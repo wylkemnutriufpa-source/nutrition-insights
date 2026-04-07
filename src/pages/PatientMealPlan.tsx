@@ -251,6 +251,59 @@ export default function PatientMealPlan() {
     setDate(d.toISOString().split("T")[0]);
   }, [date]);
 
+  const handleExportPDF = useCallback(async () => {
+    if (!user || !plan || allItems.length === 0) return;
+    setExportingPDF(true);
+    try {
+      let nutritionistName = "Profissional";
+      let patientName = "Paciente";
+      let goal = "";
+
+      const { data: myProfile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+      if (myProfile?.full_name) patientName = myProfile.full_name;
+
+      // Get nutritionist name from the plan
+      const { data: planFull } = await supabase.from("meal_plans").select("nutritionist_id, total_target_calories, total_target_protein, total_target_carbs, total_target_fat, description").eq("id", plan.id).maybeSingle();
+      if (planFull?.nutritionist_id) {
+        const { data: nutProfile } = await supabase.from("profiles").select("full_name").eq("user_id", planFull.nutritionist_id).maybeSingle();
+        if (nutProfile?.full_name) nutritionistName = nutProfile.full_name;
+      }
+
+      try {
+        const { data: anamnesisData } = await supabase.from("patient_anamnesis" as any).select("goal").eq("patient_id", user.id).limit(1).maybeSingle();
+        if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
+      } catch { /* ignore */ }
+
+      generatePremiumMealPlanPDF({
+        planTitle: plan.title || "Plano Alimentar",
+        patientName,
+        nutritionistName,
+        startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
+        items: allItems.map(i => ({
+          mealType: i.meal_type || "lunch",
+          title: i.title || "Refeição",
+          description: i.description || undefined,
+          calories_target: i.calories_target || undefined,
+          protein_target: i.protein_target || undefined,
+          carbs_target: i.carbs_target || undefined,
+          fat_target: i.fat_target || undefined,
+          day_of_week: i.day_of_week ?? undefined,
+        })),
+        targetCalories: planFull?.total_target_calories || undefined,
+        targetProtein: planFull?.total_target_protein || undefined,
+        targetCarbs: planFull?.total_target_carbs || undefined,
+        targetFat: planFull?.total_target_fat || undefined,
+        goal,
+        notes: planFull?.description || undefined,
+      });
+      toast.success("PDF gerado! Use Ctrl+P para salvar.");
+    } catch {
+      toast.error("Erro ao gerar PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  }, [user, plan, allItems]);
+
   // Apply substitution overlays to displayed items (without mutating plan data)
   const overlayedItems = useMemo(() =>
     items.map(item => {
