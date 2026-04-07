@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed, Globe, Calendar, Copy, Link2, CheckCircle2 } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
@@ -202,6 +202,9 @@ export default function Settings() {
         {/* PIX Config Manager — only for professionals */}
         {(isNutritionist || isPersonal) && <PixConfigManager />}
 
+        {/* Agenda Pública */}
+        {(isNutritionist || isPersonal) && <PublicAgendaCard />}
+
         {/* Profile */}
         <Card className="shadow-card">
           <CardHeader>
@@ -388,6 +391,124 @@ export default function Settings() {
         {minMode("advanced") && <DatabaseBackupCard />}
       </motion.div>
     </DashboardLayout>
+  );
+}
+
+function PublicAgendaCard() {
+  const { user } = useAuth();
+  const [slug, setSlug] = useState<string | null>(null);
+  const [bookingEnabled, setBookingEnabled] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [copied, setCopied] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("public_profile_settings").select("slug, booking_enabled, is_public").eq("nutritionist_id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setSlug(data.slug);
+          setBookingEnabled(data.booking_enabled ?? false);
+        }
+        setLoading(false);
+      });
+  }, [user]);
+
+  const copyLink = (url: string, label: string) => {
+    navigator.clipboard.writeText(url);
+    setCopied(label);
+    toast.success(`Link "${label}" copiado!`);
+    setTimeout(() => setCopied(null), 3000);
+  };
+
+  const origin = window.location.origin;
+  const profileUrl = slug ? `${origin}/p/${slug}` : null;
+  const agendaUrl = slug ? `${origin}/p/${slug}/agendar` : null;
+  const patientPlansUrl = slug ? `${origin}/p/${slug}/paciente` : null;
+  const proPlansUrl = slug ? `${origin}/p/${slug}/profissional` : null;
+
+  if (loading) return null;
+
+  if (!slug) {
+    return (
+      <Card className="shadow-card">
+        <CardHeader>
+          <CardTitle className="font-display flex items-center gap-2">
+            <Globe className="w-5 h-5 text-primary" /> Links Públicos
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-sm text-muted-foreground mb-3">Configure seu perfil público primeiro para gerar seus links.</p>
+          <Button variant="outline" className="gap-2" onClick={() => window.location.href = "/my-public-profile"}>
+            <Globe className="w-4 h-4" /> Configurar Perfil Público
+          </Button>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  const links = [
+    { label: "Perfil Público", url: profileUrl!, icon: Globe, desc: "Página do seu perfil para visitantes" },
+    { label: "Agenda Pública", url: agendaUrl!, icon: Calendar, desc: "Link para pacientes agendarem consultas", enabled: bookingEnabled },
+    { label: "Planos Pacientes", url: patientPlansUrl!, icon: CreditCard, desc: "Envie para pacientes escolherem o plano" },
+    { label: "Planos Profissionais", url: proPlansUrl!, icon: Crown, desc: "Envie para profissionais escolherem o plano" },
+  ];
+
+  return (
+    <Card className="shadow-card border-primary/20">
+      <CardHeader>
+        <CardTitle className="font-display flex items-center gap-2">
+          <Link2 className="w-5 h-5 text-primary" /> Meus Links Públicos
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        {links.map((link) => {
+          const Icon = link.icon;
+          const isDisabled = link.enabled === false;
+          return (
+            <div key={link.label} className={`flex items-center justify-between p-3 rounded-xl border transition-all ${
+              isDisabled ? "border-border/30 opacity-50" : "border-border/50 hover:border-primary/30"
+            }`}>
+              <div className="flex items-center gap-3 min-w-0 flex-1">
+                <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                  <Icon className="w-4 h-4 text-primary" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-medium flex items-center gap-2">
+                    {link.label}
+                    {isDisabled && <Badge variant="secondary" className="text-[9px]">Desativado</Badge>}
+                  </p>
+                  <p className="text-[10px] text-muted-foreground truncate">{link.url}</p>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Button
+                  size="sm"
+                  variant={copied === link.label ? "default" : "outline"}
+                  className="h-7 gap-1 text-[10px] px-2"
+                  onClick={() => copyLink(link.url, link.label)}
+                  disabled={isDisabled}
+                >
+                  {copied === link.label ? <CheckCircle2 className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
+                  {copied === link.label ? "Copiado" : "Copiar"}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 w-7 p-0"
+                  onClick={() => window.open(link.url, "_blank")}
+                  disabled={isDisabled}
+                >
+                  <ExternalLink className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+          );
+        })}
+        <p className="text-[10px] text-muted-foreground text-center pt-1">
+          Gerencie as configurações do perfil em <button className="text-primary underline" onClick={() => window.location.href = "/my-public-profile"}>Meu Perfil Público</button>
+        </p>
+      </CardContent>
+    </Card>
   );
 }
 
