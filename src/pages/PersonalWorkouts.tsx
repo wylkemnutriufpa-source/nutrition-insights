@@ -298,6 +298,58 @@ export default function PersonalWorkouts() {
     toast.info(`Template "${template.name}" carregado!`);
   };
 
+  const handleClonePlan = async () => {
+    if (!user || !clonePlan || !cloneTargetStudent) return;
+    setCloning(true);
+    try {
+      const { data: newPlan, error: planErr } = await supabase.from("workout_plans").insert({
+        personal_id: user.id,
+        student_id: cloneTargetStudent,
+        title: `${clonePlan.title} (cópia)`,
+        description: clonePlan.description,
+        objective: clonePlan.objective,
+        start_date: new Date().toISOString().split("T")[0],
+        end_date: null,
+        status: "active",
+        is_active: true,
+        ...getTenantIdForInsert(tenantId),
+      }).select().single();
+      if (planErr || !newPlan) throw planErr;
+
+      const { data: srcRoutines } = await supabase
+        .from("workout_routines").select("*, workout_exercises(*)")
+        .eq("plan_id", clonePlan.id).order("sort_order");
+
+      for (const routine of (srcRoutines || [])) {
+        const { data: newRoutine } = await supabase.from("workout_routines").insert({
+          plan_id: newPlan.id, name: routine.name, description: routine.description,
+          day_of_week: routine.day_of_week, estimated_duration: routine.estimated_duration,
+          sort_order: routine.sort_order,
+        }).select().single();
+        if (!newRoutine) continue;
+
+        const exercises = (routine.workout_exercises || []).map((ex: any) => ({
+          routine_id: newRoutine.id, name: ex.name, sets: ex.sets, reps: ex.reps,
+          load_kg: ex.load_kg, rest_seconds: ex.rest_seconds, notes: ex.notes,
+          muscle_group: ex.muscle_group, video_url: ex.video_url, sort_order: ex.sort_order,
+          group_id: ex.group_id, group_type: ex.group_type, group_order: ex.group_order,
+          exercise_library_id: ex.exercise_library_id, rpe: ex.rpe, cadence: ex.cadence,
+          method_label: ex.method_label,
+        }));
+        if (exercises.length > 0) await supabase.from("workout_exercises").insert(exercises);
+      }
+
+      const targetName = students.find(s => s.student_id === cloneTargetStudent)?.full_name || "aluno";
+      toast.success(`Plano clonado para ${targetName}! 🎯`);
+      setClonePlan(null);
+      setCloneTargetStudent("");
+      load();
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao clonar plano");
+    }
+    setCloning(false);
+  };
+
   if (creating) {
     return (
       <DashboardLayout>
