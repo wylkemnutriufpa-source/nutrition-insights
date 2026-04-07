@@ -186,7 +186,7 @@ function DynamicSidebar({
   const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
   const isMobile = useIsMobile();
-  const [approvalsOpen, setApprovalsOpen] = useState(false);
+  const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
   const [showcaseOpen, setShowcaseOpen] = useState(false);
 
