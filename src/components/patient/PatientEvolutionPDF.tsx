@@ -148,20 +148,15 @@ export default function PatientEvolutionPDF({ patientId, patientName }: Props) {
   </div>
 </body></html>`;
 
-      const printWindow = window.open("", "_blank");
-      if (printWindow) {
-        printWindow.document.write(html);
-        printWindow.document.close();
-        printWindow.onload = () => setTimeout(() => printWindow.print(), 300);
-      } else {
-        const blob = new Blob([html], { type: "text/html" });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `evolucao-${patientName.replace(/\s/g, "-")}.html`;
-        a.click();
-        URL.revokeObjectURL(url);
-      }
+      const blob = new Blob([html], { type: "text/html" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `evolucao-${patientName.replace(/\s+/g, "-").toLowerCase()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
 
       toast.success("Relatório gerado!");
     } catch {

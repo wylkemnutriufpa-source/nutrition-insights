@@ -112,8 +112,14 @@ ${(routines || []).map(r => `
 
       const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      toast.success("PDF gerado! Use Ctrl+P para salvar como PDF.");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `treino-${plan.title.replace(/\s+/g, "-").toLowerCase()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast.success("Treino baixado com sucesso!");
     } catch (err) {
       toast.error("Erro ao gerar relatório");
     } finally {

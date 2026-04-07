@@ -653,34 +653,11 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
 function openPremiumPrintWindow(html: string, title: string) {
   const blob = new Blob([html], { type: 'text/html' });
   const url = URL.createObjectURL(blob);
-
-  // Use a hidden iframe to trigger print without popup blockers
-  const iframe = document.createElement('iframe');
-  iframe.style.position = 'fixed';
-  iframe.style.right = '0';
-  iframe.style.bottom = '0';
-  iframe.style.width = '0';
-  iframe.style.height = '0';
-  iframe.style.border = 'none';
-  iframe.style.opacity = '0';
-  iframe.src = url;
-
-  iframe.onload = () => {
-    try {
-      iframe.contentWindow?.print();
-    } catch {
-      // Fallback: download as HTML file
-      const a = document.createElement('a');
-      a.href = url;
-      a.download = `${title}.html`;
-      a.click();
-    }
-    // Clean up after a delay to allow print dialog
-    setTimeout(() => {
-      document.body.removeChild(iframe);
-      URL.revokeObjectURL(url);
-    }, 60000);
-  };
-
-  document.body.appendChild(iframe);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `${title}.html`;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
