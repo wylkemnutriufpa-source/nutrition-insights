@@ -12,6 +12,7 @@ import { openCommandPalette } from "@/components/common/CommandPalette";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
+import MobileSidebar from "@/components/layout/MobileSidebar";
 import { useProfessionalModules } from "@/hooks/useProfessionalModules";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
@@ -628,13 +629,16 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col overflow-hidden" aria-describedby={undefined}>
+              <SheetContent side="left" className="p-0 w-[min(300px,88vw)] flex flex-col overflow-hidden !bg-card" aria-describedby={undefined}>
                 <SheetTitle className="sr-only">Menu</SheetTitle>
-                <div className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain touch-pan-y [webkit-overflow-scrolling:touch] pb-6">
-                  <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
-                    <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
-                  </ErrorBoundary>
-                </div>
+                <MobileSidebar
+                  dark={dark}
+                  toggleDark={toggleDark}
+                  initials={initials}
+                  profileName={profileName}
+                  signOut={signOut}
+                  onLinkClick={() => setMobileOpen(false)}
+                />
               </SheetContent>
             </Sheet>
             <FitJourneyLogo collapsed={false} size="sm" />
