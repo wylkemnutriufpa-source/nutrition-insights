@@ -206,7 +206,7 @@ export function usePatientDetail(patientId: string | undefined) {
         npId: npRes.data?.id || null,
         prestigePlans,
         currentPrestigePlan,
-        currentPrestigePlanId: patientPrestigeRes.data?.prestige_plans?.id || "",
+        currentPrestigePlanId: patientPrestigeData?.plan_id || "",
         patientEmail,
         adherence7d: (() => {
           const followed = adherenceRows.filter((c: any) => c.adherence_status === "followed").length;
