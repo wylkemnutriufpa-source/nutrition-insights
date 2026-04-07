@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { forwardRef, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import logoPng from "@/assets/logo.png";
+import textLogoPng from "@/assets/fitjourney-text-logo.png";
 
 const STORAGE_KEY = "fj_intro_seen";
 
@@ -151,35 +152,53 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className={`font-display font-extrabold ${s.text} tracking-tight select-none ml-2`}
-          style={{ fontStyle: "normal" }}
+          className="select-none ml-1"
         >
-          <span
-            style={{
-              background:
-                "linear-gradient(180deg, #D4A84B 0%, #F5D55A 20%, #FFFBE6 45%, #F5D55A 65%, #B8920A 85%, #8B6914 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              filter: "drop-shadow(1px 2px 1px rgba(100,70,0,0.5))",
-              textShadow: "none",
-              letterSpacing: "-0.02em",
+          <img
+            src={textLogoPng}
+            alt="FitJourney"
+            draggable={false}
+            className="h-8 sm:h-10 w-auto object-contain select-none pointer-events-none"
+            style={{ imageRendering: "auto" }}
+            onError={(e) => {
+              // Fallback to text if image doesn't load with transparency
+              const target = e.currentTarget;
+              target.style.display = "none";
+              const fallback = target.nextElementSibling as HTMLElement;
+              if (fallback) fallback.style.display = "block";
             }}
+          />
+          <div
+            className={`font-display font-extrabold ${s.text} tracking-tight hidden`}
+            style={{ fontStyle: "normal" }}
           >
-            Fit
-          </span>
-          <span
-            style={{
-              background:
-                "linear-gradient(180deg, #8A8A8A 0%, #C0C0C0 18%, #E8E8E8 40%, #F5F5F5 50%, #C0C0C0 65%, #6B6B6B 85%, #3A3A3A 100%)",
-              WebkitBackgroundClip: "text",
-              WebkitTextFillColor: "transparent",
-              filter: "drop-shadow(1px 2px 1px rgba(0,0,0,0.45))",
-              textShadow: "none",
-              letterSpacing: "-0.02em",
-            }}
-          >
-            Journey
-          </span>
+            <span
+              style={{
+                background:
+                  "linear-gradient(180deg, #D4A84B 0%, #F5D55A 20%, #FFFBE6 45%, #F5D55A 65%, #B8920A 85%, #8B6914 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(1px 2px 1px rgba(100,70,0,0.5))",
+                textShadow: "none",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Fit
+            </span>
+            <span
+              style={{
+                background:
+                  "linear-gradient(180deg, #8A8A8A 0%, #C0C0C0 18%, #E8E8E8 40%, #F5F5F5 50%, #C0C0C0 65%, #6B6B6B 85%, #3A3A3A 100%)",
+                WebkitBackgroundClip: "text",
+                WebkitTextFillColor: "transparent",
+                filter: "drop-shadow(1px 2px 1px rgba(0,0,0,0.45))",
+                textShadow: "none",
+                letterSpacing: "-0.02em",
+              }}
+            >
+              Journey
+            </span>
+          </div>
         </motion.div>
       )}
     </button>
