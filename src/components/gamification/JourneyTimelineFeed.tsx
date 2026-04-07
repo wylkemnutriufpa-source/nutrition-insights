@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Clock, Filter } from "lucide-react";
+import { Sparkles, Clock, Filter, ChevronDown } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useState } from "react";
@@ -54,6 +54,7 @@ export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false
   const { user } = useAuth();
   const targetId = patientId || user?.id;
   const [activeFilter, setActiveFilter] = useState("all");
+  const [expanded, setExpanded] = useState(false);
 
   const { data: events = [], isLoading } = useQuery({
     queryKey: ["journey-events", targetId, maxEvents],
@@ -116,97 +117,122 @@ export function JourneyTimelineFeed({ patientId, maxEvents = 30, compact = false
 
   return (
     <Card>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          {title || (compact ? "Jornada" : "Timeline de Jornada")}
+      <CardHeader
+        className="pb-3 cursor-pointer hover:bg-muted/30 transition-colors"
+        onClick={() => setExpanded(prev => !prev)}
+      >
+        <CardTitle className="text-base flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            {title || (compact ? "Jornada" : "Timeline de Jornada")}
+            <span className="text-xs font-normal text-muted-foreground">({events.length})</span>
+          </div>
+          <motion.div
+            animate={{ rotate: expanded ? 180 : 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            <ChevronDown className="h-5 w-5 text-muted-foreground" />
+          </motion.div>
         </CardTitle>
       </CardHeader>
-      <CardContent>
-        {/* Filters */}
-        {showFilters && (
-          <div className="flex flex-wrap gap-1.5 mb-4">
-            {EVENT_CATEGORIES.map(cat => (
-              <button
-                key={cat.key}
-                onClick={() => setActiveFilter(cat.key)}
-                className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
-                  activeFilter === cat.key
-                    ? "bg-primary text-primary-foreground"
-                    : "bg-muted text-muted-foreground hover:bg-muted/80"
-                }`}
-              >
-                {cat.label}
-              </button>
-            ))}
-          </div>
-        )}
 
-        <ScrollArea className={compact ? "max-h-[300px]" : "max-h-[600px]"}>
-          <div className="relative pl-6">
-            {/* Timeline line */}
-            <div className="absolute left-2 top-2 bottom-2 w-px bg-border" />
-
-            <AnimatePresence>
-              {Object.entries(grouped).map(([date, dayEvents]) => (
-                <div key={date} className="mb-4">
-                  <div className="flex items-center gap-2 mb-2 -ml-6">
-                    <div className="w-4 h-4 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center z-10">
-                      <div className="w-1.5 h-1.5 rounded-full bg-primary" />
-                    </div>
-                    <span className="text-xs font-semibold text-muted-foreground">{date}</span>
-                    <span className="text-[10px] text-muted-foreground/60">({dayEvents.length} eventos)</span>
-                  </div>
-
-                  {dayEvents.map((event, i) => {
-                    const styles = EVENT_STYLES[event.event_type] || { bg: "bg-muted/50", border: "border-border", label: "Evento" };
-                    return (
-                      <motion.div
-                        key={event.id}
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: i * 0.03 }}
-                        className={`relative mb-2 ml-2 p-2.5 rounded-lg border ${styles.border} ${styles.bg} ${event.is_highlight ? "ring-1 ring-primary/30" : ""}`}
-                      >
-                        <div className="absolute -left-[22px] w-2 h-2 rounded-full bg-muted-foreground/30 top-3.5" />
-                        <div className="flex items-start gap-2">
-                          <span className="text-lg flex-shrink-0">{event.icon}</span>
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1.5">
-                              <p className="text-sm font-medium leading-tight">{event.title}</p>
-                              {!compact && (
-                                <Badge variant="outline" className="text-[9px] px-1.5 py-0">{styles.label}</Badge>
-                              )}
-                            </div>
-                            {event.description && !compact && (
-                              <p className="text-xs text-muted-foreground mt-0.5">{event.description}</p>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-1 flex-shrink-0">
-                            {(event.xp_earned ?? 0) > 0 && (
-                              <Badge variant="secondary" className="text-[10px]">+{event.xp_earned} XP</Badge>
-                            )}
-                            <span className="text-[10px] text-muted-foreground">
-                              {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: ptBR })}
-                            </span>
-                          </div>
-                        </div>
-                      </motion.div>
-                    );
-                  })}
+      <AnimatePresence initial={false}>
+        {expanded && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.3, ease: "easeInOut" }}
+            className="overflow-hidden"
+          >
+            <CardContent>
+              {/* Filters */}
+              {showFilters && (
+                <div className="flex flex-wrap gap-1.5 mb-4">
+                  {EVENT_CATEGORIES.map(cat => (
+                    <button
+                      key={cat.key}
+                      onClick={() => setActiveFilter(cat.key)}
+                      className={`px-2.5 py-1 rounded-full text-xs font-medium transition-all ${
+                        activeFilter === cat.key
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted text-muted-foreground hover:bg-muted/80"
+                      }`}
+                    >
+                      {cat.label}
+                    </button>
+                  ))}
                 </div>
-              ))}
-            </AnimatePresence>
-          </div>
-        </ScrollArea>
+              )}
 
-        {filteredEvents.length === 0 && events.length > 0 && (
-          <div className="text-center py-4">
-            <Filter className="h-6 w-6 mx-auto mb-2 text-muted-foreground/40" />
-            <p className="text-xs text-muted-foreground">Nenhum evento nesta categoria.</p>
-          </div>
+              <ScrollArea className={compact ? "max-h-[300px]" : "max-h-[600px]"}>
+                <div className="relative pl-6">
+                  {/* Timeline line */}
+                  <div className="absolute left-2 top-2 bottom-2 w-px bg-border" />
+
+                  <AnimatePresence>
+                    {Object.entries(grouped).map(([date, dayEvents]) => (
+                      <div key={date} className="mb-4">
+                        <div className="flex items-center gap-2 mb-2 -ml-6">
+                          <div className="w-4 h-4 rounded-full bg-primary/20 border-2 border-primary flex items-center justify-center z-10">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary" />
+                          </div>
+                          <span className="text-xs font-semibold text-muted-foreground">{date}</span>
+                          <span className="text-[10px] text-muted-foreground/60">({dayEvents.length} eventos)</span>
+                        </div>
+
+                        {dayEvents.map((event, i) => {
+                          const styles = EVENT_STYLES[event.event_type] || { bg: "bg-muted/50", border: "border-border", label: "Evento" };
+                          return (
+                            <motion.div
+                              key={event.id}
+                              initial={{ opacity: 0, x: -10 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              transition={{ delay: i * 0.03 }}
+                              className={`relative mb-2 ml-2 p-2.5 rounded-lg border ${styles.border} ${styles.bg} ${event.is_highlight ? "ring-1 ring-primary/30" : ""}`}
+                            >
+                              <div className="absolute -left-[22px] w-2 h-2 rounded-full bg-muted-foreground/30 top-3.5" />
+                              <div className="flex items-start gap-2">
+                                <span className="text-lg flex-shrink-0">{event.icon}</span>
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex items-center gap-1.5">
+                                    <p className="text-sm font-medium leading-tight">{event.title}</p>
+                                    {!compact && (
+                                      <Badge variant="outline" className="text-[9px] px-1.5 py-0">{styles.label}</Badge>
+                                    )}
+                                  </div>
+                                  {event.description && !compact && (
+                                    <p className="text-xs text-muted-foreground mt-0.5">{event.description}</p>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-1 flex-shrink-0">
+                                  {(event.xp_earned ?? 0) > 0 && (
+                                    <Badge variant="secondary" className="text-[10px]">+{event.xp_earned} XP</Badge>
+                                  )}
+                                  <span className="text-[10px] text-muted-foreground">
+                                    {formatDistanceToNow(new Date(event.created_at), { addSuffix: true, locale: ptBR })}
+                                  </span>
+                                </div>
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </div>
+                    ))}
+                  </AnimatePresence>
+                </div>
+              </ScrollArea>
+
+              {filteredEvents.length === 0 && events.length > 0 && (
+                <div className="text-center py-4">
+                  <Filter className="h-6 w-6 mx-auto mb-2 text-muted-foreground/40" />
+                  <p className="text-xs text-muted-foreground">Nenhum evento nesta categoria.</p>
+                </div>
+              )}
+            </CardContent>
+          </motion.div>
         )}
-      </CardContent>
+      </AnimatePresence>
     </Card>
   );
 }
