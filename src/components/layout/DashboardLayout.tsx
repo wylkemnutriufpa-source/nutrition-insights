@@ -528,9 +528,9 @@ function DynamicSidebar({
 }
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
-  const { profile, signOut, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { profile, signOut, isPatient, isNutritionist, isPersonal, isAdmin, loading: authLoading } = useAuth();
   const isProRole = isNutritionist || isPersonal || isAdmin;
-  const workspaceCtx = useWorkspaceContextState(isProRole, isPatient);
+  const workspaceCtx = useWorkspaceContextState(isProRole, isPatient, authLoading);
   const location = useLocation();
   const isMobile = useIsMobile();
   const isTablet = useIsTablet();
