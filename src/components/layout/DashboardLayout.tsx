@@ -558,9 +558,19 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   const toggleDark = () => {
     const newDark = !dark;
+    // Suppress all CSS transitions/animations during theme switch to prevent flashing
+    const style = document.createElement("style");
+    style.textContent = "*, *::before, *::after { transition: none !important; animation: none !important; }";
+    document.head.appendChild(style);
     document.documentElement.classList.toggle("dark");
     localStorage.setItem("theme", newDark ? "dark" : "light");
     setDark(newDark);
+    // Re-enable after a frame so the browser paints the new theme first
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        document.head.removeChild(style);
+      });
+    });
   };
 
   const initials = (profile?.full_name || "U")
