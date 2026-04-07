@@ -462,7 +462,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   const mealTargets = new Map<string, number>();
   let assigned = 0;
 
-  for (const mealType of mealOrder) {
+  for (const mealType of MEAL_ORDER) {
     const mealGroup = dayItems.filter((item) => item.meal_type === mealType);
     if (mealGroup.length === 0) continue;
     const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
@@ -472,7 +472,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   }
 
   let residual = Math.round(dailyProteinTarget - assigned);
-  for (const mealType of residualPriority) {
+  for (const mealType of RESIDUAL_PRIORITY) {
     if (residual <= 0) break;
     if (!mealTargets.has(mealType)) continue;
     const current = mealTargets.get(mealType) || 0;
@@ -485,7 +485,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   }
 
   if (residual !== 0 && mealTargets.size > 0) {
-    const fallbackMeal = residualPriority.find((mealType) => mealTargets.has(mealType)) || mealOrder.find((mealType) => mealTargets.has(mealType));
+    const fallbackMeal = RESIDUAL_PRIORITY.find((mealType) => mealTargets.has(mealType)) || MEAL_ORDER.find((mealType) => mealTargets.has(mealType));
     if (fallbackMeal) {
       mealTargets.set(fallbackMeal, (mealTargets.get(fallbackMeal) || 0) + residual);
     }
