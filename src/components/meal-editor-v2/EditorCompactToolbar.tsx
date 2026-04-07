@@ -80,7 +80,6 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
         if ((anamnesis as any)?.primary_goal) goal = (anamnesis as any).primary_goal;
       } catch { /* ignore */ }
     }
-    }
 
     generatePremiumMealPlanPDF({
       planTitle: plan?.title || "Plano Alimentar",
