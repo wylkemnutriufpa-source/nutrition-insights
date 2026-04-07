@@ -1,5 +1,11 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import {
+  BLOCKED_FOODS as CANONICAL_BLOCKED_FOODS,
+  REPLACEMENTS as CANONICAL_REPLACEMENTS,
+  PREMIUM_KEYWORDS as CANONICAL_PREMIUM_KEYWORDS,
+  COMPLEX_PREP_KEYWORDS as CANONICAL_COMPLEX_PREP_KEYWORDS,
+} from "../_shared/food-rules.ts";
 
 const corsHeaders = {
     "Access-Control-Allow-Origin": "*",
@@ -16,78 +22,17 @@ const TOLERANCE = {
 };
 
 // ── Blocked Foods ─────────────────────────────────────────────────────────────
-const BLOCKED_FOODS = [
-    "salmão", "salmon", "atum fresco",
-    "kefir", "cottage", "ricota importada",
-    "quinoa", "quinua", "amaranto",
-    "castanha-do-pará", "castanha do pará", "macadâmia", "pistache",
-    "framboesa", "mirtilo", "blueberry", "cranberry", "açaí premium",
-    "tofu", "tempeh", "edamame",
-    "granola premium", "mix de nuts", "trail mix",
-    "azeite trufado", "vinagre balsâmico",
-    "pasta de amendoim importada", "manteiga de amêndoa",
-    "whey protein", "caseína", "creatina",
-    "wrap integral", "pão artesanal",
-    "leite de amêndoa", "leite de coco", "leite de aveia",
-    "abacate toast", "overnight oats",
-    "cream cheese", "philadelphia",
-    "iogurte grego importado",
-    "coalhada", "kombucha",
-    "semente de chia importada", "hemp seed",
-    "tahini", "tahine", "hummus",
-    "burrata", "brie", "camembert", "gorgonzola",
-];
+// BLOCKED_FOODS imported from _shared/food-rules.ts (canonical source)
+const BLOCKED_FOODS = CANONICAL_BLOCKED_FOODS;
 
 // ── Brazilian Replacements ────────────────────────────────────────────────────
-const REPLACEMENTS: Record<string, string> = {
-    "kefir": "iogurte natural",
-    "cottage": "queijo minas",
-    "salmão": "tilápia grelhada",
-    "salmon": "tilápia grelhada",
-    "blueberry": "morango",
-    "mirtilo": "morango",
-    "framboesa": "morango",
-    "cranberry": "acerola",
-    "quinoa": "arroz integral",
-    "quinua": "arroz integral",
-    "tahine": "pasta de amendoim",
-    "tahini": "pasta de amendoim",
-    "cream cheese": "requeijão",
-    "philadelphia": "requeijão",
-    "iogurte grego": "iogurte natural",
-    "wrap integral": "tapioca",
-    "overnight oats": "aveia com banana",
-    "hummus": "feijão",
-    "tofu": "ovo cozido",
-    "tempeh": "ovo cozido",
-    "whey protein": "ovo cozido",
-    "whey": "ovo cozido",
-    "burrata": "muçarela",
-    "brie": "queijo minas",
-    "camembert": "queijo minas",
-    "gorgonzola": "muçarela",
-    "kombucha": "chá natural",
-    "abacate toast": "pão com ovo",
-    "pão artesanal": "pão integral",
-    "leite de amêndoa": "leite desnatado",
-    "leite de aveia": "leite integral",
-    "granola premium": "granola simples",
-    "mix de nuts": "amendoim torrado",
-    "pistache": "amendoim",
-    "macadâmia": "amendoim",
-};
+// REPLACEMENTS imported from _shared/food-rules.ts (canonical source)
+const REPLACEMENTS = CANONICAL_REPLACEMENTS;
 
 // ── Premium / Complex keywords ────────────────────────────────────────────────
-const PREMIUM_KEYWORDS = [
-    "premium", "importado", "importada", "gourmet", "artesanal",
-    "overnight", "brunch", "toast", "wrap", "smoothie bowl",
-    "açaí bowl", "poke", "buddha bowl",
-];
-
-const COMPLEX_PREP_KEYWORDS = [
-    "overnight oats", "smoothie", "bowl de", "wrap de",
-    "panqueca de", "crepe de", "risoto",
-];
+// PREMIUM_KEYWORDS & COMPLEX_PREP_KEYWORDS imported from _shared/food-rules.ts
+const PREMIUM_KEYWORDS = CANONICAL_PREMIUM_KEYWORDS;
+const COMPLEX_PREP_KEYWORDS = CANONICAL_COMPLEX_PREP_KEYWORDS;
 
 // ── Brazilian base foods for main meals ───────────────────────────────────────
 const BRAZILIAN_PROTEINS = ["frango", "carne", "peixe", "tilápia", "sardinha", "ovo", "omelete", "porco", "bife", "filé", "linguiça", "charque", "jabá", "atum", "merluza", "sobrecoxa", "alcatra", "patinho", "acém", "carne moída", "carne moida"];
