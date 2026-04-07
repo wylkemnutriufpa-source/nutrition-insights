@@ -79,7 +79,7 @@ interface Props {
 }
 
 /**
- * Side flyout panel for group items — premium modal style
+ * Premium modal overlay for group items — centered on screen
  */
 function SideFlyout({
   title,
@@ -102,43 +102,47 @@ function SideFlyout({
 }) {
   return (
     <>
-      {/* Backdrop */}
+      {/* Full-screen backdrop */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        transition={{ duration: 0.15 }}
-        className="fixed inset-0 z-40"
+        transition={{ duration: 0.2 }}
+        className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
-      {/* Flyout panel */}
+      {/* Centered modal */}
       <motion.div
-        initial={{ x: -12, opacity: 0, scale: 0.96 }}
-        animate={{ x: 0, opacity: 1, scale: 1 }}
-        exit={{ x: -12, opacity: 0, scale: 0.96 }}
-        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="absolute left-full top-0 ml-2 z-50 w-56"
-        style={{ maxHeight: "80vh" }}
+        initial={{ opacity: 0, scale: 0.9, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 20 }}
+        transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none"
       >
-        <div className="bg-card/95 backdrop-blur-xl border border-border/60 rounded-xl shadow-2xl overflow-hidden">
+        <div className="pointer-events-auto w-full max-w-md bg-card/98 backdrop-blur-2xl border border-border/50 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden">
           {/* Header */}
-          <div className="flex items-center gap-2.5 px-4 py-3 border-b border-border/40 bg-muted/30">
-            <div className={`w-7 h-7 rounded-lg flex items-center justify-center bg-primary/10`}>
-              <SectionIcon className={`w-3.5 h-3.5 ${colorClass}`} />
+          <div className="flex items-center gap-3 px-5 py-4 border-b border-border/30 bg-gradient-to-r from-muted/40 to-transparent">
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-primary/10 ring-1 ring-primary/20">
+              <SectionIcon className={`w-4.5 h-4.5 ${colorClass}`} />
             </div>
-            <span className={`text-xs font-bold uppercase tracking-wider flex-1 ${colorClass}`}>
-              {title}
-            </span>
+            <div className="flex-1">
+              <h3 className={`text-sm font-bold uppercase tracking-wider ${colorClass}`}>
+                {title}
+              </h3>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {items.length} {items.length === 1 ? "item" : "itens"}
+              </p>
+            </div>
             <button
               onClick={onClose}
-              className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-muted/60 transition-colors"
+              className="w-8 h-8 rounded-xl flex items-center justify-center hover:bg-muted/60 transition-all hover:rotate-90 duration-200"
             >
-              <X className="w-3 h-3 text-muted-foreground" />
+              <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
-          {/* Items */}
-          <div className="p-1.5 max-h-[60vh] overflow-y-auto scrollbar-thin">
-            <div className="space-y-0.5">
+          {/* Items grid */}
+          <div className="p-3 max-h-[60vh] overflow-y-auto scrollbar-thin">
+            <div className="grid grid-cols-2 gap-1.5">
               {items.map((item, i) => renderItem(item, i))}
             </div>
           </div>
