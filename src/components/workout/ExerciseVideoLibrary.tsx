@@ -31,6 +31,7 @@ interface ExerciseVideo {
   tags: string[];
   is_public: boolean;
   created_at: string;
+  _source?: "personal" | "system";
 }
 
 interface Props {
@@ -567,8 +568,14 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
 function VideoPlayer({ videoPath }: { videoPath: string }) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(true);
+  const isDirectUrl = videoPath.startsWith("http");
 
   useEffect(() => {
+    if (isDirectUrl) {
+      setUrl(videoPath);
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       const { data } = await supabase.storage
         .from("exercise-videos")
@@ -577,13 +584,23 @@ function VideoPlayer({ videoPath }: { videoPath: string }) {
       setLoading(false);
     };
     load();
-  }, [videoPath]);
+  }, [videoPath, isDirectUrl]);
 
   if (loading) {
     return (
       <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
+    );
+  }
+
+  // YouTube embed
+  const isYoutube = url.includes("youtube.com") || url.includes("youtu.be");
+  if (isYoutube) {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([^&?\s]+)/);
+    const embedUrl = match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : url;
+    return (
+      <iframe src={embedUrl} className="w-full rounded-lg aspect-video" allowFullScreen allow="autoplay; encrypted-media" title="Exercise video" />
     );
   }
 
