@@ -74,14 +74,14 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
 
     // Try to get goal from patient anamnesis
     if (plan?.patient_id) {
-      const { data: anamnesis } = await supabase
+      const { data: anamnesis } = await (supabase
         .from("patient_anamnesis")
         .select("primary_goal")
         .eq("patient_id", plan.patient_id)
         .order("created_at", { ascending: false })
         .limit(1)
-        .maybeSingle();
-      if (anamnesis && (anamnesis as any).primary_goal) goal = (anamnesis as any).primary_goal;
+        .maybeSingle() as any);
+      if (anamnesis?.primary_goal) goal = anamnesis.primary_goal;
     }
 
     generatePremiumMealPlanPDF({
