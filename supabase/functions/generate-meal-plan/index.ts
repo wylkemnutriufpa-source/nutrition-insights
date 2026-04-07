@@ -331,22 +331,45 @@ function resolveVisualFromDescription(
 ): string | null {
   const normTitle = normalize(title);
 
+  // First: try exact title match (e.g. "Pão com Ovo" → pao com ovo alias)
   if (!VISUAL_GENERIC_TITLES.has(normTitle)) {
     if (aliasMap.has(normTitle)) return aliasMap.get(normTitle)!;
     const titleMatch = findBestVisualAlias(normTitle, aliasMap);
     if (titleMatch) return titleMatch;
   }
 
+  // Second: scan description lines for composed matches (prioritize longer/composed aliases first)
   const lines = description.split('\n');
+  
+  // Collect ALL candidate matches from description, pick the longest (most specific)
+  let bestMatch: string | null = null;
+  let bestAliasLength = 0;
+  
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
     if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
     const normLine = normalize(trimmed);
-    const phraseMatch = findBestVisualAlias(normLine, aliasMap);
-    if (phraseMatch) return phraseMatch;
+    
+    // Check full line first for composed matches (e.g., "pão com ovo", "tapioca com queijo")
+    for (const [alias, itemId] of aliasMap) {
+      if (alias.length < 3) continue;
+      if (normLine.includes(alias) && alias.length > bestAliasLength) {
+        // Verify word boundaries
+        const idx = normLine.indexOf(alias);
+        const before = idx === 0 || normLine[idx - 1] === ' ';
+        const after = (idx + alias.length) >= normLine.length || normLine[idx + alias.length] === ' ';
+        if (before && after) {
+          bestMatch = itemId;
+          bestAliasLength = alias.length;
+        }
+      }
+    }
   }
+  
+  if (bestMatch) return bestMatch;
 
+  // Fallback: word-by-word scan (excluding carb keywords)
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
