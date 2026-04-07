@@ -39,6 +39,8 @@ import {
 import {
   MEAL_KCAL_SPLIT,
   getProteinDistribution,
+  MEAL_ORDER,
+  RESIDUAL_PRIORITY,
 } from "./mealPlanFoodRules";
 
 type MealPlanItem = Tables<"meal_plan_items">;
@@ -162,8 +164,6 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
   const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(isGainGoal);
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-  const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
