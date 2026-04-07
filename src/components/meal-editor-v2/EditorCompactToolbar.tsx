@@ -75,13 +75,13 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
     // Try to get goal from patient anamnesis
     if (plan?.patient_id) {
       try {
-        const { data: anamnesis } = await supabase
-          .from("patient_anamnesis")
+        const { data: anamnesisData } = await supabase
+          .from("patient_anamnesis" as any)
           .select("goal")
           .eq("patient_id", plan.patient_id)
           .limit(1)
-          .maybeSingle() as { data: any };
-        if (anamnesis?.goal) goal = String(anamnesis.goal);
+          .maybeSingle();
+        if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
       } catch { /* ignore */ }
     }
 
