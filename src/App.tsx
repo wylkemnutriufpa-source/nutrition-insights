@@ -104,6 +104,7 @@ const MyReferrals = lazy(() => import("./pages/MyReferrals"));
 const GlobalRanking = lazy(() => import("./pages/GlobalRanking"));
 const AdminPrestige = lazy(() => import("./pages/AdminPrestige"));
 const AdminPricing = lazy(() => import("./pages/AdminPricing"));
+const PaymentSuccess = lazy(() => import("./pages/PaymentSuccess"));
 const AdminPatientFeatures = lazy(() => import("./pages/AdminPatientFeatures"));
 const UserGuide = lazy(() => import("./pages/UserGuide"));
 const ProfessionalGuide = lazy(() => import("./pages/ProfessionalGuide"));
@@ -604,6 +605,7 @@ const App = () => (
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />
+              <Route path="/obrigado" element={<PaymentSuccess />} />
 
               {/* Public pages */}
               <Route path="/p/:slug" element={<LP section="Perfil"><PublicProfile /></LP>} />
