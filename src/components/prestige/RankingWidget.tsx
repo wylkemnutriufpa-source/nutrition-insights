@@ -19,14 +19,19 @@ export default function RankingWidget() {
 
     Promise.allSettled([
       supabase.from("patient_ranking_cache").select("total_points, rank_position").eq("patient_id", user.id).maybeSingle(),
-      supabase.from("patient_prestige").select("*, prestige_plans(*)").eq("patient_id", user.id).eq("is_active", true).maybeSingle(),
+      supabase.from("patient_prestige").select("*").eq("patient_id", user.id).eq("is_active", true).maybeSingle(),
     ]).then(([rankRes, prestigeRes]) => {
       if (rankRes.status === "fulfilled" && rankRes.value.data) {
         setPoints(rankRes.value.data.total_points || 0);
         setRank(rankRes.value.data.rank_position || null);
       }
-      if (prestigeRes.status === "fulfilled" && prestigeRes.value.data?.prestige_plans) {
-        setPlan(prestigeRes.value.data.prestige_plans);
+      if (prestigeRes.status === "fulfilled" && prestigeRes.value.data) {
+        const pData = prestigeRes.value.data as any;
+        if (pData?.plan_id) {
+          supabase.from("prestige_plans").select("*").eq("id", pData.plan_id).maybeSingle().then(({ data: planData }) => {
+            if (planData) setPlan(planData);
+          });
+        }
       }
       setLoaded(true);
     });
