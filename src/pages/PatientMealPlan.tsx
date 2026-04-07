@@ -382,9 +382,21 @@ export default function PatientMealPlan() {
 
         <div className={`relative ${focusMode ? "z-20" : ""}`}>
           {/* Header */}
-          <div className="text-center">
-            <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
-            <p className="text-muted-foreground text-sm">{plan.title}</p>
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
+              <p className="text-muted-foreground text-sm">{plan.title}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              disabled={exportingPDF}
+              className="gap-1.5 shrink-0"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">{exportingPDF ? "Gerando..." : "Baixar PDF"}</span>
+            </Button>
           </div>
 
           {/* Journey Timeline */}
