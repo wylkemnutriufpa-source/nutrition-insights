@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { forwardRef, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import logoPng from "@/assets/logo.png";
-import textLogoPng from "@/assets/fitjourney-text-logo.png";
+
 
 const STORAGE_KEY = "fj_intro_seen";
 
@@ -154,22 +154,8 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
           animate={{ opacity: 1 }}
           className="select-none ml-1"
         >
-          <img
-            src={textLogoPng}
-            alt="FitJourney"
-            draggable={false}
-            className="h-8 sm:h-10 w-auto object-contain select-none pointer-events-none"
-            style={{ imageRendering: "auto" }}
-            onError={(e) => {
-              // Fallback to text if image doesn't load with transparency
-              const target = e.currentTarget;
-              target.style.display = "none";
-              const fallback = target.nextElementSibling as HTMLElement;
-              if (fallback) fallback.style.display = "block";
-            }}
-          />
           <div
-            className={`font-display font-extrabold ${s.text} tracking-tight hidden`}
+            className={`font-display font-extrabold ${s.text} tracking-tight`}
             style={{ fontStyle: "normal" }}
           >
             <span
