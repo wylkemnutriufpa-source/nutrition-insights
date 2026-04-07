@@ -44,7 +44,7 @@ import IFJCommandCenter from "@/components/intelligence/modules/IFJCommandCenter
 import PersonalPremiumDashboard from "@/components/workout/PersonalPremiumDashboard";
 
 // --- Plans Tab Component ---
-function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails }: any) {
+function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expandedPlan, planDetails, onClonePlan }: any) {
   const [searchTerm, setSearchTerm] = useState("");
   const [filterStatus, setFilterStatus] = useState("all");
 
@@ -77,55 +77,65 @@ function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expa
         </div>
       </div>
 
-      {filteredPlans.map((plan: any) => (
-        <Card key={plan.id} className="group hover:border-primary/20 transition-all">
-          <CardHeader className="pb-2 cursor-pointer" onClick={() => onExpandPlan(plan.id)}>
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                  <Dumbbell className="w-5 h-5 text-primary" />
-                </div>
-                <div>
-                  <CardTitle className="text-base">{plan.title}</CardTitle>
-                  <p className="text-xs text-muted-foreground">
-                    {plan.objective} • {new Date(plan.created_at).toLocaleDateString("pt-BR")}
-                  </p>
-                </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant={plan.status === "active" ? "default" : "secondary"}>
-                  {plan.status === "active" ? "Ativo" : "Pausado"}
-                </Badge>
-                <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onToggleStatus(plan.id, plan.status); }}>
-                  {plan.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                </Button>
-                <ChevronDown className={`w-4 h-4 transition-transform ${expandedPlan === plan.id ? "rotate-180" : ""}`} />
-              </div>
-            </div>
-          </CardHeader>
-          {expandedPlan === plan.id && planDetails[plan.id] && (
-            <CardContent className="pt-0 space-y-3">
-              {planDetails[plan.id].map((routine: any) => (
-                <div key={routine.id} className="bg-muted/30 rounded-lg p-3">
-                  <p className="text-sm font-semibold mb-2">{routine.name}</p>
-                  <div className="space-y-1">
-                    {(routine.workout_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((ex: any) => (
-                      <div key={ex.id} className={`flex items-center gap-2 text-xs p-1.5 rounded ${ex.group_type && ex.group_type !== "single" ? `border-l-2 ${GROUP_COLORS[ex.group_type] || ""} pl-3` : ""}`}>
-                        {ex.group_type && ex.group_type !== "single" && ex.group_order === 0 && (
-                          <Badge className="text-[9px] py-0 px-1">{ex.group_type.toUpperCase()}</Badge>
-                        )}
-                        <span className="font-medium flex-1">{ex.name}</span>
-                        <span className="text-muted-foreground">{ex.sets}×{ex.reps}</span>
-                        {ex.load_kg && <span className="text-muted-foreground">{ex.load_kg}kg</span>}
-                      </div>
-                    ))}
+      {filteredPlans.map((plan: any) => {
+        const studentName = students.find((s: any) => s.student_id === plan.student_id)?.full_name || "";
+        return (
+          <Card key={plan.id} className="group hover:border-primary/20 transition-all">
+            <CardHeader className="pb-2 cursor-pointer" onClick={() => onExpandPlan(plan.id)}>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
+                    <Dumbbell className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <CardTitle className="text-base">{plan.title}</CardTitle>
+                    <p className="text-xs text-muted-foreground">
+                      {studentName && <><Users className="w-3 h-3 inline mr-1" />{studentName} • </>}
+                      {plan.objective} • {new Date(plan.created_at).toLocaleDateString("pt-BR")}
+                    </p>
                   </div>
                 </div>
-              ))}
-            </CardContent>
-          )}
-        </Card>
-      ))}
+                <div className="flex items-center gap-2">
+                  <Badge variant={plan.status === "active" ? "default" : "secondary"}>
+                    {plan.status === "active" ? "Ativo" : "Pausado"}
+                  </Badge>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" title="Clonar para outro aluno"
+                    onClick={(e) => { e.stopPropagation(); onClonePlan(plan); }}>
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => { e.stopPropagation(); onToggleStatus(plan.id, plan.status); }}>
+                    {plan.status === "active" ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
+                  </Button>
+                  <ChevronDown className={`w-4 h-4 transition-transform ${expandedPlan === plan.id ? "rotate-180" : ""}`} />
+                </div>
+              </div>
+            </CardHeader>
+            {expandedPlan === plan.id && planDetails[plan.id] && (
+              <CardContent className="pt-0 space-y-3">
+                {planDetails[plan.id].map((routine: any) => (
+                  <div key={routine.id} className="bg-muted/30 rounded-lg p-3">
+                    <p className="text-sm font-semibold mb-2">{routine.name}</p>
+                    <div className="space-y-1">
+                      {(routine.workout_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order).map((ex: any) => (
+                        <div key={ex.id} className={`flex items-center gap-2 text-xs p-1.5 rounded ${ex.group_type && ex.group_type !== "single" ? `border-l-2 ${GROUP_COLORS[ex.group_type] || ""} pl-3` : ""}`}>
+                          {ex.group_type && ex.group_type !== "single" && ex.group_order === 0 && (
+                            <Badge className="text-[9px] py-0 px-1">{ex.group_type.toUpperCase()}</Badge>
+                          )}
+                          <span className="font-medium flex-1">{ex.name}</span>
+                          <span className="text-muted-foreground">{ex.sets}×{ex.reps}</span>
+                          {ex.rest_seconds && <span className="text-muted-foreground text-[10px]">{ex.rest_seconds}s</span>}
+                          {ex.load_kg && <span className="text-muted-foreground">{ex.load_kg}kg</span>}
+                          {ex.video_url && <Film className="w-3 h-3 text-primary" />}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            )}
+          </Card>
+        );
+      })}
 
       {filteredPlans.length === 0 && !loading && (
         <div className="text-center py-12 text-muted-foreground">
@@ -137,7 +147,6 @@ function PlansTab({ plans, loading, students, onToggleStatus, onExpandPlan, expa
     </div>
   );
 }
-
 // --- Anamnesis Tab ---
 function AnamnesisTab({ students, onSelectStudent }: any) {
   return (
