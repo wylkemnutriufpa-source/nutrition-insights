@@ -1,8 +1,11 @@
 /**
- * Regras de Alimentos Realistas — FitJourney v3.0
+ * Regras de Alimentos Realistas — FitJourney v3.1 (Client Mirror)
  * 
- * Garante que planos alimentares sejam simples, acessíveis e baseados em
- * comida brasileira popular. Aplicado em TODOS os geradores.
+ * ⚠️  CANONICAL SOURCE: supabase/functions/_shared/food-rules.ts
+ * 
+ * This file mirrors the server-side canonical rules for client-side usage
+ * (autofix, simplicity engine, personalization). Any changes to food rules
+ * MUST be made in _shared/food-rules.ts first, then synced here.
  * 
  * Princípios:
  * 1. Priorizar comida brasileira comum e acessível
@@ -12,19 +15,28 @@
  * 5. Substituições apenas dentro da mesma categoria
  */
 
-// ── Alimentos bloqueados (caros, importados, pouco acessíveis ou fora do banco validado) ──
+// ── Alimentos bloqueados (synced from _shared/food-rules.ts canonical source) ──
 export const BLOCKED_FOODS = [
+  // Peixes caros / importados
   "salmão", "salmon", "atum fresco",
+  // Laticínios importados / caros
   "kefir", "cottage", "queijo cottage", "ricota", "ricota importada",
   "queijo minas", "peito de peru", "peru defumado", "blanquet", "blanquet de peru",
+  // Grãos importados
   "quinoa", "quinua", "amaranto",
+  // Oleaginosas caras
   "castanha-do-pará", "castanha do pará", "macadâmia", "pistache",
+  // Frutas importadas
   "framboesa", "mirtilo", "blueberry", "cranberry", "açaí premium",
+  // Proteínas não-tradicionais
   "tofu", "tempeh", "edamame",
+  // Preparações complexas / importadas
   "granola premium", "mix de nuts", "trail mix",
   "azeite trufado", "vinagre balsâmico",
   "pasta de amendoim importada", "manteiga de amêndoa",
-  "whey protein", "caseína", "creatina",
+  // Suplementos
+  "whey protein", "whey", "caseína", "creatina",
+  // Preparações fora do padrão brasileiro popular
   "wrap integral", "pão artesanal",
   "leite de amêndoa", "leite de coco", "leite de aveia",
   "abacate toast", "overnight oats",
@@ -32,7 +44,8 @@ export const BLOCKED_FOODS = [
   "iogurte grego importado",
   "coalhada", "kombucha",
   "semente de chia importada", "hemp seed",
-  "tahini", "hummus",
+  "tahini", "tahine", "hummus",
+  // Queijos importados
   "burrata", "brie", "camembert", "gorgonzola",
 ];
 
