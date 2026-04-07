@@ -235,29 +235,22 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                         key={item.id}
                         to={item.route || "/"}
                         onClick={() => { setOpenSection(null); onLinkClick?.(); }}
-                        className={`flex items-center gap-3 px-3 py-2 rounded-lg transition-all group/item
+                        className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
                           ${active
                             ? isPremium
-                              ? "bg-amber-500/10 text-amber-500"
-                              : "bg-primary/10 text-primary"
-                            : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
+                              ? "bg-amber-500/10 text-amber-500 ring-1 ring-amber-500/20"
+                              : "bg-primary/10 text-primary ring-1 ring-primary/20"
+                            : "text-muted-foreground hover:text-foreground hover:bg-muted/40"
                           }`}
                       >
-                        <Icon className={`w-4 h-4 flex-shrink-0 transition-transform group-hover/item:scale-110 ${
+                        <Icon className={`w-5 h-5 transition-transform group-hover/item:scale-110 ${
                           isPremium ? "text-amber-500" : active ? "text-primary" : ""
                         }`} />
-                        <span className={`text-xs font-medium truncate flex-1 ${
+                        <span className={`text-[10px] font-medium leading-tight line-clamp-2 ${
                           isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
                         }`}>
                           {String(t(item.label_key || label, label))}
                         </span>
-                        <NewFeatureBadge featureKey={item.route || ""} variant="dot" />
-                        {item.is_pinned && (
-                          <Pin className="w-2.5 h-2.5 text-primary/50" />
-                        )}
-                        {active && !item.is_pinned && (
-                          <ChevronRight className={`w-3 h-3 ${isPremium ? "text-amber-500" : "text-primary"}`} />
-                        )}
                       </Link>
                     );
                   }}
