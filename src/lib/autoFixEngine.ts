@@ -35,8 +35,13 @@ import {
   getDefaultBeverageLine,
   standardProteinPortion,
   roundScaledQuantity,
-  getProteinDistribution,
 } from "./mealDescriptionEngine";
+import {
+  MEAL_KCAL_SPLIT,
+  getProteinDistribution,
+  MEAL_ORDER,
+  RESIDUAL_PRIORITY,
+} from "./mealPlanFoodRules";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
@@ -159,13 +164,11 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
   const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(isGainGoal);
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-  const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
 
-  for (const mealType of mealOrder) {
+  for (const mealType of MEAL_ORDER) {
     const items = dayItems.filter((item) => item.meal_type === mealType);
     if (items.length === 0) continue;
     const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
@@ -175,7 +178,7 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
   }
 
   let residual = Math.round(dailyProteinTarget - assigned);
-  for (const mealType of residualPriority) {
+  for (const mealType of RESIDUAL_PRIORITY) {
     if (residual <= 0) break;
     if (!mealTargets.has(mealType)) continue;
     const current = mealTargets.get(mealType) || 0;
@@ -188,7 +191,7 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
   }
 
   if (residual !== 0) {
-    const fallbackMeal = residualPriority.find((mealType) => mealTargets.has(mealType)) || mealOrder.find((mealType) => mealTargets.has(mealType));
+    const fallbackMeal = RESIDUAL_PRIORITY.find((mealType) => mealTargets.has(mealType)) || MEAL_ORDER.find((mealType) => mealTargets.has(mealType));
     if (fallbackMeal) {
       mealTargets.set(fallbackMeal, (mealTargets.get(fallbackMeal) || 0) + residual);
     }

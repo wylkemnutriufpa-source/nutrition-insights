@@ -109,14 +109,37 @@ export const ALLOWED_EXTRAS = [
   "pão de queijo",
 ];
 
-// ── Limites por refeição ──
+// ── Distribuição calórica por refeição (synced from _shared/food-rules.ts) ──
+export const MEAL_KCAL_SPLIT: Record<string, number> = {
+  breakfast: 0.20,
+  morning_snack: 0.10,
+  lunch: 0.30,
+  afternoon_snack: 0.10,
+  dinner: 0.22,
+  evening_snack: 0.08,
+};
+
+// ── Distribuição de proteína por refeição (synced from _shared/food-rules.ts) ──
+export function getProteinDistribution(isGainGoal: boolean) {
+  const shares: Record<string, number> = isGainGoal
+    ? { breakfast: 0.16, morning_snack: 0.10, lunch: 0.26, afternoon_snack: 0.10, dinner: 0.24, evening_snack: 0.14 }
+    : { breakfast: 0.15, morning_snack: 0.08, lunch: 0.27, afternoon_snack: 0.08, dinner: 0.27, evening_snack: 0.15 };
+  const caps: Record<string, number> = isGainGoal
+    ? { breakfast: 45, morning_snack: 24, lunch: 65, afternoon_snack: 24, dinner: 60, evening_snack: 35 }
+    : { breakfast: 30, morning_snack: 18, lunch: 55, afternoon_snack: 18, dinner: 55, evening_snack: 30 };
+  return { shares, caps };
+}
+
+export const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+export const RESIDUAL_PRIORITY = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
+
 export const MEAL_LIMITS = {
   maxFruitsPerMeal: 2,
   maxFruitsPerDay: 4,
   maxEggsBreakfast: 2,
   maxEggsPerMeal: 3,
-  minProteinMainMeal: 100, // gramas mínimas de proteína fonte por refeição principal
-  maxProteinMainMeal: 250, // gramas máximas
+  minProteinMainMeal: 100,
+  maxProteinMainMeal: 250,
 };
 
 // ── Estruturas realistas de refeição por objetivo ──

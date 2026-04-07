@@ -8,6 +8,9 @@ import {
   REPLACEMENTS,
   SUBSTITUTION_GROUPS,
   isBlockedFood as canonicalIsBlockedFood,
+  getProteinDistribution,
+  MEAL_ORDER,
+  RESIDUAL_PRIORITY,
 } from "../_shared/food-rules.ts";
 import {
   scaleDescriptionQuantities,
@@ -18,7 +21,6 @@ import {
   getDefaultBeverageLine,
   standardProteinPortion,
   roundScaledQuantity,
-  getProteinDistribution,
   buildFoodDescriptionFromItems,
 } from "../_shared/meal-description.ts";
 
@@ -456,13 +458,11 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
   const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(!isLossGoal(goal));
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-  const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
 
-  for (const mealType of mealOrder) {
+  for (const mealType of MEAL_ORDER) {
     const mealGroup = dayItems.filter((item) => item.meal_type === mealType);
     if (mealGroup.length === 0) continue;
     const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
@@ -472,7 +472,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   }
 
   let residual = Math.round(dailyProteinTarget - assigned);
-  for (const mealType of residualPriority) {
+  for (const mealType of RESIDUAL_PRIORITY) {
     if (residual <= 0) break;
     if (!mealTargets.has(mealType)) continue;
     const current = mealTargets.get(mealType) || 0;
@@ -485,7 +485,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   }
 
   if (residual !== 0 && mealTargets.size > 0) {
-    const fallbackMeal = residualPriority.find((mealType) => mealTargets.has(mealType)) || mealOrder.find((mealType) => mealTargets.has(mealType));
+    const fallbackMeal = RESIDUAL_PRIORITY.find((mealType) => mealTargets.has(mealType)) || MEAL_ORDER.find((mealType) => mealTargets.has(mealType));
     if (fallbackMeal) {
       mealTargets.set(fallbackMeal, (mealTargets.get(fallbackMeal) || 0) + residual);
     }
@@ -985,10 +985,7 @@ function reconcileDailyMacros(
 function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number; carbs: number; fat: number }, dailyKcal: number): any[] {
   // ── Pre-check: detect per-item calorie inflation (e.g. daily total on each item) ──
   const MAX_SINGLE_ITEM_KCAL = 1200;
-  const mealShares: Record<string, number> = {
-    breakfast: 0.20, morning_snack: 0.10, lunch: 0.30,
-    afternoon_snack: 0.10, dinner: 0.25, evening_snack: 0.05,
-  };
+  const mealShares = MEAL_KCAL_SPLIT;
   for (const item of items) {
     if ((item.calories_target || 0) > MAX_SINGLE_ITEM_KCAL) {
       console.warn(`[enforceCDC] Inflated calories_target=${item.calories_target} on "${item.title}". Fixing.`);
