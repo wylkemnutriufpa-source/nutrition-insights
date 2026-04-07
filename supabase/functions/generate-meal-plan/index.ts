@@ -455,8 +455,8 @@ function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
     case "breakfast": return loss ? BREAKFAST_EMAG : BREAKFAST_MASSA;
     case "morning_snack": return loss ? SNACKS : SNACKS_MASSA;
     case "afternoon_snack": return loss ? SNACKS : SNACKS_MASSA;
-    case "lunch":
-    case "dinner": return loss ? MAIN_EMAG : MAIN_MASSA;
+    case "lunch": return loss ? MAIN_EMAG : MAIN_MASSA;
+    case "dinner": return loss ? DINNER_EMAG : DINNER_MASSA;
     case "evening_snack": return loss ? CEIA : CEIA_MASSA;
     default: return SNACKS;
   }
