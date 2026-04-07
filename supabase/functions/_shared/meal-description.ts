@@ -29,16 +29,7 @@ export function standardProteinPortion(mealType: string, isGainGoal: boolean): n
   return isGainGoal ? 180 : 150;
 }
 
-// ── Protein rebalancing shares/caps ──────────────────────────
-export function getProteinDistribution(isGainGoal: boolean) {
-  const shares: Record<string, number> = isGainGoal
-    ? { breakfast: 0.16, morning_snack: 0.10, lunch: 0.26, afternoon_snack: 0.10, dinner: 0.24, evening_snack: 0.14 }
-    : { breakfast: 0.15, morning_snack: 0.08, lunch: 0.27, afternoon_snack: 0.08, dinner: 0.27, evening_snack: 0.15 };
-  const caps: Record<string, number> = isGainGoal
-    ? { breakfast: 45, morning_snack: 24, lunch: 65, afternoon_snack: 24, dinner: 60, evening_snack: 35 }
-    : { breakfast: 30, morning_snack: 18, lunch: 55, afternoon_snack: 18, dinner: 55, evening_snack: 30 };
-  return { shares, caps };
-}
+// Protein distribution moved to _shared/food-rules.ts (canonical location for macro rules)
 
 // ── Detection helpers ────────────────────────────────────────
 export function isMainMealType(mealType: string): boolean {
