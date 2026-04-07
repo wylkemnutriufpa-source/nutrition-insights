@@ -488,10 +488,7 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
     if (cal > MAX_SINGLE_ITEM_KCAL) {
       console.warn(`[slotsToInserts] Item "${(item as any).title}" has inflated calories_target=${cal}. Clamping.`);
       // Estimate correct value based on meal type share
-      const mealShares: Record<string, number> = {
-        breakfast: 0.20, morning_snack: 0.10, lunch: 0.30,
-        afternoon_snack: 0.10, dinner: 0.25, evening_snack: 0.05,
-      };
+      const mealShares = MEAL_KCAL_SPLIT;
       const share = mealShares[(item as any).meal_type] || 0.20;
       // Use the inflated value as the daily total and compute the per-meal target
       (item as any).calories_target = Math.round(cal * share);
