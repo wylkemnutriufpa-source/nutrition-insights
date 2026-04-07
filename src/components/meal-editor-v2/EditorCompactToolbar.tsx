@@ -81,7 +81,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
-      if (anamnesis?.primary_goal) goal = anamnesis.primary_goal;
+      if (anamnesis && (anamnesis as any).primary_goal) goal = (anamnesis as any).primary_goal;
     }
 
     generatePremiumMealPlanPDF({
@@ -99,7 +99,6 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
         carbs_target: i.carbs_target || undefined,
         fat_target: i.fat_target || undefined,
         day_of_week: i.day_of_week ?? undefined,
-        scheduled_time: i.scheduled_time || undefined,
       })),
       targetCalories: plan?.total_target_calories || undefined,
       targetProtein: plan?.total_target_protein || undefined,
