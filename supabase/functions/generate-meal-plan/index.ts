@@ -870,6 +870,9 @@ function generateRealisticPlan(
   const items: any[] = [];
   const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
 
+  // Track used option indices per meal type to avoid repetition across days
+  const usedIndicesPerMeal = new Map<string, Set<number>>();
+
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
@@ -890,9 +893,24 @@ function generateRealisticPlan(
 
       if (validOptions.length === 0) validOptions = options;
 
-      // Use time-based seed for variety across regenerations
+      // Anti-repetition: pick an option not yet used for this meal type
+      if (!usedIndicesPerMeal.has(mealType)) usedIndicesPerMeal.set(mealType, new Set());
+      const usedSet = usedIndicesPerMeal.get(mealType)!;
+      
+      // Reset if all options used (happens when days > options)
+      if (usedSet.size >= validOptions.length) usedSet.clear();
+
       const regenSeed = generationSeed(String(planOptionIndex), day);
-      const idx = (regenSeed + day) % validOptions.length;
+      let idx = (regenSeed + day) % validOptions.length;
+      
+      // Find unused index
+      let attempts = 0;
+      while (usedSet.has(idx) && attempts < validOptions.length) {
+        idx = (idx + 1) % validOptions.length;
+        attempts++;
+      }
+      usedSet.add(idx);
+      
       const selected = validOptions[idx];
 
       const scaleFactor = targetKcal / (selected.kcal || 1);
