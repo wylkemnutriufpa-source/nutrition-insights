@@ -88,6 +88,14 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
     setShowReplaceDialog(false);
 
     try {
+      // Ensure session is fresh before calling edge function
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData?.session) {
+        toast.error("Sessão expirada. Faça login novamente.");
+        setGenerating(false);
+        return;
+      }
+
       toast.info(`⚡ Gerando ${MODES.find(m => m.key === selectedMode)?.label}...`);
 
       const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
