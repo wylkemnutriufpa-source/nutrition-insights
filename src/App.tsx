@@ -613,7 +613,7 @@ const App = () => (
               <Route path="/program/:programId/public" element={<LP section="Projeto"><PublicProgram /></LP>} />
 
               {/* Network pages */}
-              <Route path="/my-public-profile" element={<NutritionistRoute><LP section="Perfil"><MyPublicProfile /></LP></NutritionistRoute>} />
+              <Route path="/my-public-profile" element={<ProfessionalRoute><LP section="Perfil"><MyPublicProfile /></LP></ProfessionalRoute>} />
               <Route path="/my-referrals" element={<ProtectedRoute><LP section="Indicações"><MyReferrals /></LP></ProtectedRoute>} />
 
               {/* Ambassador */}
