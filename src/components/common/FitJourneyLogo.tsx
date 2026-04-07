@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 import { forwardRef, useMemo, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import logoPng from "@/assets/logo.png";
-import textLogoPng from "@/assets/fitjourney-text-logo.png";
+
 
 const STORAGE_KEY = "fj_intro_seen";
 
