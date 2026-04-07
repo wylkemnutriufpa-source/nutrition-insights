@@ -12,8 +12,9 @@ import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer,
   CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Star,
-  CheckCircle2, MinusCircle, AlertCircle, Circle
+  CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
 } from "lucide-react";
+import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
