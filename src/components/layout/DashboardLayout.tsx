@@ -12,6 +12,7 @@ import { openCommandPalette } from "@/components/common/CommandPalette";
 import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
+import MobileSidebar from "@/components/layout/MobileSidebar";
 import { useProfessionalModules } from "@/hooks/useProfessionalModules";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
