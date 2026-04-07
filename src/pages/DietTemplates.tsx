@@ -389,42 +389,6 @@ export default function DietTemplates() {
     setApplying(true);
 
     try {
-      const multiplier = getCalorieMultiplier(template);
-
-      // Build raw template items (pre-personalization)
-      const templateItems: any[] = [];
-      for (let day = 0; day <= 6; day++) {
-        for (const meal of (Array.isArray(template.meals) ? template.meals : [])) {
-          const adjustedFoods = (meal.foods || []).map((f) => adjustFood(f, multiplier));
-          const totalCals = adjustedFoods.reduce((s, f) => s + f.calories, 0);
-          const totalProtein = adjustedFoods.reduce((s, f) => s + f.protein, 0);
-          const totalCarbs = adjustedFoods.reduce((s, f) => s + f.carbs, 0);
-          const totalFat = adjustedFoods.reduce((s, f) => s + f.fat, 0);
-
-          const desc = adjustedFoods
-            .map((f) => {
-              const subText = f.substitutions?.length
-                ? `\n   🔄 Substituições: ${f.substitutions.join(" | ")}`
-                : "";
-              return `• ${f.name} (${f.portion}) — ${f.calories}kcal${subText}`;
-            })
-            .join("\n");
-
-          templateItems.push({
-            title: meal.title,
-            description: desc,
-            meal_type: meal.meal_type || (meal as any).type,
-            day_of_week: day,
-            calories_target: totalCals,
-            protein_target: totalProtein,
-            carbs_target: totalCarbs,
-            fat_target: totalFat,
-          });
-        }
-      }
-
-      // Resolve tenant
-      const { data: resolvedTenantId } = await supabase.rpc("get_user_tenant", { _user_id: user.id });
 
       // ── DELEGATE TO EDGE FUNCTION via wrapper (single source of truth) ──
       // The generate-meal-plan edge function handles everything:
