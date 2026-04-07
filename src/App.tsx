@@ -339,14 +339,27 @@ function LegacyMealPlanRedirect() {
 function DarkModeInit() {
   useEffect(() => {
     const stored = localStorage.getItem("theme");
-    if (stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches)) {
-      document.documentElement.classList.add("dark");
-    } else if (stored === "light") {
-      document.documentElement.classList.remove("dark");
-    } else {
+    const isDark = stored === "dark" || (!stored && window.matchMedia("(prefers-color-scheme: dark)").matches) || !stored;
+    if (isDark) {
       document.documentElement.classList.add("dark");
       localStorage.setItem("theme", "dark");
+    } else if (stored === "light") {
+      document.documentElement.classList.remove("dark");
     }
+
+    const themeColor = isDark ? "#000000" : "#f5f7fa";
+    document.documentElement.style.colorScheme = isDark ? "dark" : "light";
+    document.documentElement.style.backgroundColor = themeColor;
+    document.body.style.backgroundColor = themeColor;
+
+    let meta = document.querySelector('meta[name="theme-color"]') as HTMLMetaElement | null;
+    if (!meta) {
+      meta = document.createElement("meta");
+      meta.name = "theme-color";
+      document.head.appendChild(meta);
+    }
+
+    meta.content = themeColor;
   }, []);
   return null;
 }
