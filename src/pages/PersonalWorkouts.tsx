@@ -250,6 +250,9 @@ export default function PersonalWorkouts() {
   const [planDetails, setPlanDetails] = useState<Record<string, any>>({});
   const [anamnesisStudent, setAnamnesisStudent] = useState<{ id: string; name: string } | null>(null);
   const [prePlanStudent, setPrePlanStudent] = useState<{ id: string; name: string } | null>(null);
+  const [clonePlan, setClonePlan] = useState<any>(null);
+  const [cloneTargetStudent, setCloneTargetStudent] = useState("");
+  const [cloning, setCloning] = useState(false);
 
   const load = async () => {
     if (!user) return;
