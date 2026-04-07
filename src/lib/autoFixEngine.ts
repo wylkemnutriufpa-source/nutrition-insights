@@ -26,6 +26,17 @@ import { loadPersonalizationContext, personalizePlanItems, type PersonalizationC
 import { isItemProtected } from "./planPipelineOrchestrator";
 import { isExplicitlyBanned } from "./validatedFoodDatabase";
 import { compareMealPlanCollections, haveMealPlanCollectionsChanged } from "./mealPlanPersistenceGuards";
+import {
+  scaleDescriptionQuantities,
+  finalizeMealDescription,
+  isMainMealType,
+  isProteinLine,
+  hasBeverage,
+  getDefaultBeverageLine,
+  standardProteinPortion,
+  roundScaledQuantity,
+  getProteinDistribution,
+} from "./mealDescriptionEngine";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 

@@ -455,13 +455,7 @@ function finalizeMealDescription(description: string, mealType: string, goal: st
 function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: number, goal: string) {
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
-  const loss = isLossGoal(goal);
-  const proteinShares: Record<string, number> = loss
-    ? { breakfast: 0.15, morning_snack: 0.08, lunch: 0.27, afternoon_snack: 0.08, dinner: 0.27, evening_snack: 0.15 }
-    : { breakfast: 0.16, morning_snack: 0.10, lunch: 0.26, afternoon_snack: 0.10, dinner: 0.24, evening_snack: 0.14 };
-  const proteinCaps: Record<string, number> = loss
-    ? { breakfast: 30, morning_snack: 18, lunch: 55, afternoon_snack: 18, dinner: 55, evening_snack: 30 }
-    : { breakfast: 45, morning_snack: 24, lunch: 65, afternoon_snack: 24, dinner: 60, evening_snack: 35 };
+  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(!isLossGoal(goal));
   const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
 
