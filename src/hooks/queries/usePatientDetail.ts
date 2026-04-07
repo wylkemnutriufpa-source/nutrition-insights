@@ -144,7 +144,7 @@ export function usePatientDetail(patientId: string | undefined) {
 
       const [prestigePlansRes, patientPrestigeRes] = await Promise.all([
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
-        supabase.from("patient_prestige").select("*, prestige_plans(*)").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("patient_prestige").select("*").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       const mapPlan = (d: any): PrestigePlan => ({
@@ -167,9 +167,11 @@ export function usePatientDetail(patientId: string | undefined) {
       });
 
       const prestigePlans = (prestigePlansRes.data || []).map(mapPlan);
-      const currentPrestigePlan = patientPrestigeRes.data?.prestige_plans
-        ? mapPlan(patientPrestigeRes.data.prestige_plans)
+      const patientPrestigeData = patientPrestigeRes.data as any;
+      const matchedPlan = patientPrestigeData?.plan_id
+        ? prestigePlans.find((p: any) => p.id === patientPrestigeData.plan_id)
         : null;
+      const currentPrestigePlan = matchedPlan || null;
 
       let patientEmail = "";
       if (isAdmin) {
@@ -204,7 +206,7 @@ export function usePatientDetail(patientId: string | undefined) {
         npId: npRes.data?.id || null,
         prestigePlans,
         currentPrestigePlan,
-        currentPrestigePlanId: patientPrestigeRes.data?.prestige_plans?.id || "",
+        currentPrestigePlanId: patientPrestigeData?.plan_id || "",
         patientEmail,
         adherence7d: (() => {
           const followed = adherenceRows.filter((c: any) => c.adherence_status === "followed").length;

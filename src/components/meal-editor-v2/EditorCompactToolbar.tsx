@@ -75,11 +75,14 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
     // Try to get goal from patient anamnesis
     if (plan?.patient_id) {
       try {
-        const query = supabase.from("patient_anamnesis").select("primary_goal");
-        const { data: anamnesis } = await query.eq("patient_id", plan.patient_id).limit(1).single();
-        if ((anamnesis as any)?.primary_goal) goal = (anamnesis as any).primary_goal;
+        const { data: anamnesisData } = await supabase
+          .from("patient_anamnesis" as any)
+          .select("goal")
+          .eq("patient_id", plan.patient_id)
+          .limit(1)
+          .maybeSingle();
+        if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
       } catch { /* ignore */ }
-    }
     }
 
     generatePremiumMealPlanPDF({

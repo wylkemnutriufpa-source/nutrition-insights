@@ -52,11 +52,13 @@ export function usePrestige(patientId?: string) {
   async function loadPrestige(uid: string) {
     setLoading(true);
     const [prestigeRes, rankingRes] = await Promise.all([
-      supabase.from("patient_prestige").select("*, prestige_plans(*)").eq("patient_id", uid).eq("is_active", true).maybeSingle(),
+      supabase.from("patient_prestige").select("*").eq("patient_id", uid).eq("is_active", true).maybeSingle(),
       supabase.from("patient_ranking_cache").select("total_points, rank_position").eq("patient_id", uid).maybeSingle(),
     ]);
 
-    const plan = prestigeRes.data?.prestige_plans ? mapPlan(prestigeRes.data.prestige_plans as any) : null;
+    const prestigeData = prestigeRes.data as any;
+    const matchedPlan = prestigeData?.plan_id ? plans.find(p => p.id === prestigeData.plan_id) || null : null;
+    const plan = matchedPlan;
     setPrestige({
       plan,
       totalPoints: rankingRes.data?.total_points || 0,
