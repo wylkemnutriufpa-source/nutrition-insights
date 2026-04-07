@@ -65,7 +65,6 @@ const GENERIC_TITLES = new Set([
   "almoco", "jantar", "cafe da manha",
   "refeicao", "marmita",
 ]);
-]);
 
 /** Accessory words to strip from titles before matching */
 const ACCESSORY_WORDS = new Set([
