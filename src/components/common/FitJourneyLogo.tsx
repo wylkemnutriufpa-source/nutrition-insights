@@ -152,7 +152,7 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className={`font-display font-extrabold ${s.text} tracking-tight select-none ml-2`}
-          style={{ fontStyle: "italic" }}
+          style={{ fontStyle: "normal" }}
         >
           <span
             style={{
