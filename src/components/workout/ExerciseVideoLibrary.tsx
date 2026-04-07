@@ -31,6 +31,7 @@ interface ExerciseVideo {
   tags: string[];
   is_public: boolean;
   created_at: string;
+  _source?: "personal" | "system";
 }
 
 interface Props {
@@ -60,14 +61,39 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
 
   const loadVideos = async () => {
     if (!user) return;
-    const { data, error } = await supabase
+    
+    // Load user's personal videos
+    const { data: personalData } = await supabase
       .from("exercise_video_library")
       .select("*")
       .order("created_at", { ascending: false });
 
-    if (!error && data) {
-      setVideos(data as ExerciseVideo[]);
-    }
+    // Load system videos from exercises_library that have video_url
+    const { data: systemData } = await supabase
+      .from("exercises_library")
+      .select("id, name, muscle_group, video_url, thumbnail_url, tags, description, created_at")
+      .not("video_url", "is", null);
+
+    const personal: ExerciseVideo[] = (personalData || []).map((v: any) => ({
+      ...v,
+      _source: "personal" as const,
+    }));
+
+    const system: ExerciseVideo[] = (systemData || []).map((v: any) => ({
+      id: v.id,
+      title: v.name,
+      muscle_group: v.muscle_group || "Outro",
+      video_url: v.video_url,
+      thumbnail_url: v.thumbnail_url,
+      duration_seconds: null,
+      description: v.description,
+      tags: v.tags || [],
+      is_public: true,
+      created_at: v.created_at,
+      _source: "system" as const,
+    }));
+
+    setVideos([...personal, ...system]);
     setLoading(false);
   };
 
@@ -243,16 +269,23 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold truncate">{video.title}</h4>
-              <Badge variant="outline" className="text-[10px] mt-1">{video.muscle_group}</Badge>
+              <div className="flex items-center gap-1 mt-1">
+                <Badge variant="outline" className="text-[10px]">{video.muscle_group}</Badge>
+                {video._source === "system" && (
+                  <Badge className="text-[9px] bg-primary/10 text-primary border-primary/20">Sistema</Badge>
+                )}
+              </div>
             </div>
-            <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingVideo(video)}>
-                <Edit2 className="w-3 h-3" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(video)}>
-                <Trash2 className="w-3 h-3 text-destructive" />
-              </Button>
-            </div>
+            {video._source !== "system" && (
+              <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingVideo(video)}>
+                  <Edit2 className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(video)}>
+                  <Trash2 className="w-3 h-3 text-destructive" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Tags */}
@@ -542,8 +575,14 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
 function VideoPlayer({ videoPath }: { videoPath: string }) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(true);
+  const isDirectUrl = videoPath.startsWith("http");
 
   useEffect(() => {
+    if (isDirectUrl) {
+      setUrl(videoPath);
+      setLoading(false);
+      return;
+    }
     const load = async () => {
       const { data } = await supabase.storage
         .from("exercise-videos")
@@ -552,13 +591,23 @@ function VideoPlayer({ videoPath }: { videoPath: string }) {
       setLoading(false);
     };
     load();
-  }, [videoPath]);
+  }, [videoPath, isDirectUrl]);
 
   if (loading) {
     return (
       <div className="aspect-video bg-muted rounded-lg flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
       </div>
+    );
+  }
+
+  // YouTube embed
+  const isYoutube = url.includes("youtube.com") || url.includes("youtu.be");
+  if (isYoutube) {
+    const match = url.match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([^&?\s]+)/);
+    const embedUrl = match ? `https://www.youtube.com/embed/${match[1]}?autoplay=1` : url;
+    return (
+      <iframe src={embedUrl} className="w-full rounded-lg aspect-video" allowFullScreen allow="autoplay; encrypted-media" title="Exercise video" />
     );
   }
 
