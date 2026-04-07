@@ -200,7 +200,7 @@ function DynamicSidebar({
       {/* Workspace context switcher for hybrid users */}
       <WorkspaceContextSwitcher collapsed={collapsed} />
 
-      <div className="p-4 flex items-center">
+      <div className="p-4 flex items-center flex-shrink-0">
         <FitJourneyLogo collapsed={collapsed} size="sm" />
       </div>
 
@@ -499,7 +499,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      <nav className="flex-1 px-3 overflow-y-auto">
+      <nav className="flex-1 min-h-0 px-3 overflow-y-auto overscroll-contain">
         <ErrorBoundary section="Layout:SidebarNav" fallback={<SidebarFallback onLinkClick={onLinkClick} />}>
           <AccordionSidebar
             categories={categories}
@@ -590,10 +590,12 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col">
-                <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
-                  <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
-                </ErrorBoundary>
+              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col overflow-hidden">
+                <div className="flex flex-col h-full min-h-0 overflow-y-auto overscroll-contain">
+                  <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
+                    <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
+                  </ErrorBoundary>
+                </div>
               </SheetContent>
             </Sheet>
             <FitJourneyLogo collapsed={false} size="sm" />
