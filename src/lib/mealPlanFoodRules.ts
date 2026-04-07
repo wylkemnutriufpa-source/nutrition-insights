@@ -109,7 +109,16 @@ export const ALLOWED_EXTRAS = [
   "pão de queijo",
 ];
 
-// ── Limites por refeição ──
+// ── Distribuição calórica por refeição (synced from _shared/food-rules.ts) ──
+export const MEAL_KCAL_SPLIT: Record<string, number> = {
+  breakfast: 0.20,
+  morning_snack: 0.10,
+  lunch: 0.30,
+  afternoon_snack: 0.10,
+  dinner: 0.22,
+  evening_snack: 0.08,
+};
+
 export const MEAL_LIMITS = {
   maxFruitsPerMeal: 2,
   maxFruitsPerDay: 4,

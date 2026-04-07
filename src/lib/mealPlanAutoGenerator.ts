@@ -16,6 +16,7 @@ import {
   getSubstitutionsFor,
   MEAL_LIMITS,
   BLOCKED_FOODS,
+  MEAL_KCAL_SPLIT,
   ensureBreakfastProtein,
 } from "./mealPlanFoodRules";
 import { isExplicitlyBanned, getClosestValidatedFood } from "./validatedFoodDatabase";
