@@ -51,6 +51,7 @@ interface Props {
 
 export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [pipelines, setPipelines] = useState<PendingPipeline[]>([]);
   const [loading, setLoading] = useState(true);
@@ -238,11 +239,27 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
       toast.info("Gerando plano completo com itens... Aguarde.");
       const { planId, data } = await generateOrRegeneratePlan();
 
-      await transitionPlanToReview(planId, user.id);
+      const finalized = await finalizeGeneratedMealPlan({
+        planId,
+        patientId: selectedPipeline.patient_id,
+        userId: user.id,
+        tenantId,
+      });
+
+      const reviewPlanId = finalized.finalPlanId;
+      if (reviewPlanId !== planId) {
+        await syncPipelineGeneratedPlan(selectedPipeline.id, reviewPlanId);
+      }
+
+      await transitionPlanToReview(reviewPlanId, user.id);
 
       onOpenChange(false);
-      navigate(`/meal-plans/${planId}`);
-      toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
+      navigate(`/meal-plans/${reviewPlanId}`);
+      toast.success(
+        finalized.corrected
+          ? "Plano gerado e corrigido pelo motor clínico antes da revisão."
+          : `Plano gerado com ${data.items_count} itens! Revise e aprove.`
+      );
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
     } finally {
@@ -278,9 +295,25 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         await syncPipelineGeneratedPlan(selectedPipeline.id, resolvedPlanId);
       }
 
+      const finalized = await finalizeGeneratedMealPlan({
+        planId: resolvedPlanId,
+        patientId: selectedPipeline.patient_id,
+        userId: user.id,
+        tenantId,
+      });
+
+      if (finalized.finalPlanId !== resolvedPlanId) {
+        resolvedPlanId = finalized.finalPlanId;
+        await syncPipelineGeneratedPlan(selectedPipeline.id, resolvedPlanId);
+      }
+
       const requiresReviewTransition = !["approved", "published_to_patient"].includes(resolvedPlan?.plan_status || "");
       if (requiresReviewTransition) {
         await transitionPlanToReview(resolvedPlanId, user.id);
+      }
+
+      if (finalized.corrected) {
+        toast.success("Plano revisado pelo motor clínico. Abrindo versão corrigida...");
       }
 
       onOpenChange(false);
@@ -577,15 +610,14 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
               const planId = selectedPipeline.generated_plan_id || selectedPipeline.generated_plan_data?.mealPlanId;
               if (planId) {
                 return (
-                  <EditorVersionPicker
-                    planId={planId}
-                    onBeforeNavigate={() => onOpenChange(false)}
-                    label="Analisar e Editar o Plano"
-                    variant="default"
-                    size="default"
+                  <Button
                     className="flex-1 gradient-primary shadow-glow"
-                    icon={<FileText className="w-4 h-4 mr-2" />}
-                  />
+                    disabled={processing}
+                    onClick={() => handleOpenPlanForReview(planId)}
+                  >
+                    {processing ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <FileText className="w-4 h-4 mr-2" />}
+                    {processing ? "Preparando plano..." : "Analisar e Editar o Plano"}
+                  </Button>
                 );
               }
               if (selectedPipeline.generated_plan_data || selectedPipeline.status === 'pending_approval' || selectedPipeline.status === 'pending_plan_generation') {

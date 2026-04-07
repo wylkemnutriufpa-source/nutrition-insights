@@ -74,6 +74,7 @@ const DEFAULT_CRITERIA = {
 
 export default function OnboardingApprovalQueue({ patientId, patientName }: Props) {
   const { user } = useAuth();
+  const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [pipeline, setPipeline] = useState<OnboardingPipeline | null>(null);
   const [loading, setLoading] = useState(true);
@@ -327,10 +328,26 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           } as any)
           .eq("id", pipeline.id);
 
-        await transitionPlanToReview(newPlanId, user.id);
+        const finalized = await finalizeGeneratedMealPlan({
+          planId: newPlanId,
+          patientId: pipeline.patient_id,
+          userId: user.id,
+          tenantId,
+        });
 
-        toast.success(`Plano gerado com ${data.items_count} itens! Revise e aprove.`);
-        navigate(`/meal-plans/${newPlanId}`);
+        const reviewPlanId = finalized.finalPlanId;
+        if (reviewPlanId !== newPlanId) {
+          await syncPipelineGeneratedPlan(pipeline.id, reviewPlanId);
+        }
+
+        await transitionPlanToReview(reviewPlanId, user.id);
+
+        toast.success(
+          finalized.corrected
+            ? "Plano gerado, corrigido pelo motor clínico e pronto para revisão."
+            : `Plano gerado com ${data.items_count} itens! Revise e aprove.`
+        );
+        navigate(`/meal-plans/${reviewPlanId}`);
       }
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
@@ -395,9 +412,25 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         await syncPipelineGeneratedPlan(pipeline.id, resolvedPlanId);
       }
 
+      const finalized = await finalizeGeneratedMealPlan({
+        planId: resolvedPlanId,
+        patientId: pipeline.patient_id,
+        userId: user.id,
+        tenantId,
+      });
+
+      if (finalized.finalPlanId !== resolvedPlanId) {
+        resolvedPlanId = finalized.finalPlanId;
+        await syncPipelineGeneratedPlan(pipeline.id, resolvedPlanId);
+      }
+
       const requiresReviewTransition = !["approved", "published_to_patient"].includes(resolvedPlan?.plan_status || "");
       if (requiresReviewTransition) {
         await transitionPlanToReview(resolvedPlanId, user.id);
+      }
+
+      if (finalized.corrected) {
+        toast.success("Plano revisado pelo motor clínico. Abrindo versão corrigida...");
       }
 
       navigate(`/meal-plans/${resolvedPlanId}`);
