@@ -682,23 +682,39 @@ function selectFoodsForMeal(
   const goalTag = GOAL_TO_DB_TAG[goal] || "";
   const composition = MEAL_COMPOSITION[mealType] || { required: ["proteina"], optional: [] };
 
+  // ── Dinner rule: exclude beans/legumes for lighter meal ──
+  const isDinner = mealType === "dinner";
+  const dinnerExcludeKeywords = ["feijao", "feijão", "lentilha", "feijoada", "feijao verde"];
+
   const selected: DBFood[] = [];
   const usedCategories = new Set<string>();
 
   // For each required category, find matching foods
   for (const requiredCat of composition.required) {
-    const candidates = availableFoods.filter(f => {
+    let candidates = availableFoods.filter(f => {
       if (f.category !== requiredCat) return false;
       // Prefer foods with matching meal tags
       const hasMealTag = mealTags.length === 0 || f.meal_tags_json.length === 0 || f.meal_tags_json.some((t: string) => mealTags.includes(t));
-      return hasMealTag;
+      if (!hasMealTag) return false;
+      // Dinner: exclude beans/legumes
+      if (isDinner) {
+        const normName = normalize(f.food_name);
+        if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
+      }
+      return true;
     });
 
     if (candidates.length === 0) {
-      // Fallback: any food from this category
-      const fallback = availableFoods.filter(f => f.category === requiredCat);
+      // Fallback: any food from this category (still respecting dinner rule)
+      const fallback = availableFoods.filter(f => {
+        if (f.category !== requiredCat) return false;
+        if (isDinner) {
+          const normName = normalize(f.food_name);
+          if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
+        }
+        return true;
+      });
       if (fallback.length > 0) {
-        // Sort by goal relevance
         const sorted = fallback.sort((a, b) => {
           const aGoal = a.goal_tags_json.includes(goalTag) ? 1 : 0;
           const bGoal = b.goal_tags_json.includes(goalTag) ? 1 : 0;
