@@ -133,12 +133,13 @@ export function getProteinDistribution(isGainGoal: boolean) {
 export const MEAL_ORDER = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
 export const RESIDUAL_PRIORITY = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
 
+export const MEAL_LIMITS = {
   maxFruitsPerMeal: 2,
   maxFruitsPerDay: 4,
   maxEggsBreakfast: 2,
   maxEggsPerMeal: 3,
-  minProteinMainMeal: 100, // gramas mínimas de proteína fonte por refeição principal
-  maxProteinMainMeal: 250, // gramas máximas
+  minProteinMainMeal: 100,
+  maxProteinMainMeal: 250,
 };
 
 // ── Estruturas realistas de refeição por objetivo ──
