@@ -139,21 +139,21 @@ interface RealisticMeal {
 }
 
 const BREAKFAST_EMAG: RealisticMeal[] = [
-  { title: "Café da Manhã", description: "• 1 fatia pão integral\n• 1 ovo mexido\n• Café sem açúcar", foods: ["pão integral", "ovo", "café"], kcal: 230, protein: 12, carbs: 22, fat: 10 },
-  { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 ovo\n• 1 fatia queijo minas", foods: ["tapioca", "ovo", "queijo minas"], kcal: 280, protein: 15, carbs: 30, fat: 11 },
-  { title: "Café da Manhã", description: "• 1 fatia cuscuz\n• 1 ovo cozido\n• Café sem açúcar", foods: ["cuscuz", "ovo", "café"], kcal: 240, protein: 11, carbs: 32, fat: 8 },
-  { title: "Café da Manhã", description: "• 1 pão francês\n• 1 fatia queijo muçarela\n• Café sem açúcar", foods: ["pão", "queijo", "café"], kcal: 250, protein: 10, carbs: 28, fat: 10 },
-  { title: "Café da Manhã", description: "• 3 col. sopa aveia\n• 1 banana picada\n• 1 ovo cozido\n• Café sem açúcar", foods: ["aveia", "banana", "ovo", "café"], kcal: 290, protein: 12, carbs: 40, fat: 8 },
-  { title: "Café da Manhã", description: "• 1 fatia pão integral\n• 1 col. requeijão light\n• 1 fatia queijo minas", foods: ["pão integral", "requeijão", "queijo"], kcal: 230, protein: 11, carbs: 24, fat: 9 },
-  { title: "Café da Manhã", description: "• 1 tapioca média\n• 1 ovo cozido\n• 1 col. requeijão\n• Café sem açúcar", foods: ["tapioca", "ovo", "requeijão", "café"], kcal: 280, protein: 11, carbs: 32, fat: 10 },
+  { title: "Pão com Ovo", description: "• 1 fatia pão integral\n• 1 ovo mexido\n• Café sem açúcar", foods: ["pão integral", "ovo", "café"], kcal: 230, protein: 12, carbs: 22, fat: 10 },
+  { title: "Tapioca com Ovo", description: "• 1 tapioca média\n• 1 ovo cozido\n• Café sem açúcar", foods: ["tapioca", "ovo", "café"], kcal: 260, protein: 13, carbs: 30, fat: 9 },
+  { title: "Cuscuz com Ovo", description: "• 1 fatia cuscuz\n• 1 ovo cozido\n• Café sem açúcar", foods: ["cuscuz", "ovo", "café"], kcal: 240, protein: 11, carbs: 32, fat: 8 },
+  { title: "Pão com Queijo", description: "• 1 pão francês\n• 1 fatia queijo muçarela\n• Café sem açúcar", foods: ["pão", "queijo", "café"], kcal: 250, protein: 10, carbs: 28, fat: 10 },
+  { title: "Tapioca com Queijo", description: "• 1 tapioca média\n• 1 fatia queijo coalho\n• Café sem açúcar", foods: ["tapioca", "queijo coalho", "café"], kcal: 250, protein: 12, carbs: 28, fat: 9 },
+  { title: "Pão com Frango Desfiado", description: "• 1 pão integral\n• 50g frango desfiado\n• Café sem açúcar", foods: ["pão integral", "frango", "café"], kcal: 260, protein: 18, carbs: 24, fat: 7 },
+  { title: "Cuscuz com Queijo", description: "• 1 fatia cuscuz\n• 1 fatia queijo coalho\n• Café sem açúcar", foods: ["cuscuz", "queijo coalho", "café"], kcal: 250, protein: 11, carbs: 30, fat: 9 },
 ];
 
 const BREAKFAST_MASSA: RealisticMeal[] = [
-  { title: "Café da Manhã Reforçado", description: "• 2 fatias pão integral\n• 2 ovos mexidos\n• 1 fatia queijo minas\n• Café com leite", foods: ["pão", "ovos", "queijo", "leite"], kcal: 420, protein: 24, carbs: 35, fat: 18 },
-  { title: "Café da Manhã Reforçado", description: "• Omelete 3 ovos com queijo\n• 1 pão francês\n• Café com leite", foods: ["ovos", "queijo", "pão", "leite"], kcal: 450, protein: 26, carbs: 28, fat: 22 },
-  { title: "Café da Manhã Reforçado", description: "• 1 tapioca grande\n• 2 ovos\n• Queijo coalho\n• Café com leite", foods: ["tapioca", "ovos", "queijo coalho", "leite"], kcal: 430, protein: 22, carbs: 38, fat: 16 },
-  { title: "Café da Manhã Reforçado", description: "• 2 fatias cuscuz\n• 2 ovos\n• Requeijão\n• Café com leite", foods: ["cuscuz", "ovos", "requeijão", "leite"], kcal: 440, protein: 20, carbs: 45, fat: 15 },
-  { title: "Café da Manhã Reforçado", description: "• 4 col. sopa aveia\n• 1 banana\n• 1 col. pasta de amendoim\n• Leite", foods: ["aveia", "banana", "amendoim", "leite"], kcal: 430, protein: 16, carbs: 52, fat: 14 },
+  { title: "Pão com Ovo Reforçado", description: "• 2 fatias pão integral\n• 2 ovos mexidos\n• Café com leite", foods: ["pão", "ovos", "leite"], kcal: 400, protein: 22, carbs: 34, fat: 16 },
+  { title: "Tapioca Reforçada", description: "• 1 tapioca grande\n• 2 ovos\n• Queijo coalho\n• Café com leite", foods: ["tapioca", "ovos", "queijo coalho", "leite"], kcal: 430, protein: 22, carbs: 38, fat: 16 },
+  { title: "Cuscuz Reforçado", description: "• 2 fatias cuscuz\n• 2 ovos\n• Requeijão\n• Café com leite", foods: ["cuscuz", "ovos", "requeijão", "leite"], kcal: 440, protein: 20, carbs: 45, fat: 15 },
+  { title: "Pão com Frango Reforçado", description: "• 2 fatias pão integral\n• 80g frango desfiado\n• 1 fatia queijo\n• Café com leite", foods: ["pão", "frango", "queijo", "leite"], kcal: 450, protein: 30, carbs: 32, fat: 16 },
+  { title: "Omelete Reforçado", description: "• Omelete 3 ovos com queijo\n• 1 pão francês\n• Café com leite", foods: ["ovos", "queijo", "pão", "leite"], kcal: 450, protein: 26, carbs: 28, fat: 22 },
 ];
 
 const SNACKS: RealisticMeal[] = [
@@ -162,36 +162,50 @@ const SNACKS: RealisticMeal[] = [
   { title: "Lanche", description: "• 1 fatia mamão", foods: ["mamão"], kcal: 70, protein: 1, carbs: 17, fat: 0 },
   { title: "Lanche", description: "• 1 laranja média", foods: ["laranja"], kcal: 60, protein: 1, carbs: 14, fat: 0 },
   { title: "Lanche", description: "• 1 goiaba média", foods: ["goiaba"], kcal: 65, protein: 1, carbs: 14, fat: 1 },
-  { title: "Lanche", description: "• 1 pote iogurte natural", foods: ["iogurte"], kcal: 100, protein: 6, carbs: 8, fat: 4 },
+  { title: "Lanche", description: "• 1 tangerina média", foods: ["tangerina"], kcal: 55, protein: 1, carbs: 13, fat: 0 },
   { title: "Lanche", description: "• 1 banana\n• 1 col. sopa aveia", foods: ["banana", "aveia"], kcal: 130, protein: 3, carbs: 28, fat: 2 },
-  { title: "Lanche", description: "• 1 tangerina\n• 5 castanhas de caju", foods: ["tangerina", "castanha"], kcal: 120, protein: 3, carbs: 16, fat: 5 },
 ];
 
 const SNACKS_MASSA: RealisticMeal[] = [
   { title: "Lanche Reforçado", description: "• 1 pão integral\n• 1 ovo cozido\n• 1 banana", foods: ["pão", "ovo", "banana"], kcal: 280, protein: 12, carbs: 38, fat: 8 },
-  { title: "Lanche Reforçado", description: "• 1 tapioca\n• 1 fatia queijo\n• Suco natural", foods: ["tapioca", "queijo", "suco"], kcal: 260, protein: 8, carbs: 36, fat: 8 },
   { title: "Lanche Reforçado", description: "• 1 banana\n• 1 col. pasta de amendoim\n• 1 copo leite", foods: ["banana", "amendoim", "leite"], kcal: 300, protein: 12, carbs: 34, fat: 12 },
   { title: "Lanche Reforçado", description: "• 2 fatias pão integral\n• Requeijão\n• 1 fruta", foods: ["pão", "requeijão", "fruta"], kcal: 280, protein: 8, carbs: 40, fat: 8 },
+  { title: "Lanche Reforçado", description: "• 1 tapioca\n• 1 fatia queijo\n• 1 banana", foods: ["tapioca", "queijo", "banana"], kcal: 270, protein: 8, carbs: 38, fat: 8 },
 ];
 
+// ── Main meals: Lunch (with beans + salad) ──
 const MAIN_EMAG: RealisticMeal[] = [
-  { title: "Almoço", description: "• 150g peito de frango grelhado\n• 3 col. sopa arroz\n• Salada verde", foods: ["frango", "arroz", "salada"], kcal: 380, protein: 38, carbs: 35, fat: 8 },
-  { title: "Almoço", description: "• 120g carne moída refogada\n• 2 col. sopa purê de batata\n• Salada", foods: ["carne moída", "purê", "salada"], kcal: 370, protein: 28, carbs: 30, fat: 12 },
-  { title: "Almoço", description: "• 150g tilápia grelhada\n• 100g macaxeira cozida\n• Legumes refogados", foods: ["tilápia", "macaxeira", "legumes"], kcal: 350, protein: 35, carbs: 32, fat: 6 },
-  { title: "Almoço", description: "• 120g bife de alcatra\n• 3 col. sopa arroz\n• 2 col. sopa feijão", foods: ["bife", "arroz", "feijão"], kcal: 420, protein: 32, carbs: 40, fat: 12 },
-  { title: "Almoço", description: "• 120g frango desfiado\n• 100g macarrão\n• Molho de tomate", foods: ["frango", "macarrão", "molho"], kcal: 400, protein: 30, carbs: 42, fat: 10 },
-  { title: "Almoço", description: "• 120g carne de panela\n• 100g batata cozida\n• Cenoura refogada", foods: ["carne", "batata", "cenoura"], kcal: 380, protein: 30, carbs: 28, fat: 14 },
+  { title: "Almoço", description: "• 150g peito de frango grelhado\n• 3 col. sopa arroz\n• 2 col. sopa feijão\n• Salada verde", foods: ["frango", "arroz", "feijão", "salada"], kcal: 400, protein: 38, carbs: 38, fat: 8 },
+  { title: "Almoço", description: "• 120g carne moída refogada\n• 2 col. sopa purê de batata\n• 2 col. sopa feijão\n• Salada", foods: ["carne moída", "purê", "feijão", "salada"], kcal: 390, protein: 28, carbs: 34, fat: 12 },
+  { title: "Almoço", description: "• 150g tilápia grelhada\n• 3 col. sopa arroz\n• 2 col. sopa feijão\n• Salada", foods: ["tilápia", "arroz", "feijão", "salada"], kcal: 370, protein: 35, carbs: 36, fat: 6 },
+  { title: "Almoço", description: "• 120g bife de alcatra\n• 100g macarrão\n• 2 col. sopa feijão\n• Salada", foods: ["bife", "macarrão", "feijão", "salada"], kcal: 430, protein: 32, carbs: 42, fat: 12 },
+  { title: "Almoço", description: "• 120g frango desfiado\n• 100g batata cozida\n• 2 col. sopa feijão\n• Salada", foods: ["frango", "batata", "feijão", "salada"], kcal: 380, protein: 30, carbs: 34, fat: 10 },
   { title: "Almoço", description: "• 120g sobrecoxa assada\n• 3 col. sopa arroz\n• 2 col. sopa feijão\n• Salada", foods: ["sobrecoxa", "arroz", "feijão", "salada"], kcal: 430, protein: 28, carbs: 38, fat: 16 },
-  { title: "Almoço", description: "• 150g filé de porco grelhado\n• 100g batata doce\n• Brócolis", foods: ["porco", "batata doce", "brócolis"], kcal: 370, protein: 34, carbs: 30, fat: 10 },
 ];
 
 const MAIN_MASSA: RealisticMeal[] = [
   { title: "Almoço Reforçado", description: "• 200g peito de frango\n• 5 col. sopa arroz\n• 3 col. sopa feijão\n• Salada", foods: ["frango", "arroz", "feijão", "salada"], kcal: 580, protein: 48, carbs: 55, fat: 12 },
-  { title: "Almoço Reforçado", description: "• 180g alcatra grelhada\n• 150g batata doce\n• Brócolis refogado", foods: ["alcatra", "batata doce", "brócolis"], kcal: 550, protein: 42, carbs: 45, fat: 16 },
-  { title: "Almoço Reforçado", description: "• 150g carne moída\n• 120g macarrão\n• Molho de tomate\n• Salada", foods: ["carne moída", "macarrão", "molho", "salada"], kcal: 560, protein: 38, carbs: 52, fat: 16 },
-  { title: "Almoço Reforçado", description: "• 200g tilápia\n• 5 col. sopa arroz\n• Legumes refogados", foods: ["tilápia", "arroz", "legumes"], kcal: 520, protein: 44, carbs: 50, fat: 10 },
-  { title: "Almoço Reforçado", description: "• 200g frango grelhado\n• 150g macaxeira cozida\n• 2 col. sopa feijão\n• Salada", foods: ["frango", "macaxeira", "feijão", "salada"], kcal: 570, protein: 46, carbs: 48, fat: 14 },
-  { title: "Almoço Reforçado", description: "• 180g sobrecoxa assada\n• 5 col. sopa arroz\n• 3 col. sopa feijão\n• Salada", foods: ["sobrecoxa", "arroz", "feijão", "salada"], kcal: 600, protein: 38, carbs: 56, fat: 20 },
+  { title: "Almoço Reforçado", description: "• 180g alcatra grelhada\n• 150g batata cozida\n• 3 col. sopa feijão\n• Salada", foods: ["alcatra", "batata", "feijão", "salada"], kcal: 560, protein: 42, carbs: 48, fat: 16 },
+  { title: "Almoço Reforçado", description: "• 150g carne moída\n• 120g macarrão\n• 2 col. sopa feijão\n• Salada", foods: ["carne moída", "macarrão", "feijão", "salada"], kcal: 560, protein: 38, carbs: 52, fat: 16 },
+  { title: "Almoço Reforçado", description: "• 200g tilápia\n• 5 col. sopa arroz\n• 3 col. sopa feijão\n• Salada", foods: ["tilápia", "arroz", "feijão", "salada"], kcal: 520, protein: 44, carbs: 54, fat: 10 },
+  { title: "Almoço Reforçado", description: "• 200g frango grelhado\n• 2 col. sopa purê de batata\n• 2 col. sopa feijão\n• Salada", foods: ["frango", "purê", "feijão", "salada"], kcal: 570, protein: 46, carbs: 48, fat: 14 },
+];
+
+// ── Dinner: lighter, NO beans, always with salad ──
+const DINNER_EMAG: RealisticMeal[] = [
+  { title: "Jantar", description: "• 140g peito de frango grelhado\n• 3 col. sopa arroz\n• Salada verde", foods: ["frango", "arroz", "salada"], kcal: 340, protein: 35, carbs: 30, fat: 6 },
+  { title: "Jantar", description: "• 120g tilápia grelhada\n• 100g batata cozida\n• Salada", foods: ["tilápia", "batata", "salada"], kcal: 310, protein: 32, carbs: 28, fat: 5 },
+  { title: "Jantar", description: "• 120g carne moída\n• 100g purê de batata\n• Salada", foods: ["carne moída", "purê", "salada"], kcal: 340, protein: 26, carbs: 28, fat: 12 },
+  { title: "Jantar", description: "• 120g frango desfiado\n• 100g macarrão\n• Salada", foods: ["frango", "macarrão", "salada"], kcal: 350, protein: 28, carbs: 36, fat: 8 },
+  { title: "Jantar", description: "• 120g bife grelhado\n• 3 col. sopa arroz\n• Salada verde", foods: ["bife", "arroz", "salada"], kcal: 360, protein: 30, carbs: 32, fat: 10 },
+  { title: "Jantar", description: "• 140g tilápia assada\n• 100g batata cozida\n• Brócolis + Salada", foods: ["tilápia", "batata", "brócolis", "salada"], kcal: 330, protein: 34, carbs: 30, fat: 5 },
+];
+
+const DINNER_MASSA: RealisticMeal[] = [
+  { title: "Jantar Reforçado", description: "• 170g peito de frango\n• 4 col. sopa arroz\n• Salada verde", foods: ["frango", "arroz", "salada"], kcal: 460, protein: 42, carbs: 42, fat: 8 },
+  { title: "Jantar Reforçado", description: "• 160g alcatra grelhada\n• 120g batata cozida\n• Salada", foods: ["alcatra", "batata", "salada"], kcal: 450, protein: 38, carbs: 36, fat: 14 },
+  { title: "Jantar Reforçado", description: "• 150g tilápia\n• 120g macarrão\n• Salada", foods: ["tilápia", "macarrão", "salada"], kcal: 430, protein: 36, carbs: 42, fat: 8 },
+  { title: "Jantar Reforçado", description: "• 160g frango grelhado\n• 100g purê de batata\n• Brócolis + Salada", foods: ["frango", "purê", "brócolis", "salada"], kcal: 440, protein: 38, carbs: 34, fat: 12 },
 ];
 
 const CEIA: RealisticMeal[] = [
