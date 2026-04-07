@@ -107,7 +107,7 @@ ${(routines || []).map(r => `
   FitJourney • Gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
 </div>
 
-<script class="no-print">window.onload = () => window.print();</script>
+
 </body></html>`;
 
       const blob = new Blob([html], { type: "text/html" });
