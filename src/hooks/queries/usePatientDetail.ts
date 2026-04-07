@@ -167,9 +167,11 @@ export function usePatientDetail(patientId: string | undefined) {
       });
 
       const prestigePlans = (prestigePlansRes.data || []).map(mapPlan);
-      const currentPrestigePlan = patientPrestigeRes.data?.prestige_plans
-        ? mapPlan(patientPrestigeRes.data.prestige_plans)
+      const patientPrestigeData = patientPrestigeRes.data as any;
+      const matchedPlan = patientPrestigeData?.plan_id
+        ? prestigePlans.find((p: any) => p.id === patientPrestigeData.plan_id)
         : null;
+      const currentPrestigePlan = matchedPlan || null;
 
       let patientEmail = "";
       if (isAdmin) {
