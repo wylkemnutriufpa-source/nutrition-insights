@@ -434,7 +434,7 @@ export default function PersonalWorkouts() {
           </TabsContent>
 
           <TabsContent value="plans" className="mt-4">
-            <PlansTab plans={plans} loading={loading} students={students} onToggleStatus={togglePlanStatus} onExpandPlan={loadPlanDetails} expandedPlan={expandedPlan} planDetails={planDetails} />
+            <PlansTab plans={plans} loading={loading} students={students} onToggleStatus={togglePlanStatus} onExpandPlan={loadPlanDetails} expandedPlan={expandedPlan} planDetails={planDetails} onClonePlan={setClonePlan} />
           </TabsContent>
 
           <TabsContent value="calendar" className="mt-4">
