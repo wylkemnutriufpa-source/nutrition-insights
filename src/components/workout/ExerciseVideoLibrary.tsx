@@ -37,9 +37,10 @@ interface ExerciseVideo {
 interface Props {
   draggable?: boolean;
   onDragStart?: (video: ExerciseVideo) => void;
+  onSelect?: (video: ExerciseVideo) => void;
 }
 
-export default function ExerciseVideoLibrary({ draggable = false, onDragStart }: Props) {
+export default function ExerciseVideoLibrary({ draggable = false, onDragStart, onSelect }: Props) {
   const { user } = useAuth();
   const [videos, setVideos] = useState<ExerciseVideo[]>([]);
   const [loading, setLoading] = useState(true);
