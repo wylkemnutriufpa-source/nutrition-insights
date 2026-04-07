@@ -9,6 +9,18 @@ import {
   SUBSTITUTION_GROUPS,
   isBlockedFood as canonicalIsBlockedFood,
 } from "../_shared/food-rules.ts";
+import {
+  scaleDescriptionQuantities,
+  finalizeMealDescription as canonicalFinalizeMealDescription,
+  isMainMealType,
+  isProteinLine,
+  hasBeverage,
+  getDefaultBeverageLine,
+  standardProteinPortion,
+  roundScaledQuantity,
+  getProteinDistribution,
+  buildFoodDescriptionFromItems,
+} from "../_shared/meal-description.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -434,96 +446,10 @@ function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
   }
 }
 
-const BEVERAGE_KEYWORDS = ["cafe", "chá", "cha", "leite", "suco", "vitamina"];
-const MAIN_PROTEIN_KEYWORDS = [
-  "frango", "carne", "bife", "alcatra", "patinho", "tilapia", "tilápia", "peixe", "porco", "lombo", "sobrecoxa", "sardinha",
-];
-
-function roundScaledQuantity(value: number, unit: string): number {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  const normalizedUnit = normalize(unit);
-
-  if (normalizedUnit === "g" || normalizedUnit === "ml") {
-    return value >= 20 ? Math.max(5, Math.round(value / 5) * 5) : Math.max(1, Math.round(value));
-  }
-
-  return value >= 10 ? Math.max(1, Math.round(value)) : Math.max(0.5, Math.round(value * 2) / 2);
-}
-
-function scaleDescriptionQuantities(description: string | null | undefined, factor: number): string | null | undefined {
-  if (!description || !Number.isFinite(factor) || factor <= 0 || Math.abs(factor - 1) < 0.08) return description;
-
-  const scaleToken = (rawValue: string, unit: string, spacer = "") => {
-    const parsed = Number(rawValue.replace(",", "."));
-    if (!Number.isFinite(parsed) || parsed <= 0) return `${rawValue}${spacer}${unit}`;
-    const scaled = roundScaledQuantity(parsed * factor, unit);
-    const formatted = Number.isInteger(scaled)
-      ? String(Math.trunc(scaled))
-      : scaled.toFixed(1).replace(".0", "").replace(".", ",");
-    return `${formatted}${spacer}${unit}`;
-  };
-
-  return description
-    .replace(/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/gi, (_, value: string, unit: string) => scaleToken(value, unit))
-    .replace(/(\d+(?:[.,]\d+)?)\s*(col\.?\s*(?:sopa|cha|chá))\b/gi, (_, value: string, unit: string) => scaleToken(value, unit, " "));
-}
-
-function isMainMealType(mealType: string): boolean {
-  return mealType === "lunch" || mealType === "dinner";
-}
-
-function hasBeverage(description: string): boolean {
-  const normalized = normalize(description);
-  return BEVERAGE_KEYWORDS.some(keyword => normalized.includes(normalize(keyword)));
-}
-
-function getDefaultBeverageLine(mealType: string): string | null {
-  if (mealType === "breakfast") return "• Café com leite";
-  if (mealType === "afternoon_snack") return "• Chá sem açúcar";
-  return null;
-}
-
-function standardMainProteinPortion(mealType: string, goal: string): number {
-  const loss = isLossGoal(goal);
-  if (mealType === "lunch") return loss ? 150 : 180;
-  if (mealType === "dinner") return loss ? 140 : 170;
-  return loss ? 150 : 180;
-}
-
-function isProteinLine(line: string): boolean {
-  const normalized = normalize(line);
-  return MAIN_PROTEIN_KEYWORDS.some(keyword => normalized.includes(normalize(keyword)));
-}
-
-function normalizeMainMealProteinLine(line: string, mealType: string, goal: string): string {
-  if (!isMainMealType(mealType) || !isProteinLine(line)) return line;
-  const targetGrams = standardMainProteinPortion(mealType, goal);
-  if (!/(\d+(?:[.,]\d+)?)\s*g\b/i.test(line)) return line;
-  return line.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${targetGrams}g`);
-}
-
+// Description functions imported from _shared/meal-description.ts (canonical source)
+// Wrapper to adapt isGainGoal boolean to goal string for backward compatibility
 function finalizeMealDescription(description: string, mealType: string, goal: string): string {
-  const sections = description.split(/\n\n🔄 Substituições:\n/);
-  const mainLines = sections[0]
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  let normalizedProteinApplied = false;
-  const normalizedLines = mainLines.map((line) => {
-    if (!normalizedProteinApplied && isMainMealType(mealType) && isProteinLine(line)) {
-      normalizedProteinApplied = true;
-      return normalizeMainMealProteinLine(line, mealType, goal);
-    }
-    return line;
-  });
-
-  const beverageLine = getDefaultBeverageLine(mealType);
-  if (beverageLine && !hasBeverage(normalizedLines.join("\n"))) {
-    normalizedLines.push(beverageLine);
-  }
-
-  return normalizedLines.join("\n") + (sections[1] ? `\n\n🔄 Substituições:\n${sections[1]}` : "");
+  return canonicalFinalizeMealDescription(description, mealType, !isLossGoal(goal));
 }
 
 function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: number, goal: string) {
