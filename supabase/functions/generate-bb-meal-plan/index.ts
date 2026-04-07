@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { MEAL_KCAL_SPLIT as CANONICAL_MEAL_KCAL_SPLIT } from "../_shared/food-rules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -63,14 +64,8 @@ const BB_PHASE_CONFIG: Record<number, {
   },
 };
 
-const MEAL_KCAL_SPLIT: Record<string, number> = {
-  breakfast: 0.20,
-  morning_snack: 0.10,
-  lunch: 0.30,
-  afternoon_snack: 0.10,
-  dinner: 0.22,
-  evening_snack: 0.08,
-};
+// MEAL_KCAL_SPLIT imported from _shared/food-rules.ts (canonical source)
+const MEAL_KCAL_SPLIT = CANONICAL_MEAL_KCAL_SPLIT;
 
 const ACTIVITY_MULTIPLIERS: Record<string, number> = {
   sedentary: 1.2,

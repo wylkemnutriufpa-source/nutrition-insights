@@ -2,6 +2,13 @@ import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireUser } from "../_shared/auth-guard.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import {
+  BLOCKED_FOODS as CANONICAL_BLOCKED_FOODS,
+  MEAL_KCAL_SPLIT as CANONICAL_MEAL_KCAL_SPLIT,
+  REPLACEMENTS,
+  SUBSTITUTION_GROUPS,
+  isBlockedFood as canonicalIsBlockedFood,
+} from "../_shared/food-rules.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -13,14 +20,8 @@ const corsHeaders = {
 const ENGINE_VERSION = "4.0.0";
 const PROTOCOL_VERSION = "fitjourney_personalizado_v4";
 
-const MEAL_KCAL_SPLIT: Record<string, number> = {
-  breakfast: 0.20,
-  morning_snack: 0.10,
-  lunch: 0.30,
-  afternoon_snack: 0.10,
-  dinner: 0.22,
-  evening_snack: 0.08,
-};
+// MEAL_KCAL_SPLIT imported from _shared/food-rules.ts (canonical source)
+const MEAL_KCAL_SPLIT = CANONICAL_MEAL_KCAL_SPLIT;
 
 const ACTIVITY_MULTIPLIERS: Record<string, number> = {
   sedentary: 1.2,
@@ -106,18 +107,8 @@ const MEAL_COMPOSITION: Record<string, { required: string[]; optional: string[] 
   },
 };
 
-const BLOCKED_FOODS = [
-  "salmão", "salmon", "atum fresco", "kefir", "cottage", "ricota importada",
-  "quinoa", "quinua", "amaranto", "castanha-do-pará", "castanha do pará",
-  "macadâmia", "pistache", "framboesa", "mirtilo", "blueberry", "cranberry",
-  "tofu", "tempeh", "edamame", "granola premium", "mix de nuts", "trail mix",
-  "azeite trufado", "vinagre balsâmico", "manteiga de amêndoa",
-  "wrap integral", "pão artesanal", "leite de amêndoa", "leite de coco",
-  "leite de aveia", "abacate toast", "overnight oats", "cream cheese",
-  "philadelphia", "iogurte grego importado", "coalhada", "kombucha",
-  "hemp seed", "tahini", "hummus", "burrata", "brie", "camembert", "gorgonzola",
-  "whey protein", "caseína",
-];
+// BLOCKED_FOODS imported from _shared/food-rules.ts (canonical source)
+const BLOCKED_FOODS = CANONICAL_BLOCKED_FOODS;
 
 // ═══════════════════════════════════════════════════════════════
 // FALLBACK PRESETS (used when DB query fails or returns too few)
@@ -421,6 +412,7 @@ async function resolveVisualForItems(client: any, planId: string, _items: any[])
 }
 
 function isBlockedFood(name: string): boolean {
+  // Uses local normalize (strips non-alphanumeric) for consistency with this engine's text processing
   const n = normalize(name);
   return BLOCKED_FOODS.some(blocked => n.includes(normalize(blocked)));
 }

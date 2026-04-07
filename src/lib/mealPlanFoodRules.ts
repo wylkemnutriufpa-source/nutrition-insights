@@ -1,8 +1,11 @@
 /**
- * Regras de Alimentos Realistas — FitJourney v3.0
+ * Regras de Alimentos Realistas — FitJourney v3.1 (Client Mirror)
  * 
- * Garante que planos alimentares sejam simples, acessíveis e baseados em
- * comida brasileira popular. Aplicado em TODOS os geradores.
+ * ⚠️  CANONICAL SOURCE: supabase/functions/_shared/food-rules.ts
+ * 
+ * This file mirrors the server-side canonical rules for client-side usage
+ * (autofix, simplicity engine, personalization). Any changes to food rules
+ * MUST be made in _shared/food-rules.ts first, then synced here.
  * 
  * Princípios:
  * 1. Priorizar comida brasileira comum e acessível
@@ -12,19 +15,28 @@
  * 5. Substituições apenas dentro da mesma categoria
  */
 
-// ── Alimentos bloqueados (caros, importados, pouco acessíveis ou fora do banco validado) ──
+// ── Alimentos bloqueados (synced from _shared/food-rules.ts canonical source) ──
 export const BLOCKED_FOODS = [
+  // Peixes caros / importados
   "salmão", "salmon", "atum fresco",
+  // Laticínios importados / caros
   "kefir", "cottage", "queijo cottage", "ricota", "ricota importada",
   "queijo minas", "peito de peru", "peru defumado", "blanquet", "blanquet de peru",
+  // Grãos importados
   "quinoa", "quinua", "amaranto",
+  // Oleaginosas caras
   "castanha-do-pará", "castanha do pará", "macadâmia", "pistache",
+  // Frutas importadas
   "framboesa", "mirtilo", "blueberry", "cranberry", "açaí premium",
+  // Proteínas não-tradicionais
   "tofu", "tempeh", "edamame",
+  // Preparações complexas / importadas
   "granola premium", "mix de nuts", "trail mix",
   "azeite trufado", "vinagre balsâmico",
   "pasta de amendoim importada", "manteiga de amêndoa",
-  "whey protein", "caseína", "creatina",
+  // Suplementos
+  "whey protein", "whey", "caseína", "creatina",
+  // Preparações fora do padrão brasileiro popular
   "wrap integral", "pão artesanal",
   "leite de amêndoa", "leite de coco", "leite de aveia",
   "abacate toast", "overnight oats",
@@ -32,7 +44,8 @@ export const BLOCKED_FOODS = [
   "iogurte grego importado",
   "coalhada", "kombucha",
   "semente de chia importada", "hemp seed",
-  "tahini", "hummus",
+  "tahini", "tahine", "hummus",
+  // Queijos importados
   "burrata", "brie", "camembert", "gorgonzola",
 ];
 
@@ -249,16 +262,16 @@ export const SNACK_OPTIONS = [
   { name: "Banana com aveia", foods: ["1 banana", "1 col. sopa aveia"], kcal: 130, protein: 3, carbs: 28, fat: 2 },
 ];
 
-// ── Substituições por categoria ──
+// ── Substituições por categoria (synced from _shared/food-rules.ts) ──
 export const SUBSTITUTION_GROUPS = {
-  protein_main: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha"],
-  carb_main: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame"],
-  carb_breakfast: ["pão integral", "tapioca", "cuscuz", "pão francês"],
+  protein_main: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha", "alcatra", "patinho", "acém"],
+  carb_main: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame", "cará"],
+  carb_breakfast: ["pão integral", "tapioca", "cuscuz", "pão francês", "pão de forma"],
   protein_breakfast: ["ovo mexido", "ovo cozido", "queijo coalho", "queijo muçarela"],
-  fruit: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina"],
+  fruit: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina", "melancia", "abacaxi", "manga"],
   dairy: ["iogurte natural", "leite", "queijo coalho"],
-  legume: ["feijão", "lentilha", "feijão verde"],
-  vegetable: ["alface", "tomate", "brócolis", "cenoura", "couve"],
+  legume: ["feijão", "feijão carioca", "feijão preto", "lentilha", "feijão verde"],
+  vegetable: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"],
 };
 
 // ── Validação de alimentos ──
