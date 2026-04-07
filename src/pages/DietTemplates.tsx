@@ -398,7 +398,7 @@ export default function DietTemplates() {
       const pipelineInput: PipelineInput = {
         patientId,
         nutritionistId: user.id,
-        tenantId: resolvedTenantId || "",
+        tenantId: "",
         planTitle: template.name + (patientName ? ` - ${patientName}` : ""),
         planDescription: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
         startDate: new Date().toISOString().split("T")[0],
@@ -427,7 +427,7 @@ export default function DietTemplates() {
         console.warn("[DietTemplates] activateMealPlan fallback:", activateResult.error);
       }
 
-      toast.success(`Modelo aplicado com ${templateItems.length} refeições para 7 dias! 🎉`);
+      toast.success(`Plano alimentar gerado com ${result.auditLog.items_total} refeições! 🎉`);
       setPreviewOpen(false);
       navigate(`/meal-plans/${targetPlanId}`);
     } catch (e: any) {
