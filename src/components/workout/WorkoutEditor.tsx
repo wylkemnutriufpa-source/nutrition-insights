@@ -559,8 +559,13 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
 
                           {/* Actions */}
                           <div className="col-span-3 flex gap-0.5 justify-end">
+                            <Button variant="ghost" size="icon" className="h-7 w-7" title="Vincular vídeo"
+                              onClick={() => { setVideoTarget({ rIdx, eIdx }); setVideoLibOpen(true); }}>
+                              <Film className={`w-3 h-3 ${ex.video_url ? "text-primary" : "text-muted-foreground"}`} />
+                            </Button>
                             {ex.video_url && (
-                              <Button variant="ghost" size="icon" className="h-7 w-7" title="Vídeo">
+                              <Button variant="ghost" size="icon" className="h-7 w-7" title="Vídeo vinculado"
+                                onClick={() => window.open(ex.video_url, "_blank")}>
                                 <Play className="w-3 h-3 text-primary" />
                               </Button>
                             )}
