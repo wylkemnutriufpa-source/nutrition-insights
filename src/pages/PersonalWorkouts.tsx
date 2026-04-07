@@ -3,19 +3,21 @@ import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/lib/tenantContext";
-import { withTenantFilter } from "@/lib/tenantQueryHelpers";
+import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import {
-  Dumbbell, Plus, Search, ChevronDown, Pause, Play,
+  Dumbbell, Plus, Search, ChevronDown, Pause, Play, Copy,
   BookOpen, Layers, ClipboardList, Sparkles,
   TrendingUp, Heart, Ruler, Trophy, ArrowRightLeft, BarChart3, Film,
-  CalendarDays, MessageCircle, FileText, Zap, Timer, Command, ArrowLeft
+  CalendarDays, MessageCircle, FileText, Zap, Timer, Command, ArrowLeft, Users
 } from "lucide-react";
 import WorkoutEditor from "@/components/workout/WorkoutEditor";
 import ExerciseLibrary from "@/components/workout/ExerciseLibrary";
