@@ -245,7 +245,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                         <span className={`text-xs font-medium truncate flex-1 ${
                           isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
                         }`}>
-                          {t(item.label_key || label, label)}
+                          {String(t(item.label_key || label, label))}
                         </span>
                         <NewFeatureBadge featureKey={item.route || ""} variant="dot" />
                         {item.is_pinned && (
@@ -403,7 +403,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
                         <span className={`text-xs font-medium truncate ${
                           isPremium ? "bg-gradient-to-r from-amber-400 to-yellow-300 bg-clip-text text-transparent font-bold" : ""
                         }`}>
-                          {t(menuItem.label_key, menuItem.label)}
+                          {String(t(menuItem.label_key, menuItem.label))}
                         </span>
                         {active && (
                           <ChevronRight className={`w-3 h-3 ml-auto ${isPremium ? "text-amber-500" : "text-primary"}`} />
