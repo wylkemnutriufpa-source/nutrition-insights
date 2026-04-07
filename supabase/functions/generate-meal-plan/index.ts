@@ -985,10 +985,7 @@ function reconcileDailyMacros(
 function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number; carbs: number; fat: number }, dailyKcal: number): any[] {
   // ── Pre-check: detect per-item calorie inflation (e.g. daily total on each item) ──
   const MAX_SINGLE_ITEM_KCAL = 1200;
-  const mealShares: Record<string, number> = {
-    breakfast: 0.20, morning_snack: 0.10, lunch: 0.30,
-    afternoon_snack: 0.10, dinner: 0.25, evening_snack: 0.05,
-  };
+  const mealShares = MEAL_KCAL_SPLIT;
   for (const item of items) {
     if ((item.calories_target || 0) > MAX_SINGLE_ITEM_KCAL) {
       console.warn(`[enforceCDC] Inflated calories_target=${item.calories_target} on "${item.title}". Fixing.`);
