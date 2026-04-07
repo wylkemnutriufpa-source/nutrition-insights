@@ -269,16 +269,23 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart }:
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
               <h4 className="text-sm font-semibold truncate">{video.title}</h4>
-              <Badge variant="outline" className="text-[10px] mt-1">{video.muscle_group}</Badge>
+              <div className="flex items-center gap-1 mt-1">
+                <Badge variant="outline" className="text-[10px]">{video.muscle_group}</Badge>
+                {video._source === "system" && (
+                  <Badge className="text-[9px] bg-primary/10 text-primary border-primary/20">Sistema</Badge>
+                )}
+              </div>
             </div>
-            <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingVideo(video)}>
-                <Edit2 className="w-3 h-3" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(video)}>
-                <Trash2 className="w-3 h-3 text-destructive" />
-              </Button>
-            </div>
+            {video._source !== "system" && (
+              <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingVideo(video)}>
+                  <Edit2 className="w-3 h-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleDelete(video)}>
+                  <Trash2 className="w-3 h-3 text-destructive" />
+                </Button>
+              </div>
+            )}
           </div>
 
           {/* Tags */}
