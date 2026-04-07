@@ -289,6 +289,13 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart, o
             )}
           </div>
 
+          {/* Select button when in picker mode */}
+          {onSelect && (
+            <Button size="sm" className="w-full mt-2 gap-1" onClick={() => onSelect(video)}>
+              <Check className="w-3 h-3" /> Selecionar
+            </Button>
+          )}
+
           {/* Tags */}
           {video.tags && video.tags.length > 0 && (
             <div className="flex flex-wrap gap-1 mt-2">
