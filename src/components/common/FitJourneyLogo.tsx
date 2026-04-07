@@ -151,15 +151,18 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          className={`font-display font-bold ${s.text} tracking-tight select-none ml-2`}
+          className={`font-display font-extrabold ${s.text} tracking-tight select-none ml-2`}
+          style={{ fontStyle: "italic" }}
         >
           <span
             style={{
               background:
-                "linear-gradient(180deg, #C9A030 0%, #F5D55A 30%, #FFFBE6 52%, #F5D55A 72%, #B8920A 100%)",
+                "linear-gradient(180deg, #D4A84B 0%, #F5D55A 20%, #FFFBE6 45%, #F5D55A 65%, #B8920A 85%, #8B6914 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
-              filter: "drop-shadow(0 1px 2px rgba(180,140,20,0.3))",
+              filter: "drop-shadow(1px 2px 1px rgba(100,70,0,0.5))",
+              textShadow: "none",
+              letterSpacing: "-0.02em",
             }}
           >
             Fit
@@ -167,9 +170,12 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
           <span
             style={{
               background:
-                "linear-gradient(180deg, hsl(152 58% 35%) 0%, hsl(152 58% 50%) 30%, hsl(170 60% 60%) 60%, hsl(152 58% 38%) 100%)",
+                "linear-gradient(180deg, #8A8A8A 0%, #C0C0C0 18%, #E8E8E8 40%, #F5F5F5 50%, #C0C0C0 65%, #6B6B6B 85%, #3A3A3A 100%)",
               WebkitBackgroundClip: "text",
               WebkitTextFillColor: "transparent",
+              filter: "drop-shadow(1px 2px 1px rgba(0,0,0,0.45))",
+              textShadow: "none",
+              letterSpacing: "-0.02em",
             }}
           >
             Journey
