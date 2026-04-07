@@ -147,93 +147,18 @@ function isMainMeal(mealType: string): boolean {
   return isMealType(mealType, "lunch", "dinner", "almoco", "jantar");
 }
 
-function roundScaledQuantity(value: number, unit: string): number {
-  if (!Number.isFinite(value) || value <= 0) return 0;
-  const normalizedUnit = normalize(unit);
-
-  if (normalizedUnit === "g" || normalizedUnit === "ml") {
-    return value >= 20 ? Math.max(5, Math.round(value / 5) * 5) : Math.max(1, Math.round(value));
-  }
-
-  return value >= 10 ? Math.max(1, Math.round(value)) : Math.max(0.5, Math.round(value * 2) / 2);
-}
-
-function scaleDescriptionQuantities(description: string | null | undefined, factor: number): string | null | undefined {
-  if (!description || !Number.isFinite(factor) || factor <= 0 || Math.abs(factor - 1) < 0.08) return description;
-
-  const scaleToken = (rawValue: string, unit: string, spacer = "") => {
-    const parsed = Number(rawValue.replace(",", "."));
-    if (!Number.isFinite(parsed) || parsed <= 0) return `${rawValue}${spacer}${unit}`;
-    const scaled = roundScaledQuantity(parsed * factor, unit);
-    const formatted = Number.isInteger(scaled) ? String(Math.trunc(scaled)) : scaled.toFixed(1).replace(".0", "").replace(".", ",");
-    return `${formatted}${spacer}${unit}`;
-  };
-
-  return description
-    .replace(/(\d+(?:[.,]\d+)?)\s*(g|ml)\b/gi, (_, value: string, unit: string) => scaleToken(value, unit))
-    .replace(/(\d+(?:[.,]\d+)?)\s*(col\.?\s*(?:sopa|cha|chá))\b/gi, (_, value: string, unit: string) => scaleToken(value, unit, " "));
-}
-
-const BEVERAGE_KEYWORDS = ["cafe", "chá", "cha", "leite", "suco", "vitamina"];
-const MAIN_PROTEIN_KEYWORDS = ["frango", "carne", "bife", "alcatra", "patinho", "tilapia", "tilápia", "peixe", "porco", "lombo", "sobrecoxa", "sardinha"];
-
-function hasBeverage(description: string): boolean {
-  const text = normalize(description);
-  return BEVERAGE_KEYWORDS.some((keyword) => text.includes(normalize(keyword)));
-}
-
-function defaultBeverageLine(mealType: string): string | null {
-  if (mealType === "breakfast") return "• Café com leite";
-  if (mealType === "afternoon_snack") return "• Chá sem açúcar";
-  return null;
-}
-
-function standardProteinPortion(mealType: string, isGainGoal: boolean): number {
-  if (mealType === "lunch") return isGainGoal ? 180 : 150;
-  if (mealType === "dinner") return isGainGoal ? 170 : 140;
-  return isGainGoal ? 180 : 150;
-}
-
-function isProteinLine(line: string): boolean {
-  const text = normalize(line);
-  return MAIN_PROTEIN_KEYWORDS.some((keyword) => text.includes(normalize(keyword)));
-}
+// All description functions now imported from mealDescriptionEngine.ts (canonical source)
+// syncMealDescription replaced by finalizeMealDescription from canonical engine
 
 function syncMealDescription(description: string | null | undefined, mealType: string, isGainGoal: boolean): string | null | undefined {
   if (!description) return description;
-
-  const [mainSection, substitutionsSection] = description.split(/\n\n🔄 Substituições:\n/);
-  const lines = (mainSection || "")
-    .split("\n")
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  let proteinNormalized = false;
-  const normalizedLines = lines.map((line) => {
-    if (!proteinNormalized && isMainMeal(mealType) && isProteinLine(line) && /(\d+(?:[.,]\d+)?)\s*g\b/i.test(line)) {
-      proteinNormalized = true;
-      return line.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${standardProteinPortion(mealType, isGainGoal)}g`);
-    }
-    return line;
-  });
-
-  const beverage = defaultBeverageLine(mealType);
-  if (beverage && !hasBeverage(normalizedLines.join("\n"))) {
-    normalizedLines.push(beverage);
-  }
-
-  return normalizedLines.join("\n") + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
+  return finalizeMealDescription(description, mealType, isGainGoal);
 }
 
 function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTarget: number, isGainGoal: boolean): void {
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
-  const proteinShares: Record<string, number> = isGainGoal
-    ? { breakfast: 0.16, morning_snack: 0.10, lunch: 0.26, afternoon_snack: 0.10, dinner: 0.24, evening_snack: 0.14 }
-    : { breakfast: 0.15, morning_snack: 0.08, lunch: 0.27, afternoon_snack: 0.08, dinner: 0.27, evening_snack: 0.15 };
-  const proteinCaps: Record<string, number> = isGainGoal
-    ? { breakfast: 45, morning_snack: 24, lunch: 65, afternoon_snack: 24, dinner: 60, evening_snack: 35 }
-    : { breakfast: 30, morning_snack: 18, lunch: 55, afternoon_snack: 18, dinner: 55, evening_snack: 30 };
+  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(isGainGoal);
   const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
 
