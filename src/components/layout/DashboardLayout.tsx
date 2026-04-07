@@ -100,7 +100,7 @@ function SidebarFooter({
   isProRole?: boolean;
 }) {
   return (
-    <div className="p-3 border-t border-border space-y-2">
+    <div className="flex-shrink-0 p-3 border-t border-border space-y-2">
       {!collapsed && isProRole && (
         <Link
           to="/workspace-editor"
@@ -185,6 +185,7 @@ function DynamicSidebar({
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
+  const isMobile = useIsMobile();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
   const [approvalsOpen, setApprovalsOpen] = useState(false);
   const [intelligenceOpen, setIntelligenceOpen] = useState(false);
@@ -196,7 +197,7 @@ function DynamicSidebar({
   const showPending = effectiveProRole && pendingCount > 0;
 
   return (
-    <>
+    <div className="flex h-full min-h-0 flex-col">
       {/* Workspace context switcher for hybrid users */}
       <WorkspaceContextSwitcher collapsed={collapsed} />
 
@@ -499,7 +500,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      <nav className="flex-1 min-h-0 px-3 overflow-y-auto overscroll-contain">
+      <nav className={`flex-1 min-h-0 px-3 overscroll-contain ${isMobile ? "pb-3" : "overflow-y-auto"}`}>
         <ErrorBoundary section="Layout:SidebarNav" fallback={<SidebarFallback onLinkClick={onLinkClick} />}>
           <AccordionSidebar
             categories={categories}
@@ -523,7 +524,7 @@ function DynamicSidebar({
         onLinkClick={onLinkClick}
         isProRole={effectiveProRole}
       />
-    </>
+    </div>
   );
 }
 
@@ -591,7 +592,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 </Button>
               </SheetTrigger>
               <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col overflow-hidden">
-                <div className="flex flex-col h-full min-h-0 overflow-y-auto overscroll-contain">
+                <div className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain touch-pan-y [webkit-overflow-scrolling:touch]">
                   <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
                     <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
                   </ErrorBoundary>
