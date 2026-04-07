@@ -77,11 +77,11 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
       try {
         const { data: anamnesis } = await supabase
           .from("patient_anamnesis")
-          .select("primary_goal")
+          .select("goal")
           .eq("patient_id", plan.patient_id)
           .limit(1)
-          .maybeSingle();
-        if (anamnesis?.primary_goal) goal = String(anamnesis.primary_goal);
+          .maybeSingle() as { data: any };
+        if (anamnesis?.goal) goal = String(anamnesis.goal);
       } catch { /* ignore */ }
     }
 
