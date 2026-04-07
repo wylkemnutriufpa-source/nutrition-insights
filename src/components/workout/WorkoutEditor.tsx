@@ -631,6 +631,37 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
           <ExerciseLibrary selectable onSelect={selectFromLibrary} />
         </DialogContent>
       </Dialog>
+
+      {/* Video Library Modal */}
+      <Dialog open={videoLibOpen} onOpenChange={setVideoLibOpen}>
+        <DialogContent className="sm:max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Film className="w-5 h-5 text-primary" />
+              Vincular Vídeo ao Exercício
+            </DialogTitle>
+          </DialogHeader>
+          <ExerciseVideoLibrary
+            draggable={false}
+            onSelect={(video: any) => {
+              if (videoTarget) {
+                const { rIdx, eIdx } = videoTarget;
+                const u = [...routines];
+                const ex = u[rIdx].exercises[eIdx];
+                ex.video_url = video.video_url;
+                if (!ex.name.trim()) {
+                  ex.name = video.title;
+                  ex.muscle_group = video.muscle_group;
+                }
+                setRoutines(u);
+                toast.success(`Vídeo "${video.title}" vinculado!`);
+              }
+              setVideoLibOpen(false);
+              setVideoTarget(null);
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
