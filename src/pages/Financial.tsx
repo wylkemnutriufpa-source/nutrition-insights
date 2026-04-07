@@ -198,16 +198,6 @@ export default function Financial() {
     return Object.entries(cats).map(([name, value]) => ({ name, value }));
   }, [transactions]);
 
-  // Payment status breakdown
-  const paymentStatusData = useMemo(() => {
-    const statuses: Record<string, number> = {};
-    payments.forEach((p) => {
-      const label = statusLabels[p.status] || p.status;
-      statuses[label] = (statuses[label] || 0) + 1;
-    });
-    return Object.entries(statuses).map(([name, value]) => ({ name, value }));
-  }, [payments]);
-
   const PIE_COLORS = ["hsl(160, 84%, 39%)", "hsl(45, 93%, 47%)", "hsl(0, 84%, 60%)", "hsl(200, 80%, 50%)", "hsl(280, 70%, 50%)"];
   const statusColors: Record<string, string> = {
     paid: "bg-emerald-500/10 text-emerald-500",
@@ -224,6 +214,16 @@ export default function Financial() {
     failed: "Falhou",
     cancelled: "Cancelado",
   };
+
+  // Payment status breakdown
+  const paymentStatusData = useMemo(() => {
+    const statuses: Record<string, number> = {};
+    payments.forEach((p) => {
+      const label = statusLabels[p.status] || p.status;
+      statuses[label] = (statuses[label] || 0) + 1;
+    });
+    return Object.entries(statuses).map(([name, value]) => ({ name, value }));
+  }, [payments, statusLabels]);
 
   return (
     <DashboardLayout>
