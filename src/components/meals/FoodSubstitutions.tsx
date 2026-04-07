@@ -97,28 +97,43 @@ export default function FoodSubstitutions({ currentFood, onSelect }: FoodSubstit
       <ScrollArea className={showAll ? "max-h-48" : ""}>
         <div className="p-1.5 space-y-0.5">
           {displayed.map((food, i) => {
-            const calDiff = food.calories - currentMatch.calories;
-            const protDiff = food.protein - currentMatch.protein;
+            // Calculate equivalent portion to match original calories
+            const ratio = currentMatch.calories > 0 ? currentMatch.calories / food.calories : 1;
+            const adjustedCal = Math.round(food.calories * ratio);
+            const adjustedProt = +(food.protein * ratio).toFixed(1);
+            const adjustedCarbs = +(food.carbs * ratio).toFixed(1);
+            const adjustedFat = +(food.fat * ratio).toFixed(1);
+            
+            // Parse portion to adjust quantity
+            const portionMatch = food.portion.match(/^([\d,.]+)/);
+            const adjustedPortion = portionMatch
+              ? food.portion.replace(portionMatch[1], String(Math.round(parseFloat(portionMatch[1].replace(",", ".")) * ratio)))
+              : food.portion;
+
+            const calDiff = adjustedCal - currentMatch.calories;
             return (
               <button
                 key={`${food.name}-${i}`}
                 type="button"
                 className="w-full text-left px-2 py-1.5 rounded-md hover:bg-accent/50 transition-colors flex items-center gap-2 group"
-                onClick={() => onSelect(food)}
+                onClick={() => onSelect({ ...food, portion: adjustedPortion, calories: adjustedCal, protein: adjustedProt, carbs: adjustedCarbs, fat: adjustedFat })}
               >
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-medium truncate">{food.name}</p>
-                  <p className="text-[10px] font-semibold text-primary/70">📏 {food.portion}</p>
+                  <p className="text-[10px] font-semibold text-primary/70">📏 {adjustedPortion}</p>
                 </div>
                 <div className="flex items-center gap-1.5 text-[10px] shrink-0">
                   <span className="flex items-center gap-0.5 text-muted-foreground">
-                    <Flame className="w-2.5 h-2.5 text-orange-400" />{food.calories}
+                    <Flame className="w-2.5 h-2.5 text-orange-400" />{adjustedCal}
                   </span>
                   <span className="flex items-center gap-0.5 text-muted-foreground">
-                    <Beef className="w-2.5 h-2.5 text-red-400" />{food.protein}g
+                    <Beef className="w-2.5 h-2.5 text-red-400" />{adjustedProt}g
                   </span>
-                  <span className={`text-[9px] ${calDiff > 20 ? "text-orange-500" : calDiff < -20 ? "text-green-500" : "text-muted-foreground"}`}>
-                    {calDiff > 0 ? `+${calDiff}` : calDiff}cal
+                  <span className="flex items-center gap-0.5 text-muted-foreground">
+                    <Wheat className="w-2.5 h-2.5 text-amber-500" />{adjustedCarbs}g
+                  </span>
+                  <span className={`text-[9px] ${calDiff > 5 ? "text-orange-500" : calDiff < -5 ? "text-green-500" : "text-muted-foreground"}`}>
+                    {calDiff > 0 ? `+${calDiff}` : calDiff === 0 ? "≈" : calDiff}cal
                   </span>
                 </div>
               </button>
