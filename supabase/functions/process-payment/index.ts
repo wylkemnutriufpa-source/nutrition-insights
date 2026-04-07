@@ -100,7 +100,7 @@ serve(async (req) => {
             },
             body: new URLSearchParams({
               "mode": "subscription",
-              "success_url": `${req.headers.get("origin")}/settings?payment=success`,
+              "success_url": `${req.headers.get("origin")}/obrigado`,
               "cancel_url": `${req.headers.get("origin")}/pricing?payment=cancelled`,
               "customer_email": user.email || "",
               "line_items[0][price_data][currency]": "brl",
