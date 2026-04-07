@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket } from "lucide-react";
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
@@ -500,7 +500,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      <nav className={`flex-1 min-h-0 px-3 overscroll-contain ${isMobile ? "pb-3" : "overflow-y-auto"}`}>
+      <nav className="flex-1 min-h-0 px-3 overflow-y-auto overscroll-contain">
         <ErrorBoundary section="Layout:SidebarNav" fallback={<SidebarFallback onLinkClick={onLinkClick} />}>
           <AccordionSidebar
             categories={categories}
@@ -601,8 +601,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                   <Menu className="w-5 h-5" />
                 </Button>
               </SheetTrigger>
-              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col overflow-hidden">
-                <div className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain touch-pan-y [webkit-overflow-scrolling:touch]">
+              <SheetContent side="left" className="p-0 w-[min(280px,85vw)] flex flex-col overflow-hidden" aria-describedby={undefined}>
+                <SheetTitle className="sr-only">Menu</SheetTitle>
+                <div className="flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain touch-pan-y [webkit-overflow-scrolling:touch] pb-6">
                   <ErrorBoundary section="Layout:MobileSidebar" fallback={<SidebarFallback onLinkClick={() => setMobileOpen(false)} />}>
                     <DynamicSidebar {...sidebarProps} collapsed={false} onLinkClick={() => setMobileOpen(false)} />
                   </ErrorBoundary>
