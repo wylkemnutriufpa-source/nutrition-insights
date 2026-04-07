@@ -426,10 +426,12 @@ export default function DietTemplates() {
       // Resolve tenant
       const { data: resolvedTenantId } = await supabase.rpc("get_user_tenant", { _user_id: user.id });
 
-      // ── DELEGATE TO PIPELINE ORCHESTRATOR (single source of truth) ──
+      // ── DELEGATE TO EDGE FUNCTION via wrapper (single source of truth) ──
+      // The generate-meal-plan edge function handles everything:
+      // food selection, macro calculation, visual resolution, substitutions
       let targetPlanId = mealPlanId;
 
-      if (!targetPlanId) {
+      {
         // Pipeline creates the plan
         const pipelineInput: PipelineInput = {
           patientId,
