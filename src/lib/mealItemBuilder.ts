@@ -8,9 +8,11 @@
  *   - observability (warnings for incomplete items)
  * 
  * All flows that create meal_plan_items MUST use this builder.
+ * Description logic delegated to mealDescriptionEngine.ts (canonical source).
  */
 
 import type { TablesInsert } from "@/integrations/supabase/types";
+import { isGenericDescription } from "./mealDescriptionEngine";
 
 export interface MealItemInput {
   meal_plan_id: string;
@@ -96,20 +98,8 @@ export function buildMealItems(inputs: MealItemInput[]): BuildResult {
 }
 
 /**
- * Check if a description is generic/useless for visual matching.
- * E.g. "Meta: 38g prot | 35g carb | 8g gord" or just "120g"
- */
-function isGenericDescription(desc: string): boolean {
-  const trimmed = desc.trim();
-  // Only numbers + units (e.g. "120g", "250ml")
-  if (/^\d+\s*(g|ml|kcal)$/i.test(trimmed)) return true;
-  // Only macro targets
-  if (/^Meta:/i.test(trimmed) && !trimmed.includes("•")) return true;
-  return false;
-}
-
-/**
  * Build a description from food names and their portions.
+ * Delegates to canonical format from mealDescriptionEngine.
  * Used by CalorieTemplates and TemplateQuickInsertPanel.
  */
 export function buildFoodDescription(
