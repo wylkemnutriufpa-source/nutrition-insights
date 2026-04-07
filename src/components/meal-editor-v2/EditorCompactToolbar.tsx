@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye } from "lucide-react";
+import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye, FileDown } from "lucide-react";
 import { WeeklyGrid } from "./WeeklyGrid";
 import { ListView } from "./ListView";
 import { MealLibraryModal } from "./MealLibraryModal";
@@ -11,6 +11,10 @@ import { MealVisualLibraryModal } from "./MealVisualLibraryModal";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
 import DietPreviewPanel from "./DietPreviewPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type ViewMode = "grid" | "list";
 
@@ -26,6 +30,7 @@ const TOOLS = [
   { key: "assisted", label: "Plano Assistido", icon: Sparkles, color: "text-primary" },
   { key: "auto-gen", label: "Gerar Automático", icon: Wand2, color: "text-emerald-500" },
   { key: "preview", label: "Preview da Dieta", icon: Eye, color: "text-violet-500" },
+  { key: "export-pdf", label: "Exportar PDF", icon: FileDown, color: "text-amber-500" },
 ] as const;
 
 export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Props) {
@@ -36,6 +41,74 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
   const [librarySidebarOpen, setLibrarySidebarOpen] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  const handleExportPDF = async () => {
+    const store = useMealPlanEditorV2Store.getState();
+    const { items, plan } = store;
+    if (!items.length) {
+      toast.error("Nenhum item para exportar");
+      return;
+    }
+
+    // Get patient and nutritionist names
+    let patientName = "Paciente";
+    let nutritionistName = "Profissional";
+    let goal = "";
+
+    if (plan?.patient_id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", plan.patient_id)
+        .maybeSingle();
+      if (profile?.full_name) patientName = profile.full_name;
+    }
+
+    if (plan?.nutritionist_id) {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("id", plan.nutritionist_id)
+        .maybeSingle();
+      if (profile?.full_name) nutritionistName = profile.full_name;
+    }
+
+    // Try to get goal from patient anamnesis
+    if (plan?.patient_id) {
+      try {
+        const query = supabase.from("patient_anamnesis").select("primary_goal");
+        const { data: anamnesis } = await query.eq("patient_id", plan.patient_id).limit(1).single();
+        if ((anamnesis as any)?.primary_goal) goal = (anamnesis as any).primary_goal;
+      } catch { /* ignore */ }
+    }
+    }
+
+    generatePremiumMealPlanPDF({
+      planTitle: plan?.title || "Plano Alimentar",
+      patientName,
+      nutritionistName,
+      startDate: plan?.start_date ? new Date(plan.start_date).toLocaleDateString("pt-BR") : new Date().toLocaleDateString("pt-BR"),
+      endDate: plan?.end_date ? new Date(plan.end_date).toLocaleDateString("pt-BR") : undefined,
+      items: items.map(i => ({
+        mealType: i.meal_type || "lunch",
+        title: i.title || "Refeição",
+        description: i.description || undefined,
+        calories_target: i.calories_target || undefined,
+        protein_target: i.protein_target || undefined,
+        carbs_target: i.carbs_target || undefined,
+        fat_target: i.fat_target || undefined,
+        day_of_week: i.day_of_week ?? undefined,
+      })),
+      targetCalories: plan?.total_target_calories || undefined,
+      targetProtein: plan?.total_target_protein || undefined,
+      targetCarbs: plan?.total_target_carbs || undefined,
+      targetFat: plan?.total_target_fat || undefined,
+      goal,
+      notes: plan?.description || undefined,
+    });
+
+    toast.success("PDF gerado! Use Ctrl+P para salvar.");
+  };
+
   const handleToolClick = (key: string) => {
     switch (key) {
       case "visual-lib": setVisualLibOpen(true); break;
@@ -44,6 +117,7 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
       case "assisted": setAssistedOpen(true); break;
       case "auto-gen": setAutoGenOpen(true); break;
       case "preview": setPreviewOpen(true); break;
+      case "export-pdf": handleExportPDF(); break;
     }
   };
 
