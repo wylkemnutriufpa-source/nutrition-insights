@@ -35,8 +35,11 @@ import {
   getDefaultBeverageLine,
   standardProteinPortion,
   roundScaledQuantity,
-  getProteinDistribution,
 } from "./mealDescriptionEngine";
+import {
+  MEAL_KCAL_SPLIT,
+  getProteinDistribution,
+} from "./mealPlanFoodRules";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 

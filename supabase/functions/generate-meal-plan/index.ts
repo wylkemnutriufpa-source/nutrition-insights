@@ -8,6 +8,9 @@ import {
   REPLACEMENTS,
   SUBSTITUTION_GROUPS,
   isBlockedFood as canonicalIsBlockedFood,
+  getProteinDistribution,
+  MEAL_ORDER,
+  RESIDUAL_PRIORITY,
 } from "../_shared/food-rules.ts";
 import {
   scaleDescriptionQuantities,
@@ -18,7 +21,6 @@ import {
   getDefaultBeverageLine,
   standardProteinPortion,
   roundScaledQuantity,
-  getProteinDistribution,
   buildFoodDescriptionFromItems,
 } from "../_shared/meal-description.ts";
 
@@ -456,8 +458,6 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
   const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(!isLossGoal(goal));
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-  const residualPriority = ["lunch", "dinner", "evening_snack", "breakfast", "morning_snack", "afternoon_snack"];
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
