@@ -12,13 +12,13 @@ const BASIC_ROUTES = new Set([
   "/", "/dashboard", "/patients", "/appointments", "/meal-plans",
   "/editor-v2", "/checkin", "/settings", "/notifications", "/chat",
   "/my-diet", "/checklist", "/shopping-list", "/recipes", "/anamnesis",
-  "/body-analysis", "/onboarding", "/invite-patient",
+  "/body-analysis", "/onboarding", "/invite-patient", "/financial",
 ]);
 
 const PRO_ROUTES = new Set([
   "/clinical-risk", "/reports", "/clinical-intelligence",
   "/protocols", "/programs", "/food-database", "/supplements",
-  "/branding", "/financial", "/analyze-meal",
+  "/branding", "/analyze-meal",
   "/body-projection", "/patient-overview",
   "/workspace-editor", "/clinical-workspace",
   "/coach-bodybuilder",
