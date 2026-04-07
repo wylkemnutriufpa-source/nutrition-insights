@@ -41,15 +41,16 @@ export default function Reports() {
 
       if (error) throw error;
 
-      // Open HTML in new tab for printing/PDF
+      // Download directly
       const blob = new Blob([data.html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      const win = window.open(url, "_blank");
-      if (win) {
-        win.onload = () => {
-          setTimeout(() => win.print(), 500);
-        };
-      }
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `relatorio-${(data.patient_name || "paciente").replace(/\s+/g, "-").toLowerCase()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
       toast.success(`Relatório de ${data.patient_name} gerado!`);
     } catch (e: any) {
       toast.error("Erro: " + (e.message || "Tente novamente"));

@@ -107,13 +107,19 @@ ${(routines || []).map(r => `
   FitJourney • Gerado em ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}
 </div>
 
-<script class="no-print">window.onload = () => window.print();</script>
+
 </body></html>`;
 
       const blob = new Blob([html], { type: "text/html" });
       const url = URL.createObjectURL(blob);
-      window.open(url, "_blank");
-      toast.success("PDF gerado! Use Ctrl+P para salvar como PDF.");
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `treino-${plan.title.replace(/\s+/g, "-").toLowerCase()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+      toast.success("Treino baixado com sucesso!");
     } catch (err) {
       toast.error("Erro ao gerar relatório");
     } finally {
