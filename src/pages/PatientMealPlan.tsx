@@ -12,8 +12,9 @@ import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer,
   CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Star,
-  CheckCircle2, MinusCircle, AlertCircle, Circle
+  CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
 } from "lucide-react";
+import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
@@ -90,6 +91,7 @@ export default function PatientMealPlan() {
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const xpTimerRef = useRef<number | null>(null);
+  const [exportingPDF, setExportingPDF] = useState(false);
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -249,6 +251,59 @@ export default function PatientMealPlan() {
     setDate(d.toISOString().split("T")[0]);
   }, [date]);
 
+  const handleExportPDF = useCallback(async () => {
+    if (!user || !plan || allItems.length === 0) return;
+    setExportingPDF(true);
+    try {
+      let nutritionistName = "Profissional";
+      let patientName = "Paciente";
+      let goal = "";
+
+      const { data: myProfile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle();
+      if (myProfile?.full_name) patientName = myProfile.full_name;
+
+      // Get nutritionist name from the plan
+      const { data: planFull } = await supabase.from("meal_plans").select("nutritionist_id, total_target_calories, total_target_protein, total_target_carbs, total_target_fat, description").eq("id", plan.id).maybeSingle();
+      if (planFull?.nutritionist_id) {
+        const { data: nutProfile } = await supabase.from("profiles").select("full_name").eq("user_id", planFull.nutritionist_id).maybeSingle();
+        if (nutProfile?.full_name) nutritionistName = nutProfile.full_name;
+      }
+
+      try {
+        const { data: anamnesisData } = await supabase.from("patient_anamnesis" as any).select("goal").eq("patient_id", user.id).limit(1).maybeSingle();
+        if ((anamnesisData as any)?.goal) goal = String((anamnesisData as any).goal);
+      } catch { /* ignore */ }
+
+      generatePremiumMealPlanPDF({
+        planTitle: plan.title || "Plano Alimentar",
+        patientName,
+        nutritionistName,
+        startDate: new Date(plan.start_date).toLocaleDateString("pt-BR"),
+        items: allItems.map(i => ({
+          mealType: i.meal_type || "lunch",
+          title: i.title || "Refeição",
+          description: i.description || undefined,
+          calories_target: i.calories_target || undefined,
+          protein_target: i.protein_target || undefined,
+          carbs_target: i.carbs_target || undefined,
+          fat_target: i.fat_target || undefined,
+          day_of_week: i.day_of_week ?? undefined,
+        })),
+        targetCalories: planFull?.total_target_calories || undefined,
+        targetProtein: planFull?.total_target_protein || undefined,
+        targetCarbs: planFull?.total_target_carbs || undefined,
+        targetFat: planFull?.total_target_fat || undefined,
+        goal,
+        notes: planFull?.description || undefined,
+      });
+      toast.success("PDF gerado! Use Ctrl+P para salvar.");
+    } catch {
+      toast.error("Erro ao gerar PDF");
+    } finally {
+      setExportingPDF(false);
+    }
+  }, [user, plan, allItems]);
+
   // Apply substitution overlays to displayed items (without mutating plan data)
   const overlayedItems = useMemo(() =>
     items.map(item => {
@@ -327,9 +382,21 @@ export default function PatientMealPlan() {
 
         <div className={`relative ${focusMode ? "z-20" : ""}`}>
           {/* Header */}
-          <div className="text-center">
-            <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
-            <p className="text-muted-foreground text-sm">{plan.title}</p>
+          <div className="flex items-center justify-between">
+            <div className="text-center flex-1">
+              <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
+              <p className="text-muted-foreground text-sm">{plan.title}</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleExportPDF}
+              disabled={exportingPDF}
+              className="gap-1.5 shrink-0"
+            >
+              <FileDown className="w-4 h-4" />
+              <span className="hidden sm:inline">{exportingPDF ? "Gerando..." : "Baixar PDF"}</span>
+            </Button>
           </div>
 
           {/* Journey Timeline */}
