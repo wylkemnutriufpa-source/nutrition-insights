@@ -546,8 +546,14 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
 
                           {/* Rest */}
                           <div className="col-span-1">
-                            <Input type="number" placeholder="60s" value={ex.rest_seconds}
-                              onChange={(e) => updateExercise(rIdx, eIdx, "rest_seconds", parseInt(e.target.value) || 60)}
+                            <Input type="number" placeholder="60" value={ex.rest_seconds === 0 ? "" : ex.rest_seconds}
+                              onChange={(e) => {
+                                const val = e.target.value;
+                                updateExercise(rIdx, eIdx, "rest_seconds", val === "" ? 0 : parseInt(val) || 0);
+                              }}
+                              onBlur={() => {
+                                if (!ex.rest_seconds) updateExercise(rIdx, eIdx, "rest_seconds", 60);
+                              }}
                               className="h-8 text-xs text-center" />
                           </div>
 
