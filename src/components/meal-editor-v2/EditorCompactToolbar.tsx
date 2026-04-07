@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye } from "lucide-react";
+import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye, FileDown } from "lucide-react";
 import { WeeklyGrid } from "./WeeklyGrid";
 import { ListView } from "./ListView";
 import { MealLibraryModal } from "./MealLibraryModal";
@@ -11,6 +11,10 @@ import { MealVisualLibraryModal } from "./MealVisualLibraryModal";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
 import DietPreviewPanel from "./DietPreviewPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type ViewMode = "grid" | "list";
 
@@ -26,6 +30,7 @@ const TOOLS = [
   { key: "assisted", label: "Plano Assistido", icon: Sparkles, color: "text-primary" },
   { key: "auto-gen", label: "Gerar Automático", icon: Wand2, color: "text-emerald-500" },
   { key: "preview", label: "Preview da Dieta", icon: Eye, color: "text-violet-500" },
+  { key: "export-pdf", label: "Exportar PDF", icon: FileDown, color: "text-amber-500" },
 ] as const;
 
 export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Props) {
