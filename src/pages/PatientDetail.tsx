@@ -64,6 +64,7 @@ import FitIntelligenceToggle from "@/components/intelligence/FitIntelligenceTogg
 import PatientLabExams from "@/components/patient/PatientLabExams";
 import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
 import { deactivateMealPlan } from "@/lib/serverTransitions";
+import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 
 export default function PatientDetail() {
@@ -1319,7 +1320,13 @@ export default function PatientDetail() {
                           const patientIdentity = await resolvePatientIdentity(patientId);
                           const pd = await resolveLatestOnboardingPipeline(patientId);
                           if (pd?.generated_plan_id && pd?.plan_generated) {
-                            navigate(`/meal-plans/${pd.generated_plan_id}`);
+                            const finalized = await finalizeGeneratedMealPlan({
+                              planId: pd.generated_plan_id,
+                              patientId: patientIdentity.canonicalId,
+                              userId: user!.id,
+                              tenantId,
+                            });
+                            navigate(`/meal-plans/${finalized.finalPlanId}`);
                             return;
                           }
                           // No onboarding plan — generate one
@@ -1332,8 +1339,18 @@ export default function PatientDetail() {
                             return;
                           }
                           if (genData.mealPlanId) {
-                            toast.success(`Plano gerado com ${genData.items_count || 0} itens!`);
-                            navigate(`/meal-plans/${genData.mealPlanId}`);
+                            const finalized = await finalizeGeneratedMealPlan({
+                              planId: genData.mealPlanId,
+                              patientId: patientIdentity.canonicalId,
+                              userId: user!.id,
+                              tenantId,
+                            });
+                            toast.success(
+                              finalized.corrected
+                                ? "Plano gerado e revisado pelo motor clínico."
+                                : `Plano gerado com ${genData.items_count || 0} itens!`
+                            );
+                            navigate(`/meal-plans/${finalized.finalPlanId}`);
                           }
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao processar onboarding");
