@@ -65,7 +65,7 @@ Deno.serve(async (req) => {
       manga: "manga", maca: "maca", mamao: "mamao", banana: "banana",
     };
     const CARB_IGNORE = new Set(["arroz", "batata", "macarrao", "feijao", "pure", "mandioca", "inhame", "legumes", "salada", "brocolis", "macaxeira"]);
-    const GENERIC_TITLES = new Set(["almoco", "jantar", "cafe da manha", "lanche", "lanche da manha", "lanche da tarde", "ceia"]);
+    const GENERIC_TITLES = new Set(["almoco", "jantar", "cafe da manha", "lanche", "lanche da manha", "lanche da tarde"]);
 
     /**
      * Extract the first protein mentioned in the description.
