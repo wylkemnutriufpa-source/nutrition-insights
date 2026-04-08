@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera,
