@@ -2,7 +2,6 @@ import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditor
 import MealSlotCard from "./MealSlotCard";
 import { Coffee, Apple, Utensils, Cookie, Moon, Sun, Zap, Pencil, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import type { PatientContext, ComposerMode, MacroTarget } from "@/lib/mealComposer";
 
 const MEAL_SLOTS: { key: MealType; label: string; icon: React.ReactNode; calShare: number }[] = [
@@ -28,9 +27,10 @@ interface Props {
   patientContext?: PatientContext | null;
   composerMode?: ComposerMode;
   onRequestGenerate?: () => void;
+  showDropTargets?: boolean;
 }
 
-export default function MealPlanCanvas({ patientContext, composerMode = "quick", onRequestGenerate }: Props) {
+export default function MealPlanCanvas({ patientContext, composerMode = "quick", onRequestGenerate, showDropTargets = false }: Props) {
   const { items, plan } = useMealPlanEditorV2Store();
   const [activeDay, setActiveDay] = useState(1);
   const [manualMode, setManualMode] = useState(false);
@@ -52,7 +52,7 @@ export default function MealPlanCanvas({ patientContext, composerMode = "quick",
     };
   }
 
-  const isEmpty = items.length === 0 && !manualMode;
+  const isEmpty = items.length === 0 && !manualMode && !showDropTargets;
 
   if (isEmpty) {
     return (
@@ -104,6 +104,12 @@ export default function MealPlanCanvas({ patientContext, composerMode = "quick",
 
   return (
     <div className="space-y-3 flex-1 min-w-0">
+      {items.length === 0 && showDropTargets && !manualMode && (
+        <div className="rounded-xl border border-dashed border-primary/30 bg-primary/5 px-4 py-3 text-center">
+          <p className="text-xs font-medium text-primary">Solte o alimento em uma refeição para começar a montagem manual.</p>
+        </div>
+      )}
+
       {/* Day tabs */}
       <div className="flex gap-1 overflow-x-auto pb-1">
         {DAYS.map((d) => {
