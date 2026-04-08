@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
-  Plus, Check, Flame, Beef, Wheat, Droplets,
+  Plus, Check, Flame, Beef, Wheat, Droplets, Search, ArrowLeftRight,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,9 @@ import { MealItemCard } from "./MealItemCard";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
+import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
+import { MealLibraryModal } from "./MealLibraryModal";
+import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
 import { toast } from "sonner";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
@@ -39,36 +42,25 @@ export function DayContent({ day }: Props) {
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
+  const [foodSearchKey, setFoodSearchKey] = useState<string | null>(null);
+  const [libraryMealType, setLibraryMealType] = useState<MealType>("breakfast");
+  const [libraryOpen, setLibraryOpen] = useState(false);
 
   const handleDrop = useCallback((e: React.DragEvent, mealType: MealType) => {
     e.preventDefault();
     setDragOverKey(null);
     if (!planId) return;
 
-    try {
-      const raw = e.dataTransfer.getData("application/json");
-      if (!raw) return;
-      const data = JSON.parse(raw);
+    const draggedItem = parseDraggedVisualLibraryData(e.dataTransfer.getData("application/json"));
+    if (!draggedItem) return;
 
-      if (data.source === "visual_library") {
-        addItem({
-          meal_plan_id: planId,
-          title: data.title || data.name || "Sem título",
-          description: data.portion || null,
-          meal_type: mealType,
-          day_of_week: day,
-          calories_target: data.calories ?? null,
-          protein_target: data.protein ?? null,
-          carbs_target: data.carbs ?? null,
-          fat_target: data.fat ?? null,
-          visual_library_item_id: data.id || null,
-          image_url: data.image_url || null,
-        });
-        toast.success(`${data.title} adicionado!`);
-      }
-    } catch {
-      // invalid drag data, ignore
-    }
+    addItem(buildVisualLibraryMealInsert({
+      planId,
+      day,
+      mealType,
+      item: draggedItem,
+    }));
+    toast.success(`${draggedItem.title || draggedItem.name || "Refeição"} adicionada!`);
   }, [planId, day, addItem]);
 
   const handleDragOver = useCallback((e: React.DragEvent, cellKey: string) => {
@@ -166,37 +158,81 @@ export function DayContent({ day }: Props) {
                 ))}
               </AnimatePresence>
 
-              {quickAddKey === cellKey ? (
-                <div className="flex gap-1">
-                  <Input
-                    autoFocus
-                    value={quickAddText}
-                    onChange={(e) => setQuickAddText(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter") handleQuickAdd(meal.key);
-                      if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
+              <div className="space-y-1.5">
+                {quickAddKey === cellKey && (
+                  <div className="flex gap-1">
+                    <Input
+                      autoFocus
+                      value={quickAddText}
+                      onChange={(e) => setQuickAddText(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") handleQuickAdd(meal.key);
+                        if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
+                      }}
+                      placeholder="Ex: 2 ovos cozidos"
+                      className="h-7 text-[11px]"
+                    />
+                    <Button
+                      size="icon"
+                      className="h-7 w-7 shrink-0"
+                      onClick={() => handleQuickAdd(meal.key)}
+                      disabled={!quickAddText.trim()}
+                    >
+                      <Check className="w-3 h-3" />
+                    </Button>
+                  </div>
+                )}
+
+                <div className="flex flex-wrap gap-1">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQuickAddKey(quickAddKey === cellKey ? null : cellKey);
+                      setQuickAddText("");
+                      setFoodSearchKey(null);
                     }}
-                    placeholder="Ex: 2 ovos cozidos"
-                    className="h-7 text-[11px]"
-                  />
-                  <Button
-                    size="icon"
-                    className="h-7 w-7 shrink-0"
-                    onClick={() => handleQuickAdd(meal.key)}
-                    disabled={!quickAddText.trim()}
+                    className={`flex items-center gap-1 text-[10px] py-1 px-2 rounded border transition-colors ${
+                      quickAddKey === cellKey
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                    }`}
                   >
-                    <Check className="w-3 h-3" />
-                  </Button>
+                    <Plus className="w-3 h-3" /> Manual
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFoodSearchKey(foodSearchKey === cellKey ? null : cellKey);
+                      setQuickAddKey(null);
+                      setQuickAddText("");
+                    }}
+                    className={`flex items-center gap-1 text-[10px] py-1 px-2 rounded border transition-colors ${
+                      foodSearchKey === cellKey
+                        ? "border-primary bg-primary/10 text-primary"
+                        : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                    }`}
+                  >
+                    <Search className="w-3 h-3" /> Alimento
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setLibraryMealType(meal.key);
+                      setLibraryOpen(true);
+                      setQuickAddKey(null);
+                      setQuickAddText("");
+                      setFoodSearchKey(null);
+                    }}
+                    className="flex items-center gap-1 text-[10px] py-1 px-2 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
+                  >
+                    <ArrowLeftRight className="w-3 h-3" /> Substituir
+                  </button>
                 </div>
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
-                  className="flex items-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 px-2 rounded border border-dashed border-border hover:border-primary transition-colors"
-                >
-                  <Plus className="w-3 h-3" /> Adicionar
-                </button>
-              )}
+
+                {foodSearchKey === cellKey && (
+                  <FoodSearchInline day={day} mealType={meal.key} onClose={() => setFoodSearchKey(null)} />
+                )}
+              </div>
             </div>
           </div>
         );
@@ -206,6 +242,13 @@ export function DayContent({ day }: Props) {
       <div className="pt-2">
         <MacroBalanceBar protein={totals.protein} carbs={totals.carbs} fat={totals.fat} calories={totals.calories} compact />
       </div>
+
+      <MealLibraryModal
+        open={libraryOpen}
+        onOpenChange={setLibraryOpen}
+        targetDay={day}
+        targetMealType={libraryMealType}
+      />
     </motion.div>
   );
 }

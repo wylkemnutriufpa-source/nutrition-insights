@@ -235,14 +235,22 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       meal_plan_id: ins.meal_plan_id,
       title: ins.title,
       description: ins.description ?? null,
+      edit_metadata: (ins as any).edit_metadata ?? null,
       meal_type: ins.meal_type,
       day_of_week: ins.day_of_week ?? 1,
       calories_target: ins.calories_target ?? null,
       protein_target: ins.protein_target ?? null,
       carbs_target: ins.carbs_target ?? null,
       fat_target: ins.fat_target ?? null,
+      tenant_id: (ins as any).tenant_id ?? null,
+      visual_library_item_id: (ins as any).visual_library_item_id ?? null,
+      image_url: (ins as any).image_url ?? null,
+      item_origin: (ins as any).item_origin ?? "manual",
+      is_manually_edited: (ins as any).is_manually_edited ?? false,
+      is_locked: (ins as any).is_locked ?? false,
+      was_auto_corrected: (ins as any).was_auto_corrected ?? false,
       created_at: new Date().toISOString(),
-    } as MealPlanItem));
+    } as unknown as MealPlanItem));
 
     const tIds = optimistic.map((o) => o.id);
     set({ items: [...state.items, ...optimistic] });
