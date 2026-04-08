@@ -718,12 +718,24 @@ const BREAKFAST_EXCLUDED_FOODS = new Set([
   "picanha", "alcatra", "bife", "carne moida", "tilapia", "sardinha", "sobrecoxa",
   "mostarda", "rucula", "brocolis", "tomate", "pepino", "cenoura",
   "oleo de coco", "amendoim", "castanha",
+  "atum em lata", "atum enlatado", "atum", "camarao cozido", "camarao",
+  "carne de sol desfiada", "carne seca", "carne seca desfiada", "carne moida magra",
+  "lula cozida", "cordeiro assado", "lombo suino assado", "bisteca suina grelhada",
+  "fraldinha grelhada", "maminha grelhada", "musculo cozido", "patinho grelhado",
+  "coxao duro grelhado", "dourado grelhado", "pintado grelhado", "tambaqui assado",
+  "hamburguer", "hamburguer artesanal", "hamburguer bovino", "linguica", "linguica de frango",
+  "pf completo", "bowl de frango", "carne bovina alcatra", "carne bovina coxao mole",
+  "carne bovina patinho", "carne de porco lombo",
 ]);
 
 /** Foods that make sense at breakfast in Brazilian context */
 const BREAKFAST_PREFERRED_CATEGORIES = new Set(["carboidrato", "proteina", "laticinio", "fruta"]);
-const BREAKFAST_PREFERRED_PROTEINS = new Set(["ovo", "ovo mexido", "ovo cozido", "queijo", "queijo coalho", "frango desfiado", "peito de peru"]);
-const BREAKFAST_PREFERRED_CARBS = new Set(["pao", "pao integral", "pao frances", "tapioca", "cuscuz", "aveia", "granola"]);
+const BREAKFAST_PREFERRED_PROTEINS = new Set([
+  "ovo", "ovo mexido", "ovo cozido", "clara de ovo cozida",
+  "queijo", "queijo coalho", "queijo minas", "queijo minas frescal", "queijo mucarela",
+  "frango desfiado", "peito de peru", "omelete", "requeijao",
+]);
+const BREAKFAST_PREFERRED_CARBS = new Set(["pao", "pao integral", "pao frances", "tapioca", "cuscuz", "aveia", "granola", "pao sirio integral"]);
 
 /** Select foods for a specific meal type using DB tags, with patient-seeded variety */
 function selectFoodsForMeal(
