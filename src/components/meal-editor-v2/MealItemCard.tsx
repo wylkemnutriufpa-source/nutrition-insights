@@ -70,6 +70,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             fat_target: item.fat_target,
             metadata: (item as any).metadata,
             image_url: resolvedImage,
+            itemId: item.id,
           });
         }
       }}
