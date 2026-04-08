@@ -17,9 +17,17 @@ interface MealItemCardProps {
 
 export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const { updateItem, deleteItem, duplicateItem } = useMealPlanEditorV2Store();
-  const { openMealDetail } = useMealDetail();
+  const { openMealDetail, setOnRemoveFoodLine } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
+
+  // Register callback for removing food lines from description
+  useEffect(() => {
+    setOnRemoveFoodLine((itemId: string, newDescription: string) => {
+      updateItem(itemId, { description: newDescription });
+    });
+    return () => setOnRemoveFoodLine(null);
+  }, [setOnRemoveFoodLine, updateItem]);
 
   const commitEdit = useCallback(() => {
     const trimmed = editValue.trim();
