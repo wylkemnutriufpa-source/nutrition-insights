@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
+  ImageIcon, Search, Plus, Pencil, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FoodItem {
   name: string;
@@ -43,6 +46,8 @@ interface MealDetailModalProps {
   meal: MealDetailData | null;
   /** Called when the nutritionist removes a food line from description */
   onRemoveFoodLine?: (itemId: string, newDescription: string) => void;
+  /** Called when image is changed */
+  onChangeImage?: (itemId: string, newImageUrl: string) => void;
 }
 
 const MEAL_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -172,8 +177,37 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
 }
 
 
-export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: MealDetailModalProps) {
+export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage }: MealDetailModalProps) {
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
+  const [showImagePicker, setShowImagePicker] = useState(false);
+  const [imageSearch, setImageSearch] = useState("");
+  const [libraryImages, setLibraryImages] = useState<{ id: string; name: string; image_url: string }[]>([]);
+  const [loadingImages, setLoadingImages] = useState(false);
+  const [manualSubInput, setManualSubInput] = useState("");
+  const [showManualSubInput, setShowManualSubInput] = useState(false);
+
+  // Fetch visual library images when picker opens
+  useEffect(() => {
+    if (!showImagePicker) return;
+    setLoadingImages(true);
+    supabase
+      .from("meal_visual_library" as any)
+      .select("id, name, display_name, image_url")
+      .eq("is_active", true)
+      .not("image_url", "is", null)
+      .order("name")
+      .limit(200)
+      .then(({ data }) => {
+        if (data) {
+          setLibraryImages((data as any[]).map(d => ({
+            id: d.id,
+            name: d.display_name || d.name,
+            image_url: d.image_url,
+          })));
+        }
+        setLoadingImages(false);
+      });
+  }, [showImagePicker]);
 
   if (!meal) return null;
 
@@ -222,11 +256,104 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
     toast.success(`🔄 ${newSubs.length} substituições regeneradas com porções`);
   };
 
-  // Reset removed lines when modal closes
+  const handleAddManualSub = () => {
+    if (!canEdit || !meal.itemId || !manualSubInput.trim()) return;
+    const newLine = manualSubInput.trim().startsWith("•") ? manualSubInput.trim() : `• ${manualSubInput.trim()}`;
+    const newSubs = [...substitutionLines, newLine];
+    const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
+    const newDescription = rebuildDescription(remainingFoodLines, newSubs);
+    onRemoveFoodLine!(meal.itemId, newDescription);
+    setManualSubInput("");
+    setShowManualSubInput(false);
+    toast.success("✅ Substituição adicionada manualmente");
+  };
+
+  const handleSelectImage = (newUrl: string) => {
+    if (!meal.itemId || !onChangeImage) return;
+    onChangeImage(meal.itemId, newUrl);
+    setShowImagePicker(false);
+    toast.success("📸 Imagem da refeição atualizada!");
+  };
+
+  const filteredImages = imageSearch.trim()
+    ? libraryImages.filter(img =>
+        img.name.toLowerCase().includes(imageSearch.toLowerCase())
+      )
+    : libraryImages;
+
+  // Reset state when modal closes
   const handleOpenChange = (v: boolean) => {
-    if (!v) setRemovedLines(new Set());
+    if (!v) {
+      setRemovedLines(new Set());
+      setShowImagePicker(false);
+      setShowManualSubInput(false);
+      setManualSubInput("");
+      setImageSearch("");
+    }
     onOpenChange(v);
   };
+
+  // Image picker sub-view
+  if (showImagePicker) {
+    return (
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+        <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
+          <div className="px-6 pt-6 pb-3 space-y-3">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2 text-base">
+                <ImageIcon className="w-5 h-5 text-primary" />
+                Trocar Imagem da Refeição
+              </DialogTitle>
+              <DialogDescription className="text-xs">
+                Selecione uma imagem do banco de alimentos
+              </DialogDescription>
+            </DialogHeader>
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar alimento..."
+                value={imageSearch}
+                onChange={e => setImageSearch(e.target.value)}
+                className="pl-9 h-9 text-sm"
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className="flex-1 overflow-y-auto px-4 pb-6 max-h-[calc(90vh-180px)]">
+            {loadingImages ? (
+              <div className="text-center py-10 text-muted-foreground text-sm">Carregando...</div>
+            ) : filteredImages.length === 0 ? (
+              <div className="text-center py-10 text-muted-foreground text-sm">Nenhuma imagem encontrada</div>
+            ) : (
+              <div className="grid grid-cols-3 gap-2">
+                {filteredImages.map(img => (
+                  <button
+                    key={img.id}
+                    type="button"
+                    onClick={() => handleSelectImage(img.image_url)}
+                    className="group rounded-xl overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/30 transition-all"
+                  >
+                    <div className="aspect-square relative">
+                      <img src={img.image_url} alt={img.name} className="w-full h-full object-cover" />
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                        <Check className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                      </div>
+                    </div>
+                    <p className="text-[10px] font-medium px-1.5 py-1 truncate text-center">{img.name}</p>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+          <div className="px-6 pb-4">
+            <Button variant="outline" size="sm" className="w-full" onClick={() => setShowImagePicker(false)}>
+              Voltar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -240,6 +367,17 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+            {/* Change image button */}
+            {canEdit && onChangeImage && (
+              <button
+                type="button"
+                onClick={() => setShowImagePicker(true)}
+                className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium transition-colors border border-white/20"
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                Trocar Imagem
+              </button>
+            )}
             <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10">
@@ -276,6 +414,17 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
                     </DialogDescription>
                   </div>
                 </div>
+                {canEdit && onChangeImage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5 text-[10px] h-7"
+                    onClick={() => setShowImagePicker(true)}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    Adicionar Imagem
+                  </Button>
+                )}
               </div>
             </DialogHeader>
           </div>
@@ -424,7 +573,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
           {substitutionLines.length === 0 && canEdit && hasDescriptionLines && (
             <>
               <Separator />
-              <section>
+              <section className="space-y-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -434,6 +583,33 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
                   <RefreshCw className="w-3.5 h-3.5" />
                   Gerar Substituições Equivalentes
                 </Button>
+                {showManualSubInput ? (
+                  <div className="flex gap-1.5">
+                    <Input
+                      autoFocus
+                      value={manualSubInput}
+                      onChange={e => setManualSubInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") handleAddManualSub();
+                        if (e.key === "Escape") { setShowManualSubInput(false); setManualSubInput(""); }
+                      }}
+                      placeholder="Ex: Frango → Peixe (150g), Carne (150g)"
+                      className="h-8 text-[11px]"
+                    />
+                    <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleAddManualSub} disabled={!manualSubInput.trim()}>
+                      <Check className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowManualSubInput(true)}
+                    className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary py-1.5 px-3 rounded-lg border border-dashed border-border hover:border-primary transition-colors w-full justify-center"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    Ou escrever manualmente
+                  </button>
+                )}
               </section>
             </>
           )}
@@ -514,6 +690,39 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
                     );
                   })}
                 </div>
+
+                {/* Manual substitution input */}
+                {canEdit && (
+                  <div className="mt-3">
+                    {showManualSubInput ? (
+                      <div className="flex gap-1.5">
+                        <Input
+                          autoFocus
+                          value={manualSubInput}
+                          onChange={e => setManualSubInput(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") handleAddManualSub();
+                            if (e.key === "Escape") { setShowManualSubInput(false); setManualSubInput(""); }
+                          }}
+                          placeholder="Ex: Frango → Peixe (150g), Carne (150g)"
+                          className="h-8 text-[11px]"
+                        />
+                        <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleAddManualSub} disabled={!manualSubInput.trim()}>
+                          <Check className="w-3.5 h-3.5" />
+                        </Button>
+                      </div>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setShowManualSubInput(true)}
+                        className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary py-1.5 px-3 rounded-lg border border-dashed border-border hover:border-primary transition-colors w-full justify-center"
+                      >
+                        <Pencil className="w-3 h-3" />
+                        Adicionar substituição manualmente
+                      </button>
+                    )}
+                  </div>
+                )}
               </section>
             </>
           )}
