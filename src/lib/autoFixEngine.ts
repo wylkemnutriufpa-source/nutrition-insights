@@ -1134,3 +1134,86 @@ function emptyResult(warning: string): AutoFixResult {
     },
   };
 }
+
+// ── Undo AutoFix: restore original items from backup ─────────
+
+export async function undoAutoFix(planId: string): Promise<{ success: boolean; error?: string }> {
+  console.info("[AutoFix] Undoing fix for plan", planId);
+
+  // Find the latest non-restored backup
+  const { data: backup, error: fetchErr } = await supabase
+    .from("autofix_backups" as any)
+    .select("*")
+    .eq("meal_plan_id", planId)
+    .is("restored_at", null)
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (fetchErr || !backup) {
+    console.error("[AutoFix] No backup found", { planId, fetchErr });
+    return { success: false, error: "Nenhum backup encontrado para este plano." };
+  }
+
+  const originalItems = (backup as any).original_items as any[];
+  const originalMeta = (backup as any).original_plan_metadata as any;
+
+  if (!originalItems || originalItems.length === 0) {
+    return { success: false, error: "Backup vazio — impossível restaurar." };
+  }
+
+  // Delete current items
+  const { error: delErr } = await supabase
+    .from("meal_plan_items")
+    .delete()
+    .eq("meal_plan_id", planId);
+
+  if (delErr) {
+    console.error("[AutoFix] Undo: failed to delete current items", delErr);
+    return { success: false, error: "Falha ao remover itens atuais." };
+  }
+
+  // Re-insert original items
+  const restoreItems = originalItems.map((item: any) => ({
+    meal_plan_id: planId,
+    title: item.title,
+    description: item.description,
+    meal_type: item.meal_type,
+    day_of_week: item.day_of_week,
+    calories_target: item.calories_target,
+    protein_target: item.protein_target,
+    carbs_target: item.carbs_target,
+    fat_target: item.fat_target,
+    is_locked: item.is_locked || false,
+    is_manually_edited: item.is_manually_edited || false,
+    item_origin: item.item_origin || null,
+    visual_library_item_id: item.visual_library_item_id || null,
+    image_url: item.image_url || null,
+  }));
+
+  const { error: insertErr } = await supabase.from("meal_plan_items").insert(restoreItems);
+  if (insertErr) {
+    console.error("[AutoFix] Undo: failed to restore items", insertErr);
+    return { success: false, error: "Falha ao restaurar itens originais." };
+  }
+
+  // Restore plan metadata
+  if (originalMeta) {
+    await supabase.from("meal_plans").update({
+      total_target_calories: originalMeta.total_target_calories,
+      total_target_protein: originalMeta.total_target_protein,
+      total_target_carbs: originalMeta.total_target_carbs,
+      total_target_fat: originalMeta.total_target_fat,
+      generation_metadata: originalMeta.generation_metadata,
+      generation_source: originalMeta.generation_source,
+    } as any).eq("id", planId);
+  }
+
+  // Mark backup as restored
+  await supabase.from("autofix_backups" as any)
+    .update({ restored_at: new Date().toISOString() })
+    .eq("id", (backup as any).id);
+
+  console.info("[AutoFix] Undo complete", { planId, restoredItems: originalItems.length });
+  return { success: true };
+}
