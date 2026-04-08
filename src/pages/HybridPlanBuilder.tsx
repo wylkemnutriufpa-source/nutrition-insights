@@ -143,7 +143,8 @@ export default function HybridPlanBuilder() {
   const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
 
   // DnD sensors
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [activeDragData, setActiveDragData] = useState<{ type: string; label: string } | null>(null);
 
   // Patient composer context (must be before early returns)
   const patientId = store.plan?.patient_id;
@@ -322,7 +323,16 @@ export default function HybridPlanBuilder() {
 
   return (
     <DashboardLayout>
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={(event) => {
+          const data = event.active.data?.current;
+          if (data?.type === "food") setActiveDragData({ type: "food", label: data.food?.food_name || "Alimento" });
+          else if (data?.type === "recipe") setActiveDragData({ type: "recipe", label: data.recipe?.title || "Receita" });
+        }}
+        onDragEnd={(event) => { setActiveDragData(null); handleDragEnd(event); }}
+        onDragCancel={() => setActiveDragData(null)}
+      >
         <div className="space-y-3">
           {/* Topbar */}
           <BuilderTopbar
@@ -397,7 +407,7 @@ export default function HybridPlanBuilder() {
           <div className="flex gap-3 min-h-[600px]">
             {/* Left: Library */}
             {leftPanelOpen ? (
-              <div className="w-72 shrink-0 border border-border rounded-xl bg-card/50 overflow-hidden flex flex-col">
+              <div className="w-72 shrink-0 border border-border rounded-xl bg-card/50 flex flex-col max-h-[calc(100vh-200px)]">
                 <div className="flex items-center justify-between p-2 border-b border-border">
                   <span className="text-xs font-bold">📚 Biblioteca</span>
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setLeftPanelOpen(false)}>
@@ -474,6 +484,14 @@ export default function HybridPlanBuilder() {
             )}
           </div>
         </div>
+        <DragOverlay dropAnimation={null}>
+          {activeDragData && (
+            <div className="px-3 py-2 rounded-lg bg-card border border-primary shadow-lg text-xs font-medium flex items-center gap-2 pointer-events-none">
+              <span>{activeDragData.type === "food" ? "🍎" : "🍳"}</span>
+              <span className="truncate max-w-[180px]">{activeDragData.label}</span>
+            </div>
+          )}
+        </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
