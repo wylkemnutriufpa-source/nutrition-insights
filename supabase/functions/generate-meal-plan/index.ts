@@ -1581,12 +1581,8 @@ serve(async (req) => {
       const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
-        let rawItems: any[];
-        if (useDBDriven) {
-          rawItems = generatePersonalizedPlan(dbFoods, patient_id, goal, finalKcal, finalMacros, tplIdx);
-        } else {
-          rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
-        }
+        // Template-First: always use validated presets
+        const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const planItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
 
         const genMeta = buildGenerationMetadata(
