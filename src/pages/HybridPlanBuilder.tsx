@@ -297,6 +297,14 @@ export default function HybridPlanBuilder() {
     const dragData = active.data?.current;
     if (!dragData) return;
 
+    if (dragData.type === "existing-item") {
+      const { itemId } = dragData;
+      if (!itemId) return;
+      store.moveItem(itemId, day, mealType);
+      toast.success("Refeição movida!");
+      return;
+    }
+
     if (dragData.type === "food") {
       const { food } = dragData;
       const computed = food.computed;
@@ -316,7 +324,6 @@ export default function HybridPlanBuilder() {
       toast.success(`${food.food_name} adicionado!`);
     } else if (dragData.type === "recipe") {
       const { recipe } = dragData;
-      // Phase 2: load recipe_items and expand into individual ingredients
       expandRecipeToItems(recipe, plan.id, day, mealType, tenantId || null);
     }
   };
@@ -329,6 +336,7 @@ export default function HybridPlanBuilder() {
           const data = event.active.data?.current;
           if (data?.type === "food") setActiveDragData({ type: "food", label: data.food?.food_name || "Alimento" });
           else if (data?.type === "recipe") setActiveDragData({ type: "recipe", label: data.recipe?.title || "Receita" });
+          else if (data?.type === "existing-item") setActiveDragData({ type: "existing-item", label: data.itemTitle || "Refeição" });
         }}
         onDragEnd={(event) => { setActiveDragData(null); handleDragEnd(event); }}
         onDragCancel={() => setActiveDragData(null)}
@@ -488,7 +496,7 @@ export default function HybridPlanBuilder() {
         <DragOverlay dropAnimation={null}>
           {activeDragData && (
             <div className="px-3 py-2 rounded-lg bg-card border border-primary shadow-lg text-xs font-medium flex items-center gap-2 pointer-events-none">
-              <span>{activeDragData.type === "food" ? "🍎" : "🍳"}</span>
+              <span>{activeDragData.type === "food" ? "🍎" : activeDragData.type === "recipe" ? "🍳" : "🔁"}</span>
               <span className="truncate max-w-[180px]">{activeDragData.label}</span>
             </div>
           )}
