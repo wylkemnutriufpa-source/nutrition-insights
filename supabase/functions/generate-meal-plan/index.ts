@@ -852,7 +852,7 @@ function buildMealFromDBFoods(
 
   // Build substitution text from same categories — WITH portion quantities
   const subLines: string[] = [];
-  for (const food of foods) {
+  for (const food of validFoods) {
     const groupKey =
       food.category === "proteina" ? (mealType === "breakfast" ? "protein_breakfast" : "protein") :
       food.category === "carboidrato" ? (mealType === "breakfast" ? "carb_breakfast" : "carb") :
@@ -860,10 +860,9 @@ function buildMealFromDBFoods(
     const subs = SUBSTITUTION_GROUPS[groupKey];
     if (subs) {
       const normFood = normalize(food.food_name);
-      const foodGrams = Math.round((food.portion_grams || 100) * clampedScale);
+      const foodGrams = Math.max(MIN_PORTION_GRAMS, Math.round((food.portion_grams || 100) * clampedScale));
       const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 3);
       if (alts.length > 0) {
-        // Include equivalent portion for each alternative
         const altsWithPortion = alts.map(a => `${a} (${foodGrams}g)`);
         subLines.push(`• ${food.food_name} → ${altsWithPortion.join(", ")}`);
       }
@@ -878,10 +877,10 @@ function buildMealFromDBFoods(
     description,
     meal_type: mealType,
     day_of_week: dayOfWeek,
-    calories_target: Math.round(totalKcal * clampedScale),
-    protein_target: Math.round(foods.reduce((s, f) => s + (f.protein || 0), 0) * clampedScale),
-    carbs_target: Math.round(foods.reduce((s, f) => s + (f.carbs || 0), 0) * clampedScale),
-    fat_target: Math.round(foods.reduce((s, f) => s + (f.fats || 0), 0) * clampedScale),
+    calories_target: Math.round(validFoods.reduce((s, f) => s + (f.calories || 0), 0) * clampedScale),
+    protein_target: Math.round(validFoods.reduce((s, f) => s + (f.protein || 0), 0) * clampedScale),
+    carbs_target: Math.round(validFoods.reduce((s, f) => s + (f.carbs || 0), 0) * clampedScale),
+    fat_target: Math.round(validFoods.reduce((s, f) => s + (f.fats || 0), 0) * clampedScale),
   };
 }
 
