@@ -63,7 +63,7 @@ export default function FoodSearchInline({ day, mealType, onClose }: Props) {
           .limit(10);
 
         if (data && data.length > 0) {
-          const dbResults = (data as DbFood[]).map(f => ({
+          const dbResults = (data as unknown as DbFood[]).map(f => ({
             name: f.food_name,
             portion: `${f.portion_grams}g`,
             calories: Math.round(f.calories_per_gram * f.portion_grams),

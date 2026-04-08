@@ -17,6 +17,7 @@ import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib
 import type { PatientContext } from "@/lib/mealComposer";
 import SmartMealSelectorModal from "./SmartMealSelectorModal";
 import MealSlotItemCard from "./MealSlotItemCard";
+import FoodSearchInline from "./FoodSearchInline";
 
 interface Props {
   day: number;
