@@ -950,6 +950,42 @@ export async function autoFixMealPlan(
     // Draft/review plan → apply fix IN-PLACE (replace items on same plan)
     wasInPlace = true;
 
+    // ── BACKUP original items before destructive in-place fix ──
+    try {
+      const backupItems = items.map(i => ({
+        title: i.title,
+        description: i.description,
+        meal_type: i.meal_type,
+        day_of_week: i.day_of_week,
+        calories_target: i.calories_target,
+        protein_target: i.protein_target,
+        carbs_target: i.carbs_target,
+        fat_target: i.fat_target,
+        is_locked: (i as any).is_locked || false,
+        is_manually_edited: (i as any).is_manually_edited || false,
+        item_origin: (i as any).item_origin || null,
+        visual_library_item_id: (i as any).visual_library_item_id || null,
+        image_url: (i as any).image_url || null,
+      }));
+      await supabase.from("autofix_backups" as any).insert({
+        meal_plan_id: planId,
+        original_items: backupItems,
+        original_plan_metadata: {
+          total_target_calories: plan.total_target_calories,
+          total_target_protein: plan.total_target_protein,
+          total_target_carbs: plan.total_target_carbs,
+          total_target_fat: plan.total_target_fat,
+          generation_metadata: plan.generation_metadata,
+          generation_source: plan.generation_source,
+        },
+        created_by: nutritionistId,
+        tenant_id: tenantId,
+      });
+      console.info("[AutoFix] Backup saved for plan", planId);
+    } catch (backupErr) {
+      console.warn("[AutoFix] Failed to save backup (non-blocking):", backupErr);
+    }
+
     // Delete old items
     const { error: delErr } = await supabase
       .from("meal_plan_items")
