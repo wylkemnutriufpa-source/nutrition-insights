@@ -11747,6 +11747,7 @@ export type Database = {
           created_at: string
           id: string
           is_active: boolean
+          nutritionist_id: string | null
           pix_code: string
           plan_label: string
           plan_type: string
@@ -11758,6 +11759,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          nutritionist_id?: string | null
           pix_code: string
           plan_label: string
           plan_type?: string
@@ -11769,6 +11771,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_active?: boolean
+          nutritionist_id?: string | null
           pix_code?: string
           plan_label?: string
           plan_type?: string
