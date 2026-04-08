@@ -1787,12 +1787,18 @@ serve(async (req) => {
     }
 
     const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: finalMealPlanId }));
-    const { data: existingItems } = await serviceClient
+
+    // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
+    const { error: deleteErr } = await serviceClient
       .from("meal_plan_items")
-      .select("id")
+      .delete()
       .eq("meal_plan_id", finalMealPlanId);
 
-    const previousItemIds = (existingItems || []).map((item: any) => item.id).filter(Boolean);
+    if (deleteErr) {
+      console.error(`[generate-meal-plan] Failed to delete previous items for plan ${finalMealPlanId}:`, deleteErr);
+      // Continue anyway — inserting new items is more important
+    }
+
     const { error: insertErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
     if (insertErr) {
@@ -1800,18 +1806,6 @@ serve(async (req) => {
         await safeDeletePlan(serviceClient, finalMealPlanId);
       }
       throw new Error(`Falha ao inserir itens do plano ${finalMealPlanId}: ${insertErr.message}`);
-    }
-
-    if (previousItemIds.length > 0) {
-      const { error: deleteErr } = await serviceClient
-        .from("meal_plan_items")
-        .delete()
-        .in("id", previousItemIds);
-
-      if (deleteErr) {
-        console.error(`[generate-meal-plan] Failed to delete previous items for plan ${finalMealPlanId}:`, deleteErr);
-        throw new Error(`Novos itens foram gerados, mas a limpeza dos itens antigos falhou no plano ${finalMealPlanId}: ${deleteErr.message}`);
-      }
     }
 
     const visualResolved = await resolveVisualForItems(serviceClient, finalMealPlanId, planItems);
