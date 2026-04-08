@@ -573,7 +573,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
           {substitutionLines.length === 0 && canEdit && hasDescriptionLines && (
             <>
               <Separator />
-              <section>
+              <section className="space-y-2">
                 <Button
                   variant="outline"
                   size="sm"
@@ -583,6 +583,33 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                   <RefreshCw className="w-3.5 h-3.5" />
                   Gerar Substituições Equivalentes
                 </Button>
+                {showManualSubInput ? (
+                  <div className="flex gap-1.5">
+                    <Input
+                      autoFocus
+                      value={manualSubInput}
+                      onChange={e => setManualSubInput(e.target.value)}
+                      onKeyDown={e => {
+                        if (e.key === "Enter") handleAddManualSub();
+                        if (e.key === "Escape") { setShowManualSubInput(false); setManualSubInput(""); }
+                      }}
+                      placeholder="Ex: Frango → Peixe (150g), Carne (150g)"
+                      className="h-8 text-[11px]"
+                    />
+                    <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleAddManualSub} disabled={!manualSubInput.trim()}>
+                      <Check className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setShowManualSubInput(true)}
+                    className="flex items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary py-1.5 px-3 rounded-lg border border-dashed border-border hover:border-primary transition-colors w-full justify-center"
+                  >
+                    <Pencil className="w-3 h-3" />
+                    Ou escrever manualmente
+                  </button>
+                )}
               </section>
             </>
           )}
