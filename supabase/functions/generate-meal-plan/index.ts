@@ -1693,14 +1693,9 @@ serve(async (req) => {
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
     
-    let rawPlanItems: any[];
-    if (useDBDriven) {
-      rawPlanItems = generatePersonalizedPlan(dbFoods, patient_id, goal, finalKcal, finalMacros, planOptionIndex);
-      console.log(`[generate-meal-plan] DB-driven plan generated: ${rawPlanItems.length} items`);
-    } else {
-      rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
-      console.log(`[generate-meal-plan] Preset-based plan generated: ${rawPlanItems.length} items`);
-    }
+    // ── TEMPLATE-FIRST: Always use validated Brazilian presets ──
+    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
+    console.log(`[generate-meal-plan] Template-First plan generated: ${rawPlanItems.length} items (validated presets)`);
     
     // Smart mode: apply adjustments to RAW items BEFORE reconciliation
     // so that reconcileDailyMacros can normalize the final totals correctly
