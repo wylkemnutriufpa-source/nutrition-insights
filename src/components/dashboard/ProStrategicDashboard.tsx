@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Users, ClipboardCheck, AlertTriangle, Trophy,
   TrendingUp, Activity, ArrowRight, Brain,
-  Calendar, MessageSquare, BarChart3, Zap,
+  Calendar, MessageSquare, BarChart3, Zap, FlaskConical,
 } from "lucide-react";
 
 const STRATEGIC_CARDS = [
@@ -19,6 +19,7 @@ const STRATEGIC_CARDS = [
   { key: "agenda", label: "Agenda do Dia", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5" },
   { key: "chat", label: "Mensagens", description: "Chat com pacientes", icon: MessageSquare, route: "/chat", gradient: "from-teal-500/10 to-teal-600/5" },
   { key: "analytics", label: "Analytics Avançado", description: "Métricas e tendências", icon: BarChart3, route: "/reports", gradient: "from-indigo-500/10 to-indigo-600/5" },
+  { key: "lab-interpreter", label: "Interpretador de Exames", description: "Análise bioquímica com IA", icon: FlaskConical, route: "/lab-interpreter", gradient: "from-teal-500/10 to-emerald-500/5", badge: "Premium" },
   { key: "editor", label: "Editor Premium V2", description: "Criar e editar planos", icon: Zap, route: "/editor-v2", gradient: "from-primary/10 to-primary/5" },
   { key: "automations", label: "Automações", description: "Regras e gatilhos", icon: Zap, route: "/automation", gradient: "from-cyan-500/10 to-cyan-600/5" },
 ];
