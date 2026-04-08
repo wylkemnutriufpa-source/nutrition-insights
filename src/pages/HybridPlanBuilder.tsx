@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { publishMealPlan, savePlanAsApproved } from "@/lib/serverTransitions";
 import { toast } from "sonner";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 import BuilderTopbar from "@/components/hybrid-builder/BuilderTopbar";
 import MealPlanCanvas from "@/components/hybrid-builder/MealPlanCanvas";
 import BuilderLibraryPanel from "@/components/hybrid-builder/BuilderLibraryPanel";
@@ -333,6 +334,28 @@ export default function HybridPlanBuilder() {
             onSave={handleSave}
             onValidate={handleValidate}
             onPublish={handlePublish}
+            onSaveAsTemplate={() => setSaveTemplateOpen(true)}
+            onRename={async (newTitle) => {
+              store.updatePlan({ title: newTitle, updated_at: new Date().toISOString() } as any);
+              await supabase.from("meal_plans").update({ title: newTitle }).eq("id", plan.id);
+              toast.success("Plano renomeado!");
+            }}
+          />
+
+          <SaveMealTemplateDialog
+            open={saveTemplateOpen}
+            onOpenChange={setSaveTemplateOpen}
+            items={store.items.map(i => ({
+              title: i.title,
+              description: i.description,
+              calories_target: i.calories_target,
+              protein_target: i.protein_target,
+              carbs_target: i.carbs_target,
+              fat_target: i.fat_target,
+            }))}
+            mealType={store.items[0]?.meal_type || "breakfast"}
+            defaultName={plan.title || ""}
+            onSaved={() => toast.success("Plano salvo como modelo!")}
           />
 
           {/* Validation panel */}
