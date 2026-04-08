@@ -832,8 +832,16 @@ function buildMealFromDBFoods(
     evening_snack: "Ceia",
   };
 
-  const descriptionLines = foods.map(f => {
+  // Filter out foods with absurdly small portions (< 15g after scaling)
+  const MIN_PORTION_GRAMS = 15;
+  const validFoods = foods.filter(f => {
     const grams = Math.round((f.portion_grams || 100) * clampedScale);
+    return grams >= MIN_PORTION_GRAMS;
+  });
+  if (validFoods.length === 0) return null;
+
+  const descriptionLines = validFoods.map(f => {
+    const grams = Math.max(MIN_PORTION_GRAMS, Math.round((f.portion_grams || 100) * clampedScale));
     const basePortion = (f.portion_reference || `${f.portion_grams || 100}g`).trim();
     const scaledPortion = scaleDescriptionQuantities(basePortion, clampedScale) || basePortion;
     const resolvedPortion = scaledPortion === basePortion && !/(\d+(?:[.,]\d+)?)\s*(g|ml|col\.?)/i.test(basePortion)
