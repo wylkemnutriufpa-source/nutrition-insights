@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
-  Zap, Flame, Beef, Wheat, Droplets,
+  Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X,
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 
@@ -20,14 +22,18 @@ interface Props {
   onSave: () => void;
   onValidate: () => void;
   onPublish: () => void;
+  onSaveAsTemplate?: () => void;
+  onRename?: (newTitle: string) => void;
 }
 
 export default function BuilderTopbar({
   patientName, objective, targetKcal, targetProtein, targetCarbs, targetFat,
   saving, publishing, validating,
-  onBack, onSave, onValidate, onPublish,
+  onBack, onSave, onValidate, onPublish, onSaveAsTemplate, onRename,
 }: Props) {
   const { plan, items, syncStatus } = useMealPlanEditorV2Store();
+  const [editing, setEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState("");
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -46,7 +52,34 @@ export default function BuilderTopbar({
           </Button>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h1 className="font-display text-base font-bold truncate">{plan?.title || "Novo Plano"}</h1>
+              {editing ? (
+                <div className="flex items-center gap-1">
+                  <Input
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    className="h-7 text-sm font-bold w-48"
+                    autoFocus
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && editTitle.trim()) {
+                        onRename?.(editTitle.trim());
+                        setEditing(false);
+                      }
+                      if (e.key === "Escape") setEditing(false);
+                    }}
+                  />
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => { if (editTitle.trim()) { onRename?.(editTitle.trim()); } setEditing(false); }}>
+                    <Check className="w-3 h-3 text-emerald-500" />
+                  </Button>
+                  <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setEditing(false)}>
+                    <X className="w-3 h-3 text-destructive" />
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex items-center gap-1.5 group cursor-pointer" onClick={() => { setEditTitle(plan?.title || ""); setEditing(true); }}>
+                  <h1 className="font-display text-base font-bold truncate">{plan?.title || "Novo Plano"}</h1>
+                  <Pencil className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
+                </div>
+              )}
               <Badge variant="outline" className="text-[10px] shrink-0">
                 <Zap className="w-3 h-3 mr-1" /> Builder Híbrido
               </Badge>
@@ -63,6 +96,12 @@ export default function BuilderTopbar({
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
+          {onSaveAsTemplate && (
+            <Button variant="outline" size="sm" onClick={onSaveAsTemplate} className="h-8 gap-1.5 text-xs">
+              <Bookmark className="w-3.5 h-3.5" />
+              Salvar como Modelo
+            </Button>
+          )}
           <Button variant="outline" size="sm" onClick={onSave} disabled={saving || syncStatus === "saving"} className="h-8 gap-1.5 text-xs">
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
             Salvar
