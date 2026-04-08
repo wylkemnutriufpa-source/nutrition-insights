@@ -693,6 +693,18 @@ function filterFoodsForPatient(
   });
 }
 
+/** Foods that should NEVER appear at breakfast */
+const BREAKFAST_EXCLUDED_FOODS = new Set([
+  "picanha", "alcatra", "bife", "carne moida", "tilapia", "sardinha", "sobrecoxa",
+  "mostarda", "rucula", "brocolis", "tomate", "pepino", "cenoura",
+  "oleo de coco", "amendoim", "castanha",
+]);
+
+/** Foods that make sense at breakfast in Brazilian context */
+const BREAKFAST_PREFERRED_CATEGORIES = new Set(["carboidrato", "proteina", "laticinio", "fruta"]);
+const BREAKFAST_PREFERRED_PROTEINS = new Set(["ovo", "ovo mexido", "ovo cozido", "queijo", "queijo coalho", "frango desfiado", "peito de peru"]);
+const BREAKFAST_PREFERRED_CARBS = new Set(["pao", "pao integral", "pao frances", "tapioca", "cuscuz", "aveia", "granola"]);
+
 /** Select foods for a specific meal type using DB tags, with patient-seeded variety */
 function selectFoodsForMeal(
   availableFoods: DBFood[],
@@ -707,6 +719,7 @@ function selectFoodsForMeal(
 
   // ── Dinner rule: exclude beans/legumes for lighter meal ──
   const isDinner = mealType === "dinner";
+  const isBreakfast = mealType === "breakfast";
   const dinnerExcludeKeywords = ["feijao", "feijão", "lentilha", "feijoada", "feijao verde"];
 
   const selected: DBFood[] = [];
@@ -716,25 +729,40 @@ function selectFoodsForMeal(
   for (const requiredCat of composition.required) {
     let candidates = availableFoods.filter(f => {
       if (f.category !== requiredCat) return false;
-      // Prefer foods with matching meal tags
+      const normName = normalize(f.food_name);
+
+      // ── Breakfast: strict filtering ──
+      if (isBreakfast) {
+        // Exclude foods that don't belong at breakfast
+        if (BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        // If food has meal_tags, it MUST include cafe_da_manha
+        if (f.meal_tags_json.length > 0 && !f.meal_tags_json.includes("cafe_da_manha")) return false;
+        // If food has NO tags, only allow known breakfast items
+        if (f.meal_tags_json.length === 0) {
+          if (requiredCat === "proteina" && !BREAKFAST_PREFERRED_PROTEINS.has(normName)) return false;
+          if (requiredCat === "carboidrato" && !BREAKFAST_PREFERRED_CARBS.has(normName)) return false;
+        }
+        return true;
+      }
+
+      // ── Non-breakfast: prefer foods with matching meal tags ──
       const hasMealTag = mealTags.length === 0 || f.meal_tags_json.length === 0 || f.meal_tags_json.some((t: string) => mealTags.includes(t));
       if (!hasMealTag) return false;
+
       // Dinner: exclude beans/legumes
       if (isDinner) {
-        const normName = normalize(f.food_name);
         if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
       }
       return true;
     });
 
     if (candidates.length === 0) {
-      // Fallback: any food from this category (still respecting dinner rule)
+      // Fallback: any food from this category (still respecting meal rules)
       const fallback = availableFoods.filter(f => {
         if (f.category !== requiredCat) return false;
-        if (isDinner) {
-          const normName = normalize(f.food_name);
-          if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
-        }
+        const normName = normalize(f.food_name);
+        if (isBreakfast && BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        if (isDinner && dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
         return true;
       });
       if (fallback.length > 0) {
@@ -758,10 +786,18 @@ function selectFoodsForMeal(
     usedCategories.add(requiredCat);
   }
 
-  // Add one optional food if available
+  // Add one optional food if available (skip for breakfast if we already have protein + carb)
   for (const optCat of composition.optional) {
     if (usedCategories.has(optCat)) continue;
-    const candidates = availableFoods.filter(f => f.category === optCat);
+    let candidates = availableFoods.filter(f => {
+      if (f.category !== optCat) return false;
+      if (isBreakfast) {
+        const normName = normalize(f.food_name);
+        if (BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        if (f.meal_tags_json.length > 0 && !f.meal_tags_json.includes("cafe_da_manha")) return false;
+      }
+      return true;
+    });
     if (candidates.length > 0) {
       const shuffled = seededShuffle(candidates, patientSeed + dayIndex * 17 + optCat.charCodeAt(0));
       selected.push(shuffled[0]);
@@ -796,8 +832,16 @@ function buildMealFromDBFoods(
     evening_snack: "Ceia",
   };
 
-  const descriptionLines = foods.map(f => {
+  // Filter out foods with absurdly small portions (< 15g after scaling)
+  const MIN_PORTION_GRAMS = 15;
+  const validFoods = foods.filter(f => {
     const grams = Math.round((f.portion_grams || 100) * clampedScale);
+    return grams >= MIN_PORTION_GRAMS;
+  });
+  if (validFoods.length === 0) return null;
+
+  const descriptionLines = validFoods.map(f => {
+    const grams = Math.max(MIN_PORTION_GRAMS, Math.round((f.portion_grams || 100) * clampedScale));
     const basePortion = (f.portion_reference || `${f.portion_grams || 100}g`).trim();
     const scaledPortion = scaleDescriptionQuantities(basePortion, clampedScale) || basePortion;
     const resolvedPortion = scaledPortion === basePortion && !/(\d+(?:[.,]\d+)?)\s*(g|ml|col\.?)/i.test(basePortion)
@@ -808,7 +852,7 @@ function buildMealFromDBFoods(
 
   // Build substitution text from same categories — WITH portion quantities
   const subLines: string[] = [];
-  for (const food of foods) {
+  for (const food of validFoods) {
     const groupKey =
       food.category === "proteina" ? (mealType === "breakfast" ? "protein_breakfast" : "protein") :
       food.category === "carboidrato" ? (mealType === "breakfast" ? "carb_breakfast" : "carb") :
@@ -816,10 +860,9 @@ function buildMealFromDBFoods(
     const subs = SUBSTITUTION_GROUPS[groupKey];
     if (subs) {
       const normFood = normalize(food.food_name);
-      const foodGrams = Math.round((food.portion_grams || 100) * clampedScale);
+      const foodGrams = Math.max(MIN_PORTION_GRAMS, Math.round((food.portion_grams || 100) * clampedScale));
       const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 3);
       if (alts.length > 0) {
-        // Include equivalent portion for each alternative
         const altsWithPortion = alts.map(a => `${a} (${foodGrams}g)`);
         subLines.push(`• ${food.food_name} → ${altsWithPortion.join(", ")}`);
       }
@@ -834,10 +877,10 @@ function buildMealFromDBFoods(
     description,
     meal_type: mealType,
     day_of_week: dayOfWeek,
-    calories_target: Math.round(totalKcal * clampedScale),
-    protein_target: Math.round(foods.reduce((s, f) => s + (f.protein || 0), 0) * clampedScale),
-    carbs_target: Math.round(foods.reduce((s, f) => s + (f.carbs || 0), 0) * clampedScale),
-    fat_target: Math.round(foods.reduce((s, f) => s + (f.fats || 0), 0) * clampedScale),
+    calories_target: Math.round(validFoods.reduce((s, f) => s + (f.calories || 0), 0) * clampedScale),
+    protein_target: Math.round(validFoods.reduce((s, f) => s + (f.protein || 0), 0) * clampedScale),
+    carbs_target: Math.round(validFoods.reduce((s, f) => s + (f.carbs || 0), 0) * clampedScale),
+    fat_target: Math.round(validFoods.reduce((s, f) => s + (f.fats || 0), 0) * clampedScale),
   };
 }
 
@@ -1744,12 +1787,18 @@ serve(async (req) => {
     }
 
     const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: finalMealPlanId }));
-    const { data: existingItems } = await serviceClient
+
+    // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
+    const { error: deleteErr } = await serviceClient
       .from("meal_plan_items")
-      .select("id")
+      .delete()
       .eq("meal_plan_id", finalMealPlanId);
 
-    const previousItemIds = (existingItems || []).map((item: any) => item.id).filter(Boolean);
+    if (deleteErr) {
+      console.error(`[generate-meal-plan] Failed to delete previous items for plan ${finalMealPlanId}:`, deleteErr);
+      // Continue anyway — inserting new items is more important
+    }
+
     const { error: insertErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
     if (insertErr) {
@@ -1757,18 +1806,6 @@ serve(async (req) => {
         await safeDeletePlan(serviceClient, finalMealPlanId);
       }
       throw new Error(`Falha ao inserir itens do plano ${finalMealPlanId}: ${insertErr.message}`);
-    }
-
-    if (previousItemIds.length > 0) {
-      const { error: deleteErr } = await serviceClient
-        .from("meal_plan_items")
-        .delete()
-        .in("id", previousItemIds);
-
-      if (deleteErr) {
-        console.error(`[generate-meal-plan] Failed to delete previous items for plan ${finalMealPlanId}:`, deleteErr);
-        throw new Error(`Novos itens foram gerados, mas a limpeza dos itens antigos falhou no plano ${finalMealPlanId}: ${deleteErr.message}`);
-      }
     }
 
     const visualResolved = await resolveVisualForItems(serviceClient, finalMealPlanId, planItems);
