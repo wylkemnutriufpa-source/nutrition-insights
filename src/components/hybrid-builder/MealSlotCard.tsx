@@ -11,12 +11,14 @@ import {
   ClipboardPaste,
   Scissors,
   RefreshCcw,
+  Search,
 } from "lucide-react";
 import { toast } from "sonner";
 import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
 import type { PatientContext } from "@/lib/mealComposer";
 import SmartMealSelectorModal from "./SmartMealSelectorModal";
 import MealSlotItemCard from "./MealSlotItemCard";
+import FoodSearchInline from "./FoodSearchInline";
 
 interface Props {
   day: number;
@@ -38,6 +40,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [editGrams, setEditGrams] = useState("");
   const [composing, setComposing] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
+  const [foodSearchOpen, setFoodSearchOpen] = useState(false);
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -256,7 +259,16 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 onDelete={handleDelete}
               />
             ))}
+            {foodSearchOpen && (
+              <FoodSearchInline day={day} mealType={mealType} onClose={() => setFoodSearchOpen(false)} />
+            )}
             <div className="flex gap-2">
+              <button
+                onClick={() => setFoodSearchOpen(!foodSearchOpen)}
+                className="flex-1 py-1.5 rounded-lg border border-dashed border-border text-[10px] text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1"
+              >
+                <Search className="w-3 h-3" /> Buscar alimento
+              </button>
               <button
                 onClick={() => setSelectorOpen(true)}
                 className="flex-1 py-1.5 rounded-lg border border-dashed border-border text-[10px] text-muted-foreground hover:border-primary/40 hover:text-primary transition-colors flex items-center justify-center gap-1"
