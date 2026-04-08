@@ -173,7 +173,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               </span>
             )}
             {/* Action buttons */}
-            <div className="absolute top-1 right-1 z-10 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity">
+            <div className="absolute top-1 right-1 z-10 flex gap-0.5 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity">
               <button
                 type="button"
                 onClick={(e) => { e.stopPropagation(); setInlineEdit(true); setEditValue(item.title); }}
