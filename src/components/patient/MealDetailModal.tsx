@@ -420,6 +420,24 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
             </>
           )}
 
+          {/* Regenerate substitutions button (when no subs exist yet) */}
+          {substitutionLines.length === 0 && canEdit && hasDescriptionLines && (
+            <>
+              <Separator />
+              <section>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full gap-2 text-xs"
+                  onClick={(e) => { e.stopPropagation(); handleRegenerateSubstitutions(); }}
+                >
+                  <RefreshCw className="w-3.5 h-3.5" />
+                  Gerar Substituições Equivalentes
+                </Button>
+              </section>
+            </>
+          )}
+
           {/* Substitutions from description */}
           {substitutionLines.length > 0 && (
             <>
@@ -428,6 +446,17 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
                 <div className="flex items-center gap-2 mb-3">
                   <Shuffle className="w-5 h-5 text-primary" />
                   <h4 className="font-semibold text-base">Substituições</h4>
+                  {canEdit && (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="ml-auto gap-1.5 text-[10px] h-6 px-2"
+                      onClick={(e) => { e.stopPropagation(); handleRegenerateSubstitutions(); }}
+                    >
+                      <RefreshCw className="w-3 h-3" />
+                      Regenerar
+                    </Button>
+                  )}
                 </div>
                 <div className="space-y-2">
                   {substitutionLines.map((line, idx) => {
