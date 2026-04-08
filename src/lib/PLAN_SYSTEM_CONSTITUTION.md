@@ -79,26 +79,27 @@ Onboarding → Smart Plan Generator → Preview → Validação → Publicação
 
 ---
 
-## 4. ESTADOS DE PLANO (Ciclo de Vida)
+## 4. ESTADOS DE PLANO (Ciclo de Vida) — Enum `meal_plan_status`
 
 ```
-draft → draft_review → approved → published → published_to_patient → archived
-                                                                      ↑
-draft_revision ←───── (profissional solicita ajuste) ────────────────┘
-draft_auto_corrected ←── (AutoFix em plano obsoleto)
+draft → draft_auto_generated → under_professional_review → approved → published_to_patient
+                                                                           ↓
+                                                                      archived / expired / replaced
+                                                                           ↑
+revision_requested ←───── (profissional solicita ajuste) ─────────────────┘
 ```
 
-| Estado | Editável | Visível Paciente | Ativo |
+| Estado (enum real) | Editável | Visível Paciente | Ativo |
 |--------|----------|------------------|-------|
 | `draft` | ✅ | ❌ | ❌ |
-| `draft_review` | ✅ | ❌ | ❌ |
-| `draft_revision` | ✅ | ❌ | ❌ |
-| `draft_auto_corrected` | ✅ | ❌ | ❌ |
+| `draft_auto_generated` | ✅ | ❌ | ❌ |
+| `under_professional_review` | ✅ | ❌ | ❌ |
 | `approved` | ❌ | ❌ | ❌ |
-| `published` | ❌ | ✅ | ✅ |
 | `published_to_patient` | ❌ | ✅ | ✅ |
+| `revision_requested` | ✅ | ❌ | ❌ |
 | `archived` | ❌ | ❌ | ❌ |
-| `superseded` | ❌ | ❌ | ❌ |
+| `expired` | ❌ | ❌ | ❌ |
+| `replaced` | ❌ | ❌ | ❌ |
 
 ---
 
