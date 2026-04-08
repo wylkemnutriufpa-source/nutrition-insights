@@ -367,6 +367,17 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
+            {/* Change image button */}
+            {canEdit && onChangeImage && (
+              <button
+                type="button"
+                onClick={() => setShowImagePicker(true)}
+                className="absolute top-3 right-3 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-black/50 hover:bg-black/70 backdrop-blur-sm text-white text-[10px] font-medium transition-colors border border-white/20"
+              >
+                <ImageIcon className="w-3.5 h-3.5" />
+                Trocar Imagem
+              </button>
+            )}
             <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10">
