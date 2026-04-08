@@ -942,8 +942,9 @@ function buildMealFromDBFoods(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// PERSONALIZED PLAN GENERATOR v4.0
-// Uses ifj_food_database with patient-specific seeded selection
+// TEMPLATE-FIRST PLAN GENERATOR v5.0
+// Priority: Validated presets → DB foods as fallback only
+// This ensures cultural coherence (no "lula at breakfast")
 // ═══════════════════════════════════════════════════════════════
 
 function generatePersonalizedPlan(
@@ -953,40 +954,15 @@ function generatePersonalizedPlan(
   kcalTarget: number,
   macros: { protein: number; carbs: number; fat: number },
   planOptionIndex: number = 0,
+  restrictions: string[] = [],
+  disliked: string[] = [],
 ): any[] {
-  const items: any[] = [];
-  const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
-  const patientSeed = generationSeed(patientId, planOptionIndex);
-
-  // Track used proteins per meal type to ensure variety across the week
-  const usedProteinsPerMeal: Record<string, Set<string>> = {};
-  for (const mt of mealTypes) usedProteinsPerMeal[mt] = new Set();
-
-  for (let day = 0; day < 7; day++) {
-    for (const mealType of mealTypes) {
-      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
-      
-      const selectedFoods = selectFoodsForMeal(
-        patientFoods,
-        mealType,
-        goal,
-        patientSeed,
-        day,
-        usedProteinsPerMeal[mealType],
-      );
-
-      // Track selected proteins for anti-repetition
-      for (const f of selectedFoods) {
-        if (f.category === "proteina") usedProteinsPerMeal[mealType].add(f.id);
-      }
-
-      if (selectedFoods.length > 0) {
-        const mealItem = buildMealFromDBFoods(selectedFoods, mealType, day, targetKcal, goal);
-        if (mealItem) items.push(mealItem);
-      }
-    }
-  }
-
+  // ── TEMPLATE-FIRST STRATEGY ──
+  // Always use validated presets as the primary source.
+  // DB foods are only used if presets are exhausted or restricted away.
+  const items = generateRealisticPlan(goal, kcalTarget, macros, restrictions, disliked, planOptionIndex);
+  
+  console.log(`[generate-meal-plan] Template-First: ${items.length} items from validated presets`);
   return items;
 }
 
@@ -1605,12 +1581,8 @@ serve(async (req) => {
       const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
-        let rawItems: any[];
-        if (useDBDriven) {
-          rawItems = generatePersonalizedPlan(dbFoods, patient_id, goal, finalKcal, finalMacros, tplIdx);
-        } else {
-          rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
-        }
+        // Template-First: always use validated presets
+        const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const planItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
 
         const genMeta = buildGenerationMetadata(
@@ -1721,14 +1693,9 @@ serve(async (req) => {
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
     
-    let rawPlanItems: any[];
-    if (useDBDriven) {
-      rawPlanItems = generatePersonalizedPlan(dbFoods, patient_id, goal, finalKcal, finalMacros, planOptionIndex);
-      console.log(`[generate-meal-plan] DB-driven plan generated: ${rawPlanItems.length} items`);
-    } else {
-      rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
-      console.log(`[generate-meal-plan] Preset-based plan generated: ${rawPlanItems.length} items`);
-    }
+    // ── TEMPLATE-FIRST: Always use validated Brazilian presets ──
+    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
+    console.log(`[generate-meal-plan] Template-First plan generated: ${rawPlanItems.length} items (validated presets)`);
     
     // Smart mode: apply adjustments to RAW items BEFORE reconciliation
     // so that reconcileDailyMacros can normalize the final totals correctly
