@@ -677,8 +677,19 @@ export default function PatientWorkoutView() {
             </div>
 
             <Button onClick={submitCompletion} disabled={submitting} className="w-full" size="lg">
-              {submitting ? "Registrando..." : `✅ Completar Treino (${completedExIds.size}/${exercises.length})`}
+              {submitting ? "Registrando..." : progressPercent === 100 
+                ? `🎉 Completar Treino — Todos concluídos!` 
+                : `✅ Completar Treino (${completedExIds.size}/${exercises.length})`}
             </Button>
+            {progressPercent === 100 && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center text-xs text-primary font-medium"
+              >
+                Parabéns! Todos os exercícios foram marcados ✨
+              </motion.p>
+            )}
           </div>
         </DialogContent>
       </Dialog>
