@@ -1,10 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
-  Shuffle, Leaf, UtensilsCrossed, ScrollText,
+  Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler,
 } from "lucide-react";
 
 interface FoodItem {
@@ -31,12 +31,16 @@ export interface MealDetailData {
   fat_target?: number | null;
   metadata?: Record<string, any> | null;
   image_url?: string | null;
+  /** If provided, enables editing capabilities (remove food lines) */
+  itemId?: string;
 }
 
 interface MealDetailModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   meal: MealDetailData | null;
+  /** Called when the nutritionist removes a food line from description */
+  onRemoveFoodLine?: (itemId: string, newDescription: string) => void;
 }
 
 const MEAL_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -78,7 +82,41 @@ function parseJsonField<T>(value: any): T[] {
   return [];
 }
 
-export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalProps) {
+/** Parse description text into main food lines and substitution lines */
+function parseDescriptionLines(description: string | null | undefined): {
+  foodLines: string[];
+  substitutionLines: string[];
+  rawSubstitutionHeader: string;
+} {
+  if (!description) return { foodLines: [], substitutionLines: [], rawSubstitutionHeader: "" };
+
+  const parts = description.split(/\n\n🔄 Substituições:\n/);
+  const mainSection = parts[0] || "";
+  const subsSection = parts[1] || "";
+
+  const foodLines = mainSection
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  const substitutionLines = subsSection
+    .split("\n")
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+
+  return { foodLines, substitutionLines, rawSubstitutionHeader: subsSection ? "\n\n🔄 Substituições:\n" : "" };
+}
+
+/** Rebuild description from lines */
+function rebuildDescription(foodLines: string[], substitutionLines: string[]): string {
+  const main = foodLines.join("\n");
+  if (substitutionLines.length === 0) return main;
+  return main + "\n\n🔄 Substituições:\n" + substitutionLines.join("\n");
+}
+
+export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: MealDetailModalProps) {
+  const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
+
   if (!meal) return null;
 
   const meta = meal.metadata || {};
@@ -94,8 +132,37 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
 
   const hasMacros = meal.calories_target || meal.protein_target || meal.carbs_target || meal.fat_target;
 
+  const canEdit = !!meal.itemId && !!onRemoveFoodLine;
+  const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
+  const hasDescriptionLines = foodLines.length > 0;
+
+  const handleRemoveLine = (lineIdx: number) => {
+    if (!canEdit || !meal.itemId) return;
+    const newRemoved = new Set(removedLines);
+    newRemoved.add(lineIdx);
+    setRemovedLines(newRemoved);
+
+    const remainingFoodLines = foodLines.filter((_, i) => !newRemoved.has(i));
+    const newDescription = rebuildDescription(remainingFoodLines, substitutionLines);
+    onRemoveFoodLine!(meal.itemId, newDescription);
+  };
+
+  const handleRemoveSubLine = (lineIdx: number) => {
+    if (!canEdit || !meal.itemId) return;
+    const newSubs = substitutionLines.filter((_, i) => i !== lineIdx);
+    const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
+    const newDescription = rebuildDescription(remainingFoodLines, newSubs);
+    onRemoveFoodLine!(meal.itemId, newDescription);
+  };
+
+  // Reset removed lines when modal closes
+  const handleOpenChange = (v: boolean) => {
+    if (!v) setRemovedLines(new Set());
+    onOpenChange(v);
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl backdrop-blur-sm fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
         {/* Hero Photo */}
         {imageUrl && (
@@ -106,7 +173,6 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
               className="w-full h-full object-cover"
             />
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/20 to-transparent" />
-            {/* Overlay title on photo */}
             <div className="absolute bottom-0 left-0 right-0 px-6 pb-4">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/20 backdrop-blur-sm flex items-center justify-center shrink-0 border border-white/10">
@@ -196,12 +262,63 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
             </div>
           )}
 
-          {/* Description */}
-          {meal.description && (
+          {/* Description as editable food lines */}
+          {hasDescriptionLines && (
+            <section>
+              <div className="flex items-center gap-2 mb-3">
+                <ChefHat className="w-5 h-5 text-primary" />
+                <h4 className="font-semibold text-base">Composição</h4>
+                {canEdit && (
+                  <span className="text-[10px] text-muted-foreground ml-auto">Clique no ✕ para remover</span>
+                )}
+              </div>
+              <ul className="space-y-1.5">
+                {foodLines.map((line, idx) => {
+                  if (removedLines.has(idx)) return null;
+                  const isBullet = line.startsWith("•");
+                  const displayText = isBullet ? line.slice(1).trim() : line;
+
+                  // Extract portion if present (e.g., "Frango — 150g")
+                  const portionMatch = displayText.match(/—\s*(.+)$/);
+                  const foodName = portionMatch ? displayText.replace(/—\s*.+$/, "").trim() : displayText;
+                  const portion = portionMatch ? portionMatch[1].trim() : null;
+
+                  return (
+                    <li key={idx} className="flex items-center gap-2 text-sm bg-secondary/30 rounded-lg px-3 py-2 group/line">
+                      <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
+                      <span className="flex-1 font-medium text-[13px]">{foodName}</span>
+                      {portion && (
+                        <span className="flex items-center gap-1 text-[11px] text-muted-foreground font-semibold bg-secondary rounded px-2 py-0.5">
+                          <Ruler className="w-3 h-3" />
+                          {portion}
+                        </span>
+                      )}
+                      {canEdit && isBullet && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleRemoveLine(idx);
+                          }}
+                          className="p-1 rounded-full hover:bg-destructive/20 opacity-0 group-hover/line:opacity-100 transition-opacity shrink-0"
+                          title={`Remover ${foodName}`}
+                        >
+                          <X className="w-3.5 h-3.5 text-destructive" />
+                        </button>
+                      )}
+                    </li>
+                  );
+                })}
+              </ul>
+            </section>
+          )}
+
+          {/* Non-parsed description fallback (when no bullet lines) */}
+          {!hasDescriptionLines && meal.description && (
             <p className="text-sm text-muted-foreground">{meal.description}</p>
           )}
 
-          {/* Ingredients */}
+          {/* Structured Ingredients from metadata */}
           {foods.length > 0 && (
             <section>
               <div className="flex items-center gap-2 mb-3">
@@ -236,8 +353,77 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
             </>
           )}
 
-          {/* Substitutions */}
-          {substitutions.length > 0 && (
+          {/* Substitutions from description */}
+          {substitutionLines.length > 0 && (
+            <>
+              <Separator />
+              <section>
+                <div className="flex items-center gap-2 mb-3">
+                  <Shuffle className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-base">Substituições</h4>
+                </div>
+                <div className="space-y-2">
+                  {substitutionLines.map((line, idx) => {
+                    const isBullet = line.startsWith("•");
+                    const content = isBullet ? line.slice(1).trim() : line;
+
+                    // Parse "Food → Alt1 (100g), Alt2 (80g)"
+                    const arrowParts = content.split("→");
+                    const originalFood = arrowParts[0]?.trim() || content;
+                    const alternatives = arrowParts[1]?.trim() || "";
+
+                    return (
+                      <div key={idx} className="rounded-lg bg-secondary/40 p-3 group/subline">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <p className="text-xs font-medium text-muted-foreground mb-1.5">
+                              Trocar <span className="text-foreground font-semibold">{originalFood}</span> por:
+                            </p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {alternatives.split(",").map((alt, ai) => {
+                                const trimmedAlt = alt.trim();
+                                if (!trimmedAlt) return null;
+                                // Check if alt has portion info (e.g., "arroz (150g)")
+                                const portionMatch = trimmedAlt.match(/\(([^)]+)\)/);
+                                return (
+                                  <Badge key={ai} variant="secondary" className="text-xs gap-1">
+                                    {portionMatch
+                                      ? trimmedAlt.replace(/\([^)]+\)/, "").trim()
+                                      : trimmedAlt}
+                                    {portionMatch && (
+                                      <span className="text-[10px] text-primary font-bold ml-0.5">
+                                        📏 {portionMatch[1]}
+                                      </span>
+                                    )}
+                                  </Badge>
+                                );
+                              })}
+                            </div>
+                          </div>
+                          {canEdit && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSubLine(idx);
+                              }}
+                              className="p-1 rounded-full hover:bg-destructive/20 opacity-0 group-hover/subline:opacity-100 transition-opacity shrink-0"
+                              title="Remover substituição"
+                            >
+                              <X className="w-3 h-3 text-destructive" />
+                            </button>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </section>
+            </>
+          )}
+
+          {/* Substitutions from metadata (legacy) */}
+          {substitutions.length > 0 && substitutionLines.length === 0 && (
             <>
               <Separator />
               <section>
@@ -264,7 +450,7 @@ export function MealDetailModal({ open, onOpenChange, meal }: MealDetailModalPro
           )}
 
           {/* Empty state */}
-          {foods.length === 0 && !instructions && substitutions.length === 0 && !hasMacros && !imageUrl && (
+          {foods.length === 0 && !instructions && substitutions.length === 0 && !hasMacros && !imageUrl && !hasDescriptionLines && (
             <div className="text-center py-10 text-muted-foreground">
               <UtensilsCrossed className="w-10 h-10 mx-auto mb-3 opacity-40" />
               <p className="text-sm font-medium">Detalhes serão adicionados pelo seu nutricionista.</p>
