@@ -56,6 +56,7 @@ const PROFESSIONAL_ONLY_ROUTES = [
   "/clinical-pipeline",
   "/clinical-orchestration",
   "/clinical-lab",
+  "/lab-interpreter",
   "/clinical-simulation",
   "/clinical-predictions",
   "/therapeutic-intelligence",
