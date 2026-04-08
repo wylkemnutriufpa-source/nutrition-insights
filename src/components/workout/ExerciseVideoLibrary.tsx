@@ -278,7 +278,7 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart, o
               </div>
             </div>
             {video._source !== "system" && (
-              <div className="flex gap-0.5 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="flex gap-0.5 shrink-0">
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setEditingVideo(video)}>
                   <Edit2 className="w-3 h-3" />
                 </Button>
