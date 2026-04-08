@@ -213,6 +213,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: 
     onRemoveFoodLine!(meal.itemId, newDescription);
   };
 
+  const handleRegenerateSubstitutions = () => {
+    if (!canEdit || !meal.itemId) return;
+    const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
+    const newSubs = generateSubstitutionsFromFoodLines(remainingFoodLines, meal.meal_type || "");
+    const newDescription = rebuildDescription(remainingFoodLines, newSubs);
+    onRemoveFoodLine!(meal.itemId, newDescription);
+    toast.success(`🔄 ${newSubs.length} substituições regeneradas com porções`);
+  };
+
   // Reset removed lines when modal closes
   const handleOpenChange = (v: boolean) => {
     if (!v) setRemovedLines(new Set());
