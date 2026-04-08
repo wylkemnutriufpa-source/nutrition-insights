@@ -659,6 +659,20 @@ export default function MealPlanEditorV2() {
         open={visualLibOpen}
         onOpenChange={setVisualLibOpen}
       />
+      <SaveMealTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        items={store.items.map(i => ({
+          title: i.title,
+          description: i.description,
+          calories_target: i.calories_target,
+          protein_target: i.protein_target,
+          carbs_target: i.carbs_target,
+          fat_target: i.fat_target,
+        }))}
+        mealType={plan?.plan_type || "custom"}
+        defaultName={plan?.title || ""}
+      />
     </>
   );
 
