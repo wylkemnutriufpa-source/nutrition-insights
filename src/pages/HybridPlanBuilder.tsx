@@ -407,7 +407,7 @@ export default function HybridPlanBuilder() {
           <div className="flex gap-3 min-h-[600px]">
             {/* Left: Library */}
             {leftPanelOpen ? (
-              <div className="w-72 shrink-0 border border-border rounded-xl bg-card/50 overflow-hidden flex flex-col">
+              <div className="w-72 shrink-0 border border-border rounded-xl bg-card/50 flex flex-col max-h-[calc(100vh-200px)]">
                 <div className="flex items-center justify-between p-2 border-b border-border">
                   <span className="text-xs font-bold">📚 Biblioteca</span>
                   <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setLeftPanelOpen(false)}>
