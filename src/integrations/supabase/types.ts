@@ -588,6 +588,47 @@ export type Database = {
           },
         ]
       }
+      autofix_backups: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          meal_plan_id: string
+          original_items: Json
+          original_plan_metadata: Json | null
+          restored_at: string | null
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meal_plan_id: string
+          original_items: Json
+          original_plan_metadata?: Json | null
+          restored_at?: string | null
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meal_plan_id?: string
+          original_items?: Json
+          original_plan_metadata?: Json | null
+          restored_at?: string | null
+          tenant_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "autofix_backups_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       automation_rules: {
         Row: {
           actions: Json
