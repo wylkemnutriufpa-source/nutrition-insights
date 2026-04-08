@@ -114,6 +114,74 @@ export const FOOD_DATABASE: FoodItem[] = [
   { name: "Cream cheese light", portion: "1 col sopa (30g)", calories: 42, protein: 2, carbs: 1, fat: 3.5, category: "laticinio" },
   { name: "Requeijão light", portion: "1 col sopa (30g)", calories: 45, protein: 2.5, carbs: 1, fat: 3.6, category: "laticinio" },
 
+  // ── Proteínas extras ──
+  { name: "Músculo cozido", portion: "120g", calories: 226, protein: 39.4, carbs: 0, fat: 7.2, category: "proteina" },
+  { name: "Maminha grelhada", portion: "120g", calories: 270, protein: 39.6, carbs: 0, fat: 12, category: "proteina" },
+  { name: "Fraldinha grelhada", portion: "120g", calories: 286, protein: 36, carbs: 0, fat: 15.6, category: "proteina" },
+  { name: "Coxão duro grelhado", portion: "120g", calories: 263, protein: 42, carbs: 0, fat: 9.6, category: "proteina" },
+  { name: "Acém desfiado", portion: "120g", calories: 254, protein: 39.6, carbs: 0, fat: 9.6, category: "proteina" },
+  { name: "Frango desfiado", portion: "120g", calories: 191, protein: 32, carbs: 0, fat: 6.6, category: "proteina" },
+  { name: "Sobrecoxa de frango assada", portion: "120g", calories: 270, protein: 30.8, carbs: 0, fat: 15.6, category: "proteina" },
+  { name: "Bisteca suína grelhada", portion: "120g", calories: 276, protein: 31.2, carbs: 0, fat: 16.8, category: "proteina" },
+  { name: "Carne de sol desfiada", portion: "100g", calories: 215, protein: 35, carbs: 0, fat: 8, category: "proteina" },
+  { name: "Cordeiro assado", portion: "120g", calories: 324, protein: 30, carbs: 0, fat: 21.6, category: "proteina" },
+  { name: "Dourado grelhado", portion: "120g", calories: 149, protein: 30, carbs: 0, fat: 3, category: "proteina" },
+  { name: "Pintado grelhado", portion: "120g", calories: 138, protein: 27.6, carbs: 0, fat: 2.4, category: "proteina" },
+  { name: "Tambaqui assado", portion: "120g", calories: 156, protein: 28.8, carbs: 0, fat: 4.2, category: "proteina" },
+  { name: "Robalo grelhado", portion: "120g", calories: 142, protein: 29.4, carbs: 0, fat: 2.4, category: "proteina" },
+  { name: "Lula cozida", portion: "100g", calories: 92, protein: 15.6, carbs: 3.1, fat: 1.4, category: "proteina" },
+  { name: "Polvo cozido", portion: "100g", calories: 82, protein: 15, carbs: 2.2, fat: 1, category: "proteina" },
+  { name: "Clara de ovo cozida", portion: "3 claras", calories: 52, protein: 11, carbs: 0.7, fat: 0.2, category: "proteina" },
+
+  // ── Carboidratos extras ──
+  { name: "Farinha de aveia", portion: "30g", calories: 118, protein: 3.9, carbs: 20.1, fat: 2.3, category: "carboidrato" },
+  { name: "Farinha de banana verde", portion: "20g", calories: 66, protein: 0.8, carbs: 15.2, fat: 0.1, category: "carboidrato" },
+  { name: "Polenta cozida", portion: "150g", calories: 102, protein: 2.4, carbs: 22.5, fat: 0.5, category: "carboidrato" },
+  { name: "Pão sírio integral", portion: "1 un (60g)", calories: 165, protein: 6, carbs: 32, fat: 1.5, category: "carboidrato" },
+  { name: "Torrada integral", portion: "4 un (30g)", calories: 120, protein: 3.5, carbs: 22, fat: 2, category: "carboidrato" },
+  { name: "Mandioquinha cozida", portion: "100g", calories: 96, protein: 1, carbs: 22, fat: 0.3, category: "carboidrato" },
+  { name: "Amaranto cozido", portion: "100g", calories: 102, protein: 3.8, carbs: 19, fat: 1.6, category: "carboidrato" },
+  { name: "Canjica de milho", portion: "150g", calories: 195, protein: 3, carbs: 42, fat: 0.8, category: "carboidrato" },
+
+  // ── Verduras extras ──
+  { name: "Pimentão vermelho", portion: "100g", calories: 31, protein: 1, carbs: 6, fat: 0.3, category: "verdura" },
+  { name: "Pimentão verde", portion: "100g", calories: 20, protein: 0.9, carbs: 4.6, fat: 0.2, category: "verdura" },
+  { name: "Couve-manteiga crua", portion: "100g", calories: 35, protein: 2.5, carbs: 6, fat: 0.7, category: "verdura" },
+  { name: "Chicória", portion: "100g", calories: 17, protein: 1.7, carbs: 3.4, fat: 0.3, category: "verdura" },
+  { name: "Acelga", portion: "100g", calories: 19, protein: 1.8, carbs: 3.7, fat: 0.2, category: "verdura" },
+  { name: "Ora-pro-nóbis", portion: "100g", calories: 26, protein: 2, carbs: 4, fat: 0.4, category: "verdura" },
+  { name: "Agrião cozido", portion: "100g", calories: 22, protein: 2.3, carbs: 3.3, fat: 0.3, category: "verdura" },
+
+  // ── Frutas extras ──
+  { name: "Amora", portion: "100g", calories: 43, protein: 1.4, carbs: 10, fat: 0.5, category: "fruta" },
+  { name: "Mirtilo", portion: "100g", calories: 57, protein: 0.7, carbs: 14.5, fat: 0.3, category: "fruta" },
+  { name: "Framboesa", portion: "100g", calories: 52, protein: 1.2, carbs: 12, fat: 0.7, category: "fruta" },
+  { name: "Pitaya", portion: "100g", calories: 50, protein: 1.1, carbs: 11, fat: 0.4, category: "fruta" },
+  { name: "Acerola", portion: "100g", calories: 32, protein: 0.4, carbs: 8, fat: 0.3, category: "fruta" },
+  { name: "Jabuticaba", portion: "100g", calories: 58, protein: 0.6, carbs: 16, fat: 0.1, category: "fruta" },
+  { name: "Banana nanica", portion: "1 un (100g)", calories: 92, protein: 1.4, carbs: 24, fat: 0.1, category: "fruta" },
+  { name: "Mexerica", portion: "1 un (130g)", calories: 49, protein: 1, carbs: 12.5, fat: 0.1, category: "fruta" },
+  { name: "Caju", portion: "100g", calories: 43, protein: 0.8, carbs: 10, fat: 0.3, category: "fruta" },
+  { name: "Figo", portion: "100g", calories: 74, protein: 0.8, carbs: 19, fat: 0.3, category: "fruta" },
+  { name: "Romã", portion: "100g", calories: 83, protein: 1.7, carbs: 19, fat: 1.2, category: "fruta" },
+  { name: "Tâmara", portion: "3 un (30g)", calories: 85, protein: 0.8, carbs: 22.5, fat: 0.1, category: "fruta" },
+  { name: "Damasco seco", portion: "30g", calories: 72, protein: 1, carbs: 18.9, fat: 0.2, category: "fruta" },
+
+  // ── Gorduras extras ──
+  { name: "Macadâmia", portion: "15g (5 un)", calories: 108, protein: 1.2, carbs: 2.1, fat: 11.4, category: "gordura" },
+  { name: "Semente de abóbora", portion: "15g", calories: 84, protein: 4.5, carbs: 1.7, fat: 7.4, category: "gordura" },
+  { name: "Semente de gergelim", portion: "10g", calories: 57, protein: 1.8, carbs: 2.3, fat: 5, category: "gordura" },
+  { name: "Tahine", portion: "1 col sopa (15g)", calories: 89, protein: 2.6, carbs: 3.2, fat: 8.1, category: "gordura" },
+  { name: "Óleo de abacate", portion: "1 col sopa (13ml)", calories: 120, protein: 0, carbs: 0, fat: 14, category: "gordura" },
+
+  // ── Laticínios extras ──
+  { name: "Queijo coalho grelhado", portion: "50g", calories: 175, protein: 11, carbs: 0.8, fat: 14, category: "laticinio" },
+  { name: "Queijo provolone", portion: "30g", calories: 105, protein: 7.5, carbs: 0.6, fat: 8.1, category: "laticinio" },
+  { name: "Iogurte proteico", portion: "170g", calories: 111, protein: 17, carbs: 8.5, fat: 0.9, category: "laticinio" },
+  { name: "Kefir", portion: "200ml", calories: 126, protein: 6.6, carbs: 9.4, fat: 7, category: "laticinio" },
+  { name: "Leite de aveia", portion: "200ml", calories: 96, protein: 2, carbs: 14, fat: 3, category: "laticinio" },
+  { name: "Leite sem lactose", portion: "200ml", calories: 96, protein: 6.4, carbs: 10, fat: 3, category: "laticinio" },
+
   // ── Preparações comuns ──
   { name: "Arroz com feijão", portion: "4 col arroz + 1 concha", calories: 271, protein: 8.8, carbs: 57, fat: 0.9, category: "preparacao" },
   { name: "Salada verde mista", portion: "1 prato (100g)", calories: 20, protein: 1.5, carbs: 3, fat: 0.3, category: "preparacao" },
@@ -128,6 +196,17 @@ export const FOOD_DATABASE: FoodItem[] = [
   { name: "Pão de queijo", portion: "2 un pequenas", calories: 160, protein: 4, carbs: 22, fat: 6, category: "preparacao" },
   { name: "Barrinha de cereal", portion: "1 un (25g)", calories: 100, protein: 1.5, carbs: 18, fat: 3, category: "preparacao" },
   { name: "Mix de oleaginosas", portion: "30g", calories: 180, protein: 5, carbs: 6, fat: 16, category: "preparacao" },
+  { name: "Homus", portion: "50g", calories: 83, protein: 4, carbs: 7.2, fat: 4.8, category: "preparacao" },
+  { name: "Guacamole", portion: "50g", calories: 80, protein: 1, carbs: 4.5, fat: 7.5, category: "preparacao" },
+
+  // ── Bebidas ──
+  { name: "Chá verde", portion: "200ml", calories: 2, protein: 0, carbs: 0, fat: 0, category: "bebida" },
+  { name: "Chá de hibisco", portion: "200ml", calories: 3, protein: 0, carbs: 0.5, fat: 0, category: "bebida" },
+  { name: "Chá de camomila", portion: "200ml", calories: 1, protein: 0, carbs: 0, fat: 0, category: "bebida" },
+  { name: "Café sem açúcar", portion: "50ml", calories: 2, protein: 0.1, carbs: 0, fat: 0, category: "bebida" },
+  { name: "Água de coco natural", portion: "200ml", calories: 38, protein: 1.4, carbs: 7.4, fat: 0.4, category: "bebida" },
+  { name: "Suco de maracujá natural", portion: "200ml", calories: 76, protein: 0.8, carbs: 18, fat: 0.2, category: "bebida" },
+  { name: "Kombucha", portion: "200ml", calories: 30, protein: 0, carbs: 7, fat: 0, category: "bebida" },
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {
@@ -138,6 +217,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   gordura: "🥑 Gorduras",
   laticinio: "🥛 Laticínios",
   preparacao: "🍽️ Preparações",
+  bebida: "🍵 Bebidas",
 };
 
 interface FoodAutocompleteProps {
