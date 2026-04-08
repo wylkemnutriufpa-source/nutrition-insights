@@ -196,6 +196,7 @@ function DraggableFoodItem({ food }: { food: FoodRow }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      style={{ touchAction: "none" }}
       className={`flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing transition-all text-xs ${
         isDragging ? "opacity-50 scale-95" : "hover:bg-muted/60"
       }`}
@@ -230,6 +231,7 @@ function DraggableRecipeItem({ recipe }: { recipe: RecipeRow }) {
       ref={setNodeRef}
       {...listeners}
       {...attributes}
+      style={{ touchAction: "none" }}
       className={`flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing transition-all text-xs ${
         isDragging ? "opacity-50 scale-95" : "hover:bg-muted/60"
       }`}
