@@ -670,7 +670,7 @@ export default function MealPlanEditorV2() {
           carbs_target: i.carbs_target,
           fat_target: i.fat_target,
         }))}
-        mealType={plan?.plan_type || "custom"}
+        mealType={(plan as any)?.plan_type || "custom"}
         defaultName={plan?.title || ""}
       />
     </>
