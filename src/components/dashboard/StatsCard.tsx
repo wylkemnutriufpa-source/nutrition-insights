@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { LucideIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface StatsCardProps {
   title: string;
@@ -8,18 +9,27 @@ interface StatsCardProps {
   icon: LucideIcon;
   trend?: { value: number; label: string };
   gradient?: boolean;
+  href?: string;
+  onClick?: () => void;
 }
 
-export default function StatsCard({ title, value, subtitle, icon: Icon, trend, gradient }: StatsCardProps) {
+export default function StatsCard({ title, value, subtitle, icon: Icon, trend, gradient, href, onClick }: StatsCardProps) {
+  const navigate = useNavigate();
+  const handleClick = () => {
+    if (onClick) onClick();
+    else if (href) navigate(href);
+  };
+  const isClickable = !!href || !!onClick;
   return (
     <motion.div
       whileHover={{ y: -3, scale: 1.02 }}
       whileTap={{ scale: 0.98 }}
+      onClick={handleClick}
       className={`rounded-xl p-5 shadow-card shimmer-sweep transition-all duration-300 ${
         gradient
           ? "gradient-primary text-primary-foreground shadow-glow"
           : "glass-premium metric-glow"
-      }`}
+      } ${isClickable ? "cursor-pointer" : ""}`}
     >
       <div className="flex items-start justify-between">
         <div>
