@@ -493,32 +493,55 @@ export default function PatientWorkoutView() {
 
                   {block.exercises.map((ex: any) => {
                     const isCompleted = completedExIds.has(ex.id);
+                    const restSeconds = ex.rest_seconds || 60;
                     return (
                       <motion.div
                         key={ex.id}
+                        layout
                         initial={{ opacity: 0.8 }}
-                        animate={{ opacity: isCompleted ? 0.5 : 1 }}
-                        className={`p-3 transition-all ${isCompleted ? "bg-primary/5" : "bg-muted/30"} ${groupInfo ? "border-t border-border/30" : "rounded-lg border border-transparent"}`}
+                        animate={{ 
+                          opacity: isCompleted ? 0.6 : 1,
+                          scale: isCompleted ? 0.98 : 1,
+                        }}
+                        transition={{ duration: 0.2 }}
+                        className={`p-4 transition-all ${isCompleted ? "bg-primary/5 border-primary/20" : "bg-muted/30"} ${groupInfo ? "border-t border-border/30" : "rounded-xl border"}`}
                       >
+                        {/* Exercise header with completion toggle */}
                         <div className="flex items-center justify-between mb-2">
-                          <div className="flex items-center gap-2">
+                          <div className="flex items-center gap-3">
                             <button
                               onClick={() => toggleExerciseComplete(ex.id)}
-                              className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${isCompleted ? "bg-primary border-primary" : "border-muted-foreground/30"}`}
+                              className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all ${
+                                isCompleted 
+                                  ? "bg-primary border-primary shadow-md shadow-primary/30" 
+                                  : "border-muted-foreground/30 hover:border-primary/50"
+                              }`}
                             >
-                              {isCompleted && <CheckCircle2 className="w-4 h-4 text-primary-foreground" />}
+                              {isCompleted && (
+                                <motion.div
+                                  initial={{ scale: 0 }}
+                                  animate={{ scale: 1 }}
+                                  transition={{ type: "spring", stiffness: 300 }}
+                                >
+                                  <CheckCircle2 className="w-5 h-5 text-primary-foreground" />
+                                </motion.div>
+                              )}
                             </button>
-                            <p className={`font-semibold text-sm ${isCompleted ? "line-through text-muted-foreground" : ""}`}>{ex.name}</p>
+                            <div>
+                              <p className={`font-semibold text-sm ${isCompleted ? "line-through text-muted-foreground" : ""}`}>
+                                {ex.name}
+                              </p>
+                              {ex.muscle_group && ex.muscle_group !== "other" && ex.muscle_group !== "Outro" && (
+                                <span className="text-[10px] text-muted-foreground">{ex.muscle_group}</span>
+                              )}
+                            </div>
                           </div>
                           <div className="flex items-center gap-1.5">
-                            {ex.muscle_group && ex.muscle_group !== "other" && ex.muscle_group !== "Outro" && (
-                              <Badge variant="secondary" className="text-xs">{ex.muscle_group}</Badge>
-                            )}
                             {ex.video_url && (
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="h-7 w-7"
+                                className="h-8 w-8 rounded-full bg-primary/10 hover:bg-primary/20"
                                 onClick={(e) => { e.stopPropagation(); setVideoModal(ex.video_url); }}
                               >
                                 <Video className="w-4 h-4 text-primary" />
@@ -527,42 +550,92 @@ export default function PatientWorkoutView() {
                           </div>
                         </div>
 
+                        {/* Prescription info badges */}
+                        <div className="flex flex-wrap gap-1.5 mb-3 ml-10">
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Layers className="w-3 h-3" /> {ex.sets}x{ex.reps}
+                          </Badge>
+                          {ex.load_kg && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              <Dumbbell className="w-3 h-3" /> {ex.load_kg}kg
+                            </Badge>
+                          )}
+                          <Badge variant="outline" className="text-xs gap-1">
+                            <Timer className="w-3 h-3" /> {restSeconds}s descanso
+                          </Badge>
+                          {ex.cadence && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              ⏱️ {ex.cadence}
+                            </Badge>
+                          )}
+                          {ex.rpe && (
+                            <Badge variant="outline" className="text-xs gap-1">
+                              RPE {ex.rpe}
+                            </Badge>
+                          )}
+                        </div>
+
                         {/* Method label */}
                         {ex.method_label && (
-                          <Badge variant="outline" className="text-[10px] mb-2">{ex.method_label}</Badge>
+                          <div className="ml-10 mb-2">
+                            <Badge variant="secondary" className="text-[10px]">{ex.method_label}</Badge>
+                          </div>
                         )}
 
-                        <div className="grid grid-cols-3 gap-2">
+                        {/* Notes/Observations */}
+                        {ex.notes && (
+                          <div className="ml-10 mb-3 px-3 py-2 rounded-lg bg-secondary/50 border border-border/50">
+                            <p className="text-[11px] text-muted-foreground italic">
+                              📝 {ex.notes}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Editable fields for the student */}
+                        <div className="grid grid-cols-3 gap-2 ml-10">
                           <div>
-                            <label className="text-xs text-muted-foreground">Séries</label>
+                            <label className="text-[10px] text-muted-foreground font-medium">Séries</label>
                             <Input
                               type="number"
-                              className="h-8"
+                              className="h-8 text-sm"
                               value={exerciseLogs[ex.id]?.sets_done || ""}
                               onChange={e => setExerciseLogs({ ...exerciseLogs, [ex.id]: { ...exerciseLogs[ex.id], sets_done: e.target.value } })}
                               placeholder={String(ex.sets)}
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground">Reps</label>
+                            <label className="text-[10px] text-muted-foreground font-medium">Repetições</label>
                             <Input
-                              className="h-8"
+                              className="h-8 text-sm"
                               value={exerciseLogs[ex.id]?.reps_done || ""}
                               onChange={e => setExerciseLogs({ ...exerciseLogs, [ex.id]: { ...exerciseLogs[ex.id], reps_done: e.target.value } })}
                               placeholder={ex.reps}
                             />
                           </div>
                           <div>
-                            <label className="text-xs text-muted-foreground">Carga (kg)</label>
+                            <label className="text-[10px] text-muted-foreground font-medium">Carga (kg)</label>
                             <Input
                               type="number"
-                              className="h-8"
+                              className="h-8 text-sm"
                               value={exerciseLogs[ex.id]?.load_kg || ""}
                               onChange={e => setExerciseLogs({ ...exerciseLogs, [ex.id]: { ...exerciseLogs[ex.id], load_kg: e.target.value } })}
                               placeholder={ex.load_kg?.toString() || "0"}
                             />
                           </div>
                         </div>
+
+                        {/* Completed feedback */}
+                        {isCompleted && (
+                          <motion.div
+                            initial={{ opacity: 0, height: 0 }}
+                            animate={{ opacity: 1, height: "auto" }}
+                            className="ml-10 mt-2"
+                          >
+                            <Badge className="bg-primary/10 text-primary border-primary/30 text-[10px]">
+                              ✅ Exercício concluído
+                            </Badge>
+                          </motion.div>
+                        )}
                       </motion.div>
                     );
                   })}
@@ -604,8 +677,19 @@ export default function PatientWorkoutView() {
             </div>
 
             <Button onClick={submitCompletion} disabled={submitting} className="w-full" size="lg">
-              {submitting ? "Registrando..." : `✅ Completar Treino (${completedExIds.size}/${exercises.length})`}
+              {submitting ? "Registrando..." : progressPercent === 100 
+                ? `🎉 Completar Treino — Todos concluídos!` 
+                : `✅ Completar Treino (${completedExIds.size}/${exercises.length})`}
             </Button>
+            {progressPercent === 100 && (
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="text-center text-xs text-primary font-medium"
+              >
+                Parabéns! Todos os exercícios foram marcados ✨
+              </motion.p>
+            )}
           </div>
         </DialogContent>
       </Dialog>

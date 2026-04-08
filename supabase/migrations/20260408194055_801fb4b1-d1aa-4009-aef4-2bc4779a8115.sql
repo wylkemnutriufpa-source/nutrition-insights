@@ -1,0 +1,1 @@
+DROP POLICY "Authenticated users can read active pix configs" ON public.pix_payment_configs;
