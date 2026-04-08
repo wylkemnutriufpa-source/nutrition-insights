@@ -718,12 +718,24 @@ const BREAKFAST_EXCLUDED_FOODS = new Set([
   "picanha", "alcatra", "bife", "carne moida", "tilapia", "sardinha", "sobrecoxa",
   "mostarda", "rucula", "brocolis", "tomate", "pepino", "cenoura",
   "oleo de coco", "amendoim", "castanha",
+  "atum em lata", "atum enlatado", "atum", "camarao cozido", "camarao",
+  "carne de sol desfiada", "carne seca", "carne seca desfiada", "carne moida magra",
+  "lula cozida", "cordeiro assado", "lombo suino assado", "bisteca suina grelhada",
+  "fraldinha grelhada", "maminha grelhada", "musculo cozido", "patinho grelhado",
+  "coxao duro grelhado", "dourado grelhado", "pintado grelhado", "tambaqui assado",
+  "hamburguer", "hamburguer artesanal", "hamburguer bovino", "linguica", "linguica de frango",
+  "pf completo", "bowl de frango", "carne bovina alcatra", "carne bovina coxao mole",
+  "carne bovina patinho", "carne de porco lombo",
 ]);
 
 /** Foods that make sense at breakfast in Brazilian context */
 const BREAKFAST_PREFERRED_CATEGORIES = new Set(["carboidrato", "proteina", "laticinio", "fruta"]);
-const BREAKFAST_PREFERRED_PROTEINS = new Set(["ovo", "ovo mexido", "ovo cozido", "queijo", "queijo coalho", "frango desfiado", "peito de peru"]);
-const BREAKFAST_PREFERRED_CARBS = new Set(["pao", "pao integral", "pao frances", "tapioca", "cuscuz", "aveia", "granola"]);
+const BREAKFAST_PREFERRED_PROTEINS = new Set([
+  "ovo", "ovo mexido", "ovo cozido", "clara de ovo cozida",
+  "queijo", "queijo coalho", "queijo minas", "queijo minas frescal", "queijo mucarela",
+  "frango desfiado", "peito de peru", "omelete", "requeijao",
+]);
+const BREAKFAST_PREFERRED_CARBS = new Set(["pao", "pao integral", "pao frances", "tapioca", "cuscuz", "aveia", "granola", "pao sirio integral"]);
 
 /** Select foods for a specific meal type using DB tags, with patient-seeded variety */
 function selectFoodsForMeal(
@@ -732,6 +744,7 @@ function selectFoodsForMeal(
   goal: string,
   patientSeed: number,
   dayIndex: number,
+  usedProteinIds?: Set<string>,
 ): DBFood[] {
   const mealTags = MEAL_TYPE_TO_DB_TAG[mealType] || [];
   const goalTag = GOAL_TO_DB_TAG[goal] || "";
@@ -750,6 +763,9 @@ function selectFoodsForMeal(
     let candidates = availableFoods.filter(f => {
       if (f.category !== requiredCat) return false;
       const normName = normalize(f.food_name);
+
+      // ── Anti-repetition: skip proteins already used this week for same meal type ──
+      if (requiredCat === "proteina" && usedProteinIds && usedProteinIds.has(f.id)) return false;
 
       // ── Breakfast: strict filtering ──
       if (isBreakfast) {
@@ -777,7 +793,7 @@ function selectFoodsForMeal(
     });
 
     if (candidates.length === 0) {
-      // Fallback: any food from this category (still respecting meal rules)
+      // Fallback: any food from this category (still respecting meal rules, but relaxing anti-repetition)
       const fallback = availableFoods.filter(f => {
         if (f.category !== requiredCat) return false;
         const normName = normalize(f.food_name);
@@ -921,6 +937,10 @@ function generatePersonalizedPlan(
   const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const patientSeed = generationSeed(patientId, planOptionIndex);
 
+  // Track used proteins per meal type to ensure variety across the week
+  const usedProteinsPerMeal: Record<string, Set<string>> = {};
+  for (const mt of mealTypes) usedProteinsPerMeal[mt] = new Set();
+
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
@@ -931,7 +951,13 @@ function generatePersonalizedPlan(
         goal,
         patientSeed,
         day,
+        usedProteinsPerMeal[mealType],
       );
+
+      // Track selected proteins for anti-repetition
+      for (const f of selectedFoods) {
+        if (f.category === "proteina") usedProteinsPerMeal[mealType].add(f.id);
+      }
 
       if (selectedFoods.length > 0) {
         const mealItem = buildMealFromDBFoods(selectedFoods, mealType, day, targetKcal, goal);
