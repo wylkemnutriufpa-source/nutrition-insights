@@ -73,7 +73,7 @@ export default function PublicPlans({ planType }: { planType: "patient_prestige"
 
       const [profileRes, pixRes] = await Promise.all([
         supabase.from("profiles").select("full_name, avatar_url").eq("user_id", pub.nutritionist_id).maybeSingle(),
-        supabase.from("pix_payment_configs").select("*").eq("is_active", true).eq("plan_type", planType).order("amount", { ascending: true }),
+        supabase.from("pix_payment_configs").select("*").eq("is_active", true).eq("nutritionist_id", pub.nutritionist_id).eq("plan_type", planType).order("amount", { ascending: true }),
       ]);
 
       setProfileData(profileRes.data as ProfileData | null);
