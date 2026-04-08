@@ -241,6 +241,11 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       protein_target: ins.protein_target ?? null,
       carbs_target: ins.carbs_target ?? null,
       fat_target: ins.fat_target ?? null,
+      metadata: (ins as any).metadata ?? null,
+      visual_library_item_id: (ins as any).visual_library_item_id ?? null,
+      image_url: (ins as any).image_url ?? null,
+      item_origin: (ins as any).item_origin ?? null,
+      is_manually_edited: (ins as any).is_manually_edited ?? false,
       created_at: new Date().toISOString(),
     } as MealPlanItem));
 

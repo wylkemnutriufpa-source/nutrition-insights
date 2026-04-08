@@ -16,6 +16,8 @@ import { SaveTemplateDialog } from "./SaveTemplateDialog";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
+import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
+import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
@@ -50,6 +52,7 @@ export function WeeklyGrid() {
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
+  const [foodSearchKey, setFoodSearchKey] = useState<string | null>(null);
 
   // Drag state
   const [dragSource, setDragSource] = useState<{ day: number; mealType: MealType } | null>(null);
@@ -189,13 +192,23 @@ export function WeeklyGrid() {
                   onDragEnd={() => { setDragSource(null); setDragOver(null); }}
                   onDragOver={(e) => {
                     e.preventDefault();
-                    e.dataTransfer.dropEffect = "move";
+                    const hasExternalItem = Array.from(e.dataTransfer.types).includes("application/json");
+                    e.dataTransfer.dropEffect = hasExternalItem ? "copy" : "move";
                     if (!isDragOvr) setDragOver({ day: day.key, mealType: meal.key });
                   }}
                   onDragLeave={() => { if (isDragOvr) setDragOver(null); }}
                   onDrop={(e) => {
                     e.preventDefault();
-                    if (dragSource && !(dragSource.day === day.key && dragSource.mealType === meal.key)) {
+                    const draggedItem = parseDraggedVisualLibraryData(e.dataTransfer.getData("application/json"));
+
+                    if (draggedItem && planId) {
+                      addItem(buildVisualLibraryMealInsert({
+                        planId,
+                        day: day.key,
+                        mealType: meal.key,
+                        item: draggedItem,
+                      }));
+                    } else if (dragSource && !(dragSource.day === day.key && dragSource.mealType === meal.key)) {
                       swapCells(dragSource.day, dragSource.mealType, day.key, meal.key);
                     }
                     setDragOver(null);
@@ -208,7 +221,7 @@ export function WeeklyGrid() {
                 >
                   {/* Drag handle */}
                   {cellItems.length > 0 && (
-                    <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-60 transition-opacity flex gap-0.5">
+                    <div className="absolute top-1 right-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-60 transition-opacity flex gap-0.5">
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); openSaveTemplate(day.key, meal.key); }}
@@ -243,55 +256,87 @@ export function WeeklyGrid() {
 
                   {/* Quick-add & Library */}
                   <div onClick={(e) => e.stopPropagation()} className="mt-1">
-                    {quickAddKey === cellKey ? (
-                      <div className="flex gap-1">
-                        <Input
-                          autoFocus
-                          value={quickAddText}
-                          onChange={(e) => setQuickAddText(e.target.value)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") handleQuickAdd(day.key, meal.key);
-                            if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
-                          }}
-                          placeholder="Ex: 2 ovos cozidos"
-                          className="h-7 text-[11px]"
-                        />
-                        <Button
-                          size="icon"
-                          className="h-7 w-7 shrink-0"
-                          onClick={() => handleQuickAdd(day.key, meal.key)}
-                          disabled={!quickAddText.trim()}
-                        >
-                          <Check className="w-3 h-3" />
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="space-y-1">
+                      {quickAddKey === cellKey && (
+                        <div className="flex gap-1">
+                          <Input
+                            autoFocus
+                            value={quickAddText}
+                            onChange={(e) => setQuickAddText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") handleQuickAdd(day.key, meal.key);
+                              if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
+                            }}
+                            placeholder="Ex: 2 ovos cozidos"
+                            className="h-7 text-[11px]"
+                          />
+                          <Button
+                            size="icon"
+                            className="h-7 w-7 shrink-0"
+                            onClick={() => handleQuickAdd(day.key, meal.key)}
+                            disabled={!quickAddText.trim()}
+                          >
+                            <Check className="w-3 h-3" />
+                          </Button>
+                        </div>
+                      )}
+
+                      <div className="grid grid-cols-3 gap-1">
                         <button
                           type="button"
-                          onClick={() => { setQuickAddKey(cellKey); setQuickAddText(""); }}
-                          className="flex-1 flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 rounded border border-dashed border-border hover:border-primary"
+                          onClick={() => {
+                            setQuickAddKey(quickAddKey === cellKey ? null : cellKey);
+                            setQuickAddText("");
+                            setFoodSearchKey(null);
+                          }}
+                          className={`flex items-center justify-center gap-1 text-[10px] py-1 rounded border transition-colors ${
+                            quickAddKey === cellKey
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                          }`}
                         >
-                          <Plus className="w-3 h-3" /> Adicionar
+                          <Plus className="w-3 h-3" /> Manual
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setFoodSearchKey(foodSearchKey === cellKey ? null : cellKey);
+                            setQuickAddKey(null);
+                            setQuickAddText("");
+                          }}
+                          className={`flex items-center justify-center gap-1 text-[10px] py-1 rounded border transition-colors ${
+                            foodSearchKey === cellKey
+                              ? "border-primary bg-primary/10 text-primary"
+                              : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                          }`}
+                        >
+                          <Search className="w-3 h-3" /> Alimento
                         </button>
                         <button
                           type="button"
                           onClick={() => openMealLibraryModal(day.key, meal.key)}
-                          className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 px-2 rounded border border-dashed border-border hover:border-primary"
-                          title="Banco de Refeições"
+                          className="flex items-center justify-center gap-1 text-[10px] py-1 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                          title="Substituir pela biblioteca"
                         >
-                          <Utensils className="w-3 h-3" />
+                          <Utensils className="w-3 h-3" /> Subst.
                         </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-1">
                         <button
                           type="button"
                           onClick={() => openLibrary(day.key, meal.key)}
-                          className="flex items-center justify-center gap-1 text-[10px] text-muted-foreground hover:text-primary py-1 px-2 rounded border border-dashed border-border hover:border-primary"
+                          className="flex items-center justify-center gap-1 text-[10px] py-1 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
                           title="Meus Modelos"
                         >
-                          <Zap className="w-3 h-3" />
+                          <Zap className="w-3 h-3" /> Modelos
                         </button>
                       </div>
-                    )}
+
+                      {foodSearchKey === cellKey && (
+                        <FoodSearchInline day={day.key} mealType={meal.key} onClose={() => setFoodSearchKey(null)} />
+                      )}
+                    </div>
                   </div>
                 </div>
               );
