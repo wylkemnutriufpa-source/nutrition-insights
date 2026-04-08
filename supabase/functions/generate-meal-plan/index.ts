@@ -937,6 +937,10 @@ function generatePersonalizedPlan(
   const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const patientSeed = generationSeed(patientId, planOptionIndex);
 
+  // Track used proteins per meal type to ensure variety across the week
+  const usedProteinsPerMeal: Record<string, Set<string>> = {};
+  for (const mt of mealTypes) usedProteinsPerMeal[mt] = new Set();
+
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
@@ -947,7 +951,13 @@ function generatePersonalizedPlan(
         goal,
         patientSeed,
         day,
+        usedProteinsPerMeal[mealType],
       );
+
+      // Track selected proteins for anti-repetition
+      for (const f of selectedFoods) {
+        if (f.category === "proteina") usedProteinsPerMeal[mealType].add(f.id);
+      }
 
       if (selectedFoods.length > 0) {
         const mealItem = buildMealFromDBFoods(selectedFoods, mealType, day, targetKcal, goal);
