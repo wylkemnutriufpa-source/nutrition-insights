@@ -217,6 +217,7 @@ const CATEGORY_LABELS: Record<string, string> = {
   gordura: "🥑 Gorduras",
   laticinio: "🥛 Laticínios",
   preparacao: "🍽️ Preparações",
+  bebida: "🍵 Bebidas",
 };
 
 interface FoodAutocompleteProps {
