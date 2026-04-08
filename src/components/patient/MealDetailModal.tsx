@@ -4,8 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
-  Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler,
+  Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface FoodItem {
   name: string;
