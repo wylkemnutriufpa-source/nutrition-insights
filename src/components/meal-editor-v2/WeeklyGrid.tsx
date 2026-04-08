@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
-  Plus, Check, ArrowLeftRight,
+  Plus, Check, ArrowLeftRight, Search,
   Flame, Beef, Wheat, Droplets, Zap, Bookmark,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
