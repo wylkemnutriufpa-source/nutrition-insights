@@ -17,7 +17,7 @@ interface MealItemCardProps {
 
 export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const { updateItem, deleteItem, duplicateItem } = useMealPlanEditorV2Store();
-  const { openMealDetail, setOnRemoveFoodLine } = useMealDetail();
+  const { openMealDetail, setOnRemoveFoodLine, setOnChangeImage } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
 
@@ -28,6 +28,14 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
     });
     return () => setOnRemoveFoodLine(null);
   }, [setOnRemoveFoodLine, updateItem]);
+
+  // Register callback for changing image
+  useEffect(() => {
+    setOnChangeImage((itemId: string, newImageUrl: string) => {
+      updateItem(itemId, { image_url: newImageUrl });
+    });
+    return () => setOnChangeImage(null);
+  }, [setOnChangeImage, updateItem]);
 
   const commitEdit = useCallback(() => {
     const trimmed = editValue.trim();
