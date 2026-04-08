@@ -426,6 +426,7 @@ export default function HybridPlanBuilder() {
             <MealPlanCanvas
               patientContext={patientContext}
               composerMode={composerMode}
+              showDropTargets
               onRequestGenerate={() => {
                 setRightPanelOpen(true);
                 // Scroll generation section into view
