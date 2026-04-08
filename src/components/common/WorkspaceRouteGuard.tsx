@@ -102,6 +102,7 @@ const NUTRITIONIST_ONLY_ROUTES = [
   "/clinical-brain",
   "/clinical-orchestration",
   "/clinical-lab",
+  "/lab-interpreter",
   "/clinical-simulation",
   "/clinical-predictions",
   "/therapeutic-intelligence",
