@@ -116,6 +116,62 @@ function rebuildDescription(foodLines: string[], substitutionLines: string[]): s
   return main + "\n\n🔄 Substituições:\n" + substitutionLines.join("\n");
 }
 
+/** Client-side substitution groups with portions for regeneration */
+const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPortion: string }> = {
+  protein_main: { foods: ["frango", "carne moída", "bife", "tilápia", "porco", "sardinha", "alcatra", "patinho"], defaultPortion: "150g" },
+  carb_main: { foods: ["arroz", "macarrão", "batata", "macaxeira", "batata doce", "inhame", "purê"], defaultPortion: "120g" },
+  carb_breakfast: { foods: ["pão integral", "tapioca", "cuscuz", "pão francês", "pão de forma"], defaultPortion: "50g" },
+  protein_breakfast: { foods: ["ovo mexido", "ovo cozido", "queijo coalho", "queijo muçarela", "frango desfiado"], defaultPortion: "60g" },
+  fruit: { foods: ["banana", "maçã", "mamão", "laranja", "goiaba", "morango", "tangerina", "melancia", "abacaxi", "manga"], defaultPortion: "100g" },
+  dairy: { foods: ["iogurte natural", "leite", "queijo coalho"], defaultPortion: "150ml" },
+  legume: { foods: ["feijão", "feijão carioca", "feijão preto", "lentilha"], defaultPortion: "80g" },
+  vegetable: { foods: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"], defaultPortion: "50g" },
+};
+
+function normalizeForMatch(t: string): string {
+  return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+/** Generate substitution lines from food lines */
+function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: string): string[] {
+  const newSubs: string[] = [];
+
+  for (const line of foodLines) {
+    if (!line.startsWith("•")) continue;
+    const content = line.slice(1).trim();
+    const foodName = content.split("—")[0]?.trim() || content;
+    const nFood = normalizeForMatch(foodName);
+
+    // Extract portion from the line if present
+    const portionMatch = content.match(/—\s*(\d+(?:[.,]\d+)?\s*(?:g|ml|unidade|fatia|colher)(?:\w*)?)/i);
+    const linePortion = portionMatch ? portionMatch[1].trim() : null;
+
+    for (const [groupKey, group] of Object.entries(CLIENT_SUBSTITUTION_GROUPS)) {
+      const match = group.foods.find(f => nFood.includes(normalizeForMatch(f)));
+      if (match) {
+        // Skip groups that don't match meal context
+        if (mealType === "breakfast" && (groupKey === "protein_main" || groupKey === "carb_main")) continue;
+        if ((mealType === "lunch" || mealType === "dinner") && (groupKey === "protein_breakfast" || groupKey === "carb_breakfast")) continue;
+
+        const portion = linePortion || group.defaultPortion;
+        const alternatives = group.foods
+          .filter(f => normalizeForMatch(f) !== normalizeForMatch(match))
+          .sort(() => Math.random() - 0.5) // shuffle
+          .slice(0, 3);
+
+        if (alternatives.length > 0) {
+          const altsWithPortion = alternatives.map(a => `${a} (${portion})`);
+          newSubs.push(`• ${foodName} → ${altsWithPortion.join(", ")}`);
+        }
+        break;
+      }
+    }
+  }
+
+  return newSubs;
+}
+
+
 export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine }: MealDetailModalProps) {
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
 
