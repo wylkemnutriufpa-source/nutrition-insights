@@ -143,7 +143,8 @@ export default function HybridPlanBuilder() {
   const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
 
   // DnD sensors
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const [activeDragData, setActiveDragData] = useState<{ type: string; label: string } | null>(null);
 
   // Patient composer context (must be before early returns)
   const patientId = store.plan?.patient_id;
@@ -322,7 +323,16 @@ export default function HybridPlanBuilder() {
 
   return (
     <DashboardLayout>
-      <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
+      <DndContext
+        sensors={sensors}
+        onDragStart={(event) => {
+          const data = event.active.data?.current;
+          if (data?.type === "food") setActiveDragData({ type: "food", label: data.food?.food_name || "Alimento" });
+          else if (data?.type === "recipe") setActiveDragData({ type: "recipe", label: data.recipe?.title || "Receita" });
+        }}
+        onDragEnd={(event) => { setActiveDragData(null); handleDragEnd(event); }}
+        onDragCancel={() => setActiveDragData(null)}
+      >
         <div className="space-y-3">
           {/* Topbar */}
           <BuilderTopbar
