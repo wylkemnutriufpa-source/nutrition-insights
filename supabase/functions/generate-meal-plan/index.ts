@@ -338,24 +338,47 @@ function resolveVisualFromDescription(
     if (titleMatch) return titleMatch;
   }
 
-  // Second: scan description lines for composed matches (prioritize longer/composed aliases first)
   const lines = description.split('\n');
-  
-  // Collect ALL candidate matches from description, pick the longest (most specific)
-  let bestMatch: string | null = null;
-  let bestAliasLength = 0;
-  
+  const ingredientLines: string[] = [];
   for (const line of lines) {
     const trimmed = line.trim();
     if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
     if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
-    const normLine = normalize(trimmed);
-    
-    // Check full line first for composed matches (e.g., "pão com ovo", "tapioca com queijo")
+    ingredientLines.push(normalize(trimmed));
+  }
+
+  // NEW: Cross-line composition detection
+  // Build a combined "ingredient bag" from all lines, then try composed aliases (longest first)
+  // This catches cases like pão on line 1 + ovo on line 2 → "pao com ovo" alias
+  const ingredientBag = ingredientLines.join(' ');
+  
+  // Sort aliases by length descending so we prefer the most specific composed match
+  const sortedAliases = Array.from(aliasMap.entries())
+    .filter(([alias]) => alias.length >= 5 && alias.includes(' '))
+    .sort((a, b) => b[0].length - a[0].length);
+  
+  for (const [alias, itemId] of sortedAliases) {
+    // For composed aliases like "pao com ovo", check if ALL key words exist in the ingredient bag
+    const aliasParts = alias.split(/\s+/).filter(p => p.length >= 3 && p !== 'com' && p !== 'de' && p !== 'e');
+    if (aliasParts.length < 2) continue;
+    const allPartsPresent = aliasParts.every(part => {
+      const idx = ingredientBag.indexOf(part);
+      if (idx === -1) return false;
+      const before = idx === 0 || ingredientBag[idx - 1] === ' ';
+      const after = (idx + part.length) >= ingredientBag.length || ingredientBag[idx + part.length] === ' ';
+      return before && after;
+    });
+    if (allPartsPresent) return itemId;
+  }
+
+  // Second: scan individual lines for single-line composed matches
+  let bestMatch: string | null = null;
+  let bestAliasLength = 0;
+  
+  for (const normLine of ingredientLines) {
     for (const [alias, itemId] of aliasMap) {
       if (alias.length < 3) continue;
       if (normLine.includes(alias) && alias.length > bestAliasLength) {
-        // Verify word boundaries
         const idx = normLine.indexOf(alias);
         const before = idx === 0 || normLine[idx - 1] === ' ';
         const after = (idx + alias.length) >= normLine.length || normLine[idx + alias.length] === ' ';
@@ -370,11 +393,8 @@ function resolveVisualFromDescription(
   if (bestMatch) return bestMatch;
 
   // Fallback: word-by-word scan (excluding carb keywords)
-  for (const line of lines) {
-    const trimmed = line.trim();
-    if (trimmed.includes('Substituiç') || trimmed.includes('🔄')) break;
-    if (!trimmed.startsWith('•') && !trimmed.startsWith('-')) continue;
-    const words = normalize(trimmed).split(/\s+/);
+  for (const normLine of ingredientLines) {
+    const words = normLine.split(/\s+/);
     for (const word of words) {
       if (VISUAL_CARB_KEYWORDS.has(word) || word.length < 3) continue;
       if (aliasMap.has(word)) return aliasMap.get(word)!;
