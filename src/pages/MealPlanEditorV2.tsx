@@ -4,7 +4,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
-  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal
+  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTenant } from "@/lib/tenantContext";
@@ -30,6 +30,7 @@ import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
 import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
+import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 
 type ViewMode = "grid" | "list";
 type EditorLayout = "tabs" | "compact";
@@ -71,6 +72,7 @@ export default function MealPlanEditorV2() {
   const [assistedOpen, setAssistedOpen] = useState(false);
   const [visualLibOpen, setVisualLibOpen] = useState(false);
   const [generatingNew, setGeneratingNew] = useState(false);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "grid";
@@ -486,6 +488,9 @@ export default function MealPlanEditorV2() {
                   <DropdownMenuItem onClick={() => setLibraryOpen(true)} className="gap-2">
                     <Library className="w-4 h-4" /> Meus Modelos
                   </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="gap-2">
+                    <Bookmark className="w-4 h-4" /> Salvar como Modelo
+                  </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
                       if (!confirm("Tem certeza que deseja apagar TODAS as refeições deste plano? Esta ação não pode ser desfeita.")) return;
@@ -653,6 +658,20 @@ export default function MealPlanEditorV2() {
       <MealVisualLibraryModal
         open={visualLibOpen}
         onOpenChange={setVisualLibOpen}
+      />
+      <SaveMealTemplateDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        items={store.items.map(i => ({
+          title: i.title,
+          description: i.description,
+          calories_target: i.calories_target,
+          protein_target: i.protein_target,
+          carbs_target: i.carbs_target,
+          fat_target: i.fat_target,
+        }))}
+        mealType={(plan as any)?.plan_type || "custom"}
+        defaultName={plan?.title || ""}
       />
     </>
   );
