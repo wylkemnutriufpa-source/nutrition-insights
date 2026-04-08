@@ -1,13 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
+  ImageIcon, Search, Plus, Pencil, Check,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 interface FoodItem {
   name: string;
@@ -43,6 +46,8 @@ interface MealDetailModalProps {
   meal: MealDetailData | null;
   /** Called when the nutritionist removes a food line from description */
   onRemoveFoodLine?: (itemId: string, newDescription: string) => void;
+  /** Called when image is changed */
+  onChangeImage?: (itemId: string, newImageUrl: string) => void;
 }
 
 const MEAL_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
