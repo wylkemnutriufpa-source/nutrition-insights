@@ -29,9 +29,12 @@ export default function PixConfigManager() {
   const { data: configs, isLoading } = useQuery({
     queryKey: ["admin-pix-configs"],
     queryFn: async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return [];
       const { data, error } = await supabase
         .from("pix_payment_configs")
         .select("*")
+        .eq("nutritionist_id", user.id)
         .order("amount", { ascending: true });
       if (error) throw error;
       return data as PixConfig[];
@@ -216,12 +219,15 @@ function PixConfigForm({
 
     setSaving(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) { toast.error("Usuário não autenticado"); setSaving(false); return; }
       const payload = {
         plan_label: label.trim(),
         plan_type: planType,
         amount: parsedAmount,
         pix_code: pixCode.trim(),
         qr_code_url: qrUrl || null,
+        nutritionist_id: user.id,
       };
 
       if (config) {
