@@ -744,6 +744,7 @@ function selectFoodsForMeal(
   goal: string,
   patientSeed: number,
   dayIndex: number,
+  usedProteinIds?: Set<string>,
 ): DBFood[] {
   const mealTags = MEAL_TYPE_TO_DB_TAG[mealType] || [];
   const goalTag = GOAL_TO_DB_TAG[goal] || "";
@@ -762,6 +763,9 @@ function selectFoodsForMeal(
     let candidates = availableFoods.filter(f => {
       if (f.category !== requiredCat) return false;
       const normName = normalize(f.food_name);
+
+      // ── Anti-repetition: skip proteins already used this week for same meal type ──
+      if (requiredCat === "proteina" && usedProteinIds && usedProteinIds.has(f.id)) return false;
 
       // ── Breakfast: strict filtering ──
       if (isBreakfast) {
@@ -789,7 +793,7 @@ function selectFoodsForMeal(
     });
 
     if (candidates.length === 0) {
-      // Fallback: any food from this category (still respecting meal rules)
+      // Fallback: any food from this category (still respecting meal rules, but relaxing anti-repetition)
       const fallback = availableFoods.filter(f => {
         if (f.category !== requiredCat) return false;
         const normName = normalize(f.food_name);
