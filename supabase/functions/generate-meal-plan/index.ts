@@ -693,6 +693,18 @@ function filterFoodsForPatient(
   });
 }
 
+/** Foods that should NEVER appear at breakfast */
+const BREAKFAST_EXCLUDED_FOODS = new Set([
+  "picanha", "alcatra", "bife", "carne moida", "tilapia", "sardinha", "sobrecoxa",
+  "mostarda", "rucula", "brocolis", "tomate", "pepino", "cenoura",
+  "oleo de coco", "amendoim", "castanha",
+]);
+
+/** Foods that make sense at breakfast in Brazilian context */
+const BREAKFAST_PREFERRED_CATEGORIES = new Set(["carboidrato", "proteina", "laticinio", "fruta"]);
+const BREAKFAST_PREFERRED_PROTEINS = new Set(["ovo", "ovo mexido", "ovo cozido", "queijo", "queijo coalho", "frango desfiado", "peito de peru"]);
+const BREAKFAST_PREFERRED_CARBS = new Set(["pao", "pao integral", "pao frances", "tapioca", "cuscuz", "aveia", "granola"]);
+
 /** Select foods for a specific meal type using DB tags, with patient-seeded variety */
 function selectFoodsForMeal(
   availableFoods: DBFood[],
@@ -707,6 +719,7 @@ function selectFoodsForMeal(
 
   // ── Dinner rule: exclude beans/legumes for lighter meal ──
   const isDinner = mealType === "dinner";
+  const isBreakfast = mealType === "breakfast";
   const dinnerExcludeKeywords = ["feijao", "feijão", "lentilha", "feijoada", "feijao verde"];
 
   const selected: DBFood[] = [];
@@ -716,25 +729,40 @@ function selectFoodsForMeal(
   for (const requiredCat of composition.required) {
     let candidates = availableFoods.filter(f => {
       if (f.category !== requiredCat) return false;
-      // Prefer foods with matching meal tags
+      const normName = normalize(f.food_name);
+
+      // ── Breakfast: strict filtering ──
+      if (isBreakfast) {
+        // Exclude foods that don't belong at breakfast
+        if (BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        // If food has meal_tags, it MUST include cafe_da_manha
+        if (f.meal_tags_json.length > 0 && !f.meal_tags_json.includes("cafe_da_manha")) return false;
+        // If food has NO tags, only allow known breakfast items
+        if (f.meal_tags_json.length === 0) {
+          if (requiredCat === "proteina" && !BREAKFAST_PREFERRED_PROTEINS.has(normName)) return false;
+          if (requiredCat === "carboidrato" && !BREAKFAST_PREFERRED_CARBS.has(normName)) return false;
+        }
+        return true;
+      }
+
+      // ── Non-breakfast: prefer foods with matching meal tags ──
       const hasMealTag = mealTags.length === 0 || f.meal_tags_json.length === 0 || f.meal_tags_json.some((t: string) => mealTags.includes(t));
       if (!hasMealTag) return false;
+
       // Dinner: exclude beans/legumes
       if (isDinner) {
-        const normName = normalize(f.food_name);
         if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
       }
       return true;
     });
 
     if (candidates.length === 0) {
-      // Fallback: any food from this category (still respecting dinner rule)
+      // Fallback: any food from this category (still respecting meal rules)
       const fallback = availableFoods.filter(f => {
         if (f.category !== requiredCat) return false;
-        if (isDinner) {
-          const normName = normalize(f.food_name);
-          if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
-        }
+        const normName = normalize(f.food_name);
+        if (isBreakfast && BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        if (isDinner && dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
         return true;
       });
       if (fallback.length > 0) {
@@ -758,10 +786,18 @@ function selectFoodsForMeal(
     usedCategories.add(requiredCat);
   }
 
-  // Add one optional food if available
+  // Add one optional food if available (skip for breakfast if we already have protein + carb)
   for (const optCat of composition.optional) {
     if (usedCategories.has(optCat)) continue;
-    const candidates = availableFoods.filter(f => f.category === optCat);
+    let candidates = availableFoods.filter(f => {
+      if (f.category !== optCat) return false;
+      if (isBreakfast) {
+        const normName = normalize(f.food_name);
+        if (BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        if (f.meal_tags_json.length > 0 && !f.meal_tags_json.includes("cafe_da_manha")) return false;
+      }
+      return true;
+    });
     if (candidates.length > 0) {
       const shuffled = seededShuffle(candidates, patientSeed + dayIndex * 17 + optCat.charCodeAt(0));
       selected.push(shuffled[0]);
