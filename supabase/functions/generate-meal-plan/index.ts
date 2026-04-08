@@ -806,19 +806,22 @@ function buildMealFromDBFoods(
     return `• ${f.food_name} — ${resolvedPortion}`;
   });
 
-  // Build substitution text from same categories
+  // Build substitution text from same categories — WITH portion quantities
   const subLines: string[] = [];
   for (const food of foods) {
-    const subs = SUBSTITUTION_GROUPS[
+    const groupKey =
       food.category === "proteina" ? (mealType === "breakfast" ? "protein_breakfast" : "protein") :
       food.category === "carboidrato" ? (mealType === "breakfast" ? "carb_breakfast" : "carb") :
-      food.category === "fruta" ? "fruit" : ""
-    ];
+      food.category === "fruta" ? "fruit" : "";
+    const subs = SUBSTITUTION_GROUPS[groupKey];
     if (subs) {
       const normFood = normalize(food.food_name);
+      const foodGrams = Math.round((food.portion_grams || 100) * clampedScale);
       const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 3);
       if (alts.length > 0) {
-        subLines.push(`• ${food.food_name} → ${alts.join(", ")}`);
+        // Include equivalent portion for each alternative
+        const altsWithPortion = alts.map(a => `${a} (${foodGrams}g)`);
+        subLines.push(`• ${food.food_name} → ${altsWithPortion.join(", ")}`);
       }
     }
   }
