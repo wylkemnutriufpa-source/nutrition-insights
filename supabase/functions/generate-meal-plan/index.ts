@@ -1582,23 +1582,21 @@ serve(async (req) => {
     const startDate = new Date().toISOString().split("T")[0];
 
     // ═══════════════════════════════════════════════════════════
-    // LOAD FOOD DATABASE FOR SMART/CLINICAL MODES
-    // Quick mode uses presets for speed; smart/clinical use DB
+    // LOAD FOOD DATABASE FOR ALL MODES
+    // All modes now use DB when available; presets are last resort
     // ═══════════════════════════════════════════════════════════
     
     let dbFoods: DBFood[] = [];
     let useDBDriven = false;
 
-    if (generationMode !== "quick") {
-      dbFoods = await loadFoodDatabase(serviceClient);
-      if (dbFoods.length >= 30) {
-        // Filter for this patient's restrictions/allergies/disliked
-        dbFoods = filterFoodsForPatient(dbFoods, restrictions, disliked, allergies);
-        useDBDriven = dbFoods.length >= 20;
-        console.log(`[generate-meal-plan] DB foods loaded: ${dbFoods.length} (after patient filtering). DB-driven: ${useDBDriven}`);
-      } else {
-        console.warn(`[generate-meal-plan] DB has only ${dbFoods.length} foods — falling back to presets`);
-      }
+    dbFoods = await loadFoodDatabase(serviceClient);
+    if (dbFoods.length >= 30) {
+      // Filter for this patient's restrictions/allergies/disliked
+      dbFoods = filterFoodsForPatient(dbFoods, restrictions, disliked, allergies);
+      useDBDriven = dbFoods.length >= 20;
+      console.log(`[generate-meal-plan] DB foods loaded: ${dbFoods.length} (after patient filtering). DB-driven: ${useDBDriven}`);
+    } else {
+      console.warn(`[generate-meal-plan] DB has only ${dbFoods.length} foods — falling back to presets`);
     }
 
     // ── Multi-plan flow ──
