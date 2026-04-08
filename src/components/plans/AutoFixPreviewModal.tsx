@@ -1,10 +1,13 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { CheckCircle2, ArrowRight, Wand2, PencilLine, X } from "lucide-react";
+import { CheckCircle2, ArrowRight, Wand2, PencilLine, X, Undo2, Loader2 } from "lucide-react";
 import type { AutoFixResult } from "@/lib/autoFixEngine";
+import { undoAutoFix } from "@/lib/autoFixEngine";
 import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
 const CHANGE_LABELS: Record<string, string> = {
   blocked_food_removed: "🚫 Alimento bloqueado removido",
@@ -30,6 +33,7 @@ interface Props {
   onOpenChange: (v: boolean) => void;
   result: AutoFixResult;
   onApprove: () => void;
+  onUndo?: () => void;
 }
 
 function ScoreCompare({ label, before, after }: { label: string; before: number; after: number }) {
@@ -66,8 +70,31 @@ function MacroCompare({ label, before, after, unit }: { label: string; before: n
   );
 }
 
-export default function AutoFixPreviewModal({ open, onOpenChange, result, onApprove }: Props) {
+export default function AutoFixPreviewModal({ open, onOpenChange, result, onApprove, onUndo }: Props) {
   const navigate = useNavigate();
+  const [undoing, setUndoing] = useState(false);
+
+  const handleUndo = async () => {
+    if (!result.newPlanId || !result.inPlace) {
+      toast.error("Desfazer só é possível para correções in-place.");
+      return;
+    }
+    setUndoing(true);
+    try {
+      const res = await undoAutoFix(result.newPlanId);
+      if (res.success) {
+        toast.success("Correção desfeita! Plano restaurado ao estado anterior.");
+        onOpenChange(false);
+        onUndo?.();
+      } else {
+        toast.error(res.error || "Falha ao desfazer correção.");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Erro ao desfazer correção.");
+    } finally {
+      setUndoing(false);
+    }
+  };
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -151,6 +178,17 @@ export default function AutoFixPreviewModal({ open, onOpenChange, result, onAppr
             >
               <CheckCircle2 className="w-4 h-4" /> {result.inPlace ? "OK, recarregar plano" : "Aprovar versão corrigida"}
             </Button>
+            {result.inPlace && (
+              <Button
+                variant="destructive"
+                className="flex-1 gap-2"
+                onClick={handleUndo}
+                disabled={undoing}
+              >
+                {undoing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Undo2 className="w-4 h-4" />}
+                Desfazer correção
+              </Button>
+            )}
             {!result.inPlace && (
               <Button
                 variant="outline"

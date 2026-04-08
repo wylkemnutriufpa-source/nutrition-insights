@@ -125,6 +125,9 @@ export default function AutoFixButton({ mealPlanId, patientId, onFixed, disabled
             setShowResult(false);
             if (result.newPlanId) onFixed?.(result.newPlanId, result.inPlace);
           }}
+          onUndo={() => {
+            if (result.newPlanId) onFixed?.(result.newPlanId, true);
+          }}
         />
       )}
     </>
