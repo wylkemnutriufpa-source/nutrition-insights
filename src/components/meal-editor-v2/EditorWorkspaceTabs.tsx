@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { LayoutGrid, List, BookOpen, Sparkles, Wand2, Utensils, Eye } from "lucide-react";
+import { LayoutGrid, List, BookOpen, Sparkles, Wand2, Utensils, Eye, MousePointerClick, ArrowLeftRight } from "lucide-react";
 import { WeeklyGrid } from "./WeeklyGrid";
 import { ListView } from "./ListView";
 import { MealLibraryModal } from "./MealLibraryModal";
@@ -9,6 +9,10 @@ import { AssistedPlanModal } from "./AssistedPlanModal";
 import { MealVisualLibraryModal } from "./MealVisualLibraryModal";
 import { MealLibrarySidebar } from "./MealLibrarySidebar";
 import DietPreviewPanel from "./DietPreviewPanel";
+import MealClickToAddPanel from "./MealClickToAddPanel";
+import MealTemplatePanel from "./MealTemplatePanel";
+import MealSubstitutionPanel from "./MealSubstitutionPanel";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 
 type ViewMode = "grid" | "list";
 
@@ -17,10 +21,22 @@ interface Props {
   onViewModeChange: (mode: ViewMode) => void;
 }
 
+const DAYS = [
+  { key: 1, short: "Seg" },
+  { key: 2, short: "Ter" },
+  { key: 3, short: "Qua" },
+  { key: 4, short: "Qui" },
+  { key: 5, short: "Sex" },
+  { key: 6, short: "Sáb" },
+  { key: 0, short: "Dom" },
+];
+
 const EDITOR_TABS = [
   { key: "montar", label: "Montar", icon: LayoutGrid },
-  { key: "biblioteca", label: "Biblioteca", icon: Utensils },
+  { key: "adicionar", label: "Adicionar", icon: MousePointerClick },
   { key: "templates", label: "Templates", icon: BookOpen },
+  { key: "substituir", label: "Substituir", icon: ArrowLeftRight },
+  { key: "biblioteca", label: "Biblioteca", icon: Utensils },
   { key: "ia", label: "IA", icon: Sparkles },
   { key: "preview", label: "Preview", icon: Eye },
 ] as const;
@@ -32,18 +48,20 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
   const [autoGenOpen, setAutoGenOpen] = useState(false);
   const [assistedOpen, setAssistedOpen] = useState(false);
   const [librarySidebarOpen, setLibrarySidebarOpen] = useState(false);
+  const [activeDay, setActiveDay] = useState(1);
+  const { items } = useMealPlanEditorV2Store();
 
   return (
     <div className="space-y-3">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="w-full justify-start bg-card border border-border rounded-xl p-1 h-auto gap-0.5">
+        <TabsList className="w-full justify-start bg-card border border-border rounded-xl p-1 h-auto gap-0.5 overflow-x-auto">
           {EDITOR_TABS.map((tab) => {
             const Icon = tab.icon;
             return (
               <TabsTrigger
                 key={tab.key}
                 value={tab.key}
-                className="gap-1.5 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg px-3 py-2"
+                className="gap-1.5 text-xs data-[state=active]:bg-primary/10 data-[state=active]:text-primary rounded-lg px-3 py-2 shrink-0"
               >
                 <Icon className="w-3.5 h-3.5" />
                 {tab.label}
@@ -82,6 +100,99 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
               </div>
             </div>
             {viewMode === "grid" ? <WeeklyGrid /> : <ListView />}
+          </div>
+        </TabsContent>
+
+        {/* Adicionar — Click-to-add panel (Phase 2) */}
+        <TabsContent value="adicionar" className="mt-3">
+          <div className="glass rounded-xl p-4">
+            {/* Day selector */}
+            <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+              {DAYS.map((d) => {
+                const dayCount = items.filter(i => i.day_of_week === d.key).length;
+                const isActive = activeDay === d.key;
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setActiveDay(d.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {d.short}
+                    {dayCount > 0 && (
+                      <span className={`ml-1 text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                        ({dayCount})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <MealClickToAddPanel day={activeDay} />
+          </div>
+        </TabsContent>
+
+        {/* Templates — Phase 3 */}
+        <TabsContent value="templates" className="mt-3">
+          <div className="glass rounded-xl p-4">
+            {/* Day selector */}
+            <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+              {DAYS.map((d) => {
+                const isActive = activeDay === d.key;
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setActiveDay(d.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {d.short}
+                  </button>
+                );
+              })}
+            </div>
+            <MealTemplatePanel day={activeDay} />
+          </div>
+        </TabsContent>
+
+        {/* Substituir — Phase 3 */}
+        <TabsContent value="substituir" className="mt-3">
+          <div className="glass rounded-xl p-4">
+            {/* Day selector */}
+            <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
+              {DAYS.map((d) => {
+                const dayCount = items.filter(i => i.day_of_week === d.key).length;
+                const isActive = activeDay === d.key;
+                return (
+                  <button
+                    key={d.key}
+                    type="button"
+                    onClick={() => setActiveDay(d.key)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-sm"
+                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                    }`}
+                  >
+                    {d.short}
+                    {dayCount > 0 && (
+                      <span className={`ml-1 text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                        ({dayCount})
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+            <MealSubstitutionPanel day={activeDay} />
           </div>
         </TabsContent>
 
@@ -127,26 +238,6 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
                 <p className="text-sm font-bold">📋 Meus Modelos</p>
                 <p className="text-[11px] text-muted-foreground">
                   Templates salvos e modelos pessoais
-                </p>
-              </div>
-            </button>
-          </div>
-        </TabsContent>
-
-        {/* Templates — quick access */}
-        <TabsContent value="templates" className="mt-3">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <button
-              onClick={() => setLibrarySidebarOpen(true)}
-              className="flex items-center gap-3 p-4 rounded-xl border-2 border-border hover:border-primary/40 hover:bg-primary/5 transition-all text-left"
-            >
-              <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center shrink-0">
-                <BookOpen className="w-5 h-5 text-violet-500" />
-              </div>
-              <div>
-                <p className="text-sm font-bold">📋 Aplicar Template</p>
-                <p className="text-[11px] text-muted-foreground">
-                  Carregue um template salvo no plano atual
                 </p>
               </div>
             </button>
