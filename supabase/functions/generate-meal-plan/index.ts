@@ -806,19 +806,22 @@ function buildMealFromDBFoods(
     return `• ${f.food_name} — ${resolvedPortion}`;
   });
 
-  // Build substitution text from same categories
+  // Build substitution text from same categories — WITH portion quantities
   const subLines: string[] = [];
   for (const food of foods) {
-    const subs = SUBSTITUTION_GROUPS[
+    const groupKey =
       food.category === "proteina" ? (mealType === "breakfast" ? "protein_breakfast" : "protein") :
       food.category === "carboidrato" ? (mealType === "breakfast" ? "carb_breakfast" : "carb") :
-      food.category === "fruta" ? "fruit" : ""
-    ];
+      food.category === "fruta" ? "fruit" : "";
+    const subs = SUBSTITUTION_GROUPS[groupKey];
     if (subs) {
       const normFood = normalize(food.food_name);
+      const foodGrams = Math.round((food.portion_grams || 100) * clampedScale);
       const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 3);
       if (alts.length > 0) {
-        subLines.push(`• ${food.food_name} → ${alts.join(", ")}`);
+        // Include equivalent portion for each alternative
+        const altsWithPortion = alts.map(a => `${a} (${foodGrams}g)`);
+        subLines.push(`• ${food.food_name} → ${altsWithPortion.join(", ")}`);
       }
     }
   }
@@ -964,12 +967,18 @@ function buildSubstitutionText(foods: string[], _mealType: string): string {
   const subs: string[] = [];
   for (const food of foods) {
     const n = normalize(food);
+    // Extract portion from food string (e.g., "Frango — 150g" or just "Frango")
+    const portionMatch = food.match(/—\s*(\d+g)/i);
+    const portionStr = portionMatch ? portionMatch[1] : "100g";
+
     for (const [, group] of Object.entries(SUBSTITUTION_GROUPS)) {
       const match = group.find(item => n.includes(normalize(item)));
       if (match) {
         const alternatives = group.filter(item => normalize(item) !== normalize(match)).slice(0, 3);
         if (alternatives.length > 0) {
-          subs.push(`• ${match} → ${alternatives.join(", ")}`);
+          // Include portion for each alternative
+          const altsWithPortion = alternatives.map(a => `${a} (${portionStr})`);
+          subs.push(`• ${match} → ${altsWithPortion.join(", ")}`);
         }
         break;
       }

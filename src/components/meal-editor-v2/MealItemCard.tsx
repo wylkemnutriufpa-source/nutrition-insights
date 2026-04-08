@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera,
@@ -17,9 +17,17 @@ interface MealItemCardProps {
 
 export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const { updateItem, deleteItem, duplicateItem } = useMealPlanEditorV2Store();
-  const { openMealDetail } = useMealDetail();
+  const { openMealDetail, setOnRemoveFoodLine } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
+
+  // Register callback for removing food lines from description
+  useEffect(() => {
+    setOnRemoveFoodLine((itemId: string, newDescription: string) => {
+      updateItem(itemId, { description: newDescription });
+    });
+    return () => setOnRemoveFoodLine(null);
+  }, [setOnRemoveFoodLine, updateItem]);
 
   const commitEdit = useCallback(() => {
     const trimmed = editValue.trim();
@@ -62,6 +70,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             fat_target: item.fat_target,
             metadata: (item as any).metadata,
             image_url: resolvedImage,
+            itemId: item.id,
           });
         }
       }}
