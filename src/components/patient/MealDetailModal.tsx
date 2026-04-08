@@ -414,6 +414,17 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     </DialogDescription>
                   </div>
                 </div>
+                {canEdit && onChangeImage && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="shrink-0 gap-1.5 text-[10px] h-7"
+                    onClick={() => setShowImagePicker(true)}
+                  >
+                    <ImageIcon className="w-3.5 h-3.5" />
+                    Adicionar Imagem
+                  </Button>
+                )}
               </div>
             </DialogHeader>
           </div>
