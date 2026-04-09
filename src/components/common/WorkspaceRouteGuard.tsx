@@ -252,13 +252,7 @@ export default function WorkspaceRouteGuard() {
       return;
     }
 
-    // ── Lojista-only guard ──
-    const isLojista = user ? true : false; // Check from roles below
-    if (isInList(pathname, LOJISTA_ONLY_ROUTES) && !isAdmin) {
-      // We need to check lojista role - but useAuth doesn't expose it directly
-      // The StoreRoute guard handles this; WorkspaceRouteGuard blocks non-lojista non-admin
-      // For now, let StoreRoute handle enforcement
-    }
+    // ── Lojista-only guard — enforced by StoreRoute component ──
 
     // ── Nutritionist-only guard (block personal trainers from nutrition routes) ──
     if (isPersonal && !isNutritionist && !isAdmin && isInList(pathname, NUTRITIONIST_ONLY_ROUTES)) {
