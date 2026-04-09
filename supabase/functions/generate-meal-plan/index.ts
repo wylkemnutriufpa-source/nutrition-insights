@@ -79,7 +79,7 @@ const MEAL_TYPE_TO_DB_TAG: Record<string, string[]> = {
   morning_snack: ["lanche_manha", "lanche_tarde"],
   lunch: ["almoco"],
   afternoon_snack: ["lanche_tarde", "lanche_manha"],
-  dinner: ["jantar", "almoco"],
+  dinner: ["jantar"],
   evening_snack: ["ceia", "lanche_tarde"],
 };
 
