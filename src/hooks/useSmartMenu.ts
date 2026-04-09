@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 
 export interface MenuItem {
   id: string;
@@ -141,19 +142,27 @@ export const CATEGORY_COLORS: Record<string, string> = {
 
 export function useSmartMenu() {
   const { user, roles } = useAuth();
+  const { isPatientContext, isHybridUser } = useWorkspaceContext();
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [usage, setUsage] = useState<MenuUsage[]>([]);
   const [loading, setLoading] = useState(true);
   const trackingRef = useRef(false);
 
-  // Determine user's role for filtering
-  const userRole = useMemo(() => {
+  // Determine user's auth role
+  const authRole = useMemo(() => {
     if ((roles as string[]).includes("admin")) return "admin";
     if (roles.includes("nutritionist")) return "nutritionist";
     if (roles.includes("personal")) return "personal";
     if (roles.includes("patient")) return "patient";
     return "patient";
   }, [roles]);
+
+  // For hybrid users, switch effective role based on workspace context
+  // In patient context → filter as "patient"; in professional context → use auth role
+  const userRole = useMemo(() => {
+    if (isHybridUser && isPatientContext) return "patient";
+    return authRole;
+  }, [authRole, isHybridUser, isPatientContext]);
 
   // Fetch menu items + usage
   useEffect(() => {
