@@ -399,6 +399,14 @@ export default function PatientMealPlan() {
             </Button>
           </div>
 
+          {/* Weekly plan explanation */}
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50 mt-2">
+            <CalendarRange className="w-4 h-4 text-muted-foreground shrink-0" />
+            <p className="text-xs text-muted-foreground">
+              Seu plano é <strong>semanal</strong> — cada dia tem refeições específicas. Use as setas para navegar entre os dias.
+            </p>
+          </div>
+
           {/* Journey Timeline */}
           <div className="flex items-center justify-between mt-4">
             <div className="flex items-center gap-2">
