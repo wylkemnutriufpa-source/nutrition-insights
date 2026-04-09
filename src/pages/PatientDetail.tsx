@@ -579,6 +579,13 @@ export default function PatientDetail() {
             size="md"
           />
           <div className="flex gap-2 flex-wrap">
+            <Button
+              variant="outline"
+              className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
+              onClick={() => navigate(`/in-office/${resolvedPatientId}`)}
+            >
+              🏥 Modo Consultório
+            </Button>
             {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
             <Button
               variant={patientStatus === "active" ? "outline" : "default"}
