@@ -19,7 +19,7 @@ import { ValidationCorrectionPanel, type ValidationResult } from "@/components/m
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
 import type { ComposerMode } from "@/lib/mealComposer";
 
-import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen } from "lucide-react";
+import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MealType } from "@/stores/mealPlanEditorV2Store";
@@ -141,6 +141,7 @@ export default function HybridPlanBuilder() {
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
+  const [unlocking, setUnlocking] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
@@ -187,6 +188,25 @@ export default function HybridPlanBuilder() {
   }
 
   const plan = store.plan!;
+  const IMMUTABLE_STATUSES = ["approved", "published", "published_to_patient"];
+  const isImmutable = IMMUTABLE_STATUSES.includes(plan.plan_status);
+
+  const handleUnlockForEditing = async () => {
+    setUnlocking(true);
+    try {
+      const { error } = await supabase
+        .from("meal_plans")
+        .update({ plan_status: "under_professional_review", updated_at: new Date().toISOString() })
+        .eq("id", plan.id);
+      if (error) throw error;
+      store.updatePlan({ plan_status: "under_professional_review", updated_at: new Date().toISOString() } as any);
+      toast.success("🔓 Plano desbloqueado para edição!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao desbloquear plano");
+    } finally {
+      setUnlocking(false);
+    }
+  };
 
   // Handlers
   const handleSave = async () => {
@@ -363,6 +383,29 @@ export default function HybridPlanBuilder() {
               toast.success("Plano renomeado!");
             }}
           />
+
+          {/* Immutable plan banner */}
+          {isImmutable && (
+            <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+              <Lock className="w-5 h-5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Plano publicado — somente leitura</p>
+                <p className="text-xs text-amber-600/80 dark:text-amber-400/70">
+                  Planos publicados são protegidos contra alterações. Desbloqueie para editar.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                onClick={handleUnlockForEditing}
+                disabled={unlocking}
+              >
+                {unlocking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unlock className="w-3.5 h-3.5" />}
+                Desbloquear para Edição
+              </Button>
+            </div>
+          )}
 
           <SaveMealTemplateDialog
             open={saveTemplateOpen}
