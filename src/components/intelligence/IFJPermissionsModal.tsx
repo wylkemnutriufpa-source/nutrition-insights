@@ -38,24 +38,24 @@ type PermsMap = Record<PermKey, boolean>;
 const PRESETS: Record<string, { label: string; desc: string; color: string; perms: PermsMap; mode: string }> = {
   essencial: {
     label: "Essencial",
-    desc: "Plano + Checklist apenas",
+    desc: "Plano + Checklist + Substituições",
     color: "border-blue-500/30 bg-blue-500/10 text-blue-400 hover:bg-blue-500/20",
     mode: "basic",
-    perms: { meal_plan: true, recipes: false, checklist: true, hydration: false, progress: false, appointments: false, substitutions: false, messages: false, recommendations: false },
+    perms: { meal_plan: true, recipes: true, checklist: true, hydration: false, progress: false, appointments: false, substitutions: true, messages: false, recommendations: false },
   },
   acompanhamento: {
     label: "Acompanhamento",
-    desc: "Plano + Checklist + Progresso + Hidratação",
+    desc: "Plano + Checklist + Progresso + Substituições",
     color: "border-amber-500/30 bg-amber-500/10 text-amber-400 hover:bg-amber-500/20",
     mode: "standard",
-    perms: { meal_plan: true, recipes: true, checklist: true, hydration: true, progress: true, appointments: true, substitutions: false, messages: false, recommendations: false },
+    perms: { meal_plan: true, recipes: true, checklist: true, hydration: true, progress: true, appointments: true, substitutions: true, messages: false, recommendations: false },
   },
   completo: {
     label: "Completo",
-    desc: "Todas as funções sem substituições",
+    desc: "Todas as funções com substituições",
     color: "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20",
     mode: "standard",
-    perms: { meal_plan: true, recipes: true, checklist: true, hydration: true, progress: true, appointments: true, substitutions: false, messages: true, recommendations: true },
+    perms: { meal_plan: true, recipes: true, checklist: true, hydration: true, progress: true, appointments: true, substitutions: true, messages: true, recommendations: true },
   },
   premium: {
     label: "Premium",
