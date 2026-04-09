@@ -9,7 +9,7 @@ import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";
 import { openCommandPalette } from "@/components/common/CommandPalette";
-import { useIsMobile, useIsTablet } from "@/hooks/use-mobile";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { useSmartMenu } from "@/hooks/useSmartMenu";
 import AccordionSidebar from "@/components/layout/AccordionSidebar";
 import MobileSidebar from "@/components/layout/MobileSidebar";
@@ -27,6 +27,8 @@ import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
 import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
 import { WorkspaceContext, useWorkspaceContextState, useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+
+const SIDEBAR_COLLAPSED_STORAGE_KEY = "fj_sidebar_collapsed";
 
 function LayoutFallbackCard({
   title,
@@ -544,10 +546,27 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const workspaceCtx = useWorkspaceContextState(isProRole, isPatient, authLoading);
   const location = useLocation();
   const isMobile = useIsMobile();
-  const isTablet = useIsTablet();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
-  const [collapsed, setCollapsed] = useState(() => isTablet);
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window === "undefined") return false;
+
+    try {
+      return localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
   const [mobileOpen, setMobileOpen] = useState(false);
+
+  const handleSetCollapsed = useCallback((value: boolean) => {
+    setCollapsed(value);
+
+    try {
+      localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, value ? "1" : "0");
+    } catch {
+      // Ignore storage write failures and keep in-memory state.
+    }
+  }, []);
 
   // Mount realtime subscriptions and refetch-on-focus ONCE at layout level
   useRealtimeEventBus();
@@ -561,10 +580,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   // Removed: no longer auto-close sidebar on route change
   // The user wants to close it only via the menu button
-
-  useEffect(() => {
-    setCollapsed(isTablet);
-  }, [isTablet]);
 
   const syncBrowserThemeChrome = useCallback((isDark: boolean) => {
     const themeColor = isDark ? "#000000" : "#f5f7fa";
@@ -683,7 +698,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         className="fixed left-0 top-0 h-screen border-r border-border bg-card flex flex-col z-50"
       >
         <ErrorBoundary section="Layout:DesktopSidebar" fallback={<SidebarFallback />}>
-          <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={setCollapsed} />
+          <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={handleSetCollapsed} />
         </ErrorBoundary>
       </motion.aside>
 
