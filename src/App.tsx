@@ -189,6 +189,9 @@ const IntelligenceSettings = lazy(() => import("./pages/IntelligenceSettings"));
 const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
 const RealtimeDebugCenter = lazy(() => import("./pages/RealtimeDebugCenter"));
 const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
+const StoreDashboard = lazy(() => import("./pages/store/StoreDashboard"));
+const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
+const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -296,6 +299,19 @@ function AdminRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function StoreRoute({ children }: { children: React.ReactNode }) {
+  const { user, loading, isAdmin } = useAuth();
+  const roles = useAuth().roles;
+  const isLojista = (roles as string[]).includes("lojista");
+  if (loading) return user ? <>{children}</> : <PageLoader />;
+  if (!user) return <Navigate to="/auth" replace />;
+  if (!isLojista && !isAdmin) {
+    console.warn("[RouteGuard:Store] Not lojista/admin → /");
+    return <Navigate to="/" replace />;
+  }
+  return <>{children}</>;
+}
+
 function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return null;
@@ -304,7 +320,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin } = useAuth();
+  const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
   const [bootDone, setBootDone] = useState(false);
   const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
@@ -324,6 +340,10 @@ function RootRoute() {
   if (!user) return <GatewayPage />;
   if (activeEditorRoute?.shouldRestore) {
     return <Navigate to={activeEditorRoute.route} replace />;
+  }
+  // Lojista goes to store dashboard (if not also a professional)
+  if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
+    return <Navigate to="/store" replace />;
   }
   if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
@@ -608,6 +628,11 @@ const App = () => (
               <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM"><ClinicalCRM /></LP></NutritionistRoute>} />
               <Route path="/clinical-brain" element={<NutritionistRoute><LP section="Clinical Brain"><ClinicalBrain /></LP></NutritionistRoute>} />
               <Route path="/intelligence-settings" element={<NutritionistRoute><LP section="Inteligência FitJourney"><IntelligenceSettings /></LP></NutritionistRoute>} />
+
+              {/* Store (Lojista) routes */}
+              <Route path="/store" element={<StoreRoute><LP section="Loja"><StoreDashboard /></LP></StoreRoute>} />
+              <Route path="/store/products" element={<StoreRoute><LP section="Produtos"><StoreProducts /></LP></StoreRoute>} />
+              <Route path="/store/technical-sheets" element={<StoreRoute><LP section="Fichas Técnicas"><TechnicalSheets /></LP></StoreRoute>} />
 
               {/* Public pricing */}
               <Route path="/pricing" element={<LP section="Pricing"><Pricing /></LP>} />

@@ -150,6 +150,13 @@ const PATIENT_ONLY_ROUTES = [
   "/payment-required",
 ];
 
+/** Lojista-only routes — only lojista and admin can access */
+const LOJISTA_ONLY_ROUTES = [
+  "/store",
+  "/store/products",
+  "/store/technical-sheets",
+];
+
 /** Admin-only routes */
 const ADMIN_ROUTES = [
   "/admin",
@@ -244,6 +251,8 @@ export default function WorkspaceRouteGuard() {
       navigate("/", { replace: true });
       return;
     }
+
+    // ── Lojista-only guard — enforced by StoreRoute component ──
 
     // ── Nutritionist-only guard (block personal trainers from nutrition routes) ──
     if (isPersonal && !isNutritionist && !isAdmin && isInList(pathname, NUTRITIONIST_ONLY_ROUTES)) {

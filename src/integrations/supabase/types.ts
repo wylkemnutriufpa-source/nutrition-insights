@@ -15100,6 +15100,60 @@ export type Database = {
         }
         Relationships: []
       }
+      store_products: {
+        Row: {
+          calories_per_100g: number | null
+          carbs_per_100g: number | null
+          category: string
+          created_at: string
+          fat_per_100g: number | null
+          id: string
+          is_active: boolean
+          name: string
+          owner_id: string
+          price_per_unit: number
+          protein_per_100g: number | null
+          stock_quantity: number | null
+          supplier: string | null
+          unit: string
+          updated_at: string
+        }
+        Insert: {
+          calories_per_100g?: number | null
+          carbs_per_100g?: number | null
+          category?: string
+          created_at?: string
+          fat_per_100g?: number | null
+          id?: string
+          is_active?: boolean
+          name: string
+          owner_id: string
+          price_per_unit?: number
+          protein_per_100g?: number | null
+          stock_quantity?: number | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Update: {
+          calories_per_100g?: number | null
+          carbs_per_100g?: number | null
+          category?: string
+          created_at?: string
+          fat_per_100g?: number | null
+          id?: string
+          is_active?: boolean
+          name?: string
+          owner_id?: string
+          price_per_unit?: number
+          protein_per_100g?: number | null
+          stock_quantity?: number | null
+          supplier?: string | null
+          unit?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           created_at: string
@@ -15565,6 +15619,123 @@ export type Database = {
           status?: string
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      technical_sheet_items: {
+        Row: {
+          calories: number | null
+          carbs: number | null
+          cost: number | null
+          created_at: string
+          fat: number | null
+          id: string
+          product_id: string
+          protein: number | null
+          quantity_grams: number
+          sheet_id: string
+        }
+        Insert: {
+          calories?: number | null
+          carbs?: number | null
+          cost?: number | null
+          created_at?: string
+          fat?: number | null
+          id?: string
+          product_id: string
+          protein?: number | null
+          quantity_grams?: number
+          sheet_id: string
+        }
+        Update: {
+          calories?: number | null
+          carbs?: number | null
+          cost?: number | null
+          created_at?: string
+          fat?: number | null
+          id?: string
+          product_id?: string
+          protein?: number | null
+          quantity_grams?: number
+          sheet_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "technical_sheet_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "technical_sheet_items_sheet_id_fkey"
+            columns: ["sheet_id"]
+            isOneToOne: false
+            referencedRelation: "technical_sheets"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      technical_sheets: {
+        Row: {
+          category: string | null
+          cost_per_portion: number | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          margin_percent: number | null
+          name: string
+          owner_id: string
+          portions: number
+          sale_price: number | null
+          total_calories: number | null
+          total_carbs: number | null
+          total_cost: number | null
+          total_fat: number | null
+          total_protein: number | null
+          total_weight_g: number | null
+          updated_at: string
+        }
+        Insert: {
+          category?: string | null
+          cost_per_portion?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          margin_percent?: number | null
+          name: string
+          owner_id: string
+          portions?: number
+          sale_price?: number | null
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_cost?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
+          total_weight_g?: number | null
+          updated_at?: string
+        }
+        Update: {
+          category?: string | null
+          cost_per_portion?: number | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          margin_percent?: number | null
+          name?: string
+          owner_id?: string
+          portions?: number
+          sale_price?: number | null
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_cost?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
+          total_weight_g?: number | null
+          updated_at?: string
         }
         Relationships: []
       }
@@ -18207,7 +18378,7 @@ export type Database = {
         | "nutritionist"
         | "premium_ambassador"
         | "custom"
-      app_role: "nutritionist" | "patient" | "admin" | "personal"
+      app_role: "nutritionist" | "patient" | "admin" | "personal" | "lojista"
       caloric_adjustment_type:
         | "keep_current"
         | "reduce_calories_light"
@@ -18441,7 +18612,7 @@ export const Constants = {
         "premium_ambassador",
         "custom",
       ],
-      app_role: ["nutritionist", "patient", "admin", "personal"],
+      app_role: ["nutritionist", "patient", "admin", "personal", "lojista"],
       caloric_adjustment_type: [
         "keep_current",
         "reduce_calories_light",
