@@ -465,6 +465,19 @@ export default function MealPlanEditorV2() {
                 : <Maximize2 className="w-4 h-4" />}
             </Button>
 
+            {/* Save for future use — always visible */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setSaveTemplateOpen(true)}
+              disabled={store.items.length === 0}
+              className="gap-1.5"
+              title="Salvar plano para uso futuro"
+            >
+              <Bookmark className="w-4 h-4" />
+              <span className="hidden sm:inline">Salvar p/ uso futuro</span>
+            </Button>
+
             {/* Secondary tools dropdown — only when editable */}
             {!isImmutable && (
               <DropdownMenu>
@@ -491,9 +504,6 @@ export default function MealPlanEditorV2() {
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setLibraryOpen(true)} className="gap-2">
                     <Library className="w-4 h-4" /> Meus Modelos
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setSaveTemplateOpen(true)} className="gap-2">
-                    <Bookmark className="w-4 h-4" /> Salvar como Modelo
                   </DropdownMenuItem>
                   <DropdownMenuItem
                     onClick={() => {
