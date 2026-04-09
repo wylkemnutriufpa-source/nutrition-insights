@@ -96,7 +96,7 @@ Deno.serve(async (req) => {
         });
       }
 
-      // Validate first
+      // Validate credentials with Z-API before saving
       const statusUrl = `https://api.z-api.io/instances/${instance_id}/token/${api_token}/status`;
       let isValid = false;
       let lastError: string | null = null;
@@ -112,7 +112,13 @@ Deno.serve(async (req) => {
         lastError = "Falha ao validar com Z-API";
       }
 
-      // Upsert integration
+      // Store token in Vault (encrypted)
+      await supabase.rpc("store_whatsapp_token", {
+        _professional_id: user.id,
+        _token: api_token,
+      });
+
+      // Upsert integration metadata (no token in table)
       const { data: existing } = await supabase
         .from("whatsapp_integrations")
         .select("id")
@@ -121,7 +127,6 @@ Deno.serve(async (req) => {
 
       const integrationData = {
         instance_id,
-        token: api_token,
         phone_number: phone_number || null,
         is_active: isValid,
         connection_validated_at: isValid ? new Date().toISOString() : null,

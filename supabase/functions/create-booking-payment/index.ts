@@ -31,8 +31,8 @@ Deno.serve(async (req) => {
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
 
-    // Resolve tenant_id from nutritionist
-    const { data: tenantId } = await supabase.rpc("get_user_tenant", { _user_id: nutritionist_id });
+    // Resolve tenant_id from nutritionist (active tenant only)
+    const { data: tenantId } = await supabase.rpc("get_user_active_tenant", { _user_id: nutritionist_id });
 
     // Create booking payment record
     const { data: bookingPayment, error: dbError } = await supabase
