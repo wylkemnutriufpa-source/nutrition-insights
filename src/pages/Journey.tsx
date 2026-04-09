@@ -36,6 +36,9 @@ export default function Journey() {
           <ShareProgressButton captureRef={shareRef} context="journey" />
         </div>
 
+        {/* Expandable Meal Plan - first thing patient sees */}
+        <ExpandableMealPlanCard />
+
         {/* Momentum Indicator */}
         <MomentumIndicator variant="card" />
 
