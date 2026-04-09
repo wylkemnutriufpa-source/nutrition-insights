@@ -407,6 +407,7 @@ export default function HybridPlanBuilder() {
             </div>
           )}
 
+          <SaveMealTemplateDialog
             open={saveTemplateOpen}
             onOpenChange={setSaveTemplateOpen}
             items={store.items.map(i => ({
