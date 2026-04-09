@@ -141,6 +141,7 @@ export default function HybridPlanBuilder() {
   const [rightPanelOpen, setRightPanelOpen] = useState(true);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
+  const [unlocking, setUnlocking] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
@@ -189,9 +190,8 @@ export default function HybridPlanBuilder() {
   const plan = store.plan!;
   const IMMUTABLE_STATUSES = ["approved", "published", "published_to_patient"];
   const isImmutable = IMMUTABLE_STATUSES.includes(plan.plan_status);
-  const [unlocking, setUnlocking] = useState(false);
 
-  const handleUnlockForEditing = useCallback(async () => {
+  const handleUnlockForEditing = async () => {
     setUnlocking(true);
     try {
       const { error } = await supabase
@@ -206,7 +206,7 @@ export default function HybridPlanBuilder() {
     } finally {
       setUnlocking(false);
     }
-  }, [plan.id, store]);
+  };
 
   // Handlers
   const handleSave = async () => {
