@@ -24,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 export default function Settings() {
   const { t } = useTranslation();
   const { minMode } = useExperienceMode();
-  const { user, profile, refreshProfile, isNutritionist, isPersonal, subscription, checkSubscription } = useAuth();
+  const { user, profile, refreshProfile, isNutritionist, isPersonal, isAdmin, subscription, checkSubscription } = useAuth();
   const navigate = useNavigate();
   const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [portalLoading, setPortalLoading] = useState(false);
