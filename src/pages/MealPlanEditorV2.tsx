@@ -56,6 +56,9 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.
 /** Immutable statuses — editing is BLOCKED */
 const IMMUTABLE_STATUSES = ["approved", "published", "published_to_patient"];
 
+/** Plans that can still be published (approved but not yet delivered to patient) */
+const PUBLISHABLE_STATUSES = ["approved"];
+
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -145,6 +148,7 @@ export default function MealPlanEditorV2() {
   const isApproved = planState.isApproved;
   const planStatus = (plan as any).plan_status || "draft";
   const isImmutable = IMMUTABLE_STATUSES.includes(planStatus);
+  const canPublish = !["published", "published_to_patient"].includes(planStatus);
   
   // Check if plan came from onboarding/auto-generation — block hybrid builder
   const genSource = (plan as any).generation_source || "";
@@ -219,7 +223,7 @@ export default function MealPlanEditorV2() {
 
   const handlePublish = async () => {
     if (!user) return;
-    if (isImmutable) {
+    if (!canPublish) {
       toast.error("🔒 Plano já publicado. Use '♻️ Gerar Novo Plano' para criar uma revisão.");
       return;
     }
@@ -538,16 +542,21 @@ export default function MealPlanEditorV2() {
                   {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   <span className="hidden sm:inline">Validar e Corrigir</span>
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={handlePublish}
-                  disabled={publishing || store.syncStatus === "saving"}
-                  title="Publicar plano para o paciente"
-                >
-                  {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-                  Publicar
-                </Button>
               </>
+            )}
+
+            {/* Publicar — visible for drafts AND approved plans (not yet delivered) */}
+            {canPublish && (
+              <Button
+                size="sm"
+                onClick={handlePublish}
+                disabled={publishing || store.syncStatus === "saving"}
+                title="Publicar plano para o paciente"
+                className="gradient-primary text-white border-0 gap-1.5 shadow-glow"
+              >
+                {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
+                Publicar
+              </Button>
             )}
 
             {/* Visual Library — always available for viewing */}
