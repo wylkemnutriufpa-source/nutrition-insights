@@ -70,7 +70,7 @@ const features = [
 ];
 
 const howItWorks = [
-  { step: "01", title: "Crie sua conta profissional", desc: "Cadastro exclusivo para nutricionistas. 7 dias grátis, sem cartão.", icon: Sparkles },
+  { step: "01", title: "Crie sua conta profissional", desc: "Cadastro exclusivo para nutricionistas. 3 dias grátis, sem cartão.", icon: Sparkles },
   { step: "02", title: "Convide seus pacientes", desc: "Pacientes recebem acesso por convite — via link mágico ou senha temporária.", icon: Users },
   { step: "03", title: "Configure protocolos", desc: "Crie planos alimentares, protocolos e metas personalizadas.", icon: ClipboardCheck },
   { step: "04", title: "Acompanhe com IA", desc: "A IA analisa evolução, gera relatórios e sugere ajustes automaticamente.", icon: Brain },
@@ -94,17 +94,17 @@ const defaultPlans = [
   {
     name: "Basic", price: "R$ 30", period: "/mês", popular: false,
     features: ["Até 20 pacientes", "Planos alimentares básicos", "Chat com pacientes"],
-    cta: "Testar Grátis por 7 dias →",
+    cta: "Testar Grátis por 3 dias →",
   },
   {
     name: "Profissional", price: "R$ 75", period: "/mês", popular: true,
     features: ["Até 100 pacientes", "Planos alimentares ilimitados", "Análise de IA", "Relatórios automáticos", "Suporte prioritário"],
-    cta: "Testar Grátis por 7 dias →",
+    cta: "Testar Grátis por 3 dias →",
   },
   {
     name: "Premium", price: "R$ 147", period: "/mês", popular: true,
     features: ["Pacientes ilimitados", "Todas as funcionalidades Pro", "Branding personalizado", "API de integração", "Suporte dedicado", "Todas as IAs do sistema", "Todo sistema de gamificação"],
-    cta: "Testar Grátis por 7 dias →",
+    cta: "Testar Grátis por 3 dias →",
   },
 ];
 
@@ -183,7 +183,7 @@ export default function Landing() {
             period: "/mês",
             popular: p.is_featured || false,
             features: Array.isArray(p.features) ? p.features as string[] : [],
-            cta: "Testar Grátis por 7 dias →",
+            cta: "Testar Grátis por 3 dias →",
           })));
         }
       });
@@ -223,7 +223,7 @@ export default function Landing() {
             "@type": "Offer",
             "price": "0",
             "priceCurrency": "BRL",
-            "description": "Trial gratuito de 7 dias"
+            "description": "Trial gratuito de 3 dias"
           }
         })}</script>
       </Helmet>
@@ -308,7 +308,7 @@ export default function Landing() {
             </motion.div>
 
             <motion.p variants={fadeUp} className="text-xs text-muted-foreground mb-16">
-              ✅ 7 dias grátis · Sem cartão de crédito · Setup em 30 segundos
+              ✅ 3 dias grátis · Sem cartão de crédito · Setup em 30 segundos
             </motion.p>
 
             {/* Stats with animated counters */}
@@ -822,7 +822,7 @@ export default function Landing() {
                 </Button>
               </Link>
             </div>
-            <p className="text-xs text-muted-foreground mt-5">Sem cartão de crédito · 7 dias grátis · Pacientes acessam por convite</p>
+            <p className="text-xs text-muted-foreground mt-5">Sem cartão de crédito · 3 dias grátis · Pacientes acessam por convite</p>
           </div>
         </motion.div>
       </section>
