@@ -18,6 +18,7 @@ import {
 import AddStudentModal from "@/components/professional/AddStudentModal";
 import LinkStudentModal from "@/components/professional/LinkStudentModal";
 import { useProfessionalLinks } from "@/hooks/useProfessionalLinks";
+import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
 
 export default function PersonalDashboard() {
   const { user } = useAuth();
@@ -150,6 +151,8 @@ export default function PersonalDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-6">
+        {/* Experience Mode Toggle */}
+        <InlineExperienceToggle />
         {/* Welcome Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
