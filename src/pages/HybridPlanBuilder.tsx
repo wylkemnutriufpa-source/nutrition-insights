@@ -187,6 +187,26 @@ export default function HybridPlanBuilder() {
   }
 
   const plan = store.plan!;
+  const IMMUTABLE_STATUSES = ["approved", "published", "published_to_patient"];
+  const isImmutable = IMMUTABLE_STATUSES.includes(plan.plan_status);
+  const [unlocking, setUnlocking] = useState(false);
+
+  const handleUnlockForEditing = useCallback(async () => {
+    setUnlocking(true);
+    try {
+      const { error } = await supabase
+        .from("meal_plans")
+        .update({ plan_status: "under_professional_review", updated_at: new Date().toISOString() })
+        .eq("id", plan.id);
+      if (error) throw error;
+      store.updatePlan({ plan_status: "under_professional_review", updated_at: new Date().toISOString() } as any);
+      toast.success("🔓 Plano desbloqueado para edição!");
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao desbloquear plano");
+    } finally {
+      setUnlocking(false);
+    }
+  }, [plan.id, store]);
 
   // Handlers
   const handleSave = async () => {
