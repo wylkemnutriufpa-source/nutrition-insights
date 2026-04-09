@@ -107,7 +107,25 @@ export default function InvitePatient() {
               </div>
 
               <div className="space-y-3 pt-2">
-                <Label>Método de acesso</Label>
+                <Label>Modo de atendimento</Label>
+                <RadioGroup value={attendanceMode} onValueChange={(v) => setAttendanceMode(v as any)} className="space-y-2">
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 transition-all">
+                    <RadioGroupItem value="online" id="online" />
+                    <Label htmlFor="online" className="flex-1 cursor-pointer">
+                      <p className="text-sm font-medium">🌐 Online</p>
+                      <p className="text-xs text-muted-foreground">Paciente preenche onboarding remotamente</p>
+                    </Label>
+                  </div>
+                  <div className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 transition-all">
+                    <RadioGroupItem value="presential" id="presential" />
+                    <Label htmlFor="presential" className="flex-1 cursor-pointer">
+                      <p className="text-sm font-medium">🏥 Presencial</p>
+                      <p className="text-xs text-muted-foreground">Profissional preenche durante a consulta</p>
+                    </Label>
+                  </div>
+                </RadioGroup>
+              </div>
+
                 <RadioGroup value={method} onValueChange={(v) => setMethod(v as any)} className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 transition-all">
                     <RadioGroupItem value="magic_link" id="magic_link" />
