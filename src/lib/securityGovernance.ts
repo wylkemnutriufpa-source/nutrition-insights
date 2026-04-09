@@ -1,7 +1,9 @@
 /**
  * ═══════════════════════════════════════════════════════
- * FITJOURNEY — Security Governance Framework
+ * FITJOURNEY — Security Governance Framework v9.0.0
  * ═══════════════════════════════════════════════════════
+ *
+ * Baseline oficial de segurança — Hardened em 2026-04-09
  *
  * This file defines the structural security rules that
  * ALL new tables, views, RPCs, and features MUST follow.
@@ -82,6 +84,9 @@ export const SECURITY_BASELINE = [
   "NO_PERMISSIVE_TRUE: No USING(true) or WITH CHECK(true)",
   "PUBLIC_PAYLOAD: Sanitized via security_invoker views",
   "SECURITY_DEFINER: Audited, search_path set, admin-gated",
+  "ANON_INSERT_VALIDATION: Anonymous INSERTs must validate FK references exist (e.g. nutritionist_id in user_roles)",
+  "VAULT_MANDATORY: External API tokens/secrets MUST use Supabase Vault — never plaintext columns",
+  "TENANT_RESOLUTION: Use get_user_active_tenant() — never get_user_tenant() without is_active filter",
 ] as const;
 
 // ── FAIL-CLOSED DEFAULTS ──
@@ -92,6 +97,7 @@ export const FAIL_CLOSED_RULES = [
   "NEW_COLUMN: Public exposure requires documented approval",
   "NEW_FUNCTION: SECURITY DEFINER requires audit before deploy",
   "NEW_POLICY: USING(true) requires admin sign-off in audit_logs",
+  "NEW_SECRET: External API keys go to Vault via store_*_token() — never in table columns",
 ] as const;
 
 // ── SENSITIVE COLUMN PATTERNS ──
@@ -116,3 +122,120 @@ export const SEVERITY = {
   MEDIUM: "medium",      // Missing policy for specific operation
   LOW: "low",            // Informational, best practice
 } as const;
+
+// ═══════════════════════════════════════════════════════
+// VAULT INTEGRATION — Official Secret Management
+// ═══════════════════════════════════════════════════════
+//
+// All external API tokens MUST use Supabase Vault.
+// Pattern: store_<service>_token() / get_<service>_token()
+//
+// VAULT-DEPENDENT EDGE FUNCTIONS:
+// ┌─────────────────────────┬──────────────────────────────────┐
+// │ Edge Function           │ Vault Function Used              │
+// ├─────────────────────────┼──────────────────────────────────┤
+// │ whatsapp-send           │ get_whatsapp_token()             │
+// │ whatsapp-validate       │ store_whatsapp_token()           │
+// └─────────────────────────┴──────────────────────────────────┘
+//
+// HOW IT WORKS:
+// 1. Professional submits token → whatsapp-validate stores via store_whatsapp_token()
+// 2. Token is encrypted at rest in vault.secrets
+// 3. whatsapp-send retrieves via get_whatsapp_token() (SECURITY DEFINER, search_path=public)
+// 4. whatsapp_integrations table stores ONLY metadata (instance_id, phone, status)
+// 5. Token column was permanently dropped — no plaintext exposure possible
+//
+// ADDING NEW INTEGRATIONS:
+// 1. Create store_<service>_token(_professional_id uuid, _token text) SECURITY DEFINER
+// 2. Create get_<service>_token(_professional_id uuid) SECURITY DEFINER
+// 3. Edge functions use supabase.rpc("get_<service>_token", {...}) with service role
+// 4. NEVER store tokens in regular table columns
+
+// ═══════════════════════════════════════════════════════
+// TENANT RESOLUTION — Official Standard
+// ═══════════════════════════════════════════════════════
+//
+// OFFICIAL FUNCTION: get_user_active_tenant(_user_id uuid)
+// - Filters user_tenants by is_active = true
+// - Returns first active tenant ordered by joined_at
+// - Used by: create-booking-payment, and all new features
+//
+// DEPRECATED: get_user_tenant() — lacks is_active filter
+// Do NOT use in new code. Existing usages should be migrated.
+
+// ═══════════════════════════════════════════════════════
+// SECURITY REGRESSION CHECKLIST
+// ═══════════════════════════════════════════════════════
+//
+// Run before EVERY deployment or feature merge:
+//
+// □ 1. RLS COVERAGE
+//   - All tables have RLS enabled
+//   - No USING(true) or WITH CHECK(true) on INSERT/UPDATE/DELETE
+//   - SELECT policies scoped to owner/nutritionist_patients/admin
+//
+// □ 2. ANONYMOUS INSERT VALIDATION
+//   - booking_payments: nutritionist_id validated against user_roles
+//   - lead_requests: nutritionist_id validated against user_roles
+//   - Any new anon-insertable table: FK references validated in policy
+//
+// □ 3. VAULT COMPLIANCE
+//   - No plaintext token/secret columns in any table
+//   - External API keys stored via store_*_token() vault functions
+//   - Edge functions retrieve via get_*_token() RPC
+//
+// □ 4. TENANT ISOLATION
+//   - All tenant-scoped queries use get_user_active_tenant()
+//   - BEFORE INSERT triggers enforce tenant_id on critical tables
+//   - No cross-tenant data leakage in SELECT policies
+//
+// □ 5. EDGE FUNCTION AUTH
+//   - All edge functions validate JWT via auth.getUser()
+//   - Ownership verified (caller = nutritionist_id or admin)
+//   - Error messages sanitized (no stack traces, no PII)
+//
+// □ 6. STORAGE SECURITY
+//   - All mutation policies (INSERT/UPDATE/DELETE) check folder ownership
+//   - No bucket-only checks without path validation
+//
+// □ 7. PLAN IMMUTABILITY
+//   - trg_guard_published_plan_items_immutable active
+//   - Published plans cannot be modified — only new drafts
+//
+// □ 8. INPUT VALIDATION
+//   - AI prompts: length limits + XML framing
+//   - User inputs: validated server-side with zod or equivalent
+//   - No raw SQL or user-supplied queries
+//
+// □ 9. SENSITIVE DATA
+//   - No PII in logs (emails masked, tokens redacted)
+//   - Profiles table: no role column (roles in user_roles)
+//   - Views use security_invoker = on
+//
+// □ 10. REALTIME
+//   - RLS on source tables filters broadcast rows
+//   - No sensitive data in public channels
+
+// ═══════════════════════════════════════════════════════
+// HARDENING CHANGELOG
+// ═══════════════════════════════════════════════════════
+//
+// v9.0.0 (2026-04-09) — Hardening Final
+//   ✅ booking_payments INSERT: nutritionist_id validated against user_roles
+//   ✅ lead_requests INSERT: nutritionist_id validated against user_roles
+//   ✅ WhatsApp tokens migrated to Supabase Vault (token column dropped)
+//   ✅ get_user_active_tenant() created with is_active filter
+//   ✅ create-booking-payment uses get_user_active_tenant()
+//   ✅ whatsapp-send reads token from Vault
+//   ✅ whatsapp-validate stores token in Vault
+//
+// v8.0.0 (2026-04-05) — RLS Blindagem Total
+//   ✅ patient_meal_feedback, timeline_events, plan_audit_results scoped
+//   ✅ Storage buckets hardened with folder ownership
+//   ✅ checklist_daily_summary scoped to owner/nutritionist
+//   ✅ clinical_experiment_outcomes scoped to linked nutritionist
+//
+// v7.0.0 — Edge Function Auth Standardization
+//   ✅ All edge functions use auth-guard.ts pattern
+//   ✅ generate-report: JWT + ownership validation added
+//   ✅ Error messages sanitized across all functions
