@@ -16583,7 +16583,6 @@ export type Database = {
           professional_id: string
           provider: string
           tenant_id: string | null
-          token: string
           updated_at: string
         }
         Insert: {
@@ -16597,7 +16596,6 @@ export type Database = {
           professional_id: string
           provider?: string
           tenant_id?: string | null
-          token: string
           updated_at?: string
         }
         Update: {
@@ -16611,7 +16609,6 @@ export type Database = {
           professional_id?: string
           provider?: string
           tenant_id?: string | null
-          token?: string
           updated_at?: string
         }
         Relationships: [
@@ -17944,6 +17941,7 @@ export type Database = {
       get_system_health_score: { Args: never; Returns: Json }
       get_team_head_id: { Args: { _user_id: string }; Returns: string }
       get_team_permissions: { Args: { _user_id: string }; Returns: Json }
+      get_user_active_tenant: { Args: { _user_id: string }; Returns: string }
       get_user_email_by_id: { Args: { _user_id: string }; Returns: string }
       get_user_id_by_email: { Args: { _email: string }; Returns: string }
       get_user_org_id: { Args: { _user_id: string }; Returns: string }
@@ -17951,6 +17949,10 @@ export type Database = {
         | { Args: never; Returns: string }
         | { Args: { _user_id: string }; Returns: string }
       get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
+      get_whatsapp_token: {
+        Args: { _professional_id: string }
+        Returns: string
+      }
       has_role: {
         Args: {
           _role: Database["public"]["Enums"]["app_role"]
@@ -18165,6 +18167,10 @@ export type Database = {
       set_patient_lifecycle_state: {
         Args: { _new_state: string; _patient_id: string; _reason?: string }
         Returns: Json
+      }
+      store_whatsapp_token: {
+        Args: { _professional_id: string; _token: string }
+        Returns: undefined
       }
       sync_program_prestige: {
         Args: { _assigned_by: string; _program_id: string }

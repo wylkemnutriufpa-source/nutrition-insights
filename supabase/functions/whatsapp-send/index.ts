@@ -110,8 +110,17 @@ Deno.serve(async (req) => {
     const cleanPhone = patient_phone.replace(/\D/g, "");
     const phone = cleanPhone.startsWith("55") ? cleanPhone : `55${cleanPhone}`;
 
+    // Retrieve token from Vault
+    const { data: vaultToken } = await supabase.rpc("get_whatsapp_token", { _professional_id: user.id });
+    if (!vaultToken) {
+      return new Response(JSON.stringify({ error: "Token WhatsApp não configurado" }), {
+        status: 400,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
     // Send via Z-API
-    const zapiUrl = `https://api.z-api.io/instances/${integration.instance_id}/token/${integration.token}/send-text`;
+    const zapiUrl = `https://api.z-api.io/instances/${integration.instance_id}/token/${vaultToken}/send-text`;
 
     const zapiResponse = await fetch(zapiUrl, {
       method: "POST",
