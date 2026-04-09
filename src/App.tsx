@@ -511,6 +511,7 @@ const App = () => (
               <Route path="/clinical-workspace" element={<NutritionistRoute><LP section="Workspace"><ClinicalWorkspace /></LP></NutritionistRoute>} />
               <Route path="/cockpit" element={<NutritionistRoute><LP section="Cockpit Premium"><CockpitPremium /></LP></NutritionistRoute>} />
               <Route path="/invite-patient" element={<NutritionistRoute><LP section="Convidar Paciente"><InvitePatient /></LP></NutritionistRoute>} />
+              <Route path="/in-office/:patientId" element={<NutritionistRoute><LP section="Modo Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
               <Route path="/workspace-editor" element={<ProfessionalRoute><LP section="Editor"><WorkspaceEditor /></LP></ProfessionalRoute>} />
               <Route path="/weight-trajectory" element={<NutritionistRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></NutritionistRoute>} />
               <Route path="/metabolic-twin" element={<NutritionistRoute><LP section="Digital Twin"><MetabolicTwin /></LP></NutritionistRoute>} />
