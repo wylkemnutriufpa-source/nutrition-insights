@@ -384,7 +384,29 @@ export default function HybridPlanBuilder() {
             }}
           />
 
-          <SaveMealTemplateDialog
+          {/* Immutable plan banner */}
+          {isImmutable && (
+            <div className="flex items-center gap-3 p-3 rounded-xl border border-amber-500/30 bg-amber-500/10 text-amber-700 dark:text-amber-400">
+              <Lock className="w-5 h-5 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold">Plano publicado — somente leitura</p>
+                <p className="text-xs text-amber-600/80 dark:text-amber-400/70">
+                  Planos publicados são protegidos contra alterações. Desbloqueie para editar.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                className="shrink-0 gap-1.5 border-amber-500/40 text-amber-700 dark:text-amber-400 hover:bg-amber-500/20"
+                onClick={handleUnlockForEditing}
+                disabled={unlocking}
+              >
+                {unlocking ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Unlock className="w-3.5 h-3.5" />}
+                Desbloquear para Edição
+              </Button>
+            </div>
+          )}
+
             open={saveTemplateOpen}
             onOpenChange={setSaveTemplateOpen}
             items={store.items.map(i => ({
