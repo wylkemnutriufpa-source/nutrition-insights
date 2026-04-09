@@ -20,6 +20,7 @@ import SmartResumeModal from "@/components/common/SmartResumeModal";
 import IntelligenceModal from "@/components/common/IntelligenceModal";
 import IntelligenceShowcaseModal from "@/components/intelligence/IntelligenceShowcaseModal";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import TrialCountdown from "@/components/common/TrialCountdown";
 import ClinicalAIEntity from "@/components/ai-entity/ClinicalAIEntity";
 import { usePatientRealtime } from "@/hooks/usePatientRealtime";
 import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
@@ -668,6 +669,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <FitJourneyLogo collapsed={false} size="sm" />
           </div>
           <div className="flex items-center gap-2">
+            <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
               <Search className="w-4 h-4" />
             </Button>
@@ -704,7 +706,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
       <main className="flex-1 transition-all duration-200" style={{ marginLeft: collapsed ? 72 : 260 }}>
         <div className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200" style={{ left: collapsed ? 72 : 260 }}>
-          <div className="flex justify-end">
+          <div className="flex justify-end items-center gap-2">
+            <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
               <Search className="w-4 h-4" />
             </Button>
