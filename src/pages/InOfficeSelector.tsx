@@ -50,7 +50,7 @@ export default function InOfficeSelector() {
       ]);
 
       const links = (patientsRes.data || []) as PatientRow[];
-      const sessions = (sessionsRes.data || []) as ActiveSession[];
+      const sessions = (sessionsRes.data || []) as unknown as ActiveSession[];
       setActiveSessions(sessions);
 
       // Fetch profiles
