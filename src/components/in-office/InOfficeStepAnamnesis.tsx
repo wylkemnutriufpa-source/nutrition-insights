@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
-import { ClipboardList, Save, ArrowRight, ArrowLeft, Loader2, Check } from "lucide-react";
+import { ClipboardList, ArrowRight, ArrowLeft, Loader2, Check, CloudOff, Cloud } from "lucide-react";
 
 interface Props {
   patientId: string;
@@ -32,12 +32,19 @@ const QUICK_FIELDS = [
   { key: "clinical_notes", label: "Observações clínicas", type: "textarea", placeholder: "Notas do profissional..." },
 ];
 
+type SaveStatus = "idle" | "saving" | "saved" | "error";
+
 export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessionId }: Props) {
   const { user } = useAuth();
   const [answers, setAnswers] = useState<Record<string, string>>({});
-  const [saving, setSaving] = useState(false);
-  const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [saveStatus, setSaveStatus] = useState<SaveStatus>("idle");
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const answersRef = useRef(answers);
+  const lastSavedRef = useRef<string>("");
+
+  // Keep ref in sync
+  useEffect(() => { answersRef.current = answers; }, [answers]);
 
   useEffect(() => {
     (async () => {
@@ -49,15 +56,22 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
         .limit(1)
         .maybeSingle();
       if (data?.answers && typeof data.answers === "object") {
-        setAnswers(data.answers as Record<string, string>);
+        const loaded = data.answers as Record<string, string>;
+        setAnswers(loaded);
+        lastSavedRef.current = JSON.stringify(loaded);
       }
       setLoading(false);
     })();
   }, [patientId]);
 
-  const handleSave = async () => {
+  const persistSave = useCallback(async () => {
     if (!user?.id) return;
-    setSaving(true);
+    const current = answersRef.current;
+    const serialized = JSON.stringify(current);
+    // Skip if nothing changed
+    if (serialized === lastSavedRef.current) return;
+
+    setSaveStatus("saving");
     try {
       const { data: np } = await supabase
         .from("nutritionist_patients")
@@ -66,7 +80,6 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
         .eq("nutritionist_id", user.id)
         .maybeSingle();
 
-      // Check if exists
       const { data: existing } = await supabase
         .from("patient_anamnesis")
         .select("id")
@@ -76,14 +89,14 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
       if (existing) {
         await supabase
           .from("patient_anamnesis")
-          .update({ answers: answers as any, status: "completed" })
+          .update({ answers: current as any, status: "completed" })
           .eq("id", existing.id);
       } else {
         await supabase
           .from("patient_anamnesis")
           .insert({
             user_id: patientId,
-            answers: answers as any,
+            answers: current as any,
             tenant_id: np?.tenant_id || "",
             status: "completed",
           });
@@ -94,18 +107,40 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
         .update({ anamnesis_completed: true } as any)
         .eq("id", sessionId);
 
-      setSaved(true);
-      toast.success("Anamnese salva!");
-    } catch (err: any) {
-      toast.error("Erro ao salvar: " + err.message);
-    } finally {
-      setSaving(false);
+      lastSavedRef.current = serialized;
+      setSaveStatus("saved");
+    } catch {
+      setSaveStatus("error");
     }
-  };
+  }, [user?.id, patientId, sessionId]);
+
+  // Autosave with 2s debounce
+  const triggerAutosave = useCallback(() => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    debounceRef.current = setTimeout(() => {
+      persistSave();
+    }, 2000);
+  }, [persistSave]);
+
+  // Save on unmount / step change
+  useEffect(() => {
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current);
+      // Fire immediate save on unmount
+      persistSave();
+    };
+  }, [persistSave]);
 
   const updateField = (key: string, value: string) => {
     setAnswers(prev => ({ ...prev, [key]: value }));
-    setSaved(false);
+    setSaveStatus("idle");
+    triggerAutosave();
+  };
+
+  const handleNext = async () => {
+    if (debounceRef.current) clearTimeout(debounceRef.current);
+    await persistSave();
+    onNext();
   };
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -113,9 +148,17 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <ClipboardList className="w-4 h-4 text-primary" />
-          Anamnese Rápida — Modo Consultório
+        <CardTitle className="flex items-center justify-between text-base">
+          <span className="flex items-center gap-2">
+            <ClipboardList className="w-4 h-4 text-primary" />
+            Anamnese Rápida — Modo Consultório
+          </span>
+          <span className="flex items-center gap-1.5 text-xs font-normal">
+            {saveStatus === "saving" && <><Loader2 className="w-3 h-3 animate-spin text-muted-foreground" /> <span className="text-muted-foreground">Salvando...</span></>}
+            {saveStatus === "saved" && <><Check className="w-3 h-3 text-emerald-500" /> <span className="text-emerald-600">Salvo</span></>}
+            {saveStatus === "error" && <><CloudOff className="w-3 h-3 text-destructive" /> <span className="text-destructive">Erro</span></>}
+            {saveStatus === "idle" && <><Cloud className="w-3 h-3 text-muted-foreground/50" /> <span className="text-muted-foreground/50">Autosave</span></>}
+          </span>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
@@ -154,15 +197,9 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
           <Button variant="outline" onClick={onPrev} className="gap-2">
             <ArrowLeft className="w-4 h-4" /> Voltar
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-primary" /> : <Save className="w-4 h-4" />}
-              {saved ? "Salvo" : "Salvar"}
-            </Button>
-            <Button onClick={() => { handleSave(); onNext(); }} className="gap-2">
-              Próximo <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          <Button onClick={handleNext} className="gap-2">
+            Próximo <ArrowRight className="w-4 h-4" />
+          </Button>
         </div>
       </CardContent>
     </Card>

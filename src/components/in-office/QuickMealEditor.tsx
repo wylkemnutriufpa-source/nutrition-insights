@@ -9,7 +9,8 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { toast } from "sonner";
 import {
   Plus, Trash2, Copy, Save, Search,
-  Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets
+  Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets,
+  Download, Eye, ArrowRight
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -30,6 +31,18 @@ interface MealBlock {
   label: string;
   emoji: string;
   items: MealItem[];
+}
+
+interface SavedTemplate {
+  id: string;
+  template_name: string;
+  template_type: string;
+  items: MealItem[];
+  total_calories: number;
+  total_protein: number;
+  total_carbs: number;
+  total_fat: number;
+  created_at: string;
 }
 
 const MEAL_TYPES: MealBlock[] = [
@@ -60,6 +73,12 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   const [searchLoading, setSearchLoading] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [showTemplateSave, setShowTemplateSave] = useState(false);
+
+  // Template loading state
+  const [showTemplateLoad, setShowTemplateLoad] = useState(false);
+  const [templates, setTemplates] = useState<SavedTemplate[]>([]);
+  const [templatesLoading, setTemplatesLoading] = useState(false);
+  const [previewTemplate, setPreviewTemplate] = useState<SavedTemplate | null>(null);
 
   // Load existing items for current day
   useEffect(() => {
@@ -108,6 +127,23 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
     return () => clearTimeout(t);
   }, [searchQuery, searchFoods]);
 
+  // Load templates
+  const loadTemplates = useCallback(async () => {
+    if (!user?.id) return;
+    setTemplatesLoading(true);
+    const { data } = await supabase
+      .from("quick_meal_templates" as any)
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .order("created_at", { ascending: false });
+    setTemplates((data as any as SavedTemplate[]) || []);
+    setTemplatesLoading(false);
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (showTemplateLoad) loadTemplates();
+  }, [showTemplateLoad, loadTemplates]);
+
   // Add food to block
   const addFoodToBlock = async (blockType: MealType, food: any) => {
     const { data: inserted, error } = await supabase
@@ -155,9 +191,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   const duplicateDay = async () => {
     setSaving(true);
     const nextDay = currentDay + 1;
-    // Delete existing items for next day
     await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", nextDay);
-
     const allItems = blocks.flatMap(b => b.items);
     const inserts = allItems.map(item => ({
       meal_plan_id: mealPlanId,
@@ -170,10 +204,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       day_of_week: nextDay,
       item_origin: "in_office_duplicated" as const,
     }));
-
-    if (inserts.length > 0) {
-      await supabase.from("meal_plan_items").insert(inserts);
-    }
+    if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
     setTotalDays(Math.max(totalDays, nextDay));
     setCurrentDay(nextDay);
     toast.success(`Dia ${currentDay} duplicado para Dia ${nextDay}`);
@@ -184,7 +215,6 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   const applyToWeek = async () => {
     setSaving(true);
     const allItems = blocks.flatMap(b => b.items);
-
     for (let day = 1; day <= 7; day++) {
       if (day === currentDay) continue;
       await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", day);
@@ -233,6 +263,110 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
     toast.success("Template salvo!");
   };
 
+  // Apply template to current day
+  const applyTemplateToDay = async (template: SavedTemplate) => {
+    setSaving(true);
+    // Delete existing items for current day
+    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", currentDay);
+
+    const items = (template.items || []) as MealItem[];
+    const inserts = items.map(item => ({
+      meal_plan_id: mealPlanId,
+      meal_type: item.meal_type,
+      title: item.name,
+      calories_target: item.calories || 0,
+      protein_target: item.protein || 0,
+      carbs_target: item.carbs || 0,
+      fat_target: item.fat || 0,
+      day_of_week: currentDay,
+      item_origin: "in_office_template" as const,
+    }));
+
+    if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
+
+    // Reload current day
+    setCurrentDay(prev => prev); // trigger reload
+    // Force reload by toggling
+    setLoading(true);
+    const { data: reloaded } = await supabase
+      .from("meal_plan_items")
+      .select("*")
+      .eq("meal_plan_id", mealPlanId)
+      .eq("day_of_week", currentDay);
+
+    const newBlocks = MEAL_TYPES.map(m => ({
+      ...m,
+      items: (reloaded || [])
+        .filter((i) => i.meal_type === m.type)
+        .map((i) => ({
+          id: i.id,
+          name: i.title || "Item",
+          calories: i.calories_target || 0,
+          protein: i.protein_target || 0,
+          carbs: i.carbs_target || 0,
+          fat: i.fat_target || 0,
+          meal_type: m.type,
+        })),
+    }));
+    setBlocks(newBlocks);
+    setLoading(false);
+    setShowTemplateLoad(false);
+    setPreviewTemplate(null);
+    toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
+    setSaving(false);
+  };
+
+  // Apply template to whole week
+  const applyTemplateToWeek = async (template: SavedTemplate) => {
+    setSaving(true);
+    const items = (template.items || []) as MealItem[];
+
+    for (let day = 1; day <= 7; day++) {
+      await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", day);
+      const inserts = items.map(item => ({
+        meal_plan_id: mealPlanId,
+        meal_type: item.meal_type,
+        title: item.name,
+        calories_target: item.calories || 0,
+        protein_target: item.protein || 0,
+        carbs_target: item.carbs || 0,
+        fat_target: item.fat || 0,
+        day_of_week: day,
+        item_origin: "in_office_template" as const,
+      }));
+      if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
+    }
+
+    setTotalDays(7);
+    // Reload current day
+    setLoading(true);
+    const { data: reloaded } = await supabase
+      .from("meal_plan_items")
+      .select("*")
+      .eq("meal_plan_id", mealPlanId)
+      .eq("day_of_week", currentDay);
+    const newBlocks = MEAL_TYPES.map(m => ({
+      ...m,
+      items: (reloaded || [])
+        .filter((i) => i.meal_type === m.type)
+        .map((i) => ({
+          id: i.id,
+          name: i.title || "Item",
+          calories: i.calories_target || 0,
+          protein: i.protein_target || 0,
+          carbs: i.carbs_target || 0,
+          fat: i.fat_target || 0,
+          meal_type: m.type,
+        })),
+    }));
+    setBlocks(newBlocks);
+    setLoading(false);
+    setShowTemplateLoad(false);
+    setPreviewTemplate(null);
+    toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
+    setSaving(false);
+  };
+
   // Totals
   const totalMacros = useMemo(() => {
     const all = blocks.flatMap(b => b.items);
@@ -265,13 +399,87 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
             </button>
           ))}
         </div>
-        <div className="flex gap-1 ml-auto">
+        <div className="flex gap-1 ml-auto flex-wrap">
           <Button variant="outline" size="sm" onClick={duplicateDay} disabled={saving} className="gap-1 text-xs">
-            <Copy className="w-3 h-3" /> Duplicar dia
+            <Copy className="w-3 h-3" /> Duplicar
           </Button>
           <Button variant="outline" size="sm" onClick={applyToWeek} disabled={saving} className="gap-1 text-xs">
-            <Calendar className="w-3 h-3" /> Aplicar semana
+            <Calendar className="w-3 h-3" /> Semana
           </Button>
+
+          {/* Load Template */}
+          <Dialog open={showTemplateLoad} onOpenChange={setShowTemplateLoad}>
+            <DialogTrigger asChild>
+              <Button variant="outline" size="sm" className="gap-1 text-xs">
+                <Download className="w-3 h-3" /> Carregar template
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="max-w-lg">
+              <DialogHeader><DialogTitle>Carregar Template</DialogTitle></DialogHeader>
+              {templatesLoading ? (
+                <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
+              ) : templates.length === 0 ? (
+                <p className="text-sm text-muted-foreground text-center py-8">Nenhum template salvo ainda.</p>
+              ) : previewTemplate ? (
+                /* Preview mode */
+                <div className="space-y-4">
+                  <Button variant="ghost" size="sm" onClick={() => setPreviewTemplate(null)} className="text-xs">
+                    ← Voltar à lista
+                  </Button>
+                  <div className="border border-border rounded-xl p-4 space-y-3">
+                    <h3 className="font-medium text-sm">{previewTemplate.template_name}</h3>
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div className="text-xs"><p className="font-bold">{Math.round(previewTemplate.total_calories)}</p><p className="text-muted-foreground">kcal</p></div>
+                      <div className="text-xs"><p className="font-bold">{Math.round(previewTemplate.total_protein)}g</p><p className="text-muted-foreground">prot</p></div>
+                      <div className="text-xs"><p className="font-bold">{Math.round(previewTemplate.total_carbs)}g</p><p className="text-muted-foreground">carb</p></div>
+                      <div className="text-xs"><p className="font-bold">{Math.round(previewTemplate.total_fat)}g</p><p className="text-muted-foreground">gord</p></div>
+                    </div>
+                    <ScrollArea className="max-h-48">
+                      {(previewTemplate.items || []).map((item, idx) => (
+                        <div key={idx} className="text-xs py-1 flex justify-between border-b border-border/50 last:border-0">
+                          <span>{item.name}</span>
+                          <span className="text-muted-foreground">{Math.round(item.calories)} kcal</span>
+                        </div>
+                      ))}
+                    </ScrollArea>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button size="sm" onClick={() => applyTemplateToDay(previewTemplate)} disabled={saving} className="flex-1 gap-1">
+                      <ArrowRight className="w-3 h-3" /> Aplicar ao dia {currentDay}
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={() => applyTemplateToWeek(previewTemplate)} disabled={saving} className="flex-1 gap-1">
+                      <Calendar className="w-3 h-3" /> Aplicar à semana
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                /* Template list */
+                <ScrollArea className="max-h-80">
+                  <div className="space-y-2">
+                    {templates.map(t => (
+                      <button
+                        key={t.id}
+                        className="w-full text-left p-3 rounded-xl border border-border hover:border-primary/30 hover:bg-primary/5 transition-all"
+                        onClick={() => setPreviewTemplate(t)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-sm font-medium">{t.template_name}</p>
+                            <p className="text-[10px] text-muted-foreground">
+                              {Math.round(t.total_calories)} kcal · P{Math.round(t.total_protein)}g · C{Math.round(t.total_carbs)}g · G{Math.round(t.total_fat)}g
+                            </p>
+                          </div>
+                          <Eye className="w-4 h-4 text-muted-foreground" />
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </ScrollArea>
+              )}
+            </DialogContent>
+          </Dialog>
+
+          {/* Save Template */}
           <Dialog open={showTemplateSave} onOpenChange={setShowTemplateSave}>
             <DialogTrigger asChild>
               <Button variant="outline" size="sm" className="gap-1 text-xs">
