@@ -291,7 +291,7 @@ export default function PublicDemo() {
               {isPro ? "Ver visão Paciente" : "Ver visão Profissional"} <ChevronRight className="w-4 h-4 ml-1" />
             </Button>
           </div>
-          <p className="text-white/30 text-sm">✅ 7 dias grátis · Sem cartão de crédito</p>
+          <p className="text-white/30 text-sm">✅ 3 dias grátis · Sem cartão de crédito</p>
         </motion.div>
       </section>
     </div>

@@ -53,6 +53,32 @@ serve(async (req) => {
     if (customers.data.length > 0) {
       customerId = customers.data[0].id;
       logStep("Found existing customer", { customerId });
+
+      // Check if user already has an active/trialing subscription
+      const existingSubs = await stripe.subscriptions.list({
+        customer: customerId,
+        status: "trialing",
+        limit: 1,
+      });
+      const hasActiveTrial = existingSubs.data.length > 0;
+
+      if (hasActiveTrial) {
+        // User already in trial — create checkout WITHOUT trial (direct subscription)
+        logStep("User already in trial, skipping trial period");
+        const origin = req.headers.get("origin") || "https://fijourney.lovable.app";
+        const session = await stripe.checkout.sessions.create({
+          customer: customerId,
+          line_items: [{ price: priceId, quantity: 1 }],
+          mode: "subscription",
+          success_url: `${origin}/obrigado`,
+          cancel_url: `${origin}/pricing?payment=cancelled`,
+        });
+        logStep("Checkout session created (no trial)", { sessionId: session.id });
+        return new Response(JSON.stringify({ url: session.url }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+          status: 200,
+        });
+      }
     }
 
     const origin = req.headers.get("origin") || "https://fijourney.lovable.app";
@@ -63,7 +89,7 @@ serve(async (req) => {
       line_items: [{ price: priceId, quantity: 1 }],
       mode: "subscription",
       subscription_data: {
-        trial_period_days: 7,
+        trial_period_days: 3,
       },
       success_url: `${origin}/obrigado`,
       cancel_url: `${origin}/pricing?payment=cancelled`,

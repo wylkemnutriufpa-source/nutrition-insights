@@ -139,7 +139,7 @@ export default function Pricing() {
             Escolha o plano ideal para você
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Comece com <strong>7 dias grátis</strong> em qualquer plano. Sem compromisso, cancele quando quiser.
+            Comece com <strong>3 dias grátis</strong> em qualquer plano. Sem compromisso, cancele quando quiser.
           </p>
         </motion.div>
 
@@ -224,9 +224,9 @@ export default function Pricing() {
                         </span>
                         <span className="text-muted-foreground">/mês</span>
                       </div>
-                      {plan.slug !== "free" && (
+                       {plan.slug !== "free" && (
                         <p className="text-sm text-primary mt-1 font-medium">
-                          7 dias grátis para testar
+                          {subscription.is_trial ? "Assine agora" : "3 dias grátis para testar"}
                         </p>
                       )}
                       {plan.max_patients && (
@@ -280,9 +280,14 @@ export default function Pricing() {
                           </>
                         ) : plan.slug === "free" ? (
                           "Começar Grátis"
+                        ) : subscription.is_trial ? (
+                          <>
+                            Assinar Agora
+                            <ArrowRight className="w-4 h-4" />
+                          </>
                         ) : (
                           <>
-                            Testar Grátis por 7 dias
+                            Testar Grátis por 3 dias
                             <ArrowRight className="w-4 h-4" />
                           </>
                         )}
@@ -308,7 +313,7 @@ export default function Pricing() {
           </div>
           <div className="flex items-center gap-2">
             <Zap className="w-5 h-5" />
-            <span className="text-sm">7 dias grátis</span>
+            <span className="text-sm">3 dias grátis</span>
           </div>
           <div className="flex items-center gap-2">
             <CreditCard className="w-5 h-5" />
