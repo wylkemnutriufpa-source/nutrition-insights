@@ -1030,7 +1030,7 @@ function generateRealisticPlan(
 
       const scaledBaseDescription = scaleDescriptionQuantities(selected.description, clampedScale) || selected.description;
       const finalizedBaseDescription = finalizeMealDescription(scaledBaseDescription, mealType, goal);
-      const subs = buildSubstitutionText(selected.foods, mealType);
+      const subs = buildSubstitutionText(selected.foods, mealType, disliked);
       const description = finalizedBaseDescription + (subs ? `\n\n🔄 Substituições:\n${subs}` : "");
 
       items.push({
@@ -1049,20 +1049,22 @@ function generateRealisticPlan(
   return items;
 }
 
-function buildSubstitutionText(foods: string[], _mealType: string): string {
+function buildSubstitutionText(foods: string[], _mealType: string, disliked: string[] = []): string {
+  const normalizedDisliked = disliked.map(d => normalize(d));
   const subs: string[] = [];
   for (const food of foods) {
     const n = normalize(food);
-    // Extract portion from food string (e.g., "Frango — 150g" or just "Frango")
     const portionMatch = food.match(/—\s*(\d+g)/i);
     const portionStr = portionMatch ? portionMatch[1] : "100g";
 
     for (const [, group] of Object.entries(SUBSTITUTION_GROUPS)) {
       const match = group.find(item => n.includes(normalize(item)));
       if (match) {
-        const alternatives = group.filter(item => normalize(item) !== normalize(match)).slice(0, 3);
+        const alternatives = group
+          .filter(item => normalize(item) !== normalize(match))
+          .filter(item => !normalizedDisliked.some(d => d.length >= 3 && (normalize(item).includes(d) || d.includes(normalize(item)))))
+          .slice(0, 3);
         if (alternatives.length > 0) {
-          // Include portion for each alternative
           const altsWithPortion = alternatives.map(a => `${a} (${portionStr})`);
           subs.push(`• ${match} → ${altsWithPortion.join(", ")}`);
         }
