@@ -24,7 +24,7 @@ import { useNavigate } from "react-router-dom";
 export default function Settings() {
   const { t } = useTranslation();
   const { minMode } = useExperienceMode();
-  const { user, profile, refreshProfile, isNutritionist, isPersonal, subscription, checkSubscription } = useAuth();
+  const { user, profile, refreshProfile, isNutritionist, isPersonal, isAdmin, subscription, checkSubscription } = useAuth();
   const navigate = useNavigate();
   const { permission, isSubscribed, isSupported, loading: pushLoading, subscribe, unsubscribe } = usePushNotifications();
   const [portalLoading, setPortalLoading] = useState(false);
@@ -387,8 +387,8 @@ export default function Settings() {
         {/* Protocol FitJourney - PRO+ */}
         {minMode("pro") && <ProtocolFitJourneyToggle />}
 
-        {/* Database Backup - ADVANCED only */}
-        {minMode("advanced") && <DatabaseBackupCard />}
+        {/* Database Backup - ADMIN only */}
+        {isAdmin && minMode("advanced") && <DatabaseBackupCard />}
       </motion.div>
     </DashboardLayout>
   );
