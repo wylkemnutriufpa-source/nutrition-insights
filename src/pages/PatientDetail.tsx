@@ -1456,7 +1456,7 @@ export default function PatientDetail() {
                             archived: { label: "Arquivado", color: "bg-muted text-muted-foreground" },
                           };
                           const st = statusConfig[plan.plan_status] || { label: plan.plan_status || "—", color: "bg-muted text-muted-foreground" };
-                          const isPending = ["draft_auto_generated", "under_professional_review"].includes(plan.plan_status);
+                          const isPending = ["draft", "draft_auto_generated", "draft_auto_corrected", "under_professional_review", "revision_requested"].includes(plan.plan_status);
 
                           // Engine version governance
                           const planEngineV = plan.generation_metadata?.engine_version || plan.engine_version || null;
