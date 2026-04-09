@@ -223,7 +223,7 @@ export default function MealPlanEditorV2() {
 
   const handlePublish = async () => {
     if (!user) return;
-    if (isImmutable) {
+    if (!canPublish) {
       toast.error("🔒 Plano já publicado. Use '♻️ Gerar Novo Plano' para criar uma revisão.");
       return;
     }
