@@ -148,6 +148,7 @@ export default function MealPlanEditorV2() {
   const isApproved = planState.isApproved;
   const planStatus = (plan as any).plan_status || "draft";
   const isImmutable = IMMUTABLE_STATUSES.includes(planStatus);
+  const canPublish = !["published", "published_to_patient"].includes(planStatus);
   
   // Check if plan came from onboarding/auto-generation — block hybrid builder
   const genSource = (plan as any).generation_source || "";
