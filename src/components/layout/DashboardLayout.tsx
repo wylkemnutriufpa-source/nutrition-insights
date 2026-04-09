@@ -202,8 +202,17 @@ function DynamicSidebar({
       {/* Workspace context switcher for hybrid users */}
       <WorkspaceContextSwitcher collapsed={collapsed} />
 
-      <div className="p-4 flex items-center flex-shrink-0">
+      <div className="p-4 flex items-center justify-between flex-shrink-0">
         <FitJourneyLogo collapsed={collapsed} size="sm" />
+        {setCollapsed && (
+          <button
+            onClick={() => setCollapsed(!collapsed)}
+            className="flex items-center justify-center w-8 h-8 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted transition-all"
+            title={collapsed ? "Expandir menu" : "Recolher menu"}
+          >
+            <ChevronRight className={`w-4 h-4 transition-transform ${collapsed ? "" : "rotate-180"}`} />
+          </button>
+        )}
       </div>
 
       {effectiveProRole ? (
