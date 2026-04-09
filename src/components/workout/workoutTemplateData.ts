@@ -590,6 +590,99 @@ export const BUILT_IN_TEMPLATES: WorkoutTemplate[] = [
       },
     ],
   },
+
+  // ════════════════════════════════════════════════
+  // HIPERTROFIA MUSCULAR 02 — FEMININO (Intermediário/Avançado)
+  // ════════════════════════════════════════════════
+  {
+    id: "tpl-hyper-fem-02",
+    name: "Hipertrofia Muscular 02 – Feminino",
+    category: "hypertrophy",
+    level: "avancado",
+    days: 5,
+    description: "Rotina feminina intermediária/avançada com foco em hipertrofia, glúteos e volume. 5x/semana.",
+    routines: [
+      {
+        name: "Membros Inferiores",
+        exercises: [
+          { name: "Alongamento de Dorsal e Posteriores", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 0, notes: "Alternar com Posteriores no Caixote, Adutores III e Adutor no Espaldar" },
+          { name: "Alongamento de Posteriores no Caixote", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 0 },
+          { name: "Alongamento de Adutores III", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Alongamento Adutor no Espaldar", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Cadeira Flexora", muscle_group: "Posterior", sets: 4, reps: "máximo", rest_seconds: 80, notes: "Carga: 50 kg. Manter a pelve estável." },
+          { name: "Stiff com Barra (pés próximos)", muscle_group: "Posterior", sets: 4, reps: "12-15", rest_seconds: 60, notes: "Carga: 30/40/50 kg (progressiva)" },
+          { name: "Búlgaro com Halteres (mão inversa)", muscle_group: "Pernas", sets: 3, reps: "12", rest_seconds: 60, notes: "Carga: 12 kg" },
+          { name: "Cadeira Extensora", muscle_group: "Quadríceps", sets: 3, reps: "12", rest_seconds: 60, notes: "Carga: 40 kg" },
+          { name: "Agachamento Livre com Barra", muscle_group: "Pernas", sets: 3, reps: "12/8-10/8", rest_seconds: 90, notes: "Progressão: 30→40→50 kg. Controle na descida, explosão na subida. 📈 Progressão de carga semanal." },
+          { name: "Abdominal Infra nas Paralelas", muscle_group: "Core", sets: 3, reps: "16", rest_seconds: 45 },
+        ],
+      },
+      {
+        name: "Peitoral, Ombros e Tríceps",
+        exercises: [
+          { name: "Alongamento Peitoral no Espaldar", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 0, notes: "Alternar com Ombro no Espaldar, Peitoral II e Dorsal I" },
+          { name: "Alongamento de Ombro no Espaldar", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 0 },
+          { name: "Alongamento Peitoral Espaldar II", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Alongamento Dorsal Espaldar I", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Crucifixo Máquina", muscle_group: "Peito", sets: 3, reps: "12-15", rest_seconds: 60, notes: "Carga: 25 kg" },
+          { name: "Supino Reto com Barra", muscle_group: "Peito", sets: 4, reps: "10-12", rest_seconds: 60, notes: "Carga: 24 kg" },
+          { name: "Crucifixo com Halteres", muscle_group: "Peito", sets: 3, reps: "12", rest_seconds: 60 },
+          { name: "Elevação Frontal na Polia Baixa", muscle_group: "Ombros", sets: 4, reps: "12", rest_seconds: 60 },
+          { name: "Elevação Lateral com Halteres", muscle_group: "Ombros", sets: 4, reps: "12-15", rest_seconds: 60, notes: "Carga: 9 kg" },
+          { name: "Desenvolvimento com Halteres", muscle_group: "Ombros", sets: 3, reps: "12-15", rest_seconds: 60, notes: "Carga: 10 kg" },
+          { name: "Elevação Frontal Alternada", muscle_group: "Ombros", sets: 3, reps: "16", rest_seconds: 45, notes: "Carga: 6 kg" },
+          { name: "Tríceps Unilateral na Polia Alta", muscle_group: "Tríceps", sets: 2, reps: "12", rest_seconds: 45, notes: "Carga: 15 kg" },
+          { name: "Tríceps na Polia com Barra", muscle_group: "Tríceps", sets: 4, reps: "10", rest_seconds: 60, notes: "Carga: 30 kg" },
+        ],
+      },
+      {
+        name: "Glúteos",
+        exercises: [
+          { name: "Alongamento de Quadríceps III", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0, notes: "Alternar com Quadríceps no Caixote e Dorsal e Posteriores" },
+          { name: "Alongamento de Quadríceps no Caixote", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Alongamento de Dorsal e Posteriores", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Abdução de Quadril na Polia", muscle_group: "Glúteos", sets: 4, reps: "12-15", rest_seconds: 60, notes: "Carga máxima" },
+          { name: "Elevação de Quadril na Máquina", muscle_group: "Glúteos", sets: 4, reps: "12", rest_seconds: 60 },
+          { name: "Agachamento Sumô no Step", muscle_group: "Glúteos", sets: 3, reps: "14-20", rest_seconds: 60, notes: "Carga crescente" },
+          { name: "Afundo no Smith", muscle_group: "Pernas", sets: 3, reps: "12/12/15", rest_seconds: 90, notes: "Progressão: 40 kg → crescente → carga máxima" },
+          { name: "Mesa Flexora", muscle_group: "Posterior", sets: 5, reps: "12", rest_seconds: 60, notes: "Carga desafiadora" },
+          { name: "Stiff com Halteres", muscle_group: "Posterior", sets: 3, reps: "12", rest_seconds: 60 },
+          { name: "Flexora Unilateral", muscle_group: "Posterior", sets: 3, reps: "12", rest_seconds: 60 },
+        ],
+      },
+      {
+        name: "Costas, Ombros e Bíceps",
+        exercises: [
+          { name: "Mobilidade de Ombro II", muscle_group: "Mobilidade", sets: 2, reps: "20", rest_seconds: 0, notes: "Ativação + Alongamento Peitoral 12 reps" },
+          { name: "Alongamento de Peitoral", muscle_group: "Mobilidade", sets: 1, reps: "12", rest_seconds: 0 },
+          { name: "Face Pull", muscle_group: "Ombros", sets: 3, reps: "12-15", rest_seconds: 60, notes: "Carga: 20 kg" },
+          { name: "Pulldown Barra Aberta", muscle_group: "Costas", sets: 4, reps: "10+10+10", rest_seconds: 90, notes: "Drop Set + Pré-exaustão" },
+          { name: "Remada Baixa Supinada", muscle_group: "Costas", sets: 4, reps: "12", rest_seconds: 60, notes: "Carga: 30 kg" },
+          { name: "Remada Curvada Supinada", muscle_group: "Costas", sets: 4, reps: "10", rest_seconds: 60, notes: "Carga: 10 kg" },
+          { name: "Crucifixo Inverso com Halteres", muscle_group: "Ombros", sets: 5, reps: "10", rest_seconds: 60, notes: "Carga: 7 kg" },
+          { name: "Rosca Scott Máquina", muscle_group: "Bíceps", sets: 3, reps: "12", rest_seconds: 60, notes: "Carga: 15-20 kg" },
+          { name: "Rosca Direta na Polia", muscle_group: "Bíceps", sets: 4, reps: "12", rest_seconds: 60, notes: "Carga: 35 kg" },
+          { name: "Rosca Martelo Alternada", muscle_group: "Bíceps", sets: 3, reps: "16", rest_seconds: 45, notes: "Carga: 10 kg" },
+          { name: "Prancha Isométrica", muscle_group: "Core", sets: 3, reps: "2 min", rest_seconds: 30 },
+        ],
+      },
+      {
+        name: "Superiores",
+        exercises: [
+          { name: "Mobilidade de Ombro VII", muscle_group: "Mobilidade", sets: 2, reps: "20", rest_seconds: 0, notes: "Ativação + Mobilidade Torácica III 12 reps" },
+          { name: "Mobilidade Torácica III", muscle_group: "Mobilidade", sets: 1, reps: "12", rest_seconds: 0 },
+          { name: "Puxada Unilateral", muscle_group: "Costas", sets: 3, reps: "12-15", rest_seconds: 60 },
+          { name: "Puxada Aberta Barra Reta", muscle_group: "Costas", sets: 4, reps: "10+10+10", rest_seconds: 90, notes: "Drop Set" },
+          { name: "Remada Curvada Supinada", muscle_group: "Costas", sets: 4, reps: "12", rest_seconds: 60 },
+          { name: "Desenvolvimento com Halteres", muscle_group: "Ombros", sets: 4, reps: "10", rest_seconds: 60, notes: "Carga: 10 kg" },
+          { name: "Elevação Lateral Sentado", muscle_group: "Ombros", sets: 4, reps: "12", rest_seconds: 60, notes: "Carga: 7 kg" },
+          { name: "Rosca Direta com Barra", muscle_group: "Bíceps", sets: 4, reps: "12", rest_seconds: 60, notes: "Carga: 12 kg" },
+          { name: "Rosca Martelo no Banco Inclinado", muscle_group: "Bíceps", sets: 4, reps: "16", rest_seconds: 60, notes: "Carga: 10 kg" },
+          { name: "Tríceps na Polia com Corda", muscle_group: "Tríceps", sets: 5, reps: "12-15", rest_seconds: 60 },
+        ],
+      },
+    ],
+  },
 ];
 
 // Categorias de templates
