@@ -19,7 +19,7 @@ import { ValidationCorrectionPanel, type ValidationResult } from "@/components/m
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
 import type { ComposerMode } from "@/lib/mealComposer";
 
-import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen } from "lucide-react";
+import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MealType } from "@/stores/mealPlanEditorV2Store";
