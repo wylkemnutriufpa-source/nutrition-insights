@@ -16,6 +16,7 @@ export default function InvitePatient() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [method, setMethod] = useState<"magic_link" | "password">("magic_link");
+  const [attendanceMode, setAttendanceMode] = useState<"online" | "presential">("online");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -23,6 +24,7 @@ export default function InvitePatient() {
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
 
   const generatePassword = () => {
     setTempPassword("Fit@2026!");
@@ -41,7 +43,6 @@ export default function InvitePatient() {
 
     setLoading(true);
     try {
-      // Use edge function to create patient without breaking current session
       const { data, error } = await supabase.functions.invoke("invite-patient", {
         body: {
           name,
@@ -49,11 +50,22 @@ export default function InvitePatient() {
           phone: phone || null,
           method,
           password: method === "password" ? tempPassword : undefined,
+          attendance_mode: attendanceMode,
         },
       });
 
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
+
+      // Update attendance_mode on the link
+      if (data?.patient_id) {
+        setCreatedPatientId(data.patient_id);
+        await supabase
+          .from("nutritionist_patients")
+          .update({ attendance_mode: attendanceMode } as any)
+          .eq("patient_id", data.patient_id)
+          .eq("nutritionist_id", user.id);
+      }
 
       setCreated(true);
       toast.success("Paciente convidado com sucesso!");
@@ -110,15 +122,15 @@ export default function InvitePatient() {
                 <Label>Modo de atendimento</Label>
                 <RadioGroup value={attendanceMode} onValueChange={(v) => setAttendanceMode(v as any)} className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 transition-all">
-                    <RadioGroupItem value="online" id="online" />
-                    <Label htmlFor="online" className="flex-1 cursor-pointer">
+                    <RadioGroupItem value="online" id="att_online" />
+                    <Label htmlFor="att_online" className="flex-1 cursor-pointer">
                       <p className="text-sm font-medium">🌐 Online</p>
                       <p className="text-xs text-muted-foreground">Paciente preenche onboarding remotamente</p>
                     </Label>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 transition-all">
-                    <RadioGroupItem value="presential" id="presential" />
-                    <Label htmlFor="presential" className="flex-1 cursor-pointer">
+                    <RadioGroupItem value="presential" id="att_presential" />
+                    <Label htmlFor="att_presential" className="flex-1 cursor-pointer">
                       <p className="text-sm font-medium">🏥 Presencial</p>
                       <p className="text-xs text-muted-foreground">Profissional preenche durante a consulta</p>
                     </Label>
@@ -126,6 +138,8 @@ export default function InvitePatient() {
                 </RadioGroup>
               </div>
 
+              <div className="space-y-3 pt-2">
+                <Label>Método de acesso</Label>
                 <RadioGroup value={method} onValueChange={(v) => setMethod(v as any)} className="space-y-2">
                   <div className="flex items-center gap-3 p-3 rounded-xl border border-border hover:border-primary/30 transition-all">
                     <RadioGroupItem value="magic_link" id="magic_link" />
@@ -143,7 +157,7 @@ export default function InvitePatient() {
                     <RadioGroupItem value="password" id="password" />
                     <Label htmlFor="password" className="flex-1 cursor-pointer">
                       <div className="flex items-center gap-2">
-                        <Key className="w-4 h-4 text-amber-500" />
+                        <Key className="w-4 h-4 text-accent" />
                         <div>
                           <p className="text-sm font-medium">Senha temporária</p>
                           <p className="text-xs text-muted-foreground">Você compartilha as credenciais</p>
@@ -171,10 +185,10 @@ export default function InvitePatient() {
             </CardContent>
           </Card>
         ) : (
-          <Card className="border-emerald-500/30 bg-emerald-500/5">
+          <Card className="border-primary/30 bg-primary/5">
             <CardContent className="py-8 text-center space-y-4">
-              <div className="w-16 h-16 mx-auto rounded-full bg-emerald-500/20 flex items-center justify-center">
-                <Check className="w-8 h-8 text-emerald-500" />
+              <div className="w-16 h-16 mx-auto rounded-full bg-primary/20 flex items-center justify-center">
+                <Check className="w-8 h-8 text-primary" />
               </div>
               <div>
                 <h3 className="font-display text-lg font-bold">Paciente Convidado!</h3>
@@ -202,10 +216,15 @@ export default function InvitePatient() {
               )}
 
               <div className="flex gap-2 justify-center pt-2">
-                <Button variant="outline" onClick={() => { setCreated(false); setName(""); setEmail(""); setPhone(""); setTempPassword(""); }}>
+                {attendanceMode === "presential" && createdPatientId && (
+                  <Button onClick={() => navigate(`/in-office/${createdPatientId}`)} className="gap-2">
+                    🏥 Iniciar Consulta Presencial
+                  </Button>
+                )}
+                <Button variant="outline" onClick={() => { setCreated(false); setName(""); setEmail(""); setPhone(""); setTempPassword(""); setCreatedPatientId(null); }}>
                   Convidar outro
                 </Button>
-                <Button onClick={() => navigate("/patients")}>
+                <Button variant="ghost" onClick={() => navigate("/patients")}>
                   Ver pacientes
                 </Button>
               </div>
