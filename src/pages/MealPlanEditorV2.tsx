@@ -56,6 +56,9 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.
 /** Immutable statuses — editing is BLOCKED */
 const IMMUTABLE_STATUSES = ["approved", "published", "published_to_patient"];
 
+/** Plans that can still be published (approved but not yet delivered to patient) */
+const PUBLISHABLE_STATUSES = ["approved"];
+
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
