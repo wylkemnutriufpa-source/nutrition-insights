@@ -580,7 +580,10 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart, o
   );
 }
 
-function VideoPlayer({ videoPath }: { videoPath: string }) {
+const DEFAULT_PREVIEW_SECONDS = 10;
+
+function VideoPlayer({ videoPath, maxSeconds = DEFAULT_PREVIEW_SECONDS }: { videoPath: string; maxSeconds?: number }) {
+  const videoRef = useRef<HTMLVideoElement>(null);
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -636,11 +639,25 @@ function VideoPlayer({ videoPath }: { videoPath: string }) {
   }
 
   return (
-    <video
-      src={url}
-      controls
-      className="w-full rounded-lg aspect-video bg-black"
-      onError={() => setError(true)}
-    />
+    <div className="relative">
+      <video
+        ref={videoRef}
+        src={url}
+        controls
+        autoPlay
+        className="w-full rounded-lg aspect-video bg-black"
+        onError={() => setError(true)}
+        onTimeUpdate={() => {
+          if (videoRef.current && videoRef.current.currentTime >= maxSeconds) {
+            videoRef.current.pause();
+          }
+        }}
+      />
+      <div className="absolute top-2 right-2">
+        <Badge className="bg-black/70 text-white text-[10px] border-none">
+          Prévia {maxSeconds}s
+        </Badge>
+      </div>
+    </div>
   );
 }
