@@ -583,9 +583,11 @@ export default function ExerciseVideoLibrary({ draggable = false, onDragStart, o
 function VideoPlayer({ videoPath }: { videoPath: string }) {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   const isDirectUrl = videoPath.startsWith("http");
 
   useEffect(() => {
+    setError(false);
     if (isDirectUrl) {
       setUrl(videoPath);
       setLoading(false);
@@ -595,7 +597,11 @@ function VideoPlayer({ videoPath }: { videoPath: string }) {
       const { data } = await supabase.storage
         .from("exercise-videos")
         .createSignedUrl(videoPath, 3600);
-      if (data?.signedUrl) setUrl(data.signedUrl);
+      if (data?.signedUrl) {
+        setUrl(data.signedUrl);
+      } else {
+        setError(true);
+      }
       setLoading(false);
     };
     load();
@@ -619,11 +625,22 @@ function VideoPlayer({ videoPath }: { videoPath: string }) {
     );
   }
 
-  return url ? (
-    <video src={url} controls className="w-full rounded-lg aspect-video bg-black" />
-  ) : (
-    <div className="aspect-video bg-muted rounded-lg flex items-center justify-center text-muted-foreground">
-      Erro ao carregar vídeo
-    </div>
+  if (error || !url) {
+    return (
+      <div className="aspect-video bg-muted rounded-lg flex flex-col items-center justify-center text-muted-foreground gap-2">
+        <Film className="w-8 h-8 opacity-40" />
+        <p className="text-sm">Vídeo não disponível</p>
+        <p className="text-xs opacity-60">O arquivo pode ter sido removido ou não foi carregado</p>
+      </div>
+    );
+  }
+
+  return (
+    <video
+      src={url}
+      controls
+      className="w-full rounded-lg aspect-video bg-black"
+      onError={() => setError(true)}
+    />
   );
 }
