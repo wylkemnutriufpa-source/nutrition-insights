@@ -387,8 +387,8 @@ export default function Settings() {
         {/* Protocol FitJourney - PRO+ */}
         {minMode("pro") && <ProtocolFitJourneyToggle />}
 
-        {/* Database Backup - ADVANCED only */}
-        {minMode("advanced") && <DatabaseBackupCard />}
+        {/* Database Backup - ADMIN only */}
+        {isAdmin && minMode("advanced") && <DatabaseBackupCard />}
       </motion.div>
     </DashboardLayout>
   );
