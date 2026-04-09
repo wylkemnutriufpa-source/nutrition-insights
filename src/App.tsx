@@ -320,7 +320,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin } = useAuth();
+  const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
   const [bootDone, setBootDone] = useState(false);
   const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
@@ -340,6 +340,10 @@ function RootRoute() {
   if (!user) return <GatewayPage />;
   if (activeEditorRoute?.shouldRestore) {
     return <Navigate to={activeEditorRoute.route} replace />;
+  }
+  // Lojista goes to store dashboard (if not also a professional)
+  if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
+    return <Navigate to="/store" replace />;
   }
   if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
