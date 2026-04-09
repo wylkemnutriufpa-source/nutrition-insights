@@ -2,7 +2,7 @@ import { useState, useCallback } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
-  Plus, Check, Flame, Beef, Wheat, Droplets, Search, ArrowLeftRight,
+  Plus, Check, Flame, Beef, Wheat, Droplets, Search, ArrowLeftRight, Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ interface Props {
 }
 
 export function DayContent({ day }: Props) {
-  const { items, syncingMap, planId, addItem } = useMealPlanEditorV2Store();
+  const { items, syncingMap, planId, addItem, deleteItemsInCell } = useMealPlanEditorV2Store();
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
   const [dragOverKey, setDragOverKey] = useState<string | null>(null);
@@ -145,6 +145,21 @@ export function DayContent({ day }: Props) {
               {mealItems.length === 0 && (
                 <span className="text-[10px] text-muted-foreground italic">vazio</span>
               )}
+              <div className="ml-auto">
+                {mealItems.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      deleteItemsInCell(day, meal.key);
+                      toast.success(`${meal.label} limpo`);
+                    }}
+                    className="flex items-center gap-1 text-[9px] text-destructive/70 hover:text-destructive px-1.5 py-0.5 rounded hover:bg-destructive/10 transition-colors"
+                    title={`Limpar todos os itens de ${meal.label}`}
+                  >
+                    <Trash2 className="w-3 h-3" /> Limpar
+                  </button>
+                )}
+              </div>
             </div>
 
             <div className="space-y-1 pl-6">
