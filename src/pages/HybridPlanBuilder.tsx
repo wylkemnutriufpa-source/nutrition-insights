@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { DndContext, DragEndEvent, DragOverlay, PointerSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragOverlay, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors } from "@dnd-kit/core";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
@@ -143,7 +143,11 @@ export default function HybridPlanBuilder() {
   const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
 
   // DnD sensors
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 5 } }),
+    useSensor(KeyboardSensor),
+  );
   const [activeDragData, setActiveDragData] = useState<{ type: string; label: string } | null>(null);
 
   // Patient composer context (must be before early returns)
