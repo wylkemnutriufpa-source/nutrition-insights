@@ -497,6 +497,99 @@ export const BUILT_IN_TEMPLATES: WorkoutTemplate[] = [
       ]},
     ],
   },
+
+  // ════════════════════════════════════════════════
+  // HIPERTROFIA MUSCULAR 01 — POSTURA FEMININO (Intermediário)
+  // ════════════════════════════════════════════════
+  {
+    id: "tpl-hyper-postura-fem-01",
+    name: "Hipertrofia Muscular 01 – Postura Feminino",
+    category: "hypertrophy",
+    level: "intermediario",
+    days: 5,
+    description: "Rotina feminina com foco em hipertrofia, correção postural, mobilidade e cardio. 5x/semana.",
+    routines: [
+      {
+        name: "Membros Superiores",
+        exercises: [
+          { name: "Alongamento de Peitoral no Espaldar", muscle_group: "Mobilidade", sets: 2, reps: "30s", rest_seconds: 0, notes: "Combinado – Alterne com Mobilidade Torácica III" },
+          { name: "Mobilidade Torácica III", muscle_group: "Mobilidade", sets: 2, reps: "10", rest_seconds: 0 },
+          { name: "Alongamento de Dorsais e Posteriores II", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0, notes: "Combinado – Alterne com Mobilidade de Ombro I, Mobilidade Dorsal VII e Depressão Escapular" },
+          { name: "Mobilidade de Ombro I", muscle_group: "Mobilidade", sets: 2, reps: "15", rest_seconds: 0 },
+          { name: "Mobilidade Dorsal VII", muscle_group: "Mobilidade", sets: 2, reps: "10", rest_seconds: 0 },
+          { name: "Depressão Escapular no Smith", muscle_group: "Costas", sets: 3, reps: "10", rest_seconds: 60 },
+          { name: "Puxada Aberta Barra Reta", muscle_group: "Costas", sets: 3, reps: "12", rest_seconds: 60 },
+          { name: "Remada Curvada com Halteres (Pegada Supinada)", muscle_group: "Costas", sets: 3, reps: "12-15", rest_seconds: 60, notes: "📈 Progressão de carga semanal. Manter boa velocidade no exercício." },
+          { name: "Remada Baixa Supinada", muscle_group: "Costas", sets: 4, reps: "12", rest_seconds: 60, notes: "Iniciar com retração das escápulas e depois flexionar os cotovelos." },
+          { name: "Face Pull", muscle_group: "Ombros", sets: 3, reps: "12", rest_seconds: 80, notes: "Combinado – Alterne com Prancha e Crucifixo Inverso. Carga: 4 kg" },
+          { name: "Prancha Isométrica", muscle_group: "Core", sets: 4, reps: "10", rest_seconds: 80, notes: "Carga: 7 kg" },
+          { name: "Crucifixo Inverso na Máquina", muscle_group: "Ombros", sets: 4, reps: "12", rest_seconds: 80, notes: "Carga: 20 kg" },
+          { name: "Rosca Direta na Polia (Barra Reta)", muscle_group: "Bíceps", sets: 3, reps: "12", rest_seconds: 60, notes: "Carga: 15 kg" },
+        ],
+      },
+      {
+        name: "Membros Inferiores",
+        exercises: [
+          { name: "Alongamento de Dorsal e Posteriores", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 30, notes: "Combinado – Alterne com Alongamento de Posteriores no Caixote" },
+          { name: "Alongamento de Posteriores no Caixote", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 30 },
+          { name: "Alongamento de Adutores III", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Alongamento Adutor no Espaldar", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Agachamento na Polia Baixa", muscle_group: "Pernas", sets: 3, reps: "20", rest_seconds: 60, notes: "Carga: 35 kg. Fazer a movimentação da remada ao subir." },
+          { name: "Cadeira Extensora", muscle_group: "Quadríceps", sets: 3, reps: "10+10+10", rest_seconds: 60, notes: "Método Drop Set (3 reduções)" },
+          { name: "Leg Press 45° Pés Afastados", muscle_group: "Pernas", sets: 4, reps: "12", rest_seconds: 60, notes: "Carga: 90 kg. 🎯 Meta: alcançar 150 kg" },
+          { name: "Cadeira Flexora", muscle_group: "Posterior", sets: 3, reps: "12", rest_seconds: 60, notes: "Carga: 5 placas. 🔄 Substituição: Abdução de Quadril na Máquina com Corpo à Frente" },
+          { name: "Leg Press Horizontal Unilateral", muscle_group: "Pernas", sets: 2, reps: "20", rest_seconds: 90, notes: "Carga: 3 barras. Descer em 3s e subir em 1s." },
+          { name: "Abdução de Quadril na Máquina", muscle_group: "Glúteos", sets: 4, reps: "12", rest_seconds: 70, notes: "Carga desafiadora" },
+          { name: "Esteira Caminhada", muscle_group: "Cardio", sets: 1, reps: "15 min", rest_seconds: 0 },
+        ],
+      },
+      {
+        name: "Peitoral, Ombros e Tríceps",
+        exercises: [
+          { name: "Alongamento de Peitoral no Espaldar", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 0, notes: "Combinado – Alterne com Alongamento de Ombro e Peitoral II e Dorsal I" },
+          { name: "Alongamento de Ombro no Espaldar", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 0 },
+          { name: "Alongamento de Peitoral no Espaldar II", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Alongamento Dorsal no Espaldar I", muscle_group: "Mobilidade", sets: 1, reps: "15s", rest_seconds: 0 },
+          { name: "Crucifixo Inclinado com Halteres", muscle_group: "Peito", sets: 3, reps: "12-15", rest_seconds: 60, notes: "Carga: 8 kg" },
+          { name: "Crucifixo na Máquina", muscle_group: "Peito", sets: 3, reps: "12", rest_seconds: 90, notes: "Carga: 4 placas" },
+          { name: "Remada Baixa Supinada", muscle_group: "Costas", sets: 4, reps: "12", rest_seconds: 90, notes: "Carga: 5 placas" },
+          { name: "Alongamento de Peitoral no Espaldar", muscle_group: "Mobilidade", sets: 2, reps: "30s cada lado", rest_seconds: 0 },
+          { name: "Elevação Lateral com Halteres", muscle_group: "Ombros", sets: 3, reps: "12", rest_seconds: 60, notes: "Carga: 5 kg. Manter ombros para trás e peito aberto." },
+          { name: "Tríceps Barra na Polia", muscle_group: "Tríceps", sets: 4, reps: "12", rest_seconds: 60, notes: "Carga: 4 placas. Movimentar apenas os cotovelos." },
+          { name: "Abdominal Prancha Isométrica", muscle_group: "Core", sets: 3, reps: "1 min", rest_seconds: 30 },
+        ],
+      },
+      {
+        name: "Cardio e Mobilidade (45 min)",
+        exercises: [
+          { name: "Anterior de Quadril com Flexão de Tronco", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 0, notes: "Combinado – Alterne todos os exercícios de mobilidade" },
+          { name: "Superman com Bastão", muscle_group: "Mobilidade", sets: 1, reps: "15", rest_seconds: 0 },
+          { name: "Mobilidade de Quadril VII", muscle_group: "Mobilidade", sets: 1, reps: "40s", rest_seconds: 0 },
+          { name: "Mobilidade Torácica III", muscle_group: "Mobilidade", sets: 1, reps: "30 (15 cada lado)", rest_seconds: 0 },
+          { name: "Mobilidade de Ombro I", muscle_group: "Mobilidade", sets: 2, reps: "20", rest_seconds: 0 },
+          { name: "Mobilidade Torácica X", muscle_group: "Mobilidade", sets: 2, reps: "12", rest_seconds: 0 },
+          { name: "Mobilidade de Quadril V", muscle_group: "Mobilidade", sets: 2, reps: "20", rest_seconds: 0 },
+          { name: "Esteira Caminhada", muscle_group: "Cardio", sets: 1, reps: "40 min", rest_seconds: 0, notes: "Priorizar cardio e mobilidade. Pode iniciar pelos alongamentos e finalizar com o cardio." },
+        ],
+      },
+      {
+        name: "Membros Inferiores (Complementar)",
+        exercises: [
+          { name: "Alongamento de Dorsal e Posteriores", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 30, notes: "Combinado – Alterne com Alongamento de Posteriores no Caixote" },
+          { name: "Alongamento de Posteriores no Caixote", muscle_group: "Mobilidade", sets: 1, reps: "30s", rest_seconds: 30 },
+          { name: "Alongamento de Adutores III", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Alongamento Adutor no Espaldar", muscle_group: "Mobilidade", sets: 1, reps: "20s", rest_seconds: 0 },
+          { name: "Abdução de Quadril na Máquina", muscle_group: "Glúteos", sets: 4, reps: "12", rest_seconds: 70 },
+          { name: "Agachamento na Polia Baixa", muscle_group: "Pernas", sets: 3, reps: "20", rest_seconds: 60, notes: "Carga: 35 kg" },
+          { name: "Cadeira Extensora", muscle_group: "Quadríceps", sets: 3, reps: "10+10+10", rest_seconds: 60, notes: "Drop Set" },
+          { name: "Leg Press Horizontal Unilateral", muscle_group: "Pernas", sets: 2, reps: "20", rest_seconds: 90, notes: "Carga: 3 barras" },
+          { name: "Cadeira Flexora", muscle_group: "Posterior", sets: 3, reps: "12", rest_seconds: 60, notes: "Carga: 5 placas" },
+          { name: "Leg Press 45° Pés Afastados", muscle_group: "Pernas", sets: 4, reps: "12", rest_seconds: 90, notes: "Carga: 90 kg. 🎯 Meta: 150 kg. 🔄 Substituição: Abdução com Corpo à Frente" },
+          { name: "Esteira Caminhada", muscle_group: "Cardio", sets: 1, reps: "15 min", rest_seconds: 0 },
+        ],
+      },
+    ],
+  },
 ];
 
 // Categorias de templates
