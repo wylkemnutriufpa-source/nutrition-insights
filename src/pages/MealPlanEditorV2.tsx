@@ -542,16 +542,21 @@ export default function MealPlanEditorV2() {
                   {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
                   <span className="hidden sm:inline">Validar e Corrigir</span>
                 </Button>
-                <Button
-                  size="sm"
-                  onClick={handlePublish}
-                  disabled={publishing || store.syncStatus === "saving"}
-                  title="Publicar plano para o paciente"
-                >
-                  {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-                  Publicar
-                </Button>
               </>
+            )}
+
+            {/* Publicar — visible for drafts AND approved plans (not yet delivered) */}
+            {canPublish && (
+              <Button
+                size="sm"
+                onClick={handlePublish}
+                disabled={publishing || store.syncStatus === "saving"}
+                title="Publicar plano para o paciente"
+                className="gradient-primary text-white border-0 gap-1.5 shadow-glow"
+              >
+                {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
+                Publicar
+              </Button>
             )}
 
             {/* Visual Library — always available for viewing */}
