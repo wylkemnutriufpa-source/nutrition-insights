@@ -33,6 +33,7 @@ interface AuthContextType {
   isPersonal: boolean;
   isPatient: boolean;
   isAdmin: boolean;
+  isLojista: boolean;
   subscription: SubscriptionState;
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
@@ -251,6 +252,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isPersonal: roles.includes("personal"),
         isPatient: roles.includes("patient"),
         isAdmin: (roles as string[]).includes("admin"),
+        isLojista: (roles as string[]).includes("lojista"),
         subscription,
         signOut,
         refreshProfile,

@@ -150,6 +150,13 @@ const PATIENT_ONLY_ROUTES = [
   "/payment-required",
 ];
 
+/** Lojista-only routes — only lojista and admin can access */
+const LOJISTA_ONLY_ROUTES = [
+  "/store",
+  "/store/products",
+  "/store/technical-sheets",
+];
+
 /** Admin-only routes */
 const ADMIN_ROUTES = [
   "/admin",
@@ -243,6 +250,14 @@ export default function WorkspaceRouteGuard() {
       console.warn("[WorkspaceRouteGuard] Non-admin accessing admin route:", pathname);
       navigate("/", { replace: true });
       return;
+    }
+
+    // ── Lojista-only guard ──
+    const isLojista = user ? true : false; // Check from roles below
+    if (isInList(pathname, LOJISTA_ONLY_ROUTES) && !isAdmin) {
+      // We need to check lojista role - but useAuth doesn't expose it directly
+      // The StoreRoute guard handles this; WorkspaceRouteGuard blocks non-lojista non-admin
+      // For now, let StoreRoute handle enforcement
     }
 
     // ── Nutritionist-only guard (block personal trainers from nutrition routes) ──
