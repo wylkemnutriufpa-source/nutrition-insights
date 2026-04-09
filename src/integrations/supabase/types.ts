@@ -5403,6 +5403,62 @@ export type Database = {
           },
         ]
       }
+      in_office_sessions: {
+        Row: {
+          anamnesis_completed: boolean
+          assessment_completed: boolean
+          completed_at: string | null
+          created_at: string
+          current_step: number
+          id: string
+          meal_plan_completed: boolean
+          meal_plan_id: string | null
+          notes: string | null
+          nutritionist_id: string
+          patient_id: string
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          anamnesis_completed?: boolean
+          assessment_completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          meal_plan_completed?: boolean
+          meal_plan_id?: string | null
+          notes?: string | null
+          nutritionist_id: string
+          patient_id: string
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          anamnesis_completed?: boolean
+          assessment_completed?: boolean
+          completed_at?: string | null
+          created_at?: string
+          current_step?: number
+          id?: string
+          meal_plan_completed?: boolean
+          meal_plan_id?: string | null
+          notes?: string | null
+          nutritionist_id?: string
+          patient_id?: string
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_in_office_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       intelligence_custom_prompts: {
         Row: {
           body: string
@@ -7101,6 +7157,7 @@ export type Database = {
       }
       nutritionist_patients: {
         Row: {
+          attendance_mode: string
           checkin_frequency: string | null
           created_at: string
           expires_at: string | null
@@ -7114,6 +7171,7 @@ export type Database = {
           tenant_id: string
         }
         Insert: {
+          attendance_mode?: string
           checkin_frequency?: string | null
           created_at?: string
           expires_at?: string | null
@@ -7127,6 +7185,7 @@ export type Database = {
           tenant_id: string
         }
         Update: {
+          attendance_mode?: string
           checkin_frequency?: string | null
           created_at?: string
           expires_at?: string | null
@@ -14069,6 +14128,65 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      quick_meal_templates: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          items: Json
+          meal_type: string | null
+          nutritionist_id: string
+          template_name: string
+          template_type: string
+          tenant_id: string
+          total_calories: number
+          total_carbs: number
+          total_fat: number
+          total_protein: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          items?: Json
+          meal_type?: string | null
+          nutritionist_id: string
+          template_name?: string
+          template_type?: string
+          tenant_id: string
+          total_calories?: number
+          total_carbs?: number
+          total_fat?: number
+          total_protein?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          items?: Json
+          meal_type?: string | null
+          nutritionist_id?: string
+          template_name?: string
+          template_type?: string
+          tenant_id?: string
+          total_calories?: number
+          total_carbs?: number
+          total_fat?: number
+          total_protein?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "fk_quick_template_tenant"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       quick_reply_templates: {
         Row: {
