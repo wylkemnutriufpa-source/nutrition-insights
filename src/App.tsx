@@ -183,6 +183,7 @@ const PatientOverview = lazy(() => import("./pages/PatientOverview"));
 const ClinicalWorkspace = lazy(() => import("./pages/ClinicalWorkspace"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
 const InOfficeWizard = lazy(() => import("./pages/InOfficeWizard"));
+const InOfficeSelector = lazy(() => import("./pages/InOfficeSelector"));
 const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
 const IntelligenceSettings = lazy(() => import("./pages/IntelligenceSettings"));
 const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
