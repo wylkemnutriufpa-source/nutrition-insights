@@ -8,24 +8,25 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
-  Utensils, Plus, Trash2, Copy, Save, ChevronRight, Search,
-  Loader2, Check, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets
+  Plus, Trash2, Copy, Save, Search,
+  Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets
 } from "lucide-react";
+import type { Database } from "@/integrations/supabase/types";
+
+type MealType = Database["public"]["Enums"]["meal_type"];
 
 interface MealItem {
   id?: string;
   name: string;
-  quantity: string;
-  unit: string;
   calories: number;
   protein: number;
   carbs: number;
   fat: number;
-  meal_type: string;
+  meal_type: MealType;
 }
 
 interface MealBlock {
-  type: string;
+  type: MealType;
   label: string;
   emoji: string;
   items: MealItem[];
@@ -37,7 +38,7 @@ const MEAL_TYPES: MealBlock[] = [
   { type: "lunch", label: "Almoço", emoji: "🍽️", items: [] },
   { type: "afternoon_snack", label: "Lanche da Tarde", emoji: "🥤", items: [] },
   { type: "dinner", label: "Jantar", emoji: "🌙", items: [] },
-  { type: "supper", label: "Ceia", emoji: "🥛", items: [] },
+  { type: "evening_snack", label: "Ceia", emoji: "🥛", items: [] },
 ];
 
 interface Props {
@@ -50,10 +51,10 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   const { user } = useAuth();
   const [blocks, setBlocks] = useState<MealBlock[]>(MEAL_TYPES.map(m => ({ ...m, items: [] })));
   const [currentDay, setCurrentDay] = useState(1);
-  const [totalDays, setTotalDays] = useState(1);
+  const [totalDays, setTotalDays] = useState(7);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [addingTo, setAddingTo] = useState<string | null>(null);
+  const [addingTo, setAddingTo] = useState<MealType | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [foodResults, setFoodResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -73,16 +74,14 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       const newBlocks = MEAL_TYPES.map(m => ({
         ...m,
         items: (items || [])
-          .filter((i: any) => i.meal_type === m.type)
-          .map((i: any) => ({
+          .filter((i) => i.meal_type === m.type)
+          .map((i) => ({
             id: i.id,
-            name: i.food_name || i.name || "Item",
-            quantity: String(i.quantity_grams || i.quantity || "100"),
-            unit: "g",
-            calories: i.calories || 0,
-            protein: i.protein || 0,
-            carbs: i.carbs || 0,
-            fat: i.fat || 0,
+            name: i.title || "Item",
+            calories: i.calories_target || 0,
+            protein: i.protein_target || 0,
+            carbs: i.carbs_target || 0,
+            fat: i.fat_target || 0,
             meal_type: m.type,
           })),
       }));
@@ -110,45 +109,34 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   }, [searchQuery, searchFoods]);
 
   // Add food to block
-  const addFoodToBlock = async (blockType: string, food: any) => {
-    const newItem: MealItem = {
-      name: food.name,
-      quantity: String(food.serving_size || "100"),
-      unit: food.serving_unit || "g",
-      calories: food.calories || 0,
-      protein: food.protein || 0,
-      carbs: food.carbs || 0,
-      fat: food.fat || 0,
-      meal_type: blockType,
-    };
-
-    // Persist
-    const { data: np } = await supabase
-      .from("nutritionist_patients")
-      .select("tenant_id")
-      .eq("patient_id", patientId)
-      .eq("nutritionist_id", user!.id)
-      .maybeSingle();
-
+  const addFoodToBlock = async (blockType: MealType, food: any) => {
     const { data: inserted, error } = await supabase
       .from("meal_plan_items")
       .insert({
         meal_plan_id: mealPlanId,
         meal_type: blockType,
-        food_name: food.name,
-        quantity_grams: parseFloat(newItem.quantity) || 100,
-        calories: newItem.calories,
-        protein: newItem.protein,
-        carbs: newItem.carbs,
-        fat: newItem.fat,
+        title: food.name,
+        description: `${food.serving_size || 100}${food.serving_unit || "g"}`,
+        calories_target: food.calories || 0,
+        protein_target: food.protein || 0,
+        carbs_target: food.carbs || 0,
+        fat_target: food.fat || 0,
         day_of_week: currentDay,
-        tenant_id: np?.tenant_id || null,
+        item_origin: "in_office_manual",
       })
       .select("id")
       .single();
 
     if (!error && inserted) {
-      newItem.id = inserted.id;
+      const newItem: MealItem = {
+        id: inserted.id,
+        name: food.name,
+        calories: food.calories || 0,
+        protein: food.protein || 0,
+        carbs: food.carbs || 0,
+        fat: food.fat || 0,
+        meal_type: blockType,
+      };
       setBlocks(prev => prev.map(b =>
         b.type === blockType ? { ...b, items: [...b.items, newItem] } : b
       ));
@@ -156,7 +144,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   };
 
   // Remove item
-  const removeItem = async (blockType: string, itemId: string) => {
+  const removeItem = async (blockType: MealType, itemId: string) => {
     await supabase.from("meal_plan_items").delete().eq("id", itemId);
     setBlocks(prev => prev.map(b =>
       b.type === blockType ? { ...b, items: b.items.filter(i => i.id !== itemId) } : b
@@ -167,26 +155,20 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   const duplicateDay = async () => {
     setSaving(true);
     const nextDay = currentDay + 1;
+    // Delete existing items for next day
+    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", nextDay);
+
     const allItems = blocks.flatMap(b => b.items);
-
-    const { data: np } = await supabase
-      .from("nutritionist_patients")
-      .select("tenant_id")
-      .eq("patient_id", patientId)
-      .eq("nutritionist_id", user!.id)
-      .maybeSingle();
-
     const inserts = allItems.map(item => ({
       meal_plan_id: mealPlanId,
       meal_type: item.meal_type,
-      food_name: item.name,
-      quantity_grams: parseFloat(item.quantity) || 100,
-      calories: item.calories,
-      protein: item.protein,
-      carbs: item.carbs,
-      fat: item.fat,
+      title: item.name,
+      calories_target: item.calories,
+      protein_target: item.protein,
+      carbs_target: item.carbs,
+      fat_target: item.fat,
       day_of_week: nextDay,
-      tenant_id: np?.tenant_id || null,
+      item_origin: "in_office_duplicated" as const,
     }));
 
     if (inserts.length > 0) {
@@ -202,28 +184,20 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   const applyToWeek = async () => {
     setSaving(true);
     const allItems = blocks.flatMap(b => b.items);
-    const { data: np } = await supabase
-      .from("nutritionist_patients")
-      .select("tenant_id")
-      .eq("patient_id", patientId)
-      .eq("nutritionist_id", user!.id)
-      .maybeSingle();
 
     for (let day = 1; day <= 7; day++) {
       if (day === currentDay) continue;
-      // Delete existing items for that day
       await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", day);
       const inserts = allItems.map(item => ({
         meal_plan_id: mealPlanId,
         meal_type: item.meal_type,
-        food_name: item.name,
-        quantity_grams: parseFloat(item.quantity) || 100,
-        calories: item.calories,
-        protein: item.protein,
-        carbs: item.carbs,
-        fat: item.fat,
+        title: item.name,
+        calories_target: item.calories,
+        protein_target: item.protein,
+        carbs_target: item.carbs,
+        fat_target: item.fat,
         day_of_week: day,
-        tenant_id: np?.tenant_id || null,
+        item_origin: "in_office_duplicated" as const,
       }));
       if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
     }
@@ -248,7 +222,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       tenant_id: np?.tenant_id || "",
       template_name: templateName,
       template_type: "day",
-      items: templateItems,
+      items: templateItems as any,
       total_calories: totalMacros.calories,
       total_protein: totalMacros.protein,
       total_carbs: totalMacros.carbs,
@@ -324,10 +298,10 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       {/* Macro summary bar */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { label: "Calorias", value: totalMacros.calories, unit: "kcal", icon: Flame, color: "text-amber-500" },
-          { label: "Proteína", value: totalMacros.protein, unit: "g", icon: Beef, color: "text-red-500" },
-          { label: "Carboidratos", value: totalMacros.carbs, unit: "g", icon: Wheat, color: "text-yellow-600" },
-          { label: "Gordura", value: totalMacros.fat, unit: "g", icon: Droplets, color: "text-blue-500" },
+          { label: "Calorias", value: totalMacros.calories, unit: "kcal", icon: Flame, color: "text-accent" },
+          { label: "Proteína", value: totalMacros.protein, unit: "g", icon: Beef, color: "text-destructive" },
+          { label: "Carboidratos", value: totalMacros.carbs, unit: "g", icon: Wheat, color: "text-accent" },
+          { label: "Gordura", value: totalMacros.fat, unit: "g", icon: Droplets, color: "text-primary" },
         ].map(m => {
           const Icon = m.icon;
           return (
@@ -365,7 +339,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
                     <div className="flex-1 min-w-0">
                       <p className="text-xs font-medium truncate">{item.name}</p>
                       <p className="text-[10px] text-muted-foreground">
-                        {item.quantity}{item.unit} · {Math.round(item.calories)}kcal · P{Math.round(item.protein)}g · C{Math.round(item.carbs)}g · G{Math.round(item.fat)}g
+                        {Math.round(item.calories)}kcal · P{Math.round(item.protein)}g · C{Math.round(item.carbs)}g · G{Math.round(item.fat)}g
                       </p>
                     </div>
                     <Button
@@ -378,7 +352,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
                   </div>
                 ))}
 
-                {/* Add button - opens food search */}
+                {/* Add button */}
                 <Dialog open={addingTo === block.type} onOpenChange={open => { setAddingTo(open ? block.type : null); setSearchQuery(""); setFoodResults([]); }}>
                   <DialogTrigger asChild>
                     <Button variant="outline" size="sm" className="w-full gap-1 text-xs border-dashed">

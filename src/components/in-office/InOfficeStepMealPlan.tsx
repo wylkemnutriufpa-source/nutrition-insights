@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Utensils, ArrowRight, ArrowLeft, Loader2, Plus } from "lucide-react";
@@ -19,7 +19,6 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
   const [mealPlanId, setMealPlanId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
-  // Find or create a draft meal plan for this session
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
@@ -43,7 +42,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
         .select("id")
         .eq("patient_id", patientId)
         .eq("nutritionist_id", user.id)
-        .in("status", ["draft", "draft_auto_generated"])
+        .in("plan_status", ["draft", "draft_auto_generated"])
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -72,10 +71,10 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
         .insert({
           patient_id: patientId,
           nutritionist_id: user.id,
-          tenant_id: np?.tenant_id || null,
+          tenant_id: np?.tenant_id || "",
           title: "Plano Presencial — " + new Date().toLocaleDateString("pt-BR"),
-          status: "draft",
-          plan_type: "in_office",
+          plan_status: "draft",
+          start_date: new Date().toISOString().split("T")[0],
         })
         .select("id")
         .single();

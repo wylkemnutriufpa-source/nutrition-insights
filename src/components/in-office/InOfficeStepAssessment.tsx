@@ -58,16 +58,16 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
       if (data) {
         const vals: Record<string, string> = {};
         MEASURE_FIELDS.forEach(s => s.fields.forEach(f => {
-          if ((data as any)[f.key]) vals[f.key] = String((data as any)[f.key]);
+          const v = (data as any)[f.key];
+          if (v != null) vals[f.key] = String(v);
         }));
         setValues(vals);
-        setNotes((data as any).notes || "");
+        setNotes(data.notes || "");
       }
       setLoading(false);
     })();
   }, [patientId]);
 
-  // Auto-calculate BMI
   const bmi = useMemo(() => {
     const w = parseFloat(values.weight || "0");
     const h = parseFloat(values.height || "0") / 100;
@@ -79,28 +79,20 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
     if (!user?.id) return;
     setSaving(true);
     try {
-      const { data: np } = await supabase
-        .from("nutritionist_patients")
-        .select("tenant_id")
-        .eq("patient_id", patientId)
-        .eq("nutritionist_id", user.id)
-        .maybeSingle();
-
-      const payload: Record<string, any> = {
-        patient_id: patientId,
-        assessor_id: user.id,
-        assessment_date: new Date().toISOString().split("T")[0],
-        notes,
-        tenant_id: np?.tenant_id || null,
-      };
+      const numericPayload: Record<string, number | null> = {};
       MEASURE_FIELDS.forEach(s => s.fields.forEach(f => {
         const v = parseFloat(values[f.key] || "");
-        if (!isNaN(v)) payload[f.key] = v;
+        numericPayload[f.key] = isNaN(v) ? null : v;
       }));
 
       const { error } = await supabase
         .from("physical_assessments")
-        .insert(payload);
+        .insert({
+          patient_id: patientId,
+          assessor_id: user.id,
+          notes,
+          ...numericPayload,
+        });
       if (error) throw error;
 
       await supabase
@@ -171,7 +163,7 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-emerald-500" /> : <Save className="w-4 h-4" />}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-primary" /> : <Save className="w-4 h-4" />}
               {saved ? "Salvo" : "Salvar"}
             </Button>
             <Button onClick={() => { handleSave(); onNext(); }} className="gap-2">

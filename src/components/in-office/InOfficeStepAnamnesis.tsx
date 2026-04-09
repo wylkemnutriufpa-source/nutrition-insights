@@ -39,13 +39,12 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
 
-  // Load existing anamnesis
   useEffect(() => {
     (async () => {
       const { data } = await supabase
         .from("patient_anamnesis")
         .select("answers")
-        .eq("patient_id", patientId)
+        .eq("user_id", patientId)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
@@ -60,7 +59,6 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
     if (!user?.id) return;
     setSaving(true);
     try {
-      // Get tenant
       const { data: np } = await supabase
         .from("nutritionist_patients")
         .select("tenant_id")
@@ -68,20 +66,29 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
         .eq("nutritionist_id", user.id)
         .maybeSingle();
 
-      const { error } = await supabase
+      // Check if exists
+      const { data: existing } = await supabase
         .from("patient_anamnesis")
-        .upsert({
-          patient_id: patientId,
-          nutritionist_id: user.id,
-          answers: answers as any,
-          tenant_id: np?.tenant_id || "",
-          source: "in_office",
-          status: "completed",
-        }, { onConflict: "patient_id" });
+        .select("id")
+        .eq("user_id", patientId)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (existing) {
+        await supabase
+          .from("patient_anamnesis")
+          .update({ answers: answers as any, status: "completed" })
+          .eq("id", existing.id);
+      } else {
+        await supabase
+          .from("patient_anamnesis")
+          .insert({
+            user_id: patientId,
+            answers: answers as any,
+            tenant_id: np?.tenant_id || "",
+            status: "completed",
+          });
+      }
 
-      // Mark session step
       await supabase
         .from("in_office_sessions" as any)
         .update({ anamnesis_completed: true } as any)
@@ -149,7 +156,7 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
           </Button>
           <div className="flex gap-2">
             <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-emerald-500" /> : <Save className="w-4 h-4" />}
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-primary" /> : <Save className="w-4 h-4" />}
               {saved ? "Salvo" : "Salvar"}
             </Button>
             <Button onClick={() => { handleSave(); onNext(); }} className="gap-2">
