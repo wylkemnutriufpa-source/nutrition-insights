@@ -13,6 +13,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
 import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
+import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
 import { processAnamnesisFlags } from "@/lib/clinicalFlags";
 import { RadialOrbitalSelector, type OrbitalOption as RadialOption } from "@/components/ui/radial-orbital-selector";
@@ -1044,8 +1045,12 @@ export default function Anamnesis() {
     );
   }
 
+  const exitGuardEnabled = !completed && !isNutritionistMode && !submitting && !analyzing;
+  const hasStartedFilling = step > 0 || Object.keys(answers).length > 0;
+
   return (
     <DashboardLayout>
+      <OnboardingExitGuard enabled={exitGuardEnabled} hasStartedFilling={hasStartedFilling} />
       <div className="max-w-2xl mx-auto">
         {/* Nutritionist Mode Banner */}
         {isNutritionistMode && (
