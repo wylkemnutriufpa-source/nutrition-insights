@@ -147,12 +147,13 @@ Deno.serve(async (req) => {
       stats.views++;
     }
 
-    // ── 6. DATA — with FK/trigger checks disabled ──
+    // ── 6. DATA — safe because constraints/triggers are added AFTER ──
     lines.push("-- ═══════════════════════════════════════");
     lines.push("-- SECTION 6: DATA (INSERT STATEMENTS)");
-    lines.push("-- FK checks and triggers disabled during data load");
+    lines.push("-- Safe: FK constraints and triggers are created in sections 7-9,");
+    lines.push("-- so no constraint violations or trigger interference during data load.");
+    lines.push("-- No superuser privileges required.");
     lines.push("-- ═══════════════════════════════════════");
-    lines.push("SET session_replication_role = 'replica';");
     lines.push("");
 
     for (const tableInfo of tables) {
@@ -204,8 +205,6 @@ Deno.serve(async (req) => {
 
       if (hasData) stats.data_tables++;
     }
-
-    lines.push("SET session_replication_role = 'origin';");
     lines.push("");
 
     // ── 7. CONSTRAINTS (after data, so FKs don't block inserts) ──
