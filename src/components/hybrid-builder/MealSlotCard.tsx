@@ -225,6 +225,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           <div className="flex items-center gap-1 shrink-0">
             {hasItems && (
               <>
+                <button onClick={handleApplyToAllDays} className="p-1 rounded hover:bg-primary/10" title="Aplicar em todos os dias">
+                  <CalendarRange className="w-3 h-3 text-primary" />
+                </button>
                 <button onClick={handleCopySlot} className="p-1 rounded hover:bg-muted" title="Copiar refeição">
                   <Clipboard className="w-3 h-3 text-muted-foreground" />
                 </button>
