@@ -64,24 +64,49 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     return match ? parseInt(match[1]) : 100;
   };
 
+  const applyGramsUpdate = (item: MealPlanItem, newGrams: number) => {
+    const oldGrams = parseQuantity(item);
+    const ratio = newGrams / oldGrams;
+    return {
+      calories_target: Math.round((item.calories_target || 0) * ratio),
+      protein_target: Math.round(((item.protein_target || 0) * ratio) * 10) / 10,
+      carbs_target: Math.round(((item.carbs_target || 0) * ratio) * 10) / 10,
+      fat_target: Math.round(((item.fat_target || 0) * ratio) * 10) / 10,
+      description: item.description?.replace(/\d+\s*g/i, `${newGrams}g`) || `${newGrams}g`,
+    };
+  };
+
   const handleGramsChange = (item: MealPlanItem) => {
     const newGrams = parseFloat(editGrams);
     if (isNaN(newGrams) || newGrams <= 0) {
       setEditingId(null);
       return;
     }
-    const oldGrams = parseQuantity(item);
-    const ratio = newGrams / oldGrams;
-
-    store.updateItem(item.id, {
-      calories_target: Math.round((item.calories_target || 0) * ratio),
-      protein_target: Math.round(((item.protein_target || 0) * ratio) * 10) / 10,
-      carbs_target: Math.round(((item.carbs_target || 0) * ratio) * 10) / 10,
-      fat_target: Math.round(((item.fat_target || 0) * ratio) * 10) / 10,
-      description: item.description?.replace(/\d+\s*g/i, `${newGrams}g`) || `${newGrams}g`,
-    });
+    store.updateItem(item.id, applyGramsUpdate(item, newGrams));
     setEditingId(null);
     toast.success("Gramagem atualizada — macros recalculados");
+  };
+
+  const handleGramsChangeAllDays = (item: MealPlanItem) => {
+    const newGrams = parseFloat(editGrams);
+    if (isNaN(newGrams) || newGrams <= 0) {
+      setEditingId(null);
+      return;
+    }
+    // Update current item
+    store.updateItem(item.id, applyGramsUpdate(item, newGrams));
+    
+    // Find matching items on other days (same title + meal_type)
+    const allItems = store.items;
+    const matchingItems = allItems.filter(
+      (i) => i.id !== item.id && i.title === item.title && i.meal_type === item.meal_type
+    );
+    matchingItems.forEach((match) => {
+      store.updateItem(match.id, applyGramsUpdate(match, newGrams));
+    });
+
+    setEditingId(null);
+    toast.success(`Gramagem atualizada em todos os dias (${matchingItems.length + 1} itens)`);
   };
 
   const handleCompose = async () => {
