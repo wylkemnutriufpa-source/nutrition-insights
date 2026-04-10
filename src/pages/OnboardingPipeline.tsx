@@ -93,13 +93,34 @@ export default function OnboardingPipeline() {
 
   async function fetchPipeline() {
     if (!user) return;
-    const { data } = await supabase
-      .from("onboarding_pipelines" as any)
-      .select("*")
-      .eq("patient_id", user.id)
-      .maybeSingle();
-    if (data) {
-      const d = data as any;
+    const [pipelineRes, anamnesisRes] = await Promise.all([
+      supabase
+        .from("onboarding_pipelines" as any)
+        .select("*")
+        .eq("patient_id", user.id)
+        .maybeSingle(),
+      supabase
+        .from("patient_anamnesis")
+        .select("id, status")
+        .eq("user_id", user.id)
+        .eq("status", "completed")
+        .limit(1),
+    ]);
+
+    if (pipelineRes.data) {
+      const d = pipelineRes.data as any;
+
+      // Auto-sync: if anamnesis exists but pipeline flag is false, fix it
+      const hasCompletedAnamnesis = !!(anamnesisRes.data && anamnesisRes.data.length > 0);
+      if (hasCompletedAnamnesis && !d.anamnesis_completed) {
+        await supabase
+          .from("onboarding_pipelines" as any)
+          .update({ anamnesis_completed: true, status: "in_progress" } as any)
+          .eq("id", d.id);
+        d.anamnesis_completed = true;
+        d.status = "in_progress";
+      }
+
       setPipeline(d);
       if (d.weight) setBodyForm({ weight: String(d.weight), height: String(d.height || "") });
       if (d.cooking_preference) {
