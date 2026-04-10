@@ -324,10 +324,16 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 onToggleLock={handleToggleLock}
                 onDuplicate={handleDuplicate}
                 onDelete={handleDelete}
+                onReplace={handleReplace}
               />
             ))}
             {foodSearchOpen && (
-              <FoodSearchInline day={day} mealType={mealType} onClose={() => setFoodSearchOpen(false)} />
+              <FoodSearchInline
+                day={day}
+                mealType={mealType}
+                replacingItemId={replacingItemId}
+                onClose={() => { setFoodSearchOpen(false); setReplacingItemId(null); }}
+              />
             )}
             <div className="flex gap-2">
               <button
