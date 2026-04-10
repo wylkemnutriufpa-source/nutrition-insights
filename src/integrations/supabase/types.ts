@@ -7334,6 +7334,53 @@ export type Database = {
           },
         ]
       }
+      onboarding_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          nutritionist_id: string
+          patient_id: string
+          pipeline_id: string | null
+          status: string
+          tenant_id: string | null
+          token: string
+          used_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nutritionist_id: string
+          patient_id: string
+          pipeline_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          nutritionist_id?: string
+          patient_id?: string
+          pipeline_id?: string | null
+          status?: string
+          tenant_id?: string | null
+          token?: string
+          used_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "onboarding_tokens_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       operational_cost_configuration: {
         Row: {
           avg_stripe_fee_percent: number
@@ -18301,6 +18348,14 @@ export type Database = {
         Returns: Json
       }
       reset_all_ranking_points: { Args: never; Returns: Json }
+      reset_onboarding_pipeline: {
+        Args: {
+          _nutritionist_id: string
+          _patient_id: string
+          _tenant_id?: string
+        }
+        Returns: Json
+      }
       reset_professional_password: {
         Args: { _new_password: string; _user_id: string }
         Returns: undefined
@@ -18382,6 +18437,7 @@ export type Database = {
         Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json
       }
+      validate_onboarding_token: { Args: { _token: string }; Returns: Json }
     }
     Enums: {
       achievement_type:

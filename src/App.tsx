@@ -98,6 +98,7 @@ const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const PublicBooking = lazy(() => import("./pages/PublicBooking"));
 const PublicProgram = lazy(() => import("./pages/PublicProgram"));
 const PublicPlans = lazy(() => import("./pages/PublicPlans"));
+const IntakeOnboarding = lazy(() => import("./pages/IntakeOnboarding"));
 const GrowthDashboard = lazy(() => import("./pages/GrowthDashboard"));
 const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
 const MyReferrals = lazy(() => import("./pages/MyReferrals"));
@@ -644,6 +645,9 @@ const App = () => (
               <Route path="/p/:slug/paciente" element={<LP section="Planos Paciente"><PublicPlans planType="patient_prestige" /></LP>} />
               <Route path="/p/:slug/profissional" element={<LP section="Planos Profissional"><PublicPlans planType="professional" /></LP>} />
               <Route path="/program/:programId/public" element={<LP section="Projeto"><PublicProgram /></LP>} />
+
+              {/* Intake onboarding via token (public) */}
+              <Route path="/intake/:token" element={<LP section="Onboarding"><IntakeOnboarding /></LP>} />
 
               {/* Network pages */}
               <Route path="/my-public-profile" element={<ProfessionalRoute><LP section="Perfil"><MyPublicProfile /></LP></ProfessionalRoute>} />
