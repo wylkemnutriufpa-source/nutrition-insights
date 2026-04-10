@@ -243,6 +243,22 @@ export function useDeletePatientLink() {
 
   return useMutation({
     mutationFn: async (npId: string) => {
+      // First get the patient_id from the link
+      const { data: linkData, error: linkError } = await supabase
+        .from("nutritionist_patients")
+        .select("patient_id")
+        .eq("id", npId)
+        .single();
+      if (linkError) throw linkError;
+
+      // Deactivate any active meal plans to avoid trigger guard
+      await supabase
+        .from("meal_plans")
+        .update({ is_active: false })
+        .eq("patient_id", linkData.patient_id)
+        .eq("is_active", true);
+
+      // Now delete the link
       const { error } = await supabase.from("nutritionist_patients").delete().eq("id", npId);
       if (error) throw error;
     },
