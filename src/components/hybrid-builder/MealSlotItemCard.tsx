@@ -24,6 +24,7 @@ interface Props {
   setEditingId: (id: string | null) => void;
   setEditGrams: (value: string) => void;
   onApplyGramsChange: (item: MealPlanItem) => void;
+  onApplyGramsChangeAllDays: (item: MealPlanItem) => void;
   onToggleLock: (item: MealPlanItem) => void;
   onDuplicate: (itemId: string) => void;
   onDelete: (itemId: string) => void;
