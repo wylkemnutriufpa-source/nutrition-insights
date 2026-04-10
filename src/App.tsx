@@ -98,6 +98,7 @@ const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const PublicBooking = lazy(() => import("./pages/PublicBooking"));
 const PublicProgram = lazy(() => import("./pages/PublicProgram"));
 const PublicPlans = lazy(() => import("./pages/PublicPlans"));
+const IntakeOnboarding = lazy(() => import("./pages/IntakeOnboarding"));
 const GrowthDashboard = lazy(() => import("./pages/GrowthDashboard"));
 const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
 const MyReferrals = lazy(() => import("./pages/MyReferrals"));
