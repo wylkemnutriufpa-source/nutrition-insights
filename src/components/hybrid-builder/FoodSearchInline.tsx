@@ -9,6 +9,7 @@ import { toast } from "sonner";
 interface Props {
   day: number;
   mealType: MealType;
+  replacingItemId?: string | null;
   onClose: () => void;
 }
 
