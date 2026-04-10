@@ -60,6 +60,11 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     toast.success("Item duplicado");
   };
 
+  const handleReplace = (item: MealPlanItem) => {
+    setReplacingItemId(item.id);
+    setFoodSearchOpen(true);
+  };
+
   const parseQuantity = (item: MealPlanItem): number => {
     const match = item.description?.match(/(\d+)\s*g/i);
     return match ? parseInt(match[1]) : 100;
