@@ -147,12 +147,13 @@ Deno.serve(async (req) => {
       stats.views++;
     }
 
-    // ── 6. DATA — with FK/trigger checks disabled ──
+    // ── 6. DATA — safe because constraints/triggers are added AFTER ──
     lines.push("-- ═══════════════════════════════════════");
     lines.push("-- SECTION 6: DATA (INSERT STATEMENTS)");
-    lines.push("-- FK checks and triggers disabled during data load");
+    lines.push("-- Safe: FK constraints and triggers are created in sections 7-9,");
+    lines.push("-- so no constraint violations or trigger interference during data load.");
+    lines.push("-- No superuser privileges required.");
     lines.push("-- ═══════════════════════════════════════");
-    lines.push("SET session_replication_role = 'replica';");
     lines.push("");
 
     for (const tableInfo of tables) {
@@ -204,8 +205,6 @@ Deno.serve(async (req) => {
 
       if (hasData) stats.data_tables++;
     }
-
-    lines.push("SET session_replication_role = 'origin';");
     lines.push("");
 
     // ── 7. CONSTRAINTS (after data, so FKs don't block inserts) ──
@@ -314,9 +313,10 @@ Deno.serve(async (req) => {
     lines.push(`-- Cron Jobs:       ${stats.cron_jobs}`);
     lines.push("--");
     lines.push("-- RESTORE SAFETY:");
-    lines.push("--   ✅ FK checks disabled during data load (session_replication_role)");
-    lines.push("--   ✅ Constraints added AFTER data inserts");
-    lines.push("--   ✅ Triggers added AFTER data inserts");
+    lines.push("--   ✅ No superuser privileges required");
+    lines.push("--   ✅ Data loaded BEFORE constraints — no FK violations");
+    lines.push("--   ✅ Triggers created AFTER data — no interference");
+    lines.push("--   ✅ Idempotent DDL (IF NOT EXISTS, ON CONFLICT DO NOTHING)");
     lines.push("--   ✅ No sequences to sync (all tables use UUID PKs)");
     lines.push("--   ✅ Cron jobs exported as cron.schedule() calls");
     if (warnings.length > 0) {
