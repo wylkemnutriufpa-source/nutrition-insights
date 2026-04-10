@@ -32,6 +32,8 @@ interface Props {
   composerMode?: ComposerMode;
 }
 
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
+
 let clipboard: { items: MealPlanItem[]; cut: boolean; sourceDay: number; sourceMeal: MealType } | null = null;
 
 export default function MealSlotCard({ day, mealType, label, icon, items, patientContext, mealMacroTarget, composerMode = "quick" }: Props) {
