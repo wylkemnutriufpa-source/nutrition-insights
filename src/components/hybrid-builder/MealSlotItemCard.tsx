@@ -12,6 +12,7 @@ import {
   Droplets,
   Check,
   X,
+  CalendarRange,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
