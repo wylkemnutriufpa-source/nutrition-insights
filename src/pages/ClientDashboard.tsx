@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { usePremiumPresence } from "@/hooks/usePremiumPresence";
 import { PremiumBadge, PremiumMessage, PremiumCardWrapper, PremiumAccentLine } from "@/components/premium";
@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
-import { Link } from "react-router-dom";
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
