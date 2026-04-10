@@ -26,6 +26,7 @@ import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { initFeatureFlags } from "@/lib/featureFlags";
 // useConsentGuard is now used inside OnboardingPipeline, not in route guards
 import { usePaymentGuard } from "@/hooks/usePaymentGuard";
+import { useOnboardingGuard, isOnboardingAllowedRoute } from "@/hooks/useOnboardingGuard";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
@@ -345,6 +346,10 @@ function RootRoute() {
   // Lojista goes to store dashboard (if not also a professional)
   if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
     return <Navigate to="/store" replace />;
+  }
+  // Patients always go to their dashboard (which has onboarding gate)
+  if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
+    return <Navigate to="/client/dashboard" replace />;
   }
   if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
