@@ -250,18 +250,17 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Gate: if patient is in a pre-onboarding state, show blocking screen
-  if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
-    return <OnboardingGateScreen status={journeyStatus} />;
-  }
-
   // Redirect to onboarding if status is onboarding_active (patient must complete it)
-  const navigate = useNavigate();
   useEffect(() => {
     if (!journeyLoading && journeyStatus === "onboarding_active") {
       navigate("/onboarding", { replace: true });
     }
   }, [journeyLoading, journeyStatus, navigate]);
+
+  // Gate: if patient is in a pre-onboarding state, show blocking screen
+  if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
 
   if (loading) {
     return (
