@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { usePremiumPresence } from "@/hooks/usePremiumPresence";
 import { PremiumBadge, PremiumMessage, PremiumCardWrapper, PremiumAccentLine } from "@/components/premium";
@@ -252,6 +253,14 @@ export default function ClientDashboard() {
   if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
     return <OnboardingGateScreen status={journeyStatus} />;
   }
+
+  // Redirect to onboarding if status is onboarding_active (patient must complete it)
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!journeyLoading && journeyStatus === "onboarding_active") {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [journeyLoading, journeyStatus, navigate]);
 
   if (loading) {
     return (
