@@ -18063,6 +18063,13 @@ export type Database = {
           trigger_name: string
         }[]
       }
+      get_backup_views: {
+        Args: never
+        Returns: {
+          create_statement: string
+          view_name: string
+        }[]
+      }
       get_nutritionist_dashboard_stats: {
         Args: { _nutritionist_id: string }
         Returns: Json
