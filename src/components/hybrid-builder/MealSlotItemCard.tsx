@@ -12,6 +12,7 @@ import {
   Droplets,
   Check,
   X,
+  CalendarRange,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
@@ -24,6 +25,7 @@ interface Props {
   setEditingId: (id: string | null) => void;
   setEditGrams: (value: string) => void;
   onApplyGramsChange: (item: MealPlanItem) => void;
+  onApplyGramsChangeAllDays: (item: MealPlanItem) => void;
   onToggleLock: (item: MealPlanItem) => void;
   onDuplicate: (itemId: string) => void;
   onDelete: (itemId: string) => void;
@@ -37,6 +39,7 @@ export default function MealSlotItemCard({
   setEditingId,
   setEditGrams,
   onApplyGramsChange,
+  onApplyGramsChangeAllDays,
   onToggleLock,
   onDuplicate,
   onDelete,
@@ -102,12 +105,15 @@ export default function MealSlotItemCard({
                   if (e.key === "Escape") setEditingId(null);
                 }}
               />
-              <button onClick={() => onApplyGramsChange(item)} className="text-primary hover:text-primary/80">
-                <Check className="w-3 h-3" />
-              </button>
-              <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
-                <X className="w-3 h-3" />
-              </button>
+               <button onClick={() => onApplyGramsChange(item)} className="text-primary hover:text-primary/80" title="Aplicar só hoje">
+                 <Check className="w-3 h-3" />
+               </button>
+               <button onClick={() => onApplyGramsChangeAllDays(item)} className="text-primary hover:text-primary/80" title="Aplicar em todos os dias">
+                 <CalendarRange className="w-3 h-3" />
+               </button>
+               <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
+                 <X className="w-3 h-3" />
+               </button>
             </div>
           ) : (
             <button

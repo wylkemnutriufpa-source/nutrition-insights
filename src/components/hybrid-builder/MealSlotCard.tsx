@@ -12,6 +12,7 @@ import {
   Scissors,
   RefreshCcw,
   Search,
+  CalendarRange,
 } from "lucide-react";
 import { toast } from "sonner";
 import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
@@ -30,6 +31,8 @@ interface Props {
   mealMacroTarget?: MacroTarget | null;
   composerMode?: ComposerMode;
 }
+
+const ALL_DAYS = [0, 1, 2, 3, 4, 5, 6];
 
 let clipboard: { items: MealPlanItem[]; cut: boolean; sourceDay: number; sourceMeal: MealType } | null = null;
 
@@ -61,24 +64,49 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     return match ? parseInt(match[1]) : 100;
   };
 
+  const applyGramsUpdate = (item: MealPlanItem, newGrams: number) => {
+    const oldGrams = parseQuantity(item);
+    const ratio = newGrams / oldGrams;
+    return {
+      calories_target: Math.round((item.calories_target || 0) * ratio),
+      protein_target: Math.round(((item.protein_target || 0) * ratio) * 10) / 10,
+      carbs_target: Math.round(((item.carbs_target || 0) * ratio) * 10) / 10,
+      fat_target: Math.round(((item.fat_target || 0) * ratio) * 10) / 10,
+      description: item.description?.replace(/\d+\s*g/i, `${newGrams}g`) || `${newGrams}g`,
+    };
+  };
+
   const handleGramsChange = (item: MealPlanItem) => {
     const newGrams = parseFloat(editGrams);
     if (isNaN(newGrams) || newGrams <= 0) {
       setEditingId(null);
       return;
     }
-    const oldGrams = parseQuantity(item);
-    const ratio = newGrams / oldGrams;
-
-    store.updateItem(item.id, {
-      calories_target: Math.round((item.calories_target || 0) * ratio),
-      protein_target: Math.round(((item.protein_target || 0) * ratio) * 10) / 10,
-      carbs_target: Math.round(((item.carbs_target || 0) * ratio) * 10) / 10,
-      fat_target: Math.round(((item.fat_target || 0) * ratio) * 10) / 10,
-      description: item.description?.replace(/\d+\s*g/i, `${newGrams}g`) || `${newGrams}g`,
-    });
+    store.updateItem(item.id, applyGramsUpdate(item, newGrams));
     setEditingId(null);
     toast.success("Gramagem atualizada — macros recalculados");
+  };
+
+  const handleGramsChangeAllDays = (item: MealPlanItem) => {
+    const newGrams = parseFloat(editGrams);
+    if (isNaN(newGrams) || newGrams <= 0) {
+      setEditingId(null);
+      return;
+    }
+    // Update current item
+    store.updateItem(item.id, applyGramsUpdate(item, newGrams));
+    
+    // Find matching items on other days (same title + meal_type)
+    const allItems = store.items;
+    const matchingItems = allItems.filter(
+      (i) => i.id !== item.id && i.title === item.title && i.meal_type === item.meal_type
+    );
+    matchingItems.forEach((match) => {
+      store.updateItem(match.id, applyGramsUpdate(match, newGrams));
+    });
+
+    setEditingId(null);
+    toast.success(`Gramagem atualizada em todos os dias (${matchingItems.length + 1} itens)`);
   };
 
   const handleCompose = async () => {
@@ -166,6 +194,35 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     toast.success("Refeição colada");
   };
 
+  const handleApplyToAllDays = () => {
+    if (items.length === 0) return;
+    const planId = store.plan?.id;
+    if (!planId) return;
+
+    const otherDays = ALL_DAYS.filter((d) => d !== day);
+    
+    // Clear same meal type on other days, then copy items
+    otherDays.forEach((targetDay) => {
+      store.deleteItemsInCell(targetDay, mealType);
+      items.forEach((item) => {
+        store.addItem({
+          meal_plan_id: planId,
+          title: item.title,
+          description: item.description,
+          day_of_week: targetDay,
+          meal_type: mealType,
+          calories_target: item.calories_target,
+          protein_target: item.protein_target,
+          carbs_target: item.carbs_target,
+          fat_target: item.fat_target,
+          item_origin: (item as any).item_origin || "manual",
+        });
+      });
+    });
+
+    toast.success(`${label} aplicado em todos os dias da semana`);
+  };
+
   return (
     <>
       <div
@@ -193,6 +250,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           <div className="flex items-center gap-1 shrink-0">
             {hasItems && (
               <>
+                <button onClick={handleApplyToAllDays} className="p-1 rounded hover:bg-primary/10" title="Aplicar em todos os dias">
+                  <CalendarRange className="w-3 h-3 text-primary" />
+                </button>
                 <button onClick={handleCopySlot} className="p-1 rounded hover:bg-muted" title="Copiar refeição">
                   <Clipboard className="w-3 h-3 text-muted-foreground" />
                 </button>
@@ -254,6 +314,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 setEditingId={setEditingId}
                 setEditGrams={setEditGrams}
                 onApplyGramsChange={handleGramsChange}
+                onApplyGramsChangeAllDays={handleGramsChangeAllDays}
                 onToggleLock={handleToggleLock}
                 onDuplicate={handleDuplicate}
                 onDelete={handleDelete}
