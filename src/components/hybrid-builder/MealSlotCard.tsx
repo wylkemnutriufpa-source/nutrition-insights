@@ -44,6 +44,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [composing, setComposing] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [foodSearchOpen, setFoodSearchOpen] = useState(false);
+  const [replacingItemId, setReplacingItemId] = useState<string | null>(null);
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -57,6 +58,11 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const handleDuplicate = (itemId: string) => {
     store.duplicateItem(itemId);
     toast.success("Item duplicado");
+  };
+
+  const handleReplace = (item: MealPlanItem) => {
+    setReplacingItemId(item.id);
+    setFoodSearchOpen(true);
   };
 
   const parseQuantity = (item: MealPlanItem): number => {
@@ -318,10 +324,16 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 onToggleLock={handleToggleLock}
                 onDuplicate={handleDuplicate}
                 onDelete={handleDelete}
+                onReplace={handleReplace}
               />
             ))}
             {foodSearchOpen && (
-              <FoodSearchInline day={day} mealType={mealType} onClose={() => setFoodSearchOpen(false)} />
+              <FoodSearchInline
+                day={day}
+                mealType={mealType}
+                replacingItemId={replacingItemId}
+                onClose={() => { setFoodSearchOpen(false); setReplacingItemId(null); }}
+              />
             )}
             <div className="flex gap-2">
               <button

@@ -13,6 +13,7 @@ import {
   Check,
   X,
   CalendarRange,
+  RefreshCcw,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
@@ -29,6 +30,7 @@ interface Props {
   onToggleLock: (item: MealPlanItem) => void;
   onDuplicate: (itemId: string) => void;
   onDelete: (itemId: string) => void;
+  onReplace: (item: MealPlanItem) => void;
 }
 
 export default function MealSlotItemCard({
@@ -43,6 +45,7 @@ export default function MealSlotItemCard({
   onToggleLock,
   onDuplicate,
   onDelete,
+  onReplace,
 }: Props) {
   const isSub = item.description?.startsWith("[Substituição]");
   const isEditing = editingId === item.id;
@@ -105,15 +108,15 @@ export default function MealSlotItemCard({
                   if (e.key === "Escape") setEditingId(null);
                 }}
               />
-               <button onClick={() => onApplyGramsChange(item)} className="text-primary hover:text-primary/80" title="Aplicar só hoje">
-                 <Check className="w-3 h-3" />
-               </button>
-               <button onClick={() => onApplyGramsChangeAllDays(item)} className="text-primary hover:text-primary/80" title="Aplicar em todos os dias">
-                 <CalendarRange className="w-3 h-3" />
-               </button>
-               <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
-                 <X className="w-3 h-3" />
-               </button>
+              <button onClick={() => onApplyGramsChange(item)} className="text-primary hover:text-primary/80" title="Aplicar só hoje">
+                <Check className="w-3 h-3" />
+              </button>
+              <button onClick={() => onApplyGramsChangeAllDays(item)} className="text-primary hover:text-primary/80" title="Aplicar em todos os dias">
+                <CalendarRange className="w-3 h-3" />
+              </button>
+              <button onClick={() => setEditingId(null)} className="text-muted-foreground hover:text-foreground">
+                <X className="w-3 h-3" />
+              </button>
             </div>
           ) : (
             <button
@@ -131,7 +134,11 @@ export default function MealSlotItemCard({
         </div>
       </div>
 
-      <div className="flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+      {/* Action buttons - always visible */}
+      <div className="flex items-center gap-0.5 shrink-0">
+        <button onClick={() => onReplace(item)} className="p-1 rounded hover:bg-primary/10" title="Trocar por outro alimento">
+          <RefreshCcw className="w-3 h-3 text-primary" />
+        </button>
         <button onClick={() => onToggleLock(item)} className="p-1 rounded hover:bg-muted" title={item.is_locked ? "Desbloquear" : "Travar"}>
           {item.is_locked ? <Lock className="w-3 h-3 text-warning" /> : <Unlock className="w-3 h-3 text-muted-foreground" />}
         </button>

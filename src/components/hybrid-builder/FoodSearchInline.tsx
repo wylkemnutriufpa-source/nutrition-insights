@@ -9,6 +9,7 @@ import { toast } from "sonner";
 interface Props {
   day: number;
   mealType: MealType;
+  replacingItemId?: string | null;
   onClose: () => void;
 }
 
@@ -23,7 +24,7 @@ interface DbFood {
   category: string;
 }
 
-export default function FoodSearchInline({ day, mealType, onClose }: Props) {
+export default function FoodSearchInline({ day, mealType, replacingItemId, onClose }: Props) {
   const store = useMealPlanEditorV2Store();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<(FoodItem & { source: "local" | "db"; dbFood?: DbFood })[]>([]);
@@ -100,6 +101,11 @@ export default function FoodSearchInline({ day, mealType, onClose }: Props) {
     const portionMatch = food.portion.match(/(\d+)/);
     const grams = portionMatch ? parseInt(portionMatch[1]) : 100;
 
+    // If replacing an existing item, delete it first
+    if (replacingItemId) {
+      store.deleteItem(replacingItemId);
+    }
+
     store.addItem({
       meal_plan_id: planId,
       title: food.name,
@@ -113,9 +119,10 @@ export default function FoodSearchInline({ day, mealType, onClose }: Props) {
       item_origin: food.source === "db" ? "food_database" : "manual",
     });
 
-    toast.success(`${food.name} adicionado`);
+    toast.success(replacingItemId ? `Substituído por ${food.name}` : `${food.name} adicionado`);
     setQuery("");
     setResults([]);
+    if (replacingItemId) onClose();
   };
 
   const categoryColor: Record<string, string> = {
@@ -137,7 +144,7 @@ export default function FoodSearchInline({ day, mealType, onClose }: Props) {
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar alimento... (ex: frango, arroz)"
+          placeholder={replacingItemId ? "Buscar alimento substituto..." : "Buscar alimento... (ex: frango, arroz)"}
           className="h-7 text-xs border-0 bg-transparent px-0 focus-visible:ring-0"
         />
         {loading && <div className="w-3 h-3 border border-primary/40 border-t-primary rounded-full animate-spin shrink-0" />}
