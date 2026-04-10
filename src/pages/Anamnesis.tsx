@@ -612,32 +612,64 @@ export default function Anamnesis() {
   // Load existing draft on mount
   useEffect(() => {
     if (!targetUserId) return;
-    supabase
-      .from("patient_anamnesis")
-      .select("id, status, answers")
-      .eq("user_id", targetUserId)
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .then(({ data }) => {
-        if (data?.[0]?.status === "completed") {
-          setCompleted(true);
-          setDraftId(data[0].id);
-          const savedAnswers = data[0].answers as Record<string, any>;
-          if (savedAnswers) setAnswers(savedAnswers);
-        } else if (data?.[0]?.status === "draft") {
-          // Restore draft
-          setDraftId(data[0].id);
-          const savedAnswers = data[0].answers as Record<string, any>;
-          if (savedAnswers && Object.keys(savedAnswers).length > 0) {
-            setAnswers(savedAnswers);
-            // Jump to last answered question
-            const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
-            if (lastIdx > 0) setStep(lastIdx);
-            else if (lastIdx === -1) setStep(questions.length - 1);
-            toast.info("Rascunho restaurado! Continue de onde parou 📝");
-          }
+    (async () => {
+      const [{ data: anamnesisRows }, { data: pipelineData }] = await Promise.all([
+        supabase
+          .from("patient_anamnesis")
+          .select("id, status, answers, created_at, updated_at")
+          .eq("user_id", targetUserId)
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1),
+        supabase
+          .from("onboarding_pipelines" as any)
+          .select("status, anamnesis_completed, created_at, updated_at")
+          .eq("patient_id", targetUserId)
+          .order("updated_at", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const latestAnamnesis = anamnesisRows?.[0] as any;
+      const latestPipeline = pipelineData as any;
+
+      if (!latestAnamnesis) return;
+
+      const pipelineTouchedAt = new Date(latestPipeline?.updated_at || latestPipeline?.created_at || 0).getTime();
+      const anamnesisTouchedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at || 0).getTime();
+      const ignoreStaleAnamnesis =
+        latestPipeline?.status === "pending_anamnesis" &&
+        !latestPipeline?.anamnesis_completed &&
+        anamnesisTouchedAt < pipelineTouchedAt;
+
+      if (ignoreStaleAnamnesis) {
+        setCompleted(false);
+        setDraftId(null);
+        setAnswers({});
+        setStep(0);
+        return;
+      }
+
+      if (latestAnamnesis.status === "completed") {
+        setCompleted(true);
+        setDraftId(latestAnamnesis.id);
+        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
+        if (savedAnswers) setAnswers(savedAnswers);
+      } else if (latestAnamnesis.status === "draft") {
+        // Restore draft
+        setDraftId(latestAnamnesis.id);
+        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
+        if (savedAnswers && Object.keys(savedAnswers).length > 0) {
+          setAnswers(savedAnswers);
+          // Jump to last answered question
+          const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
+          if (lastIdx > 0) setStep(lastIdx);
+          else if (lastIdx === -1) setStep(questions.length - 1);
+          toast.info("Rascunho restaurado! Continue de onde parou 📝");
         }
-      });
+      }
+    })();
   }, [targetUserId]);
 
   const handleEditAnamnesis = () => {
