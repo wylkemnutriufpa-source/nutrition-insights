@@ -314,6 +314,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 setEditingId={setEditingId}
                 setEditGrams={setEditGrams}
                 onApplyGramsChange={handleGramsChange}
+                onApplyGramsChangeAllDays={handleGramsChangeAllDays}
                 onToggleLock={handleToggleLock}
                 onDuplicate={handleDuplicate}
                 onDelete={handleDelete}
