@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { usePremiumPresence } from "@/hooks/usePremiumPresence";
 import { PremiumBadge, PremiumMessage, PremiumCardWrapper, PremiumAccentLine } from "@/components/premium";
@@ -18,7 +19,7 @@ import {
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
-import { Link } from "react-router-dom";
+
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
@@ -120,6 +121,7 @@ export default function ClientDashboard() {
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
+  const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
 
@@ -247,6 +249,13 @@ export default function ClientDashboard() {
     : 0;
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
+
+  // Redirect to onboarding if status is onboarding_active (patient must complete it)
+  useEffect(() => {
+    if (!journeyLoading && journeyStatus === "onboarding_active") {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [journeyLoading, journeyStatus, navigate]);
 
   // Gate: if patient is in a pre-onboarding state, show blocking screen
   if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
