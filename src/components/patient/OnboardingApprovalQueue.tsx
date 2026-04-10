@@ -541,7 +541,7 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             {pipeline.weight && <div><span className="text-muted-foreground">Peso:</span> <strong>{pipeline.weight}kg</strong></div>}
             {pipeline.height && <div><span className="text-muted-foreground">Altura:</span> <strong>{pipeline.height}cm</strong></div>}
             {pipeline.meal_count && <div><span className="text-muted-foreground">Refeições:</span> <strong>{pipeline.meal_count}/dia</strong></div>}
-            {pipeline.cooking_preference && <div><span className="text-muted-foreground">Preparo:</span> <strong>{pipeline.cooking_preference}</strong></div>}
+            {pipeline.cooking_preference && <div><span className="text-muted-foreground">Preparo:</span> <strong>{{ quick: "⚡ Prático", homemade: "🏠 Caseiro", gourmet: "👨‍🍳 Gourmet", any: "🤷 Tanto faz" }[pipeline.cooking_preference] || pipeline.cooking_preference}</strong></div>}
           </div>
         )}
 
