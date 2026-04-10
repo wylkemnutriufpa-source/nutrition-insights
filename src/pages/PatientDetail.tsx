@@ -1691,7 +1691,13 @@ export default function PatientDetail() {
                             if (!patientId) return;
                             const patientIdentity = await resolvePatientIdentity(patientId);
                             await supabase.from("onboarding_pipelines" as any).delete().in("patient_id", patientIdentity.allIds);
-                            toast.success("Pipeline de onboarding excluída.");
+                            // Reset journey_status so patient doesn't get stuck on black/empty screen
+                            await supabase
+                              .from("nutritionist_patients")
+                              .update({ journey_status: "awaiting_onboarding_release" } as any)
+                              .in("patient_id", patientIdentity.allIds)
+                              .eq("status", "active");
+                            toast.success("Pipeline excluída e status resetado.");
                             invalidate();
                           }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                             Excluir Permanentemente
