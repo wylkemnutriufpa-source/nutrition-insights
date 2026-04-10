@@ -169,7 +169,34 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     toast.success("Refeição colada");
   };
 
-  return (
+  const handleApplyToAllDays = () => {
+    if (items.length === 0) return;
+    const planId = store.plan?.id;
+    if (!planId) return;
+
+    const otherDays = ALL_DAYS.filter((d) => d !== day);
+    
+    // Clear same meal type on other days, then copy items
+    otherDays.forEach((targetDay) => {
+      store.deleteItemsInCell(targetDay, mealType);
+      items.forEach((item) => {
+        store.addItem({
+          meal_plan_id: planId,
+          title: item.title,
+          description: item.description,
+          day_of_week: targetDay,
+          meal_type: mealType,
+          calories_target: item.calories_target,
+          protein_target: item.protein_target,
+          carbs_target: item.carbs_target,
+          fat_target: item.fat_target,
+          item_origin: (item as any).item_origin || "manual",
+        });
+      });
+    });
+
+    toast.success(`${label} aplicado em todos os dias da semana`);
+  };
     <>
       <div
         ref={setNodeRef}
