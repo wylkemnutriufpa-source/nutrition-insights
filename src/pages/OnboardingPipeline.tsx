@@ -380,8 +380,12 @@ export default function OnboardingPipeline() {
     );
   }
 
+  const exitGuardEnabled = !loading && !!pipeline && currentStep < 5;
+  const hasStartedFilling = currentStep > 0 || !!pipeline?.anamnesis_completed;
+
   return (
     <DashboardLayout>
+      <OnboardingExitGuard enabled={exitGuardEnabled} hasStartedFilling={hasStartedFilling} />
       <div className="max-w-3xl mx-auto py-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
