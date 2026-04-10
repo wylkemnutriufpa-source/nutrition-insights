@@ -197,6 +197,8 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
 
     toast.success(`${label} aplicado em todos os dias da semana`);
   };
+
+  return (
     <>
       <div
         ref={setNodeRef}
