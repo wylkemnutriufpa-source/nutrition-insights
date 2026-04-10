@@ -22,6 +22,7 @@ import {
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
   ChefHat, Heart, Zap, ThumbsUp, Shield
 } from "lucide-react";
+import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 
 interface Pipeline {
   id: string;
