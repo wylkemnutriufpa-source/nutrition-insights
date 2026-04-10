@@ -41,6 +41,7 @@ import {
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
   TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search
 } from "lucide-react";
+import { Link2, Copy, RefreshCw } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
 import PatientProjectGovernance from "@/components/patient/PatientProjectGovernance";
@@ -1633,104 +1634,141 @@ export default function PatientDetail() {
                   {/* Onboarding Management Controls */}
                   <div className="flex flex-wrap gap-2 mb-4 p-3 rounded-lg bg-muted/30 border border-border">
                     <span className="text-xs font-medium text-muted-foreground self-center mr-2">Gerenciar:</span>
+                    {/* Official Reset + Generate Link */}
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
                         <Button size="sm" variant="outline" className="gap-1 text-xs h-7 border-warning/30 text-warning hover:bg-warning/10">
-                          <Zap className="w-3 h-3" /> Resetar
+                          <RefreshCw className="w-3 h-3" /> Resetar & Gerar Link
                         </Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
-                          <AlertDialogTitle>Resetar Onboarding?</AlertDialogTitle>
+                          <AlertDialogTitle>Resetar Onboarding e Gerar Novo Link?</AlertDialogTitle>
                           <AlertDialogDescription>
-                            Isso irá limpar o progresso atual do onboarding e permitir que o paciente refaça o processo do zero. O histórico será mantido.
+                            Isso irá arquivar o pipeline anterior, criar um novo do zero e gerar um link seguro para o paciente preencher a anamnese. O histórico será mantido.
                           </AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                           <AlertDialogCancel>Cancelar</AlertDialogCancel>
                           <AlertDialogAction onClick={async () => {
-                            if (!patientId) return;
-                            const patientIdentity = await resolvePatientIdentity(patientId);
-                            // Reset pipeline to initial state with ALL flags cleared
-                            await supabase.from("onboarding_pipelines" as any).update({
-                              status: "pending_anamnesis",
-                              current_step: null,
-                              anamnesis_completed: false,
-                              body_data_completed: false,
-                              preferences_completed: false,
-                              plan_generated: false,
-                              plan_approved: false,
-                              generated_plan_id: null,
-                              generated_plan_data: null,
-                              weight: null,
-                              height: null,
-                              wake_time: null,
-                              sleep_time: null,
-                              meal_count: 5,
-                              cooking_preference: null,
-                              food_preferences: null,
-                              rejection_reason: null,
-                            } as any).in("patient_id", patientIdentity.allIds);
-                            // Delete old anamnesis so patient truly starts fresh
-                            await supabase.from("patient_anamnesis").delete().in("user_id", patientIdentity.allIds);
-                            // Reset journey_status to onboarding_active
-                            await supabase
-                              .from("nutritionist_patients")
-                              .update({ journey_status: "onboarding_active" } as any)
-                              .in("patient_id", patientIdentity.allIds)
-                              .eq("status", "active");
-                            toast.success("Onboarding resetado do zero! Paciente pode refazer tudo.");
-                            invalidate();
+                            if (!patientId || !user) return;
+                            try {
+                              const { data, error } = await supabase.rpc("reset_onboarding_pipeline" as any, {
+                                _patient_id: patientId,
+                                _nutritionist_id: user.id,
+                                _tenant_id: tenantId || null,
+                              });
+                              if (error) throw error;
+                              const result = data as any;
+                              if (result?.success && result?.token) {
+                                const link = `${window.location.origin}/intake/${result.token}`;
+                                await navigator.clipboard.writeText(link);
+                                toast.success("Onboarding resetado! Link copiado para a área de transferência 📋");
+                              } else {
+                                toast.success("Onboarding resetado com sucesso!");
+                              }
+                              invalidate();
+                            } catch (err: any) {
+                              toast.error("Erro ao resetar: " + (err.message || "Tente novamente"));
+                            }
                           }} className="bg-warning text-warning-foreground hover:bg-warning/90">
                             Confirmar Reset
                           </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                    
+
+                    {/* Generate Link Only (without reset) */}
                     <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
                       if (!patientId || !user) return;
-                      const patientIdentity = await resolvePatientIdentity(patientId);
-                      await supabase.from("onboarding_pipelines" as any).update({ status: "active", current_step: "anamnesis" }).in("patient_id", patientIdentity.allIds);
-                      toast.success("Onboarding reiniciado!");
-                      invalidate();
+                      try {
+                        // Check for existing active token
+                        const { data: existingTokens } = await supabase
+                          .from("onboarding_tokens" as any)
+                          .select("token, expires_at")
+                          .eq("patient_id", patientId)
+                          .eq("status", "active")
+                          .gt("expires_at", new Date().toISOString())
+                          .order("created_at", { ascending: false })
+                          .limit(1);
+
+                        let tokenValue: string;
+                        if (existingTokens && (existingTokens as any[]).length > 0) {
+                          tokenValue = (existingTokens as any[])[0].token;
+                        } else {
+                          // Create new token
+                          const { data: newToken, error } = await supabase
+                            .from("onboarding_tokens" as any)
+                            .insert({
+                              patient_id: patientId,
+                              nutritionist_id: user.id,
+                              tenant_id: tenantId || null,
+                            } as any)
+                            .select("token")
+                            .single();
+                          if (error) throw error;
+                          tokenValue = (newToken as any).token;
+                        }
+
+                        const link = `${window.location.origin}/intake/${tokenValue}`;
+                        await navigator.clipboard.writeText(link);
+                        toast.success("Link de onboarding copiado! 📋");
+                      } catch (err: any) {
+                        toast.error("Erro ao gerar link: " + (err.message || "Tente novamente"));
+                      }
                     }}>
-                      <Play className="w-3 h-3" /> Reiniciar
+                      <Copy className="w-3 h-3" /> Copiar Link
                     </Button>
-                    
-                    <AlertDialog>
-                      <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="destructive" className="gap-1 text-xs h-7">
-                          <Trash2 className="w-3 h-3" /> Excluir Pipeline
-                        </Button>
-                      </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader>
-                          <AlertDialogTitle>Excluir pipeline de onboarding?</AlertDialogTitle>
-                          <AlertDialogDescription>
-                            Isso removerá permanentemente a pipeline de onboarding deste paciente. Use para limpar pipelines legadas ou duplicadas.
-                          </AlertDialogDescription>
-                        </AlertDialogHeader>
-                        <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={async () => {
-                            if (!patientId) return;
-                            const patientIdentity = await resolvePatientIdentity(patientId);
-                            await supabase.from("onboarding_pipelines" as any).delete().in("patient_id", patientIdentity.allIds);
-                            // Reset journey_status so patient doesn't get stuck on black/empty screen
-                            await supabase
-                              .from("nutritionist_patients")
-                              .update({ journey_status: "awaiting_onboarding_release" } as any)
-                              .in("patient_id", patientIdentity.allIds)
-                              .eq("status", "active");
-                            toast.success("Pipeline excluída e status resetado.");
-                            invalidate();
-                          }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
-                            Excluir Permanentemente
-                          </AlertDialogAction>
-                        </AlertDialogFooter>
-                      </AlertDialogContent>
-                    </AlertDialog>
+
+                    {/* Send Link via notification */}
+                    <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
+                      if (!patientId || !user) return;
+                      try {
+                        // Get or create token
+                        const { data: existingTokens } = await supabase
+                          .from("onboarding_tokens" as any)
+                          .select("token")
+                          .eq("patient_id", patientId)
+                          .eq("status", "active")
+                          .gt("expires_at", new Date().toISOString())
+                          .order("created_at", { ascending: false })
+                          .limit(1);
+
+                        let tokenValue: string;
+                        if (existingTokens && (existingTokens as any[]).length > 0) {
+                          tokenValue = (existingTokens as any[])[0].token;
+                        } else {
+                          const { data: newToken, error } = await supabase
+                            .from("onboarding_tokens" as any)
+                            .insert({
+                              patient_id: patientId,
+                              nutritionist_id: user.id,
+                              tenant_id: tenantId || null,
+                            } as any)
+                            .select("token")
+                            .single();
+                          if (error) throw error;
+                          tokenValue = (newToken as any).token;
+                        }
+
+                        const link = `${window.location.origin}/intake/${tokenValue}`;
+
+                        // Send notification to patient
+                        await supabase.from("notifications").insert({
+                          user_id: patientId,
+                          title: "📋 Link de Anamnese",
+                          message: `Seu profissional enviou um link para iniciar o onboarding. Acesse: ${link}`,
+                          type: "info",
+                          action_url: `/intake/${tokenValue}`,
+                        } as any);
+
+                        toast.success("Link enviado como notificação ao paciente! 📩");
+                      } catch (err: any) {
+                        toast.error("Erro ao enviar: " + (err.message || "Tente novamente"));
+                      }
+                    }}>
+                      <Send className="w-3 h-3" /> Enviar Link
+                    </Button>
                   </div>
                   
                   <OnboardingApprovalQueue patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />
