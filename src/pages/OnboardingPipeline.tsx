@@ -101,18 +101,25 @@ export default function OnboardingPipeline() {
         .maybeSingle(),
       supabase
         .from("patient_anamnesis")
-        .select("id, status")
+        .select("id, status, created_at, updated_at")
         .eq("user_id", user.id)
         .eq("status", "completed")
-        .limit(1),
+        .order("updated_at", { ascending: false })
+        .order("created_at", { ascending: false })
+        .maybeSingle(),
     ]);
 
     if (pipelineRes.data) {
       const d = pipelineRes.data as any;
 
-      // Auto-sync: if anamnesis exists but pipeline flag is false, fix it
-      const hasCompletedAnamnesis = !!(anamnesisRes.data && anamnesisRes.data.length > 0);
-      if (hasCompletedAnamnesis && !d.anamnesis_completed) {
+      // Auto-sync only when the completed anamnesis is newer than the latest pipeline reset.
+      const pipelineTouchedAt = new Date(d.updated_at || d.created_at || 0).getTime();
+      const anamnesisTouchedAt = anamnesisRes.data
+        ? new Date((anamnesisRes.data as any).updated_at || (anamnesisRes.data as any).created_at || 0).getTime()
+        : 0;
+      const hasFreshCompletedAnamnesis = !!anamnesisRes.data && anamnesisTouchedAt >= pipelineTouchedAt;
+
+      if (hasFreshCompletedAnamnesis && !d.anamnesis_completed) {
         await supabase
           .from("onboarding_pipelines" as any)
           .update({ anamnesis_completed: true, status: "in_progress" } as any)
