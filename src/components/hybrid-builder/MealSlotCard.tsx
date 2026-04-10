@@ -12,6 +12,7 @@ import {
   Scissors,
   RefreshCcw,
   Search,
+  CalendarRange,
 } from "lucide-react";
 import { toast } from "sonner";
 import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
