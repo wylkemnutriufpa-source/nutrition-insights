@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed, Globe, Calendar, Copy, Link2, CheckCircle2 } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed, Globe, Calendar, Copy, Link2, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
@@ -514,10 +514,16 @@ function PublicAgendaCard() {
 
 function DatabaseBackupCard() {
   const [generating, setGenerating] = useState(false);
+  const [lastReport, setLastReport] = useState<{
+    stats: Record<string, number>;
+    warnings: string[];
+    complete: boolean;
+  } | null>(null);
 
   const handleBackup = async () => {
     setGenerating(true);
-    toast.info("Gerando backup SQL... isso pode levar alguns segundos.");
+    setLastReport(null);
+    toast.info("Gerando backup SQL completo... isso pode levar alguns segundos.");
 
     try {
       const { data: { session } } = await supabase.auth.getSession();
@@ -542,7 +548,10 @@ function DatabaseBackupCard() {
         throw new Error(err.error || "Falha ao gerar backup");
       }
 
-      const sql = await res.text();
+      const result = await res.json();
+      const { sql, stats, warnings, complete } = result;
+
+      // Download the SQL file
       const blob = new Blob([sql], { type: "application/sql" });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -553,7 +562,13 @@ function DatabaseBackupCard() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
-      toast.success("Backup SQL gerado e baixado com sucesso!");
+      setLastReport({ stats, warnings, complete });
+
+      if (complete) {
+        toast.success(`Backup completo gerado! ${stats.tables} tabelas, ${stats.policies} policies, ${stats.functions} funções.`);
+      } else {
+        toast.warning("Backup gerado com avisos — verifique o relatório abaixo.");
+      }
     } catch (err: any) {
       console.error("Backup error:", err);
       toast.error("Erro ao gerar backup: " + (err.message || "Tente novamente."));
@@ -569,9 +584,12 @@ function DatabaseBackupCard() {
           <Database className="w-5 h-5 text-primary" /> Backup do Banco de Dados
         </CardTitle>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Gere um arquivo SQL completo com toda a estrutura (schemas, tabelas) e registros da plataforma.
+          Gere um arquivo SQL restaurável com: tabelas, tipos, constraints, indexes, funções, triggers, views, RLS policies e dados.
+        </p>
+        <p className="text-xs text-muted-foreground/70">
+          ⚠️ Cron jobs (pg_cron) não são incluídos — devem ser documentados separadamente.
         </p>
         <Button
           onClick={handleBackup}
@@ -583,8 +601,40 @@ function DatabaseBackupCard() {
           ) : (
             <Download className="w-4 h-4" />
           )}
-          {generating ? "Gerando backup..." : "Gerar Backup SQL"}
+          {generating ? "Gerando backup completo..." : "Gerar Backup SQL Completo"}
         </Button>
+
+        {lastReport && (
+          <div className={`rounded-lg border p-4 space-y-2 text-sm ${lastReport.complete ? "border-green-500/30 bg-green-500/5" : "border-yellow-500/30 bg-yellow-500/5"}`}>
+            <div className="flex items-center gap-2 font-semibold">
+              {lastReport.complete ? (
+                <><ShieldCheck className="w-4 h-4 text-green-500" /> Backup Completo ✅</>
+              ) : (
+                <><AlertTriangle className="w-4 h-4 text-yellow-500" /> Backup Incompleto ⚠️</>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
+              <span>Tabelas: {lastReport.stats.tables}</span>
+              <span>Types: {lastReport.stats.enums}</span>
+              <span>Constraints: {lastReport.stats.constraints}</span>
+              <span>Indexes: {lastReport.stats.indexes}</span>
+              <span>Funções: {lastReport.stats.functions}</span>
+              <span>Triggers: {lastReport.stats.triggers}</span>
+              <span>Views: {lastReport.stats.views}</span>
+              <span>Extensions: {lastReport.stats.extensions}</span>
+              <span className="font-semibold text-foreground">RLS Tables: {lastReport.stats.rls_tables}</span>
+              <span className="font-semibold text-foreground">RLS Policies: {lastReport.stats.policies}</span>
+              <span>Tabelas c/ dados: {lastReport.stats.data_tables}</span>
+            </div>
+            {lastReport.warnings.length > 0 && (
+              <div className="mt-2 space-y-1">
+                {lastReport.warnings.map((w, i) => (
+                  <p key={i} className="text-xs text-yellow-600">⚠️ {w}</p>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
       </CardContent>
     </Card>
   );
