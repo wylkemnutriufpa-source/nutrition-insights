@@ -646,6 +646,9 @@ const App = () => (
               <Route path="/p/:slug/profissional" element={<LP section="Planos Profissional"><PublicPlans planType="professional" /></LP>} />
               <Route path="/program/:programId/public" element={<LP section="Projeto"><PublicProgram /></LP>} />
 
+              {/* Intake onboarding via token (public) */}
+              <Route path="/intake/:token" element={<LP section="Onboarding"><IntakeOnboarding /></LP>} />
+
               {/* Network pages */}
               <Route path="/my-public-profile" element={<ProfessionalRoute><LP section="Perfil"><MyPublicProfile /></LP></ProfessionalRoute>} />
               <Route path="/my-referrals" element={<ProtectedRoute><LP section="Indicações"><MyReferrals /></LP></ProtectedRoute>} />
