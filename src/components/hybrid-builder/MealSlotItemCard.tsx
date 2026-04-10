@@ -38,6 +38,7 @@ export default function MealSlotItemCard({
   setEditingId,
   setEditGrams,
   onApplyGramsChange,
+  onApplyGramsChangeAllDays,
   onToggleLock,
   onDuplicate,
   onDelete,
