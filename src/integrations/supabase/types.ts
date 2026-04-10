@@ -18004,6 +18004,17 @@ export type Database = {
           table_name: string
         }[]
       }
+      get_backup_cron_jobs: {
+        Args: never
+        Returns: {
+          active: boolean
+          command: string
+          job_database: string
+          job_id: number
+          schedule: string
+          username: string
+        }[]
+      }
       get_backup_enums: {
         Args: never
         Returns: {
