@@ -144,7 +144,7 @@ export default function FoodSearchInline({ day, mealType, replacingItemId, onClo
           ref={inputRef}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          placeholder="Buscar alimento... (ex: frango, arroz)"
+          placeholder={replacingItemId ? "Buscar alimento substituto..." : "Buscar alimento... (ex: frango, arroz)"}
           className="h-7 text-xs border-0 bg-transparent px-0 focus-visible:ring-0"
         />
         {loading && <div className="w-3 h-3 border border-primary/40 border-t-primary rounded-full animate-spin shrink-0" />}
