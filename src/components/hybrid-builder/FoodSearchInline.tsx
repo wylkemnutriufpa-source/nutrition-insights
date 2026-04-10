@@ -24,7 +24,7 @@ interface DbFood {
   category: string;
 }
 
-export default function FoodSearchInline({ day, mealType, onClose }: Props) {
+export default function FoodSearchInline({ day, mealType, replacingItemId, onClose }: Props) {
   const store = useMealPlanEditorV2Store();
   const [query, setQuery] = useState("");
   const [results, setResults] = useState<(FoodItem & { source: "local" | "db"; dbFood?: DbFood })[]>([]);
