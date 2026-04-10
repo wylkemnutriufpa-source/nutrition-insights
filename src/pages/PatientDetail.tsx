@@ -1651,9 +1651,35 @@ export default function PatientDetail() {
                           <AlertDialogAction onClick={async () => {
                             if (!patientId) return;
                             const patientIdentity = await resolvePatientIdentity(patientId);
-                            await supabase.from("onboarding_pipelines" as any).update({ status: "reset", current_step: null }).in("patient_id", patientIdentity.allIds);
+                            // Reset pipeline to initial state with ALL flags cleared
+                            await supabase.from("onboarding_pipelines" as any).update({
+                              status: "pending_anamnesis",
+                              current_step: null,
+                              anamnesis_completed: false,
+                              body_data_completed: false,
+                              preferences_completed: false,
+                              plan_generated: false,
+                              plan_approved: false,
+                              generated_plan_id: null,
+                              generated_plan_data: null,
+                              weight: null,
+                              height: null,
+                              wake_time: null,
+                              sleep_time: null,
+                              meal_count: 5,
+                              cooking_preference: null,
+                              food_preferences: null,
+                              rejection_reason: null,
+                            } as any).in("patient_id", patientIdentity.allIds);
+                            // Delete old anamnesis so patient truly starts fresh
                             await supabase.from("patient_anamnesis").delete().in("user_id", patientIdentity.allIds);
-                            toast.success("Onboarding resetado! Paciente pode refazer.");
+                            // Reset journey_status to onboarding_active
+                            await supabase
+                              .from("nutritionist_patients")
+                              .update({ journey_status: "onboarding_active" } as any)
+                              .in("patient_id", patientIdentity.allIds)
+                              .eq("status", "active");
+                            toast.success("Onboarding resetado do zero! Paciente pode refazer tudo.");
                             invalidate();
                           }} className="bg-warning text-warning-foreground hover:bg-warning/90">
                             Confirmar Reset
