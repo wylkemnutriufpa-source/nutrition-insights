@@ -101,6 +101,11 @@ export default function FoodSearchInline({ day, mealType, replacingItemId, onClo
     const portionMatch = food.portion.match(/(\d+)/);
     const grams = portionMatch ? parseInt(portionMatch[1]) : 100;
 
+    // If replacing an existing item, delete it first
+    if (replacingItemId) {
+      store.deleteItem(replacingItemId);
+    }
+
     store.addItem({
       meal_plan_id: planId,
       title: food.name,
@@ -114,9 +119,10 @@ export default function FoodSearchInline({ day, mealType, replacingItemId, onClo
       item_origin: food.source === "db" ? "food_database" : "manual",
     });
 
-    toast.success(`${food.name} adicionado`);
+    toast.success(replacingItemId ? `Substituído por ${food.name}` : `${food.name} adicionado`);
     setQuery("");
     setResults([]);
+    if (replacingItemId) onClose();
   };
 
   const categoryColor: Record<string, string> = {
