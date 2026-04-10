@@ -98,12 +98,15 @@ export default function OnboardingPipeline() {
         .from("onboarding_pipelines" as any)
         .select("*")
         .eq("patient_id", user.id)
+        .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","superseded_by_reset")')
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle(),
       supabase
         .from("patient_anamnesis")
-        .select("id, status, created_at, updated_at")
+        .select("id, status, created_at, updated_at") 
         .eq("user_id", user.id)
-        .eq("status", "completed")
+        .in("status", ["completed", "draft"])
         .order("updated_at", { ascending: false })
         .order("created_at", { ascending: false })
         .maybeSingle(),
