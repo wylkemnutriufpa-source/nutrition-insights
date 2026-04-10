@@ -44,6 +44,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [composing, setComposing] = useState(false);
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [foodSearchOpen, setFoodSearchOpen] = useState(false);
+  const [replacingItemId, setReplacingItemId] = useState<string | null>(null);
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
