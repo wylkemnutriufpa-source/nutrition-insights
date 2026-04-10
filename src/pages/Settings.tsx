@@ -586,10 +586,13 @@ function DatabaseBackupCard() {
       </CardHeader>
       <CardContent className="space-y-4">
         <p className="text-sm text-muted-foreground">
-          Gere um arquivo SQL restaurável com: tabelas, tipos, constraints, indexes, funções, triggers, views, RLS policies e dados.
+          Gere um dump SQL estruturalmente validado com: tabelas, tipos, constraints, indexes, funções, triggers, views, RLS policies e dados.
         </p>
         <p className="text-xs text-muted-foreground/70">
-          ⚠️ Cron jobs (pg_cron) não são incluídos — devem ser documentados separadamente.
+          ℹ️ O arquivo segue ordem segura de restauração (sem dependência de superusuário). Para restore real, importe em um projeto separado e valide com o checklist oficial.
+        </p>
+        <p className="text-xs text-muted-foreground/70">
+          ⚠️ Não inclui: auth.users, storage objects, Vault secrets, configurações de projeto. Consulte o guia de restore completo.
         </p>
         <Button
           onClick={handleBackup}
@@ -601,18 +604,21 @@ function DatabaseBackupCard() {
           ) : (
             <Download className="w-4 h-4" />
           )}
-          {generating ? "Gerando backup completo..." : "Gerar Backup SQL Completo"}
+          {generating ? "Gerando backup completo..." : "Gerar Backup SQL"}
         </Button>
 
         {lastReport && (
           <div className={`rounded-lg border p-4 space-y-2 text-sm ${lastReport.complete ? "border-green-500/30 bg-green-500/5" : "border-yellow-500/30 bg-yellow-500/5"}`}>
             <div className="flex items-center gap-2 font-semibold">
               {lastReport.complete ? (
-                <><ShieldCheck className="w-4 h-4 text-green-500" /> Backup Completo ✅</>
+                <><ShieldCheck className="w-4 h-4 text-green-500" /> Dump Estruturalmente Completo ✅</>
               ) : (
-                <><AlertTriangle className="w-4 h-4 text-yellow-500" /> Backup Incompleto ⚠️</>
+                <><AlertTriangle className="w-4 h-4 text-yellow-500" /> Dump Incompleto ⚠️</>
               )}
             </div>
+            <p className="text-xs text-muted-foreground italic">
+              Validação estrutural — restore real requer importação em projeto separado.
+            </p>
             <div className="grid grid-cols-2 gap-1 text-xs text-muted-foreground">
               <span>Tabelas: {lastReport.stats.tables}</span>
               <span>Types: {lastReport.stats.enums}</span>
