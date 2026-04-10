@@ -618,6 +618,7 @@ export default function Anamnesis() {
           .from("patient_anamnesis")
           .select("id, status, answers, created_at, updated_at")
           .eq("user_id", targetUserId)
+          .in("status", ["completed", "draft"])
           .order("updated_at", { ascending: false })
           .order("created_at", { ascending: false })
           .limit(1),
@@ -625,6 +626,7 @@ export default function Anamnesis() {
           .from("onboarding_pipelines" as any)
           .select("status, anamnesis_completed, created_at, updated_at")
           .eq("patient_id", targetUserId)
+          .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","superseded_by_reset")')
           .order("updated_at", { ascending: false })
           .order("created_at", { ascending: false })
           .limit(1)
