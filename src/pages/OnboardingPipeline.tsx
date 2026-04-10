@@ -611,7 +611,7 @@ export default function OnboardingPipeline() {
                     <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
                     <div className="flex justify-between text-sm"><span>Altura:</span><span className="font-medium">{pipeline.height} cm</span></div>
                     <div className="flex justify-between text-sm"><span>Refeições/dia:</span><span className="font-medium">{pipeline.meal_count}</span></div>
-                    <div className="flex justify-between text-sm"><span>Preparo:</span><span className="font-medium">{pipeline.cooking_preference}</span></div>
+                    <div className="flex justify-between text-sm"><span>Preparo:</span><span className="font-medium">{{ quick: "⚡ Prático", homemade: "🏠 Caseiro", gourmet: "👨‍🍳 Gourmet", any: "🤷 Tanto faz" }[pipeline.cooking_preference] || pipeline.cooking_preference}</span></div>
                   </div>
                   <Button onClick={handleGeneratePlan} className="w-full" size="lg" disabled={generating}>
                     {generating ? (
