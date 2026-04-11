@@ -1,13 +1,13 @@
 import { useState, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  ArrowLeft, Check, Trash2, Plus, Search, Sparkles, Utensils,
+  ArrowLeft, Check, Trash2, Plus, Search, AlertTriangle,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
+import { PHYSIOLOGICAL_GUARDRAILS } from "@/lib/strategyAdvisor";
 import FoodSearchInStrategy from "./FoodSearchInStrategy";
 
 interface Props {
@@ -17,9 +17,10 @@ interface Props {
   onMealsChanged: (meals: StrategyMealPreview[]) => void;
   onBack: () => void;
   onConfirm: () => void;
+  disclaimer?: string;
 }
 
-export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsChanged, onBack, onConfirm }: Props) {
+export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsChanged, onBack, onConfirm, disclaimer }: Props) {
   const [searchingForMeal, setSearchingForMeal] = useState<string | null>(null);
 
   const targetDelta = useMemo(() => ({
@@ -27,13 +28,26 @@ export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsC
     protein: totals.protein - strategy.macroProfile.protein,
   }), [totals, strategy]);
 
+  // Check per-meal guardrail violations in current meals
+  const mealWarnings = useMemo(() => {
+    const G = PHYSIOLOGICAL_GUARDRAILS;
+    const warnings: string[] = [];
+    for (const meal of meals) {
+      if (meal.protein > G.maxProteinPerMeal) {
+        warnings.push(`${meal.label}: ${meal.protein}g proteína excede o máximo de ${G.maxProteinPerMeal}g por refeição`);
+      }
+      if (meal.calories > G.maxKcalPerMeal) {
+        warnings.push(`${meal.label}: ${meal.calories} kcal excede o máximo de ${G.maxKcalPerMeal} kcal por refeição`);
+      }
+    }
+    return warnings;
+  }, [meals]);
+
   const handleRemoveMeal = useCallback((mealType: string) => {
-    const updated = meals.filter(m => m.mealType !== mealType);
-    onMealsChanged(updated);
+    onMealsChanged(meals.filter(m => m.mealType !== mealType));
   }, [meals, onMealsChanged]);
 
   const handleAddMeal = useCallback((meal: StrategyMealPreview) => {
-    // Replace if same meal type exists, otherwise add
     const existing = meals.findIndex(m => m.mealType === meal.mealType);
     if (existing >= 0) {
       const updated = [...meals];
@@ -57,11 +71,31 @@ export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsC
             <div className="flex items-center gap-2">
               <span className="text-lg">{strategy.icon}</span>
               <h2 className="text-sm font-bold">{strategy.name}</h2>
+              <Badge variant="outline" className="text-[8px]">{strategy.activeSize.toUpperCase()}</Badge>
             </div>
             <p className="text-[10px] text-muted-foreground ml-7">{strategy.rationale.slice(0, 80)}...</p>
           </div>
         </div>
       </div>
+
+      {/* Disclaimer */}
+      {disclaimer && (
+        <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2">
+          <AlertTriangle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
+          <p className="text-[8px] text-amber-700 dark:text-amber-400 leading-relaxed">{disclaimer}</p>
+        </div>
+      )}
+
+      {/* Guardrail warnings */}
+      {mealWarnings.length > 0 && (
+        <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-2 space-y-0.5">
+          {mealWarnings.map((w, i) => (
+            <p key={i} className="text-[8px] text-destructive flex items-center gap-1">
+              <AlertTriangle className="w-2.5 h-2.5 shrink-0" /> {w}
+            </p>
+          ))}
+        </div>
+      )}
 
       {/* Live macro bar */}
       <div className="bg-muted/30 rounded-xl p-3 border border-border/50">
@@ -75,9 +109,9 @@ export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsC
         </div>
         <div className="grid grid-cols-4 gap-2">
           <MacroBox label="Calorias" value={totals.calories} target={strategy.macroProfile.calories} unit="kcal" color="text-primary" />
-          <MacroBox label="Proteína" value={totals.protein} target={strategy.macroProfile.protein} unit="g" color="text-red-500" />
-          <MacroBox label="Carboidrato" value={totals.carbs} target={strategy.macroProfile.carbs} unit="g" color="text-blue-500" />
-          <MacroBox label="Gordura" value={totals.fat} target={strategy.macroProfile.fat} unit="g" color="text-amber-500" />
+          <MacroBox label="Proteína" value={totals.protein} target={strategy.macroProfile.protein} unit="g" color="text-destructive" />
+          <MacroBox label="Carboidrato" value={totals.carbs} target={strategy.macroProfile.carbs} unit="g" color="text-primary" />
+          <MacroBox label="Gordura" value={totals.fat} target={strategy.macroProfile.fat} unit="g" color="text-primary" />
         </div>
       </div>
 
@@ -100,47 +134,36 @@ export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsC
                     <p className="text-[10px] text-muted-foreground leading-relaxed mt-0.5">{meal.description}</p>
                   </div>
                   <div className="flex gap-1 ml-2 shrink-0">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => setSearchingForMeal(meal.mealType)}
-                    >
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                      onClick={() => setSearchingForMeal(meal.mealType)}>
                       <Plus className="w-3 h-3 text-primary" />
                     </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
-                      onClick={() => handleRemoveMeal(meal.mealType)}
-                    >
+                    <Button variant="ghost" size="sm" className="h-6 w-6 p-0 opacity-0 group-hover:opacity-100 transition-opacity text-destructive"
+                      onClick={() => handleRemoveMeal(meal.mealType)}>
                       <Trash2 className="w-3 h-3" />
                     </Button>
                   </div>
                 </div>
                 <div className="flex gap-3 text-[9px] text-muted-foreground">
                   <span className="font-mono">{meal.calories} kcal</span>
-                  <span className="font-mono text-red-400">{meal.protein}g P</span>
-                  <span className="font-mono text-blue-400">{meal.carbs}g C</span>
-                  <span className="font-mono text-amber-400">{meal.fat}g G</span>
+                  <span className={`font-mono ${meal.protein > PHYSIOLOGICAL_GUARDRAILS.maxProteinPerMeal ? "text-destructive font-bold" : ""}`}>
+                    {meal.protein}g P
+                  </span>
+                  <span className="font-mono">{meal.carbs}g C</span>
+                  <span className="font-mono">{meal.fat}g G</span>
                 </div>
               </motion.div>
             ))}
           </AnimatePresence>
 
-          {/* Add meal button */}
-          <Button
-            variant="outline"
-            className="w-full h-8 text-[10px] gap-1 border-dashed"
-            onClick={() => setSearchingForMeal("new")}
-          >
+          <Button variant="outline" className="w-full h-8 text-[10px] gap-1 border-dashed"
+            onClick={() => setSearchingForMeal("new")}>
             <Search className="w-3 h-3" />
             Buscar e adicionar alimento/refeição
           </Button>
         </div>
       </ScrollArea>
 
-      {/* Food search overlay */}
       {searchingForMeal && (
         <FoodSearchInStrategy
           mealType={searchingForMeal}
@@ -149,11 +172,7 @@ export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsC
         />
       )}
 
-      {/* Confirm */}
-      <Button
-        onClick={onConfirm}
-        className="w-full h-10 text-xs gap-2 gradient-primary shadow-glow"
-      >
+      <Button onClick={onConfirm} className="w-full h-10 text-xs gap-2 gradient-primary shadow-glow">
         <Check className="w-4 h-4" />
         Confirmar "{strategy.name}" e Gerar Plano
       </Button>
@@ -162,16 +181,9 @@ export default function StrategyPreviewPanel({ strategy, meals, totals, onMealsC
 }
 
 function MacroBox({ label, value, target, unit, color }: {
-  label: string;
-  value: number;
-  target: number;
-  unit: string;
-  color: string;
+  label: string; value: number; target: number; unit: string; color: string;
 }) {
-  const delta = value - target;
-  const isOver = delta > 0;
   const pct = target > 0 ? Math.min(100, (value / target) * 100) : 0;
-
   return (
     <div className="text-center">
       <p className="text-[9px] text-muted-foreground mb-0.5">{label}</p>
