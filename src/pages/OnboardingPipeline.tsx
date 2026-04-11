@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -23,6 +23,8 @@ import {
   ChefHat, Heart, Zap, ThumbsUp, Shield
 } from "lucide-react";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
+import SmartNumericInput from "@/components/ui/SmartNumericInput";
+import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@/lib/normalizeInputs";
 
 interface Pipeline {
   id: string;
@@ -68,6 +70,17 @@ export default function OnboardingPipeline() {
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
+  const [bodyNormalized, setBodyNormalized] = useState<{ weight: NormalizationResult | null; height: NormalizationResult | null }>({ weight: null, height: null });
+
+  const handleWeightChange = useCallback((raw: string, result: NormalizationResult) => {
+    setBodyForm(prev => ({ ...prev, weight: raw }));
+    setBodyNormalized(prev => ({ ...prev, weight: result }));
+  }, []);
+
+  const handleHeightChange = useCallback((raw: string, result: NormalizationResult) => {
+    setBodyForm(prev => ({ ...prev, height: raw }));
+    setBodyNormalized(prev => ({ ...prev, height: result }));
+  }, []);
   // Preferences form
   const [prefForm, setPrefForm] = useState({
     wake_time: "06:30",
