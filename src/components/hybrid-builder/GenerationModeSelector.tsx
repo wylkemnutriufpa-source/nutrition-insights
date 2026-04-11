@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Zap, Brain, Stethoscope, Loader2, Save, Sparkles, Layers } from "lucide-react";
+import { Zap, Brain, Stethoscope, Loader2, Save, Sparkles, Layers, Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import PlanComparisonModal from "./PlanComparisonModal";
+import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
+import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
 
 type GenerationMode = "quick" | "smart" | "clinical";
 
