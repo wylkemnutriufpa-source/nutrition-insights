@@ -477,6 +477,10 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
 
+    // ── RATE LIMIT ──
+    const { allowed: rlAllowed } = await checkRateLimit("generate-body-projection", user.id, 5, 60);
+    if (!rlAllowed) return rateLimitResponse();
+
     const { patient_id, timeframe = "90d", generation_source = "manual", assessment_id, force_override = false, generate_all_timeframes = false } = await req.json();
     const targetPatient = patient_id || user.id;
     const timeframes = generate_all_timeframes ? ["30d", "90d", "180d", "365d"] : [timeframe];
