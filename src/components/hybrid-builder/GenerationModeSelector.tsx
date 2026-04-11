@@ -310,8 +310,42 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     setComparisonPlans([]);
   };
 
+  // If advisor is open, render it instead
+  if (showAdvisor) {
+    return (
+      <StrategyAdvisorPanel
+        patientId={patientId}
+        onStrategyConfirmed={handleStrategyConfirmed}
+        onCancel={() => setShowAdvisor(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-3">
+      {/* Strategy Advisor CTA — prominent */}
+      <Button
+        onClick={() => setShowAdvisor(true)}
+        disabled={generating || generatingAll}
+        variant="outline"
+        className="w-full h-12 text-xs gap-2 border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all"
+      >
+        <Compass className="w-5 h-5 text-primary" />
+        <div className="text-left">
+          <p className="font-bold text-primary">🧠 Consultor de Estratégia IFJ</p>
+          <p className="text-[9px] text-muted-foreground">Analisar paciente → 3 protocolos → preview → editar → gerar</p>
+        </div>
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-[9px] uppercase">
+          <span className="bg-background px-2 text-muted-foreground">ou geração direta</span>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-primary" />
         <h3 className="text-xs font-bold uppercase tracking-wider">Geração Automática</h3>
