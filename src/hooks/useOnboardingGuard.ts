@@ -63,6 +63,7 @@ export function useOnboardingGuard() {
         }
 
         // Also check journey_status — if it's onboarding_active, force onboarding
+        // BUT: if patient already has an active plan, they shouldn't be stuck in onboarding
         const { data: link } = await supabase
           .from("nutritionist_patients")
           .select("journey_status")
@@ -74,8 +75,23 @@ export function useOnboardingGuard() {
 
         if (cancelled) return;
 
-        const status = (link as any)?.journey_status;
-        if (status === "onboarding_active") {
+        const journeyStatus = (link as any)?.journey_status;
+        if (journeyStatus === "onboarding_active") {
+          // Check if patient already has an active meal plan — if so, don't block them
+          const { count } = await supabase
+            .from("meal_plans")
+            .select("id", { count: "exact", head: true })
+            .eq("patient_id", user!.id)
+            .eq("is_active", true);
+
+          if (cancelled) return;
+
+          if ((count ?? 0) > 0) {
+            // Patient has a plan but journey_status wasn't updated — auto-fix
+            setRequirement("none");
+            return;
+          }
+
           setRequirement("must_complete");
           return;
         }
