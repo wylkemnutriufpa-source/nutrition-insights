@@ -1,14 +1,16 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Zap, Brain, Stethoscope, Loader2, Save, Sparkles, Layers } from "lucide-react";
+import { Zap, Brain, Stethoscope, Loader2, Save, Sparkles, Layers, Compass } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import PlanComparisonModal from "./PlanComparisonModal";
+import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
+import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
 
 type GenerationMode = "quick" | "smart" | "clinical";
 
@@ -39,12 +41,65 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const [generating, setGenerating] = useState(false);
   const [selectedMode, setSelectedMode] = useState<GenerationMode>("quick");
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [showAdvisor, setShowAdvisor] = useState(false);
 
   // Comparison flow state
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [comparisonPlans, setComparisonPlans] = useState<GeneratedPlan[]>([]);
   const [selecting, setSelecting] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
+
+  // Strategy Advisor confirmed → generate plan with strategy context
+  const handleStrategyConfirmed = useCallback(async (strategy: NutritionalStrategy, editedMeals: StrategyMealPreview[]) => {
+    if (!user || !store.planId) return;
+    setShowAdvisor(false);
+    setGenerating(true);
+
+    try {
+      toast.info(`Gerando plano com estratégia "${strategy.name}"...`);
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+        body: {
+          patientId,
+          nutritionistId: user.id,
+          existingPlanId: store.planId,
+          meal_plan_id: store.planId,
+          isPipeline: false,
+          generationMode: "smart",
+          saveAsTemplate,
+          strategyOverride: {
+            strategyId: strategy.id,
+            strategyName: strategy.name,
+            targetCalories: strategy.macroProfile.calories,
+            targetProtein: strategy.macroProfile.protein,
+            targetCarbs: strategy.macroProfile.carbs,
+            targetFat: strategy.macroProfile.fat,
+            mealsPerDay: strategy.mealDistribution.mealsPerDay,
+          },
+        },
+      });
+
+      if (error || !data?.success) {
+        const msg = error
+          ? await friendlyEdgeFunctionError(error, "Erro ao gerar")
+          : (data?.error || "Erro desconhecido");
+        toast.error(msg);
+        return;
+      }
+
+      const resolvedPlanId = store.planId || data.mealPlanId;
+      if (!resolvedPlanId) {
+        throw new Error("A engine retornou sem um plano válido.");
+      }
+
+      await store.hydrate(resolvedPlanId, user.id);
+      toast.success(`✅ Plano "${strategy.name}" gerado com ${data.items_count || 0} refeições!`);
+      onGenerated();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar");
+    } finally {
+      setGenerating(false);
+    }
+  }, [user, store, patientId, saveAsTemplate, onGenerated]);
 
   // Generate single mode (original flow)
   const handleGenerate = async () => {
@@ -255,8 +310,42 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     setComparisonPlans([]);
   };
 
+  // If advisor is open, render it instead
+  if (showAdvisor) {
+    return (
+      <StrategyAdvisorPanel
+        patientId={patientId}
+        onStrategyConfirmed={handleStrategyConfirmed}
+        onCancel={() => setShowAdvisor(false)}
+      />
+    );
+  }
+
   return (
     <div className="space-y-3">
+      {/* Strategy Advisor CTA — prominent */}
+      <Button
+        onClick={() => setShowAdvisor(true)}
+        disabled={generating || generatingAll}
+        variant="outline"
+        className="w-full h-12 text-xs gap-2 border-primary/40 bg-primary/5 hover:bg-primary/10 transition-all"
+      >
+        <Compass className="w-5 h-5 text-primary" />
+        <div className="text-left">
+          <p className="font-bold text-primary">🧠 Consultor de Estratégia IFJ</p>
+          <p className="text-[9px] text-muted-foreground">Analisar paciente → 3 protocolos → preview → editar → gerar</p>
+        </div>
+      </Button>
+
+      <div className="relative">
+        <div className="absolute inset-0 flex items-center">
+          <span className="w-full border-t" />
+        </div>
+        <div className="relative flex justify-center text-[9px] uppercase">
+          <span className="bg-background px-2 text-muted-foreground">ou geração direta</span>
+        </div>
+      </div>
+
       <div className="flex items-center gap-2">
         <Sparkles className="w-4 h-4 text-primary" />
         <h3 className="text-xs font-bold uppercase tracking-wider">Geração Automática</h3>
