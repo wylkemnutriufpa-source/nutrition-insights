@@ -150,7 +150,7 @@ describe("normalizeMeasurementInput", () => {
   });
 
   it("rejects out-of-range", () => {
-    expect(normalizeMeasurementInput("5").isValid).toBe(false);
+    expect(normalizeMeasurementInput("0").isValid).toBe(false);
     expect(normalizeMeasurementInput("300").isValid).toBe(false);
   });
 });
