@@ -96,8 +96,9 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
     try {
       const numericPayload: Record<string, number | null> = {};
       MEASURE_FIELDS.forEach(s => s.fields.forEach(f => {
-        const v = parseFloat(values[f.key] || "");
-        numericPayload[f.key] = isNaN(v) ? null : v;
+        const normalizer = getNormalizerForField(f.key);
+        const result = normalizer(values[f.key] || "");
+        numericPayload[f.key] = result.isValid ? result.value : null;
       }));
 
       const { error } = await supabase
