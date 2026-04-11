@@ -250,12 +250,22 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Redirect to onboarding if status is onboarding_active (patient must complete it)
+  // Redirect to onboarding if status is onboarding_active AND patient has no active plan
   useEffect(() => {
     if (!journeyLoading && journeyStatus === "onboarding_active") {
-      navigate("/onboarding", { replace: true });
+      // Check if patient already has an active plan — if so, don't redirect
+      supabase
+        .from("meal_plans")
+        .select("id", { count: "exact", head: true })
+        .eq("patient_id", user?.id ?? "")
+        .eq("is_active", true)
+        .then(({ count }) => {
+          if ((count ?? 0) === 0) {
+            navigate("/onboarding", { replace: true });
+          }
+        });
     }
-  }, [journeyLoading, journeyStatus, navigate]);
+  }, [journeyLoading, journeyStatus, navigate, user?.id]);
 
   // Gate: if patient is in a pre-onboarding state, show blocking screen
   if (!journeyLoading && journeyStatus && !canAccessOnboarding) {
