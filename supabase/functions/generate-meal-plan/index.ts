@@ -1462,13 +1462,35 @@ serve(async (req) => {
       .limit(1)
       .maybeSingle();
 
-    const finalKcal = physicalAssessment?.calories_target || kcalTarget;
-    const finalMacros = {
-      protein: physicalAssessment?.protein_target || macros.protein,
-      carbs: physicalAssessment?.carbs_target || macros.carbs,
-      fat: physicalAssessment?.fat_target || macros.fat,
-    };
-    const dataSource = physicalAssessment?.calories_target ? "physical_assessment" : "anamnesis_calculated";
+    // ── Strategy Override (highest priority — nutritionist's explicit choice) ──
+    const strategyOverride = body.strategyOverride;
+    let finalKcal: number;
+    let finalMacros: { protein: number; carbs: number; fat: number };
+    let dataSource: string;
+
+    if (strategyOverride?.targetCalories && strategyOverride?.targetProtein) {
+      // Strategy Advisor chose — this is the SOURCE OF TRUTH
+      finalKcal = strategyOverride.targetCalories;
+      finalMacros = {
+        protein: strategyOverride.targetProtein,
+        carbs: strategyOverride.targetCarbs || macros.carbs,
+        fat: strategyOverride.targetFat || macros.fat,
+      };
+      dataSource = `strategy_advisor:${strategyOverride.strategyId || "custom"}`;
+      console.log(`[generate-meal-plan] ✅ Strategy Override ACTIVE: ${strategyOverride.strategyName} | Kcal: ${finalKcal} | P: ${finalMacros.protein}g | C: ${finalMacros.carbs}g | F: ${finalMacros.fat}g`);
+    } else if (physicalAssessment?.calories_target) {
+      finalKcal = physicalAssessment.calories_target;
+      finalMacros = {
+        protein: physicalAssessment.protein_target || macros.protein,
+        carbs: physicalAssessment.carbs_target || macros.carbs,
+        fat: physicalAssessment.fat_target || macros.fat,
+      };
+      dataSource = "physical_assessment";
+    } else {
+      finalKcal = kcalTarget;
+      finalMacros = { protein: macros.protein, carbs: macros.carbs, fat: macros.fat };
+      dataSource = "anamnesis_calculated";
+    }
 
     // Pipeline overrides
     const pipelineOverrides: Record<string, unknown> = isPipeline ? {

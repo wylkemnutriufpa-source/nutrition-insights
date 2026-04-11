@@ -2,15 +2,17 @@ import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { Loader2, Brain, ArrowLeft, Sparkles } from "lucide-react";
+import { Loader2, Brain, ArrowLeft, Sparkles, AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   analyzePatientAndSuggestStrategies,
+  switchStrategySize,
   type PatientProfile,
   type StrategyAnalysis,
   type NutritionalStrategy,
   type StrategyMealPreview,
+  type SizeVariant,
 } from "@/lib/strategyAdvisor";
 import StrategyCard from "./StrategyCard";
 import StrategyPreviewPanel from "./StrategyPreviewPanel";
@@ -26,11 +28,11 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [analysis, setAnalysis] = useState<StrategyAnalysis | null>(null);
+  const [strategies, setStrategies] = useState<NutritionalStrategy[]>([]);
   const [selectedStrategyId, setSelectedStrategyId] = useState<string | null>(null);
   const [editedMeals, setEditedMeals] = useState<StrategyMealPreview[]>([]);
   const [viewMode, setViewMode] = useState<"overview" | "preview">("overview");
 
-  // Load patient data and run analysis
   useEffect(() => {
     if (!patientId || !user) return;
     loadPatientProfile();
@@ -39,7 +41,6 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
   const loadPatientProfile = async () => {
     setLoading(true);
     try {
-      // Fetch patient data sequentially to avoid TS2589 with Promise.all
       const { data: anamnesis } = await (supabase.from("patient_anamnesis") as any)
         .select("answers, status")
         .eq("patient_id", patientId)
@@ -66,7 +67,6 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
 
       const answers = (anamnesis?.answers || {}) as Record<string, any>;
 
-      // Get patient name
       const { data: profileData } = await supabase
         .from("profiles")
         .select("full_name")
@@ -89,8 +89,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         restrictions: Array.isArray(answers.restrictions) ? answers.restrictions.filter((r: string) => r !== "none") : [],
         allergies: Array.isArray(answers.allergies) ? answers.allergies.filter((a: string) => a !== "none") : [],
         dislikedFoods: typeof answers.disliked_foods === "string"
-          ? answers.disliked_foods.split(",").map((s: string) => s.trim()).filter(Boolean)
-          : [],
+          ? answers.disliked_foods.split(",").map((s: string) => s.trim()).filter(Boolean) : [],
         medicalConditions: Array.isArray(answers.medical_conditions) ? answers.medical_conditions : [],
         clinicalFlags: (clinicalFlags || []).map((f: any) => f.flag_key),
         behavioralProfile: behavProfile ? {
@@ -105,8 +104,8 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
 
       const result = analyzePatientAndSuggestStrategies(profile);
       setAnalysis(result);
+      setStrategies(result.strategies);
 
-      // Auto-select best strategy
       if (result.strategies.length > 0) {
         setSelectedStrategyId(result.strategies[0].id);
         setEditedMeals([...result.strategies[0].previewMeals]);
@@ -120,48 +119,48 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
   };
 
   const selectedStrategy = useMemo(
-    () => analysis?.strategies.find(s => s.id === selectedStrategyId) || null,
-    [analysis, selectedStrategyId]
+    () => strategies.find(s => s.id === selectedStrategyId) || null,
+    [strategies, selectedStrategyId]
   );
 
   const handleSelectStrategy = useCallback((strategyId: string) => {
     setSelectedStrategyId(strategyId);
-    const strategy = analysis?.strategies.find(s => s.id === strategyId);
-    if (strategy) {
-      setEditedMeals([...strategy.previewMeals]);
+    const strategy = strategies.find(s => s.id === strategyId);
+    if (strategy) setEditedMeals([...strategy.previewMeals]);
+  }, [strategies]);
+
+  const handleSizeChange = useCallback((strategyId: string, size: SizeVariant) => {
+    setStrategies(prev => prev.map(s => {
+      if (s.id !== strategyId) return s;
+      return switchStrategySize(s, size);
+    }));
+    // If this is the selected strategy, update preview meals too
+    if (strategyId === selectedStrategyId) {
+      const strategy = strategies.find(s => s.id === strategyId);
+      if (strategy) {
+        const updated = switchStrategySize(strategy, size);
+        setEditedMeals([...updated.previewMeals]);
+      }
     }
-  }, [analysis]);
+  }, [strategies, selectedStrategyId]);
 
   const handleOpenPreview = useCallback((strategyId: string) => {
     handleSelectStrategy(strategyId);
     setViewMode("preview");
   }, [handleSelectStrategy]);
 
-  const handleBackToOverview = useCallback(() => {
-    setViewMode("overview");
-  }, []);
-
-  const handleMealsChanged = useCallback((meals: StrategyMealPreview[]) => {
-    setEditedMeals(meals);
-  }, []);
+  const handleBackToOverview = useCallback(() => setViewMode("overview"), []);
+  const handleMealsChanged = useCallback((meals: StrategyMealPreview[]) => setEditedMeals(meals), []);
 
   const handleConfirm = useCallback(() => {
     if (!selectedStrategy) return;
     onStrategyConfirmed(selectedStrategy, editedMeals);
   }, [selectedStrategy, editedMeals, onStrategyConfirmed]);
 
-  // Recalculate totals from edited meals
-  const editedTotals = useMemo(() => {
-    return editedMeals.reduce(
-      (acc, m) => ({
-        calories: acc.calories + m.calories,
-        protein: acc.protein + m.protein,
-        carbs: acc.carbs + m.carbs,
-        fat: acc.fat + m.fat,
-      }),
-      { calories: 0, protein: 0, carbs: 0, fat: 0 }
-    );
-  }, [editedMeals]);
+  const editedTotals = useMemo(() => editedMeals.reduce(
+    (acc, m) => ({ calories: acc.calories + m.calories, protein: acc.protein + m.protein, carbs: acc.carbs + m.carbs, fat: acc.fat + m.fat }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  ), [editedMeals]);
 
   if (loading) {
     return (
@@ -190,6 +189,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         onMealsChanged={handleMealsChanged}
         onBack={handleBackToOverview}
         onConfirm={handleConfirm}
+        disclaimer={analysis.previewDisclaimer}
       />
     );
   }
@@ -210,8 +210,15 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         </Button>
       </div>
 
-      {/* Patient Profile Summary */}
       <PatientProfileSummary profile={analysis.profile} />
+
+      {/* Preview disclaimer */}
+      <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2">
+        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+        <p className="text-[9px] text-amber-700 dark:text-amber-400 leading-relaxed">
+          {analysis.previewDisclaimer}
+        </p>
+      </div>
 
       {/* Strategy Cards */}
       <div className="space-y-2">
@@ -222,7 +229,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         
         <ScrollArea className="max-h-[500px]">
           <div className="space-y-3 pr-2">
-            {analysis.strategies.map((strategy, idx) => (
+            {strategies.map((strategy, idx) => (
               <StrategyCard
                 key={strategy.id}
                 strategy={strategy}
@@ -230,13 +237,13 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
                 isSelected={selectedStrategyId === strategy.id}
                 onSelect={() => handleSelectStrategy(strategy.id)}
                 onPreview={() => handleOpenPreview(strategy.id)}
+                onSizeChange={(size) => handleSizeChange(strategy.id, size)}
               />
             ))}
           </div>
         </ScrollArea>
       </div>
 
-      {/* Confirm Button */}
       {selectedStrategy && (
         <Button
           onClick={() => handleOpenPreview(selectedStrategy.id)}

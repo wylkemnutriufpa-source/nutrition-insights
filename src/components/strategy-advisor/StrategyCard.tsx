@@ -2,7 +2,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Eye, Check, Trophy, Medal, Award } from "lucide-react";
 import { motion } from "framer-motion";
-import type { NutritionalStrategy } from "@/lib/strategyAdvisor";
+import type { NutritionalStrategy, SizeVariant } from "@/lib/strategyAdvisor";
 
 interface Props {
   strategy: NutritionalStrategy;
@@ -10,6 +10,7 @@ interface Props {
   isSelected: boolean;
   onSelect: () => void;
   onPreview: () => void;
+  onSizeChange: (size: SizeVariant) => void;
 }
 
 const RANK_ICONS = [Trophy, Medal, Award];
@@ -19,7 +20,13 @@ const RANK_COLORS = [
   "from-orange-400/15 to-orange-500/5 border-orange-400/30",
 ];
 
-export default function StrategyCard({ strategy, rank, isSelected, onSelect, onPreview }: Props) {
+const SIZE_LABELS: Record<SizeVariant, string> = {
+  small: "P",
+  medium: "M",
+  large: "G",
+};
+
+export default function StrategyCard({ strategy, rank, isSelected, onSelect, onPreview, onSizeChange }: Props) {
   const RankIcon = RANK_ICONS[rank - 1] || Award;
   const rankColor = RANK_COLORS[rank - 1] || RANK_COLORS[2];
 
@@ -78,6 +85,29 @@ export default function StrategyCard({ strategy, rank, isSelected, onSelect, onP
         ))}
       </div>
 
+      {/* Size variant selector */}
+      <div className="flex items-center gap-1 mb-2">
+        <span className="text-[9px] text-muted-foreground mr-1">Tamanho:</span>
+        {(["small", "medium", "large"] as SizeVariant[]).map(size => {
+          const variant = strategy.sizeVariants.find(v => v.size === size);
+          const isActive = strategy.activeSize === size;
+          return (
+            <button
+              key={size}
+              onClick={(e) => { e.stopPropagation(); onSizeChange(size); }}
+              className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all border ${
+                isActive
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted/40 text-muted-foreground border-transparent hover:border-primary/30"
+              }`}
+              title={variant?.description}
+            >
+              {SIZE_LABELS[size]}
+            </button>
+          );
+        })}
+      </div>
+
       {/* Macro summary */}
       <div className="grid grid-cols-4 gap-1 mb-2">
         <div className="text-center bg-background/60 rounded-lg p-1.5">
@@ -98,7 +128,16 @@ export default function StrategyCard({ strategy, rank, isSelected, onSelect, onP
         </div>
       </div>
 
-      {/* Macro percentages */}
+      {/* Guardrail notes */}
+      {strategy.guardrailNotes.length > 0 && (
+        <div className="mb-2">
+          {strategy.guardrailNotes.map((note, i) => (
+            <p key={i} className="text-[8px] text-amber-600 dark:text-amber-400">⚠ {note}</p>
+          ))}
+        </div>
+      )}
+
+      {/* Macro percentages bar */}
       <div className="flex gap-1 mb-3">
         <div className="h-1.5 rounded-full bg-red-400/60" style={{ flex: strategy.macroProfile.protein * 4 }} />
         <div className="h-1.5 rounded-full bg-blue-400/60" style={{ flex: strategy.macroProfile.carbs * 4 }} />
