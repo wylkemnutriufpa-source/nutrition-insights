@@ -207,9 +207,9 @@ export default function OnboardingPipeline() {
 
   async function handleSaveBodyData() {
     if (!pipeline || !user) return;
-    const w = parseFloat(bodyForm.weight);
-    const h = parseFloat(bodyForm.height);
-    if (!w || !h || w < 30 || h < 100) {
+    const w = bodyNormalized.weight?.value;
+    const h = bodyNormalized.height?.value;
+    if (!w || !h || !bodyNormalized.weight?.isValid || !bodyNormalized.height?.isValid) {
       toast.error("Preencha peso e altura válidos");
       return;
     }
