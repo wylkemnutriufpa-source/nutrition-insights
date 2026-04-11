@@ -1,13 +1,17 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { Activity, Save, ArrowRight, ArrowLeft, Loader2, Check, Scale, Ruler } from "lucide-react";
+import SmartNumericInput from "@/components/ui/SmartNumericInput";
+import {
+  normalizeWeightInput, normalizeHeightInput, normalizeBodyFatInput,
+  normalizeMeasurementInput, type NormalizationResult, type FieldNormalizer,
+} from "@/lib/normalizeInputs";
 
 interface Props {
   patientId: string;
@@ -16,27 +20,38 @@ interface Props {
   sessionId: string;
 }
 
+const FIELD_NORMALIZERS: Record<string, FieldNormalizer> = {
+  weight: normalizeWeightInput,
+  height: normalizeHeightInput,
+  body_fat_percentage: normalizeBodyFatInput,
+  lean_mass: normalizeWeightInput,
+};
+
 const MEASURE_FIELDS = [
   { section: "Dados Gerais", icon: Scale, fields: [
-    { key: "weight", label: "Peso (kg)", placeholder: "75.0" },
-    { key: "height", label: "Altura (cm)", placeholder: "170" },
-    { key: "body_fat_percentage", label: "% Gordura", placeholder: "22.0" },
-    { key: "lean_mass", label: "Massa magra (kg)", placeholder: "58.5" },
+    { key: "weight", label: "Peso (kg)", placeholder: "72 ou 72,5" },
+    { key: "height", label: "Altura (cm)", placeholder: "158 ou 1,58" },
+    { key: "body_fat_percentage", label: "% Gordura", placeholder: "22 ou 22,5" },
+    { key: "lean_mass", label: "Massa magra (kg)", placeholder: "58,5" },
   ]},
   { section: "Circunferências (cm)", icon: Ruler, fields: [
-    { key: "neck", label: "Pescoço", placeholder: "" },
-    { key: "chest", label: "Peitoral", placeholder: "" },
-    { key: "waist", label: "Cintura", placeholder: "" },
-    { key: "abdomen", label: "Abdômen", placeholder: "" },
-    { key: "hip", label: "Quadril", placeholder: "" },
-    { key: "right_arm", label: "Braço D", placeholder: "" },
-    { key: "left_arm", label: "Braço E", placeholder: "" },
-    { key: "right_thigh", label: "Coxa D", placeholder: "" },
-    { key: "left_thigh", label: "Coxa E", placeholder: "" },
-    { key: "right_calf", label: "Panturrilha D", placeholder: "" },
-    { key: "left_calf", label: "Panturrilha E", placeholder: "" },
+    { key: "neck", label: "Pescoço", placeholder: "38" },
+    { key: "chest", label: "Peitoral", placeholder: "95" },
+    { key: "waist", label: "Cintura", placeholder: "80" },
+    { key: "abdomen", label: "Abdômen", placeholder: "85" },
+    { key: "hip", label: "Quadril", placeholder: "98" },
+    { key: "right_arm", label: "Braço D", placeholder: "32" },
+    { key: "left_arm", label: "Braço E", placeholder: "32" },
+    { key: "right_thigh", label: "Coxa D", placeholder: "55" },
+    { key: "left_thigh", label: "Coxa E", placeholder: "55" },
+    { key: "right_calf", label: "Panturrilha D", placeholder: "36" },
+    { key: "left_calf", label: "Panturrilha E", placeholder: "36" },
   ]},
 ];
+
+function getNormalizerForField(key: string): FieldNormalizer {
+  return FIELD_NORMALIZERS[key] || normalizeMeasurementInput;
+}
 
 export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sessionId }: Props) {
   const { user } = useAuth();
@@ -81,8 +96,9 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
     try {
       const numericPayload: Record<string, number | null> = {};
       MEASURE_FIELDS.forEach(s => s.fields.forEach(f => {
-        const v = parseFloat(values[f.key] || "");
-        numericPayload[f.key] = isNaN(v) ? null : v;
+        const normalizer = getNormalizerForField(f.key);
+        const result = normalizer(values[f.key] || "");
+        numericPayload[f.key] = result.isValid ? result.value : null;
       }));
 
       const { error } = await supabase
@@ -135,17 +151,15 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {section.fields.map(f => (
-                  <div key={f.key} className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">{f.label}</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={values[f.key] || ""}
-                      onChange={e => { setValues(prev => ({ ...prev, [f.key]: e.target.value })); setSaved(false); }}
-                      placeholder={f.placeholder}
-                      className="h-9 text-sm"
-                    />
-                  </div>
+                  <SmartNumericInput
+                    key={f.key}
+                    label={f.label}
+                    compact
+                    normalizer={getNormalizerForField(f.key)}
+                    value={values[f.key] || ""}
+                    onChange={(raw) => { setValues(prev => ({ ...prev, [f.key]: raw })); setSaved(false); }}
+                    placeholder={f.placeholder}
+                  />
                 ))}
               </div>
             </div>

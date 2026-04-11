@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -23,6 +23,8 @@ import {
   ChefHat, Heart, Zap, ThumbsUp, Shield
 } from "lucide-react";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
+import SmartNumericInput from "@/components/ui/SmartNumericInput";
+import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@/lib/normalizeInputs";
 
 interface Pipeline {
   id: string;
@@ -68,6 +70,17 @@ export default function OnboardingPipeline() {
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
+  const [bodyNormalized, setBodyNormalized] = useState<{ weight: NormalizationResult | null; height: NormalizationResult | null }>({ weight: null, height: null });
+
+  const handleWeightChange = useCallback((raw: string, result: NormalizationResult) => {
+    setBodyForm(prev => ({ ...prev, weight: raw }));
+    setBodyNormalized(prev => ({ ...prev, weight: result }));
+  }, []);
+
+  const handleHeightChange = useCallback((raw: string, result: NormalizationResult) => {
+    setBodyForm(prev => ({ ...prev, height: raw }));
+    setBodyNormalized(prev => ({ ...prev, height: result }));
+  }, []);
   // Preferences form
   const [prefForm, setPrefForm] = useState({
     wake_time: "06:30",
@@ -194,9 +207,9 @@ export default function OnboardingPipeline() {
 
   async function handleSaveBodyData() {
     if (!pipeline || !user) return;
-    const w = parseFloat(bodyForm.weight);
-    const h = parseFloat(bodyForm.height);
-    if (!w || !h || w < 30 || h < 100) {
+    const w = bodyNormalized.weight?.value;
+    const h = bodyNormalized.height?.value;
+    if (!w || !h || !bodyNormalized.weight?.isValid || !bodyNormalized.height?.isValid) {
       toast.error("Preencha peso e altura válidos");
       return;
     }
@@ -532,26 +545,27 @@ export default function OnboardingPipeline() {
                     Informe seu peso e altura atuais para calcularmos suas necessidades calóricas.
                   </p>
                   <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Peso (kg)</Label>
-                      <Input
-                        type="number"
-                        placeholder="Ex: 72"
-                        value={bodyForm.weight}
-                        onChange={(e) => setBodyForm({ ...bodyForm, weight: e.target.value })}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Altura (cm)</Label>
-                      <Input
-                        type="number"
-                        placeholder="Ex: 170"
-                        value={bodyForm.height}
-                        onChange={(e) => setBodyForm({ ...bodyForm, height: e.target.value })}
-                      />
-                    </div>
+                    <SmartNumericInput
+                      label="Peso (kg)"
+                      placeholder="Ex: 72 ou 72,5"
+                      normalizer={normalizeWeightInput}
+                      value={bodyForm.weight}
+                      onChange={handleWeightChange}
+                    />
+                    <SmartNumericInput
+                      label="Altura (cm)"
+                      placeholder="Ex: 158 ou 1,58"
+                      normalizer={normalizeHeightInput}
+                      value={bodyForm.height}
+                      onChange={handleHeightChange}
+                    />
                   </div>
-                  <Button onClick={handleSaveBodyData} className="w-full" size="lg" disabled={saving}>
+                  <Button
+                    onClick={handleSaveBodyData}
+                    className="w-full"
+                    size="lg"
+                    disabled={saving || !bodyNormalized.weight?.isValid || !bodyNormalized.height?.isValid}
+                  >
                     {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
                     Salvar e Continuar <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
