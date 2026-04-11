@@ -1575,6 +1575,10 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
+    // Rate limit per user
+    const { allowed: rlAllowed } = await checkRateLimit("ifj-core-router", user.id, 30, 15);
+    if (!rlAllowed) return rateLimitResponse();
+
     const body = await req.json();
     const inputText = body.input_text || body.question || body.command || "";
     const forceTargetId = body.target_id || null; // From disambiguation re-execution

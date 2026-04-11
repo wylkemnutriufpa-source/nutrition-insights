@@ -27,6 +27,10 @@ serve(async (req) => {
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
 
+    // Rate limit per user
+    const { allowed: rlAllowed } = await checkRateLimit("ifj-narrative-report", user.id, 10, 60);
+    if (!rlAllowed) return rateLimitResponse();
+
     const { patient_id } = await req.json();
     if (!patient_id) throw new Error("patient_id required");
 

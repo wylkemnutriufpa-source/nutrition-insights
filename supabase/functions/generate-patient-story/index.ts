@@ -14,6 +14,11 @@ Deno.serve(async (req) => {
     // LLM Gate — admin control
     if (!(await isLLMEnabled())) return llmBlockedResponse(corsHeaders);
 
+    // Rate limit by auth header hash or IP
+    const clientKey = req.headers.get("Authorization")?.slice(-16) || "anon";
+    const { allowed: rlAllowed } = await checkRateLimit("generate-patient-story", clientKey, 10, 60);
+    if (!rlAllowed) return rateLimitResponse();
+
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL")!,

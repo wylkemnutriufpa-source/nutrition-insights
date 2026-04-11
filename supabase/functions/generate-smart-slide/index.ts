@@ -56,6 +56,11 @@ Deno.serve(async (req) => {
     // LLM Gate — admin control
     if (!(await isLLMEnabled())) return llmBlockedResponse(corsHeaders);
 
+    // Rate limit by auth header hash
+    const clientKey = req.headers.get("Authorization")?.slice(-16) || "anon";
+    const { allowed: rlAllowed } = await checkRateLimit("generate-smart-slide", clientKey, 10, 60);
+    if (!rlAllowed) return rateLimitResponse();
+
     const { slide_type, theme, tone, custom_context } = await req.json();
 
     // Gather real system data for context
