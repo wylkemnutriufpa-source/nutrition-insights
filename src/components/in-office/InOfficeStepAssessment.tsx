@@ -150,17 +150,15 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
               </h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
                 {section.fields.map(f => (
-                  <div key={f.key} className="space-y-1">
-                    <Label className="text-[11px] text-muted-foreground">{f.label}</Label>
-                    <Input
-                      type="number"
-                      step="0.1"
-                      value={values[f.key] || ""}
-                      onChange={e => { setValues(prev => ({ ...prev, [f.key]: e.target.value })); setSaved(false); }}
-                      placeholder={f.placeholder}
-                      className="h-9 text-sm"
-                    />
-                  </div>
+                  <SmartNumericInput
+                    key={f.key}
+                    label={f.label}
+                    compact
+                    normalizer={getNormalizerForField(f.key)}
+                    value={values[f.key] || ""}
+                    onChange={(raw) => { setValues(prev => ({ ...prev, [f.key]: raw })); setSaved(false); }}
+                    placeholder={f.placeholder}
+                  />
                 ))}
               </div>
             </div>
