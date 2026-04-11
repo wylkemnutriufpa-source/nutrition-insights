@@ -41,12 +41,65 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const [generating, setGenerating] = useState(false);
   const [selectedMode, setSelectedMode] = useState<GenerationMode>("quick");
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
+  const [showAdvisor, setShowAdvisor] = useState(false);
 
   // Comparison flow state
   const [comparisonOpen, setComparisonOpen] = useState(false);
   const [comparisonPlans, setComparisonPlans] = useState<GeneratedPlan[]>([]);
   const [selecting, setSelecting] = useState(false);
   const [generatingAll, setGeneratingAll] = useState(false);
+
+  // Strategy Advisor confirmed → generate plan with strategy context
+  const handleStrategyConfirmed = useCallback(async (strategy: NutritionalStrategy, editedMeals: StrategyMealPreview[]) => {
+    if (!user || !store.planId) return;
+    setShowAdvisor(false);
+    setGenerating(true);
+
+    try {
+      toast.info(`Gerando plano com estratégia "${strategy.name}"...`);
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+        body: {
+          patientId,
+          nutritionistId: user.id,
+          existingPlanId: store.planId,
+          meal_plan_id: store.planId,
+          isPipeline: false,
+          generationMode: "smart",
+          saveAsTemplate,
+          strategyOverride: {
+            strategyId: strategy.id,
+            strategyName: strategy.name,
+            targetCalories: strategy.macroProfile.calories,
+            targetProtein: strategy.macroProfile.protein,
+            targetCarbs: strategy.macroProfile.carbs,
+            targetFat: strategy.macroProfile.fat,
+            mealsPerDay: strategy.mealDistribution.mealsPerDay,
+          },
+        },
+      });
+
+      if (error || !data?.success) {
+        const msg = error
+          ? await friendlyEdgeFunctionError(error, "Erro ao gerar")
+          : (data?.error || "Erro desconhecido");
+        toast.error(msg);
+        return;
+      }
+
+      const resolvedPlanId = store.planId || data.mealPlanId;
+      if (!resolvedPlanId) {
+        throw new Error("A engine retornou sem um plano válido.");
+      }
+
+      await store.hydrate(resolvedPlanId, user.id);
+      toast.success(`✅ Plano "${strategy.name}" gerado com ${data.items_count || 0} refeições!`);
+      onGenerated();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar");
+    } finally {
+      setGenerating(false);
+    }
+  }, [user, store, patientId, saveAsTemplate, onGenerated]);
 
   // Generate single mode (original flow)
   const handleGenerate = async () => {
