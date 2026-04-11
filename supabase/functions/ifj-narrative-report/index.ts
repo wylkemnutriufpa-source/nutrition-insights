@@ -1,6 +1,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isLLMEnabled, llmBlockedResponse } from "../_shared/llm-gate.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -25,6 +26,10 @@ serve(async (req) => {
 
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     if (authError || !user) throw new Error("Unauthorized");
+
+    // Rate limit per user
+    const { allowed: rlAllowed } = await checkRateLimit("ifj-narrative-report", user.id, 10, 60);
+    if (!rlAllowed) return rateLimitResponse();
 
     const { patient_id } = await req.json();
     if (!patient_id) throw new Error("patient_id required");

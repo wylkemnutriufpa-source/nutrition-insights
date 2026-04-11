@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isLLMEnabled, llmBlockedResponse } from "../_shared/llm-gate.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,6 +55,11 @@ Deno.serve(async (req) => {
 
     // LLM Gate — admin control
     if (!(await isLLMEnabled())) return llmBlockedResponse(corsHeaders);
+
+    // Rate limit by auth header hash
+    const clientKey = req.headers.get("Authorization")?.slice(-16) || "anon";
+    const { allowed: rlAllowed } = await checkRateLimit("generate-smart-slide", clientKey, 10, 60);
+    if (!rlAllowed) return rateLimitResponse();
 
     const { slide_type, theme, tone, custom_context } = await req.json();
 

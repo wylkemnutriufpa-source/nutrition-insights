@@ -26,6 +26,7 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isLLMEnabled } from "../_shared/llm-gate.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -475,6 +476,10 @@ serve(async (req) => {
     const token = authHeader.replace("Bearer ", "");
     const { data: { user }, error: authError } = await createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
     if (authError || !user) throw new Error("Unauthorized");
+
+    // ── RATE LIMIT ──
+    const { allowed: rlAllowed } = await checkRateLimit("generate-body-projection", user.id, 5, 60);
+    if (!rlAllowed) return rateLimitResponse();
 
     const { patient_id, timeframe = "90d", generation_source = "manual", assessment_id, force_override = false, generate_all_timeframes = false } = await req.json();
     const targetPatient = patient_id || user.id;

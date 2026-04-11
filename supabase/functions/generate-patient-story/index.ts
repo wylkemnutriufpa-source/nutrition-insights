@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { isLLMEnabled, llmBlockedResponse } from "../_shared/llm-gate.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -12,6 +13,11 @@ Deno.serve(async (req) => {
   try {
     // LLM Gate — admin control
     if (!(await isLLMEnabled())) return llmBlockedResponse(corsHeaders);
+
+    // Rate limit by auth header hash or IP
+    const clientKey = req.headers.get("Authorization")?.slice(-16) || "anon";
+    const { allowed: rlAllowed } = await checkRateLimit("generate-patient-story", clientKey, 10, 60);
+    if (!rlAllowed) return rateLimitResponse();
 
     const authHeader = req.headers.get("Authorization");
     const supabase = createClient(
