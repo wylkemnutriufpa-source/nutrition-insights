@@ -40,7 +40,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
     setLoading(true);
     try {
       // Fetch patient data sequentially to avoid TS2589 with Promise.all
-      const { data: anamnesis } = await supabase.from("patient_anamnesis")
+      const { data: anamnesis } = await (supabase.from("patient_anamnesis") as any)
         .select("answers, status")
         .eq("patient_id", patientId)
         .order("created_at", { ascending: false })
