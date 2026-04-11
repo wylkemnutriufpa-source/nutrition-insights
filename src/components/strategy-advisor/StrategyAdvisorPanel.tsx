@@ -40,33 +40,34 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
     setLoading(true);
     try {
       // Fetch patient data in parallel
-      const [
-        { data: anamnesis },
-        { data: physicalAssessment },
-        { data: clinicalFlags },
-        { data: behavProfile },
-      ] = await Promise.all([
-        supabase.from("patient_anamnesis")
-          .select("answers, status")
-          .eq("patient_id", patientId)
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase.from("physical_assessments")
-          .select("weight, height, body_fat_percentage, calories_target, protein_target, carbs_target, fat_target")
-          .eq("patient_id", patientId)
-          .order("assessment_date", { ascending: false })
-          .limit(1)
-          .maybeSingle(),
-        supabase.from("patient_clinical_flags")
-          .select("flag_key, severity")
-          .eq("patient_id", patientId)
-          .eq("is_active", true),
-        supabase.from("behavioral_profile")
-          .select("*")
-          .eq("patient_id", patientId)
-          .maybeSingle(),
+      const anamnesisQuery = supabase.from("patient_anamnesis")
+        .select("answers, status")
+        .eq("patient_id", patientId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const physicalQuery = supabase.from("physical_assessments")
+        .select("weight, height, body_fat_percentage, calories_target, protein_target, carbs_target, fat_target")
+        .eq("patient_id", patientId)
+        .order("assessment_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      const flagsQuery = supabase.from("patient_clinical_flags")
+        .select("flag_key, severity")
+        .eq("patient_id", patientId)
+        .eq("is_active", true);
+      const behavQuery = supabase.from("behavioral_profile")
+        .select("*")
+        .eq("patient_id", patientId)
+        .maybeSingle();
+
+      const [anamnesisRes, physicalRes, flagsRes, behavRes] = await Promise.all([
+        anamnesisQuery, physicalQuery, flagsQuery, behavQuery,
       ]);
+      const anamnesis = anamnesisRes.data;
+      const physicalAssessment = physicalRes.data;
+      const clinicalFlags = flagsRes.data;
+      const behavProfile = behavRes.data;
 
       const answers = (anamnesis?.answers || {}) as Record<string, any>;
 
