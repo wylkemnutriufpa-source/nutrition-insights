@@ -15,12 +15,6 @@ import {
 import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
-  isMainMealType,
-  isProteinLine,
-  hasBeverage,
-  getDefaultBeverageLine,
-  standardProteinPortion,
-  roundScaledQuantity,
   buildFoodDescriptionFromItems,
 } from "../_shared/meal-description.ts";
 
@@ -71,6 +65,31 @@ const GOAL_TO_DB_TAG: Record<string, string> = {
   gain_weight: "ganho_massa",
   improve_health: "saude_geral",
   athletic_performance: "performance",
+};
+
+const GOAL_ALIASES: Record<string, string> = {
+  health: "improve_health",
+  healthy: "improve_health",
+  wellness: "improve_health",
+  well_being: "improve_health",
+  saude: "improve_health",
+  improvehealth: "improve_health",
+  weight_loss: "lose_weight",
+  lose_fat: "lose_weight",
+  emagrecimento: "lose_weight",
+  perda_peso: "lose_weight",
+  perder_peso: "lose_weight",
+  maintain_weight: "maintain",
+  manutencao: "maintain",
+  maintenance: "maintain",
+  gain_mass: "gain_muscle",
+  muscle_gain: "gain_muscle",
+  hipertrofia: "gain_muscle",
+  ganho_massa: "gain_muscle",
+  ganhar_massa: "gain_muscle",
+  performance: "athletic_performance",
+  athlete_performance: "athletic_performance",
+  high_performance: "athletic_performance",
 };
 
 // ──── Meal type to DB tag mapping ────
@@ -600,6 +619,20 @@ function calculateTargetKcal(tdee: number, goal: string, sex: string = "male"): 
   const raw = tdee + adjustment;
   const minKcal = sex === "female" ? 1200 : 1500;
   return Math.max(minKcal, Math.min(3500, raw));
+}
+
+function normalizeGoal(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+  const normalized = value
+    .trim()
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
+
+  if (!normalized) return null;
+  return GOAL_ALIASES[normalized] || normalized;
 }
 
 function calculateMacros(kcal: number, goal: string, weight: number) {
@@ -1435,11 +1468,16 @@ serve(async (req) => {
     }
 
     // ── 3. Goal ──
-    const goal = body.goal || answers.goal || answers.objective || answers.main_goal;
+    const rawGoal = body.goal || answers.goal || answers.objective || answers.main_goal;
+    const goal = normalizeGoal(rawGoal);
     if (!goal) {
       return new Response(JSON.stringify({ error: "Objetivo do paciente não definido", code: "GOAL_MISSING" }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
+    }
+
+    if (typeof rawGoal === "string" && rawGoal !== goal) {
+      console.log(`[generate-meal-plan] Goal normalized from "${rawGoal}" to "${goal}"`);
     }
 
     // ── 4. Calculate TMB / TDEE / macros ──

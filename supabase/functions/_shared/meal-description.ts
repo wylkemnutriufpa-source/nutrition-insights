@@ -86,31 +86,14 @@ export function scaleDescriptionQuantities(
     .replace(/(\d+(?:[.,]\d+)?)\s*(col\.?\s*(?:sopa|cha|chá))\b/gi, (_, value: string, unit: string) => scaleToken(value, unit, " "));
 }
 
-// ── Normalize protein line in main meals ─────────────────────
-function normalizeProteinLine(line: string, mealType: string, isGainGoal: boolean): string {
-  if (!isMainMealType(mealType) || !isProteinLine(line)) return line;
-  const targetGrams = standardProteinPortion(mealType, isGainGoal);
-  if (!/(\d+(?:[.,]\d+)?)\s*g\b/i.test(line)) return line;
-  return line.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${targetGrams}g`);
-}
-
 // ── Finalize meal description ────────────────────────────────
-// Ensures protein normalization and beverage line are applied consistently
+// Preserves scaled portions and only applies structural cleanup + beverage line.
 export function finalizeMealDescription(description: string, mealType: string, isGainGoal: boolean): string {
   const [mainSection, substitutionsSection] = description.split(/\n\n🔄 Substituições:\n/);
-  const lines = (mainSection || "")
+  const normalizedLines = (mainSection || "")
     .split("\n")
     .map(line => line.trim())
     .filter(Boolean);
-
-  let proteinNormalized = false;
-  const normalizedLines = lines.map(line => {
-    if (!proteinNormalized && isMainMealType(mealType) && isProteinLine(line) && /(\d+(?:[.,]\d+)?)\s*g\b/i.test(line)) {
-      proteinNormalized = true;
-      return normalizeProteinLine(line, mealType, isGainGoal);
-    }
-    return line;
-  });
 
   const beverageLine = getDefaultBeverageLine(mealType);
   if (beverageLine && !hasBeverage(normalizedLines.join("\n"))) {
