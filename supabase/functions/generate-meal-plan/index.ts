@@ -15,12 +15,6 @@ import {
 import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
-  isMainMealType,
-  isProteinLine,
-  hasBeverage,
-  getDefaultBeverageLine,
-  standardProteinPortion,
-  roundScaledQuantity,
   buildFoodDescriptionFromItems,
 } from "../_shared/meal-description.ts";
 
