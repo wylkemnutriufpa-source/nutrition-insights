@@ -16,7 +16,6 @@ import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
   buildFoodDescriptionFromItems,
-  isProteinLine,
   syncProteinDescriptionPortions,
 } from "../_shared/meal-description.ts";
 
@@ -1184,7 +1183,7 @@ function reconcileDailyMacros(
   return reconciled;
 }
 
-function syncPlanDescriptionsWithProteinTargets(originalItems: any[], adjustedItems: any[]): any[] {
+function syncPlanDescriptionsWithProteinTargets(originalItems: any[], adjustedItems: any[], goal: string): any[] {
   return adjustedItems.map((item, index) => {
     const original = originalItems[index];
     if (!original?.description) return item;
@@ -1196,7 +1195,7 @@ function syncPlanDescriptionsWithProteinTargets(originalItems: any[], adjustedIt
         item.meal_type,
         Number(item.protein_target) || 0,
         Number(original.protein_target) || 0,
-        !isLossGoal(item.meal_type === "breakfast" && false ? "" : "")
+        !isLossGoal(goal),
       ) || item.description,
     };
   });
@@ -1666,7 +1665,7 @@ serve(async (req) => {
         // Template-First: always use validated presets
         const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
-        const planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems);
+        const planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
 
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
@@ -1811,7 +1810,7 @@ serve(async (req) => {
 
     // Reconcile with correct per-day targets
     const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
-    const planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems);
+    const planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems, goal);
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({

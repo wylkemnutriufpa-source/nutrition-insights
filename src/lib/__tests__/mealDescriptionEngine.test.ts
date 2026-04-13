@@ -15,7 +15,7 @@ describe("syncProteinDescriptionPortions", () => {
     expect(result).not.toContain("220g peito de frango");
   });
 
-  it("keeps scaling protein text proportionally for non-main meals", () => {
+  it("does not alter non-protein food lines", () => {
     const result = syncProteinDescriptionPortions(
       "• 100g iogurte natural",
       "evening_snack",
@@ -24,6 +24,6 @@ describe("syncProteinDescriptionPortions", () => {
       false,
     );
 
-    expect(result).toBe("• 150g iogurte natural");
+    expect(result).toBe("• 100g iogurte natural");
   });
 });
