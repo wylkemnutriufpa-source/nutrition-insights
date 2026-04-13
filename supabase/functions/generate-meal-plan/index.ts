@@ -16,6 +16,7 @@ import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
   buildFoodDescriptionFromItems,
+  isProteinLine,
 } from "../_shared/meal-description.ts";
 
 const corsHeaders = {
@@ -1182,6 +1183,46 @@ function reconcileDailyMacros(
   return reconciled;
 }
 
+function syncProteinPortionText(originalDescription: string | null | undefined, nextProtein: number, previousProtein: number): string | null | undefined {
+  if (!originalDescription || !Number.isFinite(nextProtein) || !Number.isFinite(previousProtein) || previousProtein <= 0) {
+    return originalDescription;
+  }
+
+  const ratio = nextProtein / previousProtein;
+  if (!Number.isFinite(ratio) || ratio <= 0 || Math.abs(ratio - 1) < 0.08) {
+    return originalDescription;
+  }
+
+  const [mainSection, substitutionsSection] = originalDescription.split(/\n\n🔄 Substituições:\n/);
+  const syncedMain = (mainSection || "")
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || !isProteinLine(trimmed)) return trimmed;
+      return scaleDescriptionQuantities(trimmed, ratio) || trimmed;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  return syncedMain + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
+}
+
+function syncPlanDescriptionsWithProteinTargets(originalItems: any[], adjustedItems: any[]): any[] {
+  return adjustedItems.map((item, index) => {
+    const original = originalItems[index];
+    if (!original?.description) return item;
+
+    return {
+      ...item,
+      description: syncProteinPortionText(
+        original.description,
+        Number(item.protein_target) || 0,
+        Number(original.protein_target) || 0,
+      ) || item.description,
+    };
+  });
+}
+
 // ──── Cross-day consistency enforcement (3% protein, 5% other macros) ────
 function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number; carbs: number; fat: number }, dailyKcal: number): any[] {
   // ── Pre-check: detect per-item calorie inflation (e.g. daily total on each item) ──
@@ -1645,7 +1686,8 @@ serve(async (req) => {
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         // Template-First: always use validated presets
         const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
-        const planItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
+        const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
+        const planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems);
 
         const genMeta = buildGenerationMetadata(
           tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
@@ -1789,7 +1831,8 @@ serve(async (req) => {
       : finalMacros;
 
     // Reconcile with correct per-day targets
-    const planItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
+    const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
+    const planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems);
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
