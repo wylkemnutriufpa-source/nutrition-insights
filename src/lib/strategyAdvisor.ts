@@ -643,9 +643,11 @@ function buildStrategy(
     return scaleMealPreview(base, scaleFactor, template.mealsPerDay);
   });
 
-  // Collect guardrail notes from medium variant
-  const { notes: mediumNotes } = applyGuardrails(
-    Math.round((tdee + template.kcalAdjustment)), template.proteinPerKg, profile.weight, profile.sex, template.mealsPerDay,
+  // Collect guardrail notes from recommended variant
+  const recCfg = SIZE_VARIANT_CONFIG[recommendedSize];
+  const recProtein = (BASE_PROTEIN_G + recCfg.proteinOffset) / profile.weight;
+  const { notes: activeNotes } = applyGuardrails(
+    Math.round((tdee + template.kcalAdjustment) * recCfg.kcalMultiplier), recProtein, profile.weight, profile.sex, template.mealsPerDay,
   );
 
   return {
@@ -655,9 +657,9 @@ function buildStrategy(
     icon: template.icon,
     rationale: template.getRationale(profile, bmi),
     keyFactors: template.getKeyFactors(profile, bmi),
-    macroProfile: activeProfile,
+    macroProfile: activeProfile!,
     sizeVariants,
-    activeSize: "medium",
+    activeSize: recommendedSize,
     mealDistribution: {
       mealsPerDay: Object.keys(mealSplit).length,
       distribution: Object.fromEntries(Object.entries(mealSplit).map(([k, v]) => [k, Math.round(v * 100)])),
@@ -665,7 +667,7 @@ function buildStrategy(
     previewMeals,
     score,
     tags: template.tags,
-    guardrailNotes: mediumNotes,
+    guardrailNotes: activeNotes,
   };
 }
 
