@@ -146,11 +146,26 @@ const GOAL_LABELS: Record<string, string> = {
 
 // ── Size variant multipliers ──
 // These define the kcal offset from base TDEE for each size
-const SIZE_VARIANT_CONFIG: Record<SizeVariant, { label: string; description: string; kcalMultiplier: number }> = {
-  small: { label: "Reduzido", description: "Para perfis menores, mulheres ou menor gasto", kcalMultiplier: 0.88 },
-  medium: { label: "Padrão", description: "Cálculo base por TDEE e objetivo", kcalMultiplier: 1.0 },
-  large: { label: "Aumentado", description: "Para perfis maiores, alta atividade ou ganho", kcalMultiplier: 1.12 },
+const SIZE_VARIANT_CONFIG: Record<SizeVariant, { label: string; description: string; kcalMultiplier: number; proteinOffset: number }> = {
+  small: { label: "P — 120g prot", description: "Perfis menores, mulheres ou menor gasto (120g proteína base)", kcalMultiplier: 0.88, proteinOffset: 0 },
+  medium: { label: "M — 140g prot", description: "Cálculo padrão por TDEE e objetivo (140g proteína base)", kcalMultiplier: 1.0, proteinOffset: 20 },
+  large: { label: "G — 160g prot", description: "Perfis maiores, alta atividade ou ganho (160g proteína base)", kcalMultiplier: 1.12, proteinOffset: 40 },
 };
+
+/** Base protein for tier calculation — all templates start at 120g and go up by 20g */
+const BASE_PROTEIN_G = 120;
+const PROTEIN_TIER_STEP = 20;
+
+/**
+ * Determine the recommended default size based on patient TDEE.
+ * Low TDEE (<1600) → small, Mid (1600-2200) → medium, High (>2200) → large
+ */
+function recommendSizeByTDEE(tdee: number, sex: string): SizeVariant {
+  if (sex === "female" && tdee < 1700) return "small";
+  if (tdee < 1600) return "small";
+  if (tdee > 2200) return "large";
+  return "medium";
+}
 
 // ── Core Calculations ──
 
@@ -555,34 +570,42 @@ function buildStrategy(
   bmi: number,
   tdee: number,
 ): NutritionalStrategy {
+  const recommendedSize = recommendSizeByTDEE(tdee, profile.sex);
   const sizes: SizeVariant[] = ["small", "medium", "large"];
   const sizeVariants: SizeVariantProfile[] = [];
-  let mediumProfile: MacroProfile | null = null;
+  let activeProfile: MacroProfile | null = null;
 
   for (const size of sizes) {
     const cfg = SIZE_VARIANT_CONFIG[size];
     const baseKcal = Math.round((tdee + template.kcalAdjustment) * cfg.kcalMultiplier);
 
-    const { kcal, proteinPerKg, notes: guardrailNotes } = applyGuardrails(
-      baseKcal, template.proteinPerKg, profile.weight, profile.sex, template.mealsPerDay,
+    // Absolute protein target: 120g + offset (0/20/40), then clamp to guardrails
+    const absoluteProtein = BASE_PROTEIN_G + cfg.proteinOffset;
+    const proteinPerKg = absoluteProtein / profile.weight;
+
+    const { kcal, proteinPerKg: clampedPpk, notes: guardrailNotes } = applyGuardrails(
+      baseKcal, proteinPerKg, profile.weight, profile.sex, template.mealsPerDay,
     );
 
     const { macroProfile } = calculateMacrosWithGuardrails(
-      kcal, proteinPerKg, profile.weight, profile.sex,
+      kcal, clampedPpk, profile.weight, profile.sex,
       template.carbRatio, template.fatRatio, template.mealsPerDay,
     );
 
     sizeVariants.push({
       size,
       label: cfg.label,
-      description: cfg.description,
+      description: `${cfg.description} — ${macroProfile.protein}g proteína efetiva`,
       macroProfile,
     });
 
-    if (size === "medium") mediumProfile = macroProfile;
+    if (size === recommendedSize) activeProfile = macroProfile;
   }
 
-  const activeProfile = mediumProfile!;
+  // Fallback to medium if recommended size somehow didn't match
+  if (!activeProfile) activeProfile = sizeVariants.find(v => v.size === "medium")!.macroProfile;
+
+  // activeProfile already set above from recommended size
 
   // Build meal distribution
   const mealSplit: Record<string, number> = {
@@ -620,9 +643,11 @@ function buildStrategy(
     return scaleMealPreview(base, scaleFactor, template.mealsPerDay);
   });
 
-  // Collect guardrail notes from medium variant
-  const { notes: mediumNotes } = applyGuardrails(
-    Math.round((tdee + template.kcalAdjustment)), template.proteinPerKg, profile.weight, profile.sex, template.mealsPerDay,
+  // Collect guardrail notes from recommended variant
+  const recCfg = SIZE_VARIANT_CONFIG[recommendedSize];
+  const recProtein = (BASE_PROTEIN_G + recCfg.proteinOffset) / profile.weight;
+  const { notes: activeNotes } = applyGuardrails(
+    Math.round((tdee + template.kcalAdjustment) * recCfg.kcalMultiplier), recProtein, profile.weight, profile.sex, template.mealsPerDay,
   );
 
   return {
@@ -632,9 +657,9 @@ function buildStrategy(
     icon: template.icon,
     rationale: template.getRationale(profile, bmi),
     keyFactors: template.getKeyFactors(profile, bmi),
-    macroProfile: activeProfile,
+    macroProfile: activeProfile!,
     sizeVariants,
-    activeSize: "medium",
+    activeSize: recommendedSize,
     mealDistribution: {
       mealsPerDay: Object.keys(mealSplit).length,
       distribution: Object.fromEntries(Object.entries(mealSplit).map(([k, v]) => [k, Math.round(v * 100)])),
@@ -642,7 +667,7 @@ function buildStrategy(
     previewMeals,
     score,
     tags: template.tags,
-    guardrailNotes: mediumNotes,
+    guardrailNotes: activeNotes,
   };
 }
 

@@ -21,9 +21,9 @@ const RANK_COLORS = [
 ];
 
 const SIZE_LABELS: Record<SizeVariant, string> = {
-  small: "P",
-  medium: "M",
-  large: "G",
+  small: "P 120g",
+  medium: "M 140g",
+  large: "G 160g",
 };
 
 export default function StrategyCard({ strategy, rank, isSelected, onSelect, onPreview, onSizeChange }: Props) {
