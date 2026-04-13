@@ -6,6 +6,69 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
+async function ensurePatientBindingIntegrity(
+  adminClient: any,
+  patientId: string,
+  nutritionistId: string,
+  tenantId: string | null,
+) {
+  const payload = {
+    nutritionist_id: nutritionistId,
+    patient_id: patientId,
+    status: "active",
+    journey_status: "awaiting_payment",
+    tenant_id: tenantId,
+  };
+
+  const { error: linkError } = await adminClient
+    .from("nutritionist_patients")
+    .upsert(payload, { onConflict: "nutritionist_id,patient_id" });
+
+  if (linkError) {
+    throw new Error(`Falha ao vincular paciente: ${linkError.message}`);
+  }
+
+  const { data: confirmedLink, error: confirmError } = await adminClient
+    .from("nutritionist_patients")
+    .select("id")
+    .eq("nutritionist_id", nutritionistId)
+    .eq("patient_id", patientId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (confirmError || !confirmedLink) {
+    throw new Error("Vínculo do paciente não foi persistido com segurança");
+  }
+
+  const { data: activePipeline, error: pipelineLookupError } = await adminClient
+    .from("onboarding_pipelines")
+    .select("id")
+    .eq("patient_id", patientId)
+    .not("status", "in", '("completed","archived","superseded_by_active_plan","superseded_by_published_plan","rejected","superseded_by_reset")')
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (pipelineLookupError) {
+    throw new Error(`Falha ao verificar pipeline: ${pipelineLookupError.message}`);
+  }
+
+  if (!activePipeline) {
+    const { error: pipelineCreateError } = await adminClient
+      .from("onboarding_pipelines")
+      .insert({
+        patient_id: patientId,
+        nutritionist_id: nutritionistId,
+        status: "pending_anamnesis",
+        release_status: "awaiting_release",
+      });
+
+    if (pipelineCreateError) {
+      throw new Error(`Falha ao criar pipeline de onboarding: ${pipelineCreateError.message}`);
+    }
+  }
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -113,15 +176,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Link to nutritionist
     const callerTenantLink = await resolveTenantForUser(adminClient, caller.id);
-    await adminClient.from("nutritionist_patients").upsert({
-      nutritionist_id: caller.id,
-      patient_id: patientId,
-      status: "active",
-      journey_status: "awaiting_payment",
-      tenant_id: callerTenantLink,
-    }, { onConflict: "nutritionist_id,patient_id" });
+    await ensurePatientBindingIntegrity(adminClient, patientId, caller.id, callerTenantLink);
 
     // Assign patient role
     await adminClient.from("user_roles").upsert({
