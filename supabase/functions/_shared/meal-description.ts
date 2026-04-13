@@ -86,6 +86,53 @@ export function scaleDescriptionQuantities(
     .replace(/(\d+(?:[.,]\d+)?)\s*(col\.?\s*(?:sopa|cha|chá))\b/gi, (_, value: string, unit: string) => scaleToken(value, unit, " "));
 }
 
+function clampProteinLineToStandardPortion(
+  line: string,
+  mealType: string,
+  isGainGoal: boolean,
+): string {
+  if (!isMainMealType(mealType) || !isProteinLine(line)) return line;
+
+  const standardPortion = standardProteinPortion(mealType, isGainGoal);
+  return line.replace(/(\d+(?:[.,]\d+)?)\s*(g)\b/i, (_match, rawValue: string, unit: string) => {
+    const parsed = Number(rawValue.replace(",", "."));
+    if (!Number.isFinite(parsed) || parsed <= 0 || parsed <= standardPortion) return `${rawValue}${unit}`;
+    return `${standardPortion}${unit}`;
+  });
+}
+
+export function syncProteinDescriptionPortions(
+  description: string | null | undefined,
+  mealType: string,
+  nextProtein: number,
+  previousProtein: number,
+  isGainGoal: boolean,
+): string | null | undefined {
+  if (!description) return description;
+
+  const ratio = Number.isFinite(nextProtein) && Number.isFinite(previousProtein) && previousProtein > 0
+    ? nextProtein / previousProtein
+    : 1;
+
+  const [mainSection, substitutionsSection] = description.split(/\n\n🔄 Substituições:\n/);
+  const syncedMain = (mainSection || "")
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || !isProteinLine(trimmed)) return trimmed;
+
+      const scaledLine = !Number.isFinite(ratio) || ratio <= 0 || Math.abs(ratio - 1) < 0.08
+        ? trimmed
+        : (scaleDescriptionQuantities(trimmed, ratio) || trimmed);
+
+      return clampProteinLineToStandardPortion(scaledLine, mealType, isGainGoal);
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  return syncedMain + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
+}
+
 // ── Finalize meal description ────────────────────────────────
 // Preserves scaled portions and only applies structural cleanup + beverage line.
 export function finalizeMealDescription(description: string, mealType: string, isGainGoal: boolean): string {

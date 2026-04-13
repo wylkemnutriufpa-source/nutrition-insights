@@ -17,6 +17,7 @@ import {
   finalizeMealDescription as canonicalFinalizeMealDescription,
   buildFoodDescriptionFromItems,
   isProteinLine,
+  syncProteinDescriptionPortions,
 } from "../_shared/meal-description.ts";
 
 const corsHeaders = {
@@ -1183,30 +1184,6 @@ function reconcileDailyMacros(
   return reconciled;
 }
 
-function syncProteinPortionText(originalDescription: string | null | undefined, nextProtein: number, previousProtein: number): string | null | undefined {
-  if (!originalDescription || !Number.isFinite(nextProtein) || !Number.isFinite(previousProtein) || previousProtein <= 0) {
-    return originalDescription;
-  }
-
-  const ratio = nextProtein / previousProtein;
-  if (!Number.isFinite(ratio) || ratio <= 0 || Math.abs(ratio - 1) < 0.08) {
-    return originalDescription;
-  }
-
-  const [mainSection, substitutionsSection] = originalDescription.split(/\n\n🔄 Substituições:\n/);
-  const syncedMain = (mainSection || "")
-    .split("\n")
-    .map((line) => {
-      const trimmed = line.trim();
-      if (!trimmed || !isProteinLine(trimmed)) return trimmed;
-      return scaleDescriptionQuantities(trimmed, ratio) || trimmed;
-    })
-    .filter(Boolean)
-    .join("\n");
-
-  return syncedMain + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
-}
-
 function syncPlanDescriptionsWithProteinTargets(originalItems: any[], adjustedItems: any[]): any[] {
   return adjustedItems.map((item, index) => {
     const original = originalItems[index];
@@ -1214,10 +1191,12 @@ function syncPlanDescriptionsWithProteinTargets(originalItems: any[], adjustedIt
 
     return {
       ...item,
-      description: syncProteinPortionText(
+      description: syncProteinDescriptionPortions(
         original.description,
+        item.meal_type,
         Number(item.protein_target) || 0,
         Number(original.protein_target) || 0,
+        !isLossGoal(item.meal_type === "breakfast" && false ? "" : "")
       ) || item.description,
     };
   });

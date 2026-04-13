@@ -35,6 +35,7 @@ import {
   getDefaultBeverageLine,
   standardProteinPortion,
   roundScaledQuantity,
+  syncProteinDescriptionPortions,
 } from "./mealDescriptionEngine";
 import {
   MEAL_KCAL_SPLIT,
@@ -620,6 +621,16 @@ export async function autoFixMealPlan(
     }
   }
 
+  for (const item of finalItems as Array<MealPlanItem & {
+    _baseDescription?: string | null;
+    _baseCaloriesTarget?: number;
+    _baseProteinTarget?: number;
+  }>) {
+    item._baseDescription = item.description ?? null;
+    item._baseCaloriesTarget = Number(item.calories_target) || 0;
+    item._baseProteinTarget = Number(item.protein_target) || 0;
+  }
+
   // ─── STEP 7: Rebalance macros against PATIENT CLINICAL TARGETS ──
   onStep?.("rebalancing_macros");
   let macroRebalanced = false;
@@ -839,12 +850,30 @@ export async function autoFixMealPlan(
     rebalanceProteinTargetsByMeal(dayItems, dailyProteinTarget, isGainGoal);
   }
 
-  for (const item of finalItems as Array<MealPlanItem & { _baseCaloriesTarget?: number }>) {
+  for (const item of finalItems as Array<MealPlanItem & {
+    _baseDescription?: string | null;
+    _baseCaloriesTarget?: number;
+    _baseProteinTarget?: number;
+  }>) {
+    const baseDescription = item._baseDescription ?? item.description;
     const baseCalories = Number(item._baseCaloriesTarget) || Number(item.calories_target) || 0;
+    const baseProtein = Number(item._baseProteinTarget) || Number(item.protein_target) || 0;
     const currentCalories = Number(item.calories_target) || 0;
+    const currentProtein = Number(item.protein_target) || 0;
     if (baseCalories <= 0 || currentCalories <= 0) continue;
-    item.description = scaleDescriptionQuantities(item.description, currentCalories / baseCalories) ?? item.description;
-    item.description = syncMealDescription(item.description, item.meal_type, isGainGoal) ?? item.description;
+
+    const calorieFactor = currentCalories / baseCalories;
+    const scaledDescription = scaleDescriptionQuantities(baseDescription, calorieFactor) ?? baseDescription;
+    const scaledProteinBaseline = baseProtein > 0 ? baseProtein * calorieFactor : baseProtein;
+    const proteinSyncedDescription = syncProteinDescriptionPortions(
+      scaledDescription,
+      item.meal_type,
+      currentProtein,
+      scaledProteinBaseline,
+      isGainGoal,
+    ) ?? scaledDescription;
+
+    item.description = syncMealDescription(proteinSyncedDescription, item.meal_type, isGainGoal) ?? proteinSyncedDescription;
   }
 
   // ─── STEP 8: Calculate AFTER scores ────────────────────
