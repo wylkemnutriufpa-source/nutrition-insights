@@ -570,32 +570,40 @@ function buildStrategy(
   bmi: number,
   tdee: number,
 ): NutritionalStrategy {
+  const recommendedSize = recommendSizeByTDEE(tdee, profile.sex);
   const sizes: SizeVariant[] = ["small", "medium", "large"];
   const sizeVariants: SizeVariantProfile[] = [];
-  let mediumProfile: MacroProfile | null = null;
+  let activeProfile: MacroProfile | null = null;
 
   for (const size of sizes) {
     const cfg = SIZE_VARIANT_CONFIG[size];
     const baseKcal = Math.round((tdee + template.kcalAdjustment) * cfg.kcalMultiplier);
 
-    const { kcal, proteinPerKg, notes: guardrailNotes } = applyGuardrails(
-      baseKcal, template.proteinPerKg, profile.weight, profile.sex, template.mealsPerDay,
+    // Absolute protein target: 120g + offset (0/20/40), then clamp to guardrails
+    const absoluteProtein = BASE_PROTEIN_G + cfg.proteinOffset;
+    const proteinPerKg = absoluteProtein / profile.weight;
+
+    const { kcal, proteinPerKg: clampedPpk, notes: guardrailNotes } = applyGuardrails(
+      baseKcal, proteinPerKg, profile.weight, profile.sex, template.mealsPerDay,
     );
 
     const { macroProfile } = calculateMacrosWithGuardrails(
-      kcal, proteinPerKg, profile.weight, profile.sex,
+      kcal, clampedPpk, profile.weight, profile.sex,
       template.carbRatio, template.fatRatio, template.mealsPerDay,
     );
 
     sizeVariants.push({
       size,
       label: cfg.label,
-      description: cfg.description,
+      description: `${cfg.description} — ${macroProfile.protein}g proteína efetiva`,
       macroProfile,
     });
 
-    if (size === "medium") mediumProfile = macroProfile;
+    if (size === recommendedSize) activeProfile = macroProfile;
   }
+
+  // Fallback to medium if recommended size somehow didn't match
+  if (!activeProfile) activeProfile = sizeVariants.find(v => v.size === "medium")!.macroProfile;
 
   const activeProfile = mediumProfile!;
 
