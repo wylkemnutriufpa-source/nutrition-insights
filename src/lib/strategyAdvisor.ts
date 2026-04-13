@@ -146,11 +146,26 @@ const GOAL_LABELS: Record<string, string> = {
 
 // ── Size variant multipliers ──
 // These define the kcal offset from base TDEE for each size
-const SIZE_VARIANT_CONFIG: Record<SizeVariant, { label: string; description: string; kcalMultiplier: number }> = {
-  small: { label: "Reduzido", description: "Para perfis menores, mulheres ou menor gasto", kcalMultiplier: 0.88 },
-  medium: { label: "Padrão", description: "Cálculo base por TDEE e objetivo", kcalMultiplier: 1.0 },
-  large: { label: "Aumentado", description: "Para perfis maiores, alta atividade ou ganho", kcalMultiplier: 1.12 },
+const SIZE_VARIANT_CONFIG: Record<SizeVariant, { label: string; description: string; kcalMultiplier: number; proteinOffset: number }> = {
+  small: { label: "P — 120g prot", description: "Perfis menores, mulheres ou menor gasto (120g proteína base)", kcalMultiplier: 0.88, proteinOffset: 0 },
+  medium: { label: "M — 140g prot", description: "Cálculo padrão por TDEE e objetivo (140g proteína base)", kcalMultiplier: 1.0, proteinOffset: 20 },
+  large: { label: "G — 160g prot", description: "Perfis maiores, alta atividade ou ganho (160g proteína base)", kcalMultiplier: 1.12, proteinOffset: 40 },
 };
+
+/** Base protein for tier calculation — all templates start at 120g and go up by 20g */
+const BASE_PROTEIN_G = 120;
+const PROTEIN_TIER_STEP = 20;
+
+/**
+ * Determine the recommended default size based on patient TDEE.
+ * Low TDEE (<1600) → small, Mid (1600-2200) → medium, High (>2200) → large
+ */
+function recommendSizeByTDEE(tdee: number, sex: string): SizeVariant {
+  if (sex === "female" && tdee < 1700) return "small";
+  if (tdee < 1600) return "small";
+  if (tdee > 2200) return "large";
+  return "medium";
+}
 
 // ── Core Calculations ──
 
