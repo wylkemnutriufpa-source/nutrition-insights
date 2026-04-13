@@ -13,6 +13,74 @@ const json = (body: unknown, status = 200) =>
     headers: { ...corsHeaders, "Content-Type": "application/json" },
   });
 
+const randomTemporaryPassword = () => {
+  const seed = crypto.randomUUID().replace(/-/g, "");
+  return `${seed.slice(0, 6)}Aa!${seed.slice(6, 12)}`;
+};
+
+async function ensurePatientBindingIntegrity(
+  supabase: any,
+  patientId: string,
+  nutritionistId: string,
+  tenantId: string | null,
+) {
+  const payload = {
+    nutritionist_id: nutritionistId,
+    patient_id: patientId,
+    status: "active",
+    journey_status: "awaiting_payment",
+    tenant_id: tenantId,
+  };
+
+  const { error: linkError } = await supabase
+    .from("nutritionist_patients")
+    .upsert(payload, { onConflict: "nutritionist_id,patient_id" });
+
+  if (linkError) {
+    throw new Error(`Falha ao vincular paciente: ${linkError.message}`);
+  }
+
+  const { data: confirmedLink, error: confirmError } = await supabase
+    .from("nutritionist_patients")
+    .select("id")
+    .eq("nutritionist_id", nutritionistId)
+    .eq("patient_id", patientId)
+    .eq("status", "active")
+    .maybeSingle();
+
+  if (confirmError || !confirmedLink) {
+    throw new Error("Vínculo do paciente não foi persistido com segurança");
+  }
+
+  const { data: activePipeline, error: pipelineLookupError } = await supabase
+    .from("onboarding_pipelines")
+    .select("id")
+    .eq("patient_id", patientId)
+    .not("status", "in", '("completed","archived","superseded_by_active_plan","superseded_by_published_plan","rejected","superseded_by_reset")')
+    .order("created_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (pipelineLookupError) {
+    throw new Error(`Falha ao verificar pipeline: ${pipelineLookupError.message}`);
+  }
+
+  if (!activePipeline) {
+    const { error: pipelineCreateError } = await supabase
+      .from("onboarding_pipelines")
+      .insert({
+        patient_id: patientId,
+        nutritionist_id: nutritionistId,
+        status: "pending_anamnesis",
+        release_status: "awaiting_release",
+      });
+
+    if (pipelineCreateError) {
+      throw new Error(`Falha ao criar pipeline de onboarding: ${pipelineCreateError.message}`);
+    }
+  }
+}
+
 /** Process a single patient import with retries */
 async function importOnePatient(
   supabase: any,
@@ -22,8 +90,7 @@ async function importOnePatient(
   tenantId: string | null
 ): Promise<{ ok: boolean; error?: string }> {
   try {
-    // Standard temporary password - patient changes on first login
-    const standardPassword = "Fit@2026!";
+    const standardPassword = randomTemporaryPassword();
 
     // 1. Try RPC first (fastest path)
     const { data: patientUserId, error: rpcError } = await supabase.rpc(
@@ -92,11 +159,7 @@ async function importOnePatient(
       return { ok: false, error: `${email}: ID não gerado` };
     }
 
-    // Link to nutritionist
-    await supabase.from("nutritionist_patients").upsert(
-      { nutritionist_id: nutritionistId, patient_id: finalId, status: "active", journey_status: "awaiting_payment", tenant_id: tenantId },
-      { onConflict: "nutritionist_id,patient_id" }
-    );
+    await ensurePatientBindingIntegrity(supabase, finalId, nutritionistId, tenantId);
 
     // Ensure patient is in same tenant
     if (tenantId) {
