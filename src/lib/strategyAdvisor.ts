@@ -605,7 +605,7 @@ function buildStrategy(
   // Fallback to medium if recommended size somehow didn't match
   if (!activeProfile) activeProfile = sizeVariants.find(v => v.size === "medium")!.macroProfile;
 
-  const activeProfile = mediumProfile!;
+  // activeProfile already set above from recommended size
 
   // Build meal distribution
   const mealSplit: Record<string, number> = {
