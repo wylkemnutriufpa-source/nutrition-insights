@@ -26,8 +26,29 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "6.0.0";
-const PROTOCOL_VERSION = "fitjourney_db_exclusive_v6";
+const ENGINE_VERSION = "7.0.0";
+const PROTOCOL_VERSION = "fitjourney_db_exclusive_v7_strict";
+
+// ──── FEATURE FLAG: DB-EXCLUSIVE MODE (MANDATORY) ────
+const USE_DB_EXCLUSIVE_V6 = true;
+
+// ──── VALID MEAL CATEGORIES ────
+const VALID_MEAL_CATEGORIES = new Set(["cafe_da_manha", "lanche", "almoco", "jantar", "ceia", "refeicao"]);
+
+// ──── INTOLERANCE KEYWORD MAPS (CLINICAL SAFETY) ────
+const INTOLERANCE_KEYWORDS: Record<string, string[]> = {
+  lactose: ["leite", "queijo", "iogurte", "requeijao", "whey", "nata", "creme de leite", "manteiga", "cream cheese", "coalhada", "ricota", "mucarela", "mussarela", "parmesao", "provolone", "cottage"],
+  gluten: ["pao", "macarrao", "trigo", "aveia", "cevada", "centeio", "biscoito", "bolacha", "torrada", "cuscuz de trigo", "farinha de trigo", "massa"],
+  ovo: ["ovo", "omelete", "clara", "gema", "ovos"],
+  soja: ["soja", "tofu", "edamame", "missô", "shoyu"],
+  amendoim: ["amendoim", "pasta de amendoim", "paçoca"],
+  nozes: ["nozes", "castanha", "amêndoa", "amendoa", "pistache", "macadamia", "pecan", "avel"],
+  crustaceos: ["camarao", "lagosta", "caranguejo", "siri", "lula"],
+  peixe: ["peixe", "tilapia", "salmao", "sardinha", "atum", "bacalhau", "dourado", "pintado", "tambaqui"],
+};
+
+// ──── MIN CANDIDATES PER MEAL TYPE ────
+const MIN_CANDIDATES_PER_MEAL = 3;
 
 // ──── 2-Layer Architecture Constants ────
 // Maximum deviation allowed between meal sum and total targets (3%)
@@ -204,7 +225,7 @@ async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
   return (data as VisualLibraryItem[]).filter(item => item.image_url && item.image_url.length > 5);
 }
 
-/** Filter visual library items by patient restrictions/disliked */
+/** Filter visual library items by patient restrictions/disliked/intolerances — STRICT CLINICAL SAFETY */
 function filterVisualLibraryForPatient(
   items: VisualLibraryItem[],
   restrictions: string[],
@@ -212,28 +233,63 @@ function filterVisualLibraryForPatient(
   allergies: string[],
 ): VisualLibraryItem[] {
   const blocked = [...disliked, ...allergies].map(d => normalize(d)).filter(d => d.length >= 3);
-  if (blocked.length === 0 && restrictions.length === 0) return items;
+
+  // Build intolerance keyword set from restrictions + allergies
+  const intoleranceKeywords: string[] = [];
+  for (const r of [...restrictions, ...allergies]) {
+    const nr = normalize(r);
+    for (const [key, keywords] of Object.entries(INTOLERANCE_KEYWORDS)) {
+      if (nr.includes(key) || nr.includes(key + "_free") || nr.includes("alergia_" + key)) {
+        intoleranceKeywords.push(...keywords);
+      }
+    }
+    // Direct restriction mappings
+    if (nr.includes("lactose") || nr.includes("lactose_free")) intoleranceKeywords.push(...INTOLERANCE_KEYWORDS.lactose);
+    if (nr.includes("gluten") || nr.includes("gluten_free")) intoleranceKeywords.push(...INTOLERANCE_KEYWORDS.gluten);
+  }
+  const uniqueIntoleranceKws = [...new Set(intoleranceKeywords.map(k => normalize(k)))];
+
+  // Vegetarian/vegan check
+  const isVegetarian = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegetarian") || nr.includes("vegetariano"); });
+  const isVegan = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegan") || nr.includes("vegano"); });
+  const meatKeywords = ["frango", "carne", "bife", "peixe", "tilapia", "porco", "costel", "sardinha", "atum", "camarao", "salmao", "sobrecoxa", "alcatra", "picanha", "linguica", "bacon", "presunto", "peito de peru", "peru"];
+  const animalKeywords = [...meatKeywords, "ovo", "leite", "queijo", "iogurte", "mel", "whey", "requeijao"];
 
   return items.filter(item => {
     const normName = normalize(item.display_name);
     const normSlug = normalize(item.slug);
-    const allText = normName + " " + normSlug + " " + (item.search_terms || []).map(t => normalize(t)).join(" ");
+    const searchTermsText = (item.search_terms || []).map(t => normalize(t)).join(" ");
+    const allText = normName + " " + normSlug + " " + searchTermsText;
 
-    // Check disliked/allergies
+    // Extract recipe ingredients text for deep check
+    let recipeText = "";
+    if (item.base_recipe && typeof item.base_recipe === "object") {
+      const recipe = item.base_recipe as any;
+      if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+        recipeText = recipe.ingredients.map((ing: string) => normalize(ing)).join(" ");
+      }
+    }
+    const fullText = allText + " " + recipeText;
+
+    // Check disliked/allergies (direct keyword match)
     for (const b of blocked) {
-      if (allText.includes(b)) return false;
+      if (fullText.includes(b)) return false;
     }
 
-    // Check restrictions
-    for (const r of restrictions) {
-      const nr = normalize(r);
-      if ((nr.includes("lactose") || nr.includes("lactose_free")) && 
-          (allText.includes("leite") || allText.includes("queijo") || allText.includes("iogurte") || allText.includes("requeijao"))) return false;
-      if ((nr.includes("gluten") || nr.includes("gluten_free")) && 
-          (allText.includes("pao") || allText.includes("macarrao") || allText.includes("aveia"))) return false;
-      if ((nr.includes("vegetarian") || nr.includes("vegetariano")) && 
-          (allText.includes("frango") || allText.includes("carne") || allText.includes("bife") || allText.includes("peixe") || allText.includes("tilapia") || allText.includes("porco") || allText.includes("costel"))) return false;
+    // STRICT INTOLERANCE FILTER — check display_name, slug, search_terms, AND base_recipe.ingredients
+    for (const kw of uniqueIntoleranceKws) {
+      if (kw.length < 3) continue;
+      if (fullText.includes(kw)) return false;
     }
+
+    // Vegetarian/vegan enforcement
+    if (isVegetarian) {
+      for (const mk of meatKeywords) { if (fullText.includes(mk)) return false; }
+    }
+    if (isVegan) {
+      for (const ak of animalKeywords) { if (fullText.includes(ak)) return false; }
+    }
+
     return true;
   });
 }
@@ -1008,8 +1064,9 @@ function buildMealFromDBFoods(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DB-EXCLUSIVE PLAN GENERATOR v6.0
-// ALL meals come from meal_visual_library — NO hardcoded presets
+// DB-EXCLUSIVE PLAN GENERATOR v7.0 — STRICT MODE
+// ALL meals come from meal_visual_library — NO fallbacks
+// Onboarding-compliant: respects enabled_meals, meal_times, restrictions
 // ═══════════════════════════════════════════════════════════════
 
 function generatePlanFromVisualLibrary(
@@ -1021,20 +1078,51 @@ function generatePlanFromVisualLibrary(
   disliked: string[],
   allergies: string[],
   planOptionIndex: number = 0,
+  enabledMeals?: string[],
+  mealTimes?: Record<string, string>,
 ): any[] {
+  // ──── FEATURE FLAG CHECK ────
+  if (!USE_DB_EXCLUSIVE_V6) {
+    throw new Error("[STRICT] USE_DB_EXCLUSIVE_V6 must be true. DB-exclusive mode is mandatory.");
+  }
+
+  // ──── STRICT FILTERING ────
   const filtered = filterVisualLibraryForPatient(visualLibrary, restrictions, disliked, allergies);
-  const items: any[] = [];
-  const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  console.log(`[DB-Exclusive-v7] Filtered library: ${filtered.length}/${visualLibrary.length} items passed restriction/intolerance filter`);
+
+  // ──── MEAL STRUCTURE FROM ONBOARDING ────
+  const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
+
+  if (mealTypes.length === 0) {
+    throw new Error("[STRICT] No enabled meals defined in patient onboarding. Cannot generate plan.");
+  }
 
   // Group library items by category
   const byCategory = new Map<string, VisualLibraryItem[]>();
   for (const item of filtered) {
+    if (!VALID_MEAL_CATEGORIES.has(item.category)) {
+      console.warn(`[DB-Exclusive-v7] Skipping item with invalid category: ${item.category} (${item.display_name})`);
+      continue;
+    }
     const list = byCategory.get(item.category) || [];
     list.push(item);
     byCategory.set(item.category, list);
   }
 
-  // Track used items per meal type to avoid repetition across days
+  // ──── DYNAMIC AVAILABILITY CHECK ────
+  for (const mealType of mealTypes) {
+    const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
+    let totalCandidates = 0;
+    for (const cat of categories) {
+      totalCandidates += (byCategory.get(cat) || []).length;
+    }
+    if (totalCandidates < MIN_CANDIDATES_PER_MEAL) {
+      throw new Error(`[STRICT] Insufficient visual library items for meal type "${mealType}": found ${totalCandidates}, minimum ${MIN_CANDIDATES_PER_MEAL} required after filtering. Check patient restrictions.`);
+    }
+  }
+
+  const items: any[] = [];
   const usedPerMealType = new Map<string, Set<string>>();
 
   for (let day = 0; day < 7; day++) {
@@ -1042,21 +1130,16 @@ function generatePlanFromVisualLibrary(
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
 
-      // Collect candidates from all matching categories
+      // Collect candidates from matching categories — NO FALLBACK
       let candidates: VisualLibraryItem[] = [];
       for (const cat of categories) {
         const catItems = byCategory.get(cat) || [];
         candidates.push(...catItems);
       }
 
+      // ──── NO_FALLBACK: Throw error instead of improvising ────
       if (candidates.length === 0) {
-        // Ultimate fallback: use any library item with image
-        candidates = filtered.slice(0, 10);
-      }
-
-      if (candidates.length === 0) {
-        console.warn(`[DB-Exclusive] No visual library items for ${mealType} on day ${day}`);
-        continue;
+        throw new Error(`[STRICT] No visual library items found for meal type "${mealType}" on day ${day}. No fallback allowed.`);
       }
 
       // Anti-repetition tracking
@@ -1065,7 +1148,7 @@ function generatePlanFromVisualLibrary(
       if (usedSet.size >= candidates.length) usedSet.clear();
 
       // Seeded shuffle for variety
-      const seed = generationSeed(String(planOptionIndex), day * 7 + mealTypes.indexOf(mealType));
+      const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
       const shuffled = seededShuffle(candidates, seed);
 
       // Pick first unused item
@@ -1076,6 +1159,11 @@ function generatePlanFromVisualLibrary(
       if (!picked) picked = shuffled[0];
       usedSet.add(picked.id);
 
+      // ──── STRICT_DB_EXCLUSIVE: Validate item has image ────
+      if (!picked.image_url || picked.image_url.length < 5) {
+        throw new Error(`[STRICT] Visual library item "${picked.display_name}" (${picked.id}) has no image_url. All items MUST have images.`);
+      }
+
       // Get macros (use defaults if library item lacks data)
       const catDefaults = CATEGORY_DEFAULT_MACROS[picked.category] || CATEGORY_DEFAULT_MACROS.refeicao;
       const baseCal = picked.default_calories || catDefaults.cal;
@@ -1083,7 +1171,7 @@ function generatePlanFromVisualLibrary(
       const baseC = picked.default_carbs || catDefaults.c;
       const baseF = picked.default_fat || catDefaults.f;
 
-      // Scale to match target kcal for this meal slot
+      // ──── MACRO_SCALING_ONLY: Scale 0.5x–2.5x, no composition changes ────
       const scaleFactor = baseCal > 0 ? targetKcal / baseCal : 1;
       const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
 
@@ -1093,12 +1181,14 @@ function generatePlanFromVisualLibrary(
         const recipe = picked.base_recipe as any;
         if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
           description = recipe.ingredients.map((ing: string) => `• ${ing}`).join("\n");
-          // Scale quantities in description
           description = scaleDescriptionQuantities(description, clampedScale) || description;
         }
       }
 
       const finalDescription = finalizeMealDescription(description, mealType, goal);
+
+      // ──── MEAL_TIME_SUPPORT ────
+      const mealTime = mealTimes?.[mealType] || null;
 
       items.push({
         title: picked.display_name,
@@ -1110,14 +1200,67 @@ function generatePlanFromVisualLibrary(
         carbs_target: Math.round(baseC * clampedScale),
         fat_target: Math.round(baseF * clampedScale),
         visual_library_item_id: picked.id,
-        _image_url: picked.image_url, // transient — for logging only
+        meal_time: mealTime,
+        // ──── STRUCTURED_LOGGING ────
         _source: "visual_library",
+        _category_used: picked.category,
+        _scale_factor: clampedScale,
+        _image_url: picked.image_url, // transient — for logging only
       });
     }
   }
 
-  console.log(`[DB-Exclusive] Generated ${items.length} items from visual library (${filtered.length} available items)`);
+  console.log(`[DB-Exclusive-v7] Generated ${items.length} items from visual library (${filtered.length} available, ${mealTypes.length} meal types)`);
   return items;
+}
+
+// ──── FINAL VALIDATION (MANDATORY before persisting) ────
+function validatePlanBeforeSave(
+  items: any[],
+  dailyKcal: number,
+  dailyMacros: { protein: number; carbs: number; fat: number },
+  weight: number,
+  goal: string,
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  // Rule 1: Every item must have visual_library_item_id
+  const missingVisual = items.filter(i => !i.visual_library_item_id);
+  if (missingVisual.length > 0) {
+    errors.push(`${missingVisual.length} items missing visual_library_item_id`);
+  }
+
+  // Rule 2: Every item must have image (checked via _image_url transient field)
+  const missingImage = items.filter(i => !i._image_url || i._image_url.length < 5);
+  if (missingImage.length > 0) {
+    errors.push(`${missingImage.length} items missing image_url`);
+  }
+
+  // Rule 3: Calorie deviation <= 5%
+  const day0Items = items.filter(i => i.day_of_week === 0);
+  if (day0Items.length > 0) {
+    const sumCal = day0Items.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
+    const calDev = dailyKcal > 0 ? Math.abs(sumCal - dailyKcal) / dailyKcal : 0;
+    if (calDev > 0.05) {
+      errors.push(`Calorie deviation ${(calDev * 100).toFixed(1)}% exceeds 5% tolerance (sum=${sumCal}, target=${dailyKcal})`);
+    }
+
+    // Rule 4: Protein within clinical range
+    const sumP = day0Items.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+    const proteinPerKg = sumP / weight;
+    const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+    if (proteinPerKg < proteinRange.min * 0.9 || proteinPerKg > proteinRange.max * 1.1) {
+      errors.push(`Protein ${proteinPerKg.toFixed(2)}g/kg outside clinical range ${proteinRange.min}-${proteinRange.max}g/kg for goal=${goal}`);
+    }
+  }
+
+  // Rule 5: Every item must have _source = visual_library
+  const wrongSource = items.filter(i => i._source !== "visual_library");
+  if (wrongSource.length > 0) {
+    errors.push(`${wrongSource.length} items have non-visual_library source`);
+  }
+
+  return { valid: errors.length === 0, errors };
 }
 
 async function safeDeletePlan(client: any, planId: string) {
@@ -1334,7 +1477,7 @@ function buildGenerationMetadata(
   return {
     engine_version: ENGINE_VERSION,
     protocol_version: PROTOCOL_VERSION,
-    generation_method: "db_exclusive_visual_library_v6",
+    generation_method: "db_exclusive_visual_library_v7_strict",
     bmr_formula: "mifflin_st_jeor",
     bmr_value: tmb,
     tdee_factor: tdeeFactor,
@@ -1644,7 +1787,16 @@ serve(async (req) => {
       ? rawAllergies.filter((a: string) => a !== "none")
       : [];
 
-    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")}`);
+    // ── Parse enabled meals and meal times from onboarding ──
+    const rawEnabledMeals = mergedAnswers.enabled_meals || mergedAnswers.meals_enabled || null;
+    const enabledMeals: string[] | undefined = Array.isArray(rawEnabledMeals) && rawEnabledMeals.length > 0
+      ? rawEnabledMeals.filter((m: string) => typeof m === "string" && m.length > 0)
+      : undefined;
+    const mealTimes: Record<string, string> | undefined = mergedAnswers.meal_times && typeof mergedAnswers.meal_times === "object"
+      ? mergedAnswers.meal_times as Record<string, string>
+      : undefined;
+
+    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")} | EnabledMeals: ${enabledMeals?.join(",") || "default"} | MealTimes: ${mealTimes ? JSON.stringify(mealTimes) : "none"}`);
 
     // ── Mode-specific enhancements ──
     let modeEnhancements: Record<string, any> = {};
@@ -1733,7 +1885,7 @@ serve(async (req) => {
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         // CAMADA 2: Template structure → reconciled with Layer 1 macros
-        const rawItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx);
+        const rawItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
         let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
 
@@ -1744,14 +1896,22 @@ serve(async (req) => {
           console.warn(`[2-Layer Multi] Option ${tplIdx}: corrected deviations`);
         }
 
+        // ──── FINAL VALIDATION (MANDATORY) ────
+        const finalCheck = validatePlanBeforeSave(planItems, finalKcal, finalMacros, weight, goal);
+        if (!finalCheck.valid) {
+          console.error(`[STRICT Multi] Option ${tplIdx} failed final validation: ${finalCheck.errors.join("; ")}`);
+          continue; // Skip this option, don't save invalid plan
+        }
+
         const genMeta = {
           ...buildGenerationMetadata(
             tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
             age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
           ),
-          architecture: "2-layer-db-exclusive-v6",
+          architecture: "2-layer-db-exclusive-v7-strict",
           two_layer_validated: true,
           meal_source: "visual_library_exclusive",
+          final_validation_passed: true,
         };
 
         const optionLabels = ["Simples", "Variada", "Alternativa"];
@@ -1858,11 +2018,10 @@ serve(async (req) => {
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
     
     // ── DB-EXCLUSIVE: All meals from visual library ──
-    const rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex);
+    const rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes);
     console.log(`[generate-meal-plan] DB-Exclusive plan generated: ${rawPlanItems.length} items from visual library`);
     
     // Smart mode: apply adjustments to RAW items BEFORE reconciliation
-    // so that reconcileDailyMacros can normalize the final totals correctly
     if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
       for (const item of rawPlanItems) {
         if (item.day_of_week >= 5) {
@@ -1898,7 +2057,6 @@ serve(async (req) => {
     const twoLayerCheck = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
     if (!twoLayerCheck.valid) {
       console.warn(`[2-Layer] Deviation detected after reconciliation: ${twoLayerCheck.errors.join(", ")}. Running final correction...`);
-      // Force one more pass of cross-day consistency to fix any remaining deviation
       const correctedItems = enforceCrossDayConsistency(planItems, finalMacros, finalKcal);
       const recheck = validate2LayerIntegrity(correctedItems, finalKcal, finalMacros);
       if (!recheck.valid) {
@@ -1906,11 +2064,25 @@ serve(async (req) => {
       } else {
         console.log(`[2-Layer] ✅ Final correction resolved all deviations.`);
       }
-      // Replace planItems with corrected version
       planItems.splice(0, planItems.length, ...correctedItems);
     } else {
       console.log(`[2-Layer] ✅ Plan validated: all macros within 3% tolerance.`);
     }
+
+    // ──── FINAL VALIDATION (MANDATORY — FAIL_FAST) ────
+    const finalValidation = validatePlanBeforeSave(planItems, finalKcal, finalMacros, weight, goal);
+    if (!finalValidation.valid) {
+      console.error(`[STRICT] Final validation FAILED: ${finalValidation.errors.join("; ")}`);
+      return new Response(JSON.stringify({
+        error: `Plano falhou na validação final: ${finalValidation.errors.join("; ")}`,
+        code: "FINAL_VALIDATION_FAILED",
+        details: finalValidation.errors,
+      }), {
+        status: 422,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    console.log(`[STRICT] ✅ Final validation passed. All ${planItems.length} items are DB-exclusive with images.`);
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
@@ -1929,11 +2101,14 @@ serve(async (req) => {
       ),
       generation_mode: generationMode,
       mode_enhancements: modeEnhancements,
-      architecture: "2-layer-db-exclusive-v6",
+      architecture: "2-layer-db-exclusive-v7-strict",
       layer1_source: "clinical_macro_engine",
       layer2_role: "visual_library_structure_only",
       two_layer_validated: true,
       meal_source: "visual_library_exclusive",
+      final_validation_passed: true,
+      enabled_meals: enabledMeals || "default",
+      meal_times: mealTimes || null,
     };
 
     let finalMealPlanId = meal_plan_id;
