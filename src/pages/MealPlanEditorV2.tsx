@@ -583,6 +583,20 @@ export default function MealPlanEditorV2() {
           </div>
         </div>
 
+        {/* AutoFix Results Modal */}
+        <AutoFixResultsModal
+          open={showAutofixResults}
+          onOpenChange={setShowAutofixResults}
+          result={autofixResult || {
+            success: true, changes: [],
+            before: { score: { overallScore: 100, totalItems: 0, uniqueItems: 0, avgItemsPerMeal: 0 } as any, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
+            after: { score: { overallScore: 100, totalItems: 0, uniqueItems: 0, avgItemsPerMeal: 0 } as any, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
+            warnings: [], summary: { blocked_removed: 0, meals_simplified: 0, snacks_fixed: 0, breakfasts_fixed: 0, main_meals_standardized: 0, macro_rebalanced: false },
+          }}
+          wasAlreadyValid={autofixWasValid}
+          validationMessage={autofixWasValid ? `Score: ${plan.overall_score ?? "?"}/100. Macros dentro das faixas clínicas.` : undefined}
+        />
+
         {/* Validation Correction Panel — only for editable plans */}
         {!isImmutable && validationResult && !validationResult.success && (
           <ValidationCorrectionPanel
