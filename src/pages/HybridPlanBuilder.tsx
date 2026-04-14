@@ -513,6 +513,13 @@ export default function HybridPlanBuilder() {
             onSelectMode={handleModeSelected}
           />
 
+          {/* Publish Warning Dialog (manual mode) */}
+          <PublishWarningDialog
+            open={showPublishWarning}
+            onOpenChange={setShowPublishWarning}
+            onConfirm={executePublish}
+          />
+
           <SaveMealTemplateDialog
             open={saveTemplateOpen}
             onOpenChange={setSaveTemplateOpen}
