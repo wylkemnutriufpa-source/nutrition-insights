@@ -17,8 +17,11 @@ import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
+import ValidationModeDialog, { type ValidationMode } from "@/components/hybrid-builder/ValidationModeDialog";
 import type { AutoFixResult } from "@/lib/autoFixEngine";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
+import { logAudit } from "@/lib/auditLog";
+import { validateMealPlan } from "@/lib/mealPlanValidationFlow";
 import type { ComposerMode } from "@/lib/mealComposer";
 
 import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock } from "lucide-react";
