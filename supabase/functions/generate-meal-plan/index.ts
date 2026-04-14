@@ -561,16 +561,16 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
     residual -= add;
   }
 
-  if (residual !== 0 && mealTargets.size > 0) {
-    const fallbackMeal = RESIDUAL_PRIORITY.find((mealType) => mealTargets.has(mealType)) || MEAL_ORDER.find((mealType) => mealTargets.has(mealType));
-    if (fallbackMeal) {
-      mealTargets.set(fallbackMeal, (mealTargets.get(fallbackMeal) || 0) + residual);
-    }
+  if (residual > 0) {
+    console.warn(`[generate-meal-plan] Daily protein target ${dailyProteinTarget}g exceeded distributable per-meal caps by ${residual}g; preserving meal caps`);
   }
 
-  for (const [mealType, target] of mealTargets.entries()) {
+  for (const [mealType, rawTarget] of mealTargets.entries()) {
     const mealGroup = dayItems.filter((item) => item.meal_type === mealType);
     if (mealGroup.length === 0) continue;
+
+    const mealCap = proteinCaps[mealType] ?? rawTarget;
+    const target = Math.max(0, Math.min(rawTarget, mealCap));
     const currentTotal = mealGroup.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
 
     if (currentTotal <= 0) {
@@ -578,7 +578,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
       let remaining = target;
       mealGroup.forEach((item, index) => {
         const next = index === mealGroup.length - 1 ? remaining : base;
-        item.protein_target = next;
+        item.protein_target = Math.max(0, next);
         remaining -= next;
       });
       continue;
@@ -590,7 +590,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
 
     mealGroup.forEach((item, index) => {
       const current = Number(item.protein_target) || 0;
-      const next = Math.round(current * (target / currentTotal));
+      const next = Math.max(0, Math.round(current * (target / currentTotal)));
       item.protein_target = next;
       scaledSum += next;
       if (current > largestValue) {
@@ -600,7 +600,7 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
     });
 
     const correction = target - scaledSum;
-    mealGroup[largestIndex].protein_target = (Number(mealGroup[largestIndex].protein_target) || 0) + correction;
+    mealGroup[largestIndex].protein_target = Math.max(0, (Number(mealGroup[largestIndex].protein_target) || 0) + correction);
   }
 }
 
