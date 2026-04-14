@@ -1919,6 +1919,10 @@ serve(async (req) => {
       ),
       generation_mode: generationMode,
       mode_enhancements: modeEnhancements,
+      architecture: "2-layer-v2",
+      layer1_source: "clinical_macro_engine",
+      layer2_role: "template_structure_only",
+      two_layer_validated: true,
     };
 
     let finalMealPlanId = meal_plan_id;
