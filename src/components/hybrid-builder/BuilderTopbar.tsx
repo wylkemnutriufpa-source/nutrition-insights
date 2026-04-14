@@ -5,7 +5,9 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
   Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X, PenTool, Lock,
+  Bot, UserCheck, ShieldCheck, ShieldAlert,
 } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import type { ValidationMode } from "./ValidationModeDialog";
 
@@ -45,8 +47,11 @@ export default function BuilderTopbar({
 
   const status = plan?.plan_status;
   const isPublished = status === "published_to_patient";
+  const validationStatus = (plan as any)?.overall_validation_status;
+  const isApproved = validationStatus === "aprovado";
 
   return (
+    <TooltipProvider>
     <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-3 space-y-2">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
@@ -86,6 +91,33 @@ export default function BuilderTopbar({
               <Badge variant="outline" className="text-[10px] shrink-0">
                 <Zap className="w-3 h-3 mr-1" /> Builder Híbrido
               </Badge>
+              {/* Validation status badge */}
+              {isApproved ? (
+                <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
+                  <ShieldCheck className="w-3 h-3 mr-1" /> Validado ✅
+                </Badge>
+              ) : (
+                <Badge variant="destructive" className="text-[10px]">
+                  <ShieldAlert className="w-3 h-3 mr-1" /> Pendente validação
+                </Badge>
+              )}
+              {/* Mode indicator */}
+              {lockedValidationMode && (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <Badge variant="outline" className={`text-[10px] shrink-0 ${lockedValidationMode === "AUTO_ENGINE" ? "border-blue-500/40 text-blue-600" : "border-amber-500/40 text-amber-600"}`}>
+                      {lockedValidationMode === "AUTO_ENGINE" ? <Bot className="w-3 h-3 mr-1" /> : <UserCheck className="w-3 h-3 mr-1" />}
+                      {lockedValidationMode === "AUTO_ENGINE" ? "AUTO ENGINE" : "MODO MANUAL"}
+                      <Lock className="w-2.5 h-2.5 ml-1 opacity-60" />
+                    </Badge>
+                  </TooltipTrigger>
+                  <TooltipContent side="bottom" className="max-w-xs text-xs">
+                    {lockedValidationMode === "AUTO_ENGINE"
+                      ? "Modo automático: o sistema valida e corrige o plano automaticamente com base nos dados clínicos do paciente."
+                      : "Modo manual: você tem controle total sobre as correções. O sistema apenas aponta os erros."}
+                  </TooltipContent>
+                </Tooltip>
+              )}
               {isPublished && (
                 <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
                   <CheckCircle2 className="w-3 h-3 mr-1" /> Publicado
@@ -114,10 +146,21 @@ export default function BuilderTopbar({
             {lockedValidationMode === "MANUAL_EDIT" ? "Validar Manual" : lockedValidationMode === "AUTO_ENGINE" ? "Validar Auto" : "Validar"}
             {lockedValidationMode && <Lock className="w-2.5 h-2.5 ml-0.5 opacity-60" />}
           </Button>
-          <Button size="sm" onClick={onPublish} disabled={publishing} className="h-8 gap-1.5 text-xs">
-            {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-            Publicar
-          </Button>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <span>
+                <Button size="sm" onClick={onPublish} disabled={publishing || !isApproved} className="h-8 gap-1.5 text-xs">
+                  {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+                  Publicar
+                </Button>
+              </span>
+            </TooltipTrigger>
+            {!isApproved && (
+              <TooltipContent side="bottom" className="text-xs">
+                Valide o plano antes de publicar
+              </TooltipContent>
+            )}
+          </Tooltip>
         </div>
       </div>
 
@@ -131,6 +174,7 @@ export default function BuilderTopbar({
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
 

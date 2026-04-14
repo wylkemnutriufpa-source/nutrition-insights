@@ -362,8 +362,8 @@ export default function HybridPlanBuilder() {
     if (!user) return;
     const vs = plan.overall_validation_status;
     if (!vs || vs !== "aprovado") {
-      const proceed = confirm("⚠️ Plano não validado. Publicar mesmo assim?");
-      if (!proceed) return;
+      toast.error("❌ Este plano precisa ser validado antes da publicação. Use o botão 'Validar' primeiro.");
+      return;
     }
     setPublishing(true);
     try {
