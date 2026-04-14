@@ -18,6 +18,7 @@ import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSe
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
 import ValidationModeDialog, { type ValidationMode } from "@/components/hybrid-builder/ValidationModeDialog";
+import PublishWarningDialog from "@/components/hybrid-builder/PublishWarningDialog";
 import type { AutoFixResult } from "@/lib/autoFixEngine";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
 import { logAudit } from "@/lib/auditLog";
@@ -358,6 +359,12 @@ export default function HybridPlanBuilder() {
       setValidating(false);
     }
   };
+          {/* Publish Warning Dialog (manual mode) */}
+          <PublishWarningDialog
+            open={showPublishWarning}
+            onOpenChange={setShowPublishWarning}
+            onConfirm={executePublish}
+          />
 
 
   const handlePublish = async () => {
