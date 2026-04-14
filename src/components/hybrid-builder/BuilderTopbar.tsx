@@ -149,15 +149,15 @@ export default function BuilderTopbar({
           <Tooltip>
             <TooltipTrigger asChild>
               <span>
-                <Button size="sm" onClick={onPublish} disabled={publishing || !isApproved} className="h-8 gap-1.5 text-xs">
+                <Button size="sm" onClick={onPublish} disabled={publishing || (lockedValidationMode === "AUTO_ENGINE" && !isApproved)} className="h-8 gap-1.5 text-xs">
                   {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
                   Publicar
                 </Button>
               </span>
             </TooltipTrigger>
-            {!isApproved && (
+            {lockedValidationMode === "AUTO_ENGINE" && !isApproved && (
               <TooltipContent side="bottom" className="text-xs">
-                Valide o plano antes de publicar
+                Valide o plano antes de publicar (modo automático)
               </TooltipContent>
             )}
           </Tooltip>
