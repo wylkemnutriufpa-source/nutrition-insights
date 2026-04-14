@@ -21,6 +21,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const { openMealDetail, setOnRemoveFoodLine, setOnChangeImage } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
+  const [macroEditOpen, setMacroEditOpen] = useState(false);
 
   // Register callback for removing food lines from description
   useEffect(() => {
