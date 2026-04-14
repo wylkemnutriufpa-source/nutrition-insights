@@ -152,6 +152,7 @@ export default function HybridPlanBuilder() {
   const [autofixWasValid, setAutofixWasValid] = useState(false);
   const [validationModeDialogOpen, setValidationModeDialogOpen] = useState(false);
   const [lockedValidationMode, setLockedValidationMode] = useState<ValidationMode | null>(null);
+  const [showPublishWarning, setShowPublishWarning] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
