@@ -1334,7 +1334,7 @@ function buildGenerationMetadata(
   return {
     engine_version: ENGINE_VERSION,
     protocol_version: PROTOCOL_VERSION,
-    generation_method: usedDBFoods ? "db_personalized_v4" : "realistic_preset_meals_v3",
+    generation_method: "db_exclusive_visual_library_v6",
     bmr_formula: "mifflin_st_jeor",
     bmr_value: tmb,
     tdee_factor: tdeeFactor,
@@ -1749,8 +1749,9 @@ serve(async (req) => {
             tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
             age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
           ),
-          architecture: "2-layer-v2",
+          architecture: "2-layer-db-exclusive-v6",
           two_layer_validated: true,
+          meal_source: "visual_library_exclusive",
         };
 
         const optionLabels = ["Simples", "Variada", "Alternativa"];
@@ -1928,10 +1929,11 @@ serve(async (req) => {
       ),
       generation_mode: generationMode,
       mode_enhancements: modeEnhancements,
-      architecture: "2-layer-v2",
+      architecture: "2-layer-db-exclusive-v6",
       layer1_source: "clinical_macro_engine",
-      layer2_role: "template_structure_only",
+      layer2_role: "visual_library_structure_only",
       two_layer_validated: true,
+      meal_source: "visual_library_exclusive",
     };
 
     let finalMealPlanId = meal_plan_id;
@@ -2064,7 +2066,7 @@ serve(async (req) => {
         meal_plan_id: finalMealPlanId,
         items_count: planItems.length,
         data_source: dataSource,
-        generation_method: useDBDriven ? "db_personalized_v4" : "realistic_preset_meals_v3",
+        generation_method: "db_exclusive_visual_library_v6",
         db_driven: useDBDriven,
       },
       created_by: userId,
