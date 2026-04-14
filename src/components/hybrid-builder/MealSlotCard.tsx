@@ -298,7 +298,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> Selecionar refeição
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {patientContext && mealMacroTarget && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleCompose(); }}
@@ -309,6 +309,12 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                   Compor IA
                 </button>
               )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setLoadTemplateOpen(true); }}
+                className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <FolderOpen className="w-3 h-3" /> Template salvo
+              </button>
               {clipboard && clipboard.items.length > 0 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handlePasteSlot(); }}
