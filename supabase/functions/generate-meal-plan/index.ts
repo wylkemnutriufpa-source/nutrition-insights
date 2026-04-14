@@ -1880,9 +1880,27 @@ serve(async (req) => {
       ? { protein: finalMacros.protein, carbs: Math.round(finalMacros.carbs * 1.12), fat: finalMacros.fat }
       : finalMacros;
 
-    // Reconcile with correct per-day targets
+    // ── CAMADA 2: Reconcile template items with Layer 1 macros ──
     const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
     const planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems, goal);
+
+    // ── 2-LAYER VALIDATION (MANDATORY) ──
+    const twoLayerCheck = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
+    if (!twoLayerCheck.valid) {
+      console.warn(`[2-Layer] Deviation detected after reconciliation: ${twoLayerCheck.errors.join(", ")}. Running final correction...`);
+      // Force one more pass of cross-day consistency to fix any remaining deviation
+      const correctedItems = enforceCrossDayConsistency(planItems, finalMacros, finalKcal);
+      const recheck = validate2LayerIntegrity(correctedItems, finalKcal, finalMacros);
+      if (!recheck.valid) {
+        console.warn(`[2-Layer] Still has deviation after correction: ${recheck.errors.join(", ")}. Proceeding with best-effort.`);
+      } else {
+        console.log(`[2-Layer] ✅ Final correction resolved all deviations.`);
+      }
+      // Replace planItems with corrected version
+      planItems.splice(0, planItems.length, ...correctedItems);
+    } else {
+      console.log(`[2-Layer] ✅ Plan validated: all macros within 3% tolerance.`);
+    }
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
