@@ -225,7 +225,7 @@ async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
   return (data as VisualLibraryItem[]).filter(item => item.image_url && item.image_url.length > 5);
 }
 
-/** Filter visual library items by patient restrictions/disliked */
+/** Filter visual library items by patient restrictions/disliked/intolerances — STRICT CLINICAL SAFETY */
 function filterVisualLibraryForPatient(
   items: VisualLibraryItem[],
   restrictions: string[],
@@ -233,28 +233,63 @@ function filterVisualLibraryForPatient(
   allergies: string[],
 ): VisualLibraryItem[] {
   const blocked = [...disliked, ...allergies].map(d => normalize(d)).filter(d => d.length >= 3);
-  if (blocked.length === 0 && restrictions.length === 0) return items;
+
+  // Build intolerance keyword set from restrictions + allergies
+  const intoleranceKeywords: string[] = [];
+  for (const r of [...restrictions, ...allergies]) {
+    const nr = normalize(r);
+    for (const [key, keywords] of Object.entries(INTOLERANCE_KEYWORDS)) {
+      if (nr.includes(key) || nr.includes(key + "_free") || nr.includes("alergia_" + key)) {
+        intoleranceKeywords.push(...keywords);
+      }
+    }
+    // Direct restriction mappings
+    if (nr.includes("lactose") || nr.includes("lactose_free")) intoleranceKeywords.push(...INTOLERANCE_KEYWORDS.lactose);
+    if (nr.includes("gluten") || nr.includes("gluten_free")) intoleranceKeywords.push(...INTOLERANCE_KEYWORDS.gluten);
+  }
+  const uniqueIntoleranceKws = [...new Set(intoleranceKeywords.map(k => normalize(k)))];
+
+  // Vegetarian/vegan check
+  const isVegetarian = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegetarian") || nr.includes("vegetariano"); });
+  const isVegan = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegan") || nr.includes("vegano"); });
+  const meatKeywords = ["frango", "carne", "bife", "peixe", "tilapia", "porco", "costel", "sardinha", "atum", "camarao", "salmao", "sobrecoxa", "alcatra", "picanha", "linguica", "bacon", "presunto", "peito de peru", "peru"];
+  const animalKeywords = [...meatKeywords, "ovo", "leite", "queijo", "iogurte", "mel", "whey", "requeijao"];
 
   return items.filter(item => {
     const normName = normalize(item.display_name);
     const normSlug = normalize(item.slug);
-    const allText = normName + " " + normSlug + " " + (item.search_terms || []).map(t => normalize(t)).join(" ");
+    const searchTermsText = (item.search_terms || []).map(t => normalize(t)).join(" ");
+    const allText = normName + " " + normSlug + " " + searchTermsText;
 
-    // Check disliked/allergies
+    // Extract recipe ingredients text for deep check
+    let recipeText = "";
+    if (item.base_recipe && typeof item.base_recipe === "object") {
+      const recipe = item.base_recipe as any;
+      if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+        recipeText = recipe.ingredients.map((ing: string) => normalize(ing)).join(" ");
+      }
+    }
+    const fullText = allText + " " + recipeText;
+
+    // Check disliked/allergies (direct keyword match)
     for (const b of blocked) {
-      if (allText.includes(b)) return false;
+      if (fullText.includes(b)) return false;
     }
 
-    // Check restrictions
-    for (const r of restrictions) {
-      const nr = normalize(r);
-      if ((nr.includes("lactose") || nr.includes("lactose_free")) && 
-          (allText.includes("leite") || allText.includes("queijo") || allText.includes("iogurte") || allText.includes("requeijao"))) return false;
-      if ((nr.includes("gluten") || nr.includes("gluten_free")) && 
-          (allText.includes("pao") || allText.includes("macarrao") || allText.includes("aveia"))) return false;
-      if ((nr.includes("vegetarian") || nr.includes("vegetariano")) && 
-          (allText.includes("frango") || allText.includes("carne") || allText.includes("bife") || allText.includes("peixe") || allText.includes("tilapia") || allText.includes("porco") || allText.includes("costel"))) return false;
+    // STRICT INTOLERANCE FILTER — check display_name, slug, search_terms, AND base_recipe.ingredients
+    for (const kw of uniqueIntoleranceKws) {
+      if (kw.length < 3) continue;
+      if (fullText.includes(kw)) return false;
     }
+
+    // Vegetarian/vegan enforcement
+    if (isVegetarian) {
+      for (const mk of meatKeywords) { if (fullText.includes(mk)) return false; }
+    }
+    if (isVegan) {
+      for (const ak of animalKeywords) { if (fullText.includes(ak)) return false; }
+    }
+
     return true;
   });
 }
