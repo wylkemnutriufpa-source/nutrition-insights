@@ -383,6 +383,26 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
         mealType={mealType}
         mealLabel={label}
       />
+
+      {/* Save meal as template */}
+      <SaveMealSlotDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        mode="save"
+        day={day}
+        mealType={mealType}
+        items={items}
+      />
+
+      {/* Load saved meal template */}
+      <SaveMealSlotDialog
+        open={loadTemplateOpen}
+        onOpenChange={setLoadTemplateOpen}
+        mode="load"
+        day={day}
+        mealType={mealType}
+        items={items}
+      />
     </>
   );
 }
