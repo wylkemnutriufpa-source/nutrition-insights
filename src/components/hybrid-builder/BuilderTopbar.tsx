@@ -32,6 +32,7 @@ export default function BuilderTopbar({
   patientName, objective, targetKcal, targetProtein, targetCarbs, targetFat,
   saving, publishing, validating,
   onBack, onSave, onValidate, onPublish, onSaveAsTemplate, onRename,
+  lockedValidationMode,
 }: Props) {
   const { plan, items, syncStatus } = useMealPlanEditorV2Store();
   const [editing, setEditing] = useState(false);
