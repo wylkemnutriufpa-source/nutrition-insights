@@ -128,7 +128,29 @@ const MEAL_TYPE_TO_DB_TAG: Record<string, string[]> = {
   evening_snack: ["ceia", "lanche_tarde"],
 };
 
-// ──── Restriction to DB tag mapping ────
+// ──── Restriction to clinical_tags mapping (structured tag-based filtering) ────
+const RESTRICTION_TO_CLINICAL_TAG: Record<string, string> = {
+  lactose: "contains_lactose",
+  lactose_free: "contains_lactose",
+  gluten: "contains_gluten",
+  gluten_free: "contains_gluten",
+  egg: "contains_egg",
+  egg_free: "contains_egg",
+  ovo: "contains_egg",
+  nuts: "contains_nuts",
+  nut_free: "contains_nuts",
+  amendoim: "contains_nuts",
+  castanha: "contains_nuts",
+  soy: "contains_soy",
+  soy_free: "contains_soy",
+  soja: "contains_soy",
+  seafood: "contains_seafood",
+  shellfish_free: "contains_seafood",
+  camarao: "contains_seafood",
+  frutos_do_mar: "contains_seafood",
+};
+
+// Legacy mapping kept for backward compat references
 const RESTRICTION_TO_DB_EXCLUDE_TAG: Record<string, string[]> = {
   lactose_free: ["alergia_leite"],
   gluten_free: ["alergia_gluten"],
@@ -188,6 +210,7 @@ interface VisualLibraryItem {
   base_recipe: any;
   tags: string[];
   search_terms: string[];
+  clinical_tags: string[];
 }
 
 /** Map meal_type to visual library categories */
