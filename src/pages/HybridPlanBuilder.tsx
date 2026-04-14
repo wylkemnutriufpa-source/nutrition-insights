@@ -359,7 +359,6 @@ export default function HybridPlanBuilder() {
     }
   };
 
-  const [showPublishWarning, setShowPublishWarning] = useState(false);
 
   const handlePublish = async () => {
     if (!user) return;
