@@ -4,9 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
-  Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X,
+  Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X, PenTool, Lock,
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import type { ValidationMode } from "./ValidationModeDialog";
 
 interface Props {
   patientName: string;
@@ -24,6 +25,7 @@ interface Props {
   onPublish: () => void;
   onSaveAsTemplate?: () => void;
   onRename?: (newTitle: string) => void;
+  lockedValidationMode?: ValidationMode | null;
 }
 
 export default function BuilderTopbar({

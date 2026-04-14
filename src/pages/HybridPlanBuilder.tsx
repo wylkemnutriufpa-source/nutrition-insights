@@ -488,6 +488,14 @@ export default function HybridPlanBuilder() {
             </div>
           )}
 
+          {/* Validation Mode Dialog */}
+          <ValidationModeDialog
+            open={validationModeDialogOpen}
+            onOpenChange={setValidationModeDialogOpen}
+            lockedMode={lockedValidationMode}
+            onSelectMode={handleModeSelected}
+          />
+
           <SaveMealTemplateDialog
             open={saveTemplateOpen}
             onOpenChange={setSaveTemplateOpen}
