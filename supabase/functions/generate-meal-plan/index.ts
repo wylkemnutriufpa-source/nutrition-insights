@@ -26,8 +26,29 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "6.0.0";
-const PROTOCOL_VERSION = "fitjourney_db_exclusive_v6";
+const ENGINE_VERSION = "7.0.0";
+const PROTOCOL_VERSION = "fitjourney_db_exclusive_v7_strict";
+
+// ──── FEATURE FLAG: DB-EXCLUSIVE MODE (MANDATORY) ────
+const USE_DB_EXCLUSIVE_V6 = true;
+
+// ──── VALID MEAL CATEGORIES ────
+const VALID_MEAL_CATEGORIES = new Set(["cafe_da_manha", "lanche", "almoco", "jantar", "ceia", "refeicao"]);
+
+// ──── INTOLERANCE KEYWORD MAPS (CLINICAL SAFETY) ────
+const INTOLERANCE_KEYWORDS: Record<string, string[]> = {
+  lactose: ["leite", "queijo", "iogurte", "requeijao", "whey", "nata", "creme de leite", "manteiga", "cream cheese", "coalhada", "ricota", "mucarela", "mussarela", "parmesao", "provolone", "cottage"],
+  gluten: ["pao", "macarrao", "trigo", "aveia", "cevada", "centeio", "biscoito", "bolacha", "torrada", "cuscuz de trigo", "farinha de trigo", "massa"],
+  ovo: ["ovo", "omelete", "clara", "gema", "ovos"],
+  soja: ["soja", "tofu", "edamame", "missô", "shoyu"],
+  amendoim: ["amendoim", "pasta de amendoim", "paçoca"],
+  nozes: ["nozes", "castanha", "amêndoa", "amendoa", "pistache", "macadamia", "pecan", "avel"],
+  crustaceos: ["camarao", "lagosta", "caranguejo", "siri", "lula"],
+  peixe: ["peixe", "tilapia", "salmao", "sardinha", "atum", "bacalhau", "dourado", "pintado", "tambaqui"],
+};
+
+// ──── MIN CANDIDATES PER MEAL TYPE ────
+const MIN_CANDIDATES_PER_MEAL = 3;
 
 // ──── 2-Layer Architecture Constants ────
 // Maximum deviation allowed between meal sum and total targets (3%)
