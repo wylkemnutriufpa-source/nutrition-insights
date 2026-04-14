@@ -191,16 +191,12 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
     residual -= add;
   }
 
-  if (residual !== 0) {
-    const fallbackMeal = RESIDUAL_PRIORITY.find((mealType) => mealTargets.has(mealType)) || MEAL_ORDER.find((mealType) => mealTargets.has(mealType));
-    if (fallbackMeal) {
-      mealTargets.set(fallbackMeal, (mealTargets.get(fallbackMeal) || 0) + residual);
-    }
-  }
-
-  for (const [mealType, target] of mealTargets.entries()) {
+  for (const [mealType, rawTarget] of mealTargets.entries()) {
     const items = dayItems.filter((item) => item.meal_type === mealType && !isItemProtected(item));
     if (items.length === 0) continue;
+
+    const mealCap = proteinCaps[mealType] ?? rawTarget;
+    const target = Math.max(0, Math.min(rawTarget, mealCap));
     const currentTotal = items.reduce((sum, item) => sum + (Number(item.protein_target) || 0), 0);
 
     if (currentTotal <= 0) {
@@ -208,7 +204,7 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
       let remaining = target;
       items.forEach((item, index) => {
         const next = index === items.length - 1 ? remaining : base;
-        item.protein_target = next;
+        item.protein_target = Math.max(0, next);
         remaining -= next;
       });
       continue;
@@ -219,7 +215,7 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
     let largestValue = 0;
     items.forEach((item, index) => {
       const current = Number(item.protein_target) || 0;
-      const next = Math.round(current * (target / currentTotal));
+      const next = Math.max(0, Math.round(current * (target / currentTotal)));
       item.protein_target = next;
       scaledSum += next;
       if (current > largestValue) {
@@ -229,7 +225,7 @@ function rebalanceProteinTargetsByMeal(dayItems: MealPlanItem[], dailyProteinTar
     });
 
     const correction = target - scaledSum;
-    items[largestIndex].protein_target = (Number(items[largestIndex].protein_target) || 0) + correction;
+    items[largestIndex].protein_target = Math.max(0, (Number(items[largestIndex].protein_target) || 0) + correction);
   }
 }
 
