@@ -2006,7 +2006,10 @@ serve(async (req) => {
       });
     }
 
-    const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: finalMealPlanId }));
+    const itemsToInsert = planItems.map((item: any) => {
+      const { _image_url, _source, ...rest } = item;
+      return { ...rest, meal_plan_id: finalMealPlanId };
+    });
 
     // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
     const { error: deleteErr } = await serviceClient
