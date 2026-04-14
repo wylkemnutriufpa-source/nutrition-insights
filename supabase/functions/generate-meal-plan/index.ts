@@ -2018,11 +2018,10 @@ serve(async (req) => {
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
     
     // ── DB-EXCLUSIVE: All meals from visual library ──
-    const rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex);
+    const rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes);
     console.log(`[generate-meal-plan] DB-Exclusive plan generated: ${rawPlanItems.length} items from visual library`);
     
     // Smart mode: apply adjustments to RAW items BEFORE reconciliation
-    // so that reconcileDailyMacros can normalize the final totals correctly
     if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
       for (const item of rawPlanItems) {
         if (item.day_of_week >= 5) {
@@ -2058,7 +2057,6 @@ serve(async (req) => {
     const twoLayerCheck = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
     if (!twoLayerCheck.valid) {
       console.warn(`[2-Layer] Deviation detected after reconciliation: ${twoLayerCheck.errors.join(", ")}. Running final correction...`);
-      // Force one more pass of cross-day consistency to fix any remaining deviation
       const correctedItems = enforceCrossDayConsistency(planItems, finalMacros, finalKcal);
       const recheck = validate2LayerIntegrity(correctedItems, finalKcal, finalMacros);
       if (!recheck.valid) {
@@ -2066,11 +2064,25 @@ serve(async (req) => {
       } else {
         console.log(`[2-Layer] ✅ Final correction resolved all deviations.`);
       }
-      // Replace planItems with corrected version
       planItems.splice(0, planItems.length, ...correctedItems);
     } else {
       console.log(`[2-Layer] ✅ Plan validated: all macros within 3% tolerance.`);
     }
+
+    // ──── FINAL VALIDATION (MANDATORY — FAIL_FAST) ────
+    const finalValidation = validatePlanBeforeSave(planItems, finalKcal, finalMacros, weight, goal);
+    if (!finalValidation.valid) {
+      console.error(`[STRICT] Final validation FAILED: ${finalValidation.errors.join("; ")}`);
+      return new Response(JSON.stringify({
+        error: `Plano falhou na validação final: ${finalValidation.errors.join("; ")}`,
+        code: "FINAL_VALIDATION_FAILED",
+        details: finalValidation.errors,
+      }), {
+        status: 422,
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    console.log(`[STRICT] ✅ Final validation passed. All ${planItems.length} items are DB-exclusive with images.`);
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
@@ -2089,11 +2101,14 @@ serve(async (req) => {
       ),
       generation_mode: generationMode,
       mode_enhancements: modeEnhancements,
-      architecture: "2-layer-db-exclusive-v6",
+      architecture: "2-layer-db-exclusive-v7-strict",
       layer1_source: "clinical_macro_engine",
       layer2_role: "visual_library_structure_only",
       two_layer_validated: true,
       meal_source: "visual_library_exclusive",
+      final_validation_passed: true,
+      enabled_meals: enabledMeals || "default",
+      meal_times: mealTimes || null,
     };
 
     let finalMealPlanId = meal_plan_id;
