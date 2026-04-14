@@ -26,8 +26,12 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "4.0.0";
-const PROTOCOL_VERSION = "fitjourney_personalizado_v4";
+const ENGINE_VERSION = "5.0.0";
+const PROTOCOL_VERSION = "fitjourney_2layer_v5";
+
+// ──── 2-Layer Architecture Constants ────
+// Maximum deviation allowed between meal sum and total targets (3%)
+const MAX_2LAYER_DEVIATION = 0.03;
 
 // MEAL_KCAL_SPLIT imported from _shared/food-rules.ts (canonical source)
 const MEAL_KCAL_SPLIT = CANONICAL_MEAL_KCAL_SPLIT;
