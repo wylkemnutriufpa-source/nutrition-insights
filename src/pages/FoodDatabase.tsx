@@ -1,13 +1,17 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
 import { motion } from "framer-motion";
-import { Search, Apple, Flame, Beef, Wheat, Droplets } from "lucide-react";
+import { Search, Apple, Flame, Beef, Wheat, Droplets, Plus, Pencil, Trash2 } from "lucide-react";
+import { toast } from "sonner";
 
 interface FoodItem {
   id: string;
@@ -23,6 +27,8 @@ interface FoodItem {
   iron: number | null;
   serving_size: string;
   source: string;
+  is_custom?: boolean;
+  nutritionist_id?: string | null;
 }
 
 const categoryColors: Record<string, string> = {
@@ -38,24 +44,37 @@ const categoryColors: Record<string, string> = {
   "Óleos": "bg-yellow-600/10 text-yellow-600",
   Oleaginosas: "bg-amber-600/10 text-amber-600",
   Suplementos: "bg-purple-500/10 text-purple-500",
+  Personalizado: "bg-primary/10 text-primary",
   Outros: "bg-gray-500/10 text-gray-500",
 };
 
+const EMPTY_FOOD = {
+  name: "", category: "Personalizado", calories: 0, protein: 0, carbs: 0, fat: 0,
+  fiber: null as number | null, sodium: null as number | null, calcium: null as number | null, iron: null as number | null,
+  serving_size: "100g",
+};
+
 export default function FoodDatabase() {
+  const { user } = useAuth();
   const [foods, setFoods] = useState<FoodItem[]>([]);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [categories, setCategories] = useState<string[]>([]);
   const [selected, setSelected] = useState<FoodItem | null>(null);
   const [detailOpen, setDetailOpen] = useState(false);
+  const [formOpen, setFormOpen] = useState(false);
+  const [editingFood, setEditingFood] = useState<typeof EMPTY_FOOD & { id?: string }>(EMPTY_FOOD);
+  const [saving, setSaving] = useState(false);
 
-  useEffect(() => {
+  const loadFoods = () => {
     supabase.from("food_database").select("*").order("name").then(({ data }) => {
-      setFoods(data || []);
-      const cats = [...new Set((data || []).map(f => f.category))].sort();
+      setFoods((data as any[]) || []);
+      const cats = [...new Set(((data as any[]) || []).map((f: any) => f.category))].sort();
       setCategories(cats);
     });
-  }, []);
+  };
+
+  useEffect(() => { loadFoods(); }, []);
 
   const filtered = foods.filter(f => {
     const matchSearch = !search || f.name.toLowerCase().includes(search.toLowerCase());
@@ -63,14 +82,100 @@ export default function FoodDatabase() {
     return matchSearch && matchCat;
   });
 
+  const openCreate = () => {
+    setEditingFood({ ...EMPTY_FOOD });
+    setFormOpen(true);
+  };
+
+  const openEdit = (food: FoodItem) => {
+    setEditingFood({
+      id: food.id,
+      name: food.name, category: food.category, calories: food.calories,
+      protein: food.protein, carbs: food.carbs, fat: food.fat,
+      fiber: food.fiber, sodium: food.sodium, calcium: food.calcium, iron: food.iron,
+      serving_size: food.serving_size,
+    });
+    setFormOpen(true);
+    setDetailOpen(false);
+  };
+
+  const handleSave = async () => {
+    if (!editingFood.name.trim()) { toast.error("Nome é obrigatório"); return; }
+    if (!user) { toast.error("Faça login primeiro"); return; }
+    setSaving(true);
+
+    try {
+      if (editingFood.id) {
+        // Update
+        const { error } = await supabase.from("food_database").update({
+          name: editingFood.name,
+          category: editingFood.category,
+          calories: editingFood.calories,
+          protein: editingFood.protein,
+          carbs: editingFood.carbs,
+          fat: editingFood.fat,
+          fiber: editingFood.fiber,
+          sodium: editingFood.sodium,
+          calcium: editingFood.calcium,
+          iron: editingFood.iron,
+          serving_size: editingFood.serving_size,
+        } as any).eq("id", editingFood.id);
+        if (error) throw error;
+        toast.success("Alimento atualizado!");
+      } else {
+        // Insert
+        const { error } = await supabase.from("food_database").insert({
+          name: editingFood.name,
+          category: editingFood.category,
+          calories: editingFood.calories,
+          protein: editingFood.protein,
+          carbs: editingFood.carbs,
+          fat: editingFood.fat,
+          fiber: editingFood.fiber,
+          sodium: editingFood.sodium,
+          calcium: editingFood.calcium,
+          iron: editingFood.iron,
+          serving_size: editingFood.serving_size,
+          source: "Personalizado",
+          is_custom: true,
+          nutritionist_id: user.id,
+        } as any);
+        if (error) throw error;
+        toast.success("Alimento criado!");
+      }
+      setFormOpen(false);
+      loadFoods();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao salvar");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleDelete = async (food: FoodItem) => {
+    if (!food.is_custom) { toast.error("Alimentos TACO não podem ser excluídos"); return; }
+    const { error } = await supabase.from("food_database").delete().eq("id", food.id);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Alimento excluído");
+    setDetailOpen(false);
+    loadFoods();
+  };
+
+  const isOwner = (food: FoodItem) => food.is_custom && food.nutritionist_id === user?.id;
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <div>
-          <h1 className="font-display text-2xl font-bold flex items-center gap-2">
-            <Apple className="w-6 h-6 text-primary" /> Tabela de Alimentos (TACO)
-          </h1>
-          <p className="text-sm text-muted-foreground">{foods.length} alimentos cadastrados • Fonte: Tabela Brasileira de Composição de Alimentos</p>
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-display text-2xl font-bold flex items-center gap-2">
+              <Apple className="w-6 h-6 text-primary" /> Tabela de Alimentos
+            </h1>
+            <p className="text-sm text-muted-foreground">{foods.length} alimentos • TACO + Personalizados</p>
+          </div>
+          <Button onClick={openCreate} size="sm" className="gap-1.5">
+            <Plus className="w-4 h-4" /> Novo Alimento
+          </Button>
         </div>
 
         <div className="flex gap-3">
@@ -98,9 +203,12 @@ export default function FoodDatabase() {
                   <div className="flex items-start justify-between gap-2">
                     <div>
                       <h3 className="font-medium text-sm">{food.name}</h3>
-                      <Badge className={`text-[10px] mt-1 ${categoryColors[food.category] || "bg-muted text-muted-foreground"}`}>
-                        {food.category}
-                      </Badge>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Badge className={`text-[10px] ${categoryColors[food.category] || "bg-muted text-muted-foreground"}`}>
+                          {food.category}
+                        </Badge>
+                        {food.is_custom && <Badge variant="outline" className="text-[9px]">Custom</Badge>}
+                      </div>
                     </div>
                     <div className="text-right">
                       <span className="text-lg font-bold text-primary">{food.calories}</span>
@@ -141,7 +249,10 @@ export default function FoodDatabase() {
             <DialogHeader><DialogTitle className="font-display">{selected?.name}</DialogTitle></DialogHeader>
             {selected && (
               <div className="space-y-4">
-                <Badge className={categoryColors[selected.category] || ""}>{selected.category}</Badge>
+                <div className="flex items-center gap-2">
+                  <Badge className={categoryColors[selected.category] || ""}>{selected.category}</Badge>
+                  {selected.is_custom && <Badge variant="outline" className="text-xs">Personalizado</Badge>}
+                </div>
                 <p className="text-xs text-muted-foreground">Valores por {selected.serving_size} • Fonte: {selected.source}</p>
 
                 <div className="grid grid-cols-2 gap-3">
@@ -176,8 +287,54 @@ export default function FoodDatabase() {
                     {selected.iron != null && <div className="flex justify-between p-2 rounded bg-muted"><span>Ferro</span><span className="font-medium">{selected.iron}mg</span></div>}
                   </div>
                 </div>
+
+                {isOwner(selected) && (
+                  <div className="flex gap-2 pt-2 border-t border-border">
+                    <Button variant="outline" size="sm" onClick={() => openEdit(selected)} className="gap-1.5 flex-1">
+                      <Pencil className="w-3.5 h-3.5" /> Editar
+                    </Button>
+                    <Button variant="destructive" size="sm" onClick={() => handleDelete(selected)} className="gap-1.5 flex-1">
+                      <Trash2 className="w-3.5 h-3.5" /> Excluir
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
+          </DialogContent>
+        </Dialog>
+
+        {/* Create/Edit dialog */}
+        <Dialog open={formOpen} onOpenChange={setFormOpen}>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle>{editingFood.id ? "Editar Alimento" : "Novo Alimento Personalizado"}</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-3">
+              <div>
+                <Label>Nome *</Label>
+                <Input value={editingFood.name} onChange={e => setEditingFood(p => ({ ...p, name: e.target.value }))} placeholder="Ex: Whey Protein Isolado" />
+              </div>
+              <div className="grid grid-cols-2 gap-3">
+                <div><Label>Categoria</Label><Input value={editingFood.category} onChange={e => setEditingFood(p => ({ ...p, category: e.target.value }))} /></div>
+                <div><Label>Porção</Label><Input value={editingFood.serving_size} onChange={e => setEditingFood(p => ({ ...p, serving_size: e.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                <div><Label>Kcal</Label><Input type="number" value={editingFood.calories} onChange={e => setEditingFood(p => ({ ...p, calories: +e.target.value }))} /></div>
+                <div><Label>Prot (g)</Label><Input type="number" value={editingFood.protein} onChange={e => setEditingFood(p => ({ ...p, protein: +e.target.value }))} /></div>
+                <div><Label>Carb (g)</Label><Input type="number" value={editingFood.carbs} onChange={e => setEditingFood(p => ({ ...p, carbs: +e.target.value }))} /></div>
+                <div><Label>Gord (g)</Label><Input type="number" value={editingFood.fat} onChange={e => setEditingFood(p => ({ ...p, fat: +e.target.value }))} /></div>
+              </div>
+              <div className="grid grid-cols-4 gap-2">
+                <div><Label>Fibra</Label><Input type="number" value={editingFood.fiber ?? ""} onChange={e => setEditingFood(p => ({ ...p, fiber: e.target.value ? +e.target.value : null }))} /></div>
+                <div><Label>Sódio</Label><Input type="number" value={editingFood.sodium ?? ""} onChange={e => setEditingFood(p => ({ ...p, sodium: e.target.value ? +e.target.value : null }))} /></div>
+                <div><Label>Cálcio</Label><Input type="number" value={editingFood.calcium ?? ""} onChange={e => setEditingFood(p => ({ ...p, calcium: e.target.value ? +e.target.value : null }))} /></div>
+                <div><Label>Ferro</Label><Input type="number" value={editingFood.iron ?? ""} onChange={e => setEditingFood(p => ({ ...p, iron: e.target.value ? +e.target.value : null }))} /></div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setFormOpen(false)}>Cancelar</Button>
+              <Button onClick={handleSave} disabled={saving}>{saving ? "Salvando..." : editingFood.id ? "Salvar" : "Criar"}</Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       </div>
