@@ -16,6 +16,8 @@ import ClinicalMacroPanel from "@/components/hybrid-builder/ClinicalMacroPanel";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
+import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
+import type { AutoFixResult } from "@/lib/autoFixEngine";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
 import type { ComposerMode } from "@/lib/mealComposer";
 
@@ -142,6 +144,9 @@ export default function HybridPlanBuilder() {
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
   const [unlocking, setUnlocking] = useState(false);
+  const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
+  const [showAutofixResults, setShowAutofixResults] = useState(false);
+  const [autofixWasValid, setAutofixWasValid] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
@@ -227,6 +232,7 @@ export default function HybridPlanBuilder() {
   const handleValidate = async () => {
     setValidating(true);
     setValidationResult(null);
+    setAutofixResult(null);
     try {
       const outcome = await runValidateAndFixMealPlan({
         planId: plan.id,
@@ -248,15 +254,23 @@ export default function HybridPlanBuilder() {
 
       if (outcome.kind === "validated") {
         await store.hydrate(plan.id, user?.id ?? "");
+        // Show "already valid" modal with explanation
+        setAutofixWasValid(true);
+        setAutofixResult(null);
+        setShowAutofixResults(true);
         toast.success("Plano válido! ✅");
         return;
       }
 
       if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
         await store.hydrate(plan.id, user.id);
+        // Show detailed correction results
+        setAutofixWasValid(false);
+        setAutofixResult(outcome.fixedResult);
+        setShowAutofixResults(true);
         if (outcome.kind === "fixed_and_validated") {
           setValidationResult(null);
-          toast.success("✅ Plano corrigido e revalidado com sucesso!");
+          toast.success(`✅ Plano corrigido e revalidado! ${outcome.fixedResult.changes.length} correção(ões).`);
         } else {
           setValidationResult(data as unknown as ValidationResult);
           toast.info("Correção aplicada, mas ainda existem ajustes pendentes.");
@@ -268,8 +282,12 @@ export default function HybridPlanBuilder() {
         throw new Error("Fluxo de correção retornou um estado inesperado.");
       }
 
+      // Show results before redirecting
+      setAutofixWasValid(false);
+      setAutofixResult(outcome.fixedResult);
+      setShowAutofixResults(true);
       toast.success("Plano corrigido salvo como novo draft. Abrindo no editor clínico...");
-      navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true });
+      setTimeout(() => navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true }), 2000);
       return;
     } catch (e: any) {
       toast.error(e.message || "Erro na validação");
@@ -423,7 +441,26 @@ export default function HybridPlanBuilder() {
             onSaved={() => toast.success("Plano salvo como modelo!")}
           />
 
-          {/* Validation panel */}
+          {/* AutoFix Results Modal */}
+          <AutoFixResultsModal
+            open={showAutofixResults}
+            onOpenChange={setShowAutofixResults}
+            result={autofixResult || {
+              success: true,
+              changes: [],
+              before: { score: { overallScore: 100, totalItems: 0, uniqueItems: 0, avgItemsPerMeal: 0 } as any, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
+              after: { score: { overallScore: 100, totalItems: 0, uniqueItems: 0, avgItemsPerMeal: 0 } as any, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
+              warnings: [],
+              summary: { blocked_removed: 0, meals_simplified: 0, snacks_fixed: 0, breakfasts_fixed: 0, main_meals_standardized: 0, macro_rebalanced: false },
+            }}
+            wasAlreadyValid={autofixWasValid}
+            validationMessage={
+              autofixWasValid
+                ? `Score: ${plan.overall_score ?? "?"}/100. Calorias, proteínas, carboidratos e gorduras estão dentro das faixas clínicas. Nenhuma refeição bloqueada ou desbalanceada encontrada.`
+                : undefined
+            }
+          />
+
           {validationResult && !validationResult.success && (
             <ValidationCorrectionPanel
               result={validationResult}
