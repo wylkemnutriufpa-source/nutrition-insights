@@ -919,6 +919,23 @@ export default function Anamnesis() {
       .eq("status", "pending_anamnesis");
   };
 
+  // Pipeline mode: auto-redirect back to onboarding pipeline after completion
+  const [pipelineCountdown, setPipelineCountdown] = useState(5);
+  useEffect(() => {
+    if (!completed || analyzing || !isPipelineMode || isNutritionistMode) return;
+    const timer = setInterval(() => {
+      setPipelineCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate("/onboarding-pipeline", { replace: true });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [completed, analyzing, isPipelineMode, isNutritionistMode, navigate]);
+
   // Blocked state — onboarding not released
   if (onboardingBlocked && !isNutritionistMode) {
     return (
@@ -947,23 +964,6 @@ export default function Anamnesis() {
   // Compute active adaptive blocks based on current answers
   const activeAdaptiveBlocks = getActiveAdaptiveBlocks(answers);
   const allAdaptiveQuestions = activeAdaptiveBlocks.flatMap((b) => b.questions);
-
-  // Pipeline mode: auto-redirect back to onboarding pipeline after completion
-  const [pipelineCountdown, setPipelineCountdown] = useState(5);
-  useEffect(() => {
-    if (!completed || analyzing || !isPipelineMode || isNutritionistMode) return;
-    const timer = setInterval(() => {
-      setPipelineCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          navigate("/onboarding-pipeline", { replace: true });
-          return 0;
-        }
-        return prev - 1;
-      });
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [completed, analyzing, isPipelineMode, isNutritionistMode, navigate]);
 
   if (completed) {
     return (
