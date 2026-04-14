@@ -49,7 +49,7 @@ import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
-import SmartPlanGenerator from "@/components/plans/SmartPlanGenerator";
+import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 
 type MealPlan = Tables<"meal_plans">;
 
@@ -326,15 +326,12 @@ export default function MealPlans() {
                   </select>
                 </div>
                 {form.patient_id ? (
-                  <SmartPlanGenerator
+                  <GenerationModeSelector
                     patientId={form.patient_id}
-                    patientName={patients.find(p => p.id === form.patient_id)?.name}
-                    onGenerated={(planId) => {
-                      runPostGenVisualMatch(planId).catch(() => {});
+                    onGenerated={() => {
                       setOpen(false);
-                      navigate(`/meal-plans/${planId}`);
+                      fetchPlans();
                     }}
-                    onClose={() => setOpen(false)}
                   />
                 ) : (
                   <div className="text-center py-6 text-muted-foreground text-sm">
