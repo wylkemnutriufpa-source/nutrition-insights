@@ -663,6 +663,11 @@ export default function Anamnesis() {
       }
 
       if (latestAnamnesis.status === "completed") {
+        // If patient has active pipeline and anamnesis is already done, redirect immediately
+        if (latestPipeline && !isNutritionistMode) {
+          navigate("/onboarding-pipeline", { replace: true });
+          return;
+        }
         setCompleted(true);
         setDraftId(latestAnamnesis.id);
         const savedAnswers = latestAnamnesis.answers as Record<string, any>;
