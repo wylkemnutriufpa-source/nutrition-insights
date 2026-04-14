@@ -178,6 +178,14 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             <div className="absolute top-1 right-1 z-10 flex gap-0.5 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity">
               <button
                 type="button"
+                onClick={(e) => { e.stopPropagation(); setMacroEditOpen(true); }}
+                className="p-0.5 rounded hover:bg-accent/50"
+                title="Editar macros"
+              >
+                <SlidersHorizontal className="w-2.5 h-2.5 text-muted-foreground" />
+              </button>
+              <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); setInlineEdit(true); setEditValue(item.title); }}
                 className="p-0.5 rounded hover:bg-accent/50"
                 title="Editar"
@@ -204,6 +212,11 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
           </>
         )}
       </div>
+      <MacroEditDialog
+        open={macroEditOpen}
+        onOpenChange={setMacroEditOpen}
+        item={item}
+      />
     </motion.div>
   );
 }
