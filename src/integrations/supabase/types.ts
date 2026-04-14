@@ -14665,6 +14665,66 @@ export type Database = {
         }
         Relationships: []
       }
+      saved_manual_plans: {
+        Row: {
+          created_at: string
+          days: Json
+          id: string
+          tenant_id: string | null
+          title: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          days?: Json
+          id?: string
+          tenant_id?: string | null
+          title: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          days?: Json
+          id?: string
+          tenant_id?: string | null
+          title?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      saved_meal_templates: {
+        Row: {
+          created_at: string
+          id: string
+          image_url: string | null
+          items: Json
+          meal_type: string | null
+          name: string
+          tenant_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          items?: Json
+          meal_type?: string | null
+          name: string
+          tenant_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          items?: Json
+          meal_type?: string | null
+          name?: string
+          tenant_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       saved_meals: {
         Row: {
           calories_target: number | null

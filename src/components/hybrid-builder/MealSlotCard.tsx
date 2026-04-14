@@ -13,6 +13,8 @@ import {
   RefreshCcw,
   Search,
   CalendarRange,
+  Save,
+  FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
@@ -20,6 +22,7 @@ import type { PatientContext } from "@/lib/mealComposer";
 import SmartMealSelectorModal from "./SmartMealSelectorModal";
 import MealSlotItemCard from "./MealSlotItemCard";
 import FoodSearchInline from "./FoodSearchInline";
+import SaveMealSlotDialog from "./SaveMealSlotDialog";
 
 interface Props {
   day: number;
@@ -45,6 +48,8 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [foodSearchOpen, setFoodSearchOpen] = useState(false);
   const [replacingItemId, setReplacingItemId] = useState<string | null>(null);
+  const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [loadTemplateOpen, setLoadTemplateOpen] = useState(false);
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -256,6 +261,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           <div className="flex items-center gap-1 shrink-0">
             {hasItems && (
               <>
+                <button onClick={() => setSaveTemplateOpen(true)} className="p-1 rounded hover:bg-muted" title="Salvar refeição como template">
+                  <Save className="w-3 h-3 text-muted-foreground" />
+                </button>
                 <button onClick={handleApplyToAllDays} className="p-1 rounded hover:bg-primary/10" title="Aplicar em todos os dias">
                   <CalendarRange className="w-3 h-3 text-primary" />
                 </button>
@@ -267,6 +275,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 </button>
               </>
             )}
+            <button onClick={() => setLoadTemplateOpen(true)} className="p-1 rounded hover:bg-muted" title="Usar refeição salva">
+              <FolderOpen className="w-3 h-3 text-muted-foreground" />
+            </button>
             {clipboard && clipboard.items.length > 0 && (
               <button onClick={handlePasteSlot} className="p-1 rounded hover:bg-muted" title="Colar refeição">
                 <ClipboardPaste className="w-3 h-3 text-primary" />
@@ -287,7 +298,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
             <span className="text-xs text-muted-foreground flex items-center gap-1">
               <Plus className="w-3.5 h-3.5" /> Selecionar refeição
             </span>
-            <div className="flex items-center gap-2">
+            <div className="flex items-center gap-2 flex-wrap">
               {patientContext && mealMacroTarget && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handleCompose(); }}
@@ -298,6 +309,12 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                   Compor IA
                 </button>
               )}
+              <button
+                onClick={(e) => { e.stopPropagation(); setLoadTemplateOpen(true); }}
+                className="flex items-center gap-1 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
+              >
+                <FolderOpen className="w-3 h-3" /> Template salvo
+              </button>
               {clipboard && clipboard.items.length > 0 && (
                 <button
                   onClick={(e) => { e.stopPropagation(); handlePasteSlot(); }}
@@ -365,6 +382,26 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
         day={day}
         mealType={mealType}
         mealLabel={label}
+      />
+
+      {/* Save meal as template */}
+      <SaveMealSlotDialog
+        open={saveTemplateOpen}
+        onOpenChange={setSaveTemplateOpen}
+        mode="save"
+        day={day}
+        mealType={mealType}
+        items={items}
+      />
+
+      {/* Load saved meal template */}
+      <SaveMealSlotDialog
+        open={loadTemplateOpen}
+        onOpenChange={setLoadTemplateOpen}
+        mode="load"
+        day={day}
+        mealType={mealType}
+        items={items}
       />
     </>
   );

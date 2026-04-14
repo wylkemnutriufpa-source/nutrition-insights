@@ -18,6 +18,7 @@ import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSe
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
 import ValidationModeDialog, { type ValidationMode } from "@/components/hybrid-builder/ValidationModeDialog";
+import PublishWarningDialog from "@/components/hybrid-builder/PublishWarningDialog";
 import type { AutoFixResult } from "@/lib/autoFixEngine";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
 import { logAudit } from "@/lib/auditLog";
@@ -152,6 +153,7 @@ export default function HybridPlanBuilder() {
   const [autofixWasValid, setAutofixWasValid] = useState(false);
   const [validationModeDialogOpen, setValidationModeDialogOpen] = useState(false);
   const [lockedValidationMode, setLockedValidationMode] = useState<ValidationMode | null>(null);
+  const [showPublishWarning, setShowPublishWarning] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
@@ -358,17 +360,12 @@ export default function HybridPlanBuilder() {
     }
   };
 
-  const handlePublish = async () => {
-    if (!user) return;
-    const vs = plan.overall_validation_status;
-    if (!vs || vs !== "aprovado") {
-      toast.error("❌ Este plano precisa ser validado antes da publicação. Use o botão 'Validar' primeiro.");
-      return;
-    }
+  const executePublish = async () => {
     setPublishing(true);
+    setShowPublishWarning(false);
     try {
       await store._flushQueue();
-      const result = await publishMealPlan(plan.id, user.id);
+      const result = await publishMealPlan(plan.id, user!.id);
       if (!result.success) {
         const rpcData = result.data as Record<string, unknown> | undefined;
         const errorCode = rpcData?.error as string | undefined;
@@ -384,6 +381,26 @@ export default function HybridPlanBuilder() {
     } finally {
       setPublishing(false);
     }
+  };
+
+  const handlePublish = async () => {
+    if (!user) return;
+    const vs = (plan as any).overall_validation_status;
+    const isManualMode = lockedValidationMode === "MANUAL_EDIT" || !lockedValidationMode;
+
+    // Manual mode: allow publish with warning if not validated
+    if (isManualMode && (!vs || vs !== "aprovado")) {
+      setShowPublishWarning(true);
+      return;
+    }
+
+    // Auto engine mode: hard block
+    if (!isManualMode && (!vs || vs !== "aprovado")) {
+      toast.error("❌ Este plano precisa ser validado antes da publicação. Use o botão 'Validar' primeiro.");
+      return;
+    }
+
+    await executePublish();
   };
 
   // DnD handler
@@ -494,6 +511,13 @@ export default function HybridPlanBuilder() {
             onOpenChange={setValidationModeDialogOpen}
             lockedMode={lockedValidationMode}
             onSelectMode={handleModeSelected}
+          />
+
+          {/* Publish Warning Dialog (manual mode) */}
+          <PublishWarningDialog
+            open={showPublishWarning}
+            onOpenChange={setShowPublishWarning}
+            onConfirm={executePublish}
           />
 
           <SaveMealTemplateDialog

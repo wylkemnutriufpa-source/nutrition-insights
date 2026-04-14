@@ -1,5 +1,6 @@
 import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
 import MealSlotCard from "./MealSlotCard";
+import DayActions from "./DayActions";
 import { Coffee, Apple, Utensils, Cookie, Moon, Sun, Zap, Pencil, Sparkles } from "lucide-react";
 import { useState } from "react";
 import type { PatientContext, ComposerMode, MacroTarget } from "@/lib/mealComposer";
@@ -135,6 +136,9 @@ export default function MealPlanCanvas({ patientContext, composerMode = "quick",
           );
         })}
       </div>
+
+      {/* Day-level actions */}
+      <DayActions activeDay={activeDay} />
 
       {/* Meal slots grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
