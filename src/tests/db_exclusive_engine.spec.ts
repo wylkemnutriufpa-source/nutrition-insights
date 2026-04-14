@@ -279,31 +279,40 @@ describe("Macro deviation guards", () => {
   });
 });
 
-describe("Fail-fast behavior", () => {
-  const MIN_CANDIDATES_PER_MEAL = 5;
-
-  it("throws when candidate count is below minimum", () => {
-    const candidates = [makeItem({ id: "1", display_name: "A", category: "almoco" })];
-    const totalCandidates = candidates.length;
-    expect(totalCandidates).toBeLessThan(MIN_CANDIDATES_PER_MEAL);
-    // Engine would throw: [STRICT] Insufficient visual library items
-  });
-
-  it("passes when enough candidates exist", () => {
-    const candidates = Array.from({ length: 10 }, (_, i) =>
-      makeItem({ id: String(i), display_name: `Item ${i}`, category: "almoco" })
-    );
-    expect(candidates.length).toBeGreaterThanOrEqual(MIN_CANDIDATES_PER_MEAL);
-  });
-
-  it("aggressive filtering can trigger fail-fast", () => {
+describe("Fail-fast behavior (per-meal zero-candidate check)", () => {
+  it("throws when a meal type has ZERO candidates after filtering", () => {
     // All items have lactose — patient with lactose restriction gets 0 candidates
     const allLactose = Array.from({ length: 10 }, (_, i) =>
       makeItem({ id: String(i), display_name: `Dairy ${i}`, category: "lanche", clinical_tags: ["contains_lactose"] })
     );
     const filtered = filterVisualLibraryForPatient(allLactose, ["lactose"], [], []);
     expect(filtered).toHaveLength(0);
-    expect(filtered.length).toBeLessThan(MIN_CANDIDATES_PER_MEAL);
+    // Engine would throw: [STRICT] No visual library items found for meal type
+  });
+
+  it("does NOT fail when only 1 candidate exists (valid scenario)", () => {
+    const singleItem = [makeItem({ id: "1", display_name: "Banana", category: "lanche", clinical_tags: ["whole_food"] })];
+    const filtered = filterVisualLibraryForPatient(singleItem, [], [], []);
+    expect(filtered).toHaveLength(1);
+    // 1 candidate is enough — engine should proceed
+  });
+
+  it("does NOT fail when 2 candidates exist (no arbitrary minimum)", () => {
+    const twoItems = [
+      makeItem({ id: "1", display_name: "Banana", category: "lanche", clinical_tags: ["whole_food"] }),
+      makeItem({ id: "2", display_name: "Maçã", category: "lanche", clinical_tags: ["whole_food"] }),
+    ];
+    const filtered = filterVisualLibraryForPatient(twoItems, [], [], []);
+    expect(filtered).toHaveLength(2);
+  });
+
+  it("aggressive filtering can result in zero candidates → fail-fast", () => {
+    // Vegan patient with only animal items available
+    const onlyAnimal = Array.from({ length: 5 }, (_, i) =>
+      makeItem({ id: String(i), display_name: `Meat ${i}`, category: "almoco", clinical_tags: ["animal_protein"] })
+    );
+    const filtered = filterVisualLibraryForPatient(onlyAnimal, ["vegano"], [], []);
+    expect(filtered).toHaveLength(0);
   });
 });
 

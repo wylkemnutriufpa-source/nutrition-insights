@@ -46,9 +46,8 @@ const INTOLERANCE_KEYWORDS: Record<string, string[]> = {
   crustaceos: ["camarao", "lagosta", "caranguejo", "siri", "lula"],
   peixe: ["peixe", "tilapia", "salmao", "sardinha", "atum", "bacalhau", "dourado", "pintado", "tambaqui"],
 };
-
-// ──── MIN CANDIDATES PER MEAL TYPE ────
-const MIN_CANDIDATES_PER_MEAL = 3;
+// ──── FAIL-FAST: per-meal zero-candidate check (no arbitrary minimum) ────
+// Validation happens per meal type during generation, not as a global pre-check
 
 // ──── 2-Layer Architecture Constants ────
 // Maximum deviation allowed between meal sum and total targets (3%)
@@ -1126,17 +1125,10 @@ function generatePlanFromVisualLibrary(
     byCategory.set(item.category, list);
   }
 
-  // ──── DYNAMIC AVAILABILITY CHECK ────
-  for (const mealType of mealTypes) {
-    const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
-    let totalCandidates = 0;
-    for (const cat of categories) {
-      totalCandidates += (byCategory.get(cat) || []).length;
-    }
-    if (totalCandidates < MIN_CANDIDATES_PER_MEAL) {
-      throw new Error(`[STRICT] Insufficient visual library items for meal type "${mealType}": found ${totalCandidates}, minimum ${MIN_CANDIDATES_PER_MEAL} required after filtering. Check patient restrictions.`);
-    }
-  }
+  // ──── PER-MEAL AVAILABILITY CHECK (fail-fast on zero candidates) ────
+  // Validation happens inside the generation loop per meal type.
+  // If a meal type has 0 candidates after filtering → error thrown.
+  // Having 1+ candidates is valid — the engine works with any non-zero count.
 
   const items: any[] = [];
   const usedPerMealType = new Map<string, Set<string>>();
