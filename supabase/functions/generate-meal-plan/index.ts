@@ -1446,7 +1446,7 @@ serve(async (req) => {
       });
     }
 
-    if (!anamnesis && isPipeline) {
+    if (!anamnesis) {
       const { data: fallbackAnamnesis, error: fallbackAnamErr } = await serviceClient
         .from("patient_anamnesis")
         .select("*")
