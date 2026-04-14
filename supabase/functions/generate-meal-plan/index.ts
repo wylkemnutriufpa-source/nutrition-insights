@@ -1598,19 +1598,46 @@ serve(async (req) => {
     let dataSource: string;
 
     if (strategyOverride?.targetCalories && strategyOverride?.targetProtein) {
-      // Strategy Advisor chose — this is the SOURCE OF TRUTH
+      // Strategy Advisor — but MUST respect clinical protein/fat ranges (Layer 1 immutable)
       finalKcal = strategyOverride.targetCalories;
+      let overrideProtein = strategyOverride.targetProtein;
+      let overrideFat = strategyOverride.targetFat || macros.fat;
+      
+      // ENFORCE clinical ranges — strategy cannot bypass Layer 1
+      const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+      const proteinPerKg = overrideProtein / weight;
+      if (proteinPerKg > proteinRange.max) {
+        overrideProtein = Math.round(weight * proteinRange.max);
+        console.warn(`[2-Layer] Strategy protein capped: ${strategyOverride.targetProtein}g → ${overrideProtein}g (max ${proteinRange.max}g/kg)`);
+      }
+      if (proteinPerKg < proteinRange.min) {
+        overrideProtein = Math.round(weight * proteinRange.min);
+        console.warn(`[2-Layer] Strategy protein raised: ${strategyOverride.targetProtein}g → ${overrideProtein}g (min ${proteinRange.min}g/kg)`);
+      }
+      const fatPerKg = overrideFat / weight;
+      if (fatPerKg > CLINICAL_FAT_RANGE.max * 1.1) {
+        overrideFat = Math.round(weight * CLINICAL_FAT_RANGE.max);
+        console.warn(`[2-Layer] Strategy fat capped: ${strategyOverride.targetFat}g → ${overrideFat}g`);
+      }
+      
       finalMacros = {
-        protein: strategyOverride.targetProtein,
+        protein: overrideProtein,
         carbs: strategyOverride.targetCarbs || macros.carbs,
-        fat: strategyOverride.targetFat || macros.fat,
+        fat: overrideFat,
       };
       dataSource = `strategy_advisor:${strategyOverride.strategyId || "custom"}`;
-      console.log(`[generate-meal-plan] ✅ Strategy Override ACTIVE: ${strategyOverride.strategyName} | Kcal: ${finalKcal} | P: ${finalMacros.protein}g | C: ${finalMacros.carbs}g | F: ${finalMacros.fat}g`);
+      console.log(`[generate-meal-plan] ✅ Strategy Override (Layer 1 enforced): ${strategyOverride.strategyName} | Kcal: ${finalKcal} | P: ${finalMacros.protein}g | C: ${finalMacros.carbs}g | F: ${finalMacros.fat}g`);
     } else if (physicalAssessment?.calories_target) {
       finalKcal = physicalAssessment.calories_target;
+      // Physical assessment also enforced by Layer 1 ranges
+      let paProtein = physicalAssessment.protein_target || macros.protein;
+      const paProteinPerKg = paProtein / weight;
+      const paProteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+      if (paProteinPerKg > paProteinRange.max) paProtein = Math.round(weight * paProteinRange.max);
+      if (paProteinPerKg < paProteinRange.min) paProtein = Math.round(weight * paProteinRange.min);
+      
       finalMacros = {
-        protein: physicalAssessment.protein_target || macros.protein,
+        protein: paProtein,
         carbs: physicalAssessment.carbs_target || macros.carbs,
         fat: physicalAssessment.fat_target || macros.fat,
       };
