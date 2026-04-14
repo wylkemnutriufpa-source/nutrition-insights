@@ -16,6 +16,7 @@ export interface MealVisualItem {
   default_carbs: number | null;
   default_fat: number | null;
   tags: string[];
+  clinical_tags: string[];
   search_terms: string[];
   is_active: boolean;
   sort_order: number;
@@ -24,6 +25,30 @@ export interface MealVisualItem {
   created_at: string;
   updated_at: string;
 }
+
+// Standard clinical tag constants for type-safe filtering
+export const CLINICAL_TAG = {
+  // Allergens
+  CONTAINS_LACTOSE: "contains_lactose",
+  CONTAINS_GLUTEN: "contains_gluten",
+  CONTAINS_EGG: "contains_egg",
+  CONTAINS_SOY: "contains_soy",
+  CONTAINS_NUTS: "contains_nuts",
+  CONTAINS_SEAFOOD: "contains_seafood",
+  // Diet
+  ANIMAL_PROTEIN: "animal_protein",
+  PLANT_BASED: "plant_based",
+  // Macros
+  HIGH_PROTEIN: "high_protein",
+  HIGH_CARB: "high_carb",
+  LOW_CARB: "low_carb",
+  HIGH_FAT: "high_fat",
+  // Food type
+  WHOLE_FOOD: "whole_food",
+  PROCESSED: "processed",
+} as const;
+
+export type ClinicalTag = typeof CLINICAL_TAG[keyof typeof CLINICAL_TAG];
 
 export interface MealVisualAlias {
   id: string;
