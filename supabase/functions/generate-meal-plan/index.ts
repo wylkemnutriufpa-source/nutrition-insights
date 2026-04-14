@@ -1064,8 +1064,9 @@ function buildMealFromDBFoods(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// DB-EXCLUSIVE PLAN GENERATOR v6.0
-// ALL meals come from meal_visual_library — NO hardcoded presets
+// DB-EXCLUSIVE PLAN GENERATOR v7.0 — STRICT MODE
+// ALL meals come from meal_visual_library — NO fallbacks
+// Onboarding-compliant: respects enabled_meals, meal_times, restrictions
 // ═══════════════════════════════════════════════════════════════
 
 function generatePlanFromVisualLibrary(
@@ -1077,20 +1078,51 @@ function generatePlanFromVisualLibrary(
   disliked: string[],
   allergies: string[],
   planOptionIndex: number = 0,
+  enabledMeals?: string[],
+  mealTimes?: Record<string, string>,
 ): any[] {
+  // ──── FEATURE FLAG CHECK ────
+  if (!USE_DB_EXCLUSIVE_V6) {
+    throw new Error("[STRICT] USE_DB_EXCLUSIVE_V6 must be true. DB-exclusive mode is mandatory.");
+  }
+
+  // ──── STRICT FILTERING ────
   const filtered = filterVisualLibraryForPatient(visualLibrary, restrictions, disliked, allergies);
-  const items: any[] = [];
-  const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  console.log(`[DB-Exclusive-v7] Filtered library: ${filtered.length}/${visualLibrary.length} items passed restriction/intolerance filter`);
+
+  // ──── MEAL STRUCTURE FROM ONBOARDING ────
+  const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
+
+  if (mealTypes.length === 0) {
+    throw new Error("[STRICT] No enabled meals defined in patient onboarding. Cannot generate plan.");
+  }
 
   // Group library items by category
   const byCategory = new Map<string, VisualLibraryItem[]>();
   for (const item of filtered) {
+    if (!VALID_MEAL_CATEGORIES.has(item.category)) {
+      console.warn(`[DB-Exclusive-v7] Skipping item with invalid category: ${item.category} (${item.display_name})`);
+      continue;
+    }
     const list = byCategory.get(item.category) || [];
     list.push(item);
     byCategory.set(item.category, list);
   }
 
-  // Track used items per meal type to avoid repetition across days
+  // ──── DYNAMIC AVAILABILITY CHECK ────
+  for (const mealType of mealTypes) {
+    const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
+    let totalCandidates = 0;
+    for (const cat of categories) {
+      totalCandidates += (byCategory.get(cat) || []).length;
+    }
+    if (totalCandidates < MIN_CANDIDATES_PER_MEAL) {
+      throw new Error(`[STRICT] Insufficient visual library items for meal type "${mealType}": found ${totalCandidates}, minimum ${MIN_CANDIDATES_PER_MEAL} required after filtering. Check patient restrictions.`);
+    }
+  }
+
+  const items: any[] = [];
   const usedPerMealType = new Map<string, Set<string>>();
 
   for (let day = 0; day < 7; day++) {
@@ -1098,21 +1130,16 @@ function generatePlanFromVisualLibrary(
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
 
-      // Collect candidates from all matching categories
+      // Collect candidates from matching categories — NO FALLBACK
       let candidates: VisualLibraryItem[] = [];
       for (const cat of categories) {
         const catItems = byCategory.get(cat) || [];
         candidates.push(...catItems);
       }
 
+      // ──── NO_FALLBACK: Throw error instead of improvising ────
       if (candidates.length === 0) {
-        // Ultimate fallback: use any library item with image
-        candidates = filtered.slice(0, 10);
-      }
-
-      if (candidates.length === 0) {
-        console.warn(`[DB-Exclusive] No visual library items for ${mealType} on day ${day}`);
-        continue;
+        throw new Error(`[STRICT] No visual library items found for meal type "${mealType}" on day ${day}. No fallback allowed.`);
       }
 
       // Anti-repetition tracking
@@ -1121,7 +1148,7 @@ function generatePlanFromVisualLibrary(
       if (usedSet.size >= candidates.length) usedSet.clear();
 
       // Seeded shuffle for variety
-      const seed = generationSeed(String(planOptionIndex), day * 7 + mealTypes.indexOf(mealType));
+      const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
       const shuffled = seededShuffle(candidates, seed);
 
       // Pick first unused item
@@ -1132,6 +1159,11 @@ function generatePlanFromVisualLibrary(
       if (!picked) picked = shuffled[0];
       usedSet.add(picked.id);
 
+      // ──── STRICT_DB_EXCLUSIVE: Validate item has image ────
+      if (!picked.image_url || picked.image_url.length < 5) {
+        throw new Error(`[STRICT] Visual library item "${picked.display_name}" (${picked.id}) has no image_url. All items MUST have images.`);
+      }
+
       // Get macros (use defaults if library item lacks data)
       const catDefaults = CATEGORY_DEFAULT_MACROS[picked.category] || CATEGORY_DEFAULT_MACROS.refeicao;
       const baseCal = picked.default_calories || catDefaults.cal;
@@ -1139,7 +1171,7 @@ function generatePlanFromVisualLibrary(
       const baseC = picked.default_carbs || catDefaults.c;
       const baseF = picked.default_fat || catDefaults.f;
 
-      // Scale to match target kcal for this meal slot
+      // ──── MACRO_SCALING_ONLY: Scale 0.5x–2.5x, no composition changes ────
       const scaleFactor = baseCal > 0 ? targetKcal / baseCal : 1;
       const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
 
@@ -1149,12 +1181,14 @@ function generatePlanFromVisualLibrary(
         const recipe = picked.base_recipe as any;
         if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
           description = recipe.ingredients.map((ing: string) => `• ${ing}`).join("\n");
-          // Scale quantities in description
           description = scaleDescriptionQuantities(description, clampedScale) || description;
         }
       }
 
       const finalDescription = finalizeMealDescription(description, mealType, goal);
+
+      // ──── MEAL_TIME_SUPPORT ────
+      const mealTime = mealTimes?.[mealType] || null;
 
       items.push({
         title: picked.display_name,
@@ -1166,14 +1200,67 @@ function generatePlanFromVisualLibrary(
         carbs_target: Math.round(baseC * clampedScale),
         fat_target: Math.round(baseF * clampedScale),
         visual_library_item_id: picked.id,
-        _image_url: picked.image_url, // transient — for logging only
+        meal_time: mealTime,
+        // ──── STRUCTURED_LOGGING ────
         _source: "visual_library",
+        _category_used: picked.category,
+        _scale_factor: clampedScale,
+        _image_url: picked.image_url, // transient — for logging only
       });
     }
   }
 
-  console.log(`[DB-Exclusive] Generated ${items.length} items from visual library (${filtered.length} available items)`);
+  console.log(`[DB-Exclusive-v7] Generated ${items.length} items from visual library (${filtered.length} available, ${mealTypes.length} meal types)`);
   return items;
+}
+
+// ──── FINAL VALIDATION (MANDATORY before persisting) ────
+function validatePlanBeforeSave(
+  items: any[],
+  dailyKcal: number,
+  dailyMacros: { protein: number; carbs: number; fat: number },
+  weight: number,
+  goal: string,
+): { valid: boolean; errors: string[] } {
+  const errors: string[] = [];
+
+  // Rule 1: Every item must have visual_library_item_id
+  const missingVisual = items.filter(i => !i.visual_library_item_id);
+  if (missingVisual.length > 0) {
+    errors.push(`${missingVisual.length} items missing visual_library_item_id`);
+  }
+
+  // Rule 2: Every item must have image (checked via _image_url transient field)
+  const missingImage = items.filter(i => !i._image_url || i._image_url.length < 5);
+  if (missingImage.length > 0) {
+    errors.push(`${missingImage.length} items missing image_url`);
+  }
+
+  // Rule 3: Calorie deviation <= 5%
+  const day0Items = items.filter(i => i.day_of_week === 0);
+  if (day0Items.length > 0) {
+    const sumCal = day0Items.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
+    const calDev = dailyKcal > 0 ? Math.abs(sumCal - dailyKcal) / dailyKcal : 0;
+    if (calDev > 0.05) {
+      errors.push(`Calorie deviation ${(calDev * 100).toFixed(1)}% exceeds 5% tolerance (sum=${sumCal}, target=${dailyKcal})`);
+    }
+
+    // Rule 4: Protein within clinical range
+    const sumP = day0Items.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+    const proteinPerKg = sumP / weight;
+    const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+    if (proteinPerKg < proteinRange.min * 0.9 || proteinPerKg > proteinRange.max * 1.1) {
+      errors.push(`Protein ${proteinPerKg.toFixed(2)}g/kg outside clinical range ${proteinRange.min}-${proteinRange.max}g/kg for goal=${goal}`);
+    }
+  }
+
+  // Rule 5: Every item must have _source = visual_library
+  const wrongSource = items.filter(i => i._source !== "visual_library");
+  if (wrongSource.length > 0) {
+    errors.push(`${wrongSource.length} items have non-visual_library source`);
+  }
+
+  return { valid: errors.length === 0, errors };
 }
 
 async function safeDeletePlan(client: any, planId: string) {
