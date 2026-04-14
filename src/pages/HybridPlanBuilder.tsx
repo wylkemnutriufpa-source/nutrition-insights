@@ -457,6 +457,7 @@ export default function HybridPlanBuilder() {
             onValidate={handleValidate}
             onPublish={handlePublish}
             onSaveAsTemplate={() => setSaveTemplateOpen(true)}
+            lockedValidationMode={lockedValidationMode}
             onRename={async (newTitle) => {
               store.updatePlan({ title: newTitle, updated_at: new Date().toISOString() } as any);
               await supabase.from("meal_plans").update({ title: newTitle }).eq("id", plan.id);
