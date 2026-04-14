@@ -4281,11 +4281,14 @@ export type Database = {
           fiber: number | null
           id: string
           iron: number | null
+          is_custom: boolean
           name: string
+          nutritionist_id: string | null
           protein: number
           serving_size: string | null
           sodium: number | null
           source: string | null
+          tenant_id: string | null
         }
         Insert: {
           calcium?: number | null
@@ -4297,11 +4300,14 @@ export type Database = {
           fiber?: number | null
           id?: string
           iron?: number | null
+          is_custom?: boolean
           name: string
+          nutritionist_id?: string | null
           protein?: number
           serving_size?: string | null
           sodium?: number | null
           source?: string | null
+          tenant_id?: string | null
         }
         Update: {
           calcium?: number | null
@@ -4313,13 +4319,24 @@ export type Database = {
           fiber?: number | null
           id?: string
           iron?: number | null
+          is_custom?: boolean
           name?: string
+          nutritionist_id?: string | null
           protein?: number
           serving_size?: string | null
           sodium?: number | null
           source?: string | null
+          tenant_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "food_database_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       food_substitution_groups: {
         Row: {
@@ -12903,6 +12920,7 @@ export type Database = {
           created_at: string
           engagement_index: number | null
           engagement_level: string | null
+          experience_mode: string | null
           fit_intelligence_access_mode: string | null
           fit_intelligence_enabled: boolean
           fit_intelligence_expires_at: string | null
@@ -12945,6 +12963,7 @@ export type Database = {
           created_at?: string
           engagement_index?: number | null
           engagement_level?: string | null
+          experience_mode?: string | null
           fit_intelligence_access_mode?: string | null
           fit_intelligence_enabled?: boolean
           fit_intelligence_expires_at?: string | null
@@ -12987,6 +13006,7 @@ export type Database = {
           created_at?: string
           engagement_index?: number | null
           engagement_level?: string | null
+          experience_mode?: string | null
           fit_intelligence_access_mode?: string | null
           fit_intelligence_enabled?: boolean
           fit_intelligence_expires_at?: string | null
