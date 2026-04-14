@@ -1711,21 +1711,19 @@ serve(async (req) => {
     const startDate = new Date().toISOString().split("T")[0];
 
     // ═══════════════════════════════════════════════════════════
-    // LOAD FOOD DATABASE FOR ALL MODES
-    // All modes now use DB when available; presets are last resort
+    // LOAD VISUAL LIBRARY (EXCLUSIVE SOURCE OF MEALS)
+    // ALL meals come from meal_visual_library — no presets allowed
     // ═══════════════════════════════════════════════════════════
     
-    let dbFoods: DBFood[] = [];
-    let useDBDriven = false;
+    const visualLibrary = await loadVisualLibrary(serviceClient);
+    const useDBDriven = visualLibrary.length >= 5;
+    console.log(`[generate-meal-plan] Visual library loaded: ${visualLibrary.length} items with images. DB-exclusive: ${useDBDriven}`);
 
-    dbFoods = await loadFoodDatabase(serviceClient);
-    if (dbFoods.length >= 30) {
-      // Filter for this patient's restrictions/allergies/disliked
-      dbFoods = filterFoodsForPatient(dbFoods, restrictions, disliked, allergies);
-      useDBDriven = dbFoods.length >= 20;
-      console.log(`[generate-meal-plan] DB foods loaded: ${dbFoods.length} (after patient filtering). DB-driven: ${useDBDriven}`);
-    } else {
-      console.warn(`[generate-meal-plan] DB has only ${dbFoods.length} foods — falling back to presets`);
+    if (visualLibrary.length < 5) {
+      return new Response(JSON.stringify({
+        error: "Biblioteca visual insuficiente para gerar plano. Mínimo 5 itens com imagem necessários.",
+        code: "VISUAL_LIBRARY_INSUFFICIENT",
+      }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
     // ── Multi-plan flow ──
