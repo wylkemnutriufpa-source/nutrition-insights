@@ -24,6 +24,8 @@ import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal
 import { AssistedPlanModal } from "@/components/meal-editor-v2/AssistedPlanModal";
 import { MealVisualLibraryModal } from "@/components/meal-editor-v2/MealVisualLibraryModal";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
+import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
+import type { AutoFixResult } from "@/lib/autoFixEngine";
 import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
 import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
@@ -76,6 +78,9 @@ export default function MealPlanEditorV2() {
   const [visualLibOpen, setVisualLibOpen] = useState(false);
   const [generatingNew, setGeneratingNew] = useState(false);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
+  const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
+  const [showAutofixResults, setShowAutofixResults] = useState(false);
+  const [autofixWasValid, setAutofixWasValid] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "grid";
