@@ -358,17 +358,34 @@ export default function HybridPlanBuilder() {
     }
   };
 
+  const [showPublishWarning, setShowPublishWarning] = useState(false);
+
   const handlePublish = async () => {
     if (!user) return;
-    const vs = plan.overall_validation_status;
-    if (!vs || vs !== "aprovado") {
+    const vs = (plan as any).overall_validation_status;
+    const isManualMode = lockedValidationMode === "MANUAL_EDIT" || !lockedValidationMode;
+
+    // Manual mode: allow publish with warning if not validated
+    if (isManualMode && (!vs || vs !== "aprovado")) {
+      setShowPublishWarning(true);
+      return;
+    }
+
+    // Auto engine mode: hard block
+    if (!isManualMode && (!vs || vs !== "aprovado")) {
       toast.error("❌ Este plano precisa ser validado antes da publicação. Use o botão 'Validar' primeiro.");
       return;
     }
+
+    await executePublish();
+  };
+
+  const executePublish = async () => {
     setPublishing(true);
+    setShowPublishWarning(false);
     try {
       await store._flushQueue();
-      const result = await publishMealPlan(plan.id, user.id);
+      const result = await publishMealPlan(plan.id, user!.id);
       if (!result.success) {
         const rpcData = result.data as Record<string, unknown> | undefined;
         const errorCode = rpcData?.error as string | undefined;
