@@ -1,4 +1,5 @@
-import { createContext, useContext, useState, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
 
@@ -96,9 +97,41 @@ export function useExperienceModeState() {
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
   });
 
+  const hydratedFromDb = useRef(false);
+
+  // Hydrate from DB on mount (overrides localStorage if DB has a value)
+  useEffect(() => {
+    if (hydratedFromDb.current) return;
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .select("experience_mode")
+        .eq("user_id", user.id)
+        .maybeSingle()
+        .then(({ data }) => {
+          const dbMode = data?.experience_mode as ExperienceMode;
+          if (dbMode && ["basic", "pro", "advanced"].includes(dbMode)) {
+            setModeState(dbMode);
+            localStorage.setItem(STORAGE_KEY, dbMode);
+          }
+          hydratedFromDb.current = true;
+        });
+    });
+  }, []);
+
   const setMode = useCallback((m: ExperienceMode) => {
     setModeState(m);
     localStorage.setItem(STORAGE_KEY, m);
+    // Persist to DB (fire-and-forget)
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (!user) return;
+      supabase
+        .from("profiles")
+        .update({ experience_mode: m } as any)
+        .eq("user_id", user.id)
+        .then(() => {});
+    });
   }, []);
 
   const isRouteAllowed = useCallback((route: string) => {
