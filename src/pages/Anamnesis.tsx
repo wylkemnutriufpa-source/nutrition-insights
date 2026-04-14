@@ -533,7 +533,9 @@ export default function Anamnesis() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forPatientId = searchParams.get("patientId");
-  const isPipelineMode = searchParams.get("pipeline") === "true";
+  const isPipelineFromUrl = searchParams.get("pipeline") === "true";
+  const [hasActivePipeline, setHasActivePipeline] = useState(false);
+  const isPipelineMode = isPipelineFromUrl || hasActivePipeline;
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
