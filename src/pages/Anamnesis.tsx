@@ -948,6 +948,23 @@ export default function Anamnesis() {
   const activeAdaptiveBlocks = getActiveAdaptiveBlocks(answers);
   const allAdaptiveQuestions = activeAdaptiveBlocks.flatMap((b) => b.questions);
 
+  // Pipeline mode: auto-redirect back to onboarding pipeline after completion
+  const [pipelineCountdown, setPipelineCountdown] = useState(5);
+  useEffect(() => {
+    if (!completed || analyzing || !isPipelineMode || isNutritionistMode) return;
+    const timer = setInterval(() => {
+      setPipelineCountdown(prev => {
+        if (prev <= 1) {
+          clearInterval(timer);
+          navigate("/onboarding-pipeline", { replace: true });
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [completed, analyzing, isPipelineMode, isNutritionistMode, navigate]);
+
   if (completed) {
     return (
       <DashboardLayout>
@@ -990,19 +1007,41 @@ export default function Anamnesis() {
                 >
                   <Heart className="w-12 h-12 text-primary-foreground" />
                 </motion.div>
-                <h1 className="font-display text-3xl font-bold mb-2">Anamnese Inteligente Concluída!</h1>
+                <h1 className="font-display text-3xl font-bold mb-2">
+                  {isPipelineMode && !isNutritionistMode
+                    ? "Etapa 1 Concluída — Anamnese ✅"
+                    : "Anamnese Inteligente Concluída!"}
+                </h1>
                 <p className="text-muted-foreground max-w-md">
-                  {aiResult
+                  {isPipelineMode && !isNutritionistMode
+                    ? "Ótimo! Agora vamos para a próxima etapa do seu onboarding. Faltam mais algumas etapas para completar seu cadastro."
+                    : aiResult
                     ? `${aiResult.summary || "Sua análise foi gerada com sucesso."}`
                     : "Seu nutricionista receberá seus dados e criará um plano personalizado."}
                 </p>
               </div>
 
+              {/* Pipeline mode: prominent continue banner */}
+              {isPipelineMode && !isNutritionistMode && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="p-4 rounded-xl bg-primary/10 border border-primary/20 text-center space-y-2"
+                >
+                  <p className="text-sm font-medium text-primary">
+                    ⏳ Redirecionando para a próxima etapa em {pipelineCountdown}s...
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Você ainda precisa preencher: Dados Corporais, Preferências e aguardar a geração do plano.
+                  </p>
+                </motion.div>
+              )}
+
               {/* Show smart plan card if AI was successful */}
-              <SmartPlanCard />
+              {(!isPipelineMode || isNutritionistMode) && <SmartPlanCard />}
 
               {/* AI Stats */}
-              {aiResult && (
+              {aiResult && (!isPipelineMode || isNutritionistMode) && (
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -1032,12 +1071,25 @@ export default function Anamnesis() {
               )}
 
               <div className="flex flex-col gap-3">
-                <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
-                  ✏️ Revisar / Editar Respostas
-                </Button>
-                <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
-                  {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
-                </Button>
+                {isPipelineMode && !isNutritionistMode ? (
+                  <>
+                    <Button onClick={() => navigate("/onboarding-pipeline", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
+                      <ArrowRight className="w-4 h-4" /> Continuar Onboarding — Próxima Etapa
+                    </Button>
+                    <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
+                      ✏️ Revisar / Editar Respostas
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
+                      ✏️ Revisar / Editar Respostas
+                    </Button>
+                    <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
+                      {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
+                    </Button>
+                  </>
+                )}
               </div>
             </motion.div>
           )}
