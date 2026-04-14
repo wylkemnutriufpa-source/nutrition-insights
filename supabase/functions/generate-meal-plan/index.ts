@@ -1008,137 +1008,116 @@ function buildMealFromDBFoods(
 }
 
 // ═══════════════════════════════════════════════════════════════
-// TEMPLATE-FIRST PLAN GENERATOR v5.0
-// Priority: Validated presets → DB foods as fallback only
-// This ensures cultural coherence (no "lula at breakfast")
+// DB-EXCLUSIVE PLAN GENERATOR v6.0
+// ALL meals come from meal_visual_library — NO hardcoded presets
 // ═══════════════════════════════════════════════════════════════
 
-function generatePersonalizedPlan(
-  patientFoods: DBFood[],
-  patientId: string,
+function generatePlanFromVisualLibrary(
+  visualLibrary: VisualLibraryItem[],
   goal: string,
   kcalTarget: number,
   macros: { protein: number; carbs: number; fat: number },
-  planOptionIndex: number = 0,
-  restrictions: string[] = [],
-  disliked: string[] = [],
-): any[] {
-  // ── TEMPLATE-FIRST STRATEGY ──
-  // Always use validated presets as the primary source.
-  // DB foods are only used if presets are exhausted or restricted away.
-  const items = generateRealisticPlan(goal, kcalTarget, macros, restrictions, disliked, planOptionIndex);
-  
-  console.log(`[generate-meal-plan] Template-First: ${items.length} items from validated presets`);
-  return items;
-}
-
-// ═══════════════════════════════════════════════════════════════
-// LEGACY FALLBACK GENERATOR (preset-based)
-// Used only when DB has insufficient foods
-// ═══════════════════════════════════════════════════════════════
-
-function generateRealisticPlan(
-  goal: string,
-  kcalTarget: number,
-  _macros: { protein: number; carbs: number; fat: number },
   restrictions: string[],
   disliked: string[],
+  allergies: string[],
   planOptionIndex: number = 0,
 ): any[] {
+  const filtered = filterVisualLibraryForPatient(visualLibrary, restrictions, disliked, allergies);
   const items: any[] = [];
   const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
 
-  // Track used option indices per meal type to avoid repetition across days
-  const usedIndicesPerMeal = new Map<string, Set<number>>();
+  // Group library items by category
+  const byCategory = new Map<string, VisualLibraryItem[]>();
+  for (const item of filtered) {
+    const list = byCategory.get(item.category) || [];
+    list.push(item);
+    byCategory.set(item.category, list);
+  }
+
+  // Track used items per meal type to avoid repetition across days
+  const usedPerMealType = new Map<string, Set<string>>();
 
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
-      const options = getMealOptions(mealType, goal);
+      const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
 
-      let validOptions = options.filter(opt => {
-        const allText = normalize(opt.description + " " + opt.foods.join(" "));
-        if (restrictions.includes("vegetarian") && /frango|carne|bife|tilapia|peixe|porco|sardinha|sobrecoxa|alcatra|patinho/.test(allText)) return false;
-        if (restrictions.includes("vegan") && /frango|carne|bife|tilapia|peixe|porco|ovo|leite|queijo|iogurte|requeijao|manteiga|mel/.test(allText)) return false;
-        if (restrictions.includes("lactose_free") && /leite|queijo|iogurte|requeijao|manteiga/.test(allText)) return false;
-        if (restrictions.includes("gluten_free") && /pao|macarrao|aveia|trigo/.test(allText)) return false;
-        for (const d of disliked) {
-          const nd = normalize(d);
-          if (nd.length >= 3 && allText.includes(nd)) return false;
-        }
-        return true;
-      });
-
-      if (validOptions.length === 0) validOptions = options;
-
-      // Anti-repetition: pick an option not yet used for this meal type
-      if (!usedIndicesPerMeal.has(mealType)) usedIndicesPerMeal.set(mealType, new Set());
-      const usedSet = usedIndicesPerMeal.get(mealType)!;
-      
-      // Reset if all options used (happens when days > options)
-      if (usedSet.size >= validOptions.length) usedSet.clear();
-
-      const regenSeed = generationSeed(String(planOptionIndex), day);
-      let idx = (regenSeed + day) % validOptions.length;
-      
-      // Find unused index
-      let attempts = 0;
-      while (usedSet.has(idx) && attempts < validOptions.length) {
-        idx = (idx + 1) % validOptions.length;
-        attempts++;
+      // Collect candidates from all matching categories
+      let candidates: VisualLibraryItem[] = [];
+      for (const cat of categories) {
+        const catItems = byCategory.get(cat) || [];
+        candidates.push(...catItems);
       }
-      usedSet.add(idx);
-      
-      const selected = validOptions[idx];
 
-      const scaleFactor = targetKcal / (selected.kcal || 1);
-      const clampedScale = Math.max(0.6, Math.min(1.8, scaleFactor));
+      if (candidates.length === 0) {
+        // Ultimate fallback: use any library item with image
+        candidates = filtered.slice(0, 10);
+      }
 
-      const scaledBaseDescription = scaleDescriptionQuantities(selected.description, clampedScale) || selected.description;
-      const finalizedBaseDescription = finalizeMealDescription(scaledBaseDescription, mealType, goal);
-      const subs = buildSubstitutionText(selected.foods, mealType, disliked);
-      const description = finalizedBaseDescription + (subs ? `\n\n🔄 Substituições:\n${subs}` : "");
+      if (candidates.length === 0) {
+        console.warn(`[DB-Exclusive] No visual library items for ${mealType} on day ${day}`);
+        continue;
+      }
+
+      // Anti-repetition tracking
+      if (!usedPerMealType.has(mealType)) usedPerMealType.set(mealType, new Set());
+      const usedSet = usedPerMealType.get(mealType)!;
+      if (usedSet.size >= candidates.length) usedSet.clear();
+
+      // Seeded shuffle for variety
+      const seed = generationSeed(String(planOptionIndex), day * 7 + mealTypes.indexOf(mealType));
+      const shuffled = seededShuffle(candidates, seed);
+
+      // Pick first unused item
+      let picked: VisualLibraryItem | null = null;
+      for (const c of shuffled) {
+        if (!usedSet.has(c.id)) { picked = c; break; }
+      }
+      if (!picked) picked = shuffled[0];
+      usedSet.add(picked.id);
+
+      // Get macros (use defaults if library item lacks data)
+      const catDefaults = CATEGORY_DEFAULT_MACROS[picked.category] || CATEGORY_DEFAULT_MACROS.refeicao;
+      const baseCal = picked.default_calories || catDefaults.cal;
+      const baseP = picked.default_protein || catDefaults.p;
+      const baseC = picked.default_carbs || catDefaults.c;
+      const baseF = picked.default_fat || catDefaults.f;
+
+      // Scale to match target kcal for this meal slot
+      const scaleFactor = baseCal > 0 ? targetKcal / baseCal : 1;
+      const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+
+      // Build description from library item
+      let description = `• ${picked.display_name}`;
+      if (picked.base_recipe && typeof picked.base_recipe === "object") {
+        const recipe = picked.base_recipe as any;
+        if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+          description = recipe.ingredients.map((ing: string) => `• ${ing}`).join("\n");
+          // Scale quantities in description
+          description = scaleDescriptionQuantities(description, clampedScale) || description;
+        }
+      }
+
+      const finalDescription = finalizeMealDescription(description, mealType, goal);
 
       items.push({
-        title: selected.title,
-        description,
+        title: picked.display_name,
+        description: finalDescription,
         meal_type: mealType,
         day_of_week: day,
-        calories_target: Math.round(selected.kcal * clampedScale),
-        protein_target: Math.round(selected.protein * clampedScale),
-        carbs_target: Math.round(selected.carbs * clampedScale),
-        fat_target: Math.round(selected.fat * clampedScale),
+        calories_target: Math.round(baseCal * clampedScale),
+        protein_target: Math.round(baseP * clampedScale),
+        carbs_target: Math.round(baseC * clampedScale),
+        fat_target: Math.round(baseF * clampedScale),
+        visual_library_item_id: picked.id,
+        _image_url: picked.image_url, // transient — for logging only
+        _source: "visual_library",
       });
     }
   }
 
+  console.log(`[DB-Exclusive] Generated ${items.length} items from visual library (${filtered.length} available items)`);
   return items;
-}
-
-function buildSubstitutionText(foods: string[], _mealType: string, disliked: string[] = []): string {
-  const normalizedDisliked = disliked.map(d => normalize(d));
-  const subs: string[] = [];
-  for (const food of foods) {
-    const n = normalize(food);
-    const portionMatch = food.match(/—\s*(\d+g)/i);
-    const portionStr = portionMatch ? portionMatch[1] : "100g";
-
-    for (const [, group] of Object.entries(SUBSTITUTION_GROUPS)) {
-      const match = group.find(item => n.includes(normalize(item)));
-      if (match) {
-        const alternatives = group
-          .filter(item => normalize(item) !== normalize(match))
-          .filter(item => !normalizedDisliked.some(d => d.length >= 3 && (normalize(item).includes(d) || d.includes(normalize(item)))))
-          .slice(0, 3);
-        if (alternatives.length > 0) {
-          const altsWithPortion = alternatives.map(a => `${a} (${portionStr})`);
-          subs.push(`• ${match} → ${altsWithPortion.join(", ")}`);
-        }
-        break;
-      }
-    }
-  }
-  return subs.join("\n");
 }
 
 async function safeDeletePlan(client: any, planId: string) {
