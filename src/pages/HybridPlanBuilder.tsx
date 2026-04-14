@@ -16,6 +16,8 @@ import ClinicalMacroPanel from "@/components/hybrid-builder/ClinicalMacroPanel";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
+import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
+import type { AutoFixResult } from "@/lib/autoFixEngine";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
 import type { ComposerMode } from "@/lib/mealComposer";
 
@@ -142,6 +144,9 @@ export default function HybridPlanBuilder() {
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [composerMode, setComposerMode] = useState<ComposerMode>("quick");
   const [unlocking, setUnlocking] = useState(false);
+  const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
+  const [showAutofixResults, setShowAutofixResults] = useState(false);
+  const [autofixWasValid, setAutofixWasValid] = useState(false);
 
   // DnD sensors
   const sensors = useSensors(
