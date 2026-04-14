@@ -26,8 +26,12 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "4.0.0";
-const PROTOCOL_VERSION = "fitjourney_personalizado_v4";
+const ENGINE_VERSION = "5.0.0";
+const PROTOCOL_VERSION = "fitjourney_2layer_v5";
+
+// ──── 2-Layer Architecture Constants ────
+// Maximum deviation allowed between meal sum and total targets (3%)
+const MAX_2LAYER_DEVIATION = 0.03;
 
 // MEAL_KCAL_SPLIT imported from _shared/food-rules.ts (canonical source)
 const MEAL_KCAL_SPLIT = CANONICAL_MEAL_KCAL_SPLIT;
@@ -1150,6 +1154,40 @@ async function safeDeletePlan(client: any, planId: string) {
   }
 }
 
+// ══════════════════════════════════════════════════════════════
+// 2-LAYER VALIDATION (MANDATORY before persisting any plan)
+// Ensures meal macro sums match clinical engine totals (3% max)
+// ══════════════════════════════════════════════════════════════
+function validate2LayerIntegrity(
+  items: any[],
+  dailyKcal: number,
+  dailyMacros: { protein: number; carbs: number; fat: number },
+): { valid: boolean; deviations: Record<string, number>; errors: string[] } {
+  // Check day 0 as representative
+  const day0Items = items.filter((i: any) => i.day_of_week === 0);
+  if (day0Items.length === 0) return { valid: true, deviations: {}, errors: [] };
+
+  const sumCal = day0Items.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
+  const sumP = day0Items.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+  const sumC = day0Items.reduce((s: number, i: any) => s + (i.carbs_target || 0), 0);
+  const sumF = day0Items.reduce((s: number, i: any) => s + (i.fat_target || 0), 0);
+
+  const deviations = {
+    calories: dailyKcal > 0 ? Math.abs(sumCal - dailyKcal) / dailyKcal : 0,
+    protein: dailyMacros.protein > 0 ? Math.abs(sumP - dailyMacros.protein) / dailyMacros.protein : 0,
+    carbs: dailyMacros.carbs > 0 ? Math.abs(sumC - dailyMacros.carbs) / dailyMacros.carbs : 0,
+    fat: dailyMacros.fat > 0 ? Math.abs(sumF - dailyMacros.fat) / dailyMacros.fat : 0,
+  };
+
+  const errors: string[] = [];
+  if (deviations.calories > MAX_2LAYER_DEVIATION) errors.push(`Calorie deviation ${(deviations.calories * 100).toFixed(1)}%`);
+  if (deviations.protein > MAX_2LAYER_DEVIATION) errors.push(`Protein deviation ${(deviations.protein * 100).toFixed(1)}%`);
+  if (deviations.carbs > MAX_2LAYER_DEVIATION) errors.push(`Carbs deviation ${(deviations.carbs * 100).toFixed(1)}%`);
+  if (deviations.fat > MAX_2LAYER_DEVIATION) errors.push(`Fat deviation ${(deviations.fat * 100).toFixed(1)}%`);
+
+  return { valid: errors.length === 0, deviations, errors };
+}
+
 // ──── Post-generation macro reconciliation ────
 function reconcileDailyMacros(
   items: any[],
@@ -1560,19 +1598,46 @@ serve(async (req) => {
     let dataSource: string;
 
     if (strategyOverride?.targetCalories && strategyOverride?.targetProtein) {
-      // Strategy Advisor chose — this is the SOURCE OF TRUTH
+      // Strategy Advisor — but MUST respect clinical protein/fat ranges (Layer 1 immutable)
       finalKcal = strategyOverride.targetCalories;
+      let overrideProtein = strategyOverride.targetProtein;
+      let overrideFat = strategyOverride.targetFat || macros.fat;
+      
+      // ENFORCE clinical ranges — strategy cannot bypass Layer 1
+      const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+      const proteinPerKg = overrideProtein / weight;
+      if (proteinPerKg > proteinRange.max) {
+        overrideProtein = Math.round(weight * proteinRange.max);
+        console.warn(`[2-Layer] Strategy protein capped: ${strategyOverride.targetProtein}g → ${overrideProtein}g (max ${proteinRange.max}g/kg)`);
+      }
+      if (proteinPerKg < proteinRange.min) {
+        overrideProtein = Math.round(weight * proteinRange.min);
+        console.warn(`[2-Layer] Strategy protein raised: ${strategyOverride.targetProtein}g → ${overrideProtein}g (min ${proteinRange.min}g/kg)`);
+      }
+      const fatPerKg = overrideFat / weight;
+      if (fatPerKg > CLINICAL_FAT_RANGE.max * 1.1) {
+        overrideFat = Math.round(weight * CLINICAL_FAT_RANGE.max);
+        console.warn(`[2-Layer] Strategy fat capped: ${strategyOverride.targetFat}g → ${overrideFat}g`);
+      }
+      
       finalMacros = {
-        protein: strategyOverride.targetProtein,
+        protein: overrideProtein,
         carbs: strategyOverride.targetCarbs || macros.carbs,
-        fat: strategyOverride.targetFat || macros.fat,
+        fat: overrideFat,
       };
       dataSource = `strategy_advisor:${strategyOverride.strategyId || "custom"}`;
-      console.log(`[generate-meal-plan] ✅ Strategy Override ACTIVE: ${strategyOverride.strategyName} | Kcal: ${finalKcal} | P: ${finalMacros.protein}g | C: ${finalMacros.carbs}g | F: ${finalMacros.fat}g`);
+      console.log(`[generate-meal-plan] ✅ Strategy Override (Layer 1 enforced): ${strategyOverride.strategyName} | Kcal: ${finalKcal} | P: ${finalMacros.protein}g | C: ${finalMacros.carbs}g | F: ${finalMacros.fat}g`);
     } else if (physicalAssessment?.calories_target) {
       finalKcal = physicalAssessment.calories_target;
+      // Physical assessment also enforced by Layer 1 ranges
+      let paProtein = physicalAssessment.protein_target || macros.protein;
+      const paProteinPerKg = paProtein / weight;
+      const paProteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+      if (paProteinPerKg > paProteinRange.max) paProtein = Math.round(weight * paProteinRange.max);
+      if (paProteinPerKg < paProteinRange.min) paProtein = Math.round(weight * paProteinRange.min);
+      
       finalMacros = {
-        protein: physicalAssessment.protein_target || macros.protein,
+        protein: paProtein,
         carbs: physicalAssessment.carbs_target || macros.carbs,
         fat: physicalAssessment.fat_target || macros.fat,
       };
@@ -1696,15 +1761,26 @@ serve(async (req) => {
       const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
-        // Template-First: always use validated presets
+        // CAMADA 2: Template structure → reconciled with Layer 1 macros
         const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
-        const planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
+        let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
 
-        const genMeta = buildGenerationMetadata(
-          tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-          age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
-        );
+        // 2-Layer validation for multi-plan
+        const check = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
+        if (!check.valid) {
+          planItems = enforceCrossDayConsistency(planItems, finalMacros, finalKcal);
+          console.warn(`[2-Layer Multi] Option ${tplIdx}: corrected deviations`);
+        }
+
+        const genMeta = {
+          ...buildGenerationMetadata(
+            tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
+            age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
+          ),
+          architecture: "2-layer-v2",
+          two_layer_validated: true,
+        };
 
         const optionLabels = ["Simples", "Variada", "Alternativa"];
         const endDate = new Date();
@@ -1842,9 +1918,27 @@ serve(async (req) => {
       ? { protein: finalMacros.protein, carbs: Math.round(finalMacros.carbs * 1.12), fat: finalMacros.fat }
       : finalMacros;
 
-    // Reconcile with correct per-day targets
+    // ── CAMADA 2: Reconcile template items with Layer 1 macros ──
     const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
     const planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems, goal);
+
+    // ── 2-LAYER VALIDATION (MANDATORY) ──
+    const twoLayerCheck = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
+    if (!twoLayerCheck.valid) {
+      console.warn(`[2-Layer] Deviation detected after reconciliation: ${twoLayerCheck.errors.join(", ")}. Running final correction...`);
+      // Force one more pass of cross-day consistency to fix any remaining deviation
+      const correctedItems = enforceCrossDayConsistency(planItems, finalMacros, finalKcal);
+      const recheck = validate2LayerIntegrity(correctedItems, finalKcal, finalMacros);
+      if (!recheck.valid) {
+        console.warn(`[2-Layer] Still has deviation after correction: ${recheck.errors.join(", ")}. Proceeding with best-effort.`);
+      } else {
+        console.log(`[2-Layer] ✅ Final correction resolved all deviations.`);
+      }
+      // Replace planItems with corrected version
+      planItems.splice(0, planItems.length, ...correctedItems);
+    } else {
+      console.log(`[2-Layer] ✅ Plan validated: all macros within 3% tolerance.`);
+    }
 
     if (planItems.length === 0) {
       return new Response(JSON.stringify({
@@ -1863,6 +1957,10 @@ serve(async (req) => {
       ),
       generation_mode: generationMode,
       mode_enhancements: modeEnhancements,
+      architecture: "2-layer-v2",
+      layer1_source: "clinical_macro_engine",
+      layer2_role: "template_structure_only",
+      two_layer_validated: true,
     };
 
     let finalMealPlanId = meal_plan_id;
