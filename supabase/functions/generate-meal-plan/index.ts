@@ -236,7 +236,7 @@ const CATEGORY_DEFAULT_MACROS: Record<string, { cal: number; p: number; c: numbe
 async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
   const { data, error } = await client
     .from("meal_visual_library")
-    .select("id, slug, name, display_name, category, image_url, default_calories, default_protein, default_carbs, default_fat, base_recipe, tags, search_terms")
+    .select("id, slug, name, display_name, category, image_url, default_calories, default_protein, default_carbs, default_fat, base_recipe, tags, search_terms, clinical_tags")
     .eq("is_active", true)
     .not("image_url", "is", null);
 
@@ -244,8 +244,10 @@ async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
     console.error("[generate-meal-plan] Failed to load visual library:", error);
     return [];
   }
-  // Only items WITH image
-  return (data as VisualLibraryItem[]).filter(item => item.image_url && item.image_url.length > 5);
+  // Only items WITH image; ensure clinical_tags is always an array
+  return (data as VisualLibraryItem[])
+    .filter(item => item.image_url && item.image_url.length > 5)
+    .map(item => ({ ...item, clinical_tags: item.clinical_tags || [] }));
 }
 
 /** Filter visual library items by patient restrictions/disliked/intolerances — STRICT CLINICAL SAFETY */
