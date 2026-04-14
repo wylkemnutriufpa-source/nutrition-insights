@@ -636,24 +636,58 @@ function normalizeGoal(value: unknown): string | null {
   return GOAL_ALIASES[normalized] || normalized;
 }
 
+/**
+ * Clinical Macro Calculator v2.0 — Physiological Rules
+ * 
+ * REGRAS INVIOLÁVEIS:
+ * - Proteína: 1.6–2.2 g/kg (déficit) | 1.8–2.5 g/kg (hipertrofia)
+ * - Gordura: 0.8–1.0 g/kg (universal)
+ * - Carboidrato: completa o restante calórico
+ * - PROIBIDO ultrapassar faixas de proteína
+ */
+const CLINICAL_PROTEIN_RANGES: Record<string, { min: number; max: number; ideal: number }> = {
+  lose_weight:            { min: 1.6, max: 2.2, ideal: 2.0 },
+  improve_health:         { min: 1.4, max: 2.0, ideal: 1.6 },
+  maintain:               { min: 1.4, max: 2.0, ideal: 1.6 },
+  gain_muscle:            { min: 1.8, max: 2.5, ideal: 2.2 },
+  gain_weight:            { min: 1.8, max: 2.5, ideal: 2.2 },
+  athletic_performance:   { min: 1.6, max: 2.2, ideal: 2.0 },
+};
+const CLINICAL_FAT_RANGE = { min: 0.8, max: 1.0, ideal: 0.9 };
+
 function calculateMacros(kcal: number, goal: string, weight: number) {
-  let proteinPerKg: number, carbsPct: number, fatPct: number;
-  switch (goal) {
-    case "lose_weight":
-      proteinPerKg = 2.0; carbsPct = 0.35; fatPct = 0.30; break;
-    case "gain_muscle":
-    case "gain_weight":
-      proteinPerKg = 2.2; carbsPct = 0.45; fatPct = 0.25; break;
-    case "athletic_performance":
-      proteinPerKg = 2.0; carbsPct = 0.50; fatPct = 0.25; break;
-    default:
-      proteinPerKg = 1.6; carbsPct = 0.45; fatPct = 0.30;
-  }
-  const protein = Math.round(weight * proteinPerKg);
+  const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+  const proteinPerKg = proteinRange.ideal;
+  let protein = Math.round(weight * proteinPerKg);
+
+  // Gordura fixa: 0.8–1.0 g/kg
+  let fat = Math.round(weight * CLINICAL_FAT_RANGE.ideal);
+
+  // Carboidrato: completa o restante
   const proteinKcal = protein * 4;
-  const remaining = kcal - proteinKcal;
-  const carbs = Math.round((remaining * (carbsPct / (carbsPct + fatPct))) / 4);
-  const fat = Math.round((remaining * (fatPct / (carbsPct + fatPct))) / 9);
+  const fatKcal = fat * 9;
+  let carbsKcal = kcal - proteinKcal - fatKcal;
+
+  // Se carbs ficou negativo, reduzir gordura ao mínimo
+  if (carbsKcal < 0) {
+    fat = Math.round(weight * CLINICAL_FAT_RANGE.min);
+    carbsKcal = kcal - (protein * 4) - (fat * 9);
+  }
+  // Se ainda negativo, reduzir proteína ao mínimo da faixa
+  if (carbsKcal < 0) {
+    protein = Math.round(weight * proteinRange.min);
+    carbsKcal = kcal - (protein * 4) - (fat * 9);
+  }
+
+  const carbs = Math.max(0, Math.round(carbsKcal / 4));
+
+  // Validação final: proteína dentro da faixa
+  const actualProteinPerKg = protein / weight;
+  if (actualProteinPerKg > proteinRange.max) {
+    protein = Math.round(weight * proteinRange.max);
+    console.warn(`[ClinicalMacro] Protein capped at ${proteinRange.max}g/kg for goal=${goal}`);
+  }
+
   return { protein, carbs, fat };
 }
 
