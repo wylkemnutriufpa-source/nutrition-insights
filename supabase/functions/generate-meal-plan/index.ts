@@ -1885,7 +1885,7 @@ serve(async (req) => {
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         // CAMADA 2: Template structure → reconciled with Layer 1 macros
-        const rawItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx);
+        const rawItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
         let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
 
@@ -1896,14 +1896,22 @@ serve(async (req) => {
           console.warn(`[2-Layer Multi] Option ${tplIdx}: corrected deviations`);
         }
 
+        // ──── FINAL VALIDATION (MANDATORY) ────
+        const finalCheck = validatePlanBeforeSave(planItems, finalKcal, finalMacros, weight, goal);
+        if (!finalCheck.valid) {
+          console.error(`[STRICT Multi] Option ${tplIdx} failed final validation: ${finalCheck.errors.join("; ")}`);
+          continue; // Skip this option, don't save invalid plan
+        }
+
         const genMeta = {
           ...buildGenerationMetadata(
             tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
             age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
           ),
-          architecture: "2-layer-db-exclusive-v6",
+          architecture: "2-layer-db-exclusive-v7-strict",
           two_layer_validated: true,
           meal_source: "visual_library_exclusive",
+          final_validation_passed: true,
         };
 
         const optionLabels = ["Simples", "Variada", "Alternativa"];
