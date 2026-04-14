@@ -640,6 +640,11 @@ export default function Anamnesis() {
       const latestAnamnesis = anamnesisRows?.[0] as any;
       const latestPipeline = pipelineData as any;
 
+      // Detect active pipeline for auto-redirect behavior
+      if (latestPipeline && !isNutritionistMode) {
+        setHasActivePipeline(true);
+      }
+
       if (!latestAnamnesis) return;
 
       const pipelineTouchedAt = new Date(latestPipeline?.updated_at || latestPipeline?.created_at || 0).getTime();
