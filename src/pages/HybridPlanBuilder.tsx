@@ -359,33 +359,6 @@ export default function HybridPlanBuilder() {
       setValidating(false);
     }
   };
-          {/* Publish Warning Dialog (manual mode) */}
-          <PublishWarningDialog
-            open={showPublishWarning}
-            onOpenChange={setShowPublishWarning}
-            onConfirm={executePublish}
-          />
-
-
-  const handlePublish = async () => {
-    if (!user) return;
-    const vs = (plan as any).overall_validation_status;
-    const isManualMode = lockedValidationMode === "MANUAL_EDIT" || !lockedValidationMode;
-
-    // Manual mode: allow publish with warning if not validated
-    if (isManualMode && (!vs || vs !== "aprovado")) {
-      setShowPublishWarning(true);
-      return;
-    }
-
-    // Auto engine mode: hard block
-    if (!isManualMode && (!vs || vs !== "aprovado")) {
-      toast.error("❌ Este plano precisa ser validado antes da publicação. Use o botão 'Validar' primeiro.");
-      return;
-    }
-
-    await executePublish();
-  };
 
   const executePublish = async () => {
     setPublishing(true);
@@ -408,6 +381,26 @@ export default function HybridPlanBuilder() {
     } finally {
       setPublishing(false);
     }
+  };
+
+  const handlePublish = async () => {
+    if (!user) return;
+    const vs = (plan as any).overall_validation_status;
+    const isManualMode = lockedValidationMode === "MANUAL_EDIT" || !lockedValidationMode;
+
+    // Manual mode: allow publish with warning if not validated
+    if (isManualMode && (!vs || vs !== "aprovado")) {
+      setShowPublishWarning(true);
+      return;
+    }
+
+    // Auto engine mode: hard block
+    if (!isManualMode && (!vs || vs !== "aprovado")) {
+      toast.error("❌ Este plano precisa ser validado antes da publicação. Use o botão 'Validar' primeiro.");
+      return;
+    }
+
+    await executePublish();
   };
 
   // DnD handler
