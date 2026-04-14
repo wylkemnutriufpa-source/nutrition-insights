@@ -17,8 +17,11 @@ import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { ValidationCorrectionPanel, type ValidationResult } from "@/components/meal-editor-v2/ValidationCorrectionPanel";
 import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal";
+import ValidationModeDialog, { type ValidationMode } from "@/components/hybrid-builder/ValidationModeDialog";
 import type { AutoFixResult } from "@/lib/autoFixEngine";
 import { usePatientComposerContext } from "@/hooks/usePatientComposerContext";
+import { logAudit } from "@/lib/auditLog";
+import { validateMealPlan } from "@/lib/mealPlanValidationFlow";
 import type { ComposerMode } from "@/lib/mealComposer";
 
 import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock } from "lucide-react";
@@ -147,6 +150,8 @@ export default function HybridPlanBuilder() {
   const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
   const [showAutofixResults, setShowAutofixResults] = useState(false);
   const [autofixWasValid, setAutofixWasValid] = useState(false);
+  const [validationModeDialogOpen, setValidationModeDialogOpen] = useState(false);
+  const [lockedValidationMode, setLockedValidationMode] = useState<ValidationMode | null>(null);
 
   // DnD sensors
   const sensors = useSensors(
@@ -229,7 +234,62 @@ export default function HybridPlanBuilder() {
     }
   };
 
-  const handleValidate = async () => {
+  // Open validation mode dialog (or run directly if already locked)
+  const handleValidate = () => {
+    if (lockedValidationMode) {
+      lockedValidationMode === "MANUAL_EDIT" ? runManualValidation() : runAutoEngineValidation();
+    } else {
+      setValidationModeDialogOpen(true);
+    }
+  };
+
+  const handleModeSelected = (mode: ValidationMode) => {
+    setLockedValidationMode(mode);
+    logAudit("validation_mode_selected", "meal_plan", plan.id, { mode });
+    if (mode === "MANUAL_EDIT") runManualValidation();
+    else runAutoEngineValidation();
+  };
+
+  // ── MANUAL MODE: validate only, no auto-fix ─────────────────
+  const runManualValidation = async () => {
+    setValidating(true);
+    setValidationResult(null);
+    setAutofixResult(null);
+    try {
+      await store._flushQueue();
+      const data = await validateMealPlan(plan.id);
+      const nextStatus = data.overall_status || data.status || (data.success ? "aprovado" : "sugestoes_pendentes");
+
+      store.updatePlan({
+        overall_validation_status: nextStatus,
+        overall_score: typeof data.score === "number" ? data.score : plan.overall_score,
+        last_validated_at: new Date().toISOString(),
+        validation_engine_version: "manual_v1",
+        updated_at: new Date().toISOString(),
+      } as any);
+
+      logAudit("plan_validated_manual", "meal_plan", plan.id, {
+        validation_status: nextStatus,
+        score: data.score ?? 0,
+      });
+
+      if (data.success) {
+        setAutofixWasValid(true);
+        setShowAutofixResults(true);
+        toast.success("Plano válido! ✅");
+      } else {
+        setValidationResult(data as unknown as ValidationResult);
+        toast.info("Validação concluída. Corrija os itens pendentes manualmente.");
+      }
+    } catch (e: any) {
+      toast.error(e.message || "Erro na validação");
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  // ── AUTO ENGINE MODE: validate → fix → revalidate ───────────
+  const runAutoEngineValidation = async () => {
     setValidating(true);
     setValidationResult(null);
     setAutofixResult(null);
@@ -252,9 +312,13 @@ export default function HybridPlanBuilder() {
         updated_at: new Date().toISOString(),
       } as any);
 
+      logAudit("plan_validated_auto", "meal_plan", plan.id, {
+        validation_status: nextStatus,
+        corrections_applied: outcome.kind !== "validated" ? (outcome as any).fixedResult?.changes?.length ?? 0 : 0,
+      });
+
       if (outcome.kind === "validated") {
         await store.hydrate(plan.id, user?.id ?? "");
-        // Show "already valid" modal with explanation
         setAutofixWasValid(true);
         setAutofixResult(null);
         setShowAutofixResults(true);
@@ -263,8 +327,7 @@ export default function HybridPlanBuilder() {
       }
 
       if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
-        await store.hydrate(plan.id, user.id);
-        // Show detailed correction results
+        await store.hydrate(plan.id, user!.id);
         setAutofixWasValid(false);
         setAutofixResult(outcome.fixedResult);
         setShowAutofixResults(true);
@@ -282,7 +345,6 @@ export default function HybridPlanBuilder() {
         throw new Error("Fluxo de correção retornou um estado inesperado.");
       }
 
-      // Show results before redirecting
       setAutofixWasValid(false);
       setAutofixResult(outcome.fixedResult);
       setShowAutofixResults(true);
@@ -395,6 +457,7 @@ export default function HybridPlanBuilder() {
             onValidate={handleValidate}
             onPublish={handlePublish}
             onSaveAsTemplate={() => setSaveTemplateOpen(true)}
+            lockedValidationMode={lockedValidationMode}
             onRename={async (newTitle) => {
               store.updatePlan({ title: newTitle, updated_at: new Date().toISOString() } as any);
               await supabase.from("meal_plans").update({ title: newTitle }).eq("id", plan.id);
@@ -424,6 +487,14 @@ export default function HybridPlanBuilder() {
               </Button>
             </div>
           )}
+
+          {/* Validation Mode Dialog */}
+          <ValidationModeDialog
+            open={validationModeDialogOpen}
+            onOpenChange={setValidationModeDialogOpen}
+            lockedMode={lockedValidationMode}
+            onSelectMode={handleModeSelected}
+          />
 
           <SaveMealTemplateDialog
             open={saveTemplateOpen}

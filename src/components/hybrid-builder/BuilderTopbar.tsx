@@ -4,9 +4,10 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
-  Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X,
+  Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X, PenTool, Lock,
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import type { ValidationMode } from "./ValidationModeDialog";
 
 interface Props {
   patientName: string;
@@ -24,12 +25,14 @@ interface Props {
   onPublish: () => void;
   onSaveAsTemplate?: () => void;
   onRename?: (newTitle: string) => void;
+  lockedValidationMode?: ValidationMode | null;
 }
 
 export default function BuilderTopbar({
   patientName, objective, targetKcal, targetProtein, targetCarbs, targetFat,
   saving, publishing, validating,
   onBack, onSave, onValidate, onPublish, onSaveAsTemplate, onRename,
+  lockedValidationMode,
 }: Props) {
   const { plan, items, syncStatus } = useMealPlanEditorV2Store();
   const [editing, setEditing] = useState(false);
@@ -107,8 +110,9 @@ export default function BuilderTopbar({
             Salvar
           </Button>
           <Button variant="outline" size="sm" onClick={onValidate} disabled={validating} className="h-8 gap-1.5 text-xs gradient-primary text-white border-0">
-            {validating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-            Validar e Corrigir
+            {validating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : lockedValidationMode === "MANUAL_EDIT" ? <PenTool className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+            {lockedValidationMode === "MANUAL_EDIT" ? "Validar Manual" : lockedValidationMode === "AUTO_ENGINE" ? "Validar Auto" : "Validar"}
+            {lockedValidationMode && <Lock className="w-2.5 h-2.5 ml-0.5 opacity-60" />}
           </Button>
           <Button size="sm" onClick={onPublish} disabled={publishing} className="h-8 gap-1.5 text-xs">
             {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
