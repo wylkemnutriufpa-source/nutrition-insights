@@ -270,6 +270,7 @@ export default function MealPlanEditorV2() {
 
     setValidating(true);
     setValidationResult(null);
+    setAutofixResult(null);
 
     try {
       const outcome = await runValidateAndFixMealPlan({
@@ -294,15 +295,21 @@ export default function MealPlanEditorV2() {
       if (outcome.kind === "validated") {
         await store.hydrate(plan.id, user.id);
         setValidationResult(null);
+        setAutofixWasValid(true);
+        setAutofixResult(null);
+        setShowAutofixResults(true);
         toast.success(data.message || "Motor Clínico: Plano válido! Pode ser publicado. ✅");
         return;
       }
 
       if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
         await store.hydrate(plan.id, user.id);
+        setAutofixWasValid(false);
+        setAutofixResult(outcome.fixedResult);
+        setShowAutofixResults(true);
         if (outcome.kind === "fixed_and_validated") {
           setValidationResult(null);
-          toast.success("✅ Plano corrigido e revalidado com sucesso!");
+          toast.success(`✅ Plano corrigido e revalidado! ${outcome.fixedResult.changes.length} correção(ões).`);
         } else {
           setValidationResult(data as unknown as ValidationResult);
           toast.info("Correção aplicada. Ainda há sugestões pendentes.");
@@ -314,8 +321,11 @@ export default function MealPlanEditorV2() {
         throw new Error("Fluxo de correção retornou um estado inesperado.");
       }
 
+      setAutofixWasValid(false);
+      setAutofixResult(outcome.fixedResult);
+      setShowAutofixResults(true);
       toast.success("Plano corrigido salvo como draft! Abrindo no editor clínico...");
-      navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true });
+      setTimeout(() => navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true }), 2000);
     } catch (e: any) {
       toast.error(e.message || "Erro de conexão com o Motor Clínico");
     } finally {
