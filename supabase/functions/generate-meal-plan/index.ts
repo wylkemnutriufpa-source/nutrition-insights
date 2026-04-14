@@ -1733,7 +1733,7 @@ serve(async (req) => {
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         // CAMADA 2: Template structure → reconciled with Layer 1 macros
-        const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
+        const rawItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
         let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
 
@@ -1856,9 +1856,9 @@ serve(async (req) => {
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
     
-    // ── TEMPLATE-FIRST: Always use validated Brazilian presets ──
-    const rawPlanItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, planOptionIndex);
-    console.log(`[generate-meal-plan] Template-First plan generated: ${rawPlanItems.length} items (validated presets)`);
+    // ── DB-EXCLUSIVE: All meals from visual library ──
+    const rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex);
+    console.log(`[generate-meal-plan] DB-Exclusive plan generated: ${rawPlanItems.length} items from visual library`);
     
     // Smart mode: apply adjustments to RAW items BEFORE reconciliation
     // so that reconcileDailyMacros can normalize the final totals correctly
