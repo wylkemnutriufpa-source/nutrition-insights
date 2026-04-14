@@ -26,8 +26,8 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "5.0.0";
-const PROTOCOL_VERSION = "fitjourney_2layer_v5";
+const ENGINE_VERSION = "6.0.0";
+const PROTOCOL_VERSION = "fitjourney_db_exclusive_v6";
 
 // ──── 2-Layer Architecture Constants ────
 // Maximum deviation allowed between meal sum and total targets (3%)
