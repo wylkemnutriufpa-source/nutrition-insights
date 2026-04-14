@@ -174,6 +174,7 @@ export default function BuilderTopbar({
         </div>
       </div>
     </div>
+    </TooltipProvider>
   );
 }
 
