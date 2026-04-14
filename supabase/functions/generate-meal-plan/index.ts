@@ -1477,7 +1477,7 @@ function buildGenerationMetadata(
   return {
     engine_version: ENGINE_VERSION,
     protocol_version: PROTOCOL_VERSION,
-    generation_method: "db_exclusive_visual_library_v6",
+    generation_method: "db_exclusive_visual_library_v7_strict",
     bmr_formula: "mifflin_st_jeor",
     bmr_value: tmb,
     tdee_factor: tdeeFactor,
