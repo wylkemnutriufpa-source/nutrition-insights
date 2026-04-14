@@ -1787,7 +1787,7 @@ serve(async (req) => {
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => ({ ...item, meal_plan_id: newPlan.id }));
+        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id }; });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
