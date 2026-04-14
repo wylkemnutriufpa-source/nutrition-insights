@@ -155,7 +155,7 @@ export function MealLibraryModal({
       protein_target: Math.round(meal.protein * scaleFactor),
       carbs_target: Math.round(meal.carbs * scaleFactor),
       fat_target: Math.round(meal.fat * scaleFactor),
-      metadata: mealMeta,
+      edit_metadata: mealMeta,
     };
 
     addItem(headerItem as any);

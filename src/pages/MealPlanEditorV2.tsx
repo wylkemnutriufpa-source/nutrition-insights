@@ -200,13 +200,6 @@ export default function MealPlanEditorV2() {
     }
     setSaving(true);
     try {
-      const pendingOps = useMealPlanEditorV2Store.getState().pendingOps;
-      const hasStaleOps = pendingOps.some(op => op.itemIds.some(id => id.startsWith("temp-")));
-      if (hasStaleOps) {
-        useMealPlanEditorV2Store.setState(s => ({
-          pendingOps: s.pendingOps.filter(op => !op.itemIds.some(id => id.startsWith("temp-"))),
-        }));
-      }
       await store._flushQueue();
 
       const approveResult = await savePlanAsApproved(plan.id, user!.id);
@@ -236,13 +229,6 @@ export default function MealPlanEditorV2() {
 
     setPublishing(true);
     try {
-      const pendingOps = useMealPlanEditorV2Store.getState().pendingOps;
-      const hasStaleOps = pendingOps.some(op => op.itemIds.some(id => id.startsWith("temp-")));
-      if (hasStaleOps) {
-        useMealPlanEditorV2Store.setState(s => ({
-          pendingOps: s.pendingOps.filter(op => !op.itemIds.some(id => id.startsWith("temp-"))),
-        }));
-      }
       await store._flushQueue();
 
       const result = await publishMealPlan(plan.id, user.id);

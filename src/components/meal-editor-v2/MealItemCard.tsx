@@ -78,7 +78,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             protein_target: item.protein_target,
             carbs_target: item.carbs_target,
             fat_target: item.fat_target,
-            metadata: (item as any).metadata,
+            metadata: (item as any).edit_metadata ?? (item as any).metadata,
             image_url: resolvedImage,
             itemId: item.id,
           });
