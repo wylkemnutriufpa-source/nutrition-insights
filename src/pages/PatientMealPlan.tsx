@@ -612,7 +612,7 @@ export default function PatientMealPlan() {
                                         : <Circle className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />}
                                     </button>
                                     <span className={`text-xs flex-1 cursor-pointer hover:text-primary transition-colors ${status === "followed" ? "line-through text-muted-foreground" : ""}`}
-                                      onClick={() => setSelectedMeal({ ...item, metadata: item.metadata })}
+                                      onClick={() => setSelectedMeal({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
                                     >
                                       {item.title}
                                     </span>

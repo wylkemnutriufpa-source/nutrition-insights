@@ -176,7 +176,7 @@ const MealItemCard = memo(function MealItemCard({
       {resolvedImage && (
         <div
           className="relative w-full h-24 overflow-hidden cursor-pointer"
-          onClick={() => onOpenDetail({ ...item, metadata: (item as any).metadata })}
+          onClick={() => onOpenDetail({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
         >
           <img src={resolvedImage} alt={item.title} className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
@@ -200,7 +200,7 @@ const MealItemCard = memo(function MealItemCard({
       <div className="p-4">
         <div
           className="flex items-start gap-3 cursor-pointer"
-          onClick={() => onOpenDetail({ ...item, metadata: (item as any).metadata })}
+          onClick={() => onOpenDetail({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
         >
           {!resolvedImage && (
             <div className="mt-0.5">

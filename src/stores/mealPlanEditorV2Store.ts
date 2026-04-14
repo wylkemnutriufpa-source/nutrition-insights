@@ -19,6 +19,8 @@ export interface PendingOp {
   queuedAt: number;
 }
 
+type MealPlanItemInsert = TablesInsert<"meal_plan_items">;
+
 interface EditorV2State {
   // ── Core data ─────────────────────────────────────────────
   planId: string | null;
@@ -73,6 +75,55 @@ let flushTimer: ReturnType<typeof setTimeout> | null = null;
 let syncBadgeTimer: ReturnType<typeof setTimeout> | null = null;
 let isFlushing = false;
 let activeFlushPromise: Promise<void> | null = null;
+
+const IMMUTABLE_PLAN_STATUSES = new Set(["approved", "published", "published_to_patient"]);
+
+function isPlanImmutable(plan: MealPlan | null) {
+  return IMMUTABLE_PLAN_STATUSES.has(String((plan as any)?.plan_status ?? ""));
+}
+
+function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemInsert {
+  return {
+    meal_plan_id: insert.meal_plan_id,
+    title: insert.title,
+    description: insert.description ?? null,
+    meal_type: insert.meal_type,
+    day_of_week: insert.day_of_week ?? 1,
+    calories_target: insert.calories_target ?? null,
+    protein_target: insert.protein_target ?? null,
+    carbs_target: insert.carbs_target ?? null,
+    fat_target: insert.fat_target ?? null,
+    tenant_id: (insert as any).tenant_id ?? null,
+    visual_library_item_id: (insert as any).visual_library_item_id ?? null,
+    image_url: (insert as any).image_url ?? null,
+    item_origin: (insert as any).item_origin ?? "manual",
+    is_manually_edited: (insert as any).is_manually_edited ?? false,
+    is_locked: (insert as any).is_locked ?? false,
+    was_auto_corrected: (insert as any).was_auto_corrected ?? false,
+    edit_metadata: (insert as any).edit_metadata ?? null,
+  };
+}
+
+function buildOptimisticMealPlanItem(insert: MealPlanItemInsert): MealPlanItem {
+  return {
+    id: tempId(),
+    created_at: new Date().toISOString(),
+    ...sanitizeMealPlanItemInsert(insert),
+  } as MealPlanItem;
+}
+
+function getMetadataFromItem(item: Partial<MealPlanItem> & { metadata?: unknown }) {
+  return (item as any).edit_metadata ?? (item as any).metadata ?? null;
+}
+
+function sanitizeMealPlanItemPatch(patch: Partial<MealPlanItem>) {
+  const next: Record<string, unknown> = { ...patch };
+  if ("metadata" in next && !("edit_metadata" in next)) {
+    next.edit_metadata = (next as any).metadata;
+  }
+  delete next.metadata;
+  return next as Partial<MealPlanItem>;
+}
 
 // ── Session cache helpers ────────────────────────────────────
 function readCache(planId: string): Pick<EditorV2State, "plan" | "patientName" | "items"> | null {
@@ -229,28 +280,13 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   addItem: (insert) => get().addItems([insert]),
 
   addItems: (inserts) => {
+    if (isPlanImmutable(get().plan)) {
+      return;
+    }
+
     const state = get();
-    const optimistic = inserts.map((ins) => ({
-      id: tempId(),
-      meal_plan_id: ins.meal_plan_id,
-      title: ins.title,
-      description: ins.description ?? null,
-      edit_metadata: (ins as any).edit_metadata ?? null,
-      meal_type: ins.meal_type,
-      day_of_week: ins.day_of_week ?? 1,
-      calories_target: ins.calories_target ?? null,
-      protein_target: ins.protein_target ?? null,
-      carbs_target: ins.carbs_target ?? null,
-      fat_target: ins.fat_target ?? null,
-      tenant_id: (ins as any).tenant_id ?? null,
-      visual_library_item_id: (ins as any).visual_library_item_id ?? null,
-      image_url: (ins as any).image_url ?? null,
-      item_origin: (ins as any).item_origin ?? "manual",
-      is_manually_edited: (ins as any).is_manually_edited ?? false,
-      is_locked: (ins as any).is_locked ?? false,
-      was_auto_corrected: (ins as any).was_auto_corrected ?? false,
-      created_at: new Date().toISOString(),
-    } as unknown as MealPlanItem));
+    const sanitizedInserts = inserts.map(sanitizeMealPlanItemInsert);
+    const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
     const tIds = optimistic.map((o) => o.id);
     set({ items: [...state.items, ...optimistic] });
@@ -260,9 +296,37 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: tIds,
       queuedAt: Date.now(),
       persist: async () => {
+        const currentState = get();
+        const rowsToInsert = tIds
+          .map((tempItemId) => currentState.items.find((item) => item.id === tempItemId))
+          .filter(Boolean)
+          .map((item) =>
+            sanitizeMealPlanItemInsert({
+              meal_plan_id: item!.meal_plan_id,
+              title: item!.title,
+              description: item!.description,
+              meal_type: item!.meal_type,
+              day_of_week: item!.day_of_week,
+              calories_target: item!.calories_target,
+              protein_target: item!.protein_target,
+              carbs_target: item!.carbs_target,
+              fat_target: item!.fat_target,
+              tenant_id: item!.tenant_id,
+              visual_library_item_id: item!.visual_library_item_id,
+              image_url: item!.image_url,
+              item_origin: item!.item_origin,
+              is_manually_edited: item!.is_manually_edited,
+              is_locked: item!.is_locked,
+              was_auto_corrected: item!.was_auto_corrected,
+              edit_metadata: getMetadataFromItem(item!),
+            })
+          );
+
+        if (rowsToInsert.length === 0) return;
+
         const { data, error } = await supabase
           .from("meal_plan_items")
-          .insert(inserts)
+          .insert(rowsToInsert)
           .select();
         if (error) throw error;
 
@@ -286,9 +350,14 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Update item ───────────────────────────────────────────
   updateItem: (itemId, patch) => {
+    if (isPlanImmutable(get().plan)) {
+      return;
+    }
+
+    const sanitizedPatch = sanitizeMealPlanItemPatch(patch);
     const prev = get().items;
     set((s) => ({
-      items: s.items.map((i) => (i.id === itemId ? { ...i, ...patch } as MealPlanItem : i)),
+      items: s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i)),
     }));
 
     // For temp items (not yet persisted), only update local state — the pending insert will use the updated local data
@@ -303,7 +372,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       persist: async () => {
         const { error } = await supabase
           .from("meal_plan_items")
-          .update(patch as any)
+          .update(sanitizedPatch as any)
           .eq("id", itemId);
         if (error) throw error;
       },
@@ -313,6 +382,10 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Delete item ───────────────────────────────────────────
   deleteItem: (itemId) => {
+    if (isPlanImmutable(get().plan)) {
+      return;
+    }
+
     const prev = get().items;
     set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
 
@@ -333,6 +406,10 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Delete all items in a cell (day + mealType) ────────────
   deleteItemsInCell: (day, mealType) => {
+    if (isPlanImmutable(get().plan)) {
+      return;
+    }
+
     const toDelete = get().items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
     if (toDelete.length === 0) return;
     const prev = get().items;
@@ -356,6 +433,10 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Clear ALL items from the plan ─────────────────────────
   clearAllItems: () => {
+    if (isPlanImmutable(get().plan)) {
+      return;
+    }
+
     const prev = get().items;
     if (prev.length === 0) return;
     const allIds = prev.map((i) => i.id);
@@ -385,6 +466,10 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Duplicate item ────────────────────────────────────────
   duplicateItem: (itemId) => {
+    if (isPlanImmutable(get().plan)) {
+      return;
+    }
+
     const item = get().items.find((i) => i.id === itemId);
     if (!item) return;
     get().addItem({
@@ -397,11 +482,23 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       protein_target: item.protein_target,
       carbs_target: item.carbs_target,
       fat_target: item.fat_target,
+      tenant_id: item.tenant_id,
+      visual_library_item_id: item.visual_library_item_id,
+      image_url: item.image_url,
+      item_origin: item.item_origin,
+      is_manually_edited: item.is_manually_edited,
+      is_locked: item.is_locked,
+      was_auto_corrected: item.was_auto_corrected,
+      edit_metadata: getMetadataFromItem(item),
     });
   },
 
   // ── Swap two cells ────────────────────────────────────────
   swapCells: (srcDay, srcMeal, dstDay, dstMeal) => {
+    if (isPlanImmutable(get().plan)) {
+      return;
+    }
+
     const prev = get().items;
     const srcItems = prev.filter((i) => i.day_of_week === srcDay && i.meal_type === srcMeal);
     const dstItems = prev.filter((i) => i.day_of_week === dstDay && i.meal_type === dstMeal);
@@ -427,7 +524,9 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: affectedIds,
       queuedAt: Date.now(),
       persist: async () => {
-        const updates = allAffected.map((item) => {
+        const updates = allAffected
+          .filter((item) => !item.id.startsWith("temp-"))
+          .map((item) => {
           const isSrc = item.day_of_week === srcDay && item.meal_type === srcMeal;
           return supabase
             .from("meal_plan_items")
@@ -436,7 +535,8 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
               meal_type: isSrc ? dstMeal : srcMeal,
             })
             .eq("id", item.id);
-        });
+          });
+        if (updates.length === 0) return;
         const results = await Promise.all(updates);
         const firstError = results.find((r) => r.error);
         if (firstError?.error) throw firstError.error;
