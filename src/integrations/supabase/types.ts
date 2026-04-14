@@ -6475,6 +6475,7 @@ export type Database = {
         Row: {
           base_recipe: string | null
           category: string
+          clinical_tags: string[] | null
           created_at: string | null
           created_by: string | null
           default_calories: number | null
@@ -6501,6 +6502,7 @@ export type Database = {
         Insert: {
           base_recipe?: string | null
           category: string
+          clinical_tags?: string[] | null
           created_at?: string | null
           created_by?: string | null
           default_calories?: number | null
@@ -6527,6 +6529,7 @@ export type Database = {
         Update: {
           base_recipe?: string | null
           category?: string
+          clinical_tags?: string[] | null
           created_at?: string | null
           created_by?: string | null
           default_calories?: number | null

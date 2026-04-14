@@ -128,7 +128,29 @@ const MEAL_TYPE_TO_DB_TAG: Record<string, string[]> = {
   evening_snack: ["ceia", "lanche_tarde"],
 };
 
-// ──── Restriction to DB tag mapping ────
+// ──── Restriction to clinical_tags mapping (structured tag-based filtering) ────
+const RESTRICTION_TO_CLINICAL_TAG: Record<string, string> = {
+  lactose: "contains_lactose",
+  lactose_free: "contains_lactose",
+  gluten: "contains_gluten",
+  gluten_free: "contains_gluten",
+  egg: "contains_egg",
+  egg_free: "contains_egg",
+  ovo: "contains_egg",
+  nuts: "contains_nuts",
+  nut_free: "contains_nuts",
+  amendoim: "contains_nuts",
+  castanha: "contains_nuts",
+  soy: "contains_soy",
+  soy_free: "contains_soy",
+  soja: "contains_soy",
+  seafood: "contains_seafood",
+  shellfish_free: "contains_seafood",
+  camarao: "contains_seafood",
+  frutos_do_mar: "contains_seafood",
+};
+
+// Legacy mapping kept for backward compat references
 const RESTRICTION_TO_DB_EXCLUDE_TAG: Record<string, string[]> = {
   lactose_free: ["alergia_leite"],
   gluten_free: ["alergia_gluten"],
@@ -188,6 +210,7 @@ interface VisualLibraryItem {
   base_recipe: any;
   tags: string[];
   search_terms: string[];
+  clinical_tags: string[];
 }
 
 /** Map meal_type to visual library categories */
@@ -213,7 +236,7 @@ const CATEGORY_DEFAULT_MACROS: Record<string, { cal: number; p: number; c: numbe
 async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
   const { data, error } = await client
     .from("meal_visual_library")
-    .select("id, slug, name, display_name, category, image_url, default_calories, default_protein, default_carbs, default_fat, base_recipe, tags, search_terms")
+    .select("id, slug, name, display_name, category, image_url, default_calories, default_protein, default_carbs, default_fat, base_recipe, tags, search_terms, clinical_tags")
     .eq("is_active", true)
     .not("image_url", "is", null);
 
@@ -221,73 +244,66 @@ async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
     console.error("[generate-meal-plan] Failed to load visual library:", error);
     return [];
   }
-  // Only items WITH image
-  return (data as VisualLibraryItem[]).filter(item => item.image_url && item.image_url.length > 5);
+  // Only items WITH image; ensure clinical_tags is always an array
+  return (data as VisualLibraryItem[])
+    .filter(item => item.image_url && item.image_url.length > 5)
+    .map(item => ({ ...item, clinical_tags: item.clinical_tags || [] }));
 }
 
-/** Filter visual library items by patient restrictions/disliked/intolerances — STRICT CLINICAL SAFETY */
+/** Filter visual library items by patient restrictions/disliked/intolerances — TAG-BASED CLINICAL SAFETY v2.0 */
 function filterVisualLibraryForPatient(
   items: VisualLibraryItem[],
   restrictions: string[],
   disliked: string[],
   allergies: string[],
 ): VisualLibraryItem[] {
-  const blocked = [...disliked, ...allergies].map(d => normalize(d)).filter(d => d.length >= 3);
-
-  // Build intolerance keyword set from restrictions + allergies
-  const intoleranceKeywords: string[] = [];
+  // ── STEP 1: Build excluded clinical_tags set from restrictions + allergies ──
+  const excludedClinicalTags = new Set<string>();
   for (const r of [...restrictions, ...allergies]) {
     const nr = normalize(r);
-    for (const [key, keywords] of Object.entries(INTOLERANCE_KEYWORDS)) {
-      if (nr.includes(key) || nr.includes(key + "_free") || nr.includes("alergia_" + key)) {
-        intoleranceKeywords.push(...keywords);
+    // Map restriction strings to clinical_tags
+    for (const [key, clinicalTag] of Object.entries(RESTRICTION_TO_CLINICAL_TAG)) {
+      if (nr.includes(key)) {
+        excludedClinicalTags.add(clinicalTag);
       }
     }
-    // Direct restriction mappings
-    if (nr.includes("lactose") || nr.includes("lactose_free")) intoleranceKeywords.push(...INTOLERANCE_KEYWORDS.lactose);
-    if (nr.includes("gluten") || nr.includes("gluten_free")) intoleranceKeywords.push(...INTOLERANCE_KEYWORDS.gluten);
   }
-  const uniqueIntoleranceKws = [...new Set(intoleranceKeywords.map(k => normalize(k)))];
 
-  // Vegetarian/vegan check
+  // Vegetarian/vegan → exclude animal_protein tag
   const isVegetarian = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegetarian") || nr.includes("vegetariano"); });
   const isVegan = restrictions.some(r => { const nr = normalize(r); return nr.includes("vegan") || nr.includes("vegano"); });
-  const meatKeywords = ["frango", "carne", "bife", "peixe", "tilapia", "porco", "costel", "sardinha", "atum", "camarao", "salmao", "sobrecoxa", "alcatra", "picanha", "linguica", "bacon", "presunto", "peito de peru", "peru"];
-  const animalKeywords = [...meatKeywords, "ovo", "leite", "queijo", "iogurte", "mel", "whey", "requeijao"];
+  if (isVegetarian || isVegan) {
+    excludedClinicalTags.add("animal_protein");
+  }
+  if (isVegan) {
+    excludedClinicalTags.add("contains_lactose");
+    excludedClinicalTags.add("contains_egg");
+  }
+
+  // ── STEP 2: Build blocked keywords from disliked foods (still string-based for custom dislikes) ──
+  const blocked = [...disliked].map(d => normalize(d)).filter(d => d.length >= 3);
+
+  console.log(`[TAG-FILTER-v2] Excluded clinical_tags: [${[...excludedClinicalTags].join(', ')}], Blocked keywords: [${blocked.join(', ')}]`);
 
   return items.filter(item => {
-    const normName = normalize(item.display_name);
-    const normSlug = normalize(item.slug);
-    const searchTermsText = (item.search_terms || []).map(t => normalize(t)).join(" ");
-    const allText = normName + " " + normSlug + " " + searchTermsText;
+    const itemTags = item.clinical_tags || [];
 
-    // Extract recipe ingredients text for deep check
-    let recipeText = "";
-    if (item.base_recipe && typeof item.base_recipe === "object") {
-      const recipe = item.base_recipe as any;
-      if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
-        recipeText = recipe.ingredients.map((ing: string) => normalize(ing)).join(" ");
+    // ── PRIMARY FILTER: Tag-based exclusion (100% reliable) ──
+    for (const excludedTag of excludedClinicalTags) {
+      if (itemTags.includes(excludedTag)) {
+        return false;
       }
     }
-    const fullText = allText + " " + recipeText;
 
-    // Check disliked/allergies (direct keyword match)
-    for (const b of blocked) {
-      if (fullText.includes(b)) return false;
-    }
-
-    // STRICT INTOLERANCE FILTER — check display_name, slug, search_terms, AND base_recipe.ingredients
-    for (const kw of uniqueIntoleranceKws) {
-      if (kw.length < 3) continue;
-      if (fullText.includes(kw)) return false;
-    }
-
-    // Vegetarian/vegan enforcement
-    if (isVegetarian) {
-      for (const mk of meatKeywords) { if (fullText.includes(mk)) return false; }
-    }
-    if (isVegan) {
-      for (const ak of animalKeywords) { if (fullText.includes(ak)) return false; }
+    // ── SECONDARY FILTER: Disliked foods keyword match (custom preferences) ──
+    if (blocked.length > 0) {
+      const normName = normalize(item.display_name);
+      const normSlug = normalize(item.slug);
+      const searchTermsText = (item.search_terms || []).map(t => normalize(t)).join(" ");
+      const fullText = normName + " " + normSlug + " " + searchTermsText;
+      for (const b of blocked) {
+        if (fullText.includes(b)) return false;
+      }
     }
 
     return true;
