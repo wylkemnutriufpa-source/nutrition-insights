@@ -326,15 +326,12 @@ export default function MealPlans() {
                   </select>
                 </div>
                 {form.patient_id ? (
-                  <SmartPlanGenerator
+                  <GenerationModeSelector
                     patientId={form.patient_id}
-                    patientName={patients.find(p => p.id === form.patient_id)?.name}
-                    onGenerated={(planId) => {
-                      runPostGenVisualMatch(planId).catch(() => {});
+                    onGenerated={() => {
                       setOpen(false);
-                      navigate(`/meal-plans/${planId}`);
+                      fetchPlans();
                     }}
-                    onClose={() => setOpen(false)}
                   />
                 ) : (
                   <div className="text-center py-6 text-muted-foreground text-sm">
