@@ -1,8 +1,9 @@
 import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
-  Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera,
+  Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera, SlidersHorizontal,
 } from "lucide-react";
+import { MacroEditDialog } from "./MacroEditDialog";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
 import { useMealDetail } from "@/components/patient/MealDetailContext";
@@ -20,6 +21,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const { openMealDetail, setOnRemoveFoodLine, setOnChangeImage } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
+  const [macroEditOpen, setMacroEditOpen] = useState(false);
 
   // Register callback for removing food lines from description
   useEffect(() => {
@@ -176,6 +178,14 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             <div className="absolute top-1 right-1 z-10 flex gap-0.5 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity">
               <button
                 type="button"
+                onClick={(e) => { e.stopPropagation(); setMacroEditOpen(true); }}
+                className="p-0.5 rounded hover:bg-accent/50"
+                title="Editar macros"
+              >
+                <SlidersHorizontal className="w-2.5 h-2.5 text-muted-foreground" />
+              </button>
+              <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); setInlineEdit(true); setEditValue(item.title); }}
                 className="p-0.5 rounded hover:bg-accent/50"
                 title="Editar"
@@ -202,6 +212,11 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
           </>
         )}
       </div>
+      <MacroEditDialog
+        open={macroEditOpen}
+        onOpenChange={setMacroEditOpen}
+        item={item}
+      />
     </motion.div>
   );
 }
