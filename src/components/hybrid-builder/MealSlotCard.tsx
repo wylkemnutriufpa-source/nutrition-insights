@@ -13,6 +13,8 @@ import {
   RefreshCcw,
   Search,
   CalendarRange,
+  Save,
+  FolderOpen,
 } from "lucide-react";
 import { toast } from "sonner";
 import { composeMealForTarget, type ComposerMode, type MacroTarget } from "@/lib/mealComposer";
@@ -20,6 +22,7 @@ import type { PatientContext } from "@/lib/mealComposer";
 import SmartMealSelectorModal from "./SmartMealSelectorModal";
 import MealSlotItemCard from "./MealSlotItemCard";
 import FoodSearchInline from "./FoodSearchInline";
+import SaveMealSlotDialog from "./SaveMealSlotDialog";
 
 interface Props {
   day: number;
