@@ -110,8 +110,9 @@ export default function BuilderTopbar({
             Salvar
           </Button>
           <Button variant="outline" size="sm" onClick={onValidate} disabled={validating} className="h-8 gap-1.5 text-xs gradient-primary text-white border-0">
-            {validating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
-            Validar e Corrigir
+            {validating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : lockedValidationMode === "MANUAL_EDIT" ? <PenTool className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
+            {lockedValidationMode === "MANUAL_EDIT" ? "Validar Manual" : lockedValidationMode === "AUTO_ENGINE" ? "Validar Auto" : "Validar"}
+            {lockedValidationMode && <Lock className="w-2.5 h-2.5 ml-0.5 opacity-60" />}
           </Button>
           <Button size="sm" onClick={onPublish} disabled={publishing} className="h-8 gap-1.5 text-xs">
             {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
