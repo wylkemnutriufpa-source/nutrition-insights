@@ -441,7 +441,26 @@ export default function HybridPlanBuilder() {
             onSaved={() => toast.success("Plano salvo como modelo!")}
           />
 
-          {/* Validation panel */}
+          {/* AutoFix Results Modal */}
+          <AutoFixResultsModal
+            open={showAutofixResults}
+            onOpenChange={setShowAutofixResults}
+            result={autofixResult || {
+              success: true,
+              changes: [],
+              before: { score: { overallScore: 100, totalItems: 0, uniqueItems: 0, avgItemsPerMeal: 0 } as any, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
+              after: { score: { overallScore: 100, totalItems: 0, uniqueItems: 0, avgItemsPerMeal: 0 } as any, totalCalories: 0, totalProtein: 0, totalCarbs: 0, totalFat: 0 },
+              warnings: [],
+              summary: { blocked_removed: 0, meals_simplified: 0, snacks_fixed: 0, breakfasts_fixed: 0, main_meals_standardized: 0, macro_rebalanced: false },
+            }}
+            wasAlreadyValid={autofixWasValid}
+            validationMessage={
+              autofixWasValid
+                ? `Score: ${plan.overall_score ?? "?"}/100. Calorias, proteínas, carboidratos e gorduras estão dentro das faixas clínicas. Nenhuma refeição bloqueada ou desbalanceada encontrada.`
+                : undefined
+            }
+          />
+
           {validationResult && !validationResult.success && (
             <ValidationCorrectionPanel
               result={validationResult}
