@@ -1734,15 +1734,26 @@ serve(async (req) => {
       const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
-        // Template-First: always use validated presets
+        // CAMADA 2: Template structure → reconciled with Layer 1 macros
         const rawItems = generateRealisticPlan(goal, finalKcal, finalMacros, restrictions, disliked, tplIdx);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
-        const planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
+        let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
 
-        const genMeta = buildGenerationMetadata(
-          tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
-          age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
-        );
+        // 2-Layer validation for multi-plan
+        const check = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
+        if (!check.valid) {
+          planItems = enforceCrossDayConsistency(planItems, finalMacros, finalKcal);
+          console.warn(`[2-Layer Multi] Option ${tplIdx}: corrected deviations`);
+        }
+
+        const genMeta = {
+          ...buildGenerationMetadata(
+            tmb, tdee, tdeeFactor, finalKcal, goal, finalMacros, weight, height,
+            age, sex, activityLevel, dataSource, restrictions, medicalConditions, disliked, useDBDriven
+          ),
+          architecture: "2-layer-v2",
+          two_layer_validated: true,
+        };
 
         const optionLabels = ["Simples", "Variada", "Alternativa"];
         const endDate = new Date();
