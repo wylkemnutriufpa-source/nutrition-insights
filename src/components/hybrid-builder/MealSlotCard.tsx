@@ -261,6 +261,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           <div className="flex items-center gap-1 shrink-0">
             {hasItems && (
               <>
+                <button onClick={() => setSaveTemplateOpen(true)} className="p-1 rounded hover:bg-muted" title="Salvar refeição como template">
+                  <Save className="w-3 h-3 text-muted-foreground" />
+                </button>
                 <button onClick={handleApplyToAllDays} className="p-1 rounded hover:bg-primary/10" title="Aplicar em todos os dias">
                   <CalendarRange className="w-3 h-3 text-primary" />
                 </button>
@@ -272,6 +275,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 </button>
               </>
             )}
+            <button onClick={() => setLoadTemplateOpen(true)} className="p-1 rounded hover:bg-muted" title="Usar refeição salva">
+              <FolderOpen className="w-3 h-3 text-muted-foreground" />
+            </button>
             {clipboard && clipboard.items.length > 0 && (
               <button onClick={handlePasteSlot} className="p-1 rounded hover:bg-muted" title="Colar refeição">
                 <ClipboardPaste className="w-3 h-3 text-primary" />
