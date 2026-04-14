@@ -1787,7 +1787,16 @@ serve(async (req) => {
       ? rawAllergies.filter((a: string) => a !== "none")
       : [];
 
-    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")}`);
+    // ── Parse enabled meals and meal times from onboarding ──
+    const rawEnabledMeals = mergedAnswers.enabled_meals || mergedAnswers.meals_enabled || null;
+    const enabledMeals: string[] | undefined = Array.isArray(rawEnabledMeals) && rawEnabledMeals.length > 0
+      ? rawEnabledMeals.filter((m: string) => typeof m === "string" && m.length > 0)
+      : undefined;
+    const mealTimes: Record<string, string> | undefined = mergedAnswers.meal_times && typeof mergedAnswers.meal_times === "object"
+      ? mergedAnswers.meal_times as Record<string, string>
+      : undefined;
+
+    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")} | EnabledMeals: ${enabledMeals?.join(",") || "default"} | MealTimes: ${mealTimes ? JSON.stringify(mealTimes) : "none"}`);
 
     // ── Mode-specific enhancements ──
     let modeEnhancements: Record<string, any> = {};
