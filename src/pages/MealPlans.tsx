@@ -49,7 +49,7 @@ import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
-import SmartPlanGenerator from "@/components/plans/SmartPlanGenerator";
+import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 
 type MealPlan = Tables<"meal_plans">;
 
