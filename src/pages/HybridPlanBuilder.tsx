@@ -232,6 +232,7 @@ export default function HybridPlanBuilder() {
   const handleValidate = async () => {
     setValidating(true);
     setValidationResult(null);
+    setAutofixResult(null);
     try {
       const outcome = await runValidateAndFixMealPlan({
         planId: plan.id,
@@ -253,15 +254,23 @@ export default function HybridPlanBuilder() {
 
       if (outcome.kind === "validated") {
         await store.hydrate(plan.id, user?.id ?? "");
+        // Show "already valid" modal with explanation
+        setAutofixWasValid(true);
+        setAutofixResult(null);
+        setShowAutofixResults(true);
         toast.success("Plano válido! ✅");
         return;
       }
 
       if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
         await store.hydrate(plan.id, user.id);
+        // Show detailed correction results
+        setAutofixWasValid(false);
+        setAutofixResult(outcome.fixedResult);
+        setShowAutofixResults(true);
         if (outcome.kind === "fixed_and_validated") {
           setValidationResult(null);
-          toast.success("✅ Plano corrigido e revalidado com sucesso!");
+          toast.success(`✅ Plano corrigido e revalidado! ${outcome.fixedResult.changes.length} correção(ões).`);
         } else {
           setValidationResult(data as unknown as ValidationResult);
           toast.info("Correção aplicada, mas ainda existem ajustes pendentes.");
@@ -273,8 +282,12 @@ export default function HybridPlanBuilder() {
         throw new Error("Fluxo de correção retornou um estado inesperado.");
       }
 
+      // Show results before redirecting
+      setAutofixWasValid(false);
+      setAutofixResult(outcome.fixedResult);
+      setShowAutofixResults(true);
       toast.success("Plano corrigido salvo como novo draft. Abrindo no editor clínico...");
-      navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true });
+      setTimeout(() => navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true }), 2000);
       return;
     } catch (e: any) {
       toast.error(e.message || "Erro na validação");
