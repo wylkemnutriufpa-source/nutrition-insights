@@ -4,14 +4,19 @@
  * ALL components MUST use these helpers instead of inline status checks.
  * 
  * Rules:
- * - published / published_to_patient → immutable to automation, editable by owner nutritionist
- * - approved → editable
- * - draft_* → editable
+ * - published / published_to_patient / approved → immutable to automation (trigger-enforced)
+ * - approved → editable by owner nutritionist in UI, but automation creates new draft
+ * - draft_* → editable (in-place)
  * - archived → read-only
+ * 
+ * IMPORTANT: This file MUST stay aligned with the SQL trigger
+ * `fn_guard_published_plan_items_immutable` which blocks DELETE/UPDATE
+ * on items belonging to plans with status IN ('approved', 'published', 'published_to_patient').
  */
 
-/** Statuses where automated engines (autofix, pipeline) must NOT modify in-place */
-const AUTOMATION_IMMUTABLE: ReadonlySet<string> = new Set(["published", "published_to_patient"]);
+/** Statuses where automated engines (autofix, pipeline) must NOT modify in-place.
+ *  Aligned with SQL trigger trg_guard_published_plan_items_immutable. */
+const AUTOMATION_IMMUTABLE: ReadonlySet<string> = new Set(["approved", "published", "published_to_patient"]);
 
 /** Statuses where UI blocks editing entirely (archived plans) */
 const UI_READ_ONLY: ReadonlySet<string> = new Set(["archived"]);
@@ -30,6 +35,7 @@ export function canNutritionistEdit(planStatus: string): boolean {
 /**
  * Should automated engines (autofix, pipeline) create a new draft
  * instead of modifying this plan in-place?
+ * Aligned with SQL trigger trg_guard_published_plan_items_immutable.
  */
 export function isAutomationImmutable(planStatus: string): boolean {
   return AUTOMATION_IMMUTABLE.has(planStatus);
