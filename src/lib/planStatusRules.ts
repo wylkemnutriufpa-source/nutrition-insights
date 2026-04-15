@@ -50,7 +50,21 @@ export function isEffectivePlan(planStatus: string): boolean {
 
 /**
  * Can this plan be published (transition to published_to_patient)?
+ * ALIGNED with SQL trigger validate_meal_plan_status_transition:
+ * allows from: approved, draft, draft_auto_generated, under_professional_review
+ * blocks from: archived, expired, published_to_patient (must archive first)
+ * 
+ * Note: draft_auto_corrected and draft_revision are allowed because the trigger
+ * only blocks specific transitions, not these source statuses.
  */
 export function canPublish(planStatus: string): boolean {
-  return ["approved", "draft", "draft_auto_generated", "draft_auto_corrected", "draft_revision", "draft_template"].includes(planStatus);
+  return [
+    "approved",
+    "draft",
+    "draft_auto_generated",
+    "draft_auto_corrected",
+    "draft_revision",
+    "draft_template",
+    "under_professional_review",
+  ].includes(planStatus);
 }

@@ -322,7 +322,8 @@ export function buildMealItemFromTemplate(
   for (const food of template.foods_structure) {
     if (food.substitutions && food.substitutions.length > 0) {
       const matchedScaled = scaledFoods.find(sf => sf.name === food.name);
-      const grams = matchedScaled?.portion_grams || food.portion_grams;
+      const rawGrams = matchedScaled?.portion_grams ?? food.portion_grams;
+      const grams = Number.isFinite(Number(rawGrams)) && Number(rawGrams) > 0 ? Number(rawGrams) : 100;
       const alts = food.substitutions.slice(0, 3).map(s => `${s} (${grams}g)`);
       subLines.push(`• ${food.name} → ${alts.join(", ")}`);
     }
