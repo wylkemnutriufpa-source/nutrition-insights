@@ -68,7 +68,7 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
     const targetUrl = "/?intro=1";
 
     if (location.pathname === "/" && window.location.search === "?intro=1") {
-      navigate("/", { replace: true });
+      // Already on intro, just return without reloading
       return;
     }
 
