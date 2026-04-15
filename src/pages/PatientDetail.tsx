@@ -1417,11 +1417,15 @@ export default function PatientDetail() {
                                 <AlertDialogAction onClick={async () => {
                                   const activePlan = mealPlans.find((p: any) => p.is_active);
                                   if (!activePlan) return;
-                                  // Deactivate first to bypass immutability trigger for non-owners
-                                  await supabase.from("meal_plans").update({ is_active: false, plan_status: "draft" }).eq("id", activePlan.id);
+                                  // Server-authoritative: archive → delete items → delete plan
+                                  await supabase.from("meal_plans").update({ is_active: false, plan_status: "archived" }).eq("id", activePlan.id);
                                   await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
                                   await supabase.from("meal_plans").delete().eq("id", activePlan.id);
                                   toast.success("Plano alimentar excluído!");
+                                  // Invalidate all caches
+                                  const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
+                                  const qc = (window as any).__REACT_QUERY_CLIENT__;
+                                  if (qc) invalidateCriticalQueries(qc, activePlan.patient_id);
                                   invalidate();
                                 }} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
                                   Excluir Permanentemente

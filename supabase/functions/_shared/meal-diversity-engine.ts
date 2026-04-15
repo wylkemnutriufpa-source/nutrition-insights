@@ -77,7 +77,7 @@ export async function loadRecentMeals(
     .from("meal_plans")
     .select("id")
     .eq("patient_id", patientId)
-    .in("status", ["approved", "published", "published_to_patient"])
+    .in("plan_status", ["approved", "published", "published_to_patient"])
     .order("created_at", { ascending: false })
     .limit(1);
 

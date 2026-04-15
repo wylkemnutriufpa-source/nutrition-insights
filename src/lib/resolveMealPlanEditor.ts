@@ -31,7 +31,7 @@ interface MealPlanMeta {
  */
 export function resolveMealPlanEditor(plan: MealPlanMeta): PlanEditorResolution {
   const isLegacy = plan.editor_version === "v1" || plan.editor_version === null;
-  const isPublished = plan.plan_status === "published" || plan.plan_status === "approved";
+  const isPublished = plan.plan_status === "published" || plan.plan_status === "published_to_patient";
   const isActive = plan.is_active === true;
   const markedForRegen = plan.requires_regeneration === true;
 

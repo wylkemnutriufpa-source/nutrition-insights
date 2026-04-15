@@ -56,8 +56,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.
   archived: { label: "Arquivado", color: "text-muted-foreground bg-muted/50", icon: null },
 };
 
-/** Immutable statuses — editing is BLOCKED */
-const IMMUTABLE_STATUSES = ["approved", "published", "published_to_patient"];
+/** Immutable statuses — only published plans are blocked from UI editing */
+const IMMUTABLE_STATUSES = ["published", "published_to_patient"];
 
 /** Plans that can still be published (approved but not yet delivered to patient) */
 const PUBLISHABLE_STATUSES = ["approved"];
