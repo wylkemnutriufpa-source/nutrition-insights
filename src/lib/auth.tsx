@@ -199,16 +199,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               const userRoles = rolesResult.data?.map((r) => r.role) || [];
               setRoles(userRoles);
 
-              // Only block on SIGNED_IN (first login), not TOKEN_REFRESHED
+              // If user has no roles yet, don't force logout — roles may be created asynchronously
               if (event === "SIGNED_IN" && userRoles.length === 0) {
-                console.warn("User has no roles, signing out:", session.user.email);
-                await supabase.auth.signOut();
-                setSession(null);
-                setUser(null);
-                setProfile(null);
-                setRoles([]);
-                setLoading(false);
-                window.location.href = "/auth?error=no_account";
+                console.warn("[Auth] User has no roles yet, will retry:", session.user.email);
+                // Retry once after a short delay — roles may be created by triggers
+                setTimeout(async () => {
+                  const { data: retryRoles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
+                  const retried = retryRoles?.map((r) => r.role) || [];
+                  if (retried.length > 0) {
+                    setRoles(retried);
+                  }
+                  if (mounted) setLoading(false);
+                }, 2000);
                 return;
               }
 
