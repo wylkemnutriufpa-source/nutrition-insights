@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDraggable } from "@dnd-kit/core";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Search, ChefHat, Apple,
   Flame, Beef, Wheat, Droplets, Loader2, GripVertical,
