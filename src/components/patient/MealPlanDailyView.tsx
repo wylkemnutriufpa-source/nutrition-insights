@@ -149,13 +149,16 @@ const MealItemCard = memo(function MealItemCard({
   onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
   const impacts = useMemo(() => getImpactTags(item), [item]);
-  const { item: visualItem } = useMealVisualItem(item.visual_library_item_id);
-  const visualImageSource = visualItem?.image_url || visualItem?.image_path || null;
-  const { url: signedVisualImage } = useSignedStorageUrl(visualImageSource, {
+  // Primary: use image_url directly from item (populated during generation)
+  // Fallback: resolve from visual library if item.image_url is missing
+  const needsVisualFallback = !item.image_url && !!item.visual_library_item_id;
+  const { item: visualItem } = useMealVisualItem(needsVisualFallback ? item.visual_library_item_id : null);
+  const fallbackImage = visualItem?.image_url || visualItem?.image_path || null;
+  const { url: signedFallback } = useSignedStorageUrl(fallbackImage, {
     bucket: "meal-images",
-    enabled: !!visualImageSource && !(item as any).image_url,
+    enabled: !!fallbackImage,
   });
-  const resolvedImage = (item as any).image_url || signedVisualImage || null;
+  const resolvedImage = item.image_url || signedFallback || null;
   
   const statusColor = status === "followed" ? "border-emerald-500/30 bg-emerald-500/5"
     : status === "partial" ? "border-amber-500/30 bg-amber-500/5"
@@ -187,7 +190,7 @@ const MealItemCard = memo(function MealItemCard({
               : status === "not_followed" ? <AlertCircle className="w-5 h-5 text-red-500 drop-shadow" />
               : null}
           </div>
-          {visualItem && !(item as any).image_url && (
+          {needsVisualFallback && visualItem && (
             <div className="absolute bottom-1 left-1">
               <span className="text-[8px] px-1.5 py-0.5 rounded bg-primary/70 text-primary-foreground backdrop-blur-sm">
                 📸 Inspiração
