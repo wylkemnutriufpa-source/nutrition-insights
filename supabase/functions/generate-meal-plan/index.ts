@@ -1405,16 +1405,17 @@ function validatePlanBeforeSave(
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Rule 1: Every item must have visual_library_item_id
-  const missingVisual = items.filter(i => !i.visual_library_item_id);
-  if (missingVisual.length > 0) {
-    errors.push(`${missingVisual.length} items missing visual_library_item_id`);
+  // Rule 1: Every item must have visual_library_item_id OR _template_id
+  const missingSource = items.filter(i => !i.visual_library_item_id && !i._template_id);
+  if (missingSource.length > 0) {
+    errors.push(`${missingSource.length} items missing both visual_library_item_id and _template_id`);
   }
 
-  // Rule 2: Every item must have image (checked via _image_url transient field)
-  const missingImage = items.filter(i => !i._image_url || i._image_url.length < 5);
+  // Rule 2: Visual library items must have image (template items don't need it)
+  const visualItems = items.filter(i => i._source === "visual_library");
+  const missingImage = visualItems.filter(i => !i._image_url || i._image_url.length < 5);
   if (missingImage.length > 0) {
-    errors.push(`${missingImage.length} items missing image_url`);
+    errors.push(`${missingImage.length} visual_library items missing image_url`);
   }
 
   // Rule 3: Calorie deviation <= 5%
@@ -1435,10 +1436,11 @@ function validatePlanBeforeSave(
     }
   }
 
-  // Rule 5: Every item must have _source = visual_library
-  const wrongSource = items.filter(i => i._source !== "visual_library");
+  // Rule 5: Every item must have a valid _source
+  const VALID_SOURCES = new Set(["visual_library", "template_resolver"]);
+  const wrongSource = items.filter(i => !VALID_SOURCES.has(i._source));
   if (wrongSource.length > 0) {
-    errors.push(`${wrongSource.length} items have non-visual_library source`);
+    errors.push(`${wrongSource.length} items have invalid source`);
   }
 
   return { valid: errors.length === 0, errors };
