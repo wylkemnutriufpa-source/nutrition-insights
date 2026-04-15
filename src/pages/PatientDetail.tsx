@@ -6,6 +6,7 @@ import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { createMealPlanDraft } from "@/lib/createMealPlanDraft";
+import { createPlanRevision } from "@/lib/createPlanRevision";
 import { acquireActionLock, releaseActionLock } from "@/lib/fitjourneyBible";
 import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useQueryClient } from "@tanstack/react-query";
@@ -1389,14 +1390,32 @@ export default function PatientDetail() {
                       </Button>
                       {mealPlans.some((p: any) => p.is_active) && (
                         <>
-                          <EditorVersionPicker
-                            planId={mealPlans.find((p: any) => p.is_active)?.id}
-                            onBeforeNavigate={() => setOpenSection(null)}
-                            label="Editar Ativo"
-                            variant="outline"
-                            className="gap-1 text-xs h-7"
-                            icon={<Pencil className="w-3 h-3" />}
-                          />
+                          <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
+                            const activePlan = mealPlans.find((p: any) => p.is_active);
+                            if (!activePlan) return;
+                            const immutableStatuses = ["approved", "published", "published_to_patient"];
+                            if (immutableStatuses.includes(activePlan.plan_status)) {
+                              toast.loading("Criando revisão editável...");
+                              const { planId, error } = await createPlanRevision({
+                                sourcePlanId: activePlan.id,
+                                nutritionistId: user!.id,
+                                tenantId,
+                              });
+                              toast.dismiss();
+                              if (error || !planId) {
+                                toast.error(error || "Erro ao criar revisão");
+                                return;
+                              }
+                              toast.success("Revisão criada! Abrindo editor...");
+                              setOpenSection(null);
+                              navigate(`/meal-plans/${planId}`);
+                            } else {
+                              setOpenSection(null);
+                              navigate(`/meal-plans/${activePlan.id}`);
+                            }
+                          }}>
+                            <Pencil className="w-3 h-3" /> Editar Ativo
+                          </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
                               <Button size="sm" variant="destructive" className="gap-1 text-xs h-7">
