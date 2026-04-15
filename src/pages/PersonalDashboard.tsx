@@ -391,14 +391,14 @@ export default function PersonalDashboard() {
         <LinkStudentModal
           open={linkOpen}
           onOpenChange={setLinkOpen}
-          onLinked={() => { refetchLinks(); window.location.reload(); }}
+          onLinked={() => { refetchLinks(); }}
           professionalRole="trainer"
         />
 
         <AddStudentModal
           open={addOpen}
           onOpenChange={setAddOpen}
-          onAdded={() => { refetchLinks(); window.location.reload(); }}
+          onAdded={() => { refetchLinks(); }}
         />
       </div>
     </DashboardLayout>
