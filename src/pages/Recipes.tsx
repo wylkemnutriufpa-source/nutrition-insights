@@ -307,6 +307,7 @@ function NutritionistRecipes() {
 // ──── PATIENT VIEW ────
 function PatientRecipes() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [selected, setSelected] = useState<Recipe | null>(null);
