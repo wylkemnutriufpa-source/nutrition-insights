@@ -1876,7 +1876,69 @@ serve(async (req) => {
       ? mergedAnswers.meal_times as Record<string, string>
       : undefined;
 
-    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")} | EnabledMeals: ${enabledMeals?.join(",") || "default"} | MealTimes: ${mealTimes ? JSON.stringify(mealTimes) : "none"}`);
+    // ═══════════════════════════════════════════════════════════
+    // UNIFIED ENGINE: STRATEGY DETECTION & APPLICATION
+    // ═══════════════════════════════════════════════════════════
+    
+    // Detect strategy based on request params, protocols, and flags
+    const bbPhase = body.bb_phase || body.bbPhase || null;
+    
+    // Load active protocols/programs for strategy detection
+    const [{ data: activeProtocolsForStrategy }, { data: activeProgramsForStrategy }] = await Promise.all([
+      serviceClient.from("patient_protocols").select("nutrition_protocols(name)")
+        .eq("patient_id", patient_id).eq("status", "active"),
+      serviceClient.from("program_enrollments").select("programs(slug)")
+        .eq("patient_id", patient_id).eq("status", "active"),
+    ]);
+    
+    const activeProtocolNames = (activeProtocolsForStrategy || [])
+      .map((p: any) => p?.nutrition_protocols?.name).filter(Boolean) as string[];
+    const programSlugs = (activeProgramsForStrategy || [])
+      .map((p: any) => p?.programs?.slug).filter(Boolean) as string[];
+
+    const resolvedStrategy = detectStrategy({
+      requestedStrategy: body.strategy || body.requestedStrategy,
+      generationMode,
+      bbPhase,
+      activeProtocolNames,
+      clinicalFlags: [],  // will be populated below if clinical mode
+      programSlugs,
+    });
+
+    const strategy = getStrategy(resolvedStrategy.strategyId);
+    const strategyParams = { goal, weight, sex, activityLevel, bbPhase, clinicalFlags: [] as string[] };
+    
+    console.log(`[UNIFIED-ENGINE] Strategy: ${resolvedStrategy.strategyId} (${resolvedStrategy.reason}) | Version: ${strategy.version}`);
+
+    // Apply strategy-specific calorie adjustment if applicable
+    if (resolvedStrategy.strategyId === "bikini_protocol" && bbPhase) {
+      const bbAdjustment = strategy.getCalorieAdjustment(strategyParams);
+      if (typeof bbAdjustment === "number") {
+        finalKcal = Math.max(1000, Math.min(3500, tdee + bbAdjustment));
+        console.log(`[UNIFIED-ENGINE] BB calorie adjustment applied: TDEE=${tdee} + adjustment=${bbAdjustment} → ${finalKcal}kcal`);
+      }
+      // Apply BB-specific protein
+      const bbProteinPerKg = strategy.getProteinPerKg(strategyParams);
+      if (bbProteinPerKg) {
+        finalMacros.protein = Math.round(weight * bbProteinPerKg);
+        console.log(`[UNIFIED-ENGINE] BB protein override: ${bbProteinPerKg}g/kg → ${finalMacros.protein}g`);
+      }
+      // Apply BB macro distribution
+      const bbDist = strategy.getMacroDistribution(strategyParams);
+      if (bbDist) {
+        const proteinKcal = finalMacros.protein * 4;
+        const remaining = finalKcal - proteinKcal;
+        finalMacros.carbs = Math.round((remaining * (bbDist.carbPct / (bbDist.carbPct + bbDist.fatPct))) / 4);
+        finalMacros.fat = Math.round((remaining * (bbDist.fatPct / (bbDist.carbPct + bbDist.fatPct))) / 9);
+      }
+      dataSource = "bb_phase_calculated";
+    }
+
+    // Apply strategy extra restrictions
+    const strategyRestrictions = strategy.getExtraRestrictions(strategyParams);
+    restrictions.push(...strategyRestrictions);
+
+    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Strategy: ${resolvedStrategy.strategyId} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")} | EnabledMeals: ${enabledMeals?.join(",") || "default"} | MealTimes: ${mealTimes ? JSON.stringify(mealTimes) : "none"}`);
 
     // ── Mode-specific enhancements ──
     let modeEnhancements: Record<string, any> = {};
@@ -1904,7 +1966,7 @@ serve(async (req) => {
         weekendDietBreaks: behavProfile?.weekend_diet_breaks || false,
         cravingHours: behavProfile?.craving_hours || [],
       };
-    } else if (generationMode === "clinical") {
+    } else if (generationMode === "clinical" || resolvedStrategy.strategyId === "clinical_standard") {
       const [{ data: clinicalFlags }, { data: activeProtocol }] = await Promise.all([
         serviceClient.from("patient_clinical_flags").select("flag_key, severity")
           .eq("patient_id", patient_id).eq("is_active", true),
@@ -1915,6 +1977,9 @@ serve(async (req) => {
       const flagKeys = (clinicalFlags || []).map((f: any) => f.flag_key);
       const severityFlags = (clinicalFlags || []).filter((f: any) => f.severity === "high" || f.severity === "critical");
       const protocolMacroRules = (activeProtocol as any)?.nutrition_protocols?.macro_rules;
+      
+      // Update strategy params with clinical flags
+      strategyParams.clinicalFlags = flagKeys;
       
       modeEnhancements = {
         mode: "clinical",
