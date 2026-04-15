@@ -31,6 +31,14 @@ import {
 import { detectStrategy } from "../_shared/strategy-resolver.ts";
 import { getStrategy, BB_PHASE_CONFIG, type StrategyId } from "../_shared/strategies.ts";
 import {
+  loadMealTemplates,
+  resolveMealTemplates,
+  scaleTemplateToTarget,
+  buildMealItemFromTemplate,
+  type ResolvedTemplate,
+  type TemplateResolverParams,
+} from "../_shared/template-resolver.ts";
+import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
   buildFoodDescriptionFromItems,
@@ -1128,6 +1136,106 @@ function buildMealFromDBFoods(
 // Onboarding-compliant: respects enabled_meals, meal_times, restrictions
 // ═══════════════════════════════════════════════════════════════
 
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATE-FIRST PLAN GENERATOR v1.0
+// Attempts to fill meal slots from nutritionist_meal_templates.
+// Any slots without matching templates fall through to visual library.
+// ═══════════════════════════════════════════════════════════════
+
+function generatePlanWithTemplates(
+  templates: ResolvedTemplate[],
+  visualLibrary: VisualLibraryItem[],
+  goal: string,
+  kcalTarget: number,
+  macros: { protein: number; carbs: number; fat: number },
+  restrictions: string[],
+  disliked: string[],
+  allergies: string[],
+  planOptionIndex: number = 0,
+  enabledMeals?: string[],
+  mealTimes?: Record<string, string>,
+  strategy?: string,
+): { items: any[]; templateHits: number; visualFallbacks: number } {
+  const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
+
+  const items: any[] = [];
+  let templateHits = 0;
+  let visualFallbacks = 0;
+  const usedTemplateIds = new Map<string, Set<string>>(); // per meal_type
+
+  for (let day = 0; day < 7; day++) {
+    for (const mealType of mealTypes) {
+      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+
+      // ── STEP 1: Try template resolver ──
+      if (!usedTemplateIds.has(mealType)) usedTemplateIds.set(mealType, new Set());
+      const usedForType = usedTemplateIds.get(mealType)!;
+
+      const resolverParams: TemplateResolverParams = {
+        goal,
+        mealType,
+        strategy,
+        excludeTemplateIds: Array.from(usedForType),
+      };
+
+      const matched = resolveMealTemplates(templates, resolverParams);
+
+      if (matched.length > 0) {
+        // Pick from top candidates with seeded variety
+        const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
+        const pickIdx = seed % Math.min(matched.length, 3); // pick from top 3
+        const picked = matched[pickIdx];
+
+        // Scale template to target kcal
+        const { foods: scaledFoods, scaleFactor } = scaleTemplateToTarget(picked, targetKcal);
+
+        if (scaledFoods.length > 0) {
+          const item = buildMealItemFromTemplate(picked, scaledFoods, mealType, day, scaleFactor);
+          
+          // Add meal_time if available
+          const mealTime = mealTimes?.[mealType] || null;
+          if (mealTime) item.meal_time = mealTime;
+
+          items.push(item);
+          usedForType.add(picked.id);
+          // Reset if all used
+          if (usedForType.size >= matched.length) usedForType.clear();
+          templateHits++;
+          continue; // Slot filled by template — skip visual library
+        }
+      }
+
+      // ── STEP 2: Fallback to visual library (existing logic) ──
+      visualFallbacks++;
+      // This slot will be filled by generatePlanFromVisualLibrary below
+    }
+  }
+
+  // If any slots were NOT filled by templates, generate remaining from visual library
+  if (visualFallbacks > 0) {
+    // Determine which (day, mealType) slots are already filled
+    const filledSlots = new Set(items.map(i => `${i.day_of_week}_${i.meal_type}`));
+
+    // Generate a full visual library plan, then cherry-pick missing slots
+    const visualItems = generatePlanFromVisualLibrary(
+      visualLibrary, goal, kcalTarget, macros, restrictions, disliked, allergies,
+      planOptionIndex, enabledMeals, mealTimes,
+    );
+
+    for (const vItem of visualItems) {
+      const slotKey = `${vItem.day_of_week}_${vItem.meal_type}`;
+      if (!filledSlots.has(slotKey)) {
+        items.push(vItem);
+        filledSlots.add(slotKey);
+      }
+    }
+  }
+
+  console.log(`[template-resolver] Template hits: ${templateHits}, Visual fallbacks: ${visualFallbacks}, Total items: ${items.length}`);
+  return { items, templateHits, visualFallbacks };
+}
+
 function generatePlanFromVisualLibrary(
   visualLibrary: VisualLibraryItem[],
   goal: string,
@@ -1297,16 +1405,17 @@ function validatePlanBeforeSave(
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Rule 1: Every item must have visual_library_item_id
-  const missingVisual = items.filter(i => !i.visual_library_item_id);
-  if (missingVisual.length > 0) {
-    errors.push(`${missingVisual.length} items missing visual_library_item_id`);
+  // Rule 1: Every item must have visual_library_item_id OR _template_id
+  const missingSource = items.filter(i => !i.visual_library_item_id && !i._template_id);
+  if (missingSource.length > 0) {
+    errors.push(`${missingSource.length} items missing both visual_library_item_id and _template_id`);
   }
 
-  // Rule 2: Every item must have image (checked via _image_url transient field)
-  const missingImage = items.filter(i => !i._image_url || i._image_url.length < 5);
+  // Rule 2: Visual library items must have image (template items don't need it)
+  const visualItems = items.filter(i => i._source === "visual_library");
+  const missingImage = visualItems.filter(i => !i._image_url || i._image_url.length < 5);
   if (missingImage.length > 0) {
-    errors.push(`${missingImage.length} items missing image_url`);
+    errors.push(`${missingImage.length} visual_library items missing image_url`);
   }
 
   // Rule 3: Calorie deviation <= 5%
@@ -1327,10 +1436,11 @@ function validatePlanBeforeSave(
     }
   }
 
-  // Rule 5: Every item must have _source = visual_library
-  const wrongSource = items.filter(i => i._source !== "visual_library");
+  // Rule 5: Every item must have a valid _source
+  const VALID_SOURCES = new Set(["visual_library", "template_resolver"]);
+  const wrongSource = items.filter(i => !VALID_SOURCES.has(i._source));
   if (wrongSource.length > 0) {
-    errors.push(`${wrongSource.length} items have non-visual_library source`);
+    errors.push(`${wrongSource.length} items have invalid source`);
   }
 
   return { valid: errors.length === 0, errors };
@@ -2001,15 +2111,20 @@ serve(async (req) => {
     const startDate = new Date().toISOString().split("T")[0];
 
     // ═══════════════════════════════════════════════════════════
-    // LOAD VISUAL LIBRARY (EXCLUSIVE SOURCE OF MEALS)
-    // ALL meals come from meal_visual_library — no presets allowed
+    // LOAD VISUAL LIBRARY + MEAL TEMPLATES (TEMPLATE-FIRST PIPELINE)
+    // Templates from nutritionist_meal_templates are the primary source.
+    // Visual library serves as fallback for unfilled meal slots.
     // ═══════════════════════════════════════════════════════════
     
-    const visualLibrary = await loadVisualLibrary(serviceClient);
+    const [visualLibrary, mealTemplates] = await Promise.all([
+      loadVisualLibrary(serviceClient),
+      loadMealTemplates(serviceClient, requestedNutritionistId),
+    ]);
     const foodDatabase = await loadFoodDatabase(serviceClient);
     const patientFoodDatabase = filterFoodsForPatient(foodDatabase, restrictions, disliked, allergies);
     const useDBDriven = visualLibrary.length >= 5;
-    console.log(`[generate-meal-plan] Visual library loaded: ${visualLibrary.length} items with images. DB-exclusive: ${useDBDriven}`);
+    const hasTemplates = mealTemplates.length > 0;
+    console.log(`[generate-meal-plan] Visual library: ${visualLibrary.length} items | Templates: ${mealTemplates.length} | DB-exclusive: ${useDBDriven}`);
 
     if (visualLibrary.length < 5) {
       return new Response(JSON.stringify({
@@ -2024,8 +2139,11 @@ serve(async (req) => {
       const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
-        // CAMADA 2: Template structure → reconciled with Layer 1 macros
-        const rawItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes);
+        // CAMADA 2: Template-first → Visual Library fallback → reconciled with Layer 1 macros
+        const { items: rawItems, templateHits, visualFallbacks } = hasTemplates
+          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes, resolvedStrategy.strategyId)
+          : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
+        console.log(`[Multi-plan ${tplIdx}] Templates: ${templateHits}, Visual fallbacks: ${visualFallbacks}`);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
         let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
         planItems = injectComputedProteinServings(planItems, patientFoodDatabase);
@@ -2088,7 +2206,7 @@ serve(async (req) => {
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id }; });
+        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id }; });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
@@ -2158,9 +2276,21 @@ serve(async (req) => {
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
     
-    // ── DB-EXCLUSIVE: All meals from visual library ──
-    const rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes);
-    console.log(`[generate-meal-plan] DB-Exclusive plan generated: ${rawPlanItems.length} items from visual library`);
+    // ── TEMPLATE-FIRST PIPELINE: Templates → Visual Library fallback ──
+    let rawPlanItems: any[];
+    let templateHitsCount = 0;
+    let visualFallbacksCount = 0;
+
+    if (hasTemplates) {
+      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId);
+      rawPlanItems = result.items;
+      templateHitsCount = result.templateHits;
+      visualFallbacksCount = result.visualFallbacks;
+    } else {
+      rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes);
+      visualFallbacksCount = rawPlanItems.length;
+    }
+    console.log(`[generate-meal-plan] Plan generated: ${rawPlanItems.length} items (templates: ${templateHitsCount}, visual: ${visualFallbacksCount})`);
     
     // Smart mode: apply adjustments to RAW items BEFORE reconciliation
     if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
@@ -2243,11 +2373,13 @@ serve(async (req) => {
       ),
       generation_mode: generationMode,
       mode_enhancements: modeEnhancements,
-      architecture: "2-layer-db-exclusive-v7-strict",
+      architecture: "2-layer-template-first-v8",
       layer1_source: "clinical_macro_engine",
-      layer2_role: "visual_library_structure_only",
+      layer2_role: hasTemplates ? "template_resolver_with_visual_fallback" : "visual_library_structure_only",
       two_layer_validated: true,
-      meal_source: "visual_library_exclusive",
+      meal_source: hasTemplates ? "template_first" : "visual_library_exclusive",
+      template_hits: templateHitsCount,
+      visual_fallbacks: visualFallbacksCount,
       final_validation_passed: true,
       enabled_meals: enabledMeals || "default",
       meal_times: mealTimes || null,
@@ -2324,7 +2456,7 @@ serve(async (req) => {
     }
 
     const itemsToInsert = planItems.map((item: any) => {
-      const { _image_url, _source, _category_used, _scale_factor, meal_time, ...rest } = item;
+      const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item;
       return { ...rest, meal_plan_id: finalMealPlanId };
     });
 
