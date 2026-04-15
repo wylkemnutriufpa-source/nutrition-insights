@@ -108,11 +108,37 @@ export async function loadMealTemplates(client: any, nutritionistId?: string): P
 
 function parseFoodsStructure(raw: any): FoodStructureItem[] {
   if (!raw) return [];
-  if (Array.isArray(raw)) return raw as FoodStructureItem[];
-  if (typeof raw === "string") {
-    try { return JSON.parse(raw) as FoodStructureItem[]; } catch { return []; }
+  let arr: any[];
+  if (Array.isArray(raw)) {
+    arr = raw;
+  } else if (typeof raw === "string") {
+    try { arr = JSON.parse(raw); } catch { return []; }
+  } else {
+    return [];
   }
-  return [];
+  // Normalize: templates may store `portion` (string like "120g") instead of `portion_grams` (number)
+  return arr.map((item: any) => {
+    const f = item as FoodStructureItem;
+    if ((f.portion_grams == null || f.portion_grams === 0) && item.portion) {
+      const match = String(item.portion).match(/(\d+)/);
+      if (match) {
+        f.portion_grams = Number(match[1]);
+      }
+    }
+    // Also map `kcal` → `calories` if needed
+    if ((f.calories == null || f.calories === 0) && item.kcal != null) {
+      f.calories = Number(item.kcal) || 0;
+    }
+    // Map `fats` → `fat` 
+    if ((f.fat == null || f.fat === 0) && item.fats != null) {
+      f.fat = Number(item.fats) || 0;
+    }
+    // Ensure portion_grams has a fallback
+    if (!f.portion_grams || f.portion_grams <= 0) {
+      f.portion_grams = 100;
+    }
+    return f;
+  });
 }
 
 function parseGoalTags(raw: any): string[] {
