@@ -668,92 +668,13 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   }
 }
 
-// ──── TMB Calculator (Mifflin-St Jeor) ────
-function calculateTMB(weight: number, height: number, age: number, sex: string): number {
-  if (sex === "female") return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
-  return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
-}
-
-function calculateTDEE(tmb: number, activityLevel: string): number {
-  const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
-  return Math.round(tmb * multiplier);
-}
-
-function calculateTargetKcal(tdee: number, goal: string, sex: string = "male"): number {
-  const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
-  const raw = tdee + adjustment;
-  const minKcal = sex === "female" ? 1200 : 1500;
-  return Math.max(minKcal, Math.min(3500, raw));
-}
-
-function normalizeGoal(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-
-  if (!normalized) return null;
-  return GOAL_ALIASES[normalized] || normalized;
-}
-
-/**
- * Clinical Macro Calculator v2.0 — Physiological Rules
- * 
- * REGRAS INVIOLÁVEIS:
- * - Proteína: 1.6–2.2 g/kg (déficit) | 1.8–2.5 g/kg (hipertrofia)
- * - Gordura: 0.8–1.0 g/kg (universal)
- * - Carboidrato: completa o restante calórico
- * - PROIBIDO ultrapassar faixas de proteína
- */
-const CLINICAL_PROTEIN_RANGES: Record<string, { min: number; max: number; ideal: number }> = {
-  lose_weight:            { min: 1.6, max: 2.2, ideal: 2.0 },
-  improve_health:         { min: 1.4, max: 2.0, ideal: 1.6 },
-  maintain:               { min: 1.4, max: 2.0, ideal: 1.6 },
-  gain_muscle:            { min: 1.8, max: 2.5, ideal: 2.2 },
-  gain_weight:            { min: 1.8, max: 2.5, ideal: 2.2 },
-  athletic_performance:   { min: 1.6, max: 2.2, ideal: 2.0 },
-};
-const CLINICAL_FAT_RANGE = { min: 0.8, max: 1.0, ideal: 0.9 };
-
-function calculateMacros(kcal: number, goal: string, weight: number) {
-  const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
-  const proteinPerKg = proteinRange.ideal;
-  let protein = Math.round(weight * proteinPerKg);
-
-  // Gordura fixa: 0.8–1.0 g/kg
-  let fat = Math.round(weight * CLINICAL_FAT_RANGE.ideal);
-
-  // Carboidrato: completa o restante
-  const proteinKcal = protein * 4;
-  const fatKcal = fat * 9;
-  let carbsKcal = kcal - proteinKcal - fatKcal;
-
-  // Se carbs ficou negativo, reduzir gordura ao mínimo
-  if (carbsKcal < 0) {
-    fat = Math.round(weight * CLINICAL_FAT_RANGE.min);
-    carbsKcal = kcal - (protein * 4) - (fat * 9);
-  }
-  // Se ainda negativo, reduzir proteína ao mínimo da faixa
-  if (carbsKcal < 0) {
-    protein = Math.round(weight * proteinRange.min);
-    carbsKcal = kcal - (protein * 4) - (fat * 9);
-  }
-
-  const carbs = Math.max(0, Math.round(carbsKcal / 4));
-
-  // Validação final: proteína dentro da faixa
-  const actualProteinPerKg = protein / weight;
-  if (actualProteinPerKg > proteinRange.max) {
-    protein = Math.round(weight * proteinRange.max);
-    console.warn(`[ClinicalMacro] Protein capped at ${proteinRange.max}g/kg for goal=${goal}`);
-  }
-
-  return { protein, carbs, fat };
-}
+// ──── UNIFIED: TMB/TDEE/Macros delegated to shared clinical-macro-engine ────
+const calculateTMB = sharedCalculateTMB;
+const calculateTDEE = sharedCalculateTDEE;
+const calculateTargetKcal = sharedCalculateTargetKcal;
+const calculateMacros = sharedCalculateMacros;
+const CLINICAL_PROTEIN_RANGES = SHARED_CLINICAL_PROTEIN_RANGES;
+const CLINICAL_FAT_RANGE = SHARED_CLINICAL_FAT_RANGE;
 
 // ═══════════════════════════════════════════════════════════════
 // DATABASE-DRIVEN FOOD SELECTION ENGINE v4.0
