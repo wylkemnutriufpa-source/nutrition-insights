@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { createPlanRevision } from "@/lib/createPlanRevision";
 import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
@@ -348,16 +349,41 @@ export default function MealPlanEditorV2() {
                 Alterações automáticas estão bloqueadas. Crie uma nova versão para editar.
               </p>
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={handleGenerateNewPlan}
-              disabled={generatingNew}
-              className="shrink-0 gap-1.5 border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
-            >
-              {generatingNew ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
-              ♻️ Gerar Novo Plano
-            </Button>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={async () => {
+                  if (!plan || !user) return;
+                  toast.loading("Criando revisão editável...");
+                  const { planId, error } = await createPlanRevision({
+                    sourcePlanId: plan.id,
+                    nutritionistId: user.id,
+                    tenantId: tenantId || null,
+                  });
+                  toast.dismiss();
+                  if (error || !planId) {
+                    toast.error(error || "Erro ao criar revisão");
+                    return;
+                  }
+                  toast.success("Revisão criada! Abrindo editor...");
+                  navigate(`/meal-plans/${planId}`, { replace: true });
+                }}
+                className="shrink-0 gap-1.5 border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
+              >
+                <Pencil className="w-4 h-4" /> Editar Cópia
+              </Button>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleGenerateNewPlan}
+                disabled={generatingNew}
+                className="shrink-0 gap-1.5 border-amber-500/40 text-amber-800 dark:text-amber-200 hover:bg-amber-500/20"
+              >
+                {generatingNew ? <Loader2 className="w-4 h-4 animate-spin" /> : <RefreshCw className="w-4 h-4" />}
+                ♻️ Gerar Novo
+              </Button>
+            </div>
           </div>
         )}
 
