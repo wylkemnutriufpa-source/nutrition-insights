@@ -86,13 +86,6 @@ const GOAL_KCAL_ADJUSTMENT: Record<string, number> = {
   improve_health: -200,
   athletic_performance: 200,
 };
-  lose_weight: -500,
-  maintain: 0,
-  gain_muscle: 300,
-  gain_weight: 500,
-  improve_health: -200,
-  athletic_performance: 200,
-};
 
 const GOAL_STRATEGY: Record<string, { calorie: string; macro: string }> = {
   lose_weight: { calorie: "calorie_deficit", macro: "high_protein_cut" },
