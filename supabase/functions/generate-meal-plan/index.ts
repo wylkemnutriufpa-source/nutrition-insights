@@ -2274,9 +2274,21 @@ serve(async (req) => {
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
     
-    // ── DB-EXCLUSIVE: All meals from visual library ──
-    const rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes);
-    console.log(`[generate-meal-plan] DB-Exclusive plan generated: ${rawPlanItems.length} items from visual library`);
+    // ── TEMPLATE-FIRST PIPELINE: Templates → Visual Library fallback ──
+    let rawPlanItems: any[];
+    let templateHitsCount = 0;
+    let visualFallbacksCount = 0;
+
+    if (hasTemplates) {
+      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId);
+      rawPlanItems = result.items;
+      templateHitsCount = result.templateHits;
+      visualFallbacksCount = result.visualFallbacks;
+    } else {
+      rawPlanItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes);
+      visualFallbacksCount = rawPlanItems.length;
+    }
+    console.log(`[generate-meal-plan] Plan generated: ${rawPlanItems.length} items (templates: ${templateHitsCount}, visual: ${visualFallbacksCount})`);
     
     // Smart mode: apply adjustments to RAW items BEFORE reconciliation
     if (generationMode === "smart" && modeEnhancements.weekendDietBreaks) {
