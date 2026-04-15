@@ -189,6 +189,9 @@ export default function MealPlanEditorV2() {
         throw new Error(result.warnings?.[0] || "Erro ao gerar novo plano");
       }
 
+      // Clear editor sessionStorage cache for current plan
+      try { sessionStorage.removeItem(`meal-plan-editor:${plan.id}`); } catch {}
+
       toast.success("✅ Novo plano gerado! Abrindo no editor...");
       navigate(`/meal-plans/${result.planId}`, { replace: true });
     } catch (err: any) {

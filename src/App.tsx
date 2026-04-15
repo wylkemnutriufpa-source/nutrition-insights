@@ -213,6 +213,9 @@ const queryClient = new QueryClient({
   },
 });
 
+// Expose QueryClient globally for pipeline cache invalidation
+(window as any).__REACT_QUERY_CLIENT__ = queryClient;
+
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;

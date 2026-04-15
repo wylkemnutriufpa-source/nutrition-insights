@@ -476,7 +476,7 @@ export async function autoFixMealPlan(
     return emptyResult("Plano não encontrado");
   }
 
-  const isImmutable = ["approved", "published", "published_to_patient"].includes(plan.plan_status);
+  const isImmutable = ["published", "published_to_patient"].includes(plan.plan_status);
   console.info("[AutoFix] Plan loaded", { planId, status: plan.plan_status, isImmutable, isActive: plan.is_active });
 
   if (isImmutable) {
