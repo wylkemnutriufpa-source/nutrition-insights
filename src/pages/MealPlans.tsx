@@ -281,11 +281,20 @@ export default function MealPlans() {
   const handleDeletePlan = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir permanentemente este plano e todas as suas refeições?")) return;
     
+    // Server-authoritative: archive first, then delete items, then delete plan
+    await supabase.from("meal_plans").update({ is_active: false, plan_status: "archived" }).eq("id", id);
     await supabase.from("meal_plan_items").delete().eq("meal_plan_id", id);
     const { error } = await supabase.from("meal_plans").delete().eq("id", id);
     
     if (error) { toast.error("Erro ao deletar: " + error.message); }
-    else { toast.success("Plano excluído definitivamente."); fetchPlans(); }
+    else {
+      toast.success("Plano excluído definitivamente.");
+      // Invalidate all caches
+      const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
+      const qc = (window as any).__REACT_QUERY_CLIENT__;
+      if (qc) invalidateCriticalQueries(qc);
+      fetchPlans();
+    }
   };
 
   // Count effective plans using normalized state
