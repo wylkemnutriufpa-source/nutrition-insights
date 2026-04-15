@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading";
 
@@ -40,11 +41,13 @@ export function useOnboardingGuard() {
 
     async function check() {
       try {
+        const patientIdentity = await resolvePatientIdentity(user!.id);
+
         // Check if there's an active/in_progress onboarding pipeline
         const { data: pipeline } = await supabase
           .from("onboarding_pipelines" as any)
           .select("id, status, anamnesis_completed, body_data_completed, preferences_completed, plan_generated, plan_approved")
-          .eq("patient_id", user!.id)
+          .in("patient_id", patientIdentity.allIds)
           .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","superseded_by_reset")')
           .order("created_at", { ascending: false })
           .limit(1)

@@ -4,10 +4,10 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
+import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
@@ -78,46 +78,24 @@ export default function PatientGridDashboard() {
   const { patientView, setPatientView } = useLayoutPreference();
   const { user } = useAuth();
   const expUI = useExperienceUI();
-  const [onboarding, setOnboarding] = useState<any>(null);
-  const [anamnesisCompleted, setAnamnesisCompleted] = useState<boolean | null>(null);
-  const [loadingAnamnesis, setLoadingAnamnesis] = useState(true);
+  const lifecycle = usePatientLifecycleState();
 
   useEffect(() => {
-    if (!user?.id) return;
-    
-    // Check onboarding pipeline AND anamnesis completion in parallel
-    Promise.all([
-      supabase
-        .from("onboarding_pipelines" as any)
-        .select("id, status, current_step, anamnesis_completed")
-        .eq("patient_id", user.id)
-        .order("created_at", { ascending: false })
-        .limit(1),
-      supabase
-        .from("patient_anamnesis")
-        .select("id, status")
-        .eq("user_id", user.id)
-        .eq("status", "completed")
-        .limit(1),
-    ]).then(([pipelineRes, anamnesisRes]) => {
-      const pipeline = pipelineRes.data?.[0];
-      if (pipeline) setOnboarding(pipeline);
-      
-      const hasCompletedAnamnesis = !!(anamnesisRes.data && anamnesisRes.data.length > 0) || !!(pipeline as any)?.anamnesis_completed;
-      setAnamnesisCompleted(hasCompletedAnamnesis);
-      setLoadingAnamnesis(false);
-    });
-  }, [user?.id]);
+    if (!user?.id || lifecycle.isLoading) return;
+    if (lifecycle.showOnboarding) {
+      navigate("/onboarding", { replace: true });
+    }
+  }, [user?.id, lifecycle.isLoading, lifecycle.showOnboarding, navigate]);
 
   // Filter cards by experience mode
   const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
   const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
-  // Onboarding is mandatory — block everything until anamnesis is done
-  const showOnboardingCard = !anamnesisCompleted;
-  const blockDashboard = loadingAnamnesis === false && !anamnesisCompleted;
+  // Onboarding is mandatory — block everything until the full onboarding is done
+  const showOnboardingCard = lifecycle.showOnboarding;
+  const blockDashboard = lifecycle.showOnboarding;
 
-  if (loadingAnamnesis) {
+  if (lifecycle.isLoading) {
     return (
       <div className="flex items-center justify-center h-40">
         <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
@@ -198,7 +176,7 @@ export default function PatientGridDashboard() {
                   </Badge>
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
-                  Preencha suas informações de saúde para que seu profissional crie um plano personalizado.
+                  Conclua todo o onboarding para que seu profissional possa criar e entregar seu plano personalizado.
                 </p>
               </div>
               <ChevronRight className="w-5 h-5 text-emerald-500/60 group-hover:text-emerald-500 group-hover:translate-x-1 transition-all flex-shrink-0" />
@@ -211,10 +189,10 @@ export default function PatientGridDashboard() {
       {blockDashboard && (
         <div className="text-center py-8 space-y-3">
           <p className="text-sm text-muted-foreground">
-            Para acessar seus recursos, preencha a anamnese primeiro.
+            Para acessar seus recursos, conclua todo o onboarding primeiro.
           </p>
-          <Button onClick={() => navigate("/anamnesis")} className="gap-2">
-            <Rocket className="w-4 h-4" /> Preencher Anamnese
+          <Button onClick={() => navigate("/onboarding")} className="gap-2">
+            <Rocket className="w-4 h-4" /> Continuar Onboarding
           </Button>
         </div>
       )}

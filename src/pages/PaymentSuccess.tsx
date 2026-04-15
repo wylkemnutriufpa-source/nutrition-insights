@@ -10,7 +10,7 @@ export default function PaymentSuccess() {
 
   useEffect(() => {
     // Auto-redirect after 15 seconds
-    const timer = setTimeout(() => navigate("/dashboard"), 15000);
+    const timer = setTimeout(() => navigate("/client/dashboard"), 15000);
     return () => clearTimeout(timer);
   }, [navigate]);
 
@@ -55,7 +55,7 @@ export default function PaymentSuccess() {
 
             <div className="space-y-3 pt-2">
               <Button
-                onClick={() => navigate("/dashboard")}
+                onClick={() => navigate("/client/dashboard")}
                 className="w-full gap-2"
                 size="lg"
               >
