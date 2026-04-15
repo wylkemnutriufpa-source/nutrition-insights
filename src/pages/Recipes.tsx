@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -12,7 +13,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { ChefHat, Plus, Pencil, Trash2, Clock, Users, Heart, Sparkles, Search, Share2 } from "lucide-react";
+import { ChefHat, Plus, Pencil, Trash2, Clock, Users, Heart, Sparkles, Search, Share2, Calculator } from "lucide-react";
 import { useAIUsage } from "@/hooks/useAIUsage";
 import { useFeatureFlag } from "@/lib/featureFlags";
 import AIUsageBadge from "@/components/common/AIUsageBadge";
