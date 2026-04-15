@@ -139,6 +139,30 @@ export function normalizeAge(value: unknown, fallback = 30): number {
   return rounded;
 }
 
+export function normalizeGoal(value: unknown): string | null {
+  if (!value || typeof value !== "string") return null;
+  const raw = value.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s_]/g, "").trim();
+  const GOAL_MAP: Record<string, string> = {
+    "lose_weight": "lose_weight", "perder_peso": "lose_weight", "perder peso": "lose_weight",
+    "emagrecer": "lose_weight", "emagrecimento": "lose_weight", "definicao": "lose_weight",
+    "cutting": "lose_weight", "fat_loss": "lose_weight", "deficit": "lose_weight",
+    "gain_weight": "gain_weight", "ganhar_peso": "gain_weight", "ganhar peso": "gain_weight",
+    "ganho_de_massa": "gain_weight", "ganho de massa": "gain_weight", "hipertrofia": "gain_weight",
+    "muscle_gain": "gain_weight", "bulking": "gain_weight", "massa muscular": "gain_weight",
+    "maintain": "maintain", "manter_peso": "maintain", "manter peso": "maintain",
+    "manutencao": "maintain", "manter": "maintain", "recomposicao": "maintain",
+    "recomp": "maintain", "recomposition": "maintain",
+    "performance": "performance", "desempenho": "performance", "esportivo": "performance",
+    "saude": "maintain", "health": "maintain", "bem_estar": "maintain", "bem estar": "maintain",
+    "qualidade_de_vida": "maintain", "qualidade de vida": "maintain",
+  };
+  if (GOAL_MAP[raw]) return GOAL_MAP[raw];
+  if (raw.includes("emagrec") || raw.includes("perder") || raw.includes("deficit")) return "lose_weight";
+  if (raw.includes("massa") || raw.includes("hipertro") || raw.includes("ganhar") || raw.includes("ganho")) return "gain_weight";
+  if (raw.includes("manter") || raw.includes("manutenç") || raw.includes("manuten") || raw.includes("saude") || raw.includes("saúde")) return "maintain";
+  return "maintain";
+}
+
 export function normalizeActivityLevel(value: unknown): string {
   const raw = String(value || "light").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s_]/g, "").trim();
   if (["sedentary", "sedentario"].includes(raw)) return "sedentary";
