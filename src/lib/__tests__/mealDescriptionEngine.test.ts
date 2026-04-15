@@ -27,12 +27,14 @@ describe("buildFoodDescriptionFromItems — hardening", () => {
     expect(result).toContain("Feijão");
   });
 
-  it("never produces '0g' in output", () => {
+  it("never produces standalone '0g' for zero portion", () => {
     const result = buildFoodDescriptionFromItems([
       { food_name: "Frango", portion_grams: 0 },
     ]);
-    expect(result).not.toContain("0g");
+    // Should fallback to 100g, never " — 0g"
+    expect(result).not.toContain(" — 0g");
     expect(result).toContain("Frango");
+    expect(result).toContain("100g");
   });
 
   it("handles negative portion_grams gracefully", () => {
