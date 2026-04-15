@@ -1236,7 +1236,7 @@ function generatePlanWithTemplates(
   return { items, templateHits, visualFallbacks };
 }
 
-
+function generatePlanFromVisualLibrary(
   visualLibrary: VisualLibraryItem[],
   goal: string,
   kcalTarget: number,
