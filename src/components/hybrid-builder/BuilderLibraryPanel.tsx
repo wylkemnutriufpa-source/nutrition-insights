@@ -140,7 +140,7 @@ export default function BuilderLibraryPanel() {
         </TabsList>
 
         <TabsContent value="foods" className="flex-1 min-h-0 m-0">
-          <ScrollArea className="h-full">
+          <div className="h-full overflow-y-auto">
             <div className="p-2 space-y-1">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
@@ -152,11 +152,11 @@ export default function BuilderLibraryPanel() {
                 filteredFoods.map((food) => <DraggableFoodItem key={food.id} food={food} />)
               )}
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
 
         <TabsContent value="recipes" className="flex-1 min-h-0 m-0">
-          <ScrollArea className="h-full">
+          <div className="h-full overflow-y-auto">
             <div className="p-2 space-y-1">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
@@ -168,7 +168,7 @@ export default function BuilderLibraryPanel() {
                 filteredRecipes.map((recipe) => <DraggableRecipeItem key={recipe.id} recipe={recipe} />)
               )}
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
