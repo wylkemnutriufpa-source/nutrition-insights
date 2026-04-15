@@ -5,6 +5,7 @@
  */
 
 import type { ResolvedTemplate, FoodStructureItem } from "./template-resolver.ts";
+import { BLOCKED_FOODS, COMPLEX_PREP_KEYWORDS, PREMIUM_KEYWORDS, normalize as normalizeRule } from "./food-rules.ts";
 
 // ── Food category mapping ──
 const FOOD_CATEGORY_MAP: Record<string, string[]> = {
@@ -45,7 +46,28 @@ const BLOCKED_VARIATION_KEYWORDS = [
   "oleo de abacate",
   "óleo de coco",
   "oleo de coco",
+  "pastel",
+  "prato feito",
+  "pf ",
+  "salada caesar",
+  "colageno",
+  "colágeno",
+  "barra proteica",
+  "suco verde",
 ];
+
+const SAFE_VARIATION_DB_CATEGORIES = new Set([
+  "proteina",
+  "carboidrato",
+  "leguminosa",
+  "verdura",
+  "vegetal",
+  "fruta",
+  "laticinio",
+  "gordura",
+  "oleaginosa",
+  "cafe_da_manha",
+]);
 
 const MEAL_TYPE_ALLOWED_TAGS: Record<string, string[]> = {
   breakfast: ["cafe_da_manha"],
@@ -71,7 +93,12 @@ function normalize(text: string): string {
 
 function hasBlockedKeyword(foodName: string): boolean {
   const norm = normalize(foodName);
-  return BLOCKED_VARIATION_KEYWORDS.some((kw) => norm.includes(normalize(kw)));
+  return [
+    ...BLOCKED_VARIATION_KEYWORDS,
+    ...BLOCKED_FOODS,
+    ...PREMIUM_KEYWORDS,
+    ...COMPLEX_PREP_KEYWORDS,
+  ].some((kw) => norm.includes(normalizeRule(kw)));
 }
 
 function classifyFood(foodName: string, dbCategory?: string): string {
@@ -99,6 +126,11 @@ function tagsMatchMealType(food: DBFoodItem, mealType?: string): boolean {
   if (tags.some((tag) => denied.includes(tag))) return false;
   if (tags.length === 0) return true;
   return tags.some((tag) => allowed.includes(tag));
+}
+
+function isVariationCategorySafe(food: DBFoodItem): boolean {
+  const category = normalize(food.category || "");
+  return SAFE_VARIATION_DB_CATEGORIES.has(category);
 }
 
 /**
@@ -141,6 +173,7 @@ function isFoodCompatible(food: DBFoodItem, ctx: VariationContext): boolean {
   const norm = normalize(food.food_name);
 
   if (hasBlockedKeyword(food.food_name)) return false;
+  if (!isVariationCategorySafe(food)) return false;
   if (!tagsMatchMealType(food, ctx.mealType)) return false;
 
   // Disliked check
