@@ -332,15 +332,21 @@ export function buildMealItemFromTemplate(
   const description = descriptionLines.join("\n") +
     (subLines.length > 0 ? `\n\n🔄 Substituições:\n${subLines.join("\n")}` : "");
 
+  // Validate totals — never allow zero/NaN
+  const safeCal = Number.isFinite(totalCal) && totalCal > 0 ? Math.round(totalCal) : null;
+  const safeP = Number.isFinite(totalP) && totalP > 0 ? Math.round(totalP) : null;
+  const safeC = Number.isFinite(totalC) && totalC >= 0 ? Math.round(totalC) : null;
+  const safeF = Number.isFinite(totalF) && totalF >= 0 ? Math.round(totalF) : null;
+
   return {
     title: template.name,
     description,
     meal_type: mealType,
     day_of_week: dayOfWeek,
-    calories_target: Math.round(totalCal),
-    protein_target: Math.round(totalP),
-    carbs_target: Math.round(totalC),
-    fat_target: Math.round(totalF),
+    calories_target: safeCal,
+    protein_target: safeP,
+    carbs_target: safeC,
+    fat_target: safeF,
     _source: "template_resolver",
     _template_id: template.id,
     _scale_factor: scaleFactor,
