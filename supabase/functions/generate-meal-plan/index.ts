@@ -12,6 +12,24 @@ import {
   MEAL_ORDER,
   RESIDUAL_PRIORITY,
 } from "../_shared/food-rules.ts";
+// ──── UNIFIED ENGINE: Shared modules ────
+import {
+  calculateTMB as sharedCalculateTMB,
+  calculateTDEE as sharedCalculateTDEE,
+  calculateTargetKcal as sharedCalculateTargetKcal,
+  calculateMacros as sharedCalculateMacros,
+  enforceProteinRange,
+  enforceFatRange,
+  normalizeWeightKg as sharedNormalizeWeightKg,
+  normalizeHeightCm as sharedNormalizeHeightCm,
+  normalizeAge as sharedNormalizeAge,
+  normalizeActivityLevel as sharedNormalizeActivityLevel,
+  ACTIVITY_MULTIPLIERS as SHARED_ACTIVITY_MULTIPLIERS,
+  CLINICAL_PROTEIN_RANGES as SHARED_CLINICAL_PROTEIN_RANGES,
+  CLINICAL_FAT_RANGE as SHARED_CLINICAL_FAT_RANGE,
+} from "../_shared/clinical-macro-engine.ts";
+import { detectStrategy } from "../_shared/strategy-resolver.ts";
+import { getStrategy, BB_PHASE_CONFIG, type StrategyId } from "../_shared/strategies.ts";
 import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
@@ -26,8 +44,9 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "7.0.0";
-const PROTOCOL_VERSION = "fitjourney_db_exclusive_v7_strict";
+// ──── UNIFIED ENGINE VERSION ────
+const ENGINE_VERSION = "8.0.0-unified";
+const PROTOCOL_VERSION = "clinical_nutrition_engine_v1";
 
 // ──── FEATURE FLAG: DB-EXCLUSIVE MODE (MANDATORY) ────
 const USE_DB_EXCLUSIVE_V6 = true;
@@ -56,13 +75,8 @@ const MAX_2LAYER_DEVIATION = 0.03;
 // MEAL_KCAL_SPLIT imported from _shared/food-rules.ts (canonical source)
 const MEAL_KCAL_SPLIT = CANONICAL_MEAL_KCAL_SPLIT;
 
-const ACTIVITY_MULTIPLIERS: Record<string, number> = {
-  sedentary: 1.2,
-  light: 1.375,
-  moderate: 1.55,
-  active: 1.725,
-  very_active: 1.9,
-};
+// ──── UNIFIED: Use shared activity multipliers ────
+const ACTIVITY_MULTIPLIERS = SHARED_ACTIVITY_MULTIPLIERS;
 
 const GOAL_KCAL_ADJUSTMENT: Record<string, number> = {
   lose_weight: -500,
@@ -326,6 +340,7 @@ function normalize(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, " ");
 }
 
+// ──── UNIFIED: Normalization helpers delegated to shared engine ────
 function toFiniteNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "string") {
@@ -337,37 +352,10 @@ function toFiniteNumber(value: unknown): number | null {
   return null;
 }
 
-function normalizeWeightKg(value: unknown): number | null {
-  const parsed = toFiniteNumber(value);
-  if (parsed === null || parsed <= 0) return null;
-  if (parsed > 300) return parsed / 1000;
-  return parsed;
-}
-
-function normalizeHeightCm(value: unknown): number | null {
-  const parsed = toFiniteNumber(value);
-  if (parsed === null || parsed <= 0) return null;
-  if (parsed > 0 && parsed < 3) return parsed * 100;
-  return parsed;
-}
-
-function normalizeAge(value: unknown, fallback = 30): number {
-  const parsed = toFiniteNumber(value);
-  if (parsed === null) return fallback;
-  const rounded = Math.round(parsed);
-  if (rounded < 1 || rounded > 120) return fallback;
-  return rounded;
-}
-
-function normalizeActivityLevel(value: unknown): string {
-  const raw = normalize(String(value || "light"));
-  if (["sedentary", "sedentario"].includes(raw)) return "sedentary";
-  if (["light", "leve"].includes(raw)) return "light";
-  if (["moderate", "moderado"].includes(raw)) return "moderate";
-  if (["active", "ativo", "intense", "intenso"].includes(raw)) return "active";
-  if (["very_active", "very active", "muito ativo", "muito_ativo"].includes(raw)) return "very_active";
-  return "light";
-}
+const normalizeWeightKg = sharedNormalizeWeightKg;
+const normalizeHeightCm = sharedNormalizeHeightCm;
+const normalizeAge = sharedNormalizeAge;
+const normalizeActivityLevel = sharedNormalizeActivityLevel;
 
 // ── Seeded pseudo-random for patient-specific variety ──
 // Uses time-based entropy so each generation produces different results
@@ -673,92 +661,13 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
   }
 }
 
-// ──── TMB Calculator (Mifflin-St Jeor) ────
-function calculateTMB(weight: number, height: number, age: number, sex: string): number {
-  if (sex === "female") return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
-  return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
-}
-
-function calculateTDEE(tmb: number, activityLevel: string): number {
-  const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
-  return Math.round(tmb * multiplier);
-}
-
-function calculateTargetKcal(tdee: number, goal: string, sex: string = "male"): number {
-  const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
-  const raw = tdee + adjustment;
-  const minKcal = sex === "female" ? 1200 : 1500;
-  return Math.max(minKcal, Math.min(3500, raw));
-}
-
-function normalizeGoal(value: unknown): string | null {
-  if (typeof value !== "string") return null;
-  const normalized = value
-    .trim()
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9]+/g, "_")
-    .replace(/^_+|_+$/g, "");
-
-  if (!normalized) return null;
-  return GOAL_ALIASES[normalized] || normalized;
-}
-
-/**
- * Clinical Macro Calculator v2.0 — Physiological Rules
- * 
- * REGRAS INVIOLÁVEIS:
- * - Proteína: 1.6–2.2 g/kg (déficit) | 1.8–2.5 g/kg (hipertrofia)
- * - Gordura: 0.8–1.0 g/kg (universal)
- * - Carboidrato: completa o restante calórico
- * - PROIBIDO ultrapassar faixas de proteína
- */
-const CLINICAL_PROTEIN_RANGES: Record<string, { min: number; max: number; ideal: number }> = {
-  lose_weight:            { min: 1.6, max: 2.2, ideal: 2.0 },
-  improve_health:         { min: 1.4, max: 2.0, ideal: 1.6 },
-  maintain:               { min: 1.4, max: 2.0, ideal: 1.6 },
-  gain_muscle:            { min: 1.8, max: 2.5, ideal: 2.2 },
-  gain_weight:            { min: 1.8, max: 2.5, ideal: 2.2 },
-  athletic_performance:   { min: 1.6, max: 2.2, ideal: 2.0 },
-};
-const CLINICAL_FAT_RANGE = { min: 0.8, max: 1.0, ideal: 0.9 };
-
-function calculateMacros(kcal: number, goal: string, weight: number) {
-  const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
-  const proteinPerKg = proteinRange.ideal;
-  let protein = Math.round(weight * proteinPerKg);
-
-  // Gordura fixa: 0.8–1.0 g/kg
-  let fat = Math.round(weight * CLINICAL_FAT_RANGE.ideal);
-
-  // Carboidrato: completa o restante
-  const proteinKcal = protein * 4;
-  const fatKcal = fat * 9;
-  let carbsKcal = kcal - proteinKcal - fatKcal;
-
-  // Se carbs ficou negativo, reduzir gordura ao mínimo
-  if (carbsKcal < 0) {
-    fat = Math.round(weight * CLINICAL_FAT_RANGE.min);
-    carbsKcal = kcal - (protein * 4) - (fat * 9);
-  }
-  // Se ainda negativo, reduzir proteína ao mínimo da faixa
-  if (carbsKcal < 0) {
-    protein = Math.round(weight * proteinRange.min);
-    carbsKcal = kcal - (protein * 4) - (fat * 9);
-  }
-
-  const carbs = Math.max(0, Math.round(carbsKcal / 4));
-
-  // Validação final: proteína dentro da faixa
-  const actualProteinPerKg = protein / weight;
-  if (actualProteinPerKg > proteinRange.max) {
-    protein = Math.round(weight * proteinRange.max);
-    console.warn(`[ClinicalMacro] Protein capped at ${proteinRange.max}g/kg for goal=${goal}`);
-  }
-
-  return { protein, carbs, fat };
-}
+// ──── UNIFIED: TMB/TDEE/Macros delegated to shared clinical-macro-engine ────
+const calculateTMB = sharedCalculateTMB;
+const calculateTDEE = sharedCalculateTDEE;
+const calculateTargetKcal = sharedCalculateTargetKcal;
+const calculateMacros = sharedCalculateMacros;
+const CLINICAL_PROTEIN_RANGES = SHARED_CLINICAL_PROTEIN_RANGES;
+const CLINICAL_FAT_RANGE = SHARED_CLINICAL_FAT_RANGE;
 
 // ═══════════════════════════════════════════════════════════════
 // DATABASE-DRIVEN FOOD SELECTION ENGINE v4.0
@@ -1960,7 +1869,69 @@ serve(async (req) => {
       ? mergedAnswers.meal_times as Record<string, string>
       : undefined;
 
-    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")} | EnabledMeals: ${enabledMeals?.join(",") || "default"} | MealTimes: ${mealTimes ? JSON.stringify(mealTimes) : "none"}`);
+    // ═══════════════════════════════════════════════════════════
+    // UNIFIED ENGINE: STRATEGY DETECTION & APPLICATION
+    // ═══════════════════════════════════════════════════════════
+    
+    // Detect strategy based on request params, protocols, and flags
+    const bbPhase = body.bb_phase || body.bbPhase || null;
+    
+    // Load active protocols/programs for strategy detection
+    const [{ data: activeProtocolsForStrategy }, { data: activeProgramsForStrategy }] = await Promise.all([
+      serviceClient.from("patient_protocols").select("nutrition_protocols(name)")
+        .eq("patient_id", patient_id).eq("status", "active"),
+      serviceClient.from("program_enrollments").select("programs(slug)")
+        .eq("patient_id", patient_id).eq("status", "active"),
+    ]);
+    
+    const activeProtocolNames = (activeProtocolsForStrategy || [])
+      .map((p: any) => p?.nutrition_protocols?.name).filter(Boolean) as string[];
+    const programSlugs = (activeProgramsForStrategy || [])
+      .map((p: any) => p?.programs?.slug).filter(Boolean) as string[];
+
+    const resolvedStrategy = detectStrategy({
+      requestedStrategy: body.strategy || body.requestedStrategy,
+      generationMode,
+      bbPhase,
+      activeProtocolNames,
+      clinicalFlags: [],  // will be populated below if clinical mode
+      programSlugs,
+    });
+
+    const strategy = getStrategy(resolvedStrategy.strategyId);
+    const strategyParams = { goal, weight, sex, activityLevel, bbPhase, clinicalFlags: [] as string[] };
+    
+    console.log(`[UNIFIED-ENGINE] Strategy: ${resolvedStrategy.strategyId} (${resolvedStrategy.reason}) | Version: ${strategy.version}`);
+
+    // Apply strategy-specific calorie adjustment if applicable
+    if (resolvedStrategy.strategyId === "bikini_protocol" && bbPhase) {
+      const bbAdjustment = strategy.getCalorieAdjustment(strategyParams);
+      if (typeof bbAdjustment === "number") {
+        finalKcal = Math.max(1000, Math.min(3500, tdee + bbAdjustment));
+        console.log(`[UNIFIED-ENGINE] BB calorie adjustment applied: TDEE=${tdee} + adjustment=${bbAdjustment} → ${finalKcal}kcal`);
+      }
+      // Apply BB-specific protein
+      const bbProteinPerKg = strategy.getProteinPerKg(strategyParams);
+      if (bbProteinPerKg) {
+        finalMacros.protein = Math.round(weight * bbProteinPerKg);
+        console.log(`[UNIFIED-ENGINE] BB protein override: ${bbProteinPerKg}g/kg → ${finalMacros.protein}g`);
+      }
+      // Apply BB macro distribution
+      const bbDist = strategy.getMacroDistribution(strategyParams);
+      if (bbDist) {
+        const proteinKcal = finalMacros.protein * 4;
+        const remaining = finalKcal - proteinKcal;
+        finalMacros.carbs = Math.round((remaining * (bbDist.carbPct / (bbDist.carbPct + bbDist.fatPct))) / 4);
+        finalMacros.fat = Math.round((remaining * (bbDist.fatPct / (bbDist.carbPct + bbDist.fatPct))) / 9);
+      }
+      dataSource = "bb_phase_calculated";
+    }
+
+    // Apply strategy extra restrictions
+    const strategyRestrictions = strategy.getExtraRestrictions(strategyParams);
+    restrictions.push(...strategyRestrictions);
+
+    console.log(`[generate-meal-plan] Patient ${patient_id} | Mode: ${generationMode} | Strategy: ${resolvedStrategy.strategyId} | Goal: ${goal} | Kcal: ${finalKcal} | Restrictions: ${restrictions.join(",")} | Disliked: ${disliked.join(",")} | Allergies: ${allergies.join(",")} | EnabledMeals: ${enabledMeals?.join(",") || "default"} | MealTimes: ${mealTimes ? JSON.stringify(mealTimes) : "none"}`);
 
     // ── Mode-specific enhancements ──
     let modeEnhancements: Record<string, any> = {};
@@ -1988,7 +1959,7 @@ serve(async (req) => {
         weekendDietBreaks: behavProfile?.weekend_diet_breaks || false,
         cravingHours: behavProfile?.craving_hours || [],
       };
-    } else if (generationMode === "clinical") {
+    } else if (generationMode === "clinical" || resolvedStrategy.strategyId === "clinical_standard") {
       const [{ data: clinicalFlags }, { data: activeProtocol }] = await Promise.all([
         serviceClient.from("patient_clinical_flags").select("flag_key, severity")
           .eq("patient_id", patient_id).eq("is_active", true),
@@ -1999,6 +1970,9 @@ serve(async (req) => {
       const flagKeys = (clinicalFlags || []).map((f: any) => f.flag_key);
       const severityFlags = (clinicalFlags || []).filter((f: any) => f.severity === "high" || f.severity === "critical");
       const protocolMacroRules = (activeProtocol as any)?.nutrition_protocols?.macro_rules;
+      
+      // Update strategy params with clinical flags
+      strategyParams.clinicalFlags = flagKeys;
       
       modeEnhancements = {
         mode: "clinical",

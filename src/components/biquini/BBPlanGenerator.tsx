@@ -64,10 +64,12 @@ export default function BBPlanGenerator() {
     setResult(null);
 
     try {
-      const { data, error } = await supabase.functions.invoke("generate-bb-meal-plan", {
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
         body: {
           patient_id: selectedPatient,
           bb_phase: parseInt(selectedPhase),
+          strategy: "bikini_protocol",
+          generationMode: "clinical",
         },
       });
 
