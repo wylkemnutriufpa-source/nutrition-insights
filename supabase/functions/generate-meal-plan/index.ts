@@ -780,6 +780,141 @@ interface DBFood {
   restriction_tags_json: string[];
 }
 
+const ANIMAL_PROTEIN_KEYWORDS = [
+  "frango", "carne", "bife", "alcatra", "patinho", "tilapia", "tilápia",
+  "peixe", "porco", "lombo", "sobrecoxa", "sardinha", "atum", "salmao",
+  "salmão", "camarao", "camarão", "fraldinha", "maminha", "bisteca", "pernil",
+  "suino", "suína", "file de peixe", "filé de peixe",
+];
+
+function isAnimalProteinFood(food: DBFood): boolean {
+  if (food.category !== "proteina") return false;
+  const normName = normalize(food.food_name || food.normalized_name || "");
+  return ANIMAL_PROTEIN_KEYWORDS.some((keyword) => normName.includes(normalize(keyword)));
+}
+
+function getProteinDensity(food: DBFood): number {
+  const portionGrams = Number(food.portion_grams) || 0;
+  const proteinPerPortion = Number(food.protein) || 0;
+  if (portionGrams <= 0 || proteinPerPortion <= 0) return 0;
+  return proteinPerPortion / portionGrams;
+}
+
+function roundServingGrams(value: number): number {
+  if (!Number.isFinite(value) || value <= 0) return 0;
+  if (value >= 20) return Math.max(5, Math.round(value / 5) * 5);
+  return Math.max(1, Math.round(value));
+}
+
+function clampComputedProteinServing(grams: number, mealType: string): number {
+  const min = ["lunch", "dinner"].includes(mealType) ? 50 : 20;
+  const max = 350;
+  return Math.min(max, Math.max(min, roundServingGrams(grams)));
+}
+
+function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
+  const searchableText = normalize(`${item.title || ""}\n${item.description || ""}`);
+  if (!searchableText) return null;
+
+  let best: { food: DBFood; score: number } | null = null;
+
+  for (const food of proteinFoods) {
+    const aliases = Array.from(new Set([
+      normalize(food.food_name || ""),
+      normalize(food.normalized_name || ""),
+    ].filter(Boolean)));
+
+    let score = 0;
+    for (const alias of aliases) {
+      if (!alias) continue;
+      if (searchableText.includes(alias)) {
+        score = Math.max(score, alias.length + 20);
+      }
+
+      const parts = alias
+        .split(/\s+/)
+        .filter((part) => part.length >= 4 && !["com", "de", "ao", "a", "e", "grelhado", "cozido", "assado", "desfiado"].includes(part));
+      const matchedParts = parts.filter((part) => searchableText.includes(part)).length;
+      if (matchedParts > 0) {
+        score = Math.max(score, matchedParts * 6 + alias.length);
+      }
+    }
+
+    if (!best || score > best.score) {
+      best = { food, score };
+    }
+  }
+
+  return best && best.score > 0 ? best.food : null;
+}
+
+function replaceProteinLineWithServing(description: string, food: DBFood, grams: number): string {
+  const [mainSection, substitutionsSection] = description.split(/\n\n🔄 Substituições:\n/);
+  const aliases = Array.from(new Set([
+    normalize(food.food_name || ""),
+    normalize(food.normalized_name || ""),
+  ].filter(Boolean)));
+
+  let replaced = false;
+
+  const nextMain = (mainSection || "")
+    .split("\n")
+    .map((line) => {
+      const trimmed = line.trim();
+      if (!trimmed || replaced) return trimmed;
+
+      const normalizedLine = normalize(trimmed);
+      const matchesExactFood = aliases.some((alias) => alias && normalizedLine.includes(alias));
+      const matchesProteinLine = ANIMAL_PROTEIN_KEYWORDS.some((keyword) => normalizedLine.includes(normalize(keyword)));
+
+      if (!matchesExactFood && !matchesProteinLine) return trimmed;
+
+      replaced = true;
+
+      if (/(\d+(?:[.,]\d+)?)\s*g\b/i.test(trimmed)) {
+        return trimmed.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${grams}g`);
+      }
+
+      if (/\s+[—-]\s+/.test(trimmed)) {
+        return trimmed.replace(/\s+[—-]\s+.*$/, ` — ${grams}g`);
+      }
+
+      return `${trimmed} — ${grams}g`;
+    })
+    .filter(Boolean)
+    .join("\n");
+
+  const finalMain = replaced
+    ? nextMain
+    : [`• ${food.food_name} — ${grams}g`, nextMain].filter(Boolean).join("\n");
+
+  return finalMain + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
+}
+
+function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
+  const proteinFoods = foods.filter(isAnimalProteinFood);
+  if (proteinFoods.length === 0) return items;
+
+  return items.map((item) => {
+    const requiredProtein = Number(item.protein_target) || 0;
+    if (requiredProtein <= 0 || !item.description) return item;
+
+    const matchedFood = resolveProteinFoodForItem(item, proteinFoods);
+    if (!matchedFood) return item;
+
+    const density = getProteinDensity(matchedFood);
+    if (!Number.isFinite(density) || density <= 0) return item;
+
+    const computedServing = clampComputedProteinServing(requiredProtein / density, item.meal_type || "");
+    if (!Number.isFinite(computedServing) || computedServing <= 0) return item;
+
+    return {
+      ...item,
+      description: replaceProteinLineWithServing(item.description, matchedFood, computedServing),
+    };
+  });
+}
+
 /** Load all active foods from ifj_food_database */
 async function loadFoodDatabase(client: any): Promise<DBFood[]> {
   const { data, error } = await client
@@ -1897,6 +2032,8 @@ serve(async (req) => {
     // ═══════════════════════════════════════════════════════════
     
     const visualLibrary = await loadVisualLibrary(serviceClient);
+    const foodDatabase = await loadFoodDatabase(serviceClient);
+    const patientFoodDatabase = filterFoodsForPatient(foodDatabase, restrictions, disliked, allergies);
     const useDBDriven = visualLibrary.length >= 5;
     console.log(`[generate-meal-plan] Visual library loaded: ${visualLibrary.length} items with images. DB-exclusive: ${useDBDriven}`);
 
@@ -1917,6 +2054,7 @@ serve(async (req) => {
         const rawItems = generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
         let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
+        planItems = injectComputedProteinServings(planItems, patientFoodDatabase);
 
         // 2-Layer validation for multi-plan
         const check = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
@@ -2080,7 +2218,8 @@ serve(async (req) => {
 
     // ── CAMADA 2: Reconcile template items with Layer 1 macros ──
     const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
-    const planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems, goal);
+    let planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems, goal);
+    planItems = injectComputedProteinServings(planItems, patientFoodDatabase);
 
     // ── 2-LAYER VALIDATION (MANDATORY) ──
     const twoLayerCheck = validate2LayerIntegrity(planItems, finalKcal, finalMacros);
