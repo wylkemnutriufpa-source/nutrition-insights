@@ -1955,7 +1955,7 @@ serve(async (req) => {
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id }; });
+        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id }; });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
@@ -2190,7 +2190,7 @@ serve(async (req) => {
     }
 
     const itemsToInsert = planItems.map((item: any) => {
-      const { _image_url, _source, ...rest } = item;
+      const { _image_url, _source, _category_used, _scale_factor, ...rest } = item;
       return { ...rest, meal_plan_id: finalMealPlanId };
     });
 
