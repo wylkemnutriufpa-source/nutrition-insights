@@ -374,8 +374,12 @@ function PatientRecipes() {
 
   return (
     <div className="space-y-6">
-      <h1 className="font-display text-2xl font-bold flex items-center gap-2"><ChefHat className="w-6 h-6 text-primary" /> Receitas</h1>
-
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <h1 className="font-display text-2xl font-bold flex items-center gap-2"><ChefHat className="w-6 h-6 text-primary" /> Receitas</h1>
+        <Button onClick={() => navigate("/recipe-builder")} className="gradient-primary gap-2">
+          <Calculator className="w-4 h-4" /> Criar Receita
+        </Button>
+      </div>
       <div className="relative">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
         <Input value={search} onChange={e => setSearch(e.target.value)} placeholder="Buscar receitas..." className="pl-9" />
