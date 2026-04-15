@@ -5,6 +5,7 @@
  */
 
 import type { ResolvedTemplate, FoodStructureItem } from "./template-resolver.ts";
+import { BLOCKED_FOODS, COMPLEX_PREP_KEYWORDS, PREMIUM_KEYWORDS, normalize as normalizeRule } from "./food-rules.ts";
 
 // ── Food category mapping ──
 const FOOD_CATEGORY_MAP: Record<string, string[]> = {
@@ -27,6 +28,7 @@ interface DBFoodItem {
   protein: number;
   carbs: number;
   fats: number;
+  meal_tags_json?: string[];
   restriction_tags_json?: string[];
 }
 
@@ -35,15 +37,70 @@ export interface VariationContext {
   dislikedFoods: string[];
   allergies: string[];
   seed: number;
+  mealType?: string;
 }
+
+const BLOCKED_VARIATION_KEYWORDS = [
+  "canjica",
+  "óleo de abacate",
+  "oleo de abacate",
+  "óleo de coco",
+  "oleo de coco",
+  "pastel",
+  "prato feito",
+  "pf ",
+  "salada caesar",
+  "colageno",
+  "colágeno",
+  "barra proteica",
+  "suco verde",
+];
+
+const SAFE_VARIATION_DB_CATEGORIES = new Set([
+  "proteina",
+  "carboidrato",
+  "leguminosa",
+  "verdura",
+  "vegetal",
+  "fruta",
+  "laticinio",
+  "gordura",
+  "oleaginosa",
+  "cafe_da_manha",
+]);
+
+const MEAL_TYPE_ALLOWED_TAGS: Record<string, string[]> = {
+  breakfast: ["cafe_da_manha"],
+  morning_snack: ["lanche", "lanche_manha"],
+  lunch: ["almoco"],
+  afternoon_snack: ["lanche", "lanche_tarde"],
+  dinner: ["jantar", "almoco", "refeicao"],
+  evening_snack: ["ceia", "lanche"],
+};
+
+const CATEGORY_MEALTYPE_DENYLIST: Record<string, string[]> = {
+  lunch: ["cafe_da_manha"],
+  dinner: ["cafe_da_manha"],
+  breakfast: ["almoco", "jantar", "ceia", "refeicao"],
+  morning_snack: ["almoco", "jantar", "refeicao"],
+  afternoon_snack: ["almoco", "jantar", "refeicao"],
+  evening_snack: ["almoco", "jantar", "cafe_da_manha", "refeicao"],
+};
 
 function normalize(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-/**
- * Classify a food item into a macro category based on its name and DB category.
- */
+function hasBlockedKeyword(foodName: string): boolean {
+  const norm = normalize(foodName);
+  return [
+    ...BLOCKED_VARIATION_KEYWORDS,
+    ...BLOCKED_FOODS,
+    ...PREMIUM_KEYWORDS,
+    ...COMPLEX_PREP_KEYWORDS,
+  ].some((kw) => norm.includes(normalizeRule(kw)));
+}
+
 function classifyFood(foodName: string, dbCategory?: string): string {
   const norm = normalize(foodName);
   const cat = normalize(dbCategory || "");
@@ -55,6 +112,25 @@ function classifyFood(foodName: string, dbCategory?: string): string {
   }
 
   return "other";
+}
+
+function tagsMatchMealType(food: DBFoodItem, mealType?: string): boolean {
+  if (!mealType) return true;
+  const tags = (food.meal_tags_json || []).map(normalize);
+  const category = normalize(food.category || "");
+  const allowed = (MEAL_TYPE_ALLOWED_TAGS[mealType] || []).map(normalize);
+  const denied = (CATEGORY_MEALTYPE_DENYLIST[mealType] || []).map(normalize);
+
+  if (category && denied.includes(category)) return false;
+  if (category && allowed.includes(category)) return true;
+  if (tags.some((tag) => denied.includes(tag))) return false;
+  if (tags.length === 0) return true;
+  return tags.some((tag) => allowed.includes(tag));
+}
+
+function isVariationCategorySafe(food: DBFoodItem): boolean {
+  const category = normalize(food.category || "");
+  return SAFE_VARIATION_DB_CATEGORIES.has(category);
 }
 
 /**
@@ -96,6 +172,10 @@ function macroDensitySimilarity(
 function isFoodCompatible(food: DBFoodItem, ctx: VariationContext): boolean {
   const norm = normalize(food.food_name);
 
+  if (hasBlockedKeyword(food.food_name)) return false;
+  if (!isVariationCategorySafe(food)) return false;
+  if (!tagsMatchMealType(food, ctx.mealType)) return false;
+
   // Disliked check
   if (ctx.dislikedFoods.some(d => {
     const nd = normalize(d);
@@ -125,6 +205,10 @@ export function findSubstitutions(
 ): DBFoodItem[] {
   const originalCategory = classifyFood(originalFood.name);
   const normOriginal = normalize(originalFood.name);
+
+  if (originalCategory === "other" || hasBlockedKeyword(originalFood.name)) {
+    return [];
+  }
 
   const candidates = dbFoods
     .filter(f => {
@@ -202,6 +286,14 @@ export function generateTemplateVariation(
       calories_per_gram: sub.calories / subPortion,
       food_id: sub.id,
     };
+  }
+
+  const invalidCrossMealMix = ctx.mealType
+    ? newFoods.some((food) => hasBlockedKeyword(food.name))
+    : false;
+
+  if (invalidCrossMealMix) {
+    return template;
   }
 
   // Recalculate template base macros

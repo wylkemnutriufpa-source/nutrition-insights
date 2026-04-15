@@ -27,6 +27,8 @@ export function normalize(text: string): string {
 // BLOCKED FOODS — foods that must NEVER appear in generated plans
 // ══════════════════════════════════════════════════════════════════════════
 export const BLOCKED_FOODS: string[] = [
+  // Combinações / itens que geram composições clinicamente incoerentes
+  "canjica", "canjica de milho", "óleo de abacate", "oleo de abacate", "óleo de coco", "oleo de coco",
   // Peixes caros / importados
   "salmão", "salmon", "atum fresco",
   // Laticínios importados / caros
