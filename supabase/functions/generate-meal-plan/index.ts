@@ -735,9 +735,11 @@ function roundServingGrams(value: number): number {
 }
 
 function clampComputedProteinServing(grams: number, mealType: string): number {
-  const min = ["lunch", "dinner"].includes(mealType) ? 50 : 20;
-  const max = 350;
-  return Math.min(max, Math.max(min, roundServingGrams(grams)));
+  // Clinical limits: main meals 80-150g, snacks 20-80g
+  if (["lunch", "dinner"].includes(mealType)) {
+    return Math.min(150, Math.max(80, roundServingGrams(grams)));
+  }
+  return Math.min(80, Math.max(20, roundServingGrams(grams)));
 }
 
 function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
