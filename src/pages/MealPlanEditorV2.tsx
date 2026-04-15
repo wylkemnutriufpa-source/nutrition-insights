@@ -189,14 +189,7 @@ export default function MealPlanEditorV2() {
         throw new Error(result.warnings?.[0] || "Erro ao gerar novo plano");
       }
 
-      // Invalidate caches so UI reflects fresh data
-      const { QueryClient } = await import("@tanstack/react-query");
-      const queryClient = (window as any).__REACT_QUERY_CLIENT__ as import("@tanstack/react-query").QueryClient | undefined;
-      if (queryClient) {
-        const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
-        invalidateCriticalQueries(queryClient, plan.patient_id);
-      }
-      // Clear editor sessionStorage cache
+      // Clear editor sessionStorage cache for current plan
       try { sessionStorage.removeItem(`meal-plan-editor:${plan.id}`); } catch {}
 
       toast.success("✅ Novo plano gerado! Abrindo no editor...");
