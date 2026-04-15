@@ -2160,7 +2160,10 @@ serve(async (req) => {
     const patientFoodDatabase = filterFoodsForPatient(foodDatabase, restrictions, disliked, allergies);
     const useDBDriven = visualLibrary.length >= 5;
     const hasTemplates = mealTemplates.length > 0;
-    console.log(`[generate-meal-plan] Visual library: ${visualLibrary.length} items | Templates: ${mealTemplates.length} | DB-exclusive: ${useDBDriven}`);
+
+    // ── Load recent meals for diversity engine ──
+    const recentMeals = patient_id ? await loadRecentMeals(serviceClient, patient_id) : [];
+    console.log(`[generate-meal-plan] Visual library: ${visualLibrary.length} items | Templates: ${mealTemplates.length} | DB-exclusive: ${useDBDriven} | Recent meals for diversity: ${recentMeals.length}`);
 
     if (visualLibrary.length < 5) {
       return new Response(JSON.stringify({
