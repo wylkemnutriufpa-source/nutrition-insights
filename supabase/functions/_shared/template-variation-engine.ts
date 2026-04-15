@@ -90,9 +90,12 @@ function classifyFood(foodName: string, dbCategory?: string): string {
 function tagsMatchMealType(food: DBFoodItem, mealType?: string): boolean {
   if (!mealType) return true;
   const tags = (food.meal_tags_json || []).map(normalize);
+  const category = normalize(food.category || "");
   const allowed = (MEAL_TYPE_ALLOWED_TAGS[mealType] || []).map(normalize);
   const denied = (CATEGORY_MEALTYPE_DENYLIST[mealType] || []).map(normalize);
 
+  if (category && denied.includes(category)) return false;
+  if (category && allowed.includes(category)) return true;
   if (tags.some((tag) => denied.includes(tag))) return false;
   if (tags.length === 0) return true;
   return tags.some((tag) => allowed.includes(tag));
