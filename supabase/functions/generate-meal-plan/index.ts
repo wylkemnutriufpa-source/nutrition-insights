@@ -12,6 +12,24 @@ import {
   MEAL_ORDER,
   RESIDUAL_PRIORITY,
 } from "../_shared/food-rules.ts";
+// ──── UNIFIED ENGINE: Shared modules ────
+import {
+  calculateTMB as sharedCalculateTMB,
+  calculateTDEE as sharedCalculateTDEE,
+  calculateTargetKcal as sharedCalculateTargetKcal,
+  calculateMacros as sharedCalculateMacros,
+  enforceProteinRange,
+  enforceFatRange,
+  normalizeWeightKg as sharedNormalizeWeightKg,
+  normalizeHeightCm as sharedNormalizeHeightCm,
+  normalizeAge as sharedNormalizeAge,
+  normalizeActivityLevel as sharedNormalizeActivityLevel,
+  ACTIVITY_MULTIPLIERS as SHARED_ACTIVITY_MULTIPLIERS,
+  CLINICAL_PROTEIN_RANGES as SHARED_CLINICAL_PROTEIN_RANGES,
+  CLINICAL_FAT_RANGE as SHARED_CLINICAL_FAT_RANGE,
+} from "../_shared/clinical-macro-engine.ts";
+import { detectStrategy } from "../_shared/strategy-resolver.ts";
+import { getStrategy, BB_PHASE_CONFIG, type StrategyId } from "../_shared/strategies.ts";
 import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
