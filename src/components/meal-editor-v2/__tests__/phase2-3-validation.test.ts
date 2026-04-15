@@ -249,8 +249,8 @@ describe("Phase 3 — Substitutions", () => {
   });
 });
 
-describe("Immutability Guard", () => {
-  it("7. immutable statuses block editing actions", () => {
+describe("Professional Authority (formerly Immutability Guard)", () => {
+  it("7. professional can edit published/approved plans (authority model)", () => {
     for (const status of ["approved", "published", "published_to_patient"]) {
       useMealPlanEditorV2Store.setState({
         planId: PLAN_ID,
@@ -276,9 +276,11 @@ describe("Immutability Guard", () => {
         lastSavedAt: null,
       });
 
+      // Professional has full authority — operations should NOT be blocked
       const planStatus = useMealPlanEditorV2Store.getState().plan?.plan_status;
-      const isImmutable = ["approved", "published", "published_to_patient"].includes(planStatus as string);
-      expect(isImmutable).toBe(true);
+      expect(["approved", "published", "published_to_patient"]).toContain(planStatus);
+      // Items should still be accessible for editing
+      expect(useMealPlanEditorV2Store.getState().items.length).toBe(1);
     }
   });
 });
