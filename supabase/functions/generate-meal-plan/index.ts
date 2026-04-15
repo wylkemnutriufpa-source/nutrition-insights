@@ -23,6 +23,7 @@ import {
   normalizeWeightKg as sharedNormalizeWeightKg,
   normalizeHeightCm as sharedNormalizeHeightCm,
   normalizeAge as sharedNormalizeAge,
+  normalizeGoal,
   normalizeActivityLevel as sharedNormalizeActivityLevel,
   ACTIVITY_MULTIPLIERS as SHARED_ACTIVITY_MULTIPLIERS,
   CLINICAL_PROTEIN_RANGES as SHARED_CLINICAL_PROTEIN_RANGES,
