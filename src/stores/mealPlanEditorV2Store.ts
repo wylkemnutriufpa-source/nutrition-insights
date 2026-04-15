@@ -76,11 +76,8 @@ let syncBadgeTimer: ReturnType<typeof setTimeout> | null = null;
 let isFlushing = false;
 let activeFlushPromise: Promise<void> | null = null;
 
-const IMMUTABLE_PLAN_STATUSES = new Set(["approved", "published", "published_to_patient"]);
-
-function isPlanImmutable(plan: MealPlan | null) {
-  return IMMUTABLE_PLAN_STATUSES.has(String((plan as any)?.plan_status ?? ""));
-}
+// Professional has full authority — immutability enforced at DB trigger level (owner-scoped)
+// Frontend no longer blocks edit operations
 
 function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemInsert {
   return {
@@ -280,9 +277,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   addItem: (insert) => get().addItems([insert]),
 
   addItems: (inserts) => {
-    if (isPlanImmutable(get().plan)) {
-      return;
-    }
 
     const state = get();
     const sanitizedInserts = inserts.map(sanitizeMealPlanItemInsert);
@@ -350,9 +344,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Update item ───────────────────────────────────────────
   updateItem: (itemId, patch) => {
-    if (isPlanImmutable(get().plan)) {
-      return;
-    }
 
     const sanitizedPatch = sanitizeMealPlanItemPatch(patch);
     const prev = get().items;
@@ -382,9 +373,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Delete item ───────────────────────────────────────────
   deleteItem: (itemId) => {
-    if (isPlanImmutable(get().plan)) {
-      return;
-    }
 
     const prev = get().items;
     set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
@@ -406,9 +394,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Delete all items in a cell (day + mealType) ────────────
   deleteItemsInCell: (day, mealType) => {
-    if (isPlanImmutable(get().plan)) {
-      return;
-    }
 
     const toDelete = get().items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
     if (toDelete.length === 0) return;
@@ -433,9 +418,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Clear ALL items from the plan ─────────────────────────
   clearAllItems: () => {
-    if (isPlanImmutable(get().plan)) {
-      return;
-    }
 
     const prev = get().items;
     if (prev.length === 0) return;
@@ -466,9 +448,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Duplicate item ────────────────────────────────────────
   duplicateItem: (itemId) => {
-    if (isPlanImmutable(get().plan)) {
-      return;
-    }
 
     const item = get().items.find((i) => i.id === itemId);
     if (!item) return;
@@ -495,9 +474,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Swap two cells ────────────────────────────────────────
   swapCells: (srcDay, srcMeal, dstDay, dstMeal) => {
-    if (isPlanImmutable(get().plan)) {
-      return;
-    }
 
     const prev = get().items;
     const srcItems = prev.filter((i) => i.day_of_week === srcDay && i.meal_type === srcMeal);

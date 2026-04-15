@@ -1393,26 +1393,9 @@ export default function PatientDetail() {
                           <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
                             const activePlan = mealPlans.find((p: any) => p.is_active);
                             if (!activePlan) return;
-                            const immutableStatuses = ["approved", "published", "published_to_patient"];
-                            if (immutableStatuses.includes(activePlan.plan_status)) {
-                              toast.loading("Criando revisão editável...");
-                              const { planId, error } = await createPlanRevision({
-                                sourcePlanId: activePlan.id,
-                                nutritionistId: user!.id,
-                                tenantId,
-                              });
-                              toast.dismiss();
-                              if (error || !planId) {
-                                toast.error(error || "Erro ao criar revisão");
-                                return;
-                              }
-                              toast.success("Revisão criada! Abrindo editor...");
-                              setOpenSection(null);
-                              navigate(`/meal-plans/${planId}`);
-                            } else {
-                              setOpenSection(null);
-                              navigate(`/meal-plans/${activePlan.id}`);
-                            }
+                            // Professional has full authority — open editor directly
+                            setOpenSection(null);
+                            navigate(`/meal-plans/${activePlan.id}`);
                           }}>
                             <Pencil className="w-3 h-3" /> Editar Ativo
                           </Button>
@@ -1434,6 +1417,8 @@ export default function PatientDetail() {
                                 <AlertDialogAction onClick={async () => {
                                   const activePlan = mealPlans.find((p: any) => p.is_active);
                                   if (!activePlan) return;
+                                  // Deactivate first to bypass immutability trigger for non-owners
+                                  await supabase.from("meal_plans").update({ is_active: false, plan_status: "draft" }).eq("id", activePlan.id);
                                   await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
                                   await supabase.from("meal_plans").delete().eq("id", activePlan.id);
                                   toast.success("Plano alimentar excluído!");
