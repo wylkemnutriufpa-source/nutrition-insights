@@ -23,7 +23,6 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const [editValue, setEditValue] = useState(item.title);
   const [macroEditOpen, setMacroEditOpen] = useState(false);
 
-  // Register callback for removing food lines from description
   useEffect(() => {
     setOnRemoveFoodLine((itemId: string, newDescription: string) => {
       updateItem(itemId, { description: newDescription });
@@ -31,7 +30,6 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
     return () => setOnRemoveFoodLine(null);
   }, [setOnRemoveFoodLine, updateItem]);
 
-  // Register callback for changing image
   useEffect(() => {
     setOnChangeImage((itemId: string, newImageUrl: string) => {
       updateItem(itemId, { image_url: newImageUrl });
@@ -50,8 +48,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const catDot = getCategoryDot(item.title);
   const imageUrl = (item as any).image_url as string | null | undefined;
   const visualLibraryItemId = (item as any).visual_library_item_id as string | null | undefined;
-  
-  // Only fetch visual library if item has no direct image_url
+
   const needsVisualFallback = !imageUrl && !!visualLibraryItemId;
   const { item: visualItem } = useMealVisualItem(needsVisualFallback ? visualLibraryItemId : null);
   const fallbackImage = visualItem?.image_url || visualItem?.image_path || null;
@@ -60,7 +57,6 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
     enabled: !!fallbackImage,
   });
 
-  // Resolve image: direct url > visual library fallback > none
   const resolvedImage = imageUrl || signedFallback || null;
 
   return (
@@ -88,17 +84,15 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
         }
       }}
     >
-      {/* Meal Photo Thumbnail */}
       {resolvedImage ? (
-        <div className="relative w-full h-20 overflow-hidden shrink-0">
+        <div className="relative w-full aspect-[16/9] overflow-hidden shrink-0 bg-muted/30">
           <img
             src={resolvedImage}
             alt={item.title}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover object-center"
             loading="lazy"
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent" />
-          {/* Visual library badge */}
           {visualItem && !imageUrl && (
             <div className="absolute bottom-0.5 left-0.5">
               <span className="text-[7px] px-1 py-0.5 rounded bg-primary/60 text-primary-foreground backdrop-blur-sm">
@@ -106,7 +100,6 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               </span>
             </div>
           )}
-          {/* Photo action buttons (only for manual uploads) */}
           {imageUrl && (
             <div className="absolute top-0.5 right-0.5 flex gap-0.5 opacity-0 group-hover/item:opacity-100 transition-opacity z-10">
               <button
@@ -177,7 +170,6 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                 sincronizando...
               </span>
             )}
-            {/* Action buttons */}
             <div className="absolute top-1 right-1 z-10 flex gap-0.5 sm:opacity-0 sm:group-hover/item:opacity-100 transition-opacity">
               <button
                 type="button"
