@@ -4,7 +4,6 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 import { useState, useEffect, lazy, Suspense } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
@@ -92,7 +91,7 @@ export default function PatientGridDashboard() {
   const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
   const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
-  // Onboarding is mandatory — block everything until anamnesis is done
+  // Onboarding is mandatory — block everything until the full onboarding is done
   const showOnboardingCard = lifecycle.showOnboarding;
   const blockDashboard = lifecycle.showOnboarding;
 
