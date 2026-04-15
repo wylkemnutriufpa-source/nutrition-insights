@@ -2256,7 +2256,7 @@ serve(async (req) => {
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id }; });
+        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id, image_url: _image_url || rest.image_url || null }; });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
@@ -2526,7 +2526,7 @@ serve(async (req) => {
 
     const itemsToInsert = planItems.map((item: any) => {
       const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item;
-      return { ...rest, meal_plan_id: finalMealPlanId };
+      return { ...rest, meal_plan_id: finalMealPlanId, image_url: _image_url || rest.image_url || null };
     });
 
     // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
