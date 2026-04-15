@@ -39,6 +39,16 @@ import {
   type TemplateResolverParams,
 } from "../_shared/template-resolver.ts";
 import {
+  generateTemplateVariation,
+  type VariationContext,
+} from "../_shared/template-variation-engine.ts";
+import {
+  ensureMealDiversity,
+  loadRecentMeals,
+  trackProteinUsage,
+  type RecentMealItem,
+} from "../_shared/meal-diversity-engine.ts";
+import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
   buildFoodDescriptionFromItems,
@@ -1155,6 +1165,8 @@ function generatePlanWithTemplates(
   enabledMeals?: string[],
   mealTimes?: Record<string, string>,
   strategy?: string,
+  dbFoods?: any[],
+  recentMeals?: RecentMealItem[],
 ): { items: any[]; templateHits: number; visualFallbacks: number } {
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
@@ -1164,7 +1176,20 @@ function generatePlanWithTemplates(
   let visualFallbacks = 0;
   const usedTemplateIds = new Map<string, Set<string>>(); // per meal_type
 
+  // ── Variation context for food swaps ──
+  const variationCtx: VariationContext = {
+    restrictions,
+    dislikedFoods: disliked,
+    allergies,
+    seed: planOptionIndex * 31,
+  };
+
+  // ── Diversity: recent meals from previous plan ──
+  const recentMealItems = recentMeals || [];
+
   for (let day = 0; day < 7; day++) {
+    const usedProteinsToday = new Set<string>();
+
     for (const mealType of mealTypes) {
       const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
 
@@ -1179,13 +1204,27 @@ function generatePlanWithTemplates(
         excludeTemplateIds: Array.from(usedForType),
       };
 
-      const matched = resolveMealTemplates(templates, resolverParams);
+      let matched = resolveMealTemplates(templates, resolverParams);
+
+      // ── STEP 2: Apply diversity scoring ──
+      if (matched.length > 1) {
+        matched = ensureMealDiversity(matched, recentMealItems, day, mealType, usedProteinsToday);
+      }
 
       if (matched.length > 0) {
         // Pick from top candidates with seeded variety
         const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
         const pickIdx = seed % Math.min(matched.length, 3); // pick from top 3
-        const picked = matched[pickIdx];
+        let picked = matched[pickIdx];
+
+        // ── STEP 3: Apply template variation (swap 1-2 foods) ──
+        if (dbFoods && dbFoods.length > 0 && picked.foods_structure.length > 0) {
+          const varSeed = seed + day * 13 + defaultMeals.indexOf(mealType) * 3;
+          // Apply variation on ~60% of slots for natural diversity
+          if (varSeed % 5 < 3) {
+            picked = generateTemplateVariation(picked, dbFoods, { ...variationCtx, seed: varSeed });
+          }
+        }
 
         // Scale template to target kcal
         const { foods: scaledFoods, scaleFactor } = scaleTemplateToTarget(picked, targetKcal);
@@ -1199,6 +1238,7 @@ function generatePlanWithTemplates(
 
           items.push(item);
           usedForType.add(picked.id);
+          trackProteinUsage(picked, usedProteinsToday);
           // Reset if all used
           if (usedForType.size >= matched.length) usedForType.clear();
           templateHits++;
@@ -1206,18 +1246,14 @@ function generatePlanWithTemplates(
         }
       }
 
-      // ── STEP 2: Fallback to visual library (existing logic) ──
+      // ── STEP 4: Fallback to visual library (existing logic) ──
       visualFallbacks++;
-      // This slot will be filled by generatePlanFromVisualLibrary below
     }
   }
 
   // If any slots were NOT filled by templates, generate remaining from visual library
   if (visualFallbacks > 0) {
-    // Determine which (day, mealType) slots are already filled
     const filledSlots = new Set(items.map(i => `${i.day_of_week}_${i.meal_type}`));
-
-    // Generate a full visual library plan, then cherry-pick missing slots
     const visualItems = generatePlanFromVisualLibrary(
       visualLibrary, goal, kcalTarget, macros, restrictions, disliked, allergies,
       planOptionIndex, enabledMeals, mealTimes,
@@ -2124,7 +2160,10 @@ serve(async (req) => {
     const patientFoodDatabase = filterFoodsForPatient(foodDatabase, restrictions, disliked, allergies);
     const useDBDriven = visualLibrary.length >= 5;
     const hasTemplates = mealTemplates.length > 0;
-    console.log(`[generate-meal-plan] Visual library: ${visualLibrary.length} items | Templates: ${mealTemplates.length} | DB-exclusive: ${useDBDriven}`);
+
+    // ── Load recent meals for diversity engine ──
+    const recentMeals = patient_id ? await loadRecentMeals(serviceClient, patient_id) : [];
+    console.log(`[generate-meal-plan] Visual library: ${visualLibrary.length} items | Templates: ${mealTemplates.length} | DB-exclusive: ${useDBDriven} | Recent meals for diversity: ${recentMeals.length}`);
 
     if (visualLibrary.length < 5) {
       return new Response(JSON.stringify({
@@ -2141,7 +2180,7 @@ serve(async (req) => {
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
         // CAMADA 2: Template-first → Visual Library fallback → reconciled with Layer 1 macros
         const { items: rawItems, templateHits, visualFallbacks } = hasTemplates
-          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes, resolvedStrategy.strategyId)
+          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals)
           : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
         console.log(`[Multi-plan ${tplIdx}] Templates: ${templateHits}, Visual fallbacks: ${visualFallbacks}`);
         const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
@@ -2282,7 +2321,7 @@ serve(async (req) => {
     let visualFallbacksCount = 0;
 
     if (hasTemplates) {
-      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId);
+      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals);
       rawPlanItems = result.items;
       templateHitsCount = result.templateHits;
       visualFallbacksCount = result.visualFallbacks;
