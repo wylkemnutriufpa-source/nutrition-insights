@@ -200,7 +200,7 @@ export default function HybridPlanBuilder() {
   }
 
   const plan = store.plan!;
-  const IMMUTABLE_STATUSES = ["published", "published_to_patient"];
+  const IMMUTABLE_STATUSES = ["approved", "published", "published_to_patient"];
   const isImmutable = IMMUTABLE_STATUSES.includes(plan.plan_status);
 
   const handleUnlockForEditing = async () => {

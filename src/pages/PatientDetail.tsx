@@ -1417,11 +1417,20 @@ export default function PatientDetail() {
                                 <AlertDialogAction onClick={async () => {
                                   const activePlan = mealPlans.find((p: any) => p.is_active);
                                   if (!activePlan) return;
-                                  // Server-authoritative: archive → delete items → delete plan
-                                  await supabase.from("meal_plans").update({ is_active: false, plan_status: "archived" }).eq("id", activePlan.id);
-                                  await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
-                                  await supabase.from("meal_plans").delete().eq("id", activePlan.id);
-                                  toast.success("Plano alimentar excluído!");
+                                  try {
+                                    // Server-authoritative: archive → delete items → delete plan
+                                    const { error: archErr } = await supabase.from("meal_plans").update({ is_active: false, plan_status: "archived" }).eq("id", activePlan.id);
+                                    if (archErr) throw archErr;
+                                    const { error: itemsErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
+                                    if (itemsErr) throw itemsErr;
+                                    const { error: delErr } = await supabase.from("meal_plans").delete().eq("id", activePlan.id);
+                                    if (delErr) throw delErr;
+                                    toast.success("Plano alimentar excluído!");
+                                  } catch (e: any) {
+                                    console.error("[PatientDetail] Delete plan error:", e);
+                                    toast.error("Erro ao excluir plano: " + (e.message || "erro desconhecido"));
+                                    return;
+                                  }
                                   // Invalidate all caches
                                   const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
                                   const qc = (window as any).__REACT_QUERY_CLIENT__;

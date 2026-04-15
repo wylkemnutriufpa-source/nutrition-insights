@@ -225,7 +225,8 @@ export function scaleTemplateToTarget(
   scaleFactor = Math.max(0.3, Math.min(2.5, scaleFactor));
 
   const foods: ScaledFoodItem[] = template.foods_structure.map(food => {
-    let newPortion = Math.round(food.portion_grams * scaleFactor);
+    const basePortion = Number(food.portion_grams) || 100; // guard undefined/NaN
+    let newPortion = Math.round(basePortion * scaleFactor);
     newPortion = Math.max(10, Math.min(500, newPortion));
 
     const hasPerGram = food.calories_per_gram != null && food.calories_per_gram > 0;
@@ -238,19 +239,19 @@ export function scaleTemplateToTarget(
         protein: Math.round(newPortion * (food.protein_per_gram || 0) * 10) / 10,
         carbs: Math.round(newPortion * (food.carbs_per_gram || 0) * 10) / 10,
         fat: Math.round(newPortion * (food.fat_per_gram || 0) * 10) / 10,
-        original_portion: food.portion_grams,
+        original_portion: basePortion,
       };
     }
 
-    const portionRatio = newPortion / food.portion_grams;
+    const portionRatio = basePortion > 0 ? newPortion / basePortion : 1;
     return {
       name: food.name,
       portion_grams: newPortion,
-      calories: Math.round(food.calories * portionRatio),
-      protein: Math.round(food.protein * portionRatio * 10) / 10,
-      carbs: Math.round(food.carbs * portionRatio * 10) / 10,
-      fat: Math.round(food.fat * portionRatio * 10) / 10,
-      original_portion: food.portion_grams,
+      calories: Math.round((food.calories || 0) * portionRatio),
+      protein: Math.round((food.protein || 0) * portionRatio * 10) / 10,
+      carbs: Math.round((food.carbs || 0) * portionRatio * 10) / 10,
+      fat: Math.round((food.fat || 0) * portionRatio * 10) / 10,
+      original_portion: basePortion,
     };
   });
 
@@ -283,10 +284,12 @@ export function buildMealItemFromTemplate(
   const totalC = scaledFoods.reduce((s, f) => s + f.carbs, 0);
   const totalF = scaledFoods.reduce((s, f) => s + f.fat, 0);
 
-  // Build description with gram portions
-  const descriptionLines = scaledFoods.map(f =>
-    `• ${f.name} — ${f.portion_grams}g`
-  );
+  // Build description with gram portions — guard against undefined/NaN
+  const descriptionLines = scaledFoods.map(f => {
+    const grams = Number(f.portion_grams);
+    const gramsStr = Number.isFinite(grams) && grams > 0 ? `${grams}g` : "";
+    return gramsStr ? `• ${f.name} — ${gramsStr}` : `• ${f.name}`;
+  });
 
   // Build substitution lines from foods_structure substitutions
   const subLines: string[] = [];
