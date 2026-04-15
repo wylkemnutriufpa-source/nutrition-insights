@@ -1136,7 +1136,107 @@ function buildMealFromDBFoods(
 // Onboarding-compliant: respects enabled_meals, meal_times, restrictions
 // ═══════════════════════════════════════════════════════════════
 
-function generatePlanFromVisualLibrary(
+// ═══════════════════════════════════════════════════════════════
+// TEMPLATE-FIRST PLAN GENERATOR v1.0
+// Attempts to fill meal slots from nutritionist_meal_templates.
+// Any slots without matching templates fall through to visual library.
+// ═══════════════════════════════════════════════════════════════
+
+function generatePlanWithTemplates(
+  templates: ResolvedTemplate[],
+  visualLibrary: VisualLibraryItem[],
+  goal: string,
+  kcalTarget: number,
+  macros: { protein: number; carbs: number; fat: number },
+  restrictions: string[],
+  disliked: string[],
+  allergies: string[],
+  planOptionIndex: number = 0,
+  enabledMeals?: string[],
+  mealTimes?: Record<string, string>,
+  strategy?: string,
+): { items: any[]; templateHits: number; visualFallbacks: number } {
+  const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
+
+  const items: any[] = [];
+  let templateHits = 0;
+  let visualFallbacks = 0;
+  const usedTemplateIds = new Map<string, Set<string>>(); // per meal_type
+
+  for (let day = 0; day < 7; day++) {
+    for (const mealType of mealTypes) {
+      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+
+      // ── STEP 1: Try template resolver ──
+      if (!usedTemplateIds.has(mealType)) usedTemplateIds.set(mealType, new Set());
+      const usedForType = usedTemplateIds.get(mealType)!;
+
+      const resolverParams: TemplateResolverParams = {
+        goal,
+        mealType,
+        strategy,
+        excludeTemplateIds: Array.from(usedForType),
+      };
+
+      const matched = resolveMealTemplates(templates, resolverParams);
+
+      if (matched.length > 0) {
+        // Pick from top candidates with seeded variety
+        const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
+        const pickIdx = seed % Math.min(matched.length, 3); // pick from top 3
+        const picked = matched[pickIdx];
+
+        // Scale template to target kcal
+        const { foods: scaledFoods, scaleFactor } = scaleTemplateToTarget(picked, targetKcal);
+
+        if (scaledFoods.length > 0) {
+          const item = buildMealItemFromTemplate(picked, scaledFoods, mealType, day, scaleFactor);
+          
+          // Add meal_time if available
+          const mealTime = mealTimes?.[mealType] || null;
+          if (mealTime) item.meal_time = mealTime;
+
+          items.push(item);
+          usedForType.add(picked.id);
+          // Reset if all used
+          if (usedForType.size >= matched.length) usedForType.clear();
+          templateHits++;
+          continue; // Slot filled by template — skip visual library
+        }
+      }
+
+      // ── STEP 2: Fallback to visual library (existing logic) ──
+      visualFallbacks++;
+      // This slot will be filled by generatePlanFromVisualLibrary below
+    }
+  }
+
+  // If any slots were NOT filled by templates, generate remaining from visual library
+  if (visualFallbacks > 0) {
+    // Determine which (day, mealType) slots are already filled
+    const filledSlots = new Set(items.map(i => `${i.day_of_week}_${i.meal_type}`));
+
+    // Generate a full visual library plan, then cherry-pick missing slots
+    const visualItems = generatePlanFromVisualLibrary(
+      visualLibrary, goal, kcalTarget, macros, restrictions, disliked, allergies,
+      planOptionIndex, enabledMeals, mealTimes,
+    );
+
+    for (const vItem of visualItems) {
+      const slotKey = `${vItem.day_of_week}_${vItem.meal_type}`;
+      if (!filledSlots.has(slotKey)) {
+        items.push(vItem);
+        filledSlots.add(slotKey);
+      }
+    }
+  }
+
+  console.log(`[template-resolver] Template hits: ${templateHits}, Visual fallbacks: ${visualFallbacks}, Total items: ${items.length}`);
+  return { items, templateHits, visualFallbacks };
+}
+
+
   visualLibrary: VisualLibraryItem[],
   goal: string,
   kcalTarget: number,
