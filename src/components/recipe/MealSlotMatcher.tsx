@@ -53,7 +53,7 @@ export default function MealSlotMatcher({ open, onOpenChange, ingredients, servi
         .from("meal_plans")
         .select("id")
         .eq("patient_id", user.id)
-        .in("status", ["approved", "published", "published_to_patient"])
+        .in("status", ["approved", "published", "published_to_patient"] as any)
         .order("created_at", { ascending: false })
         .limit(1);
 
