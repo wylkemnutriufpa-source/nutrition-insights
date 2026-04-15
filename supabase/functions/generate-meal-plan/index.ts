@@ -1183,13 +1183,34 @@ function generatePlanFromVisualLibrary(
       const scaleFactor = baseCal > 0 ? targetKcal / baseCal : 1;
       const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
 
-      // Build description from library item
-      let description = `• ${picked.display_name}`;
+      // Build description from library item — ALWAYS with gram quantities
+      let description = "";
       if (picked.base_recipe && typeof picked.base_recipe === "object") {
         const recipe = picked.base_recipe as any;
         if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
           description = recipe.ingredients.map((ing: string) => `• ${ing}`).join("\n");
           description = scaleDescriptionQuantities(description, clampedScale) || description;
+        }
+      }
+      
+      // Fallback: use default_portion or build portion from macros
+      if (!description || description.trim().length === 0) {
+        if (picked.default_portion && picked.default_portion.trim().length > 0) {
+          // default_portion has text like "150g arroz + 120g frango" or "4 col. arroz + concha feijão + 120g frango"
+          const portionText = picked.default_portion.trim();
+          // Scale the quantities in the portion text
+          const scaledPortion = scaleDescriptionQuantities(portionText, clampedScale) || portionText;
+          // Split on " + " to create separate lines
+          const portionParts = scaledPortion.split(/\s*\+\s*/);
+          description = portionParts.map(part => `• ${part.trim()}`).join("\n");
+        } else {
+          // Last resort: build from display_name with calculated gram portion
+          const scaledCalories = Math.round(baseCal * clampedScale);
+          const scaledProtein = Math.round(baseP * clampedScale);
+          // Estimate portion in grams from calories (rough: 1g protein ≈ 4kcal, mixed food ≈ 1.2-1.5 kcal/g)
+          const estimatedGrams = Math.round(scaledCalories / 1.3);
+          const portionGrams = Math.max(50, Math.min(500, Math.round(estimatedGrams / 5) * 5));
+          description = `• ${picked.display_name} — ${portionGrams}g`;
         }
       }
 
