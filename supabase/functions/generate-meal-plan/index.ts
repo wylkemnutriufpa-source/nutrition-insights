@@ -1233,7 +1233,7 @@ function generatePlanWithTemplates(
           const varSeed = seed + day * 13 + defaultMeals.indexOf(mealType) * 3;
           // Apply variation on ~60% of slots for natural diversity
           if (varSeed % 5 < 3) {
-            picked = generateTemplateVariation(picked, dbFoods, { ...variationCtx, seed: varSeed });
+            picked = generateTemplateVariation(picked, dbFoods, { ...variationCtx, seed: varSeed, mealType });
           }
         }
 

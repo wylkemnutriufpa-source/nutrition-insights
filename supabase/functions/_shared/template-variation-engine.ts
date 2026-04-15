@@ -27,6 +27,7 @@ interface DBFoodItem {
   protein: number;
   carbs: number;
   fats: number;
+  meal_tags_json?: string[];
   restriction_tags_json?: string[];
 }
 
@@ -35,15 +36,44 @@ export interface VariationContext {
   dislikedFoods: string[];
   allergies: string[];
   seed: number;
+  mealType?: string;
 }
+
+const BLOCKED_VARIATION_KEYWORDS = [
+  "canjica",
+  "óleo de abacate",
+  "oleo de abacate",
+  "óleo de coco",
+  "oleo de coco",
+];
+
+const MEAL_TYPE_ALLOWED_TAGS: Record<string, string[]> = {
+  breakfast: ["cafe_da_manha"],
+  morning_snack: ["lanche", "lanche_manha"],
+  lunch: ["almoco"],
+  afternoon_snack: ["lanche", "lanche_tarde"],
+  dinner: ["jantar", "almoco", "refeicao"],
+  evening_snack: ["ceia", "lanche"],
+};
+
+const CATEGORY_MEALTYPE_DENYLIST: Record<string, string[]> = {
+  lunch: ["cafe_da_manha"],
+  dinner: ["cafe_da_manha"],
+  breakfast: ["almoco", "jantar", "ceia", "refeicao"],
+  morning_snack: ["almoco", "jantar", "refeicao"],
+  afternoon_snack: ["almoco", "jantar", "refeicao"],
+  evening_snack: ["almoco", "jantar", "cafe_da_manha", "refeicao"],
+};
 
 function normalize(text: string): string {
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
-/**
- * Classify a food item into a macro category based on its name and DB category.
- */
+function hasBlockedKeyword(foodName: string): boolean {
+  const norm = normalize(foodName);
+  return BLOCKED_VARIATION_KEYWORDS.some((kw) => norm.includes(normalize(kw)));
+}
+
 function classifyFood(foodName: string, dbCategory?: string): string {
   const norm = normalize(foodName);
   const cat = normalize(dbCategory || "");
@@ -55,6 +85,17 @@ function classifyFood(foodName: string, dbCategory?: string): string {
   }
 
   return "other";
+}
+
+function tagsMatchMealType(food: DBFoodItem, mealType?: string): boolean {
+  if (!mealType) return true;
+  const tags = (food.meal_tags_json || []).map(normalize);
+  const allowed = (MEAL_TYPE_ALLOWED_TAGS[mealType] || []).map(normalize);
+  const denied = (CATEGORY_MEALTYPE_DENYLIST[mealType] || []).map(normalize);
+
+  if (tags.some((tag) => denied.includes(tag))) return false;
+  if (tags.length === 0) return true;
+  return tags.some((tag) => allowed.includes(tag));
 }
 
 /**
@@ -96,6 +137,9 @@ function macroDensitySimilarity(
 function isFoodCompatible(food: DBFoodItem, ctx: VariationContext): boolean {
   const norm = normalize(food.food_name);
 
+  if (hasBlockedKeyword(food.food_name)) return false;
+  if (!tagsMatchMealType(food, ctx.mealType)) return false;
+
   // Disliked check
   if (ctx.dislikedFoods.some(d => {
     const nd = normalize(d);
@@ -125,6 +169,10 @@ export function findSubstitutions(
 ): DBFoodItem[] {
   const originalCategory = classifyFood(originalFood.name);
   const normOriginal = normalize(originalFood.name);
+
+  if (originalCategory === "other" || hasBlockedKeyword(originalFood.name)) {
+    return [];
+  }
 
   const candidates = dbFoods
     .filter(f => {
@@ -202,6 +250,14 @@ export function generateTemplateVariation(
       calories_per_gram: sub.calories / subPortion,
       food_id: sub.id,
     };
+  }
+
+  const invalidCrossMealMix = ctx.mealType
+    ? newFoods.some((food) => hasBlockedKeyword(food.name))
+    : false;
+
+  if (invalidCrossMealMix) {
+    return template;
   }
 
   // Recalculate template base macros

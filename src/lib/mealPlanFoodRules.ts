@@ -17,6 +17,8 @@
 
 // ── Alimentos bloqueados (synced from _shared/food-rules.ts canonical source) ──
 export const BLOCKED_FOODS = [
+  // Combinações / itens que geram composições clinicamente incoerentes
+  "canjica", "canjica de milho", "óleo de abacate", "oleo de abacate", "óleo de coco", "oleo de coco",
   // Peixes caros / importados
   "salmão", "salmon", "atum fresco",
   // Laticínios importados / caros
