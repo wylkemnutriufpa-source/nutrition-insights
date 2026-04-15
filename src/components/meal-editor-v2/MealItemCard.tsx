@@ -85,7 +85,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
       }}
     >
       {resolvedImage ? (
-        <div className="relative w-full aspect-[16/9] overflow-hidden shrink-0 bg-muted/30">
+        <div className="relative w-full aspect-[4/3] min-h-[112px] overflow-hidden shrink-0 bg-muted/30">
           <img
             src={resolvedImage}
             alt={item.title}

@@ -66,6 +66,24 @@ export default function UpdateBanner() {
     setDismissed(true);
   }, []);
 
+  useEffect(() => {
+    if (!needRefresh) return;
+
+    const syncDismissedState = () => {
+      setDismissed(wasDismissedRecently());
+    };
+
+    syncDismissedState();
+
+    const interval = window.setInterval(syncDismissedState, 30_000);
+    document.addEventListener("visibilitychange", syncDismissedState);
+
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", syncDismissedState);
+    };
+  }, [needRefresh]);
+
   if (!needRefresh || dismissed) return null;
 
   return (
