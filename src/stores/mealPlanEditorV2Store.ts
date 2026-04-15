@@ -76,11 +76,8 @@ let syncBadgeTimer: ReturnType<typeof setTimeout> | null = null;
 let isFlushing = false;
 let activeFlushPromise: Promise<void> | null = null;
 
-const IMMUTABLE_PLAN_STATUSES = new Set(["approved", "published", "published_to_patient"]);
-
-function isPlanImmutable(plan: MealPlan | null) {
-  return IMMUTABLE_PLAN_STATUSES.has(String((plan as any)?.plan_status ?? ""));
-}
+// Professional has full authority — immutability enforced at DB trigger level (owner-scoped)
+// Frontend no longer blocks edit operations
 
 function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemInsert {
   return {
