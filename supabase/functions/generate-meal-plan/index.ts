@@ -1647,9 +1647,17 @@ function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number
     for (const c of corrections) {
       const deviation = c.target > 0 ? Math.abs(c.actual - c.target) / c.target : 0;
       if (deviation > c.tolerance) {
-        const factor = c.target / (c.actual || 1);
-        for (const item of dayItems) {
-          item[c.macro] = Math.round((item[c.macro] || 0) * factor);
+        // If all items have 0 for this macro, distribute proportionally by meal share
+        if (c.actual === 0 && c.target > 0) {
+          for (const item of dayItems) {
+            const share = mealShares[item.meal_type] || (1 / dayItems.length);
+            item[c.macro] = Math.round(c.target * share);
+          }
+        } else {
+          const factor = c.target / (c.actual || 1);
+          for (const item of dayItems) {
+            item[c.macro] = Math.round((item[c.macro] || 0) * factor);
+          }
         }
         const newSum = dayItems.reduce((s: number, i: any) => s + (i[c.macro] || 0), 0);
         const diff = c.target - newSum;
