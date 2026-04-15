@@ -22,7 +22,7 @@ const MAIN_PROTEIN_KEYWORDS = [
 
 const MAIN_MEAL_TYPES = new Set(["lunch", "dinner"]);
 
-// ── Protein portion standards ────────────────────────────────
+// ── Protein portion standards (guide only, clinical calculation takes precedence) ────
 export function standardProteinPortion(mealType: string, isGainGoal: boolean): number {
   if (mealType === "lunch") return isGainGoal ? 180 : 150;
   if (mealType === "dinner") return isGainGoal ? 170 : 140;
