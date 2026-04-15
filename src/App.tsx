@@ -501,6 +501,7 @@ const App = () => (
               <Route path="/notifications" element={<ProtectedRoute><LP section="Notificações"><Notifications /></LP></ProtectedRoute>} />
               <Route path="/food-database" element={<NutritionistRoute><LP section="Alimentos"><FoodDatabase /></LP></NutritionistRoute>} />
               <Route path="/recipes" element={<ProtectedRoute><LP section="Receitas"><Recipes /></LP></ProtectedRoute>} />
+              <Route path="/recipe-builder" element={<ProtectedRoute><LP section="Calculadora de Receitas"><RecipeBuilder /></LP></ProtectedRoute>} />
               <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
               <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
 
