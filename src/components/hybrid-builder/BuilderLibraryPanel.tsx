@@ -3,7 +3,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { useDraggable } from "@dnd-kit/core";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Search, ChefHat, Apple,
   Flame, Beef, Wheat, Droplets, Loader2, GripVertical,
@@ -141,7 +140,7 @@ export default function BuilderLibraryPanel() {
         </TabsList>
 
         <TabsContent value="foods" className="flex-1 min-h-0 m-0">
-          <ScrollArea className="h-full">
+          <div className="h-full overflow-y-auto">
             <div className="p-2 space-y-1">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
@@ -153,11 +152,11 @@ export default function BuilderLibraryPanel() {
                 filteredFoods.map((food) => <DraggableFoodItem key={food.id} food={food} />)
               )}
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
 
         <TabsContent value="recipes" className="flex-1 min-h-0 m-0">
-          <ScrollArea className="h-full">
+          <div className="h-full overflow-y-auto">
             <div className="p-2 space-y-1">
               {loading ? (
                 <div className="flex items-center justify-center py-8">
@@ -169,7 +168,7 @@ export default function BuilderLibraryPanel() {
                 filteredRecipes.map((recipe) => <DraggableRecipeItem key={recipe.id} recipe={recipe} />)
               )}
             </div>
-          </ScrollArea>
+          </div>
         </TabsContent>
       </Tabs>
     </div>
@@ -194,14 +193,19 @@ function DraggableFoodItem({ food }: { food: FoodRow }) {
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={{ touchAction: "none" }}
-      className={`flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing transition-all text-xs ${
+      className={`flex items-center gap-2 p-2 rounded-lg transition-all text-xs ${
         isDragging ? "opacity-50 scale-95" : "hover:bg-muted/60"
       }`}
     >
-      <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+      <button
+        type="button"
+        className="shrink-0 cursor-grab active:cursor-grabbing rounded-sm text-muted-foreground/40 hover:text-foreground"
+        style={{ touchAction: "none" }}
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical className="w-3 h-3" />
+      </button>
       <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
         <Apple className="w-4 h-4 text-muted-foreground" />
       </div>
@@ -229,14 +233,19 @@ function DraggableRecipeItem({ recipe }: { recipe: RecipeRow }) {
   return (
     <div
       ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={{ touchAction: "none" }}
-      className={`flex items-center gap-2 p-2 rounded-lg cursor-grab active:cursor-grabbing transition-all text-xs ${
+      className={`flex items-center gap-2 p-2 rounded-lg transition-all text-xs ${
         isDragging ? "opacity-50 scale-95" : "hover:bg-muted/60"
       }`}
     >
-      <GripVertical className="w-3 h-3 text-muted-foreground/40 shrink-0" />
+      <button
+        type="button"
+        className="shrink-0 cursor-grab active:cursor-grabbing rounded-sm text-muted-foreground/40 hover:text-foreground"
+        style={{ touchAction: "none" }}
+        {...listeners}
+        {...attributes}
+      >
+        <GripVertical className="w-3 h-3" />
+      </button>
       {recipe.image_url ? (
         <img src={recipe.image_url} alt="" className="w-8 h-8 rounded-md object-cover shrink-0" />
       ) : (
