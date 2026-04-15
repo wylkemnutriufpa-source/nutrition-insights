@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { syncProteinDescriptionPortions } from "@/lib/mealDescriptionEngine";
+import { buildFoodDescriptionFromItems, syncProteinDescriptionPortions } from "@/lib/mealDescriptionEngine";
 
 describe("syncProteinDescriptionPortions", () => {
   it("clamps oversized lunch protein portions to the clinical standard", () => {
@@ -25,5 +25,28 @@ describe("syncProteinDescriptionPortions", () => {
     );
 
     expect(result).toBe("• 100g iogurte natural");
+  });
+});
+
+describe("buildFoodDescriptionFromItems", () => {
+  it("preserves unit-based portions for bread and tapioca instead of converting to grams", () => {
+    const result = buildFoodDescriptionFromItems([
+      { food_name: "Pão integral", portion_grams: 25, portion_reference: "1 fatia" },
+      { food_name: "Tapioca", portion_grams: 60, portion_reference: "1 tapioca média" },
+    ]);
+
+    expect(result).toContain("• Pão integral — 1 unidade P");
+    expect(result).toContain("• Tapioca — 1 unidade M");
+    expect(result).not.toContain("25g");
+    expect(result).not.toContain("60g");
+  });
+
+  it("keeps meaningful non-gram references for other foods", () => {
+    const result = buildFoodDescriptionFromItems([
+      { food_name: "Banana", portion_grams: 100, portion_reference: "1 unidade" },
+    ]);
+
+    expect(result).toContain("• Banana — 1 unidade");
+    expect(result).not.toContain("100g");
   });
 });

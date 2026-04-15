@@ -1112,15 +1112,10 @@ function buildMealFromDBFoods(
   });
   if (validFoods.length === 0) return null;
 
-  const descriptionLines = validFoods.map(f => {
-    const grams = Math.max(MIN_PORTION_GRAMS, Math.round((f.portion_grams || 100) * clampedScale));
-    const basePortion = (f.portion_reference || `${f.portion_grams || 100}g`).trim();
-    const scaledPortion = scaleDescriptionQuantities(basePortion, clampedScale) || basePortion;
-    const resolvedPortion = scaledPortion === basePortion && !/(\d+(?:[.,]\d+)?)\s*(g|ml|col\.?)/i.test(basePortion)
-      ? `${grams}g`
-      : scaledPortion;
-    return `• ${f.food_name} — ${resolvedPortion}`;
-  });
+  const descriptionLines = buildFoodDescriptionFromItems(validFoods, clampedScale)
+    .split("\n")
+    .map(line => line.trim())
+    .filter(Boolean);
 
   // Build substitution text from same categories — WITH portion quantities
   const subLines: string[] = [];

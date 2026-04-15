@@ -12,6 +12,29 @@ function normalize(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 
+function isUnitBasedCarb(foodName: string): boolean {
+  const normalized = normalize(foodName);
+  return normalized.includes("pao") || normalized.includes("tapioca");
+}
+
+function getUnitSizeLabel(grams: number): "P" | "M" | "G" {
+  if (grams <= 35) return "P";
+  if (grams <= 70) return "M";
+  return "G";
+}
+
+function resolveDisplayPortion(foodName: string, basePortion: string, grams: number): string {
+  if (isUnitBasedCarb(foodName)) {
+    return `1 unidade ${getUnitSizeLabel(grams)}`;
+  }
+
+  if (basePortion && !/(\d+(?:[.,]\d+)?)\s*(g|ml|col\.?)/i.test(basePortion)) {
+    return basePortion;
+  }
+
+  return `${grams}g`;
+}
+
 // ── Constants ────────────────────────────────────────────────
 const BEVERAGE_KEYWORDS = ["cafe", "chá", "cha", "leite", "suco", "vitamina"];
 const MAIN_PROTEIN_KEYWORDS = [
@@ -166,8 +189,8 @@ export function buildFoodDescriptionFromItems(
     const grams = Math.round((f.portion_grams || 100) * clampedScale);
     const basePortion = (f.portion_reference || `${f.portion_grams || 100}g`).trim();
     const scaledPortion = scaleDescriptionQuantities(basePortion, clampedScale) || basePortion;
-    const resolvedPortion = scaledPortion === basePortion && !/(\d+(?:[.,]\d+)?)\s*(g|ml|col\.?)/i.test(basePortion)
-      ? `${grams}g`
+    const resolvedPortion = scaledPortion === basePortion
+      ? resolveDisplayPortion(f.food_name, basePortion, grams)
       : scaledPortion;
     return `• ${f.food_name} — ${resolvedPortion}`;
   }).join("\n");
