@@ -50,15 +50,18 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const catDot = getCategoryDot(item.title);
   const imageUrl = (item as any).image_url as string | null | undefined;
   const visualLibraryItemId = (item as any).visual_library_item_id as string | null | undefined;
-  const { item: visualItem } = useMealVisualItem(visualLibraryItemId);
-  const visualImageSource = visualItem?.image_url || visualItem?.image_path || null;
-  const { url: signedVisualImage } = useSignedStorageUrl(visualImageSource, {
+  
+  // Only fetch visual library if item has no direct image_url
+  const needsVisualFallback = !imageUrl && !!visualLibraryItemId;
+  const { item: visualItem } = useMealVisualItem(needsVisualFallback ? visualLibraryItemId : null);
+  const fallbackImage = visualItem?.image_url || visualItem?.image_path || null;
+  const { url: signedFallback } = useSignedStorageUrl(fallbackImage, {
     bucket: "meal-images",
-    enabled: !!visualImageSource && !imageUrl,
+    enabled: !!fallbackImage,
   });
 
-  // Resolve image: manual upload > visual library > none
-  const resolvedImage = imageUrl || signedVisualImage || null;
+  // Resolve image: direct url > visual library fallback > none
+  const resolvedImage = imageUrl || signedFallback || null;
 
   return (
     <motion.div
