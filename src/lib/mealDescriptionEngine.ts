@@ -25,6 +25,17 @@ function getUnitSizeLabel(grams: number): "P" | "M" | "G" {
   return "G";
 }
 
+function sanitizeDescription(text: string): string {
+  return text
+    .replace(/\bundefined\b/gi, '')
+    .replace(/\bNaN\b/gi, '')
+    .replace(/ — undefinedg/g, '')
+    .replace(/ — NaNg/g, '')
+    .replace(/ — 0g/g, '')
+    .replace(/\s{2,}/g, ' ')
+    .trim();
+}
+
 function resolveDisplayPortion(foodName: string, basePortion: string, grams: number): string {
   if (isUnitBasedCarb(foodName)) {
     return `1 unidade ${getUnitSizeLabel(grams)}`;
@@ -34,6 +45,7 @@ function resolveDisplayPortion(foodName: string, basePortion: string, grams: num
     return basePortion;
   }
 
+  if (!Number.isFinite(grams) || grams <= 0) return basePortion || '100g';
   return `${grams}g`;
 }
 
@@ -182,15 +194,19 @@ export function buildFoodDescriptionFromItems(
 ): string {
   const clampedScale = Math.max(0.5, Math.min(2.0, scaleFactor));
 
-  return foods.map(f => {
-    const grams = Math.round((f.portion_grams || 100) * clampedScale);
-    const basePortion = (f.portion_reference || `${f.portion_grams || 100}g`).trim();
+  const result = foods.map(f => {
+    const rawGrams = f.portion_grams;
+    const safeGrams = Number.isFinite(rawGrams) && (rawGrams as number) > 0 ? (rawGrams as number) : 100;
+    const grams = Math.round(safeGrams * clampedScale);
+    const basePortion = (f.portion_reference || `${safeGrams}g`).trim();
     const scaledPortion = scaleDescriptionQuantities(basePortion, clampedScale) || basePortion;
     const resolvedPortion = scaledPortion === basePortion
       ? resolveDisplayPortion(f.food_name, basePortion, grams)
       : scaledPortion;
     return `• ${f.food_name} — ${resolvedPortion}`;
   }).join("\n");
+
+  return sanitizeDescription(result);
 }
 
 // ── Check if description is generic/useless ──────────────────
