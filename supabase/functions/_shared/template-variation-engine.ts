@@ -185,19 +185,21 @@ export function generateTemplateVariation(
     const sub = subs[pickIdx];
 
     // Scale substitute to match original portion's macro target
-    const portionRatio = original.portion_grams / (sub.portion_grams || 100);
+    const origPortion = Number(original.portion_grams) || 100;
+    const subPortion = Number(sub.portion_grams) || 100;
+    const portionRatio = origPortion / subPortion;
 
     newFoods[idx] = {
       name: sub.food_name,
-      portion_grams: original.portion_grams,
+      portion_grams: origPortion,
       calories: Math.round(sub.calories * portionRatio),
       protein: Math.round(sub.protein * portionRatio * 10) / 10,
       carbs: Math.round(sub.carbs * portionRatio * 10) / 10,
       fat: Math.round(sub.fats * portionRatio * 10) / 10,
-      protein_per_gram: sub.protein / (sub.portion_grams || 100),
-      carbs_per_gram: sub.carbs / (sub.portion_grams || 100),
-      fat_per_gram: sub.fats / (sub.portion_grams || 100),
-      calories_per_gram: sub.calories / (sub.portion_grams || 100),
+      protein_per_gram: sub.protein / subPortion,
+      carbs_per_gram: sub.carbs / subPortion,
+      fat_per_gram: sub.fats / subPortion,
+      calories_per_gram: sub.calories / subPortion,
       food_id: sub.id,
     };
   }
