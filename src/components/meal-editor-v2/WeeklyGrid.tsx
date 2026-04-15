@@ -38,8 +38,6 @@ const DAYS = [
   { key: 6, label: "Sábado", short: "Sáb" },
 ];
 
-const WEEKLY_GRID_TEMPLATE = "grid-cols-[160px_repeat(7,minmax(220px,1fr))]";
-
 const findFoodMatch = (text: string): FoodItem | null => {
   const q = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   return FOOD_DATABASE.find((f) => {
@@ -130,9 +128,9 @@ export function WeeklyGrid() {
 
   return (
     <>
-      <div className="overflow-x-auto pb-2">
+      <div className="overflow-x-auto">
         {/* Day headers */}
-        <div className={`grid ${WEEKLY_GRID_TEMPLATE} min-w-[1700px] gap-1 mb-1 sticky top-0 z-20 bg-background pb-1`}>
+        <div className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mb-1 sticky top-0 z-20 bg-background pb-1">
           <div className="glass rounded-lg p-3 flex items-center">
             <span className="font-display text-xs font-bold text-primary">REFEIÇÃO</span>
           </div>
@@ -166,7 +164,7 @@ export function WeeklyGrid() {
 
         {/* Meal rows */}
         {MEAL_TYPES.map((meal) => (
-          <div key={meal.key} className={`grid ${WEEKLY_GRID_TEMPLATE} min-w-[1700px] gap-1 mb-1`}>
+          <div key={meal.key} className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mb-1">
             {/* Row label */}
             <div className="glass rounded-lg p-3 flex flex-col justify-center">
               <div className="flex items-center gap-2">
@@ -347,7 +345,7 @@ export function WeeklyGrid() {
         ))}
 
         {/* Day totals */}
-        <div className={`grid ${WEEKLY_GRID_TEMPLATE} min-w-[1700px] gap-1 mt-2`}>
+        <div className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mt-2">
           <div className="glass rounded-lg p-3 flex items-center">
             <span className="font-display text-xs font-bold text-primary">TOTAL DIÁRIO</span>
           </div>
