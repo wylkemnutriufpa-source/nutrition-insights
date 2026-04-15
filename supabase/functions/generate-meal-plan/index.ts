@@ -559,6 +559,19 @@ async function resolveVisualForItems(client: any, planId: string, _items: any[])
 
   if (updates.length === 0) return 0;
 
+  // Load image URLs from visual library to copy into items
+  const visualIds = [...new Set(updates.map(u => u.visual_library_item_id))];
+  const { data: visualItems } = await client
+    .from("meal_visual_library")
+    .select("id, image_url")
+    .in("id", visualIds);
+  const visualImageMap = new Map<string, string>();
+  if (visualItems) {
+    for (const vi of visualItems) {
+      if (vi.image_url) visualImageMap.set(vi.id, vi.image_url);
+    }
+  }
+
   const groupedByVisual = new Map<string, string[]>();
   for (const u of updates) {
     if (!groupedByVisual.has(u.visual_library_item_id)) {
@@ -570,7 +583,7 @@ async function resolveVisualForItems(client: any, planId: string, _items: any[])
   const updatePromises = Array.from(groupedByVisual.entries()).map(([visualId, ids]) =>
     client
       .from("meal_plan_items")
-      .update({ visual_library_item_id: visualId })
+      .update({ visual_library_item_id: visualId, image_url: visualImageMap.get(visualId) || null })
       .in("id", ids)
   );
   await Promise.all(updatePromises);
