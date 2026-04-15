@@ -39,6 +39,16 @@ import {
   type TemplateResolverParams,
 } from "../_shared/template-resolver.ts";
 import {
+  generateTemplateVariation,
+  type VariationContext,
+} from "../_shared/template-variation-engine.ts";
+import {
+  ensureMealDiversity,
+  loadRecentMeals,
+  trackProteinUsage,
+  type RecentMealItem,
+} from "../_shared/meal-diversity-engine.ts";
+import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
   buildFoodDescriptionFromItems,
