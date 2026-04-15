@@ -190,7 +190,7 @@ const MealItemCard = memo(function MealItemCard({
               : status === "not_followed" ? <AlertCircle className="w-5 h-5 text-red-500 drop-shadow" />
               : null}
           </div>
-          {visualItem && !(item as any).image_url && (
+          {needsVisualFallback && visualItem && (
             <div className="absolute bottom-1 left-1">
               <span className="text-[8px] px-1.5 py-0.5 rounded bg-primary/70 text-primary-foreground backdrop-blur-sm">
                 📸 Inspiração
