@@ -63,8 +63,8 @@ export function MealPhotoUpload({ imageUrl, onUploaded, onRemoved, className, co
           src={imageUrl}
           alt="Foto da refeição"
           className={cn(
-            "w-full object-cover rounded-xl",
-            compact ? "h-20" : "h-40"
+            "w-full object-cover rounded-xl aspect-[4/3]",
+            compact ? "max-h-[112px]" : "max-h-[320px]"
           )}
         />
         <button
