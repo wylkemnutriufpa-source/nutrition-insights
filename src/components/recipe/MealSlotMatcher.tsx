@@ -58,8 +58,6 @@ export default function MealSlotMatcher({ open, onOpenChange, ingredients, servi
       // Filter by active statuses
       (query as any).in("status", ["approved", "published", "published_to_patient"]);
       const { data: plans } = await query;
-        .order("created_at", { ascending: false })
-        .limit(1);
 
       if (!plans?.length) return;
 
