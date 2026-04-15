@@ -87,7 +87,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
     >
       {/* Meal Photo Thumbnail */}
       {resolvedImage ? (
-        <div className="relative w-full h-16 overflow-hidden">
+        <div className="relative w-full h-20 overflow-hidden shrink-0">
           <img
             src={resolvedImage}
             alt={item.title}
@@ -152,7 +152,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               <p className="text-[11px] font-medium leading-tight truncate flex-1">{item.title}</p>
             </div>
             {item.description && (
-              <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2">
+              <p className="text-[9px] text-muted-foreground leading-tight mt-0.5 line-clamp-2 break-words overflow-hidden">
                 {item.description}
               </p>
             )}
