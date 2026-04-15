@@ -2321,7 +2321,7 @@ serve(async (req) => {
     let visualFallbacksCount = 0;
 
     if (hasTemplates) {
-      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId);
+      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals);
       rawPlanItems = result.items;
       templateHitsCount = result.templateHits;
       visualFallbacksCount = result.visualFallbacks;
