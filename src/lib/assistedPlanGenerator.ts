@@ -1,7 +1,16 @@
 /**
  * Gerador Assistido de Plano Alimentar — FitJourney Clinical Engine v3.0
  * 
- * Gera 3 opções diferenciadas (Fácil, Equilibrada, Elaborada) com:
+ * ⚠️ DEPRECATED AS STANDALONE GENERATOR (v8.0.0-unified)
+ * Este motor NÃO deve ser usado para gerar planos finais independentes.
+ * Planos finais devem ser gerados exclusivamente pela Edge Function `generate-meal-plan`
+ * (Clinical Nutrition Engine unificado).
+ * 
+ * Este módulo é mantido APENAS como ferramenta auxiliar do Editor V2:
+ * - Geração de opções (Fácil, Equilibrada, Elaborada) para preenchimento do editor
+ * - NÃO cria meal_plans, apenas meal_plan_items dentro de um plano existente
+ * 
+ * Gera 3 opções diferenciadas com:
  * - Refeições realistas com comida brasileira popular
  * - Bloqueio de alimentos caros/importados
  * - Limite de frutas (max 2 por refeição)

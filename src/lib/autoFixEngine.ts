@@ -1,7 +1,19 @@
 /**
- * Motor de Correção Automática Inteligente — FitJourney AutoFix Engine v1.0
+ * Motor de Correção Automática Inteligente — FitJourney AutoFix Engine v2.0
  * 
- * Pipeline completo:
+ * ⚠️ ESCOPO REDEFINIDO (v8.0.0-unified)
+ * Com a unificação do Clinical Nutrition Engine, o AutoFix NÃO deve mais
+ * corrigir erros estruturais do motor de geração (esses devem ser eliminados
+ * na fonte, dentro do generate-meal-plan).
+ * 
+ * O AutoFix agora foca EXCLUSIVAMENTE em validações clínicas pós-geração:
+ * 1. Remover alimentos bloqueados / intolerâncias
+ * 2. Aplicar personalização do paciente
+ * 3. Rebalancear macros quando necessário
+ * 4. Validar limites clínicos
+ * 5. Sincronizar descrições textuais
+ * 
+ * Pipeline:
  * 1. Carregar contexto (plano, itens, objetivo do paciente)
  * 2. Remover alimentos bloqueados
  * 3. Simplificar cafés da manhã

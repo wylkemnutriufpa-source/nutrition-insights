@@ -2,6 +2,16 @@
  * Motor Automático de Montagem de Plano Alimentar — FitJourney Clinical Engine v3.0
  * 100% determinístico. Sem IA generativa.
  * 
+ * ⚠️ DEPRECATED AS STANDALONE GENERATOR (v8.0.0-unified)
+ * Este motor NÃO deve ser usado para gerar planos finais independentes.
+ * Planos finais devem ser gerados exclusivamente pela Edge Function `generate-meal-plan`
+ * (Clinical Nutrition Engine unificado).
+ * 
+ * Este módulo é mantido APENAS como ferramenta auxiliar do Editor V2:
+ * - Geração de slots para preenchimento do editor manual
+ * - Conversão de slots para inserts (slotsToInserts)
+ * - NÃO cria meal_plans, apenas meal_plan_items dentro de um plano existente
+ * 
  * v3.0: Refeições realistas pré-definidas com comida brasileira popular
  * - Bloqueio de alimentos caros/importados
  * - Limite de frutas (max 2 por refeição)
