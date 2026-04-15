@@ -172,11 +172,3 @@ export function normalizeActivityLevel(value: unknown): string {
   if (["very_active", "very active", "muito ativo", "muito_ativo"].includes(raw)) return "very_active";
   return "light";
 }
-  const raw = String(value || "light").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s_]/g, "").trim();
-  if (["sedentary", "sedentario"].includes(raw)) return "sedentary";
-  if (["light", "leve"].includes(raw)) return "light";
-  if (["moderate", "moderado"].includes(raw)) return "moderate";
-  if (["active", "ativo", "intense", "intenso"].includes(raw)) return "active";
-  if (["very_active", "very active", "muito ativo", "muito_ativo"].includes(raw)) return "very_active";
-  return "light";
-}
