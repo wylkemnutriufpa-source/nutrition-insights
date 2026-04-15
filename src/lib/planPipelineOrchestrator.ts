@@ -176,6 +176,23 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
 
     const items = (generatedItems || []) as Partial<MealPlanItem>[];
 
+    // Invalidate caches after successful generation
+    try {
+      const { QueryClient } = await import("@tanstack/react-query");
+      const qc = (window as any).__REACT_QUERY_CLIENT__ as import("@tanstack/react-query").QueryClient | undefined;
+      if (qc) {
+        const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
+        invalidateCriticalQueries(qc, input.patientId);
+      }
+      // Clear editor sessionStorage for previous plans
+      try {
+        for (let i = 0; i < sessionStorage.length; i++) {
+          const key = sessionStorage.key(i);
+          if (key?.startsWith("meal-plan-editor:")) sessionStorage.removeItem(key);
+        }
+      } catch {}
+    } catch {}
+
     return {
       success: true,
       planId,
