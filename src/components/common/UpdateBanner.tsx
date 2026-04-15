@@ -1,14 +1,33 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+const DISMISS_KEY = "fj:update-dismissed-at";
+const DISMISS_COOLDOWN_MS = 5 * 60 * 1000; // 5 min cooldown after dismiss/update
+
+function wasDismissedRecently(): boolean {
+  try {
+    const ts = sessionStorage.getItem(DISMISS_KEY);
+    if (!ts) return false;
+    return Date.now() - Number(ts) < DISMISS_COOLDOWN_MS;
+  } catch {
+    return false;
+  }
+}
+
+function markDismissed() {
+  try {
+    sessionStorage.setItem(DISMISS_KEY, String(Date.now()));
+  } catch {}
+}
+
 /**
  * Shows a non-intrusive banner when a new service worker is waiting.
- * Forces a hard reload after activating the new SW to guarantee the update.
+ * Includes anti-loop protection via sessionStorage cooldown.
  */
 export default function UpdateBanner() {
-  const [dismissed, setDismissed] = useState(false);
+  const [dismissed, setDismissed] = useState(() => wasDismissedRecently());
   const [updating, setUpdating] = useState(false);
 
   const {
@@ -19,7 +38,7 @@ export default function UpdateBanner() {
       if (registration) {
         setInterval(() => {
           registration.update();
-        }, 60 * 1000);
+        }, 5 * 60 * 1000); // check every 5 min instead of 1 min
       }
     },
     onRegisterError(error) {
@@ -30,9 +49,9 @@ export default function UpdateBanner() {
   const handleUpdate = useCallback(async () => {
     if (updating) return;
     setUpdating(true);
+    markDismissed(); // prevent loop on reload
     try {
       await updateServiceWorker(true);
-      // Give the SW a moment to activate, then force reload
       setTimeout(() => {
         window.location.reload();
       }, 800);
@@ -41,6 +60,11 @@ export default function UpdateBanner() {
       window.location.reload();
     }
   }, [updating, updateServiceWorker]);
+
+  const handleDismiss = useCallback(() => {
+    markDismissed();
+    setDismissed(true);
+  }, []);
 
   if (!needRefresh || dismissed) return null;
 
@@ -65,7 +89,7 @@ export default function UpdateBanner() {
         </Button>
         {!updating && (
           <button
-            onClick={() => setDismissed(true)}
+            onClick={handleDismiss}
             className="ml-1 text-muted-foreground hover:text-foreground text-xs"
             aria-label="Fechar"
           >
