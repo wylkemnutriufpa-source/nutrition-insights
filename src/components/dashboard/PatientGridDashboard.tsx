@@ -125,14 +125,59 @@ export default function PatientGridDashboard() {
     );
   }
 
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+  // 🛡️ REGRESSION GUARD — BASIC MODE PATIENT DASHBOARD
+  // DO NOT add cards, sections, or complexity to the basic mode render.
+  // Basic mode = meal plan + feedback ONLY. 
+  // Any additions must go to pro/advanced blocks below.
+  // See: mem://ux/painel-basico-paciente-ultra-minimo
+  // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+  // BASIC MODE — Ultra-minimal: only meal plan + feedback
+  if (expUI.isBasic && !blockDashboard && !showOnboardingCard) {
+    return (
+      <div className="space-y-4">
+        {/* Greeting */}
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Meu Plano</h2>
+          <p className="text-xs text-muted-foreground">Seu plano alimentar do dia</p>
+        </div>
+
+        {/* Daily Meal Plan — the ONLY main content */}
+        <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+          <DailyMealPlanInline />
+        </Suspense>
+
+        {/* Feedback / Plan Request — single CTA */}
+        <PlanRequestButton />
+
+        {/* Quick access: only recipes */}
+        <Card
+          className="cursor-pointer border border-border/50 hover:border-primary/20 hover:bg-muted/30 transition-all group"
+          onClick={() => navigate("/recipes")}
+        >
+          <div className="flex items-center gap-3 px-4 py-3">
+            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-border/30 flex items-center justify-center flex-shrink-0">
+              <ChefHat className="w-4 h-4 text-foreground/80" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-medium text-foreground">Receitas</h3>
+              <p className="text-xs text-muted-foreground">Receitas saudáveis e práticas</p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
+          </div>
+        </Card>
+
+        {/* Mode switcher at bottom — subtle */}
+        <div className="pt-2 flex justify-center">
+          <InlineExperienceToggle />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      {/* Experience Mode Toggle + Plan Request */}
-      <div className="flex items-center justify-between gap-2 flex-wrap">
-        <InlineExperienceToggle />
-        <PlanRequestButton />
-      </div>
-
       {/* Onboarding Card — top priority */}
       {showOnboardingCard && (
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
@@ -176,44 +221,46 @@ export default function PatientGridDashboard() {
 
       {!blockDashboard && (<>
 
-      {/* BASIC MODE: Show daily meal plan directly */}
-      {expUI.isBasic && (
-        <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
-          <DailyMealPlanInline />
-        </Suspense>
-      )}
+      {/* Experience Mode Toggle + Plan Request */}
+      <div className="flex items-center justify-between gap-2 flex-wrap">
+        <InlineExperienceToggle />
+        <PlanRequestButton />
+      </div>
 
-      {/* FitJourney Timeline — hidden in basic mode */}
+      {/* PRO+: Show daily meal plan */}
+      <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+        <DailyMealPlanInline />
+      </Suspense>
+
+      {/* FitJourney Timeline — pro+ only */}
       {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
 
       {/* Header with view toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">{expUI.isBasic ? "Minha Jornada" : "Meu Painel"}</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">{expUI.isBasic ? "Foque no essencial para seguir seu plano" : "Acesse tudo em um só lugar"}</p>
+          <h2 className="text-xl font-bold text-foreground">Meu Painel</h2>
+          <p className="text-xs text-muted-foreground mt-0.5">Acesse tudo em um só lugar</p>
         </div>
-        {!expUI.isBasic && (
-          <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
-            <Button
-              variant={patientView === "grid" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-2 gap-1 text-xs"
-              onClick={() => setPatientView("grid")}
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              Grade
-            </Button>
-            <Button
-              variant={patientView === "list" ? "default" : "ghost"}
-              size="sm"
-              className="h-7 px-2 gap-1 text-xs"
-              onClick={() => setPatientView("list")}
-            >
-              <List className="w-3.5 h-3.5" />
-              Lista
-            </Button>
-          </div>
-        )}
+        <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
+          <Button
+            variant={patientView === "grid" ? "default" : "ghost"}
+            size="sm"
+            className="h-7 px-2 gap-1 text-xs"
+            onClick={() => setPatientView("grid")}
+          >
+            <LayoutGrid className="w-3.5 h-3.5" />
+            Grade
+          </Button>
+          <Button
+            variant={patientView === "list" ? "default" : "ghost"}
+            size="sm"
+            className="h-7 px-2 gap-1 text-xs"
+            onClick={() => setPatientView("list")}
+          >
+            <List className="w-3.5 h-3.5" />
+            Lista
+          </Button>
+        </div>
       </div>
 
       {/* Grid view */}
