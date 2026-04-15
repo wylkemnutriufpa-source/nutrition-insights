@@ -57,8 +57,8 @@ const STATUS_LABELS: Record<string, { label: string; color: string; icon: React.
 };
 
 /** Immutable statuses — nutritionist CAN edit published plans (they are the owner).
- *  Only "archived" is truly immutable. */
-const IMMUTABLE_STATUSES: string[] = [];
+ *  Only "archived" is truly immutable in the editor UI. */
+const IMMUTABLE_STATUSES: string[] = ["archived"];
 
 /** Plans that can still be published (approved but not yet delivered to patient) */
 const PUBLISHABLE_STATUSES = ["approved"];
