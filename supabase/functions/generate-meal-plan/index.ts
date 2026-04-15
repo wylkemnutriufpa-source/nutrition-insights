@@ -44,8 +44,9 @@ const corsHeaders = {
 };
 
 // ──── Constants ────
-const ENGINE_VERSION = "7.0.0";
-const PROTOCOL_VERSION = "fitjourney_db_exclusive_v7_strict";
+// ──── UNIFIED ENGINE VERSION ────
+const ENGINE_VERSION = "8.0.0-unified";
+const PROTOCOL_VERSION = "clinical_nutrition_engine_v1";
 
 // ──── FEATURE FLAG: DB-EXCLUSIVE MODE (MANDATORY) ────
 const USE_DB_EXCLUSIVE_V6 = true;
@@ -74,15 +75,17 @@ const MAX_2LAYER_DEVIATION = 0.03;
 // MEAL_KCAL_SPLIT imported from _shared/food-rules.ts (canonical source)
 const MEAL_KCAL_SPLIT = CANONICAL_MEAL_KCAL_SPLIT;
 
-const ACTIVITY_MULTIPLIERS: Record<string, number> = {
-  sedentary: 1.2,
-  light: 1.375,
-  moderate: 1.55,
-  active: 1.725,
-  very_active: 1.9,
-};
+// ──── UNIFIED: Use shared activity multipliers ────
+const ACTIVITY_MULTIPLIERS = SHARED_ACTIVITY_MULTIPLIERS;
 
 const GOAL_KCAL_ADJUSTMENT: Record<string, number> = {
+  lose_weight: -500,
+  maintain: 0,
+  gain_muscle: 300,
+  gain_weight: 500,
+  improve_health: -200,
+  athletic_performance: 200,
+};
   lose_weight: -500,
   maintain: 0,
   gain_muscle: 300,
