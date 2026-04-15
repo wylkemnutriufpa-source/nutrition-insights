@@ -37,6 +37,7 @@ const allRoutes = [
   { to: "/meal-plans", icon: UtensilsCrossed, label: "Planos Alimentares", keywords: "planos alimentares dieta plano alimentar refeicao calorias macros cardapio", roles: ["nutritionist", "admin"], desc: "Gerenciar dietas" },
   { to: "/diet-templates", icon: BookOpen, label: "Templates de Dieta", keywords: "templates dieta modelo base pre-definido template padrao low carb cetogenica", roles: ["nutritionist", "admin"], desc: "Modelos de dieta" },
   { to: "/recipes", icon: ChefHat, label: "Receitas", keywords: "receitas receita culinaria cozinhar preparar alimento recipe", roles: ["nutritionist", "admin", "patient"], desc: "Receitas saudáveis" },
+  { to: "/recipe-builder", icon: ChefHat, label: "Calculadora de Receitas", keywords: "calculadora receita macro calorias montar criar recipe builder", roles: ["nutritionist", "admin", "patient"], desc: "Monte e calcule macros" },
   { to: "/food-database", icon: Apple, label: "Banco de Alimentos", keywords: "banco alimentos database comida ingredientes tabela nutricional taco ibge", roles: ["nutritionist", "admin"], desc: "Base de dados de alimentos" },
   { to: "/reports", icon: BarChart3, label: "Relatórios", keywords: "relatorios relatorio report pdf exportar analise analytics dados evolucao", roles: ["nutritionist", "admin"], desc: "Relatórios e análises" },
   { to: "/clinical-intelligence", icon: Activity, label: "Inteligência Clínica", keywords: "inteligencia clinica ia analise risco alertas churn abandono", roles: ["nutritionist", "admin"], desc: "Motor de inteligência clínica" },

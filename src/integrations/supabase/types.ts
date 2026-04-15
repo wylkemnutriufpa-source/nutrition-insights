@@ -14426,6 +14426,47 @@ export type Database = {
         }
         Relationships: []
       }
+      recipe_curation_queue: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          nutritionist_id: string
+          patient_id: string
+          recipe_id: string
+          reviewed_at: string | null
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          nutritionist_id: string
+          patient_id: string
+          recipe_id: string
+          reviewed_at?: string | null
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          nutritionist_id?: string
+          patient_id?: string
+          recipe_id?: string
+          reviewed_at?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_curation_queue_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "user_recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_items: {
         Row: {
           created_at: string
@@ -16621,6 +16662,69 @@ export type Database = {
           device_info?: string | null
           is_online?: boolean
           last_seen_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_recipes: {
+        Row: {
+          approved_by: string | null
+          created_at: string
+          description: string | null
+          id: string
+          image_path: string | null
+          image_url: string | null
+          ingredients_json: Json
+          instructions: string | null
+          is_approved: boolean
+          servings: number
+          target_meal_type: string | null
+          title: string
+          total_calories: number | null
+          total_carbs: number | null
+          total_fat: number | null
+          total_protein: number | null
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          approved_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_path?: string | null
+          image_url?: string | null
+          ingredients_json?: Json
+          instructions?: string | null
+          is_approved?: boolean
+          servings?: number
+          target_meal_type?: string | null
+          title: string
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          approved_by?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_path?: string | null
+          image_url?: string | null
+          ingredients_json?: Json
+          instructions?: string | null
+          is_approved?: boolean
+          servings?: number
+          target_meal_type?: string | null
+          title?: string
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
+          updated_at?: string
           user_id?: string
         }
         Relationships: []

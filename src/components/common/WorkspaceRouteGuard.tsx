@@ -180,6 +180,7 @@ const UNIVERSAL_ROUTES = [
   "/planner",
   "/weekly-goals",
   "/recipes",
+  "/recipe-builder",
   "/feedbacks",
   "/supplements",
   "/user-guide",
