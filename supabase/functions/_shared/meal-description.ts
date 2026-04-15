@@ -89,15 +89,19 @@ export function scaleDescriptionQuantities(
 function clampProteinLineToStandardPortion(
   line: string,
   mealType: string,
-  isGainGoal: boolean,
+  _isGainGoal: boolean,
 ): string {
+  // Clinical calculation takes precedence — only clamp extreme outliers (>350g single protein)
   if (!isMainMealType(mealType) || !isProteinLine(line)) return line;
 
-  const standardPortion = standardProteinPortion(mealType, isGainGoal);
+  const MAX_SINGLE_PROTEIN_PORTION = 350; // physiological safety ceiling
+  const MIN_SINGLE_PROTEIN_PORTION = 50;  // minimum meaningful portion
   return line.replace(/(\d+(?:[.,]\d+)?)\s*(g)\b/i, (_match, rawValue: string, unit: string) => {
     const parsed = Number(rawValue.replace(",", "."));
-    if (!Number.isFinite(parsed) || parsed <= 0 || parsed <= standardPortion) return `${rawValue}${unit}`;
-    return `${standardPortion}${unit}`;
+    if (!Number.isFinite(parsed) || parsed <= 0) return `${rawValue}${unit}`;
+    if (parsed > MAX_SINGLE_PROTEIN_PORTION) return `${MAX_SINGLE_PROTEIN_PORTION}${unit}`;
+    if (parsed < MIN_SINGLE_PROTEIN_PORTION) return `${MIN_SINGLE_PROTEIN_PORTION}${unit}`;
+    return `${rawValue}${unit}`;
   });
 }
 
