@@ -347,6 +347,7 @@ function normalize(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s]/g, "").trim().replace(/\s+/g, " ");
 }
 
+// ──── UNIFIED: Normalization helpers delegated to shared engine ────
 function toFiniteNumber(value: unknown): number | null {
   if (typeof value === "number") return Number.isFinite(value) ? value : null;
   if (typeof value === "string") {
@@ -358,37 +359,10 @@ function toFiniteNumber(value: unknown): number | null {
   return null;
 }
 
-function normalizeWeightKg(value: unknown): number | null {
-  const parsed = toFiniteNumber(value);
-  if (parsed === null || parsed <= 0) return null;
-  if (parsed > 300) return parsed / 1000;
-  return parsed;
-}
-
-function normalizeHeightCm(value: unknown): number | null {
-  const parsed = toFiniteNumber(value);
-  if (parsed === null || parsed <= 0) return null;
-  if (parsed > 0 && parsed < 3) return parsed * 100;
-  return parsed;
-}
-
-function normalizeAge(value: unknown, fallback = 30): number {
-  const parsed = toFiniteNumber(value);
-  if (parsed === null) return fallback;
-  const rounded = Math.round(parsed);
-  if (rounded < 1 || rounded > 120) return fallback;
-  return rounded;
-}
-
-function normalizeActivityLevel(value: unknown): string {
-  const raw = normalize(String(value || "light"));
-  if (["sedentary", "sedentario"].includes(raw)) return "sedentary";
-  if (["light", "leve"].includes(raw)) return "light";
-  if (["moderate", "moderado"].includes(raw)) return "moderate";
-  if (["active", "ativo", "intense", "intenso"].includes(raw)) return "active";
-  if (["very_active", "very active", "muito ativo", "muito_ativo"].includes(raw)) return "very_active";
-  return "light";
-}
+const normalizeWeightKg = sharedNormalizeWeightKg;
+const normalizeHeightCm = sharedNormalizeHeightCm;
+const normalizeAge = sharedNormalizeAge;
+const normalizeActivityLevel = sharedNormalizeActivityLevel;
 
 // ── Seeded pseudo-random for patient-specific variety ──
 // Uses time-based entropy so each generation produces different results
