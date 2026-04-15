@@ -49,11 +49,15 @@ export default function MealSlotMatcher({ open, onOpenChange, ingredients, servi
     if (!open || !user) return;
     (async () => {
       // Get active meal plan items for the patient
-      const { data: plans } = await supabase
+      const query = supabase
         .from("meal_plans")
         .select("id")
         .eq("patient_id", user.id)
-        .in("status", ["approved", "published", "published_to_patient"] as any)
+        .order("created_at", { ascending: false })
+        .limit(1);
+      // Filter by active statuses
+      (query as any).in("status", ["approved", "published", "published_to_patient"]);
+      const { data: plans } = await query;
         .order("created_at", { ascending: false })
         .limit(1);
 

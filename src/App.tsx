@@ -59,6 +59,7 @@ const PhysicalAssessment = lazy(() => import("./pages/PhysicalAssessment"));
 const Feedbacks = lazy(() => import("./pages/Feedbacks"));
 const GlobalTips = lazy(() => import("./pages/GlobalTips"));
 const Recipes = lazy(() => import("./pages/Recipes"));
+const RecipeBuilder = lazy(() => import("./pages/RecipeBuilder"));
 const ShoppingList = lazy(() => import("./pages/ShoppingList"));
 const FoodDatabase = lazy(() => import("./pages/FoodDatabase"));
 const BodyAnalysis = lazy(() => import("./pages/BodyAnalysis"));
