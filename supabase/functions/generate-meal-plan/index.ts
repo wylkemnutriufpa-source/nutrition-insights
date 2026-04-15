@@ -31,6 +31,14 @@ import {
 import { detectStrategy } from "../_shared/strategy-resolver.ts";
 import { getStrategy, BB_PHASE_CONFIG, type StrategyId } from "../_shared/strategies.ts";
 import {
+  loadMealTemplates,
+  resolveMealTemplates,
+  scaleTemplateToTarget,
+  buildMealItemFromTemplate,
+  type ResolvedTemplate,
+  type TemplateResolverParams,
+} from "../_shared/template-resolver.ts";
+import {
   scaleDescriptionQuantities,
   finalizeMealDescription as canonicalFinalizeMealDescription,
   buildFoodDescriptionFromItems,
