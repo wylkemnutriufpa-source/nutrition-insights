@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
+import { resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 
 interface PipelineStep {
   key: string;
@@ -48,10 +49,11 @@ export default function OnboardingProgressModal() {
     }
 
     (async () => {
+      const patientIdentity = await resolvePatientIdentity(user.id);
       const { data: pipeline } = await supabase
         .from("onboarding_pipelines")
         .select("*")
-        .eq("patient_id", user.id)
+        .in("patient_id", patientIdentity.allIds)
         .not("status", "in", '("completed","superseded_by_published_plan")')
         .order("created_at", { ascending: false })
         .limit(1)
@@ -75,12 +77,12 @@ export default function OnboardingProgressModal() {
           key: "anamnesis",
           label: "Anamnese Nutricional",
           description: pipeline.anamnesis_completed
-            ? "✅ Anamnese preenchida com sucesso!"
+            ? "✅ Questionário inicial preenchido. Ainda faltam as próximas etapas do onboarding."
             : "Responda o questionário sobre sua saúde e hábitos alimentares.",
-          helpText: "Esse questionário leva cerca de 5 minutos. Suas respostas ajudam seu nutricionista a criar um plano personalizado.",
+          helpText: "A anamnese é só a primeira parte. O onboarding só termina após dados corporais, preferências e andamento do plano.",
           icon: ClipboardCheck,
           completed: !!pipeline.anamnesis_completed,
-          route: "/anamnesis",
+          route: "/onboarding",
         },
         {
           key: "body_data",
@@ -115,7 +117,7 @@ export default function OnboardingProgressModal() {
             : "Complete as etapas acima para que seu nutricionista possa iniciar a elaboração do seu plano.",
           icon: allPatientStepsDone ? PartyPopper : CheckCircle2,
           completed: !!pipeline.plan_approved,
-          route: "/dashboard",
+          route: "/client/dashboard",
         },
       ];
 
@@ -251,7 +253,7 @@ export default function OnboardingProgressModal() {
             {firstIncomplete && (
               <Button onClick={() => handleGoToStep(firstIncomplete.route)} className="flex-1 gap-1.5 font-semibold">
                 <Sparkles className="h-4 w-4" />
-                {firstIncomplete.key === "anamnesis" ? "Começar agora" :
+                {firstIncomplete.key === "anamnesis" ? "Continuar onboarding" :
                  firstIncomplete.key === "body_data" ? "Informar dados" :
                  "Preencher agora"}
               </Button>

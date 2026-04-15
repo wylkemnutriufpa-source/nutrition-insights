@@ -1021,12 +1021,12 @@ export default function Anamnesis() {
                 </motion.div>
                 <h1 className="font-display text-3xl font-bold mb-2">
                   {isPipelineMode && !isNutritionistMode
-                    ? "Etapa 1 Concluída — Anamnese ✅"
+                    ? "Etapa 1 concluída do onboarding ✅"
                     : "Anamnese Inteligente Concluída!"}
                 </h1>
                 <p className="text-muted-foreground max-w-md">
                   {isPipelineMode && !isNutritionistMode
-                    ? "Ótimo! Agora vamos para a próxima etapa do seu onboarding. Faltam mais algumas etapas para completar seu cadastro."
+                    ? "Ótimo! Sua anamnese foi salva, mas o onboarding ainda não terminou. Agora siga para as próximas etapas obrigatórias."
                     : aiResult
                     ? `${aiResult.summary || "Sua análise foi gerada com sucesso."}`
                     : "Seu nutricionista receberá seus dados e criará um plano personalizado."}
@@ -1044,7 +1044,7 @@ export default function Anamnesis() {
                     ⏳ Redirecionando para a próxima etapa em {pipelineCountdown}s...
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    Você ainda precisa preencher: Dados Corporais, Preferências e aguardar a geração do plano.
+                    Você ainda precisa concluir: Dados Corporais, Preferências e depois aguardar o andamento do plano.
                   </p>
                 </motion.div>
               )}
