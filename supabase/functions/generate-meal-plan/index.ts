@@ -2109,15 +2109,20 @@ serve(async (req) => {
     const startDate = new Date().toISOString().split("T")[0];
 
     // ═══════════════════════════════════════════════════════════
-    // LOAD VISUAL LIBRARY (EXCLUSIVE SOURCE OF MEALS)
-    // ALL meals come from meal_visual_library — no presets allowed
+    // LOAD VISUAL LIBRARY + MEAL TEMPLATES (TEMPLATE-FIRST PIPELINE)
+    // Templates from nutritionist_meal_templates are the primary source.
+    // Visual library serves as fallback for unfilled meal slots.
     // ═══════════════════════════════════════════════════════════
     
-    const visualLibrary = await loadVisualLibrary(serviceClient);
+    const [visualLibrary, mealTemplates] = await Promise.all([
+      loadVisualLibrary(serviceClient),
+      loadMealTemplates(serviceClient, requestedNutritionistId),
+    ]);
     const foodDatabase = await loadFoodDatabase(serviceClient);
     const patientFoodDatabase = filterFoodsForPatient(foodDatabase, restrictions, disliked, allergies);
     const useDBDriven = visualLibrary.length >= 5;
-    console.log(`[generate-meal-plan] Visual library loaded: ${visualLibrary.length} items with images. DB-exclusive: ${useDBDriven}`);
+    const hasTemplates = mealTemplates.length > 0;
+    console.log(`[generate-meal-plan] Visual library: ${visualLibrary.length} items | Templates: ${mealTemplates.length} | DB-exclusive: ${useDBDriven}`);
 
     if (visualLibrary.length < 5) {
       return new Response(JSON.stringify({
