@@ -2443,6 +2443,25 @@ serve(async (req) => {
       const endDate = new Date();
       endDate.setDate(endDate.getDate() + 30);
 
+      // ── Clean up old draft_auto_generated plans for this patient ──
+      try {
+        const { data: staleDrafts } = await serviceClient
+          .from("meal_plans")
+          .select("id")
+          .eq("patient_id", patient_id)
+          .eq("plan_status", "draft_auto_generated")
+          .eq("is_active", false);
+
+        if (staleDrafts && staleDrafts.length > 0) {
+          const staleDraftIds = staleDrafts.map((d: any) => d.id);
+          await serviceClient.from("meal_plan_items").delete().in("meal_plan_id", staleDraftIds);
+          await serviceClient.from("meal_plans").delete().in("id", staleDraftIds);
+          console.log(`[ENGINE] Cleaned ${staleDraftIds.length} stale draft_auto_generated plans`);
+        }
+      } catch (cleanupErr) {
+        console.warn("[ENGINE] Draft cleanup non-blocking error:", cleanupErr);
+      }
+
       const { data: newPlan, error: planErr } = await serviceClient
         .from("meal_plans")
         .insert({
