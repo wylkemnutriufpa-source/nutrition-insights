@@ -281,19 +281,47 @@ export default function MealPlans() {
   const handleDeletePlan = async (id: string) => {
     if (!confirm("Tem certeza que deseja excluir permanentemente este plano e todas as suas refeições?")) return;
     
-    // Server-authoritative: archive first, then delete items, then delete plan
-    await supabase.from("meal_plans").update({ is_active: false, plan_status: "archived" }).eq("id", id);
-    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", id);
-    const { error } = await supabase.from("meal_plans").delete().eq("id", id);
-    
-    if (error) { toast.error("Erro ao deletar: " + error.message); }
-    else {
+    try {
+      // Step 1: Archive the plan first (required by trigger protect_approved_meal_plans)
+      const { error: archiveErr } = await supabase
+        .from("meal_plans")
+        .update({ is_active: false, plan_status: "archived" })
+        .eq("id", id);
+      
+      if (archiveErr) {
+        console.error("[MealPlans] Failed to archive before delete:", archiveErr);
+        toast.error("Erro ao preparar exclusão: " + archiveErr.message);
+        return;
+      }
+
+      // Step 2: Delete items (now safe — plan is archived, trigger allows)
+      const { error: itemsErr } = await supabase
+        .from("meal_plan_items")
+        .delete()
+        .eq("meal_plan_id", id);
+      
+      if (itemsErr) {
+        console.error("[MealPlans] Failed to delete items:", itemsErr);
+        toast.error("Erro ao excluir refeições: " + itemsErr.message);
+        return;
+      }
+
+      // Step 3: Delete the plan itself
+      const { error } = await supabase.from("meal_plans").delete().eq("id", id);
+      
+      if (error) {
+        toast.error("Erro ao deletar plano: " + error.message);
+        return;
+      }
+
       toast.success("Plano excluído definitivamente.");
-      // Invalidate all caches
       const { invalidateCriticalQueries } = await import("@/lib/queryInvalidation");
       const qc = (window as any).__REACT_QUERY_CLIENT__;
       if (qc) invalidateCriticalQueries(qc);
       fetchPlans();
+    } catch (e: any) {
+      console.error("[MealPlans] Unexpected delete error:", e);
+      toast.error("Erro inesperado ao excluir plano.");
     }
   };
 
