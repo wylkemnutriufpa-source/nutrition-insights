@@ -1,0 +1,150 @@
+/**
+ * Clinical Macro Engine v2.0 — SINGLE SOURCE OF TRUTH
+ * Centralizes ALL metabolic calculations: TMB, TDEE, Macros
+ * Used by: generate-meal-plan (unified engine)
+ * 
+ * REGRAS INVIOLÁVEIS:
+ * - Proteína: 1.6–2.2 g/kg (déficit) | 1.8–2.5 g/kg (hipertrofia)
+ * - Gordura: 0.8–1.0 g/kg (universal)
+ * - Carboidrato: completa o restante calórico
+ */
+
+// ──── Activity Multipliers (Mifflin-St Jeor) ────
+export const ACTIVITY_MULTIPLIERS: Record<string, number> = {
+  sedentary: 1.2,
+  light: 1.375,
+  moderate: 1.55,
+  active: 1.725,
+  very_active: 1.9,
+};
+
+// ──── Goal Calorie Adjustments ────
+export const GOAL_KCAL_ADJUSTMENT: Record<string, number> = {
+  lose_weight: -500,
+  maintain: 0,
+  gain_muscle: 300,
+  gain_weight: 500,
+  improve_health: -200,
+  athletic_performance: 200,
+};
+
+// ──── Clinical Protein Ranges (g/kg) ────
+export const CLINICAL_PROTEIN_RANGES: Record<string, { min: number; max: number; ideal: number }> = {
+  lose_weight:          { min: 1.6, max: 2.2, ideal: 2.0 },
+  improve_health:       { min: 1.4, max: 2.0, ideal: 1.6 },
+  maintain:             { min: 1.4, max: 2.0, ideal: 1.6 },
+  gain_muscle:          { min: 1.8, max: 2.5, ideal: 2.2 },
+  gain_weight:          { min: 1.8, max: 2.5, ideal: 2.2 },
+  athletic_performance: { min: 1.6, max: 2.2, ideal: 2.0 },
+};
+
+export const CLINICAL_FAT_RANGE = { min: 0.8, max: 1.0, ideal: 0.9 };
+
+// ──── TMB Calculator (Mifflin-St Jeor) ────
+export function calculateTMB(weight: number, height: number, age: number, sex: string): number {
+  if (sex === "female") return Math.round(10 * weight + 6.25 * height - 5 * age - 161);
+  return Math.round(10 * weight + 6.25 * height - 5 * age + 5);
+}
+
+// ──── TDEE Calculator ────
+export function calculateTDEE(tmb: number, activityLevel: string): number {
+  const multiplier = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
+  return Math.round(tmb * multiplier);
+}
+
+// ──── Target Kcal with Goal Adjustment ────
+export function calculateTargetKcal(tdee: number, goal: string, sex: string = "male"): number {
+  const adjustment = GOAL_KCAL_ADJUSTMENT[goal] || 0;
+  const raw = tdee + adjustment;
+  const minKcal = sex === "female" ? 1200 : 1500;
+  return Math.max(minKcal, Math.min(3500, raw));
+}
+
+// ──── Clinical Macro Calculator ────
+export function calculateMacros(kcal: number, goal: string, weight: number): { protein: number; carbs: number; fat: number } {
+  const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+  let protein = Math.round(weight * proteinRange.ideal);
+  let fat = Math.round(weight * CLINICAL_FAT_RANGE.ideal);
+
+  const proteinKcal = protein * 4;
+  const fatKcal = fat * 9;
+  let carbsKcal = kcal - proteinKcal - fatKcal;
+
+  if (carbsKcal < 0) {
+    fat = Math.round(weight * CLINICAL_FAT_RANGE.min);
+    carbsKcal = kcal - (protein * 4) - (fat * 9);
+  }
+  if (carbsKcal < 0) {
+    protein = Math.round(weight * proteinRange.min);
+    carbsKcal = kcal - (protein * 4) - (fat * 9);
+  }
+
+  const carbs = Math.max(0, Math.round(carbsKcal / 4));
+
+  const actualProteinPerKg = protein / weight;
+  if (actualProteinPerKg > proteinRange.max) {
+    protein = Math.round(weight * proteinRange.max);
+    console.warn(`[ClinicalMacroEngine] Protein capped at ${proteinRange.max}g/kg for goal=${goal}`);
+  }
+
+  return { protein, carbs, fat };
+}
+
+// ──── Enforce Clinical Ranges on External Overrides ────
+export function enforceProteinRange(protein: number, weight: number, goal: string): number {
+  const range = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+  const perKg = protein / weight;
+  if (perKg > range.max) return Math.round(weight * range.max);
+  if (perKg < range.min) return Math.round(weight * range.min);
+  return protein;
+}
+
+export function enforceFatRange(fat: number, weight: number): number {
+  const perKg = fat / weight;
+  if (perKg > CLINICAL_FAT_RANGE.max * 1.1) return Math.round(weight * CLINICAL_FAT_RANGE.max);
+  return fat;
+}
+
+// ──── Normalization Helpers ────
+export function toFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number") return Number.isFinite(value) ? value : null;
+  if (typeof value === "string") {
+    const cleaned = value.replace(",", ".").trim();
+    if (!cleaned) return null;
+    const parsed = Number(cleaned);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+export function normalizeWeightKg(value: unknown): number | null {
+  const parsed = toFiniteNumber(value);
+  if (parsed === null || parsed <= 0) return null;
+  if (parsed > 300) return parsed / 1000;
+  return parsed;
+}
+
+export function normalizeHeightCm(value: unknown): number | null {
+  const parsed = toFiniteNumber(value);
+  if (parsed === null || parsed <= 0) return null;
+  if (parsed > 0 && parsed < 3) return parsed * 100;
+  return parsed;
+}
+
+export function normalizeAge(value: unknown, fallback = 30): number {
+  const parsed = toFiniteNumber(value);
+  if (parsed === null) return fallback;
+  const rounded = Math.round(parsed);
+  if (rounded < 1 || rounded > 120) return fallback;
+  return rounded;
+}
+
+export function normalizeActivityLevel(value: unknown): string {
+  const raw = String(value || "light").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9\s_]/g, "").trim();
+  if (["sedentary", "sedentario"].includes(raw)) return "sedentary";
+  if (["light", "leve"].includes(raw)) return "light";
+  if (["moderate", "moderado"].includes(raw)) return "moderate";
+  if (["active", "ativo", "intense", "intenso"].includes(raw)) return "active";
+  if (["very_active", "very active", "muito ativo", "muito_ativo"].includes(raw)) return "very_active";
+  return "light";
+}
