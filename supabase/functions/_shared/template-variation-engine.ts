@@ -1,0 +1,220 @@
+/**
+ * Template Variation Engine v1.0.0
+ * Generates food-level variations of meal templates using ifj_food_database.
+ * Swaps individual food items within a template while preserving structure and macro targets.
+ */
+
+import type { ResolvedTemplate, FoodStructureItem } from "./template-resolver.ts";
+
+// ── Food category mapping ──
+const FOOD_CATEGORY_MAP: Record<string, string[]> = {
+  protein: ["proteina", "protein", "carne", "frango", "peixe", "ovo", "meat", "chicken", "fish", "egg"],
+  carb: ["carboidrato", "carb", "arroz", "batata", "macarrao", "pao", "rice", "potato", "bread", "pasta"],
+  legume: ["leguminosa", "legume", "feijao", "lentilha", "grao de bico", "bean", "lentil"],
+  vegetable: ["vegetal", "verdura", "legume_verdura", "salada", "brocolis", "vegetable", "greens"],
+  fat: ["gordura", "fat", "azeite", "castanha", "oleaginosa", "nuts", "oil"],
+  fruit: ["fruta", "fruit", "banana", "maca", "mamao"],
+  dairy: ["laticinio", "dairy", "iogurte", "leite", "yogurt", "milk"],
+};
+
+interface DBFoodItem {
+  id: string;
+  food_name: string;
+  normalized_name: string;
+  category: string;
+  portion_grams: number;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fats: number;
+  restriction_tags_json?: string[];
+}
+
+export interface VariationContext {
+  restrictions: string[];
+  dislikedFoods: string[];
+  allergies: string[];
+  seed: number;
+}
+
+function normalize(text: string): string {
+  return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+}
+
+/**
+ * Classify a food item into a macro category based on its name and DB category.
+ */
+function classifyFood(foodName: string, dbCategory?: string): string {
+  const norm = normalize(foodName);
+  const cat = normalize(dbCategory || "");
+
+  for (const [category, keywords] of Object.entries(FOOD_CATEGORY_MAP)) {
+    if (keywords.some(kw => norm.includes(kw) || cat.includes(kw))) {
+      return category;
+    }
+  }
+
+  return "other";
+}
+
+/**
+ * Calculate macro density similarity between two foods (0-1 scale).
+ */
+function macroDensitySimilarity(
+  a: { calories: number; protein: number; carbs: number; fat: number; portion_grams: number },
+  b: { calories: number; protein: number; carbs: number; fats: number; portion_grams: number },
+): number {
+  if (a.portion_grams <= 0 || b.portion_grams <= 0) return 0;
+
+  const aDensity = {
+    cal: a.calories / a.portion_grams,
+    p: a.protein / a.portion_grams,
+    c: a.carbs / a.portion_grams,
+    f: a.fat / a.portion_grams,
+  };
+  const bDensity = {
+    cal: b.calories / b.portion_grams,
+    p: b.protein / b.portion_grams,
+    c: b.carbs / b.portion_grams,
+    f: b.fats / b.portion_grams,
+  };
+
+  const diffs = [
+    Math.abs(aDensity.cal - bDensity.cal) / Math.max(aDensity.cal, bDensity.cal, 0.01),
+    Math.abs(aDensity.p - bDensity.p) / Math.max(aDensity.p, bDensity.p, 0.01),
+    Math.abs(aDensity.c - bDensity.c) / Math.max(aDensity.c, bDensity.c, 0.01),
+    Math.abs(aDensity.f - bDensity.f) / Math.max(aDensity.f, bDensity.f, 0.01),
+  ];
+
+  const avgDiff = diffs.reduce((s, d) => s + d, 0) / diffs.length;
+  return Math.max(0, 1 - avgDiff);
+}
+
+/**
+ * Check if a food is compatible with patient restrictions.
+ */
+function isFoodCompatible(food: DBFoodItem, ctx: VariationContext): boolean {
+  const norm = normalize(food.food_name);
+
+  // Disliked check
+  if (ctx.dislikedFoods.some(d => {
+    const nd = normalize(d);
+    return nd.length >= 3 && (norm.includes(nd) || nd.includes(norm));
+  })) return false;
+
+  // Allergy check via restriction_tags
+  const tags = food.restriction_tags_json || [];
+  for (const allergy of ctx.allergies) {
+    const normA = normalize(allergy);
+    if (tags.some(t => normalize(t).includes(normA))) return false;
+    if (norm.includes(normA)) return false;
+  }
+
+  return true;
+}
+
+/**
+ * Find compatible substitutions for a food item from the DB.
+ * Returns up to `maxCandidates` foods sorted by macro density similarity.
+ */
+export function findSubstitutions(
+  originalFood: FoodStructureItem,
+  dbFoods: DBFoodItem[],
+  ctx: VariationContext,
+  maxCandidates: number = 5,
+): DBFoodItem[] {
+  const originalCategory = classifyFood(originalFood.name);
+  const normOriginal = normalize(originalFood.name);
+
+  const candidates = dbFoods
+    .filter(f => {
+      // Same category
+      if (classifyFood(f.food_name, f.category) !== originalCategory) return false;
+      // Not the same food
+      if (normalize(f.food_name) === normOriginal) return false;
+      // Compatible with patient
+      if (!isFoodCompatible(f, ctx)) return false;
+      return true;
+    })
+    .map(f => ({
+      food: f,
+      similarity: macroDensitySimilarity(
+        { calories: originalFood.calories, protein: originalFood.protein, carbs: originalFood.carbs, fat: originalFood.fat, portion_grams: originalFood.portion_grams },
+        f,
+      ),
+    }))
+    .filter(c => c.similarity >= 0.4) // Minimum 40% similarity
+    .sort((a, b) => b.similarity - a.similarity);
+
+  return candidates.slice(0, maxCandidates).map(c => c.food);
+}
+
+/**
+ * Generate a variation of a template by swapping foods with compatible alternatives.
+ * Only swaps 1-2 foods per variation to maintain structural integrity.
+ */
+export function generateTemplateVariation(
+  template: ResolvedTemplate,
+  dbFoods: DBFoodItem[],
+  ctx: VariationContext,
+): ResolvedTemplate {
+  if (template.foods_structure.length === 0) return template;
+
+  // Determine how many foods to swap (1-2, never more than half)
+  const maxSwaps = Math.min(2, Math.ceil(template.foods_structure.length / 2));
+
+  // Use seed for deterministic but varied selection
+  const swapIndices: number[] = [];
+  for (let i = 0; i < template.foods_structure.length && swapIndices.length < maxSwaps; i++) {
+    const idx = (ctx.seed + i * 7) % template.foods_structure.length;
+    if (!swapIndices.includes(idx)) {
+      swapIndices.push(idx);
+    }
+  }
+
+  const newFoods = [...template.foods_structure];
+
+  for (const idx of swapIndices) {
+    const original = newFoods[idx];
+    const subs = findSubstitutions(original, dbFoods, ctx);
+
+    if (subs.length === 0) continue;
+
+    // Pick substitute using seed
+    const pickIdx = ctx.seed % subs.length;
+    const sub = subs[pickIdx];
+
+    // Scale substitute to match original portion's macro target
+    const portionRatio = original.portion_grams / (sub.portion_grams || 100);
+
+    newFoods[idx] = {
+      name: sub.food_name,
+      portion_grams: original.portion_grams,
+      calories: Math.round(sub.calories * portionRatio),
+      protein: Math.round(sub.protein * portionRatio * 10) / 10,
+      carbs: Math.round(sub.carbs * portionRatio * 10) / 10,
+      fat: Math.round(sub.fats * portionRatio * 10) / 10,
+      protein_per_gram: sub.protein / (sub.portion_grams || 100),
+      carbs_per_gram: sub.carbs / (sub.portion_grams || 100),
+      fat_per_gram: sub.fats / (sub.portion_grams || 100),
+      calories_per_gram: sub.calories / (sub.portion_grams || 100),
+      food_id: sub.id,
+    };
+  }
+
+  // Recalculate template base macros
+  const totalCal = newFoods.reduce((s, f) => s + f.calories, 0);
+  const totalP = newFoods.reduce((s, f) => s + f.protein, 0);
+  const totalC = newFoods.reduce((s, f) => s + f.carbs, 0);
+  const totalF = newFoods.reduce((s, f) => s + f.fat, 0);
+
+  return {
+    ...template,
+    name: `${template.name} (var)`,
+    foods_structure: newFoods,
+    kcal_base: totalCal,
+    protein_base: totalP,
+    carbs_base: totalC,
+    fat_base: totalF,
+  };
+}
