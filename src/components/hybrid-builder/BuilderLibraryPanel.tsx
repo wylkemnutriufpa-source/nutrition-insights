@@ -193,19 +193,16 @@ function DraggableFoodItem({ food }: { food: FoodRow }) {
   return (
     <div
       ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={{ touchAction: "none" }}
       className={`flex items-center gap-2 p-2 rounded-lg transition-all text-xs ${
         isDragging ? "opacity-50 scale-95" : "hover:bg-muted/60"
       }`}
     >
-      <button
-        type="button"
-        className="shrink-0 cursor-grab active:cursor-grabbing rounded-sm text-muted-foreground/40 hover:text-foreground"
-        style={{ touchAction: "none" }}
-        {...listeners}
-        {...attributes}
-      >
+      <div className="shrink-0 cursor-grab active:cursor-grabbing rounded-sm text-muted-foreground/40 hover:text-foreground">
         <GripVertical className="w-3 h-3" />
-      </button>
+      </div>
       <div className="w-8 h-8 rounded-md bg-muted flex items-center justify-center shrink-0">
         <Apple className="w-4 h-4 text-muted-foreground" />
       </div>
@@ -233,19 +230,16 @@ function DraggableRecipeItem({ recipe }: { recipe: RecipeRow }) {
   return (
     <div
       ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={{ touchAction: "none" }}
       className={`flex items-center gap-2 p-2 rounded-lg transition-all text-xs ${
         isDragging ? "opacity-50 scale-95" : "hover:bg-muted/60"
       }`}
     >
-      <button
-        type="button"
-        className="shrink-0 cursor-grab active:cursor-grabbing rounded-sm text-muted-foreground/40 hover:text-foreground"
-        style={{ touchAction: "none" }}
-        {...listeners}
-        {...attributes}
-      >
+      <div className="shrink-0 cursor-grab active:cursor-grabbing rounded-sm text-muted-foreground/40 hover:text-foreground">
         <GripVertical className="w-3 h-3" />
-      </button>
+      </div>
       {recipe.image_url ? (
         <img src={recipe.image_url} alt="" className="w-8 h-8 rounded-md object-cover shrink-0" />
       ) : (
