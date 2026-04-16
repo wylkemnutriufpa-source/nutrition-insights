@@ -41,13 +41,20 @@ export function useOnboardingGuard() {
 
     async function check() {
       try {
-        const patientIdentity = await resolvePatientIdentity(user!.id);
+        // Build list of IDs to check — always include user.id, plus resolved identity
+        let allIds: string[] = [user!.id];
+        try {
+          const patientIdentity = await resolvePatientIdentity(user!.id);
+          allIds = Array.from(new Set([user!.id, ...patientIdentity.allIds]));
+        } catch (e) {
+          console.warn("[OnboardingGuard] resolvePatientIdentity failed, using user.id only", e);
+        }
 
         // Check if there's an active/in_progress onboarding pipeline
         const { data: pipeline } = await supabase
           .from("onboarding_pipelines" as any)
           .select("id, status, anamnesis_completed, body_data_completed, preferences_completed, plan_generated, plan_approved")
-          .in("patient_id", patientIdentity.allIds)
+          .in("patient_id", allIds)
           .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","superseded_by_reset")')
           .order("created_at", { ascending: false })
           .limit(1)
@@ -60,6 +67,21 @@ export function useOnboardingGuard() {
           const p = pipeline as any;
           const allDone = p.anamnesis_completed && p.body_data_completed && p.preferences_completed && p.plan_generated && p.plan_approved;
           if (!allDone) {
+            // But first check: does patient already have an active meal plan?
+            // If yes, don't block them (plan was published outside pipeline)
+            const { count } = await supabase
+              .from("meal_plans")
+              .select("id", { count: "exact", head: true })
+              .in("patient_id", allIds)
+              .eq("is_active", true);
+
+            if (cancelled) return;
+
+            if ((count ?? 0) > 0) {
+              setRequirement("none");
+              return;
+            }
+
             setRequirement("must_complete");
             return;
           }
