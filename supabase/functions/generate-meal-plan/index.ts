@@ -2519,9 +2519,12 @@ serve(async (req) => {
       ? { protein: finalMacros.protein, carbs: Math.round(finalMacros.carbs * 1.12), fat: finalMacros.fat }
       : finalMacros;
 
+    // ── GUARDRAILS (MANDATORY) ──
+    const guardedPlanItems = applyPostGenerationGuardrails(rawPlanItems, disliked);
+
     // ── CAMADA 2: Reconcile template items with Layer 1 macros ──
-    const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
-    let planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems, goal);
+    const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(guardedPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
+    let planItems = syncPlanDescriptionsWithProteinTargets(guardedPlanItems, reconciledPlanItems, goal);
     planItems = injectComputedProteinServings(planItems, patientFoodDatabase);
 
     // ── 2-LAYER VALIDATION (MANDATORY) ──
