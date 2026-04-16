@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { DndContext, DragEndEvent, DragOverlay, PointerSensor, TouchSensor, KeyboardSensor, useSensor, useSensors } from "@dnd-kit/core";
+import { DndContext, DragEndEvent, DragMoveEvent, DragOverlay, KeyboardSensor, PointerSensor, TouchSensor, pointerWithin, rectIntersection, useSensor, useSensors } from "@dnd-kit/core";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
@@ -39,8 +39,13 @@ export default function HybridPlanBuilder() {
     day: number,
     mealType: MealType,
     tenantIdVal: string | null,
+    replaceExisting = false,
   ) => {
     try {
+      if (replaceExisting) {
+        store.deleteItemsInCell(day, mealType);
+      }
+
       // 1. Load recipe_items
       const { data: recipeItems } = await supabase
         .from("recipe_items")
@@ -64,7 +69,7 @@ export default function HybridPlanBuilder() {
           item_origin: "builder_drag_recipe" as any,
           tenant_id: tenantIdVal,
         });
-        toast.success(`Receita "${recipe.title}" adicionada (resumo)`);
+        toast.success(replaceExisting ? `Refeição substituída por "${recipe.title}"` : `Receita "${recipe.title}" adicionada (resumo)`);
         return;
       }
 
@@ -127,7 +132,7 @@ export default function HybridPlanBuilder() {
       });
 
       store.addItems(inserts);
-      toast.success(`Receita "${recipe.title}" expandida: ${inserts.length} ingredientes`);
+      toast.success(replaceExisting ? `Refeição substituída por "${recipe.title}"` : `Receita "${recipe.title}" expandida: ${inserts.length} ingredientes`);
     } catch (err) {
       console.error("Error expanding recipe:", err);
       toast.error("Erro ao expandir receita");
@@ -154,6 +159,8 @@ export default function HybridPlanBuilder() {
   const [validationModeDialogOpen, setValidationModeDialogOpen] = useState(false);
   const [lockedValidationMode, setLockedValidationMode] = useState<ValidationMode | null>(null);
   const [showPublishWarning, setShowPublishWarning] = useState(false);
+  const canvasScrollRef = useRef<HTMLDivElement | null>(null);
+  const dragStartYRef = useRef<number | null>(null);
 
   // DnD sensors
   const sensors = useSensors(
@@ -162,6 +169,43 @@ export default function HybridPlanBuilder() {
     useSensor(KeyboardSensor),
   );
   const [activeDragData, setActiveDragData] = useState<{ type: string; label: string } | null>(null);
+
+  const getClientY = (event: any): number | null => {
+    if (!event) return null;
+    if (Array.isArray(event.touches) && event.touches.length > 0) return event.touches[0]?.clientY ?? null;
+    if (Array.isArray(event.changedTouches) && event.changedTouches.length > 0) return event.changedTouches[0]?.clientY ?? null;
+    if (typeof event.clientY === "number") return event.clientY;
+    return null;
+  };
+
+  const autoScrollCanvas = (pointerClientY: number) => {
+    const scrollHost = canvasScrollRef.current;
+    const threshold = 96;
+    const step = 32;
+
+    if (scrollHost) {
+      const rect = scrollHost.getBoundingClientRect();
+      const canScrollUp = scrollHost.scrollTop > 0;
+      const canScrollDown = scrollHost.scrollTop + scrollHost.clientHeight < scrollHost.scrollHeight;
+
+      if (pointerClientY >= rect.bottom - threshold && canScrollDown) {
+        scrollHost.scrollBy({ top: step, behavior: "auto" });
+        return;
+      }
+
+      if (pointerClientY <= rect.top + threshold && canScrollUp) {
+        scrollHost.scrollBy({ top: -step, behavior: "auto" });
+        return;
+      }
+    }
+
+    const viewportHeight = window.innerHeight;
+    if (pointerClientY >= viewportHeight - threshold) {
+      window.scrollBy({ top: step, behavior: "auto" });
+    } else if (pointerClientY <= threshold) {
+      window.scrollBy({ top: -step, behavior: "auto" });
+    }
+  };
 
   // Patient composer context (must be before early returns)
   const patientId = store.plan?.patient_id;
@@ -406,6 +450,7 @@ export default function HybridPlanBuilder() {
   // DnD handler
   const handleDragEnd = (event: DragEndEvent) => {
     const { active, over } = event;
+    dragStartYRef.current = null;
     if (!over) return;
 
     const overId = String(over.id);
@@ -414,6 +459,7 @@ export default function HybridPlanBuilder() {
     const [, dayStr, ...mealParts] = overId.split("-");
     const day = parseInt(dayStr);
     const mealType = mealParts.join("-") as MealType;
+    const targetHasItems = store.items.some((item) => item.day_of_week === day && item.meal_type === mealType);
 
     const dragData = active.data?.current;
     if (!dragData) return;
@@ -445,22 +491,33 @@ export default function HybridPlanBuilder() {
       toast.success(`${food.food_name} adicionado!`);
     } else if (dragData.type === "recipe") {
       const { recipe } = dragData;
-      expandRecipeToItems(recipe, plan.id, day, mealType, tenantId || null);
+      expandRecipeToItems(recipe, plan.id, day, mealType, tenantId || null, targetHasItems);
     }
+  };
+
+  const handleDragMove = (event: DragMoveEvent) => {
+    if (dragStartYRef.current == null) return;
+    autoScrollCanvas(dragStartYRef.current + event.delta.y);
   };
 
   return (
     <DashboardLayout>
       <DndContext
+        collisionDetection={(args) => {
+          const pointerHits = pointerWithin(args);
+          return pointerHits.length > 0 ? pointerHits : rectIntersection(args);
+        }}
         sensors={sensors}
         onDragStart={(event) => {
+          dragStartYRef.current = getClientY(event.activatorEvent);
           const data = event.active.data?.current;
           if (data?.type === "food") setActiveDragData({ type: "food", label: data.food?.food_name || "Alimento" });
           else if (data?.type === "recipe") setActiveDragData({ type: "recipe", label: data.recipe?.title || "Receita" });
           else if (data?.type === "existing-item") setActiveDragData({ type: "existing-item", label: data.itemTitle || "Refeição" });
         }}
+        onDragMove={handleDragMove}
         onDragEnd={(event) => { setActiveDragData(null); handleDragEnd(event); }}
-        onDragCancel={() => setActiveDragData(null)}
+        onDragCancel={() => { dragStartYRef.current = null; setActiveDragData(null); }}
       >
         <div className="space-y-3">
           {/* Topbar */}
@@ -610,18 +667,20 @@ export default function HybridPlanBuilder() {
             )}
 
             {/* Center: Canvas */}
-            <MealPlanCanvas
-              patientContext={patientContext}
-              composerMode={composerMode}
-              showDropTargets
-              onRequestGenerate={() => {
-                setRightPanelOpen(true);
-                // Scroll generation section into view
-                setTimeout(() => {
-                  document.getElementById("generation-mode-selector")?.scrollIntoView({ behavior: "smooth" });
-                }, 200);
-              }}
-            />
+            <div ref={canvasScrollRef} className="flex-1 min-w-0 min-h-0 max-h-[calc(100vh-200px)] overflow-y-auto pr-1">
+              <MealPlanCanvas
+                patientContext={patientContext}
+                composerMode={composerMode}
+                showDropTargets
+                onRequestGenerate={() => {
+                  setRightPanelOpen(true);
+                  // Scroll generation section into view
+                  setTimeout(() => {
+                    document.getElementById("generation-mode-selector")?.scrollIntoView({ behavior: "smooth" });
+                  }, 200);
+                }}
+              />
+            </div>
 
             {/* Right: Clinical + Generation */}
             {rightPanelOpen ? (
