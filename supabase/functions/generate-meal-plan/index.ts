@@ -943,6 +943,17 @@ const BREAKFAST_EXCLUDED_FOODS = new Set([
   "carne bovina patinho", "carne de porco lombo",
 ]);
 
+/** Foods that should NEVER appear at lunch or dinner (main meals)
+ *  Canned/preserved proteins are unsuitable for a main clinical meal.
+ *  They can still appear in snacks if explicitly allowed elsewhere. */
+const MAIN_MEAL_EXCLUDED_FOODS = new Set([
+  "sardinha enlatada", "sardinha em lata", "sardinha em conserva", "sardinha em oleo", "sardinha em óleo",
+  "atum enlatado", "atum em lata", "atum em conserva", "atum em oleo", "atum em óleo",
+  "patê de atum", "pate de atum", "patê de sardinha", "pate de sardinha",
+  "salsicha", "salsichão", "mortadela", "presunto", "blanquet", "peito de peru defumado",
+  "nuggets", "hamburguer industrializado",
+]);
+
 /** Foods that make sense at breakfast in Brazilian context */
 const BREAKFAST_PREFERRED_CATEGORIES = new Set(["carboidrato", "proteina", "laticinio", "fruta"]);
 const BREAKFAST_PREFERRED_PROTEINS = new Set([
