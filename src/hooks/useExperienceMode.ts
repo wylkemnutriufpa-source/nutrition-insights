@@ -14,19 +14,20 @@ const STORAGE_KEY = "fj_experience_mode";
  * 🔹 AVANÇADO: controle total — automação, integrações, configs finas, debug, admin
  */
 const BASIC_ROUTES = new Set([
-  // Núcleo clínico diário
+  // ── PROFISSIONAL: núcleo clínico diário ──
   "/", "/dashboard", "/patients", "/appointments",
   "/anamnesis", "/body-analysis",
   "/meal-plans", "/editor-v2",
-  "/checkin", "/notifications", "/chat",
+  "/notifications", "/chat",
   "/settings", "/invite-patient",
-  // Lado paciente (mesmo modo)
-  "/my-diet", "/checklist", "/shopping-list", "/recipes",
   "/onboarding", "/financial",
+  // ── PACIENTE BÁSICO: APENAS plano + feedback (check-in com peso/foto) ──
+  // Regression guard: do NOT add patient routes here. Anything else goes to PRO/ADVANCED.
+  "/my-diet", "/checkin",
 ]);
 
 const PRO_ROUTES = new Set([
-  // Inteligência e produtividade clínica
+  // ── PROFISSIONAL: inteligência e produtividade clínica ──
   "/clinical-risk", "/clinical-intelligence", "/clinical-workspace",
   "/reports", "/analyze-meal",
   "/protocols", "/programs",
@@ -35,6 +36,9 @@ const PRO_ROUTES = new Set([
   "/workspace-editor",
   "/coach-bodybuilder",
   "/professional/crm",
+  // ── PACIENTE COMPLETO: acompanhamento expandido ──
+  "/checklist", "/shopping-list", "/recipes",
+  "/journey", "/weekly-goals",
 ]);
 
 const ADVANCED_ROUTES = new Set([
