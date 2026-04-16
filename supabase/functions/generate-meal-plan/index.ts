@@ -3118,7 +3118,7 @@ serve(async (req) => {
     let marmitasUsedList: string[] = [];
 
     if (generationMode === "weekly_marmita") {
-      // ── WEEKLY MARMITA MODE ──
+      // ── WEEKLY MARMITA MODE (escalável) ──
       const mealRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId);
       console.log(`[generate-meal-plan] weekly_marmita: ${mealRecipes.length} recipes loaded`);
       const result = generateWeeklyMarmitaPlan(
@@ -3128,6 +3128,20 @@ serve(async (req) => {
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
+      templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
+      visualFallbacksCount = rawPlanItems.length - templateHitsCount;
+    } else if (generationMode === "fixed_marmita") {
+      // ── FIXED MARMITA MODE (congelada — NUNCA escala) ──
+      const fixedRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId, { onlyFixed: true });
+      console.log(`[generate-meal-plan] fixed_marmita: ${fixedRecipes.length} fixed recipes loaded`);
+      const result = generateFixedMarmitaPlan(
+        fixedRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
+        restrictions, disliked, allergies, enabledMeals, mealTimes,
+        resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+      );
+      rawPlanItems = result.items;
+      marmitasUsedList = result.marmitasUsed;
+      if (result.warning) console.warn(`[fixed_marmita] ${result.warning}`);
       templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
       visualFallbacksCount = rawPlanItems.length - templateHitsCount;
     } else if (hasTemplates) {
