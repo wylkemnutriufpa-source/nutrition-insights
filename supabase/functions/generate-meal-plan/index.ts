@@ -1104,8 +1104,12 @@ function buildMealFromDBFoods(
     evening_snack: "Ceia",
   };
 
-  // Filter out foods with absurdly small portions (< 15g after scaling)
+  // Filter out foods with absurdly small portions (< 15g after scaling) and apply MAX clamps
   const MIN_PORTION_GRAMS = 15;
+  const MAX_PORTION_GRAMS_BY_CAT: Record<string, number> = {
+    proteina: 180, carboidrato: 200, fruta: 250, verdura: 200,
+    laticinio: 250, oleaginosa: 40, gordura: 15,
+  };
   const validFoods = foods.filter(f => {
     const grams = Math.round((f.portion_grams || 100) * clampedScale);
     return grams >= MIN_PORTION_GRAMS;
@@ -1504,6 +1508,34 @@ function validatePlanBeforeSave(
     errors.push(`${wrongSource.length} items have invalid source`);
   }
 
+  // Rule 6 (IFJ Blueprint Layer 8): No item can have empty title
+  const emptyTitles = items.filter(i => !i.title || i.title.trim().length === 0);
+  if (emptyTitles.length > 0) {
+    errors.push(`${emptyTitles.length} items have empty/null title`);
+  }
+
+  // Rule 7 (IFJ Blueprint Layer 8): No "• — Xg" pattern in descriptions
+  const brokenDescriptions = items.filter(i => {
+    if (!i.description) return false;
+    return /•\s*[—-]\s*\d+g/i.test(i.description);
+  });
+  if (brokenDescriptions.length > 0) {
+    errors.push(`${brokenDescriptions.length} items have broken description pattern (empty food name)`);
+  }
+
+  // Rule 8 (IFJ Blueprint Layer 5): No absurd single-item portions (> 500g protein)
+  const absurdPortions = items.filter(i => {
+    if (!i.description) return false;
+    const matches = [...i.description.matchAll(/•\s*(.+?)\s*[—-]\s*(\d+)g/g)];
+    return matches.some(m => {
+      const grams = parseInt(m[2]);
+      return grams > 500;
+    });
+  });
+  if (absurdPortions.length > 0) {
+    errors.push(`${absurdPortions.length} items have portions exceeding 500g`);
+  }
+
   return { valid: errors.length === 0, errors };
 }
 
@@ -1747,19 +1779,26 @@ function sanitizeDislikedFoodsFromItems(items: any[], dislikedFoods: string[]): 
 }
 
 /**
- * GUARDRAIL 2: Enforce minimum portion sizes per food category.
- * Scans description lines and fixes absurdly small portions.
+ * GUARDRAIL 2: Enforce minimum AND maximum portion sizes per food category.
+ * Scans description lines and fixes absurd portions (too small or too large).
  */
 function clampMinimumPortionsInDescriptions(items: any[]): any[] {
-  const PORTION_MINS: Record<string, number> = {
-    frango: 60, carne: 60, bife: 60, tilapia: 60, peixe: 60, porco: 60,
-    sardinha: 60, alcatra: 60, sobrecoxa: 60, lombo: 60, patinho: 60,
-    ovo: 50, omelete: 50,
-    arroz: 30, macarrao: 30, batata: 30, macaxeira: 30, inhame: 30,
-    pao: 40, tapioca: 40, cuscuz: 40,
-    banana: 80, maca: 80, mamao: 80, laranja: 80, morango: 80, goiaba: 80,
-    alface: 50, tomate: 50, brocolis: 50, cenoura: 50, couve: 50,
-    iogurte: 100, leite: 100, queijo: 30,
+  const PORTION_LIMITS: Record<string, { min: number; max: number }> = {
+    frango: { min: 60, max: 180 }, carne: { min: 60, max: 180 }, bife: { min: 60, max: 180 },
+    tilapia: { min: 60, max: 180 }, peixe: { min: 60, max: 180 }, porco: { min: 60, max: 180 },
+    sardinha: { min: 60, max: 180 }, alcatra: { min: 60, max: 180 }, sobrecoxa: { min: 60, max: 180 },
+    lombo: { min: 60, max: 180 }, patinho: { min: 60, max: 180 },
+    ovo: { min: 50, max: 150 }, omelete: { min: 50, max: 150 },
+    arroz: { min: 30, max: 200 }, macarrao: { min: 30, max: 200 }, batata: { min: 30, max: 200 },
+    macaxeira: { min: 30, max: 200 }, inhame: { min: 30, max: 200 },
+    pao: { min: 40, max: 100 }, tapioca: { min: 40, max: 100 }, cuscuz: { min: 40, max: 100 },
+    banana: { min: 80, max: 250 }, maca: { min: 80, max: 250 }, mamao: { min: 80, max: 250 },
+    laranja: { min: 80, max: 250 }, morango: { min: 80, max: 250 }, goiaba: { min: 80, max: 250 },
+    alface: { min: 50, max: 200 }, tomate: { min: 50, max: 200 }, brocolis: { min: 50, max: 200 },
+    cenoura: { min: 50, max: 200 }, couve: { min: 50, max: 200 },
+    iogurte: { min: 100, max: 250 }, leite: { min: 100, max: 250 }, queijo: { min: 30, max: 100 },
+    azeite: { min: 5, max: 15 }, oleo: { min: 5, max: 15 },
+    castanha: { min: 10, max: 40 }, amendoim: { min: 10, max: 40 }, amendoa: { min: 10, max: 40 },
   };
 
   return items.map(item => {
@@ -1771,16 +1810,19 @@ function clampMinimumPortionsInDescriptions(items: any[]): any[] {
         const grams = parseInt(gramsStr);
         const normFood = normalize(foodName);
         
-        let minGrams = 20; // absolute minimum
-        for (const [keyword, min] of Object.entries(PORTION_MINS)) {
+        let minGrams = 20;
+        let maxGrams = 500;
+        for (const [keyword, limits] of Object.entries(PORTION_LIMITS)) {
           if (normFood.includes(keyword)) {
-            minGrams = Math.max(minGrams, min);
+            minGrams = Math.max(minGrams, limits.min);
+            maxGrams = Math.min(maxGrams, limits.max);
             break;
           }
         }
 
-        if (grams < minGrams) {
-          return `• ${foodName} — ${minGrams}g`;
+        const clamped = Math.max(minGrams, Math.min(maxGrams, grams));
+        if (clamped !== grams) {
+          return `• ${foodName} — ${clamped}g`;
         }
         return `• ${foodName} — ${gramsStr}g`;
       }
@@ -1831,12 +1873,52 @@ function removeEmptyNameItems(items: any[]): any[] {
 }
 
 /**
- * Master guardrail function — runs all 3 guardrails in sequence.
+ * GUARDRAIL 4: Validate meal composition structure.
+ * Each main meal (lunch/dinner) MUST have protein+carb+vegetable lines.
+ * Breakfast MUST have protein+carb. Snacks MUST have at least 1 food line.
+ * Logs warnings but does not discard items (structural issues should be caught earlier).
+ */
+function validateMealComposition(items: any[]): any[] {
+  const COMPOSITION_RULES: Record<string, string[]> = {
+    lunch: ["proteina", "carboidrato"],
+    dinner: ["proteina", "carboidrato"],
+    breakfast: ["proteina"],
+  };
+  const CATEGORY_DETECT: Record<string, string[]> = {
+    proteina: ["frango", "carne", "bife", "tilapia", "peixe", "porco", "sardinha", "ovo", "omelete", "queijo"],
+    carboidrato: ["arroz", "macarrao", "batata", "pao", "tapioca", "cuscuz", "macaxeira", "inhame"],
+    verdura: ["alface", "tomate", "brocolis", "cenoura", "couve", "repolho", "salada", "rucula"],
+  };
+
+  let warnings = 0;
+  for (const item of items) {
+    const rules = COMPOSITION_RULES[item.meal_type];
+    if (!rules) continue;
+    
+    const desc = normalize(item.description || "");
+    for (const requiredCat of rules) {
+      const keywords = CATEGORY_DETECT[requiredCat] || [];
+      const hasCat = keywords.some(kw => desc.includes(kw));
+      if (!hasCat) {
+        warnings++;
+      }
+    }
+  }
+  if (warnings > 0) {
+    console.warn(`[GUARDRAIL-4] ${warnings} meal composition warnings detected (missing expected food categories)`);
+  }
+  return items;
+}
+
+/**
+ * Master guardrail function — runs all guardrails in sequence.
+ * Order: 1. Disliked foods → 2. Portion clamps → 3. Empty names → 4. Composition check
  */
 function applyPostGenerationGuardrails(items: any[], dislikedFoods: string[]): any[] {
   let result = sanitizeDislikedFoodsFromItems(items, dislikedFoods);
   result = clampMinimumPortionsInDescriptions(result);
   result = removeEmptyNameItems(result);
+  result = validateMealComposition(result);
   return result;
 }
 

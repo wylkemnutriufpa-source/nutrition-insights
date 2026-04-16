@@ -227,7 +227,7 @@ export function resolveMealTemplates(
  * Scale a template's foods_structure to match target kcal.
  * Returns scaled food items with updated macros.
  */
-// ── GUARDRAIL 2: Minimum portion clamps by food category ──
+// ── GUARDRAIL 2: Minimum AND Maximum portion clamps by food category ──
 const MIN_PORTION_BY_CATEGORY: Record<string, number> = {
   protein: 60,   // proteínas principais: 60g mínimo
   carb: 30,      // carboidratos: 30g mínimo
@@ -240,6 +240,19 @@ const MIN_PORTION_BY_CATEGORY: Record<string, number> = {
   other: 20,     // outros: 20g mínimo
 };
 
+const MAX_PORTION_BY_CATEGORY: Record<string, number> = {
+  protein: 180,  // proteínas: máx 180g (evita porções irreais)
+  carb: 200,     // carboidratos: máx 200g
+  fruit: 250,    // frutas: máx 250g
+  vegetable: 200,// vegetais: máx 200g
+  egg: 150,      // ovos: máx ~3 unidades
+  bread: 100,    // pão: máx ~2 fatias
+  dairy: 250,    // laticínios: máx 250g
+  fat: 15,       // azeite/óleo: máx 15g (1 colher de sopa)
+  nuts: 40,      // oleaginosas: máx 40g
+  other: 200,    // outros: máx 200g
+};
+
 const PORTION_CATEGORY_KEYWORDS: Record<string, string[]> = {
   protein: ["frango", "carne", "bife", "tilapia", "peixe", "porco", "sardinha", "alcatra", "sobrecoxa", "lombo", "patinho"],
   egg: ["ovo", "omelete", "clara"],
@@ -248,7 +261,8 @@ const PORTION_CATEGORY_KEYWORDS: Record<string, string[]> = {
   vegetable: ["alface", "tomate", "brocolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha", "salada", "verdura", "rucula"],
   carb: ["arroz", "macarrao", "batata", "macaxeira", "inhame", "mandioca", "farinha", "farofa"],
   dairy: ["iogurte", "leite", "queijo", "requeijao"],
-  fat: ["azeite", "oleo", "castanha", "amendoim", "pasta de amendoim"],
+  fat: ["azeite", "oleo"],
+  nuts: ["castanha", "amendoim", "pasta de amendoim", "amendoa", "nozes"],
 };
 
 function classifyFoodForPortion(name: string): string {
@@ -259,10 +273,11 @@ function classifyFoodForPortion(name: string): string {
   return "other";
 }
 
-function clampMinPortion(name: string, portion: number): number {
+function clampPortion(name: string, portion: number): number {
   const cat = classifyFoodForPortion(name);
   const min = MIN_PORTION_BY_CATEGORY[cat] || MIN_PORTION_BY_CATEGORY.other;
-  return Math.max(min, portion);
+  const max = MAX_PORTION_BY_CATEGORY[cat] || MAX_PORTION_BY_CATEGORY.other;
+  return Math.max(min, Math.min(max, portion));
 }
 
 export function scaleTemplateToTarget(
@@ -275,7 +290,7 @@ export function scaleTemplateToTarget(
         .filter(f => f.name && f.name.trim().length > 0) // GUARDRAIL 3: skip empty names
         .map(f => ({
           name: f.name,
-          portion_grams: clampMinPortion(f.name, f.portion_grams),
+          portion_grams: clampPortion(f.name, f.portion_grams),
           calories: f.calories,
           protein: f.protein,
           carbs: f.carbs,
@@ -296,8 +311,8 @@ export function scaleTemplateToTarget(
       const basePortion = Number(food.portion_grams) || 100; // guard undefined/NaN
       let newPortion = Math.round(basePortion * scaleFactor);
       newPortion = Math.max(10, Math.min(500, newPortion));
-      // GUARDRAIL 2: Enforce minimum portion by food category
-      newPortion = clampMinPortion(food.name, newPortion);
+      // GUARDRAIL 2: Enforce min AND max portion by food category
+      newPortion = clampPortion(food.name, newPortion);
 
       const hasPerGram = food.calories_per_gram != null && food.calories_per_gram > 0;
 
