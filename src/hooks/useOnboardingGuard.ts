@@ -67,7 +67,14 @@ export function useOnboardingGuard() {
           const p = pipeline as any;
           const allDone = p.anamnesis_completed && p.body_data_completed && p.preferences_completed && p.plan_generated && p.plan_approved;
           if (!allDone) {
-            // But first check: does patient already have an active meal plan?
+            // If the nutritionist already generated a plan, don't block the patient
+            // (the professional moved forward even if some steps were skipped)
+            if (p.plan_generated) {
+              setRequirement("none");
+              return;
+            }
+
+            // Check: does patient already have an active meal plan?
             // If yes, don't block them (plan was published outside pipeline)
             const { count } = await supabase
               .from("meal_plans")
