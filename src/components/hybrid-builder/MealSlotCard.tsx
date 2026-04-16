@@ -23,6 +23,7 @@ import SmartMealSelectorModal from "./SmartMealSelectorModal";
 import MealSlotItemCard from "./MealSlotItemCard";
 import FoodSearchInline from "./FoodSearchInline";
 import SaveMealSlotDialog from "./SaveMealSlotDialog";
+import { smartSubstituteFood } from "@/lib/smartFoodSubstitution";
 
 interface Props {
   day: number;
