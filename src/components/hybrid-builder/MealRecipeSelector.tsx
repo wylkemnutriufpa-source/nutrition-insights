@@ -18,12 +18,8 @@ interface Props {
 }
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
-  "café da manhã": "☕ Café da Manhã",
-  "lanche da manhã": "🍎 Lanche da Manhã",
   "almoço": "🍽️ Almoço",
-  "lanche da tarde": "🥤 Lanche da Tarde",
   "jantar": "🌙 Jantar",
-  "ceia": "🌜 Ceia",
 };
 
 export default function MealRecipeSelector({ onSelect, onCancel }: Props) {
@@ -85,9 +81,12 @@ export default function MealRecipeSelector({ onSelect, onCancel }: Props) {
         <h3 className="text-sm font-bold">Selecionar Receita (Marmita)</h3>
       </div>
 
-      <p className="text-xs text-muted-foreground">
-        Escolha uma receita base. O motor vai apenas escalar as porções proporcionalmente aos macros do paciente.
-      </p>
+       <p className="text-xs text-muted-foreground">
+          Escolha uma receita base para <strong>almoço e jantar</strong>. Café da manhã, lanches e ceia continuam pelo motor automático.
+        </p>
+        <p className="text-xs text-muted-foreground">
+          O motor vai apenas escalar as porções proporcionalmente aos macros do paciente.
+        </p>
 
       <div className="space-y-4 max-h-[50vh] overflow-y-auto pr-1">
         {Object.entries(grouped).map(([type, items]) => (
