@@ -424,7 +424,12 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ExperienceModeProvider({ children }: { children: React.ReactNode }) {
-  const value = useExperienceModeState();
+  // Derive effective role from auth: patient-only users get patient route gating.
+  const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+  // Pure patients (no pro role) → "patient" gating. Hybrid/pro → "professional".
+  const role = (isPatient && !isProRole) ? "patient" : "professional";
+  const value = useExperienceModeState(role);
   return <ExperienceModeContext.Provider value={value}>{children}</ExperienceModeContext.Provider>;
 }
 
