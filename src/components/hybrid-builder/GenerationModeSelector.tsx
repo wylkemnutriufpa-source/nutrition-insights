@@ -163,6 +163,45 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       setGenerating(false);
     }
   }, [user, store, patientId, onGenerated]);
+
+  // Fixed Marmita → marmitas congeladas, motor ajusta APENAS café/lanches/ceia
+  const handleFixedMarmita = useCallback(async () => {
+    if (!user || !store.planId) return;
+    setGenerating(true);
+
+    try {
+      toast.info("Gerando plano com marmitas fixas (congeladas)...");
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+        body: {
+          patientId,
+          nutritionistId: user.id,
+          existingPlanId: store.planId,
+          meal_plan_id: store.planId,
+          isPipeline: false,
+          generationMode: "fixed_marmita",
+        },
+      });
+
+      if (error || !data?.success) {
+        const msg = error
+          ? await friendlyEdgeFunctionError(error, "Erro ao gerar")
+          : (data?.error || "Erro desconhecido");
+        toast.error(msg);
+        return;
+      }
+
+      const resolvedPlanId = store.planId || data.mealPlanId;
+      if (!resolvedPlanId) throw new Error("A engine retornou sem um plano válido.");
+
+      await store.hydrate(resolvedPlanId, user.id);
+      toast.success(`✅ Plano com marmitas fixas gerado! ${data.items_count || 0} refeições.`);
+      onGenerated();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar");
+    } finally {
+      setGenerating(false);
+    }
+  }, [user, store, patientId, onGenerated]);
   if (view === "strategy") {
     return (
       <StrategyAdvisorPanel
