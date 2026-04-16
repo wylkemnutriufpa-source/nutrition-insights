@@ -35,6 +35,9 @@ interface PendingPipeline {
   generated_plan_id: string | null;
   generated_plan_data: any;
   plan_generated?: boolean;
+  anamnesis_completed?: boolean;
+  body_data_completed?: boolean;
+  preferences_completed?: boolean;
   weight: number | null;
   height: number | null;
   meal_count: number;
