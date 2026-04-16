@@ -1656,11 +1656,13 @@ function generateWeeklyMarmitaPlan(
       prevLunchProtein = protein;
     }
 
-    // Dinner — different protein than today's lunch
+    // Dinner — different protein than today's lunch AND yesterday's dinner
     if (mealTypes.includes("dinner")) {
       const avoidSet = new Set<string>();
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
-      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, day + 100);
+      if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
+      // Use a varying seed so we cycle through proteins instead of repeating the modulo result
+      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, day * 7 + 13);
       const protein = detectRecipeProtein(picked);
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
