@@ -111,10 +111,15 @@ export default function PatientGridDashboard() {
   // See: mem://ux/painel-basico-paciente-ultra-minimo
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-  // BASIC MODE — Ultra-minimal: only meal plan + feedback
+  // BASIC MODE — Ultra-minimal: only meal plan + feedback (check-in com peso/foto a cada 15 dias)
   if (expUI.isBasic && !blockDashboard && !showOnboardingCard) {
     return (
       <div className="space-y-4">
+        {/* Mode switcher at top — sempre visível para o paciente trocar */}
+        <div className="flex justify-center">
+          <InlineExperienceToggle />
+        </div>
+
         {/* Greeting */}
         <div>
           <h2 className="text-lg font-bold text-foreground">Meu Plano</h2>
@@ -126,30 +131,30 @@ export default function PatientGridDashboard() {
           <DailyMealPlanInline />
         </Suspense>
 
-        {/* Feedback / Plan Request — single CTA */}
+        {/* Plan Request — single CTA (only when sem plano) */}
         <PlanRequestButton />
 
-        {/* Quick access: only recipes */}
+        {/* Feedback / Check-in card: peso + fotos a cada 15 dias */}
         <Card
-          className="cursor-pointer border border-border/50 hover:border-primary/20 hover:bg-muted/30 transition-all group"
-          onClick={() => navigate("/recipes")}
+          className="cursor-pointer border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/40 hover:shadow-md transition-all group"
+          onClick={() => navigate("/checkin")}
         >
-          <div className="flex items-center gap-3 px-4 py-3">
-            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-orange-500/10 to-orange-600/5 border border-border/30 flex items-center justify-center flex-shrink-0">
-              <ChefHat className="w-4 h-4 text-foreground/80" />
+          <div className="flex items-center gap-3 px-4 py-4">
+            <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
+              <CameraIcon className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-medium text-foreground">Receitas</h3>
-              <p className="text-xs text-muted-foreground">Receitas saudáveis e práticas</p>
+              <div className="flex items-center gap-2">
+                <h3 className="text-sm font-semibold text-foreground">Enviar Feedback</h3>
+                <Badge variant="secondary" className="text-[9px] h-4">A cada 15 dias</Badge>
+              </div>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                Mande seu peso e fotos para o seu profissional acompanhar a evolução
+              </p>
             </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-colors flex-shrink-0" />
+            <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
           </div>
         </Card>
-
-        {/* Mode switcher at bottom — subtle */}
-        <div className="pt-2 flex justify-center">
-          <InlineExperienceToggle />
-        </div>
       </div>
     );
   }
