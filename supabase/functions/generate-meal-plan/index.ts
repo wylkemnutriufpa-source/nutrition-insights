@@ -1751,19 +1751,26 @@ function sanitizeDislikedFoodsFromItems(items: any[], dislikedFoods: string[]): 
 }
 
 /**
- * GUARDRAIL 2: Enforce minimum portion sizes per food category.
- * Scans description lines and fixes absurdly small portions.
+ * GUARDRAIL 2: Enforce minimum AND maximum portion sizes per food category.
+ * Scans description lines and fixes absurd portions (too small or too large).
  */
 function clampMinimumPortionsInDescriptions(items: any[]): any[] {
-  const PORTION_MINS: Record<string, number> = {
-    frango: 60, carne: 60, bife: 60, tilapia: 60, peixe: 60, porco: 60,
-    sardinha: 60, alcatra: 60, sobrecoxa: 60, lombo: 60, patinho: 60,
-    ovo: 50, omelete: 50,
-    arroz: 30, macarrao: 30, batata: 30, macaxeira: 30, inhame: 30,
-    pao: 40, tapioca: 40, cuscuz: 40,
-    banana: 80, maca: 80, mamao: 80, laranja: 80, morango: 80, goiaba: 80,
-    alface: 50, tomate: 50, brocolis: 50, cenoura: 50, couve: 50,
-    iogurte: 100, leite: 100, queijo: 30,
+  const PORTION_LIMITS: Record<string, { min: number; max: number }> = {
+    frango: { min: 60, max: 180 }, carne: { min: 60, max: 180 }, bife: { min: 60, max: 180 },
+    tilapia: { min: 60, max: 180 }, peixe: { min: 60, max: 180 }, porco: { min: 60, max: 180 },
+    sardinha: { min: 60, max: 180 }, alcatra: { min: 60, max: 180 }, sobrecoxa: { min: 60, max: 180 },
+    lombo: { min: 60, max: 180 }, patinho: { min: 60, max: 180 },
+    ovo: { min: 50, max: 150 }, omelete: { min: 50, max: 150 },
+    arroz: { min: 30, max: 200 }, macarrao: { min: 30, max: 200 }, batata: { min: 30, max: 200 },
+    macaxeira: { min: 30, max: 200 }, inhame: { min: 30, max: 200 },
+    pao: { min: 40, max: 100 }, tapioca: { min: 40, max: 100 }, cuscuz: { min: 40, max: 100 },
+    banana: { min: 80, max: 250 }, maca: { min: 80, max: 250 }, mamao: { min: 80, max: 250 },
+    laranja: { min: 80, max: 250 }, morango: { min: 80, max: 250 }, goiaba: { min: 80, max: 250 },
+    alface: { min: 50, max: 200 }, tomate: { min: 50, max: 200 }, brocolis: { min: 50, max: 200 },
+    cenoura: { min: 50, max: 200 }, couve: { min: 50, max: 200 },
+    iogurte: { min: 100, max: 250 }, leite: { min: 100, max: 250 }, queijo: { min: 30, max: 100 },
+    azeite: { min: 5, max: 15 }, oleo: { min: 5, max: 15 },
+    castanha: { min: 10, max: 40 }, amendoim: { min: 10, max: 40 }, amendoa: { min: 10, max: 40 },
   };
 
   return items.map(item => {
@@ -1775,16 +1782,19 @@ function clampMinimumPortionsInDescriptions(items: any[]): any[] {
         const grams = parseInt(gramsStr);
         const normFood = normalize(foodName);
         
-        let minGrams = 20; // absolute minimum
-        for (const [keyword, min] of Object.entries(PORTION_MINS)) {
+        let minGrams = 20;
+        let maxGrams = 500;
+        for (const [keyword, limits] of Object.entries(PORTION_LIMITS)) {
           if (normFood.includes(keyword)) {
-            minGrams = Math.max(minGrams, min);
+            minGrams = Math.max(minGrams, limits.min);
+            maxGrams = Math.min(maxGrams, limits.max);
             break;
           }
         }
 
-        if (grams < minGrams) {
-          return `• ${foodName} — ${minGrams}g`;
+        const clamped = Math.max(minGrams, Math.min(maxGrams, grams));
+        if (clamped !== grams) {
+          return `• ${foodName} — ${clamped}g`;
         }
         return `• ${foodName} — ${gramsStr}g`;
       }
