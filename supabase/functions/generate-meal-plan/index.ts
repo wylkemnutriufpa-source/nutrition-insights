@@ -1704,21 +1704,38 @@ function buildMarmitaItem(
   goal: string,
   visualLibrary: VisualLibraryItem[],
   mealTimes?: Record<string, string>,
+  macroTarget?: { protein: number; carbs: number; fat: number },
 ): any {
   const baseMacros = estimateRecipeMacros(recipe);
   const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
-  const clampedScale = Math.max(0.6, Math.min(1.8, scaleFactor));
+  // Allow wider scale range so high/low kcal patients can hit their target (was 0.6-1.8)
+  const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+
+  // Seasonings/condiments are exempt from the 20g minimum portion rule
+  const SEASONING_KEYWORDS = ["orégano", "oregano", "sal", "pimenta", "noz-moscada", "açafrão", "acafrao", "cominho", "alho em pó", "ervas finas", "páprica", "paprica", "limão", "limao", "vinagre", "molho de pimenta", "tempero"];
+  function isSeasoning(name: string): boolean {
+    const n = name.toLowerCase();
+    return SEASONING_KEYWORDS.some(k => n.includes(k));
+  }
 
   // Scale ingredient grams proportionally — preserve composition
-  const scaledFoods = recipe.foods_json.map(f => ({
-    name: f.name,
-    grams: Math.max(5, Math.round((Number(f.grams) || 0) * clampedScale)),
-  }));
+  // Non-seasoning ingredients have a 20g floor; seasonings keep their small amount
+  const scaledFoods = recipe.foods_json.map(f => {
+    const scaled = Math.round((Number(f.grams) || 0) * clampedScale);
+    const minGrams = isSeasoning(f.name) ? 1 : 20;
+    return { name: f.name, grams: Math.max(minGrams, scaled) };
+  });
 
   const description = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
   const finalDescription = finalizeMealDescription(description, mealType, goal);
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
+
+  // If macroTarget provided, prefer it (the engine already split daily macros across slots).
+  // Otherwise fall back to the rough recipe-derived estimate.
+  const proteinFinal = macroTarget?.protein ?? Math.round(baseMacros.p * clampedScale);
+  const carbsFinal = macroTarget?.carbs ?? Math.round(baseMacros.c * clampedScale);
+  const fatFinal = macroTarget?.fat ?? Math.round(baseMacros.f * clampedScale);
 
   return {
     title: `🍱 ${recipe.name}`,
@@ -1726,9 +1743,9 @@ function buildMarmitaItem(
     meal_type: mealType,
     day_of_week: day,
     calories_target: Math.round(baseMacros.cal * clampedScale),
-    protein_target: Math.round(baseMacros.p * clampedScale),
-    carbs_target: Math.round(baseMacros.c * clampedScale),
-    fat_target: Math.round(baseMacros.f * clampedScale),
+    protein_target: proteinFinal,
+    carbs_target: carbsFinal,
+    fat_target: fatFinal,
     visual_library_item_id: visual?.id || null,
     meal_time: mealTimes?.[mealType] || null,
     _source: "meal_recipe",
