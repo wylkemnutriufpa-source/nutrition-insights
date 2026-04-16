@@ -1989,7 +1989,7 @@ function generateAdjustableMealsForDay(
 }
 
 
-
+function validatePlanBeforeSave(
   items: any[],
   dailyKcal: number,
   dailyMacros: { protein: number; carbs: number; fat: number },
