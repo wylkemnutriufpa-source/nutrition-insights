@@ -193,6 +193,11 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
     const planId = data?.mealPlanId || targetPlanId;
     if (!planId) throw new Error("ID do plano não retornado pela geração");
 
+    const patientStepsDone = !!pip.anamnesis_completed && !!pip.body_data_completed && !!pip.preferences_completed;
+    if (!patientStepsDone) {
+      throw new Error("Pipeline incompleto: o paciente precisa concluir anamnese, dados corporais e preferências antes da geração.");
+    }
+
     await supabase
       .from("onboarding_pipelines" as any)
       .update({

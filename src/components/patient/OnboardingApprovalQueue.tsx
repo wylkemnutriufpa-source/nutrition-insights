@@ -125,8 +125,9 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
         setPlanOptions([]);
       }
 
-      // Auto-fix: if plan is generated but status isn't pending_approval, fix it
-      if (p.plan_generated && !p.plan_approved && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
+      // Keep pending approval status only when the onboarding is actually complete.
+      const patientStepsDone = !!p.anamnesis_completed && !!p.body_data_completed && !!p.preferences_completed;
+      if (p.plan_generated && !p.plan_approved && patientStepsDone && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
         await supabase
           .from("onboarding_pipelines" as any)
           .update({ status: "pending_approval" } as any)
@@ -278,6 +279,13 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
   async function handleGenerateNewPlan() {
     if (!pipeline || !user) return;
+
+    const patientStepsDone = !!pipeline.anamnesis_completed && !!pipeline.body_data_completed && !!pipeline.preferences_completed;
+    if (!patientStepsDone) {
+      toast.error("O plano só pode ser gerado após consentimento, anamnese, dados corporais e preferências completos.");
+      return;
+    }
+
     setOpeningEditor(true);
     try {
       toast.info("Gerando opções de plano... Aguarde.");
