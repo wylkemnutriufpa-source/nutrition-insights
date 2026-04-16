@@ -2,32 +2,30 @@ import { createContext, useContext, useState, useCallback, useMemo, useEffect, u
 import { supabase } from "@/integrations/supabase/client";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
+export type ExperienceRole = "professional" | "patient";
 
 const STORAGE_KEY = "fj_experience_mode";
 
 /**
- * Routes accessible per experience mode.
+ * Routes accessible per experience mode — split by role (professional vs patient).
  * Each mode includes all routes from lower modes.
  *
- * 🔹 BÁSICO: uso clínico diário — anamnese, avaliação, plano, paciente, feedback, lembretes
- * 🔹 PROFISSIONAL: produtividade — IFJ, motor automático, templates, estratégias, ajustes
- * 🔹 AVANÇADO: controle total — automação, integrações, configs finas, debug, admin
+ * 🔹 BÁSICO: uso essencial diário
+ * 🔹 PROFISSIONAL: produtividade adicional
+ * 🔹 AVANÇADO: controle total
  */
-const BASIC_ROUTES = new Set([
-  // ── PROFISSIONAL: núcleo clínico diário ──
+
+// ─── PROFISSIONAL ───
+const PRO_BASIC_ROUTES = new Set([
   "/", "/dashboard", "/patients", "/appointments",
   "/anamnesis", "/body-analysis",
   "/meal-plans", "/editor-v2",
   "/notifications", "/chat",
   "/settings", "/invite-patient",
   "/onboarding", "/financial",
-  // ── PACIENTE BÁSICO: APENAS plano + feedback (check-in com peso/foto) ──
-  // Regression guard: do NOT add patient routes here. Anything else goes to PRO/ADVANCED.
-  "/my-diet", "/checkin",
 ]);
 
-const PRO_ROUTES = new Set([
-  // ── PROFISSIONAL: inteligência e produtividade clínica ──
+const PRO_PRO_ROUTES = new Set([
   "/clinical-risk", "/clinical-intelligence", "/clinical-workspace",
   "/reports", "/analyze-meal",
   "/protocols", "/programs",
@@ -36,13 +34,9 @@ const PRO_ROUTES = new Set([
   "/workspace-editor",
   "/coach-bodybuilder",
   "/professional/crm",
-  // ── PACIENTE COMPLETO: acompanhamento expandido ──
-  "/checklist", "/shopping-list", "/recipes",
-  "/journey", "/weekly-goals",
 ]);
 
-const ADVANCED_ROUTES = new Set([
-  // Controle total, automação, configs técnicas
+const PRO_ADVANCED_ROUTES = new Set([
   "/automation",
   "/control-tower", "/intelligence-settings",
   "/integrations", "/team", "/settings/whatsapp",
@@ -50,28 +44,59 @@ const ADVANCED_ROUTES = new Set([
   "/admin/import-patients",
 ]);
 
-export function getVisibleRoutes(mode: ExperienceMode): Set<string> {
-  const routes = new Set(BASIC_ROUTES);
+// ─── PACIENTE ───
+// 🛡️ REGRESSION GUARD: Basic = APENAS plano + feedback. NUNCA adicione mais aqui.
+const PATIENT_BASIC_ROUTES = new Set([
+  "/", "/dashboard",
+  "/my-diet", "/checkin",
+  "/settings",
+  "/onboarding",
+  "/notifications",
+]);
+
+const PATIENT_PRO_ROUTES = new Set([
+  "/anamnesis", "/body-analysis",
+  "/appointments", "/chat",
+  "/checklist", "/shopping-list", "/recipes",
+  "/journey", "/weekly-goals",
+  "/patient-overview",
+  "/meal-plans",
+  "/recipe-builder",
+]);
+
+const PATIENT_ADVANCED_ROUTES = new Set([
+  "/body-projection",
+  "/analyze-meal",
+  "/financial",
+]);
+
+function getRouteSets(role: ExperienceRole) {
+  if (role === "patient") {
+    return { basic: PATIENT_BASIC_ROUTES, pro: PATIENT_PRO_ROUTES, advanced: PATIENT_ADVANCED_ROUTES };
+  }
+  return { basic: PRO_BASIC_ROUTES, pro: PRO_PRO_ROUTES, advanced: PRO_ADVANCED_ROUTES };
+}
+
+export function getVisibleRoutes(mode: ExperienceMode, role: ExperienceRole = "professional"): Set<string> {
+  const { basic, pro, advanced } = getRouteSets(role);
+  const routes = new Set(basic);
   if (mode === "pro" || mode === "advanced") {
-    PRO_ROUTES.forEach(r => routes.add(r));
+    pro.forEach(r => routes.add(r));
   }
   if (mode === "advanced") {
-    ADVANCED_ROUTES.forEach(r => routes.add(r));
+    advanced.forEach(r => routes.add(r));
   }
   return routes;
 }
 
 /**
- * Returns true if a route is allowed for the given mode.
+ * Returns true if a route is allowed for the given mode + role.
  * Routes NOT listed in any experience set are always visible (uncontrolled).
- * Routes IN a set are only visible if the set is included in the current mode.
  */
-export function isRouteVisible(route: string, mode: ExperienceMode): boolean {
-  const allControlled = getVisibleRoutes("advanced");
-  // If the route is not controlled by experience mode, allow it
+export function isRouteVisible(route: string, mode: ExperienceMode, role: ExperienceRole = "professional"): boolean {
+  const allControlled = getVisibleRoutes("advanced", role);
   if (!allControlled.has(route)) return true;
-  // Otherwise check if it's in the current mode's visible set
-  const visible = getVisibleRoutes(mode);
+  const visible = getVisibleRoutes(mode, role);
   return visible.has(route);
 }
 
