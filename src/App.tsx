@@ -282,22 +282,31 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
   const { user, loading, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
   const { hasPaid, loading: paymentLoading } = usePaymentGuard();
   const { requirement } = useOnboardingGuard();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
   const location = useLocation();
-  if (loading || paymentLoading || requirement === "loading") return <PageLoader />;
+  if (loading || paymentLoading || requirement === "loading" || consentLoading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   // Professionals and admins are NEVER blocked by patient guards
   const isProfessional = isNutritionist || isPersonal || isAdmin;
   if (isProfessional) return <>{children}</>;
+
+  // 1. Consent check — patients without consent MUST accept before anything else
+  const consentAllowedRoutes = ["/consent-required", "/auth", "/settings", "/reset-password"];
+  if (isPatient && !hasConsent && !consentAllowedRoutes.some(r => location.pathname.startsWith(r))) {
+    console.warn("[RouteGuard:PaymentGuarded] No consent → /consent-required");
+    return <Navigate to="/consent-required" replace />;
+  }
+
+  // 2. Payment check
   if (isPatient && !hasPaid) {
     console.warn("[RouteGuard:PaymentGuarded] Not paid → /payment-required");
     return <Navigate to="/payment-required" replace />;
   }
-  // Force onboarding completion — only allow onboarding-related routes
+  // 3. Force onboarding completion — only allow onboarding-related routes
   if (isPatient && requirement === "must_complete" && !isOnboardingAllowedRoute(location.pathname)) {
     console.warn("[RouteGuard:PaymentGuarded] Onboarding incomplete → /onboarding");
     return <Navigate to="/onboarding" replace />;
   }
-  // Consent is now handled as step 0 inside the onboarding pipeline
   return <>{children}</>;
 }
 
