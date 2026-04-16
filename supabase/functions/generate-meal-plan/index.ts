@@ -1595,10 +1595,10 @@ function generateWeeklyMarmitaPlan(
   const items: any[] = [];
   const marmitasUsedSet = new Set<string>();
   const proteinsUsedThisWeek = new Set<string>();
-  let lastDayProtein: string | null = null;
+  let prevLunchProtein: string | null = null;
+  let prevDinnerProtein: string | null = null;
 
   // For non-marmita meals (breakfast/snacks), reuse template/visual library generator output
-  // Generate a shadow plan for those meal types only
   const nonMarmitaMealTypes = mealTypes.filter(m => m !== "lunch" && m !== "dinner");
   let shadowItems: any[] = [];
   if (nonMarmitaMealTypes.length > 0) {
@@ -1618,34 +1618,60 @@ function generateWeeklyMarmitaPlan(
     }
   }
 
+  // Compute kcal targets per slot
+  const lunchKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["lunch"] || 0.30));
+  const dinnerKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["dinner"] || 0.22));
+  // Compute residual macros for marmita slots = daily target − sum(shadow snacks day 0)
+  const day0Shadow = shadowItems.filter(i => i.day_of_week === 0);
+  const shadowProtein = day0Shadow.reduce((s, i) => s + (i.protein_target || 0), 0);
+  const shadowCarbs = day0Shadow.reduce((s, i) => s + (i.carbs_target || 0), 0);
+  const shadowFat = day0Shadow.reduce((s, i) => s + (i.fat_target || 0), 0);
+  const marmitaProteinPool = Math.max(0, macros.protein - shadowProtein);
+  const marmitaCarbsPool = Math.max(0, macros.carbs - shadowCarbs);
+  const marmitaFatPool = Math.max(0, macros.fat - shadowFat);
+  const lunchShare = lunchKcal / Math.max(1, lunchKcal + dinnerKcal);
+  const lunchProteinTarget = Math.round(marmitaProteinPool * lunchShare);
+  const dinnerProteinTarget = Math.max(0, marmitaProteinPool - lunchProteinTarget);
+  const lunchCarbsTarget = Math.round(marmitaCarbsPool * lunchShare);
+  const dinnerCarbsTarget = Math.max(0, marmitaCarbsPool - lunchCarbsTarget);
+  const lunchFatTarget = Math.round(marmitaFatPool * lunchShare);
+  const dinnerFatTarget = Math.max(0, marmitaFatPool - lunchFatTarget);
+
   for (let day = 0; day < 7; day++) {
-    // Add non-marmita items for this day
     for (const it of shadowItems.filter(i => i.day_of_week === day)) {
       items.push(it);
     }
 
-    // Generate lunch (marmita)
+    // Lunch — avoid yesterday's lunch AND yesterday's dinner protein
     if (mealTypes.includes("lunch")) {
-      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["lunch"] || 0.30));
-      const picked = pickMarmita(lunchByProtein, lunchRecipes, lastDayProtein, day);
-      lastDayProtein = detectRecipeProtein(picked);
-      proteinsUsedThisWeek.add(lastDayProtein);
+      const avoidSet = new Set<string>();
+      if (prevLunchProtein) avoidSet.add(prevLunchProtein);
+      if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
+      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, day);
+      const protein = detectRecipeProtein(picked);
+      proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
-      items.push(buildMarmitaItem(picked, "lunch", day, targetKcal, goal, visualLibrary, mealTimes));
+      items.push(buildMarmitaItem(picked, "lunch", day, lunchKcal, goal, visualLibrary, mealTimes,
+        { protein: lunchProteinTarget, carbs: lunchCarbsTarget, fat: lunchFatTarget }));
+      prevLunchProtein = protein;
     }
 
-    // Generate dinner (marmita) — different protein than lunch when possible
+    // Dinner — different protein than today's lunch AND yesterday's dinner
     if (mealTypes.includes("dinner")) {
-      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["dinner"] || 0.25));
-      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, lastDayProtein, day + 100);
-      lastDayProtein = detectRecipeProtein(picked);
-      proteinsUsedThisWeek.add(lastDayProtein);
+      const avoidSet = new Set<string>();
+      if (prevLunchProtein) avoidSet.add(prevLunchProtein);
+      if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
+      // Use a varying seed so we cycle through proteins instead of repeating the modulo result
+      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, day * 7 + 13);
+      const protein = detectRecipeProtein(picked);
+      proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
-      items.push(buildMarmitaItem(picked, "dinner", day, targetKcal, goal, visualLibrary, mealTimes));
+      items.push(buildMarmitaItem(picked, "dinner", day, dinnerKcal, goal, visualLibrary, mealTimes,
+        { protein: dinnerProteinTarget, carbs: dinnerCarbsTarget, fat: dinnerFatTarget }));
+      prevDinnerProtein = protein;
     }
   }
 
-  // Variety guarantee: if < 4 distinct proteins used, log a warning (best-effort)
   if (proteinsUsedThisWeek.size < 4) {
     console.warn(`[weekly_marmita] Only ${proteinsUsedThisWeek.size} distinct proteins used this week — recipe pool may be too narrow.`);
   }
@@ -1657,12 +1683,14 @@ function generateWeeklyMarmitaPlan(
 function pickMarmita(
   byProtein: Map<string, MarmitaRecipe[]>,
   allRecipes: MarmitaRecipe[],
-  avoidProtein: string | null,
+  avoidProteins: Set<string> | string | null,
   seed: number,
 ): MarmitaRecipe {
-  // Prefer a different protein than yesterday
+  const avoidSet = avoidProteins instanceof Set
+    ? avoidProteins
+    : (avoidProteins ? new Set([avoidProteins]) : new Set<string>());
   const proteins = Array.from(byProtein.keys());
-  const candidateProteins = proteins.filter(p => p !== avoidProtein);
+  const candidateProteins = proteins.filter(p => !avoidSet.has(p));
   const useProteins = candidateProteins.length > 0 ? candidateProteins : proteins;
   const proteinIdx = seed % useProteins.length;
   const chosenProtein = useProteins[proteinIdx];
@@ -1678,21 +1706,38 @@ function buildMarmitaItem(
   goal: string,
   visualLibrary: VisualLibraryItem[],
   mealTimes?: Record<string, string>,
+  macroTarget?: { protein: number; carbs: number; fat: number },
 ): any {
   const baseMacros = estimateRecipeMacros(recipe);
   const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
-  const clampedScale = Math.max(0.6, Math.min(1.8, scaleFactor));
+  // Allow wider scale range so high/low kcal patients can hit their target (was 0.6-1.8)
+  const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+
+  // Seasonings/condiments are exempt from the 20g minimum portion rule
+  const SEASONING_KEYWORDS = ["orégano", "oregano", "sal", "pimenta", "noz-moscada", "açafrão", "acafrao", "cominho", "alho em pó", "ervas finas", "páprica", "paprica", "limão", "limao", "vinagre", "molho de pimenta", "tempero"];
+  function isSeasoning(name: string): boolean {
+    const n = name.toLowerCase();
+    return SEASONING_KEYWORDS.some(k => n.includes(k));
+  }
 
   // Scale ingredient grams proportionally — preserve composition
-  const scaledFoods = recipe.foods_json.map(f => ({
-    name: f.name,
-    grams: Math.max(5, Math.round((Number(f.grams) || 0) * clampedScale)),
-  }));
+  // Non-seasoning ingredients have a 20g floor; seasonings keep their small amount
+  const scaledFoods = recipe.foods_json.map(f => {
+    const scaled = Math.round((Number(f.grams) || 0) * clampedScale);
+    const minGrams = isSeasoning(f.name) ? 1 : 20;
+    return { name: f.name, grams: Math.max(minGrams, scaled) };
+  });
 
   const description = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
   const finalDescription = finalizeMealDescription(description, mealType, goal);
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
+
+  // If macroTarget provided, prefer it (the engine already split daily macros across slots).
+  // Otherwise fall back to the rough recipe-derived estimate.
+  const proteinFinal = macroTarget?.protein ?? Math.round(baseMacros.p * clampedScale);
+  const carbsFinal = macroTarget?.carbs ?? Math.round(baseMacros.c * clampedScale);
+  const fatFinal = macroTarget?.fat ?? Math.round(baseMacros.f * clampedScale);
 
   return {
     title: `🍱 ${recipe.name}`,
@@ -1700,9 +1745,9 @@ function buildMarmitaItem(
     meal_type: mealType,
     day_of_week: day,
     calories_target: Math.round(baseMacros.cal * clampedScale),
-    protein_target: Math.round(baseMacros.p * clampedScale),
-    carbs_target: Math.round(baseMacros.c * clampedScale),
-    fat_target: Math.round(baseMacros.f * clampedScale),
+    protein_target: proteinFinal,
+    carbs_target: carbsFinal,
+    fat_target: fatFinal,
     visual_library_item_id: visual?.id || null,
     meal_time: mealTimes?.[mealType] || null,
     _source: "meal_recipe",
