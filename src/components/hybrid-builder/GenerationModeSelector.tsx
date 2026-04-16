@@ -231,6 +231,29 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         </div>
       </Button>
 
+      {/* Option 3: Weekly Marmita Plan */}
+      <Button
+        onClick={handleWeeklyMarmita}
+        disabled={generating}
+        variant="outline"
+        className="w-full h-14 text-sm gap-3 border-dashed"
+      >
+        {generating ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Gerando cardápio...
+          </>
+        ) : (
+          <>
+            <CalendarDays className="w-5 h-5 text-primary" />
+            <div className="text-left">
+              <p className="font-bold">📅 Cardápio Semanal de Marmitas</p>
+              <p className="text-[10px] text-muted-foreground">7 dias completos com marmitas no almoço/jantar</p>
+            </div>
+          </>
+        )}
+      </Button>
+
       {/* Info */}
       <div className="text-[9px] text-muted-foreground text-center space-y-0.5">
         <p>✅ Motor clínico calcula macros → Você escolhe o caminho → Plano gerado</p>
