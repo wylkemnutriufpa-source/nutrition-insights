@@ -1228,6 +1228,20 @@ function generatePlanWithTemplates(
         const pickIdx = seed % Math.min(matched.length, 3); // pick from top 3
         let picked = matched[pickIdx];
 
+        // ── GUARDRAIL 1: Pre-filter disliked foods from template foods_structure ──
+        if (disliked.length > 0) {
+          const normalizedDisliked = disliked.map(d => normalize(d)).filter(d => d.length >= 3);
+          if (normalizedDisliked.length > 0) {
+            picked = {
+              ...picked,
+              foods_structure: picked.foods_structure.filter(f => {
+                const normName = normalize(f.name);
+                return !normalizedDisliked.some(d => normName.includes(d));
+              }),
+            };
+          }
+        }
+
         // ── STEP 3: Apply template variation (swap 1-2 foods) ──
         if (dbFoods && dbFoods.length > 0 && picked.foods_structure.length > 0) {
           const varSeed = seed + day * 13 + defaultMeals.indexOf(mealType) * 3;
@@ -1677,6 +1691,145 @@ function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number
     }
   }
   return items;
+}
+
+// ═══════════════════════════════════════════════════════════════
+// GUARDRAIL ENGINE — Post-generation sanitization (MANDATORY)
+// Runs AFTER item generation, BEFORE macro reconciliation
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * GUARDRAIL 1: Remove disliked foods from item descriptions.
+ * Scans each item's description for disliked food keywords and removes matching lines.
+ * If ALL lines are removed, the item gets a generic fallback description.
+ */
+function sanitizeDislikedFoodsFromItems(items: any[], dislikedFoods: string[]): any[] {
+  if (!dislikedFoods || dislikedFoods.length === 0) return items;
+  const normalizedDisliked = dislikedFoods.map(d => normalize(d)).filter(d => d.length >= 3);
+  if (normalizedDisliked.length === 0) return items;
+
+  let totalRemoved = 0;
+
+  const sanitized = items.map(item => {
+    if (!item.description) return item;
+
+    const [mainSection, subSection] = item.description.split(/\n\n🔄 Substituições:\n/);
+    const lines = (mainSection || "").split("\n");
+    
+    const cleanLines = lines.filter(line => {
+      const normLine = normalize(line);
+      const isDisliked = normalizedDisliked.some(d => normLine.includes(d));
+      if (isDisliked) totalRemoved++;
+      return !isDisliked;
+    });
+
+    // Also clean substitution section
+    let cleanSubs = "";
+    if (subSection) {
+      const subLines = subSection.split("\n").filter(line => {
+        const normLine = normalize(line);
+        return !normalizedDisliked.some(d => normLine.includes(d));
+      });
+      if (subLines.length > 0) cleanSubs = `\n\n🔄 Substituições:\n${subLines.join("\n")}`;
+    }
+
+    const newDesc = cleanLines.length > 0
+      ? cleanLines.join("\n") + cleanSubs
+      : `• ${item.title || "Refeição"}`;
+
+    return { ...item, description: newDesc };
+  });
+
+  if (totalRemoved > 0) {
+    console.log(`[GUARDRAIL-1] Removed ${totalRemoved} disliked food lines from plan items`);
+  }
+  return sanitized;
+}
+
+/**
+ * GUARDRAIL 2: Enforce minimum portion sizes per food category.
+ * Scans description lines and fixes absurdly small portions.
+ */
+function clampMinimumPortionsInDescriptions(items: any[]): any[] {
+  const PORTION_MINS: Record<string, number> = {
+    frango: 60, carne: 60, bife: 60, tilapia: 60, peixe: 60, porco: 60,
+    sardinha: 60, alcatra: 60, sobrecoxa: 60, lombo: 60, patinho: 60,
+    ovo: 50, omelete: 50,
+    arroz: 30, macarrao: 30, batata: 30, macaxeira: 30, inhame: 30,
+    pao: 40, tapioca: 40, cuscuz: 40,
+    banana: 80, maca: 80, mamao: 80, laranja: 80, morango: 80, goiaba: 80,
+    alface: 50, tomate: 50, brocolis: 50, cenoura: 50, couve: 50,
+    iogurte: 100, leite: 100, queijo: 30,
+  };
+
+  return items.map(item => {
+    if (!item.description) return item;
+
+    const newDesc = item.description.replace(
+      /•\s*(.+?)\s*[—-]\s*(\d+)g/g,
+      (_match: string, foodName: string, gramsStr: string) => {
+        const grams = parseInt(gramsStr);
+        const normFood = normalize(foodName);
+        
+        let minGrams = 20; // absolute minimum
+        for (const [keyword, min] of Object.entries(PORTION_MINS)) {
+          if (normFood.includes(keyword)) {
+            minGrams = Math.max(minGrams, min);
+            break;
+          }
+        }
+
+        if (grams < minGrams) {
+          return `• ${foodName} — ${minGrams}g`;
+        }
+        return `• ${foodName} — ${gramsStr}g`;
+      }
+    );
+
+    return { ...item, description: newDesc };
+  });
+}
+
+/**
+ * GUARDRAIL 3: Remove items with empty/null/undefined titles or descriptions.
+ * Items with "• — Xg" pattern (no food name) are discarded.
+ */
+function removeEmptyNameItems(items: any[]): any[] {
+  const before = items.length;
+  const filtered = items.filter(item => {
+    // Must have a title
+    if (!item.title || item.title.trim().length === 0) return false;
+    // Check for empty-name description pattern "• — Xg" or "•  — Xg"
+    if (item.description) {
+      const lines = item.description.split("\n").filter((l: string) => l.trim().startsWith("•"));
+      const validLines = lines.filter((l: string) => {
+        const trimmed = l.trim();
+        // Pattern "• — 52g" or "•  — 52g" = empty food name
+        if (/^•\s*[—-]\s*\d+g?\s*$/.test(trimmed)) return false;
+        // Pattern "• " with nothing after = empty
+        if (/^•\s*$/.test(trimmed)) return false;
+        return true;
+      });
+      // If ALL food lines are empty-name, discard the item
+      if (lines.length > 0 && validLines.length === 0) return false;
+    }
+    return true;
+  });
+
+  if (before !== filtered.length) {
+    console.log(`[GUARDRAIL-3] Removed ${before - filtered.length} items with empty/invalid food names`);
+  }
+  return filtered;
+}
+
+/**
+ * Master guardrail function — runs all 3 guardrails in sequence.
+ */
+function applyPostGenerationGuardrails(items: any[], dislikedFoods: string[]): any[] {
+  let result = sanitizeDislikedFoodsFromItems(items, dislikedFoods);
+  result = clampMinimumPortionsInDescriptions(result);
+  result = removeEmptyNameItems(result);
+  return result;
 }
 
 // ──── Deterministic tips engine ────
@@ -2202,8 +2355,10 @@ serve(async (req) => {
           ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals)
           : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
         console.log(`[Multi-plan ${tplIdx}] Templates: ${templateHits}, Visual fallbacks: ${visualFallbacks}`);
-        const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
-        let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
+        // ── GUARDRAILS (MANDATORY) ──
+        const guardedItems = applyPostGenerationGuardrails(rawItems, disliked);
+        const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(guardedItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
+        let planItems = syncPlanDescriptionsWithProteinTargets(guardedItems, reconciledItems, goal);
         planItems = injectComputedProteinServings(planItems, patientFoodDatabase);
 
         // 2-Layer validation for multi-plan
@@ -2378,9 +2533,12 @@ serve(async (req) => {
       ? { protein: finalMacros.protein, carbs: Math.round(finalMacros.carbs * 1.12), fat: finalMacros.fat }
       : finalMacros;
 
+    // ── GUARDRAILS (MANDATORY) ──
+    const guardedPlanItems = applyPostGenerationGuardrails(rawPlanItems, disliked);
+
     // ── CAMADA 2: Reconcile template items with Layer 1 macros ──
-    const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(rawPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
-    let planItems = syncPlanDescriptionsWithProteinTargets(rawPlanItems, reconciledPlanItems, goal);
+    const reconciledPlanItems = enforceCrossDayConsistency(reconcileDailyMacros(guardedPlanItems, weekdayKcal, finalMacros, goal), finalMacros, weekdayKcal);
+    let planItems = syncPlanDescriptionsWithProteinTargets(guardedPlanItems, reconciledPlanItems, goal);
     planItems = injectComputedProteinServings(planItems, patientFoodDatabase);
 
     // ── 2-LAYER VALIDATION (MANDATORY) ──
