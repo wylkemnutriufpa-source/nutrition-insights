@@ -290,7 +290,7 @@ export function scaleTemplateToTarget(
         .filter(f => f.name && f.name.trim().length > 0) // GUARDRAIL 3: skip empty names
         .map(f => ({
           name: f.name,
-          portion_grams: clampMinPortion(f.name, f.portion_grams),
+          portion_grams: clampPortion(f.name, f.portion_grams),
           calories: f.calories,
           protein: f.protein,
           carbs: f.carbs,
@@ -311,8 +311,8 @@ export function scaleTemplateToTarget(
       const basePortion = Number(food.portion_grams) || 100; // guard undefined/NaN
       let newPortion = Math.round(basePortion * scaleFactor);
       newPortion = Math.max(10, Math.min(500, newPortion));
-      // GUARDRAIL 2: Enforce minimum portion by food category
-      newPortion = clampMinPortion(food.name, newPortion);
+      // GUARDRAIL 2: Enforce min AND max portion by food category
+      newPortion = clampPortion(food.name, newPortion);
 
       const hasPerGram = food.calories_per_gram != null && food.calories_per_gram > 0;
 
