@@ -1530,6 +1530,16 @@ function recipeViolatesRestrictions(
   return blocked.some(b => b.length > 2 && text.includes(b));
 }
 
+/** Hard block: canned / industrialized proteins are never acceptable in a marmita main meal. */
+function recipeIsCannedProtein(recipe: MarmitaRecipe): boolean {
+  const text = (recipe.name + " " + (recipe.foods_json || []).map(f => f.name).join(" ")).toLowerCase();
+  if (text.includes("enlatad") || text.includes("em lata") || text.includes("em conserva")) return true;
+  // Catch standalone canned-style names
+  if (/\bsardinha\b/.test(text) && !text.includes("fresca") && !text.includes("assada") && !text.includes("grelhada")) return true;
+  if (/\bpat[eê] de (atum|sardinha)\b/.test(text)) return true;
+  return false;
+}
+
 function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibraryItem[]): VisualLibraryItem | null {
   const targetCategories = recipe.meal_type === "almoço" ? ["almoco"] : ["jantar", "almoco"];
   const candidates = visualLibrary.filter(v => targetCategories.includes(v.category) && v.image_url);
