@@ -1051,6 +1051,9 @@ function selectFoodsForMeal(
         if (f.category !== requiredCat) return false;
         const normName = normalize(f.food_name);
         if (isBreakfast && BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        const isMainMealFb = mealType === "lunch" || mealType === "dinner";
+        if (isMainMealFb && MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
+        if (isMainMealFb && (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva"))) return false;
         if (isDinner && dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
         // Still enforce meal_tags in fallback (but relax anti-repetition)
         if (f.meal_tags_json.length > 0) {
