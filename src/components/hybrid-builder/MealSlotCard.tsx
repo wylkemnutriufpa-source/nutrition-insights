@@ -23,6 +23,7 @@ import SmartMealSelectorModal from "./SmartMealSelectorModal";
 import MealSlotItemCard from "./MealSlotItemCard";
 import FoodSearchInline from "./FoodSearchInline";
 import SaveMealSlotDialog from "./SaveMealSlotDialog";
+import { smartSubstituteFood } from "@/lib/smartFoodSubstitution";
 
 interface Props {
   day: number;
@@ -65,7 +66,41 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
     toast.success("Item duplicado");
   };
 
-  const handleReplace = (item: MealPlanItem) => {
+  const handleReplace = async (item: MealPlanItem) => {
+    const grams = parseQuantity(item);
+    const tId = toast.loading(`🔄 Buscando equivalente para ${item.title}...`);
+    try {
+      const result = await smartSubstituteFood({
+        currentTitle: item.title || "",
+        currentDescription: item.description,
+        currentGrams: grams,
+        mealType,
+        excludeNames: [item.title || ""],
+      });
+      if (!result) {
+        toast.dismiss(tId);
+        // Fallback: open manual search
+        setReplacingItemId(item.id);
+        setFoodSearchOpen(true);
+        toast.info("Sem equivalente automático. Buscando manualmente...");
+        return;
+      }
+      store.updateItem(item.id, {
+        title: result.newName,
+        description: result.newDescription,
+        calories_target: result.calories_target,
+        protein_target: result.protein_target,
+        carbs_target: result.carbs_target,
+        fat_target: result.fat_target,
+      });
+      toast.success(`✅ ${item.title} → ${result.newName} (${grams}g)`, { id: tId });
+    } catch (e) {
+      toast.dismiss(tId);
+      toast.error("Erro ao trocar alimento");
+    }
+  };
+
+  const handleManualReplace = (item: MealPlanItem) => {
     setReplacingItemId(item.id);
     setFoodSearchOpen(true);
   };

@@ -1221,6 +1221,10 @@ function generatePlanWithTemplates(
   // ── Diversity: recent meals from previous plan ──
   const recentMealItems = recentMeals || [];
 
+  // ── Stable backbone cache: same (template_id + mealType) → same scaled foods every day
+  // Prevents 150g/120g/130g jitter for the same protein across the week.
+  const stableBackbone = new Map<string, { foods: any[]; scaleFactor: number; picked: any }>();
+
   for (let day = 0; day < 7; day++) {
     const usedProteinsToday = new Set<string>();
 
@@ -1265,21 +1269,36 @@ function generatePlanWithTemplates(
           }
         }
 
-        // ── STEP 3: Apply template variation (swap 1-2 foods) ──
-        if (dbFoods && dbFoods.length > 0 && picked.foods_structure.length > 0) {
-          const varSeed = seed + day * 13 + defaultMeals.indexOf(mealType) * 3;
-          // Apply variation on ~60% of slots for natural diversity
-          if (varSeed % 5 < 3) {
-            picked = generateTemplateVariation(picked, dbFoods, { ...variationCtx, seed: varSeed, mealType });
-          }
-        }
+        // ── STABLE BACKBONE: reuse the SAME variation + scale across the week ──
+        // Key by (template_id, mealType) so all 7 days of the same template
+        // produce identical grams/macros — eliminates the 150/120/130 jitter.
+        const backboneKey = `${picked.id}__${mealType}`;
+        let scaledFoods: any[];
+        let scaleFactor: number;
 
-        // Scale template to target kcal
-        const { foods: scaledFoods, scaleFactor } = scaleTemplateToTarget(picked, targetKcal);
+        const cached = stableBackbone.get(backboneKey);
+        if (cached) {
+          picked = cached.picked;
+          scaledFoods = cached.foods;
+          scaleFactor = cached.scaleFactor;
+        } else {
+          // ── STEP 3: Apply template variation ONCE per template (not per day) ──
+          if (dbFoods && dbFoods.length > 0 && picked.foods_structure.length > 0) {
+            const varSeed = seed; // no day-based jitter
+            if (varSeed % 5 < 3) {
+              picked = generateTemplateVariation(picked, dbFoods, { ...variationCtx, seed: varSeed, mealType });
+            }
+          }
+          // Scale template to target kcal ONCE
+          const scaled = scaleTemplateToTarget(picked, targetKcal);
+          scaledFoods = scaled.foods;
+          scaleFactor = scaled.scaleFactor;
+          stableBackbone.set(backboneKey, { foods: scaledFoods, scaleFactor, picked });
+        }
 
         if (scaledFoods.length > 0) {
           const item = buildMealItemFromTemplate(picked, scaledFoods, mealType, day, scaleFactor);
-          
+
           // Add meal_time if available
           const mealTime = mealTimes?.[mealType] || null;
           if (mealTime) item.meal_time = mealTime;

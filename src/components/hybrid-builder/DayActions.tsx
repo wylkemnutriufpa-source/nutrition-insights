@@ -1,5 +1,6 @@
 import { useState } from "react";
-import { Copy, CalendarRange, Save } from "lucide-react";
+import { Copy, CalendarRange, Save, Scale } from "lucide-react";
+import { normalizePortionsAcrossDays } from "@/lib/smartFoodSubstitution";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
@@ -148,6 +149,23 @@ export default function DayActions({ activeDay }: Props) {
           onClick={() => { setSelectedDays([]); setShowCopyDays(true); }}
         >
           <Copy className="w-3 h-3" /> Copiar para dias...
+        </Button>
+        <Button
+          variant="outline"
+          size="sm"
+          className="h-7 text-[10px] gap-1"
+          onClick={() => {
+            const patches = normalizePortionsAcrossDays(store.items as any);
+            if (patches.size === 0) {
+              toast.info("Porções já estão padronizadas na semana");
+              return;
+            }
+            patches.forEach((patch, itemId) => store.updateItem(itemId, patch as any));
+            toast.success(`✅ Porções padronizadas em ${patches.size} item(ns) da semana`);
+          }}
+          title="Iguala as gramagens dos mesmos alimentos em todos os dias"
+        >
+          <Scale className="w-3 h-3" /> Padronizar porções
         </Button>
       </div>
 
