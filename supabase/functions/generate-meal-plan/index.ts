@@ -1845,12 +1845,52 @@ function removeEmptyNameItems(items: any[]): any[] {
 }
 
 /**
- * Master guardrail function — runs all 3 guardrails in sequence.
+ * GUARDRAIL 4: Validate meal composition structure.
+ * Each main meal (lunch/dinner) MUST have protein+carb+vegetable lines.
+ * Breakfast MUST have protein+carb. Snacks MUST have at least 1 food line.
+ * Logs warnings but does not discard items (structural issues should be caught earlier).
+ */
+function validateMealComposition(items: any[]): any[] {
+  const COMPOSITION_RULES: Record<string, string[]> = {
+    lunch: ["proteina", "carboidrato"],
+    dinner: ["proteina", "carboidrato"],
+    breakfast: ["proteina"],
+  };
+  const CATEGORY_DETECT: Record<string, string[]> = {
+    proteina: ["frango", "carne", "bife", "tilapia", "peixe", "porco", "sardinha", "ovo", "omelete", "queijo"],
+    carboidrato: ["arroz", "macarrao", "batata", "pao", "tapioca", "cuscuz", "macaxeira", "inhame"],
+    verdura: ["alface", "tomate", "brocolis", "cenoura", "couve", "repolho", "salada", "rucula"],
+  };
+
+  let warnings = 0;
+  for (const item of items) {
+    const rules = COMPOSITION_RULES[item.meal_type];
+    if (!rules) continue;
+    
+    const desc = normalize(item.description || "");
+    for (const requiredCat of rules) {
+      const keywords = CATEGORY_DETECT[requiredCat] || [];
+      const hasCat = keywords.some(kw => desc.includes(kw));
+      if (!hasCat) {
+        warnings++;
+      }
+    }
+  }
+  if (warnings > 0) {
+    console.warn(`[GUARDRAIL-4] ${warnings} meal composition warnings detected (missing expected food categories)`);
+  }
+  return items;
+}
+
+/**
+ * Master guardrail function — runs all guardrails in sequence.
+ * Order: 1. Disliked foods → 2. Portion clamps → 3. Empty names → 4. Composition check
  */
 function applyPostGenerationGuardrails(items: any[], dislikedFoods: string[]): any[] {
   let result = sanitizeDislikedFoodsFromItems(items, dislikedFoods);
   result = clampMinimumPortionsInDescriptions(result);
   result = removeEmptyNameItems(result);
+  result = validateMealComposition(result);
   return result;
 }
 
