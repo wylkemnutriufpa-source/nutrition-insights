@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Compass, ShieldCheck, ChefHat } from "lucide-react";
+import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -125,7 +125,44 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     }
   }, [user, store, patientId, onGenerated]);
 
-  // Sub-views
+  // Weekly Marmita → generate full 7-day plan from meal_recipes
+  const handleWeeklyMarmita = useCallback(async () => {
+    if (!user || !store.planId) return;
+    setGenerating(true);
+
+    try {
+      toast.info("Gerando cardápio semanal de marmitas (7 dias)...");
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+        body: {
+          patientId,
+          nutritionistId: user.id,
+          existingPlanId: store.planId,
+          meal_plan_id: store.planId,
+          isPipeline: false,
+          generationMode: "weekly_marmita",
+        },
+      });
+
+      if (error || !data?.success) {
+        const msg = error
+          ? await friendlyEdgeFunctionError(error, "Erro ao gerar cardápio")
+          : (data?.error || "Erro desconhecido");
+        toast.error(msg);
+        return;
+      }
+
+      const resolvedPlanId = store.planId || data.mealPlanId;
+      if (!resolvedPlanId) throw new Error("A engine retornou sem um plano válido.");
+
+      await store.hydrate(resolvedPlanId, user.id);
+      toast.success(`✅ Cardápio semanal gerado com ${data.items_count || 0} refeições!`);
+      onGenerated();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar");
+    } finally {
+      setGenerating(false);
+    }
+  }, [user, store, patientId, onGenerated]);
   if (view === "strategy") {
     return (
       <StrategyAdvisorPanel
