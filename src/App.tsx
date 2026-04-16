@@ -24,7 +24,7 @@ import { installGlobalErrorHandlers } from "@/lib/monitoring";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { initFeatureFlags } from "@/lib/featureFlags";
-// useConsentGuard is now used inside OnboardingPipeline, not in route guards
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { usePaymentGuard } from "@/hooks/usePaymentGuard";
 import { useOnboardingGuard, isOnboardingAllowedRoute } from "@/hooks/useOnboardingGuard";
 
