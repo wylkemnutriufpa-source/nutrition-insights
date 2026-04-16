@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays } from "lucide-react";
+import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
