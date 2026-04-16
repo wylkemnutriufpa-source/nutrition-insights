@@ -1532,13 +1532,17 @@ function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; 
   return { cal: Math.max(cal, 350), p: protein, c: carbs, f: fat };
 }
 
-async function loadMealRecipes(client: any, nutritionistId: string): Promise<MarmitaRecipe[]> {
+async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onlyFixed?: boolean }): Promise<MarmitaRecipe[]> {
   // Load recipes owned by this nutritionist + global ones (nutritionist_id IS NULL)
-  const { data, error } = await client
+  let query = client
     .from("meal_recipes")
-    .select("id, name, meal_type, foods_json, nutritionist_id")
+    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
     .eq("is_active", true)
     .or(`nutritionist_id.eq.${nutritionistId},nutritionist_id.is.null`);
+  if (opts?.onlyFixed) {
+    query = query.eq("is_fixed", true);
+  }
+  const { data, error } = await query;
   if (error || !data) {
     console.error("[loadMealRecipes] Error:", error);
     return [];
@@ -1548,6 +1552,12 @@ async function loadMealRecipes(client: any, nutritionistId: string): Promise<Mar
     name: r.name,
     meal_type: r.meal_type,
     foods_json: Array.isArray(r.foods_json) ? r.foods_json : [],
+    is_fixed: !!r.is_fixed,
+    is_scalable: r.is_scalable !== false,
+    fixed_calories: r.fixed_calories != null ? Number(r.fixed_calories) : null,
+    fixed_protein: r.fixed_protein != null ? Number(r.fixed_protein) : null,
+    fixed_carbs: r.fixed_carbs != null ? Number(r.fixed_carbs) : null,
+    fixed_fat: r.fixed_fat != null ? Number(r.fixed_fat) : null,
   })).filter(r => r.foods_json.length > 0);
 }
 
