@@ -227,21 +227,61 @@ export function resolveMealTemplates(
  * Scale a template's foods_structure to match target kcal.
  * Returns scaled food items with updated macros.
  */
+// ── GUARDRAIL 2: Minimum portion clamps by food category ──
+const MIN_PORTION_BY_CATEGORY: Record<string, number> = {
+  protein: 60,   // proteínas principais: 60g mínimo
+  carb: 30,      // carboidratos: 30g mínimo
+  fruit: 80,     // frutas: 80g mínimo
+  vegetable: 50, // vegetais: 50g mínimo
+  egg: 50,       // ovos: ~1 unidade (50g)
+  bread: 40,     // pão: ~1 unidade (40g)
+  dairy: 100,    // laticínios: 100g mínimo
+  fat: 10,       // gorduras: 10g mínimo
+  other: 20,     // outros: 20g mínimo
+};
+
+const PORTION_CATEGORY_KEYWORDS: Record<string, string[]> = {
+  protein: ["frango", "carne", "bife", "tilapia", "peixe", "porco", "sardinha", "alcatra", "sobrecoxa", "lombo", "patinho"],
+  egg: ["ovo", "omelete", "clara"],
+  bread: ["pao", "tapioca", "cuscuz", "torrada"],
+  fruit: ["banana", "maca", "mamao", "laranja", "morango", "goiaba", "melancia", "abacaxi", "manga", "tangerina", "fruta"],
+  vegetable: ["alface", "tomate", "brocolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha", "salada", "verdura", "rucula"],
+  carb: ["arroz", "macarrao", "batata", "macaxeira", "inhame", "mandioca", "farinha", "farofa"],
+  dairy: ["iogurte", "leite", "queijo", "requeijao"],
+  fat: ["azeite", "oleo", "castanha", "amendoim", "pasta de amendoim"],
+};
+
+function classifyFoodForPortion(name: string): string {
+  const norm = name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+  for (const [category, keywords] of Object.entries(PORTION_CATEGORY_KEYWORDS)) {
+    if (keywords.some(kw => norm.includes(kw))) return category;
+  }
+  return "other";
+}
+
+function clampMinPortion(name: string, portion: number): number {
+  const cat = classifyFoodForPortion(name);
+  const min = MIN_PORTION_BY_CATEGORY[cat] || MIN_PORTION_BY_CATEGORY.other;
+  return Math.max(min, portion);
+}
+
 export function scaleTemplateToTarget(
   template: ResolvedTemplate,
   targetKcal: number,
 ): { foods: ScaledFoodItem[]; scaleFactor: number } {
   if (!template.kcal_base || template.kcal_base === 0) {
     return {
-      foods: template.foods_structure.map(f => ({
-        name: f.name,
-        portion_grams: f.portion_grams,
-        calories: f.calories,
-        protein: f.protein,
-        carbs: f.carbs,
-        fat: f.fat,
-        original_portion: f.portion_grams,
-      })),
+      foods: template.foods_structure
+        .filter(f => f.name && f.name.trim().length > 0) // GUARDRAIL 3: skip empty names
+        .map(f => ({
+          name: f.name,
+          portion_grams: clampMinPortion(f.name, f.portion_grams),
+          calories: f.calories,
+          protein: f.protein,
+          carbs: f.carbs,
+          fat: f.fat,
+          original_portion: f.portion_grams,
+        })),
       scaleFactor: 1,
     };
   }
@@ -250,36 +290,40 @@ export function scaleTemplateToTarget(
   // Clinical safety clamp: 0.3x – 2.5x
   scaleFactor = Math.max(0.3, Math.min(2.5, scaleFactor));
 
-  const foods: ScaledFoodItem[] = template.foods_structure.map(food => {
-    const basePortion = Number(food.portion_grams) || 100; // guard undefined/NaN
-    let newPortion = Math.round(basePortion * scaleFactor);
-    newPortion = Math.max(10, Math.min(500, newPortion));
+  const foods: ScaledFoodItem[] = template.foods_structure
+    .filter(f => f.name && f.name.trim().length > 0) // GUARDRAIL 3: skip empty names
+    .map(food => {
+      const basePortion = Number(food.portion_grams) || 100; // guard undefined/NaN
+      let newPortion = Math.round(basePortion * scaleFactor);
+      newPortion = Math.max(10, Math.min(500, newPortion));
+      // GUARDRAIL 2: Enforce minimum portion by food category
+      newPortion = clampMinPortion(food.name, newPortion);
 
-    const hasPerGram = food.calories_per_gram != null && food.calories_per_gram > 0;
+      const hasPerGram = food.calories_per_gram != null && food.calories_per_gram > 0;
 
-    if (hasPerGram) {
+      if (hasPerGram) {
+        return {
+          name: food.name,
+          portion_grams: newPortion,
+          calories: Math.round(newPortion * (food.calories_per_gram || 0)),
+          protein: Math.round(newPortion * (food.protein_per_gram || 0) * 10) / 10,
+          carbs: Math.round(newPortion * (food.carbs_per_gram || 0) * 10) / 10,
+          fat: Math.round(newPortion * (food.fat_per_gram || 0) * 10) / 10,
+          original_portion: basePortion,
+        };
+      }
+
+      const portionRatio = basePortion > 0 ? newPortion / basePortion : 1;
       return {
         name: food.name,
         portion_grams: newPortion,
-        calories: Math.round(newPortion * (food.calories_per_gram || 0)),
-        protein: Math.round(newPortion * (food.protein_per_gram || 0) * 10) / 10,
-        carbs: Math.round(newPortion * (food.carbs_per_gram || 0) * 10) / 10,
-        fat: Math.round(newPortion * (food.fat_per_gram || 0) * 10) / 10,
+        calories: Math.round((food.calories || 0) * portionRatio),
+        protein: Math.round((food.protein || 0) * portionRatio * 10) / 10,
+        carbs: Math.round((food.carbs || 0) * portionRatio * 10) / 10,
+        fat: Math.round((food.fat || 0) * portionRatio * 10) / 10,
         original_portion: basePortion,
       };
-    }
-
-    const portionRatio = basePortion > 0 ? newPortion / basePortion : 1;
-    return {
-      name: food.name,
-      portion_grams: newPortion,
-      calories: Math.round((food.calories || 0) * portionRatio),
-      protein: Math.round((food.protein || 0) * portionRatio * 10) / 10,
-      carbs: Math.round((food.carbs || 0) * portionRatio * 10) / 10,
-      fat: Math.round((food.fat || 0) * portionRatio * 10) / 10,
-      original_portion: basePortion,
-    };
-  });
+    });
 
   return { foods, scaleFactor: Math.round(scaleFactor * 100) / 100 };
 }
@@ -311,7 +355,25 @@ export function buildMealItemFromTemplate(
   const totalF = scaledFoods.reduce((s, f) => s + f.fat, 0);
 
   // Build description with gram portions — guard against undefined/NaN
-  const descriptionLines = scaledFoods.map(f => {
+  // GUARDRAIL 3: Filter out foods with empty/invalid names before building description
+  const validFoods = scaledFoods.filter(f => f.name && f.name.trim().length > 0);
+  if (validFoods.length === 0) {
+    return {
+      title: template.name,
+      description: `• ${template.name}`,
+      meal_type: mealType,
+      day_of_week: dayOfWeek,
+      calories_target: null,
+      protein_target: null,
+      carbs_target: null,
+      fat_target: null,
+      _source: "template_resolver",
+      _template_id: template.id,
+      _scale_factor: scaleFactor,
+    };
+  }
+
+  const descriptionLines = validFoods.map(f => {
     const grams = Number(f.portion_grams);
     const gramsStr = Number.isFinite(grams) && grams > 0 ? `${grams}g` : "";
     return gramsStr ? `• ${f.name} — ${gramsStr}` : `• ${f.name}`;
