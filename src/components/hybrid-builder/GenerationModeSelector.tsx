@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays } from "lucide-react";
+import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -163,6 +163,45 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       setGenerating(false);
     }
   }, [user, store, patientId, onGenerated]);
+
+  // Fixed Marmita → marmitas congeladas, motor ajusta APENAS café/lanches/ceia
+  const handleFixedMarmita = useCallback(async () => {
+    if (!user || !store.planId) return;
+    setGenerating(true);
+
+    try {
+      toast.info("Gerando plano com marmitas fixas (congeladas)...");
+      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+        body: {
+          patientId,
+          nutritionistId: user.id,
+          existingPlanId: store.planId,
+          meal_plan_id: store.planId,
+          isPipeline: false,
+          generationMode: "fixed_marmita",
+        },
+      });
+
+      if (error || !data?.success) {
+        const msg = error
+          ? await friendlyEdgeFunctionError(error, "Erro ao gerar")
+          : (data?.error || "Erro desconhecido");
+        toast.error(msg);
+        return;
+      }
+
+      const resolvedPlanId = store.planId || data.mealPlanId;
+      if (!resolvedPlanId) throw new Error("A engine retornou sem um plano válido.");
+
+      await store.hydrate(resolvedPlanId, user.id);
+      toast.success(`✅ Plano com marmitas fixas gerado! ${data.items_count || 0} refeições.`);
+      onGenerated();
+    } catch (err: any) {
+      toast.error(err.message || "Erro ao gerar");
+    } finally {
+      setGenerating(false);
+    }
+  }, [user, store, patientId, onGenerated]);
   if (view === "strategy") {
     return (
       <StrategyAdvisorPanel
@@ -249,6 +288,29 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
             <div className="text-left">
               <p className="font-bold">📅 Cardápio Semanal de Marmitas</p>
               <p className="text-[10px] text-muted-foreground">7 dias completos com marmitas no almoço/jantar</p>
+            </div>
+          </>
+        )}
+      </Button>
+
+      {/* Option 4: Fixed Marmita (Frozen) — não escala marmitas */}
+      <Button
+        onClick={handleFixedMarmita}
+        disabled={generating}
+        variant="outline"
+        className="w-full h-14 text-sm gap-3 border-dashed border-accent/40 hover:bg-accent/5"
+      >
+        {generating ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Gerando plano...
+          </>
+        ) : (
+          <>
+            <Snowflake className="w-5 h-5 text-accent" />
+            <div className="text-left">
+              <p className="font-bold">❄️ Marmitas Fixas (Congeladas)</p>
+              <p className="text-[10px] text-muted-foreground">Marmitas não escalam · ajusta só café/lanches/ceia</p>
             </div>
           </>
         )}

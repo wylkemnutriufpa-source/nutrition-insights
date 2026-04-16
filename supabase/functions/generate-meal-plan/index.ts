@@ -1475,6 +1475,12 @@ interface MarmitaRecipe {
   name: string;
   meal_type: string; // 'almoço' | 'jantar'
   foods_json: Array<{ name: string; grams: number }>;
+  is_fixed?: boolean;
+  is_scalable?: boolean;
+  fixed_calories?: number | null;
+  fixed_protein?: number | null;
+  fixed_carbs?: number | null;
+  fixed_fat?: number | null;
 }
 
 const PROTEIN_KEYWORDS: Array<{ key: string; matches: string[] }> = [
@@ -1532,13 +1538,17 @@ function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; 
   return { cal: Math.max(cal, 350), p: protein, c: carbs, f: fat };
 }
 
-async function loadMealRecipes(client: any, nutritionistId: string): Promise<MarmitaRecipe[]> {
+async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onlyFixed?: boolean }): Promise<MarmitaRecipe[]> {
   // Load recipes owned by this nutritionist + global ones (nutritionist_id IS NULL)
-  const { data, error } = await client
+  let query = client
     .from("meal_recipes")
-    .select("id, name, meal_type, foods_json, nutritionist_id")
+    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
     .eq("is_active", true)
     .or(`nutritionist_id.eq.${nutritionistId},nutritionist_id.is.null`);
+  if (opts?.onlyFixed) {
+    query = query.eq("is_fixed", true);
+  }
+  const { data, error } = await query;
   if (error || !data) {
     console.error("[loadMealRecipes] Error:", error);
     return [];
@@ -1548,6 +1558,12 @@ async function loadMealRecipes(client: any, nutritionistId: string): Promise<Mar
     name: r.name,
     meal_type: r.meal_type,
     foods_json: Array.isArray(r.foods_json) ? r.foods_json : [],
+    is_fixed: !!r.is_fixed,
+    is_scalable: r.is_scalable !== false,
+    fixed_calories: r.fixed_calories != null ? Number(r.fixed_calories) : null,
+    fixed_protein: r.fixed_protein != null ? Number(r.fixed_protein) : null,
+    fixed_carbs: r.fixed_carbs != null ? Number(r.fixed_carbs) : null,
+    fixed_fat: r.fixed_fat != null ? Number(r.fixed_fat) : null,
   })).filter(r => r.foods_json.length > 0);
 }
 
@@ -1759,6 +1775,220 @@ function buildMarmitaItem(
 }
 
 
+// ═══════════════════════════════════════════════════════════════
+// FIXED MARMITA MODE — frozen products, immutable macros
+// Marmitas are NEVER scaled. Only breakfast/snacks/ceia adjust.
+// ═══════════════════════════════════════════════════════════════
+function buildFixedMarmitaItem(
+  recipe: MarmitaRecipe,
+  mealType: string,
+  day: number,
+  goal: string,
+  visualLibrary: VisualLibraryItem[],
+  mealTimes?: Record<string, string>,
+): any {
+  // ⚠️ NO SCALING. Use fixed_* macros if present, else estimate ONCE and freeze.
+  let cal: number, p: number, c: number, f: number;
+  if (recipe.fixed_calories != null && recipe.fixed_protein != null) {
+    cal = Math.round(recipe.fixed_calories);
+    p = Math.round(recipe.fixed_protein);
+    c = Math.round(recipe.fixed_carbs ?? 0);
+    f = Math.round(recipe.fixed_fat ?? 0);
+  } else {
+    const est = estimateRecipeMacros(recipe);
+    cal = est.cal; p = est.p; c = est.c; f = est.f;
+  }
+
+  // Description uses ORIGINAL grams — no scaling allowed
+  const description = (recipe.foods_json || []).map(food => `• ${food.grams}g ${food.name}`).join("\n");
+  const finalDescription = finalizeMealDescription(description, mealType, goal);
+  const visual = findVisualForRecipe(recipe, visualLibrary);
+
+  return {
+    title: `🍱 ${recipe.name} (Marmita Fixa)`,
+    description: finalDescription,
+    meal_type: mealType,
+    day_of_week: day,
+    calories_target: cal,
+    protein_target: p,
+    carbs_target: c,
+    fat_target: f,
+    visual_library_item_id: visual?.id || null,
+    meal_time: mealTimes?.[mealType] || null,
+    _source: "meal_recipe",
+    _recipe_id: recipe.id,
+    _recipe_name: recipe.name,
+    _is_fixed: true,
+    _scale_factor: 1, // forced — no scaling
+    _image_url: visual?.image_url || null,
+  };
+}
+
+function generateFixedMarmitaPlan(
+  fixedRecipes: MarmitaRecipe[],
+  templates: ResolvedTemplate[],
+  visualLibrary: VisualLibraryItem[],
+  goal: string,
+  kcalTarget: number,
+  macros: { protein: number; carbs: number; fat: number },
+  restrictions: string[],
+  disliked: string[],
+  allergies: string[],
+  enabledMeals?: string[],
+  mealTimes?: Record<string, string>,
+  strategy?: string,
+  patientFoodDatabase?: any[],
+  recentMeals?: RecentMealItem[],
+): { items: any[]; marmitasUsed: string[]; warning?: string } {
+  const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
+
+  const filteredRecipes = fixedRecipes.filter(r => !recipeViolatesRestrictions(r, disliked, allergies));
+  const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
+  const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
+
+  if (lunchRecipes.length === 0 || dinnerRecipes.length === 0) {
+    throw new Error(`[fixed_marmita] Marmitas fixas insuficientes (almoço: ${lunchRecipes.length}, jantar: ${dinnerRecipes.length}). Cadastre marmitas com is_fixed=true.`);
+  }
+
+  // Pre-compute proteins (for variety)
+  const lunchByProtein = new Map<string, MarmitaRecipe[]>();
+  const dinnerByProtein = new Map<string, MarmitaRecipe[]>();
+  for (const r of lunchRecipes) {
+    const p = detectRecipeProtein(r);
+    if (!lunchByProtein.has(p)) lunchByProtein.set(p, []);
+    lunchByProtein.get(p)!.push(r);
+  }
+  for (const r of dinnerRecipes) {
+    const p = detectRecipeProtein(r);
+    if (!dinnerByProtein.has(p)) dinnerByProtein.set(p, []);
+    dinnerByProtein.get(p)!.push(r);
+  }
+
+  // Pick representative marmitas to compute "fixed kcal cost" per day (use day 0 picks as reference)
+  // Marmitas are FIXED — we pick once per day, get their macros, and the REMAINDER goes to snacks.
+  const items: any[] = [];
+  const marmitasUsedSet = new Set<string>();
+  const proteinsUsedThisWeek = new Set<string>();
+  let prevLunchProtein: string | null = null;
+  let prevDinnerProtein: string | null = null;
+  let warning: string | undefined;
+
+  for (let day = 0; day < 7; day++) {
+    let dayMarmitaCal = 0;
+    let dayMarmitaP = 0;
+    let dayMarmitaC = 0;
+    let dayMarmitaF = 0;
+
+    // Lunch (FIXED)
+    if (mealTypes.includes("lunch")) {
+      const avoid = new Set<string>();
+      if (prevLunchProtein) avoid.add(prevLunchProtein);
+      if (prevDinnerProtein) avoid.add(prevDinnerProtein);
+      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoid, day);
+      const proteinKey = detectRecipeProtein(picked);
+      proteinsUsedThisWeek.add(proteinKey);
+      marmitasUsedSet.add(picked.name);
+      const item = buildFixedMarmitaItem(picked, "lunch", day, goal, visualLibrary, mealTimes);
+      items.push(item);
+      dayMarmitaCal += item.calories_target;
+      dayMarmitaP += item.protein_target;
+      dayMarmitaC += item.carbs_target;
+      dayMarmitaF += item.fat_target;
+      prevLunchProtein = proteinKey;
+    }
+
+    // Dinner (FIXED)
+    if (mealTypes.includes("dinner")) {
+      const avoid = new Set<string>();
+      if (prevLunchProtein) avoid.add(prevLunchProtein);
+      if (prevDinnerProtein) avoid.add(prevDinnerProtein);
+      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoid, day * 7 + 13);
+      const proteinKey = detectRecipeProtein(picked);
+      proteinsUsedThisWeek.add(proteinKey);
+      marmitasUsedSet.add(picked.name);
+      const item = buildFixedMarmitaItem(picked, "dinner", day, goal, visualLibrary, mealTimes);
+      items.push(item);
+      dayMarmitaCal += item.calories_target;
+      dayMarmitaP += item.protein_target;
+      dayMarmitaC += item.carbs_target;
+      dayMarmitaF += item.fat_target;
+      prevDinnerProtein = proteinKey;
+    }
+
+    // Compute REMAINDER for snacks/breakfast/ceia
+    const remainderKcal = kcalTarget - dayMarmitaCal;
+    const remainderP = Math.max(0, macros.protein - dayMarmitaP);
+    const remainderC = Math.max(0, macros.carbs - dayMarmitaC);
+    const remainderF = Math.max(0, macros.fat - dayMarmitaF);
+
+    if (remainderKcal <= 0) {
+      warning = `As marmitas fixas selecionadas (${dayMarmitaCal} kcal) excedem a meta calórica diária do paciente (${kcalTarget} kcal). Considere meta maior ou marmitas menores.`;
+      console.warn(`[fixed_marmita] day ${day}: ${warning}`);
+      // Still emit snacks with minimum allocation so plan is not empty
+    }
+
+    // Generate adjustable meals (breakfast/snacks/ceia) for this day to absorb the remainder
+    const nonMarmitaMealTypes = mealTypes.filter(m => m !== "lunch" && m !== "dinner");
+    if (nonMarmitaMealTypes.length > 0 && remainderKcal > 0) {
+      const remainderMacros = { protein: remainderP, carbs: remainderC, fat: remainderF };
+      // Build using template/visual library — single-day generation by passing day-restricted offset
+      const dayItems = generateAdjustableMealsForDay(
+        templates, visualLibrary, goal, remainderKcal, remainderMacros,
+        restrictions, disliked, allergies, nonMarmitaMealTypes, mealTimes,
+        strategy, patientFoodDatabase, recentMeals, day,
+      );
+      for (const it of dayItems) items.push(it);
+    }
+  }
+
+  if (proteinsUsedThisWeek.size < 4) {
+    console.warn(`[fixed_marmita] Only ${proteinsUsedThisWeek.size} distinct proteins used this week.`);
+  }
+
+  console.log(`[fixed_marmita] ✅ Generated ${items.length} items | Fixed marmitas used: ${marmitasUsedSet.size} | Proteins/week: ${proteinsUsedThisWeek.size}`);
+  return { items, marmitasUsed: Array.from(marmitasUsedSet), warning };
+}
+
+// Helper: generate adjustable (non-marmita) meals for a SINGLE day
+function generateAdjustableMealsForDay(
+  templates: ResolvedTemplate[],
+  visualLibrary: VisualLibraryItem[],
+  goal: string,
+  remainderKcal: number,
+  remainderMacros: { protein: number; carbs: number; fat: number },
+  restrictions: string[],
+  disliked: string[],
+  allergies: string[],
+  mealTypes: string[],
+  mealTimes: Record<string, string> | undefined,
+  strategy: string | undefined,
+  patientFoodDatabase: any[] | undefined,
+  recentMeals: RecentMealItem[] | undefined,
+  targetDay: number,
+): any[] {
+  const hasTpl = templates.length > 0;
+  let result: any[];
+  if (hasTpl) {
+    const r = generatePlanWithTemplates(
+      templates, visualLibrary, goal, remainderKcal, remainderMacros,
+      restrictions, disliked, allergies, targetDay, mealTypes, mealTimes,
+      strategy, patientFoodDatabase, recentMeals,
+    );
+    result = r.items;
+  } else {
+    result = generatePlanFromVisualLibrary(
+      visualLibrary, goal, remainderKcal, remainderMacros,
+      restrictions, disliked, allergies, targetDay, mealTypes, mealTimes,
+    );
+  }
+  // Filter only this day and remap day_of_week if needed
+  return result
+    .filter(i => i.day_of_week === 0 || i.day_of_week === targetDay)
+    .map(i => ({ ...i, day_of_week: targetDay }));
+}
+
+
 function validatePlanBeforeSave(
   items: any[],
   dailyKcal: number,
@@ -1800,7 +2030,7 @@ function validatePlanBeforeSave(
   }
 
   // Rule 5: Every item must have a valid _source
-  const VALID_SOURCES = new Set(["visual_library", "template_resolver"]);
+  const VALID_SOURCES = new Set(["visual_library", "template_resolver", "meal_recipe"]);
   const wrongSource = items.filter(i => !VALID_SOURCES.has(i._source));
   if (wrongSource.length > 0) {
     errors.push(`${wrongSource.length} items have invalid source`);
@@ -2306,7 +2536,7 @@ serve(async (req) => {
     const isPipeline = body.isPipeline || false;
     const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
     const requestedNutritionistId = body.nutritionistId || userId;
-    const generationMode: "quick" | "smart" | "clinical" | "weekly_marmita" = body.generationMode || "quick";
+    const generationMode: "quick" | "smart" | "clinical" | "weekly_marmita" | "fixed_marmita" = body.generationMode || "quick";
     const saveAsTemplate = body.saveAsTemplate || false;
 
     if (!patient_id || typeof patient_id !== "string" || patient_id.length < 10) {
@@ -2888,7 +3118,7 @@ serve(async (req) => {
     let marmitasUsedList: string[] = [];
 
     if (generationMode === "weekly_marmita") {
-      // ── WEEKLY MARMITA MODE ──
+      // ── WEEKLY MARMITA MODE (escalável) ──
       const mealRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId);
       console.log(`[generate-meal-plan] weekly_marmita: ${mealRecipes.length} recipes loaded`);
       const result = generateWeeklyMarmitaPlan(
@@ -2898,6 +3128,20 @@ serve(async (req) => {
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
+      templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
+      visualFallbacksCount = rawPlanItems.length - templateHitsCount;
+    } else if (generationMode === "fixed_marmita") {
+      // ── FIXED MARMITA MODE (congelada — NUNCA escala) ──
+      const fixedRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId, { onlyFixed: true });
+      console.log(`[generate-meal-plan] fixed_marmita: ${fixedRecipes.length} fixed recipes loaded`);
+      const result = generateFixedMarmitaPlan(
+        fixedRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
+        restrictions, disliked, allergies, enabledMeals, mealTimes,
+        resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+      );
+      rawPlanItems = result.items;
+      marmitasUsedList = result.marmitasUsed;
+      if (result.warning) console.warn(`[fixed_marmita] ${result.warning}`);
       templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
       visualFallbacksCount = rawPlanItems.length - templateHitsCount;
     } else if (hasTemplates) {
@@ -3015,12 +3259,14 @@ serve(async (req) => {
       smart: "Plano Inteligente",
       clinical: "Plano Clínico",
       weekly_marmita: "Cardápio Semanal de Marmitas",
+      fixed_marmita: "Cardápio com Marmitas Fixas (Congeladas)",
     };
     const MODE_SOURCES: Record<string, string> = {
       quick: "smart_quick_v4",
       smart: "smart_intelligent_v4",
       clinical: "smart_clinical_v4",
       weekly_marmita: "weekly_marmita_v1",
+      fixed_marmita: "fixed_marmita_v1",
     };
     const planTitle = MODE_TITLES[generationMode] || "Plano Alimentar";
     const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v4";

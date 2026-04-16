@@ -6401,9 +6401,15 @@ export type Database = {
       meal_recipes: {
         Row: {
           created_at: string
+          fixed_calories: number | null
+          fixed_carbs: number | null
+          fixed_fat: number | null
+          fixed_protein: number | null
           foods_json: Json
           id: string
           is_active: boolean
+          is_fixed: boolean
+          is_scalable: boolean
           meal_type: string
           name: string
           nutritionist_id: string
@@ -6412,9 +6418,15 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          fixed_calories?: number | null
+          fixed_carbs?: number | null
+          fixed_fat?: number | null
+          fixed_protein?: number | null
           foods_json?: Json
           id?: string
           is_active?: boolean
+          is_fixed?: boolean
+          is_scalable?: boolean
           meal_type?: string
           name: string
           nutritionist_id: string
@@ -6423,9 +6435,15 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          fixed_calories?: number | null
+          fixed_carbs?: number | null
+          fixed_fat?: number | null
+          fixed_protein?: number | null
           foods_json?: Json
           id?: string
           is_active?: boolean
+          is_fixed?: boolean
+          is_scalable?: boolean
           meal_type?: string
           name?: string
           nutritionist_id?: string
