@@ -1796,28 +1796,36 @@ function clampMinimumPortionsInDescriptions(items: any[]): any[] {
  */
 function removeEmptyNameItems(items: any[]): any[] {
   const before = items.length;
-  const filtered = items.filter(item => {
-    // Must have a title
+  let linesRemoved = 0;
+
+  const processed = items.map(item => {
+    if (!item.description) return item;
+
+    const allLines = item.description.split("\n");
+    const cleanedLines = allLines.filter((l: string) => {
+      const trimmed = l.trim();
+      // Remove lines with empty food name: "• — 52g" or "•  — 52g"
+      if (/^•\s*[—-]\s*\d+g?\s*$/.test(trimmed)) { linesRemoved++; return false; }
+      // Remove empty bullet lines
+      if (/^•\s*$/.test(trimmed)) { linesRemoved++; return false; }
+      return true;
+    });
+
+    return { ...item, description: cleanedLines.join("\n") };
+  });
+
+  // Now discard items with no title or no remaining food lines
+  const filtered = processed.filter(item => {
     if (!item.title || item.title.trim().length === 0) return false;
-    // Check for empty-name description pattern "• — Xg" or "•  — Xg"
     if (item.description) {
-      const lines = item.description.split("\n").filter((l: string) => l.trim().startsWith("•"));
-      const validLines = lines.filter((l: string) => {
-        const trimmed = l.trim();
-        // Pattern "• — 52g" or "•  — 52g" = empty food name
-        if (/^•\s*[—-]\s*\d+g?\s*$/.test(trimmed)) return false;
-        // Pattern "• " with nothing after = empty
-        if (/^•\s*$/.test(trimmed)) return false;
-        return true;
-      });
-      // If ALL food lines are empty-name, discard the item
-      if (lines.length > 0 && validLines.length === 0) return false;
+      const foodLines = item.description.split("\n").filter((l: string) => l.trim().startsWith("•"));
+      if (foodLines.length === 0) return false;
     }
     return true;
   });
 
-  if (before !== filtered.length) {
-    console.log(`[GUARDRAIL-3] Removed ${before - filtered.length} items with empty/invalid food names`);
+  if (before !== filtered.length || linesRemoved > 0) {
+    console.log(`[GUARDRAIL-3] Removed ${linesRemoved} empty-name lines, discarded ${before - filtered.length} fully empty items`);
   }
   return filtered;
 }
@@ -2172,7 +2180,11 @@ serve(async (req) => {
       : [];
     const medicalConditions = mergedAnswers.medical_conditions || mergedAnswers.health_conditions || [];
     const rawDisliked = mergedAnswers.disliked_foods || "";
-    const disliked = (typeof rawDisliked === "string" ? rawDisliked : "").toLowerCase().split(",").map((s: string) => s.trim()).filter(Boolean);
+    const disliked = (typeof rawDisliked === "string" ? rawDisliked : "")
+      .toLowerCase()
+      .split(/[,;]+|\s+e\s+/)
+      .map((s: string) => s.trim())
+      .filter(Boolean);
     const rawAllergies = mergedAnswers.allergies || [];
     const allergies: string[] = Array.isArray(rawAllergies) 
       ? rawAllergies.filter((a: string) => a !== "none")
