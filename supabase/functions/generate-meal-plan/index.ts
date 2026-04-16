@@ -2008,7 +2008,7 @@ serve(async (req) => {
     const isPipeline = body.isPipeline || false;
     const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
     const requestedNutritionistId = body.nutritionistId || userId;
-    const generationMode: "quick" | "smart" | "clinical" = body.generationMode || "quick";
+    const generationMode: "quick" | "smart" | "clinical" | "weekly_marmita" = body.generationMode || "quick";
     const saveAsTemplate = body.saveAsTemplate || false;
 
     if (!patient_id || typeof patient_id !== "string" || patient_id.length < 10) {
@@ -2701,11 +2701,13 @@ serve(async (req) => {
       quick: "Plano Rápido",
       smart: "Plano Inteligente",
       clinical: "Plano Clínico",
+      weekly_marmita: "Cardápio Semanal de Marmitas",
     };
     const MODE_SOURCES: Record<string, string> = {
       quick: "smart_quick_v4",
       smart: "smart_intelligent_v4",
       clinical: "smart_clinical_v4",
+      weekly_marmita: "weekly_marmita_v1",
     };
     const planTitle = MODE_TITLES[generationMode] || "Plano Alimentar";
     const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v4";
