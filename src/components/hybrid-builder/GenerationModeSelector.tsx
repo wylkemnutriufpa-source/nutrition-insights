@@ -298,7 +298,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         onClick={handleFixedMarmita}
         disabled={generating}
         variant="outline"
-        className="w-full h-14 text-sm gap-3 border-dashed border-blue-400/40 hover:bg-blue-500/5"
+        className="w-full h-14 text-sm gap-3 border-dashed border-accent/40 hover:bg-accent/5"
       >
         {generating ? (
           <>
@@ -307,7 +307,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           </>
         ) : (
           <>
-            <Snowflake className="w-5 h-5 text-blue-500" />
+            <Snowflake className="w-5 h-5 text-accent" />
             <div className="text-left">
               <p className="font-bold">❄️ Marmitas Fixas (Congeladas)</p>
               <p className="text-[10px] text-muted-foreground">Marmitas não escalam · ajusta só café/lanches/ceia</p>
