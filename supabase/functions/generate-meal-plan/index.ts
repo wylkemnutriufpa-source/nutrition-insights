@@ -1228,6 +1228,20 @@ function generatePlanWithTemplates(
         const pickIdx = seed % Math.min(matched.length, 3); // pick from top 3
         let picked = matched[pickIdx];
 
+        // ── GUARDRAIL 1: Pre-filter disliked foods from template foods_structure ──
+        if (disliked.length > 0) {
+          const normalizedDisliked = disliked.map(d => normalize(d)).filter(d => d.length >= 3);
+          if (normalizedDisliked.length > 0) {
+            picked = {
+              ...picked,
+              foods_structure: picked.foods_structure.filter(f => {
+                const normName = normalize(f.name);
+                return !normalizedDisliked.some(d => normName.includes(d));
+              }),
+            };
+          }
+        }
+
         // ── STEP 3: Apply template variation (swap 1-2 foods) ──
         if (dbFoods && dbFoods.length > 0 && picked.foods_structure.length > 0) {
           const varSeed = seed + day * 13 + defaultMeals.indexOf(mealType) * 3;
