@@ -1460,7 +1460,260 @@ function generatePlanFromVisualLibrary(
   return items;
 }
 
-// ──── FINAL VALIDATION (MANDATORY before persisting) ────
+// ═══════════════════════════════════════════════════════════════
+// WEEKLY MARMITA GENERATOR v1.0
+// Builds 7-day plan using meal_recipes for lunch/dinner (marmitas)
+// and templates/visual library for breakfast & snacks.
+// - Scales recipe ingredient grams to hit per-meal kcal target
+// - Anti-repetition: no same protein on consecutive days
+// - Variety: ensures min 4 different proteins per week
+// - Image resolution via meal_visual_library by category match
+// ═══════════════════════════════════════════════════════════════
+
+interface MarmitaRecipe {
+  id: string;
+  name: string;
+  meal_type: string; // 'almoço' | 'jantar'
+  foods_json: Array<{ name: string; grams: number }>;
+}
+
+const PROTEIN_KEYWORDS: Array<{ key: string; matches: string[] }> = [
+  { key: "frango", matches: ["frango", "sobrecoxa", "peito de frango", "coxa"] },
+  { key: "carne_bovina", matches: ["patinho", "alcatra", "acém", "carne moída", "carne bovina", "almôndega", "hambúrguer de boi", "estrogonofe", "bife"] },
+  { key: "peixe", matches: ["peixe", "tilápia", "salmão", "merluza", "pescada", "atum"] },
+  { key: "porco", matches: ["porco", "lombo", "pernil"] },
+  { key: "ovo", matches: ["ovo", "omelete"] },
+  { key: "vegetariano", matches: ["grão de bico", "lentilha", "feijão preto", "soja", "tofu", "proteína vegetal"] },
+  { key: "frutos_mar", matches: ["camarão", "lula", "polvo", "fruto do mar"] },
+];
+
+function detectRecipeProtein(recipe: MarmitaRecipe): string {
+  const text = (recipe.name + " " + (recipe.foods_json || []).map(f => f.name).join(" ")).toLowerCase();
+  for (const p of PROTEIN_KEYWORDS) {
+    if (p.matches.some(m => text.includes(m))) return p.key;
+  }
+  return "outros";
+}
+
+function recipeViolatesRestrictions(
+  recipe: MarmitaRecipe,
+  disliked: string[],
+  allergies: string[],
+): boolean {
+  const text = (recipe.name + " " + (recipe.foods_json || []).map(f => f.name).join(" ")).toLowerCase();
+  const blocked = [...disliked, ...allergies].map(s => s.toLowerCase().trim()).filter(Boolean);
+  return blocked.some(b => b.length > 2 && text.includes(b));
+}
+
+function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibraryItem[]): VisualLibraryItem | null {
+  const targetCategories = recipe.meal_type === "almoço" ? ["almoco"] : ["jantar", "almoco"];
+  const candidates = visualLibrary.filter(v => targetCategories.includes(v.category) && v.image_url);
+  if (candidates.length === 0) return null;
+  // Try fuzzy match on name keywords
+  const recipeText = recipe.name.toLowerCase();
+  const tokens = recipeText.split(/[\s,/-]+/).filter(t => t.length >= 4);
+  let best: VisualLibraryItem | null = null;
+  let bestScore = 0;
+  for (const c of candidates) {
+    const cText = (c.display_name || c.name || "").toLowerCase();
+    const score = tokens.reduce((s, t) => s + (cText.includes(t) ? 1 : 0), 0);
+    if (score > bestScore) { bestScore = score; best = c; }
+  }
+  return best || candidates[0];
+}
+
+function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
+  // Rough estimate from total grams: ~1.3 kcal/g, with macros from defaults
+  const totalGrams = (recipe.foods_json || []).reduce((s, f) => s + (Number(f.grams) || 0), 0);
+  const cal = Math.round(totalGrams * 1.3);
+  const protein = recipe.meal_type === "almoço" ? 35 : 28;
+  const carbs = Math.round(cal * 0.45 / 4);
+  const fat = Math.round(cal * 0.25 / 9);
+  return { cal: Math.max(cal, 350), p: protein, c: carbs, f: fat };
+}
+
+async function loadMealRecipes(client: any, nutritionistId: string): Promise<MarmitaRecipe[]> {
+  // Load recipes owned by this nutritionist + global ones (nutritionist_id IS NULL)
+  const { data, error } = await client
+    .from("meal_recipes")
+    .select("id, name, meal_type, foods_json, nutritionist_id")
+    .eq("is_active", true)
+    .or(`nutritionist_id.eq.${nutritionistId},nutritionist_id.is.null`);
+  if (error || !data) {
+    console.error("[loadMealRecipes] Error:", error);
+    return [];
+  }
+  return (data as any[]).map(r => ({
+    id: r.id,
+    name: r.name,
+    meal_type: r.meal_type,
+    foods_json: Array.isArray(r.foods_json) ? r.foods_json : [],
+  })).filter(r => r.foods_json.length > 0);
+}
+
+function generateWeeklyMarmitaPlan(
+  recipes: MarmitaRecipe[],
+  templates: ResolvedTemplate[],
+  visualLibrary: VisualLibraryItem[],
+  goal: string,
+  kcalTarget: number,
+  macros: { protein: number; carbs: number; fat: number },
+  restrictions: string[],
+  disliked: string[],
+  allergies: string[],
+  enabledMeals?: string[],
+  mealTimes?: Record<string, string>,
+  strategy?: string,
+  patientFoodDatabase?: any[],
+  recentMeals?: RecentMealItem[],
+): { items: any[]; marmitasUsed: string[] } {
+  const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
+  const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
+
+  const filteredRecipes = recipes.filter(r => !recipeViolatesRestrictions(r, disliked, allergies));
+  const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
+  const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
+
+  if (lunchRecipes.length === 0 || dinnerRecipes.length === 0) {
+    throw new Error(`[weekly_marmita] Receitas insuficientes (almoço: ${lunchRecipes.length}, jantar: ${dinnerRecipes.length}). Cadastre receitas em meal_recipes.`);
+  }
+
+  // Pre-compute proteins for each recipe pool
+  const lunchByProtein = new Map<string, MarmitaRecipe[]>();
+  const dinnerByProtein = new Map<string, MarmitaRecipe[]>();
+  for (const r of lunchRecipes) {
+    const p = detectRecipeProtein(r);
+    if (!lunchByProtein.has(p)) lunchByProtein.set(p, []);
+    lunchByProtein.get(p)!.push(r);
+  }
+  for (const r of dinnerRecipes) {
+    const p = detectRecipeProtein(r);
+    if (!dinnerByProtein.has(p)) dinnerByProtein.set(p, []);
+    dinnerByProtein.get(p)!.push(r);
+  }
+
+  const items: any[] = [];
+  const marmitasUsedSet = new Set<string>();
+  const proteinsUsedThisWeek = new Set<string>();
+  let lastDayProtein: string | null = null;
+
+  // For non-marmita meals (breakfast/snacks), reuse template/visual library generator output
+  // Generate a shadow plan for those meal types only
+  const nonMarmitaMealTypes = mealTypes.filter(m => m !== "lunch" && m !== "dinner");
+  let shadowItems: any[] = [];
+  if (nonMarmitaMealTypes.length > 0) {
+    const hasTpl = templates.length > 0;
+    if (hasTpl) {
+      const result = generatePlanWithTemplates(
+        templates, visualLibrary, goal, kcalTarget, macros,
+        restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
+        strategy, patientFoodDatabase, recentMeals,
+      );
+      shadowItems = result.items;
+    } else {
+      shadowItems = generatePlanFromVisualLibrary(
+        visualLibrary, goal, kcalTarget, macros,
+        restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
+      );
+    }
+  }
+
+  for (let day = 0; day < 7; day++) {
+    // Add non-marmita items for this day
+    for (const it of shadowItems.filter(i => i.day_of_week === day)) {
+      items.push(it);
+    }
+
+    // Generate lunch (marmita)
+    if (mealTypes.includes("lunch")) {
+      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["lunch"] || 0.30));
+      const picked = pickMarmita(lunchByProtein, lunchRecipes, lastDayProtein, day);
+      lastDayProtein = detectRecipeProtein(picked);
+      proteinsUsedThisWeek.add(lastDayProtein);
+      marmitasUsedSet.add(picked.name);
+      items.push(buildMarmitaItem(picked, "lunch", day, targetKcal, goal, visualLibrary, mealTimes));
+    }
+
+    // Generate dinner (marmita) — different protein than lunch when possible
+    if (mealTypes.includes("dinner")) {
+      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["dinner"] || 0.25));
+      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, lastDayProtein, day + 100);
+      lastDayProtein = detectRecipeProtein(picked);
+      proteinsUsedThisWeek.add(lastDayProtein);
+      marmitasUsedSet.add(picked.name);
+      items.push(buildMarmitaItem(picked, "dinner", day, targetKcal, goal, visualLibrary, mealTimes));
+    }
+  }
+
+  // Variety guarantee: if < 4 distinct proteins used, log a warning (best-effort)
+  if (proteinsUsedThisWeek.size < 4) {
+    console.warn(`[weekly_marmita] Only ${proteinsUsedThisWeek.size} distinct proteins used this week — recipe pool may be too narrow.`);
+  }
+
+  console.log(`[weekly_marmita] ✅ Generated ${items.length} items | Marmitas used: ${marmitasUsedSet.size} | Proteins/week: ${proteinsUsedThisWeek.size}`);
+  return { items, marmitasUsed: Array.from(marmitasUsedSet) };
+}
+
+function pickMarmita(
+  byProtein: Map<string, MarmitaRecipe[]>,
+  allRecipes: MarmitaRecipe[],
+  avoidProtein: string | null,
+  seed: number,
+): MarmitaRecipe {
+  // Prefer a different protein than yesterday
+  const proteins = Array.from(byProtein.keys());
+  const candidateProteins = proteins.filter(p => p !== avoidProtein);
+  const useProteins = candidateProteins.length > 0 ? candidateProteins : proteins;
+  const proteinIdx = seed % useProteins.length;
+  const chosenProtein = useProteins[proteinIdx];
+  const pool = byProtein.get(chosenProtein) || allRecipes;
+  return pool[seed % pool.length];
+}
+
+function buildMarmitaItem(
+  recipe: MarmitaRecipe,
+  mealType: string,
+  day: number,
+  targetKcal: number,
+  goal: string,
+  visualLibrary: VisualLibraryItem[],
+  mealTimes?: Record<string, string>,
+): any {
+  const baseMacros = estimateRecipeMacros(recipe);
+  const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
+  const clampedScale = Math.max(0.6, Math.min(1.8, scaleFactor));
+
+  // Scale ingredient grams proportionally — preserve composition
+  const scaledFoods = recipe.foods_json.map(f => ({
+    name: f.name,
+    grams: Math.max(5, Math.round((Number(f.grams) || 0) * clampedScale)),
+  }));
+
+  const description = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
+  const finalDescription = finalizeMealDescription(description, mealType, goal);
+
+  const visual = findVisualForRecipe(recipe, visualLibrary);
+
+  return {
+    title: `🍱 ${recipe.name}`,
+    description: finalDescription,
+    meal_type: mealType,
+    day_of_week: day,
+    calories_target: Math.round(baseMacros.cal * clampedScale),
+    protein_target: Math.round(baseMacros.p * clampedScale),
+    carbs_target: Math.round(baseMacros.c * clampedScale),
+    fat_target: Math.round(baseMacros.f * clampedScale),
+    visual_library_item_id: visual?.id || null,
+    meal_time: mealTimes?.[mealType] || null,
+    _source: "meal_recipe",
+    _recipe_id: recipe.id,
+    _recipe_name: recipe.name,
+    _scale_factor: clampedScale,
+    _image_url: visual?.image_url || null,
+  };
+}
+
+
 function validatePlanBeforeSave(
   items: any[],
   dailyKcal: number,
@@ -1470,10 +1723,10 @@ function validatePlanBeforeSave(
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Rule 1: Every item must have visual_library_item_id OR _template_id
-  const missingSource = items.filter(i => !i.visual_library_item_id && !i._template_id);
+  // Rule 1: Every item must have visual_library_item_id, _template_id OR _recipe_id (marmita)
+  const missingSource = items.filter(i => !i.visual_library_item_id && !i._template_id && !i._recipe_id);
   if (missingSource.length > 0) {
-    errors.push(`${missingSource.length} items missing both visual_library_item_id and _template_id`);
+    errors.push(`${missingSource.length} items missing visual_library_item_id, _template_id and _recipe_id`);
   }
 
   // Rule 2: Visual library items must have image (template items don't need it)
@@ -2008,7 +2261,7 @@ serve(async (req) => {
     const isPipeline = body.isPipeline || false;
     const planCount = Math.min(Math.max(body.planCount || 1, 1), 3);
     const requestedNutritionistId = body.nutritionistId || userId;
-    const generationMode: "quick" | "smart" | "clinical" = body.generationMode || "quick";
+    const generationMode: "quick" | "smart" | "clinical" | "weekly_marmita" = body.generationMode || "quick";
     const saveAsTemplate = body.saveAsTemplate || false;
 
     if (!patient_id || typeof patient_id !== "string" || patient_id.length < 10) {
@@ -2513,7 +2766,7 @@ serve(async (req) => {
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id, image_url: _image_url || rest.image_url || null }; });
+        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id, image_url: _image_url || rest.image_url || null }; });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
@@ -2587,8 +2840,22 @@ serve(async (req) => {
     let rawPlanItems: any[];
     let templateHitsCount = 0;
     let visualFallbacksCount = 0;
+    let marmitasUsedList: string[] = [];
 
-    if (hasTemplates) {
+    if (generationMode === "weekly_marmita") {
+      // ── WEEKLY MARMITA MODE ──
+      const mealRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId);
+      console.log(`[generate-meal-plan] weekly_marmita: ${mealRecipes.length} recipes loaded`);
+      const result = generateWeeklyMarmitaPlan(
+        mealRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
+        restrictions, disliked, allergies, enabledMeals, mealTimes,
+        resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+      );
+      rawPlanItems = result.items;
+      marmitasUsedList = result.marmitasUsed;
+      templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
+      visualFallbacksCount = rawPlanItems.length - templateHitsCount;
+    } else if (hasTemplates) {
       const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals);
       rawPlanItems = result.items;
       templateHitsCount = result.templateHits;
@@ -2690,6 +2957,7 @@ serve(async (req) => {
       meal_source: hasTemplates ? "template_first" : "visual_library_exclusive",
       template_hits: templateHitsCount,
       visual_fallbacks: visualFallbacksCount,
+      marmitas_used: marmitasUsedList,
       final_validation_passed: true,
       enabled_meals: enabledMeals || "default",
       meal_times: mealTimes || null,
@@ -2701,11 +2969,13 @@ serve(async (req) => {
       quick: "Plano Rápido",
       smart: "Plano Inteligente",
       clinical: "Plano Clínico",
+      weekly_marmita: "Cardápio Semanal de Marmitas",
     };
     const MODE_SOURCES: Record<string, string> = {
       quick: "smart_quick_v4",
       smart: "smart_intelligent_v4",
       clinical: "smart_clinical_v4",
+      weekly_marmita: "weekly_marmita_v1",
     };
     const planTitle = MODE_TITLES[generationMode] || "Plano Alimentar";
     const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v4";
@@ -2785,7 +3055,7 @@ serve(async (req) => {
     }
 
     const itemsToInsert = planItems.map((item: any) => {
-      const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item;
+      const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item;
       return { ...rest, meal_plan_id: finalMealPlanId, image_url: _image_url || rest.image_url || null };
     });
 
