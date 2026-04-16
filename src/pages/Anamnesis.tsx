@@ -919,7 +919,7 @@ export default function Anamnesis() {
     // Sync onboarding pipeline whenever this patient has a pending anamnesis step.
     // This keeps imported/manual patients in the correct flow even if they reached
     // the anamnesis screen outside /onboarding?pipeline=true.
-    await supabase
+    const { data: syncedPipeline } = await supabase
       .from("onboarding_pipelines" as any)
       .update({
         anamnesis_completed: true,
@@ -928,7 +928,14 @@ export default function Anamnesis() {
         height: height,
       } as any)
       .eq("patient_id", targetUserId)
-      .eq("status", "pending_anamnesis");
+      .in("status", ["pending_anamnesis", "in_progress"])
+      .select("id")
+      .maybeSingle();
+
+    // If we synced a pipeline, ensure isPipelineMode is active so patient gets redirected
+    if (syncedPipeline && !isPipelineMode) {
+      setHasActivePipeline(true);
+    }
   };
 
   // Pipeline mode: auto-redirect back to onboarding pipeline after completion
@@ -1097,9 +1104,15 @@ export default function Anamnesis() {
                     <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
                       ✏️ Revisar / Editar Respostas
                     </Button>
-                    <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
-                      {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
-                    </Button>
+                    {!isNutritionistMode && hasActivePipeline ? (
+                      <Button onClick={() => navigate("/onboarding-pipeline", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
+                        <ArrowRight className="w-4 h-4" /> Continuar Onboarding — Próxima Etapa
+                      </Button>
+                    ) : (
+                      <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
+                        {isNutritionistMode ? "Voltar ao Paciente" : "Voltar ao Dashboard"}
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
