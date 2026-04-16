@@ -293,6 +293,29 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         )}
       </Button>
 
+      {/* Option 4: Fixed Marmita (Frozen) — não escala marmitas */}
+      <Button
+        onClick={handleFixedMarmita}
+        disabled={generating}
+        variant="outline"
+        className="w-full h-14 text-sm gap-3 border-dashed border-blue-400/40 hover:bg-blue-500/5"
+      >
+        {generating ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Gerando plano...
+          </>
+        ) : (
+          <>
+            <Snowflake className="w-5 h-5 text-blue-500" />
+            <div className="text-left">
+              <p className="font-bold">❄️ Marmitas Fixas (Congeladas)</p>
+              <p className="text-[10px] text-muted-foreground">Marmitas não escalam · ajusta só café/lanches/ceia</p>
+            </div>
+          </>
+        )}
+      </Button>
+
       {/* Info */}
       <div className="text-[9px] text-muted-foreground text-center space-y-0.5">
         <p>✅ Motor clínico calcula macros → Você escolhe o caminho → Plano gerado</p>
