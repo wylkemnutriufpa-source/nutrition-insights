@@ -2341,8 +2341,10 @@ serve(async (req) => {
           ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals)
           : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
         console.log(`[Multi-plan ${tplIdx}] Templates: ${templateHits}, Visual fallbacks: ${visualFallbacks}`);
-        const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(rawItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
-        let planItems = syncPlanDescriptionsWithProteinTargets(rawItems, reconciledItems, goal);
+        // ── GUARDRAILS (MANDATORY) ──
+        const guardedItems = applyPostGenerationGuardrails(rawItems, disliked);
+        const reconciledItems = enforceCrossDayConsistency(reconcileDailyMacros(guardedItems, finalKcal, finalMacros, goal), finalMacros, finalKcal);
+        let planItems = syncPlanDescriptionsWithProteinTargets(guardedItems, reconciledItems, goal);
         planItems = injectComputedProteinServings(planItems, patientFoodDatabase);
 
         // 2-Layer validation for multi-plan
