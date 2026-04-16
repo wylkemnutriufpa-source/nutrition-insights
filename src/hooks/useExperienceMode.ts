@@ -109,6 +109,8 @@ export interface ExperienceModeContextValue {
   isAdvanced: boolean;
   /** Show content only at given mode or above */
   minMode: (min: ExperienceMode) => boolean;
+  /** Effective role used for route gating */
+  role: ExperienceRole;
 }
 
 export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
@@ -119,6 +121,7 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
   isPro: true,
   isAdvanced: false,
   minMode: () => true,
+  role: "professional",
 });
 
 export function useExperienceMode() {
@@ -133,7 +136,7 @@ export function checkMinMode(current: ExperienceMode, min: ExperienceMode): bool
 }
 
 /** Use this at the provider level */
-export function useExperienceModeState() {
+export function useExperienceModeState(role: ExperienceRole = "professional") {
   const [mode, setModeState] = useState<ExperienceMode>(() => {
     const saved = localStorage.getItem(STORAGE_KEY) as ExperienceMode;
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
@@ -177,8 +180,8 @@ export function useExperienceModeState() {
   }, []);
 
   const isRouteAllowed = useCallback((route: string) => {
-    return isRouteVisible(route, mode);
-  }, [mode]);
+    return isRouteVisible(route, mode, role);
+  }, [mode, role]);
 
   const isBasic = mode === "basic";
   const isPro = mode === "pro";
@@ -186,8 +189,8 @@ export function useExperienceModeState() {
   const minMode = useCallback((min: ExperienceMode) => checkMinMode(mode, min), [mode]);
 
   const value = useMemo<ExperienceModeContextValue>(
-    () => ({ mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode }),
-    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode]
+    () => ({ mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode, role }),
+    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode, role]
   );
 
   return value;
