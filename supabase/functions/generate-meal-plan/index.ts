@@ -1025,6 +1025,11 @@ function selectFoodsForMeal(
       }
     }
 
+    // Lunch / Dinner: exclude canned and industrialized proteins (unsuitable for main meal)
+    const isMainMeal = mealType === "lunch" || mealType === "dinner";
+    if (isMainMeal && MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
+    if (isMainMeal && (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva"))) return false;
+
     // Dinner: exclude beans/legumes
     if (isDinner) {
       if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
