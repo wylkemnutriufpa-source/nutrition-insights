@@ -2030,7 +2030,7 @@ function validatePlanBeforeSave(
   }
 
   // Rule 5: Every item must have a valid _source
-  const VALID_SOURCES = new Set(["visual_library", "template_resolver"]);
+  const VALID_SOURCES = new Set(["visual_library", "template_resolver", "meal_recipe"]);
   const wrongSource = items.filter(i => !VALID_SOURCES.has(i._source));
   if (wrongSource.length > 0) {
     errors.push(`${wrongSource.length} items have invalid source`);
