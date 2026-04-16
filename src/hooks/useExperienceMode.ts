@@ -8,28 +8,41 @@ const STORAGE_KEY = "fj_experience_mode";
 /**
  * Routes accessible per experience mode.
  * Each mode includes all routes from lower modes.
+ *
+ * 🔹 BÁSICO: uso clínico diário — anamnese, avaliação, plano, paciente, feedback, lembretes
+ * 🔹 PROFISSIONAL: produtividade — IFJ, motor automático, templates, estratégias, ajustes
+ * 🔹 AVANÇADO: controle total — automação, integrações, configs finas, debug, admin
  */
 const BASIC_ROUTES = new Set([
-  "/", "/dashboard", "/patients", "/appointments", "/meal-plans",
-  "/editor-v2", "/checkin", "/settings", "/notifications", "/chat",
-  "/my-diet", "/checklist", "/shopping-list", "/recipes", "/anamnesis",
-  "/body-analysis", "/onboarding", "/invite-patient", "/financial",
+  // Núcleo clínico diário
+  "/", "/dashboard", "/patients", "/appointments",
+  "/anamnesis", "/body-analysis",
+  "/meal-plans", "/editor-v2",
+  "/checkin", "/notifications", "/chat",
+  "/settings", "/invite-patient",
+  // Lado paciente (mesmo modo)
+  "/my-diet", "/checklist", "/shopping-list", "/recipes",
+  "/onboarding", "/financial",
 ]);
 
 const PRO_ROUTES = new Set([
-  "/clinical-risk", "/reports", "/clinical-intelligence",
-  "/protocols", "/programs", "/food-database", "/supplements",
-  "/branding", "/analyze-meal",
+  // Inteligência e produtividade clínica
+  "/clinical-risk", "/clinical-intelligence", "/clinical-workspace",
+  "/reports", "/analyze-meal",
+  "/protocols", "/programs",
+  "/food-database", "/supplements",
   "/body-projection", "/patient-overview",
-  "/workspace-editor", "/clinical-workspace",
+  "/workspace-editor",
   "/coach-bodybuilder",
-  "/control-tower", "/intelligence-settings",
-  "/professional/crm", "/integrations",
-  "/team", "/settings/whatsapp",
+  "/professional/crm",
 ]);
 
 const ADVANCED_ROUTES = new Set([
+  // Controle total, automação, configs técnicas
   "/automation",
+  "/control-tower", "/intelligence-settings",
+  "/integrations", "/team", "/settings/whatsapp",
+  "/branding",
   "/admin/import-patients",
 ]);
 
