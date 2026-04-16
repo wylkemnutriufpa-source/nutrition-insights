@@ -62,40 +62,19 @@ export function useOnboardingGuard() {
 
         if (cancelled) return;
 
-        // If there's an active pipeline that isn't fully completed, patient must complete it
+        // Active pipeline means onboarding is still in progress until ALL required patient steps are complete.
         if (pipeline) {
           const p = pipeline as any;
-          const allDone = p.anamnesis_completed && p.body_data_completed && p.preferences_completed && p.plan_generated && p.plan_approved;
-          if (!allDone) {
-            // If the nutritionist already generated a plan, don't block the patient
-            // (the professional moved forward even if some steps were skipped)
-            if (p.plan_generated) {
-              setRequirement("none");
-              return;
-            }
+          const patientStepsDone = !!p.anamnesis_completed && !!p.body_data_completed && !!p.preferences_completed;
+          const pipelineFullyDone = patientStepsDone && !!p.plan_generated && !!p.plan_approved;
 
-            // Check: does patient already have an active meal plan?
-            // If yes, don't block them (plan was published outside pipeline)
-            const { count } = await supabase
-              .from("meal_plans")
-              .select("id", { count: "exact", head: true })
-              .in("patient_id", allIds)
-              .eq("is_active", true);
-
-            if (cancelled) return;
-
-            if ((count ?? 0) > 0) {
-              setRequirement("none");
-              return;
-            }
-
+          if (!pipelineFullyDone) {
             setRequirement("must_complete");
             return;
           }
         }
 
-        // Also check journey_status — if it's onboarding_active, force onboarding
-        // BUT: if patient already has an active plan, they shouldn't be stuck in onboarding
+        // Defensive fallback: if journey still says onboarding_active, patient must remain in onboarding.
         const { data: link } = await supabase
           .from("nutritionist_patients")
           .select("journey_status")
@@ -109,21 +88,6 @@ export function useOnboardingGuard() {
 
         const journeyStatus = (link as any)?.journey_status;
         if (journeyStatus === "onboarding_active") {
-          // Check if patient already has an active meal plan — if so, don't block them
-          const { count } = await supabase
-            .from("meal_plans")
-            .select("id", { count: "exact", head: true })
-            .eq("patient_id", user!.id)
-            .eq("is_active", true);
-
-          if (cancelled) return;
-
-          if ((count ?? 0) > 0) {
-            // Patient has a plan but journey_status wasn't updated — auto-fix
-            setRequirement("none");
-            return;
-          }
-
           setRequirement("must_complete");
           return;
         }
