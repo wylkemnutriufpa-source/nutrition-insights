@@ -1615,7 +1615,9 @@ function generateWeeklyMarmitaPlan(
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
-  const filteredRecipes = recipes.filter(r => !recipeViolatesRestrictions(r, disliked, allergies));
+  const filteredRecipes = recipes
+    .filter(r => !recipeViolatesRestrictions(r, disliked, allergies))
+    .filter(r => !recipeIsCannedProtein(r));
   const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
   const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
 
@@ -1872,7 +1874,9 @@ function generateFixedMarmitaPlan(
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
-  const filteredRecipes = fixedRecipes.filter(r => !recipeViolatesRestrictions(r, disliked, allergies));
+  const filteredRecipes = fixedRecipes
+    .filter(r => !recipeViolatesRestrictions(r, disliked, allergies))
+    .filter(r => !recipeIsCannedProtein(r));
   const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
   const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
 
