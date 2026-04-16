@@ -2957,6 +2957,7 @@ serve(async (req) => {
       meal_source: hasTemplates ? "template_first" : "visual_library_exclusive",
       template_hits: templateHitsCount,
       visual_fallbacks: visualFallbacksCount,
+      marmitas_used: marmitasUsedList,
       final_validation_passed: true,
       enabled_meals: enabledMeals || "default",
       meal_times: mealTimes || null,
