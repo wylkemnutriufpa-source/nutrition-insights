@@ -3259,12 +3259,14 @@ serve(async (req) => {
       smart: "Plano Inteligente",
       clinical: "Plano Clínico",
       weekly_marmita: "Cardápio Semanal de Marmitas",
+      fixed_marmita: "Cardápio com Marmitas Fixas (Congeladas)",
     };
     const MODE_SOURCES: Record<string, string> = {
       quick: "smart_quick_v4",
       smart: "smart_intelligent_v4",
       clinical: "smart_clinical_v4",
       weekly_marmita: "weekly_marmita_v1",
+      fixed_marmita: "fixed_marmita_v1",
     };
     const planTitle = MODE_TITLES[generationMode] || "Plano Alimentar";
     const genSource = MODE_SOURCES[generationMode] || "protocol_fitjourney_v4";
