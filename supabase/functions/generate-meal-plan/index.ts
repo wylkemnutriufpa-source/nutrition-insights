@@ -1104,8 +1104,12 @@ function buildMealFromDBFoods(
     evening_snack: "Ceia",
   };
 
-  // Filter out foods with absurdly small portions (< 15g after scaling)
+  // Filter out foods with absurdly small portions (< 15g after scaling) and apply MAX clamps
   const MIN_PORTION_GRAMS = 15;
+  const MAX_PORTION_GRAMS_BY_CAT: Record<string, number> = {
+    proteina: 180, carboidrato: 200, fruta: 250, verdura: 200,
+    laticinio: 250, oleaginosa: 40, gordura: 15,
+  };
   const validFoods = foods.filter(f => {
     const grams = Math.round((f.portion_grams || 100) * clampedScale);
     return grams >= MIN_PORTION_GRAMS;
