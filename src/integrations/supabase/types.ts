@@ -6398,6 +6398,50 @@ export type Database = {
           },
         ]
       }
+      meal_recipes: {
+        Row: {
+          created_at: string
+          foods_json: Json
+          id: string
+          is_active: boolean
+          meal_type: string
+          name: string
+          nutritionist_id: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          foods_json?: Json
+          id?: string
+          is_active?: boolean
+          meal_type?: string
+          name: string
+          nutritionist_id: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          foods_json?: Json
+          id?: string
+          is_active?: boolean
+          meal_type?: string
+          name?: string
+          nutritionist_id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_recipes_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_template_performance: {
         Row: {
           avg_adherence: number | null
