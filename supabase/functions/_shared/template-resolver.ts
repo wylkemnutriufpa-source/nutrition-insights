@@ -349,10 +349,12 @@ export function buildMealItemFromTemplate(
   dayOfWeek: number,
   scaleFactor: number,
 ): any {
-  const totalCal = scaledFoods.reduce((s, f) => s + f.calories, 0);
-  const totalP = scaledFoods.reduce((s, f) => s + f.protein, 0);
-  const totalC = scaledFoods.reduce((s, f) => s + f.carbs, 0);
-  const totalF = scaledFoods.reduce((s, f) => s + f.fat, 0);
+  // Use only valid-named foods for totals
+  const validAllFoods = scaledFoods.filter(f => f.name && f.name.trim().length > 0);
+  const totalCal = validAllFoods.reduce((s, f) => s + f.calories, 0);
+  const totalP = validAllFoods.reduce((s, f) => s + f.protein, 0);
+  const totalC = validAllFoods.reduce((s, f) => s + f.carbs, 0);
+  const totalF = validAllFoods.reduce((s, f) => s + f.fat, 0);
 
   // Build description with gram portions — guard against undefined/NaN
   // GUARDRAIL 3: Filter out foods with empty/invalid names before building description
