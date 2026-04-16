@@ -943,6 +943,17 @@ const BREAKFAST_EXCLUDED_FOODS = new Set([
   "carne bovina patinho", "carne de porco lombo",
 ]);
 
+/** Foods that should NEVER appear at lunch or dinner (main meals)
+ *  Canned/preserved proteins are unsuitable for a main clinical meal.
+ *  They can still appear in snacks if explicitly allowed elsewhere. */
+const MAIN_MEAL_EXCLUDED_FOODS = new Set([
+  "sardinha enlatada", "sardinha em lata", "sardinha em conserva", "sardinha em oleo", "sardinha em óleo",
+  "atum enlatado", "atum em lata", "atum em conserva", "atum em oleo", "atum em óleo",
+  "patê de atum", "pate de atum", "patê de sardinha", "pate de sardinha",
+  "salsicha", "salsichão", "mortadela", "presunto", "blanquet", "peito de peru defumado",
+  "nuggets", "hamburguer industrializado",
+]);
+
 /** Foods that make sense at breakfast in Brazilian context */
 const BREAKFAST_PREFERRED_CATEGORIES = new Set(["carboidrato", "proteina", "laticinio", "fruta"]);
 const BREAKFAST_PREFERRED_PROTEINS = new Set([
@@ -1014,6 +1025,11 @@ function selectFoodsForMeal(
       }
     }
 
+    // Lunch / Dinner: exclude canned and industrialized proteins (unsuitable for main meal)
+    const isMainMeal = mealType === "lunch" || mealType === "dinner";
+    if (isMainMeal && MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
+    if (isMainMeal && (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva"))) return false;
+
     // Dinner: exclude beans/legumes
     if (isDinner) {
       if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
@@ -1035,6 +1051,9 @@ function selectFoodsForMeal(
         if (f.category !== requiredCat) return false;
         const normName = normalize(f.food_name);
         if (isBreakfast && BREAKFAST_EXCLUDED_FOODS.has(normName)) return false;
+        const isMainMealFb = mealType === "lunch" || mealType === "dinner";
+        if (isMainMealFb && MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
+        if (isMainMealFb && (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva"))) return false;
         if (isDinner && dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
         // Still enforce meal_tags in fallback (but relax anti-repetition)
         if (f.meal_tags_json.length > 0) {
@@ -1511,6 +1530,16 @@ function recipeViolatesRestrictions(
   return blocked.some(b => b.length > 2 && text.includes(b));
 }
 
+/** Hard block: canned / industrialized proteins are never acceptable in a marmita main meal. */
+function recipeIsCannedProtein(recipe: MarmitaRecipe): boolean {
+  const text = (recipe.name + " " + (recipe.foods_json || []).map(f => f.name).join(" ")).toLowerCase();
+  if (text.includes("enlatad") || text.includes("em lata") || text.includes("em conserva")) return true;
+  // Catch standalone canned-style names
+  if (/\bsardinha\b/.test(text) && !text.includes("fresca") && !text.includes("assada") && !text.includes("grelhada")) return true;
+  if (/\bpat[eê] de (atum|sardinha)\b/.test(text)) return true;
+  return false;
+}
+
 function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibraryItem[]): VisualLibraryItem | null {
   const targetCategories = recipe.meal_type === "almoço" ? ["almoco"] : ["jantar", "almoco"];
   const candidates = visualLibrary.filter(v => targetCategories.includes(v.category) && v.image_url);
@@ -1586,7 +1615,9 @@ function generateWeeklyMarmitaPlan(
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
-  const filteredRecipes = recipes.filter(r => !recipeViolatesRestrictions(r, disliked, allergies));
+  const filteredRecipes = recipes
+    .filter(r => !recipeViolatesRestrictions(r, disliked, allergies))
+    .filter(r => !recipeIsCannedProtein(r));
   const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
   const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
 
@@ -1843,7 +1874,9 @@ function generateFixedMarmitaPlan(
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
-  const filteredRecipes = fixedRecipes.filter(r => !recipeViolatesRestrictions(r, disliked, allergies));
+  const filteredRecipes = fixedRecipes
+    .filter(r => !recipeViolatesRestrictions(r, disliked, allergies))
+    .filter(r => !recipeIsCannedProtein(r));
   const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
   const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
 
