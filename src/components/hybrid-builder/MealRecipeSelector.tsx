@@ -18,12 +18,8 @@ interface Props {
 }
 
 const MEAL_TYPE_LABELS: Record<string, string> = {
-  "café da manhã": "☕ Café da Manhã",
-  "lanche da manhã": "🍎 Lanche da Manhã",
   "almoço": "🍽️ Almoço",
-  "lanche da tarde": "🥤 Lanche da Tarde",
   "jantar": "🌙 Jantar",
-  "ceia": "🌜 Ceia",
 };
 
 export default function MealRecipeSelector({ onSelect, onCancel }: Props) {
