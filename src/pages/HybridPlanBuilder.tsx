@@ -170,11 +170,11 @@ export default function HybridPlanBuilder() {
   );
   const [activeDragData, setActiveDragData] = useState<{ type: string; label: string } | null>(null);
 
-  const getClientY = (event: Event | null | undefined): number | null => {
+  const getClientY = (event: any): number | null => {
     if (!event) return null;
-    if ("touches" in event && event.touches?.length) return event.touches[0].clientY;
-    if ("changedTouches" in event && event.changedTouches?.length) return event.changedTouches[0].clientY;
-    if ("clientY" in event && typeof (event as MouseEvent).clientY === "number") return (event as MouseEvent).clientY;
+    if (Array.isArray(event.touches) && event.touches.length > 0) return event.touches[0]?.clientY ?? null;
+    if (Array.isArray(event.changedTouches) && event.changedTouches.length > 0) return event.changedTouches[0]?.clientY ?? null;
+    if (typeof event.clientY === "number") return event.clientY;
     return null;
   };
 
