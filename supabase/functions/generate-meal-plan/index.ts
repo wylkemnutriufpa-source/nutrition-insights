@@ -2840,8 +2840,22 @@ serve(async (req) => {
     let rawPlanItems: any[];
     let templateHitsCount = 0;
     let visualFallbacksCount = 0;
+    let marmitasUsedList: string[] = [];
 
-    if (hasTemplates) {
+    if (generationMode === "weekly_marmita") {
+      // ── WEEKLY MARMITA MODE ──
+      const mealRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId);
+      console.log(`[generate-meal-plan] weekly_marmita: ${mealRecipes.length} recipes loaded`);
+      const result = generateWeeklyMarmitaPlan(
+        mealRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
+        restrictions, disliked, allergies, enabledMeals, mealTimes,
+        resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+      );
+      rawPlanItems = result.items;
+      marmitasUsedList = result.marmitasUsed;
+      templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
+      visualFallbacksCount = rawPlanItems.length - templateHitsCount;
+    } else if (hasTemplates) {
       const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals);
       rawPlanItems = result.items;
       templateHitsCount = result.templateHits;
