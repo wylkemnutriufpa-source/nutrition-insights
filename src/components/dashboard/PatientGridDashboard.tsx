@@ -13,7 +13,7 @@ import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggl
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
 import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
-  TrendingUp, Brain, Camera, Target,
+  TrendingUp, Brain, Camera, Camera as CameraIcon, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
 } from "lucide-react";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
