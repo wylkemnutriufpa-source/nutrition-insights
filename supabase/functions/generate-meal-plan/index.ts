@@ -1723,10 +1723,10 @@ function validatePlanBeforeSave(
 ): { valid: boolean; errors: string[] } {
   const errors: string[] = [];
 
-  // Rule 1: Every item must have visual_library_item_id OR _template_id
-  const missingSource = items.filter(i => !i.visual_library_item_id && !i._template_id);
+  // Rule 1: Every item must have visual_library_item_id, _template_id OR _recipe_id (marmita)
+  const missingSource = items.filter(i => !i.visual_library_item_id && !i._template_id && !i._recipe_id);
   if (missingSource.length > 0) {
-    errors.push(`${missingSource.length} items missing both visual_library_item_id and _template_id`);
+    errors.push(`${missingSource.length} items missing visual_library_item_id, _template_id and _recipe_id`);
   }
 
   // Rule 2: Visual library items must have image (template items don't need it)
@@ -2766,7 +2766,7 @@ serve(async (req) => {
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id, image_url: _image_url || rest.image_url || null }; });
+        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id, image_url: _image_url || rest.image_url || null }; });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
@@ -3055,7 +3055,7 @@ serve(async (req) => {
     }
 
     const itemsToInsert = planItems.map((item: any) => {
-      const { _image_url, _source, _category_used, _scale_factor, _template_id, meal_time, ...rest } = item;
+      const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item;
       return { ...rest, meal_plan_id: finalMealPlanId, image_url: _image_url || rest.image_url || null };
     });
 
