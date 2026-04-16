@@ -1508,6 +1508,34 @@ function validatePlanBeforeSave(
     errors.push(`${wrongSource.length} items have invalid source`);
   }
 
+  // Rule 6 (IFJ Blueprint Layer 8): No item can have empty title
+  const emptyTitles = items.filter(i => !i.title || i.title.trim().length === 0);
+  if (emptyTitles.length > 0) {
+    errors.push(`${emptyTitles.length} items have empty/null title`);
+  }
+
+  // Rule 7 (IFJ Blueprint Layer 8): No "• — Xg" pattern in descriptions
+  const brokenDescriptions = items.filter(i => {
+    if (!i.description) return false;
+    return /•\s*[—-]\s*\d+g/i.test(i.description);
+  });
+  if (brokenDescriptions.length > 0) {
+    errors.push(`${brokenDescriptions.length} items have broken description pattern (empty food name)`);
+  }
+
+  // Rule 8 (IFJ Blueprint Layer 5): No absurd single-item portions (> 500g protein)
+  const absurdPortions = items.filter(i => {
+    if (!i.description) return false;
+    const matches = [...i.description.matchAll(/•\s*(.+?)\s*[—-]\s*(\d+)g/g)];
+    return matches.some(m => {
+      const grams = parseInt(m[2]);
+      return grams > 500;
+    });
+  });
+  if (absurdPortions.length > 0) {
+    errors.push(`${absurdPortions.length} items have portions exceeding 500g`);
+  }
+
   return { valid: errors.length === 0, errors };
 }
 
