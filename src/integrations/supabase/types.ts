@@ -105,6 +105,13 @@ export type Database = {
             referencedRelation: "affiliate_referrals"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "affiliate_commissions_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_referrals_safe"
+            referencedColumns: ["id"]
+          },
         ]
       }
       affiliate_metrics_cache: {
@@ -298,6 +305,13 @@ export type Database = {
             columns: ["referral_id"]
             isOneToOne: false
             referencedRelation: "affiliate_referrals"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "affiliate_risk_flags_referral_id_fkey"
+            columns: ["referral_id"]
+            isOneToOne: false
+            referencedRelation: "affiliate_referrals_safe"
             referencedColumns: ["id"]
           },
         ]
@@ -18007,6 +18021,53 @@ export type Database = {
       }
     }
     Views: {
+      affiliate_referrals_safe: {
+        Row: {
+          affiliate_id: string | null
+          converted_at: string | null
+          created_at: string | null
+          id: string | null
+          referral_code_used: string | null
+          referred_email_masked: string | null
+          referred_plan: string | null
+          referred_type: string | null
+          referred_user_id: string | null
+          status: Database["public"]["Enums"]["referral_status"] | null
+        }
+        Insert: {
+          affiliate_id?: string | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          referral_code_used?: string | null
+          referred_email_masked?: never
+          referred_plan?: string | null
+          referred_type?: string | null
+          referred_user_id?: string | null
+          status?: Database["public"]["Enums"]["referral_status"] | null
+        }
+        Update: {
+          affiliate_id?: string | null
+          converted_at?: string | null
+          created_at?: string | null
+          id?: string | null
+          referral_code_used?: string | null
+          referred_email_masked?: never
+          referred_plan?: string | null
+          referred_type?: string | null
+          referred_user_id?: string | null
+          status?: Database["public"]["Enums"]["referral_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "affiliate_referrals_affiliate_id_fkey"
+            columns: ["affiliate_id"]
+            isOneToOne: false
+            referencedRelation: "affiliates"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_resolved_state: {
         Row: {
           created_at: string | null
@@ -18255,6 +18316,7 @@ export type Database = {
         Args: { _patient_id: string; _program_id: string; _reason?: string }
         Returns: Json
       }
+      extract_topic_uuid: { Args: { _topic: string }; Returns: string }
       finalize_pipeline_execution: {
         Args: {
           _error_details?: Json
@@ -18460,6 +18522,10 @@ export type Database = {
       is_admin: { Args: { _user_id: string }; Returns: boolean }
       is_linked_professional: {
         Args: { _patient_id: string; _user_id: string }
+        Returns: boolean
+      }
+      is_linked_professional_for: {
+        Args: { _patient_id: string }
         Returns: boolean
       }
       is_org_member: {

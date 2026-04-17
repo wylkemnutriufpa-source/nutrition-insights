@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import {
   Search, CreditCard, Play, FileCheck, ArrowLeft,
   Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck,
-  ClipboardList, KeyRound, Send, UserCog
+  ClipboardList, KeyRound, Send, UserCog, Mail, Copy
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
@@ -49,7 +49,42 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [confirmedPayments, setConfirmedPayments] = useState<Set<string>>(new Set());
   const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
+  const [sendingLinkId, setSendingLinkId] = useState<string | null>(null);
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
+
+  const onboardingLink = `${window.location.origin}/onboarding`;
+
+  const copyOnboardingLink = async () => {
+    try {
+      await navigator.clipboard.writeText(onboardingLink);
+      toast.success("Link de onboarding copiado!");
+    } catch {
+      toast.error("Não foi possível copiar o link");
+    }
+  };
+
+  const sendOnboardingEmail = async (patientId: string, email: string | null | undefined) => {
+    if (!email) {
+      toast.error("Paciente sem email cadastrado — copie o link e envie manualmente.");
+      return;
+    }
+    if (sendingLinkId) {
+      toast.info("Envio já em andamento...");
+      return;
+    }
+    setSendingLinkId(patientId);
+    try {
+      const { error } = await supabase.functions.invoke("send-onboarding-link", {
+        body: { email, patient_id: patientId },
+      });
+      if (error) throw error;
+      toast.success(`✉️ Link de onboarding reenviado para ${email}`);
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao reenviar link de onboarding");
+    } finally {
+      setSendingLinkId(null);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
@@ -317,6 +352,44 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                           </TooltipTrigger>
                           <TooltipContent>
                             <p>Revisar e aprovar o plano do paciente</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {/* Resend onboarding link — visible whenever patient hasn't completed onboarding */}
+                      {!completed && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={() => sendOnboardingEmail(p.patient_id, p.email)}
+                              disabled={sendingLinkId === p.patient_id}
+                            >
+                              {sendingLinkId === p.patient_id
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                                : <Mail className="w-3.5 h-3.5 text-primary" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Reenviar link de onboarding por email</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {!completed && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={copyOnboardingLink}
+                            >
+                              <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copiar link de onboarding (WhatsApp)</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
