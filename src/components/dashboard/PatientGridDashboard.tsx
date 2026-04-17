@@ -166,7 +166,7 @@ export default function PatientGridDashboard() {
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.4 }}>
           <Card
             className="relative cursor-pointer overflow-hidden border border-emerald-500/30 bg-gradient-to-r from-emerald-500/10 via-emerald-600/5 to-teal-500/10 hover:border-emerald-500/50 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 group"
-            onClick={() => navigate("/anamnesis")}
+            onClick={() => navigate("/onboarding")}
           >
             <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             <div className="relative flex items-center gap-4 p-4">
