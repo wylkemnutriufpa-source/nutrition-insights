@@ -348,6 +348,49 @@ export default function RecipeBuilder() {
           servings={servings}
           recipeName={title || "Receita"}
         />
+
+        {/* ── SEARCH SAVED RECIPES ── */}
+        <RecipeSearchDialog
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          onLoad={handleLoadRecipe}
+        />
+
+        {/* ── POST-SAVE CONFIRMATION ── */}
+        <Dialog open={savedDialogOpen} onOpenChange={setSavedDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Receita salva com sucesso!
+              </DialogTitle>
+              <DialogDescription>
+                Seu nutricionista será notificado para revisar e aprovar.
+                Quer fazer o <strong>Match Clínico</strong> agora — ajustar as porções para encaixar em uma refeição do seu plano?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setSavedDialogOpen(false);
+                  navigate("/recipes");
+                }}
+              >
+                Voltar para Receitas
+              </Button>
+              <Button
+                className="flex-1 gradient-primary gap-2"
+                onClick={() => {
+                  setSavedDialogOpen(false);
+                  setMatcherOpen(true);
+                }}
+              >
+                <Sparkles className="w-4 h-4" /> Fazer Match Clínico
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
