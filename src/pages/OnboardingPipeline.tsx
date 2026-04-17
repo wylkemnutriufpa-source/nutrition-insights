@@ -202,7 +202,10 @@ export default function OnboardingPipeline() {
   }
 
   async function handleGoToAnamnesis() {
-    navigate("/anamnesis?pipeline=true");
+    // Hard navigation to bypass any stale RouteGuard state from the
+    // onboarding pipeline. SPA navigate() was occasionally being short-circuited
+    // by re-renders that caused the patient to stay on /onboarding (loop).
+    window.location.assign("/anamnesis?pipeline=true");
   }
 
   async function handleSaveBodyData() {
