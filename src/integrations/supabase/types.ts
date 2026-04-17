@@ -8345,6 +8345,45 @@ export type Database = {
           },
         ]
       }
+      patient_audit_results: {
+        Row: {
+          action_taken: string
+          audit_run_id: string
+          created_at: string
+          description: string
+          details: Json | null
+          finding_type: string
+          id: string
+          nutritionist_id: string | null
+          patient_id: string | null
+          severity: string
+        }
+        Insert: {
+          action_taken: string
+          audit_run_id: string
+          created_at?: string
+          description: string
+          details?: Json | null
+          finding_type: string
+          id?: string
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          severity: string
+        }
+        Update: {
+          action_taken?: string
+          audit_run_id?: string
+          created_at?: string
+          description?: string
+          details?: Json | null
+          finding_type?: string
+          id?: string
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          severity?: string
+        }
+        Relationships: []
+      }
       patient_automation_state: {
         Row: {
           automation_enabled: boolean | null
@@ -18875,6 +18914,7 @@ export type Database = {
         Returns: Json
       }
       resolve_tenant_for_user: { Args: { _user_id: string }; Returns: string }
+      run_daily_patient_audit: { Args: never; Returns: Json }
       run_patient_data_audit: { Args: { _dry_run?: boolean }; Returns: Json }
       run_security_audit: { Args: never; Returns: Json }
       save_plan_as_approved: {
