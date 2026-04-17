@@ -50,6 +50,34 @@ export function useOnboardingGuard() {
           console.warn("[OnboardingGuard] resolvePatientIdentity failed, using user.id only", e);
         }
 
+        // 🔓 PROFESSIONAL OVERRIDE: If the professional already delivered any plan
+        // (published / approved / draft entregue), the patient is NOT forced through
+        // the automated-onboarding pipeline. Onboarding becomes optional.
+        // Onboarding is ONLY mandatory when the patient depends on the automated
+        // engine to generate their first plan (no plan exists yet).
+        const { data: existingPlan } = await supabase
+          .from("meal_plans")
+          .select("id, plan_status, is_active")
+          .in("patient_id", allIds)
+          .in("plan_status", [
+            "published",
+            "published_to_patient",
+            "approved",
+            "active",
+            "delivered",
+          ])
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+
+        if (cancelled) return;
+
+        if (existingPlan) {
+          // Professional already delivered a plan → onboarding is optional.
+          setRequirement("none");
+          return;
+        }
+
         // Check if there's an active/in_progress onboarding pipeline
         const { data: pipeline } = await supabase
           .from("onboarding_pipelines" as any)
@@ -62,19 +90,28 @@ export function useOnboardingGuard() {
 
         if (cancelled) return;
 
-        // Active pipeline means onboarding is still in progress until ALL required patient steps are complete.
+        // Pipeline only blocks the patient when it explicitly targets the
+        // AUTOMATED engine (release_status = 'released' AND no plan delivered yet).
         if (pipeline) {
           const p = pipeline as any;
-          const patientStepsDone = !!p.anamnesis_completed && !!p.body_data_completed && !!p.preferences_completed;
-          const pipelineFullyDone = patientStepsDone && !!p.plan_generated && !!p.plan_approved;
+          const targetsAutomatedFlow =
+            p.release_status === "released" || p.release_status === undefined;
+          const patientStepsDone =
+            !!p.anamnesis_completed &&
+            !!p.body_data_completed &&
+            !!p.preferences_completed;
+          const pipelineFullyDone =
+            patientStepsDone && !!p.plan_generated && !!p.plan_approved;
 
-          if (!pipelineFullyDone) {
+          if (targetsAutomatedFlow && !pipelineFullyDone) {
             setRequirement("must_complete");
             return;
           }
         }
 
-        // Defensive fallback: if journey still says onboarding_active, patient must remain in onboarding.
+        // Defensive fallback: if journey says onboarding_active AND there is still
+        // no plan delivered, keep patient in onboarding. Plan check above already
+        // short-circuits when professional has delivered a manual plan.
         const { data: link } = await supabase
           .from("nutritionist_patients")
           .select("journey_status")
@@ -113,6 +150,12 @@ export function useOnboardingGuard() {
         event: "UPDATE",
         schema: "public",
         table: "nutritionist_patients",
+        filter: `patient_id=eq.${user.id}`,
+      }, () => check())
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "meal_plans",
         filter: `patient_id=eq.${user.id}`,
       }, () => check())
       .subscribe();
