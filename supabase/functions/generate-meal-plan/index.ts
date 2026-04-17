@@ -2802,9 +2802,9 @@ serve(async (req) => {
     }
 
     // ── 4. Calculate TMB / TDEE / macros ──
-    const age = normalizeAge(answers.age, 30);
-    const sex = String(answers.sex || answers.gender || "male").toLowerCase() === "female" ? "female" : "male";
-    const activityLevel = normalizeActivityLevel(answers.activity_level || body.activityLevel || latestPipeline?.food_preferences?.activity_level);
+    const age = normalizeAge(profOverride?.age ?? answers.age, 30);
+    const sex = String(profOverride?.sex || answers.sex || answers.gender || "male").toLowerCase() === "female" ? "female" : "male";
+    const activityLevel = normalizeActivityLevel(profOverride?.activityLevel || answers.activity_level || body.activityLevel || latestPipeline?.food_preferences?.activity_level);
 
     const tmb = calculateTMB(weight, height, age, sex);
     const tdeeFactor = ACTIVITY_MULTIPLIERS[activityLevel] || 1.375;
