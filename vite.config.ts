@@ -18,15 +18,15 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
-      // prompt = user controls when to update (via UpdateBanner)
-      registerType: "prompt",
+        // autoUpdate makes the new worker download/activate quickly; UI still controls hard reload.
+        registerType: "autoUpdate",
       // We register manually via useRegisterSW in UpdateBanner
       injectRegister: false,
       includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
       workbox: {
         // Let the new SW claim clients only after user clicks "Atualizar agora"
-        clientsClaim: true,
-        skipWaiting: false,
+          clientsClaim: true,
+          skipWaiting: true,
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
