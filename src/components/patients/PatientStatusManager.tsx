@@ -355,6 +355,44 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                           </TooltipContent>
                         </Tooltip>
                       )}
+                      {/* Resend onboarding link — visible whenever patient hasn't completed onboarding */}
+                      {!completed && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={() => sendOnboardingEmail(p.patient_id, p.email)}
+                              disabled={sendingLinkId === p.patient_id}
+                            >
+                              {sendingLinkId === p.patient_id
+                                ? <Loader2 className="w-3.5 h-3.5 animate-spin text-primary" />
+                                : <Mail className="w-3.5 h-3.5 text-primary" />}
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Reenviar link de onboarding por email</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {!completed && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
+                              onClick={copyOnboardingLink}
+                            >
+                              <Copy className="w-3.5 h-3.5 text-muted-foreground" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Copiar link de onboarding (WhatsApp)</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
                       {completed && (
                         <Tooltip>
                           <TooltipTrigger asChild>
