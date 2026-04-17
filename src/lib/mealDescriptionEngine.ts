@@ -36,6 +36,26 @@ function sanitizeDescription(text: string): string {
     .trim();
 }
 
+// ── Orphan/incomplete line detection ──────────────────────────
+// Drops lines like "1 fatia", "2 col. sopa", "100g" that have NO food name attached.
+function isOrphanUnitLine(line: string): boolean {
+  const cleaned = line.replace(/[•\-\*]/g, "").trim();
+  if (!cleaned) return false;
+  const STOP = new Set([
+    "g","ml","kg","l","fatia","fatias","col","col.","colher","colheres",
+    "xicara","xicaras","xícara","xícaras","copo","copos","un","und","unidade","unidades",
+    "porcao","porção","porcoes","porções","sopa","cha","chá","de","do","da","com","e","ou",
+    "pedaco","pedaço","pedacos","pedaços","concha","conchas","prato","pratos","media","médio",
+    "médias","medias","grande","pequena","pequeno","p","m","g","aprox",
+  ]);
+  const meaningfulWords = cleaned
+    .toLowerCase()
+    .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+    .split(/\s+/)
+    .filter(w => w && !/^\d+(?:[.,]\d+)?$/.test(w) && !STOP.has(w));
+  return meaningfulWords.length === 0;
+}
+
 function resolveDisplayPortion(foodName: string, basePortion: string, grams: number): string {
   if (isUnitBasedCarb(foodName)) {
     return `1 unidade ${getUnitSizeLabel(grams)}`;
@@ -177,7 +197,9 @@ export function finalizeMealDescription(description: string, mealType: string, i
   const normalizedLines = (mainSection || "")
     .split("\n")
     .map(line => line.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    // Drop orphan unit-only lines (e.g. "1 fatia" with no food name)
+    .filter(line => !isOrphanUnitLine(line));
 
   const beverageLine = getDefaultBeverageLine(mealType);
   if (beverageLine && !hasBeverage(normalizedLines.join("\n"))) {
