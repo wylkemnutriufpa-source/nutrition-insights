@@ -4,7 +4,9 @@ import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const DISMISS_KEY = "fj:update-dismissed-at";
-const DISMISS_COOLDOWN_MS = 5 * 60 * 1000; // 5 min cooldown after dismiss/update
+const DISMISS_COOLDOWN_MS = 30 * 60 * 1000; // 30 min cooldown after dismiss/update (was 5)
+const SW_BOOT_KEY = "fj:sw-boot-ts";
+const SW_BOOT_GRACE_MS = 15 * 1000; // ignore controllerchange for 15s after page load (avoids reload loop on iOS)
 
 async function clearRuntimeCaches() {
   const tasks: Promise<unknown>[] = [];
@@ -31,7 +33,8 @@ function forceHardReload() {
 
 function wasDismissedRecently(): boolean {
   try {
-    const ts = sessionStorage.getItem(DISMISS_KEY);
+    // Use localStorage so dismiss persists across hard reloads (was sessionStorage which gets cleared)
+    const ts = localStorage.getItem(DISMISS_KEY);
     if (!ts) return false;
     return Date.now() - Number(ts) < DISMISS_COOLDOWN_MS;
   } catch {
@@ -41,8 +44,26 @@ function wasDismissedRecently(): boolean {
 
 function markDismissed() {
   try {
-    sessionStorage.setItem(DISMISS_KEY, String(Date.now()));
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
   } catch {}
+}
+
+/** Records the time this page instance booted so we can ignore the very first
+ * controllerchange (which fires on normal first-load activation, not a real update). */
+function markBoot() {
+  try {
+    sessionStorage.setItem(SW_BOOT_KEY, String(Date.now()));
+  } catch {}
+}
+
+function isWithinBootGrace(): boolean {
+  try {
+    const ts = sessionStorage.getItem(SW_BOOT_KEY);
+    if (!ts) return true; // no boot timestamp yet → assume booting
+    return Date.now() - Number(ts) < SW_BOOT_GRACE_MS;
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -68,16 +89,13 @@ export default function UpdateBanner() {
         setFallbackNeedRefresh(true);
       }
 
-      // Aggressive update check — every 30s instead of 5min
+      // Mark this page boot so we can ignore the initial controllerchange event
+      markBoot();
+
+      // Update check — every 5min (was 30s, too aggressive and contributed to reload loops)
       const intervalId = setInterval(() => {
         registration.update().catch(() => {});
-      }, 30 * 1000);
-
-      // Check on window focus (user returns to tab)
-      const onFocus = () => {
-        registration.update().catch(() => {});
-      };
-      window.addEventListener("focus", onFocus);
+      }, 5 * 60 * 1000);
 
       // Check on visibility change (tab becomes visible)
       const onVisibility = () => {
@@ -86,12 +104,6 @@ export default function UpdateBanner() {
         }
       };
       document.addEventListener("visibilitychange", onVisibility);
-
-      // Check on network reconnection
-      const onOnline = () => {
-        registration.update().catch(() => {});
-      };
-      window.addEventListener("online", onOnline);
 
       // Listen for new updates manually as a fallback
       registration.addEventListener("updatefound", () => {
@@ -105,12 +117,9 @@ export default function UpdateBanner() {
         });
       });
 
-      // Cleanup on unmount (best effort — banner stays mounted normally)
       return () => {
         clearInterval(intervalId);
-        window.removeEventListener("focus", onFocus);
         document.removeEventListener("visibilitychange", onVisibility);
-        window.removeEventListener("online", onOnline);
       };
     },
     onRegisterError(error) {
@@ -118,10 +127,15 @@ export default function UpdateBanner() {
     },
   });
 
-  // Also listen to controllerchange — fires when a new SW takes control
+  // Listen to controllerchange — but ignore the initial activation that fires
+  // shortly after page load (which is normal SW boot, not a real update).
   useEffect(() => {
     if (!("serviceWorker" in navigator)) return;
     const onControllerChange = () => {
+      if (isWithinBootGrace()) {
+        console.log("[FJ:SW] Ignoring controllerchange during boot grace period");
+        return;
+      }
       console.log("[FJ:SW] Controller changed — new version active");
       setFallbackNeedRefresh(true);
     };
