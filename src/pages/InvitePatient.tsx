@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, UserPlus, Mail, Key, Copy, Check } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -23,8 +23,48 @@ export default function InvitePatient() {
   const [tempPassword, setTempPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [created, setCreated] = useState(false);
-  const [copied, setCopied] = useState(false);
+  const [copied, setCopied] = useState<string | null>(null);
   const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
+  const [sendingEmail, setSendingEmail] = useState(false);
+
+  const onboardingLink = useMemo(
+    () => `${window.location.origin}/onboarding`,
+    [],
+  );
+  const whatsappMessage = useMemo(() => {
+    const greeting = name ? `Olá ${name.split(" ")[0]}! ` : "Olá! ";
+    return `${greeting}Seu acesso ao FitJourney foi criado. Use o email *${email}* para entrar e completar seu onboarding aqui: ${onboardingLink}`;
+  }, [name, email, onboardingLink]);
+  const whatsappUrl = useMemo(() => {
+    const phoneDigits = (phone || "").replace(/\D/g, "");
+    const base = phoneDigits ? `https://wa.me/${phoneDigits}` : "https://wa.me/";
+    return `${base}?text=${encodeURIComponent(whatsappMessage)}`;
+  }, [phone, whatsappMessage]);
+
+  const copyToClipboard = (value: string, key: string, label: string) => {
+    navigator.clipboard.writeText(value);
+    setCopied(key);
+    toast.success(`${label} copiado!`);
+    setTimeout(() => setCopied(null), 2000);
+  };
+
+  const handleSendOnboardingEmail = async () => {
+    if (!email) return;
+    setSendingEmail(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("send-onboarding-link", {
+        body: { email, patient_id: createdPatientId },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      toast.success("Link de onboarding enviado por email ✉️");
+    } catch (err: any) {
+      console.error("send-onboarding-link error:", err);
+      toast.error(err.message || "Erro ao enviar link por email");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
 
   const generatePassword = () => {
     setTempPassword("Fit@2026!");
