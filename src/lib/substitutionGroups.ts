@@ -253,14 +253,17 @@ export function getValidSubstitutions(
   context?: ClinicalContext,
   maxResults = 3,
 ): { food: FoodItem; labels: SmartLabel[] }[] {
-  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const query = norm(currentFood);
 
-  // Find current food
-  const currentMatch = FOOD_DATABASE.find(f => {
+  // Find current food (exact/substring → fallback to fuzzy token match)
+  let currentMatch = FOOD_DATABASE.find(f => {
     const n = norm(f.name);
     return n === query || query.includes(n) || n.includes(query);
   });
+  if (!currentMatch) {
+    const fuzzy = findFoodsInTitle(currentFood);
+    currentMatch = fuzzy[0];
+  }
   if (!currentMatch) return [];
 
   const group = getFoodGroup(currentMatch.name);
