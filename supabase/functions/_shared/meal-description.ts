@@ -199,7 +199,9 @@ export function finalizeMealDescription(description: string, mealType: string, i
   const normalizedLines = (mainSection || "")
     .split("\n")
     .map(line => line.trim())
-    .filter(Boolean);
+    .filter(Boolean)
+    // Drop orphan unit-only lines (e.g. "1 fatia" with no food name)
+    .filter(line => !isOrphanUnitLine(line));
 
   const beverageLine = getDefaultBeverageLine(mealType);
   if (beverageLine && !hasBeverage(normalizedLines.join("\n"))) {
