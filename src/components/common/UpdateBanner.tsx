@@ -4,7 +4,9 @@ import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const DISMISS_KEY = "fj:update-dismissed-at";
-const DISMISS_COOLDOWN_MS = 5 * 60 * 1000; // 5 min cooldown after dismiss/update
+const DISMISS_COOLDOWN_MS = 30 * 60 * 1000; // 30 min cooldown after dismiss/update (was 5)
+const SW_BOOT_KEY = "fj:sw-boot-ts";
+const SW_BOOT_GRACE_MS = 15 * 1000; // ignore controllerchange for 15s after page load (avoids reload loop on iOS)
 
 async function clearRuntimeCaches() {
   const tasks: Promise<unknown>[] = [];
