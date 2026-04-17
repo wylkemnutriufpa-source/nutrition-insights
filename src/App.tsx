@@ -356,6 +356,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 
 function RootRoute() {
   const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
+  const { requirement } = useOnboardingGuard();
   const [bootDone, setBootDone] = useState(false);
   const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
@@ -380,8 +381,13 @@ function RootRoute() {
   if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
     return <Navigate to="/store" replace />;
   }
-  // Patients always go to their dashboard (which has onboarding gate)
+  // Patients with INCOMPLETE onboarding → straight to /onboarding (avoids
+  // dashboard→guard-bounce→onboarding loop that was breaking handoff to /anamnesis)
   if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
+    if (requirement === "loading") return <PageLoader />;
+    if (requirement === "must_complete") {
+      return <Navigate to="/onboarding" replace />;
+    }
     return <Navigate to="/client/dashboard" replace />;
   }
   if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
