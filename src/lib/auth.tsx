@@ -134,9 +134,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) setLoading(false);
       }
     };
-
-    initializeAuth();
-
     // Safety net: if loading stays true for >8s, force it off so the UI never gets stuck on a blank/spinner screen
     let loadingWatchdog: ReturnType<typeof setTimeout> | null = null;
     const armWatchdog = () => {
@@ -148,6 +145,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }, 8000);
     };
+
+    // Arm immediately at mount to protect the very first load too
+    armWatchdog();
+
+    initializeAuth();
 
     // Listen for subsequent auth changes (sign in/out, token refresh)
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
