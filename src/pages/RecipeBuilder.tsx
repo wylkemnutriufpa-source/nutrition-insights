@@ -39,6 +39,8 @@ export default function RecipeBuilder() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [matcherOpen, setMatcherOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [savedDialogOpen, setSavedDialogOpen] = useState(false);
 
   const units = getAvailableUnits();
 
