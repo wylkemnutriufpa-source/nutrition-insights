@@ -66,7 +66,7 @@ export default function MealSubstitutionModal({
       if (!seen.has(f.name)) { foods.push(f); seen.add(f.name); }
     }
 
-    return foods.slice(0, 3).map(food => {
+    const blocks = foods.slice(0, 3).map(food => {
       const group = getFoodGroup(food.name);
       const subs = getValidSubstitutions(food.name, undefined, 4);
       return {
@@ -75,6 +75,28 @@ export default function MealSubstitutionModal({
         substitutions: subs,
       };
     }).filter(c => c.substitutions.length > 0);
+
+    // Last-resort fallback: if nothing was detected in the title, offer a generic
+    // protein/carb/fruit triplet so the patient always sees options.
+    if (blocks.length === 0) {
+      const fallbackPicks: FoodItem[] = [];
+      const proteinDefault = FOOD_DATABASE.find(f => f.name === "Frango grelhado");
+      const carbDefault = FOOD_DATABASE.find(f => f.name === "Arroz integral");
+      const fruitDefault = FOOD_DATABASE.find(f => f.category === "fruta");
+      [proteinDefault, carbDefault, fruitDefault].forEach(f => { if (f) fallbackPicks.push(f); });
+
+      return fallbackPicks.map(food => {
+        const group = getFoodGroup(food.name);
+        const subs = getValidSubstitutions(food.name, undefined, 4);
+        return {
+          current: food,
+          groupLabel: group ? SUBSTITUTION_GROUP_LABELS[group] : null,
+          substitutions: subs,
+        };
+      }).filter(c => c.substitutions.length > 0);
+    }
+
+    return blocks;
   }, [mealTitle]);
 
   const handleConfirm = async () => {
@@ -146,9 +168,9 @@ export default function MealSubstitutionModal({
           {components.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               <UtensilsCrossed className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium">Sem substituições disponíveis</p>
-              <p className="text-xs mt-1">Não encontramos equivalentes para esta refeição.</p>
-              <p className="text-[10px] mt-2 opacity-70">Peça ao seu nutricionista para cadastrar opções.</p>
+              <p className="text-sm font-medium">Refeição muito específica</p>
+              <p className="text-xs mt-1">Não conseguimos detectar um alimento principal nesta refeição.</p>
+              <p className="text-[10px] mt-2 opacity-70">Peça ao seu nutricionista para sugerir substituições personalizadas no chat.</p>
             </div>
           ) : (
             <div className="space-y-5 pt-2">
