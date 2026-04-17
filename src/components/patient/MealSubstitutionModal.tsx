@@ -168,9 +168,9 @@ export default function MealSubstitutionModal({
           {components.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
               <UtensilsCrossed className="w-10 h-10 mx-auto mb-3 opacity-40" />
-              <p className="text-sm font-medium">Sem substituições disponíveis</p>
-              <p className="text-xs mt-1">Não encontramos equivalentes para esta refeição.</p>
-              <p className="text-[10px] mt-2 opacity-70">Peça ao seu nutricionista para cadastrar opções.</p>
+              <p className="text-sm font-medium">Refeição muito específica</p>
+              <p className="text-xs mt-1">Não conseguimos detectar um alimento principal nesta refeição.</p>
+              <p className="text-[10px] mt-2 opacity-70">Peça ao seu nutricionista para sugerir substituições personalizadas no chat.</p>
             </div>
           ) : (
             <div className="space-y-5 pt-2">
