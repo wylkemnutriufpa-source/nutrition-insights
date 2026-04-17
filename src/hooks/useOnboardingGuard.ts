@@ -81,7 +81,7 @@ export function useOnboardingGuard() {
         // Check if there's an active/in_progress onboarding pipeline
         const { data: pipeline } = await supabase
           .from("onboarding_pipelines" as any)
-          .select("id, status, anamnesis_completed, body_data_completed, preferences_completed, plan_generated, plan_approved")
+          .select("id, status, release_status, anamnesis_completed, body_data_completed, preferences_completed, plan_generated, plan_approved")
           .in("patient_id", allIds)
           .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","superseded_by_reset")')
           .order("created_at", { ascending: false })
@@ -92,10 +92,15 @@ export function useOnboardingGuard() {
 
         // Pipeline only blocks the patient when it explicitly targets the
         // AUTOMATED engine (release_status = 'released' AND no plan delivered yet).
+        // FIX: previously release_status wasn't in the SELECT, so it was always
+        // undefined and EVERY patient with a pipeline was forced into onboarding,
+        // even when the professional preferred to deliver a manual plan.
         if (pipeline) {
           const p = pipeline as any;
-          const targetsAutomatedFlow =
-            p.release_status === "released" || p.release_status === undefined;
+          // Only block if release_status is explicitly "released".
+          // 'awaiting_release' or 'blocked' = professional has NOT activated the
+          // automated flow → patient is FREE to wait for manual plan.
+          const targetsAutomatedFlow = p.release_status === "released";
           const patientStepsDone =
             !!p.anamnesis_completed &&
             !!p.body_data_completed &&
