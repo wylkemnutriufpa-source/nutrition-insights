@@ -865,15 +865,15 @@ export default function Anamnesis() {
 
     let anamData: any;
     if (draftId) {
-      // Update existing draft to completed
       const { data, error } = await supabase
         .from("patient_anamnesis")
         .update(payload)
         .eq("id", draftId)
         .select()
-        .single();
-      if (error) {
-        toast.error("Erro ao salvar: " + error.message);
+        .maybeSingle();
+      if (error || !data) {
+        console.error("[FJ:Anamnesis] submit UPDATE failed:", error);
+        toast.error("Erro ao salvar: " + (error?.message || "registro não encontrado"));
         setSubmitting(false);
         return;
       }
@@ -883,9 +883,10 @@ export default function Anamnesis() {
         .from("patient_anamnesis")
         .insert(payload)
         .select()
-        .single();
-      if (error) {
-        toast.error("Erro ao salvar: " + error.message);
+        .maybeSingle();
+      if (error || !data) {
+        console.error("[FJ:Anamnesis] submit INSERT failed:", error);
+        toast.error("Erro ao salvar: " + (error?.message || "falha ao criar anamnese"));
         setSubmitting(false);
         return;
       }
