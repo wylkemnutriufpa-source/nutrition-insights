@@ -695,38 +695,53 @@ export default function Anamnesis() {
     toast.info("Modo edição ativado! Revise suas respostas ✏️");
   };
 
-  // Autosave function
+  // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
     setAutoSaveStatus("saving");
 
     try {
       if (draftId) {
-        await supabase
+        const { error } = await supabase
           .from("patient_anamnesis")
           .update({ answers: currentAnswers, updated_at: new Date().toISOString() })
           .eq("id", draftId);
+        if (error) {
+          console.error("[FJ:Anamnesis] autosave UPDATE failed:", error);
+          setAutoSaveStatus("idle");
+          return;
+        }
       } else {
-        const { data } = await supabase
+        const insertPayload: any = {
+          user_id: targetUserId,
+          answers: currentAnswers,
+          status: "draft",
+        };
+        // Only attach tenant_id if resolved — trigger auto_resolve_tenant_patient_anamnesis handles null case
+        if (tenantId) insertPayload.tenant_id = tenantId;
+
+        const { data, error } = await supabase
           .from("patient_anamnesis")
-          .insert({
-            user_id: targetUserId,
-            answers: currentAnswers,
-            status: "draft",
-            ...getTenantIdForInsert(tenantId),
-          })
+          .insert(insertPayload)
           .select("id")
-          .single();
-        if (data) setDraftId(data.id);
+          .maybeSingle();
+        if (error) {
+          console.error("[FJ:Anamnesis] autosave INSERT failed:", error);
+          toast.error("Não foi possível salvar o rascunho. Recarregue a página.");
+          setAutoSaveStatus("idle");
+          return;
+        }
+        if (data?.id) setDraftId(data.id);
       }
       setAutoSaveStatus("saved");
       setTimeout(() => setAutoSaveStatus("idle"), 2000);
-    } catch {
+    } catch (e) {
+      console.error("[FJ:Anamnesis] autosave threw:", e);
       setAutoSaveStatus("idle");
     }
-  }, [targetUserId, user, draftId]);
+  }, [targetUserId, user, draftId, tenantId]);
 
-  // Debounced autosave on answers change
+  // Debounced autosave on answers change — wait for first user interaction (not just mount)
   useEffect(() => {
     if (Object.keys(answers).length === 0 || completed) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
