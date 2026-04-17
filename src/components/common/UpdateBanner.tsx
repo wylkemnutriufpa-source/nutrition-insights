@@ -37,33 +37,76 @@ export default function UpdateBanner() {
   } = useRegisterSW({
     onRegisteredSW(swUrl, registration) {
       console.log("[FJ:SW] Registered:", swUrl);
-      if (registration) {
-        // Check immediately if there's already a waiting worker (missed event)
-        if (registration.waiting) {
-          console.log("[FJ:SW] Waiting worker already present at mount");
-          setFallbackNeedRefresh(true);
-        }
-        // Periodic update check
-        setInterval(() => {
-          registration.update().catch(() => {});
-        }, 5 * 60 * 1000);
-        // Listen for new updates manually as a fallback
-        registration.addEventListener("updatefound", () => {
-          const newWorker = registration.installing;
-          if (!newWorker) return;
-          newWorker.addEventListener("statechange", () => {
-            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
-              console.log("[FJ:SW] New version installed, prompting user");
-              setFallbackNeedRefresh(true);
-            }
-          });
-        });
+      if (!registration) return;
+
+      // Check immediately if there's already a waiting worker (missed event)
+      if (registration.waiting) {
+        console.log("[FJ:SW] Waiting worker already present at mount");
+        setFallbackNeedRefresh(true);
       }
+
+      // Aggressive update check — every 30s instead of 5min
+      const intervalId = setInterval(() => {
+        registration.update().catch(() => {});
+      }, 30 * 1000);
+
+      // Check on window focus (user returns to tab)
+      const onFocus = () => {
+        registration.update().catch(() => {});
+      };
+      window.addEventListener("focus", onFocus);
+
+      // Check on visibility change (tab becomes visible)
+      const onVisibility = () => {
+        if (document.visibilityState === "visible") {
+          registration.update().catch(() => {});
+        }
+      };
+      document.addEventListener("visibilitychange", onVisibility);
+
+      // Check on network reconnection
+      const onOnline = () => {
+        registration.update().catch(() => {});
+      };
+      window.addEventListener("online", onOnline);
+
+      // Listen for new updates manually as a fallback
+      registration.addEventListener("updatefound", () => {
+        const newWorker = registration.installing;
+        if (!newWorker) return;
+        newWorker.addEventListener("statechange", () => {
+          if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+            console.log("[FJ:SW] New version installed, prompting user");
+            setFallbackNeedRefresh(true);
+          }
+        });
+      });
+
+      // Cleanup on unmount (best effort — banner stays mounted normally)
+      return () => {
+        clearInterval(intervalId);
+        window.removeEventListener("focus", onFocus);
+        document.removeEventListener("visibilitychange", onVisibility);
+        window.removeEventListener("online", onOnline);
+      };
     },
     onRegisterError(error) {
       console.error("[FJ:SW] Registration error:", error);
     },
   });
+
+  // Also listen to controllerchange — fires when a new SW takes control
+  useEffect(() => {
+    if (!("serviceWorker" in navigator)) return;
+    const onControllerChange = () => {
+      console.log("[FJ:SW] Controller changed — new version active");
+      setFallbackNeedRefresh(true);
+    };
+    navigator.serviceWorker.addEventListener("controllerchange", onControllerChange);
+    return () => {
+      navigator.serviceWorker.removeEventListener("controllerchange", onControllerChange);
+    };
+  }, []);
 
   const showBanner = needRefresh || fallbackNeedRefresh;
 
