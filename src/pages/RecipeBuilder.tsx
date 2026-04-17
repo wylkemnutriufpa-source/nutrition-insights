@@ -197,12 +197,15 @@ export default function RecipeBuilder() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/recipes")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="font-display text-xl font-bold flex items-center gap-2">
               <ChefHat className="w-5 h-5 text-primary" /> Calculadora de Receitas
             </h1>
             <p className="text-xs text-muted-foreground">Monte sua receita e veja os macros em tempo real</p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setSearchOpen(true)} className="gap-1.5 shrink-0">
+            <Search className="w-4 h-4" /> <span className="hidden sm:inline">Buscar Receita</span>
+          </Button>
         </div>
 
         {/* ── MACRO GAUGES ── */}
