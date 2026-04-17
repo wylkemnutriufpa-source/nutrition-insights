@@ -49,7 +49,43 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [processingId, setProcessingId] = useState<string | null>(null);
   const [confirmedPayments, setConfirmedPayments] = useState<Set<string>>(new Set());
   const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
+  const [sendingLinkId, setSendingLinkId] = useState<string | null>(null);
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
+
+  const onboardingLink = `${window.location.origin}/onboarding`;
+
+  const copyOnboardingLink = async () => {
+    try {
+      await navigator.clipboard.writeText(onboardingLink);
+      toast.success("Link de onboarding copiado!");
+    } catch {
+      toast.error("Não foi possível copiar o link");
+    }
+  };
+
+  const sendOnboardingEmail = async (patientId: string, email: string | null | undefined) => {
+    if (!email) {
+      toast.error("Paciente sem email cadastrado — copie o link e envie manualmente.");
+      return;
+    }
+    if (!acquireActionLock("send_onboarding_link", patientId)) {
+      toast.info("Envio já em andamento...");
+      return;
+    }
+    setSendingLinkId(patientId);
+    try {
+      const { error } = await supabase.functions.invoke("send-onboarding-link", {
+        body: { email, patient_id: patientId },
+      });
+      if (error) throw error;
+      toast.success(`✉️ Link de onboarding reenviado para ${email}`);
+    } catch (err: any) {
+      toast.error(err?.message || "Erro ao reenviar link de onboarding");
+    } finally {
+      setSendingLinkId(null);
+      releaseActionLock("send_onboarding_link", patientId);
+    }
+  };
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase().trim();
