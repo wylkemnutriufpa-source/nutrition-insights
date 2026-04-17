@@ -219,12 +219,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.warn("[Auth] User has no roles yet, will retry:", session.user.email);
                 // Retry once after a short delay — roles may be created by triggers
                 setTimeout(async () => {
-                  const { data: retryRoles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
-                  const retried = retryRoles?.map((r) => r.role) || [];
-                  if (retried.length > 0) {
-                    setRoles(retried);
+                  try {
+                    const { data: retryRoles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
+                    const retried = retryRoles?.map((r) => r.role) || [];
+                    if (mounted && retried.length > 0) {
+                      setRoles(retried);
+                    }
+                  } catch (err) {
+                    console.error("[Auth] Role retry failed:", err);
+                  } finally {
+                    if (mounted) setLoading(false);
                   }
-                  if (mounted) setLoading(false);
                 }, 2000);
                 return;
               }
