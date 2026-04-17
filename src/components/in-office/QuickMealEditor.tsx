@@ -244,12 +244,18 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       .select("tenant_id")
       .eq("patient_id", patientId)
       .eq("nutritionist_id", user.id)
+      .eq("status", "active")
       .maybeSingle();
+
+    if (!np?.tenant_id) {
+      toast.error("Vínculo com paciente não encontrado.");
+      return;
+    }
 
     const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, meal_type: b.type })));
     await supabase.from("quick_meal_templates" as any).insert({
       nutritionist_id: user.id,
-      tenant_id: np?.tenant_id || "",
+      tenant_id: np.tenant_id,
       template_name: templateName,
       template_type: "day",
       items: templateItems as any,
