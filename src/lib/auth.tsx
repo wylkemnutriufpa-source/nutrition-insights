@@ -131,13 +131,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     initializeAuth();
 
+    // Safety net: if loading stays true for >8s, force it off so the UI never gets stuck on a blank/spinner screen
+    let loadingWatchdog: ReturnType<typeof setTimeout> | null = null;
+    const armWatchdog = () => {
+      if (loadingWatchdog) clearTimeout(loadingWatchdog);
+      loadingWatchdog = setTimeout(() => {
+        if (mounted) {
+          console.warn("[Auth] Loading watchdog tripped — forcing loading=false");
+          setLoading(false);
+        }
+      }, 8000);
+    };
+
     // Listen for subsequent auth changes (sign in/out, token refresh)
     const { data: { subscription: authSubscription } } = supabase.auth.onAuthStateChange(
       (event, session) => {
         if (event === "INITIAL_SESSION") return;
 
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // Only flip loading=true on SIGNED_IN. TOKEN_REFRESHED should NOT block UI —
+        // refreshing tokens silently in background is normal and shouldn't trigger a splash.
+        if (event === "SIGNED_IN") {
           setLoading(true);
+          armWatchdog();
         }
 
         if (event === "SIGNED_IN" && session?.user) {
