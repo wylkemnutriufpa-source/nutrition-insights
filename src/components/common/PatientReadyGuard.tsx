@@ -11,11 +11,12 @@
  *   error   → fallback amigável + retry
  */
 
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
 import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface Props {
   children: ReactNode;
@@ -37,13 +38,22 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
 
   // Permite "fixed" passar para "ok" quase instantaneamente
   const [graceDone, setGraceDone] = useState(false);
+  const toastedRef = useRef<string | null>(null);
   useEffect(() => {
     if (result.status === "fixed") {
+      const key = `${targetId}:${context}`;
+      if (toastedRef.current !== key) {
+        toastedRef.current = key;
+        toast.success("Corrigimos automaticamente um detalhe para você", {
+          description: "Seu acesso já está pronto.",
+          duration: 3000,
+        });
+      }
       const t = setTimeout(() => setGraceDone(true), 300);
       return () => clearTimeout(t);
     }
     setGraceDone(false);
-  }, [result.status]);
+  }, [result.status, targetId, context]);
 
   // Profissional sem patientId explícito: não bloqueia nada
   if (!isPatient && !patientId) return <>{children}</>;
