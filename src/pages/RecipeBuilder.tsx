@@ -8,15 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChefHat, Plus, Trash2, Camera, Save, Sparkles, Flame, Beef, Wheat, Droplets, ArrowLeft,
+  ChefHat, Plus, Trash2, Camera, Save, Sparkles, Flame, Beef, Wheat, Droplets, ArrowLeft, Search, CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import IngredientSearch from "@/components/recipe/IngredientSearch";
 import MacroGauge from "@/components/recipe/MacroGauge";
 import MealSlotMatcher from "@/components/recipe/MealSlotMatcher";
+import RecipeSearchDialog from "@/components/recipe/RecipeSearchDialog";
 import {
   RecipeIngredient, calculateRecipeMacros, perServingMacros, getAvailableUnits,
 } from "@/lib/recipeCalculator";
@@ -37,6 +39,8 @@ export default function RecipeBuilder() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [matcherOpen, setMatcherOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [savedDialogOpen, setSavedDialogOpen] = useState(false);
 
   const units = getAvailableUnits();
 
@@ -157,12 +161,32 @@ export default function RecipeBuilder() {
         }
       }
 
-      toast.success("Receita salva! 🎉 Seu nutricionista será notificado.");
-      navigate("/recipes");
+      toast.success("Receita salva! 🎉");
+      setSavedDialogOpen(true);
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     }
     setSaving(false);
+  };
+
+  // ── Load existing recipe into builder ──
+  const handleLoadRecipe = (r: {
+    title: string;
+    description: string;
+    instructions: string;
+    servings: number;
+    ingredients: RecipeIngredient[];
+    imageUrl: string | null;
+    imagePath: string | null;
+  }) => {
+    setTitle(r.title);
+    setDescription(r.description);
+    setInstructions(r.instructions);
+    setServings(r.servings);
+    setIngredients(r.ingredients);
+    setImageUrl(r.imageUrl);
+    setImagePath(r.imagePath);
+    toast.success(`Receita "${r.title}" carregada — agora você pode fazer o Match Clínico.`);
   };
 
   return (
@@ -173,12 +197,15 @@ export default function RecipeBuilder() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/recipes")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div>
+          <div className="flex-1 min-w-0">
             <h1 className="font-display text-xl font-bold flex items-center gap-2">
               <ChefHat className="w-5 h-5 text-primary" /> Calculadora de Receitas
             </h1>
             <p className="text-xs text-muted-foreground">Monte sua receita e veja os macros em tempo real</p>
           </div>
+          <Button variant="outline" size="sm" onClick={() => setSearchOpen(true)} className="gap-1.5 shrink-0">
+            <Search className="w-4 h-4" /> <span className="hidden sm:inline">Buscar Receita</span>
+          </Button>
         </div>
 
         {/* ── MACRO GAUGES ── */}
@@ -321,6 +348,49 @@ export default function RecipeBuilder() {
           servings={servings}
           recipeName={title || "Receita"}
         />
+
+        {/* ── SEARCH SAVED RECIPES ── */}
+        <RecipeSearchDialog
+          open={searchOpen}
+          onOpenChange={setSearchOpen}
+          onLoad={handleLoadRecipe}
+        />
+
+        {/* ── POST-SAVE CONFIRMATION ── */}
+        <Dialog open={savedDialogOpen} onOpenChange={setSavedDialogOpen}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="font-display flex items-center gap-2">
+                <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Receita salva com sucesso!
+              </DialogTitle>
+              <DialogDescription>
+                Seu nutricionista será notificado para revisar e aprovar.
+                Quer fazer o <strong>Match Clínico</strong> agora — ajustar as porções para encaixar em uma refeição do seu plano?
+              </DialogDescription>
+            </DialogHeader>
+            <div className="flex flex-col sm:flex-row gap-2 pt-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                onClick={() => {
+                  setSavedDialogOpen(false);
+                  navigate("/recipes");
+                }}
+              >
+                Voltar para Receitas
+              </Button>
+              <Button
+                className="flex-1 gradient-primary gap-2"
+                onClick={() => {
+                  setSavedDialogOpen(false);
+                  setMatcherOpen(true);
+                }}
+              >
+                <Sparkles className="w-4 h-4" /> Fazer Match Clínico
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
