@@ -202,6 +202,8 @@ export default function OnboardingPipeline() {
   }
 
   async function handleGoToAnamnesis() {
+    // Use SPA navigation. Hard reload routes through Lovable's auth-bridge,
+    // which lands the patient on /client/dashboard and triggers a guard loop.
     navigate("/anamnesis?pipeline=true");
   }
 

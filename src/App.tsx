@@ -304,7 +304,11 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
   }
   // 3. Force onboarding completion — only allow onboarding-related routes
   if (isPatient && requirement === "must_complete" && !isOnboardingAllowedRoute(location.pathname)) {
-    console.warn("[RouteGuard:PaymentGuarded] Onboarding incomplete → /onboarding");
+    console.warn("[RouteGuard:PaymentGuarded] Onboarding incomplete → /onboarding", {
+      pathname: location.pathname,
+      allowed: isOnboardingAllowedRoute(location.pathname),
+      requirement,
+    });
     return <Navigate to="/onboarding" replace />;
   }
   return <>{children}</>;
