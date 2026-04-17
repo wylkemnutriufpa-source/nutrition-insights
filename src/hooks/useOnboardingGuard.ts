@@ -81,7 +81,7 @@ export function useOnboardingGuard() {
         // Check if there's an active/in_progress onboarding pipeline
         const { data: pipeline } = await supabase
           .from("onboarding_pipelines" as any)
-          .select("id, status, anamnesis_completed, body_data_completed, preferences_completed, plan_generated, plan_approved")
+          .select("id, status, release_status, anamnesis_completed, body_data_completed, preferences_completed, plan_generated, plan_approved")
           .in("patient_id", allIds)
           .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan","superseded_by_reset")')
           .order("created_at", { ascending: false })
