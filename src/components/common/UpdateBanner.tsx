@@ -33,7 +33,8 @@ function forceHardReload() {
 
 function wasDismissedRecently(): boolean {
   try {
-    const ts = sessionStorage.getItem(DISMISS_KEY);
+    // Use localStorage so dismiss persists across hard reloads (was sessionStorage which gets cleared)
+    const ts = localStorage.getItem(DISMISS_KEY);
     if (!ts) return false;
     return Date.now() - Number(ts) < DISMISS_COOLDOWN_MS;
   } catch {
@@ -43,8 +44,26 @@ function wasDismissedRecently(): boolean {
 
 function markDismissed() {
   try {
-    sessionStorage.setItem(DISMISS_KEY, String(Date.now()));
+    localStorage.setItem(DISMISS_KEY, String(Date.now()));
   } catch {}
+}
+
+/** Records the time this page instance booted so we can ignore the very first
+ * controllerchange (which fires on normal first-load activation, not a real update). */
+function markBoot() {
+  try {
+    sessionStorage.setItem(SW_BOOT_KEY, String(Date.now()));
+  } catch {}
+}
+
+function isWithinBootGrace(): boolean {
+  try {
+    const ts = sessionStorage.getItem(SW_BOOT_KEY);
+    if (!ts) return true; // no boot timestamp yet → assume booting
+    return Date.now() - Number(ts) < SW_BOOT_GRACE_MS;
+  } catch {
+    return false;
+  }
 }
 
 /**
