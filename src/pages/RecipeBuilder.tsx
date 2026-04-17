@@ -8,15 +8,17 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  ChefHat, Plus, Trash2, Camera, Save, Sparkles, Flame, Beef, Wheat, Droplets, ArrowLeft,
+  ChefHat, Plus, Trash2, Camera, Save, Sparkles, Flame, Beef, Wheat, Droplets, ArrowLeft, Search, CheckCircle2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import IngredientSearch from "@/components/recipe/IngredientSearch";
 import MacroGauge from "@/components/recipe/MacroGauge";
 import MealSlotMatcher from "@/components/recipe/MealSlotMatcher";
+import RecipeSearchDialog from "@/components/recipe/RecipeSearchDialog";
 import {
   RecipeIngredient, calculateRecipeMacros, perServingMacros, getAvailableUnits,
 } from "@/lib/recipeCalculator";
