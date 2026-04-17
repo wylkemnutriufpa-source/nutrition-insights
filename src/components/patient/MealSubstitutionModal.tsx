@@ -66,7 +66,7 @@ export default function MealSubstitutionModal({
       if (!seen.has(f.name)) { foods.push(f); seen.add(f.name); }
     }
 
-    return foods.slice(0, 3).map(food => {
+    const blocks = foods.slice(0, 3).map(food => {
       const group = getFoodGroup(food.name);
       const subs = getValidSubstitutions(food.name, undefined, 4);
       return {
@@ -75,6 +75,28 @@ export default function MealSubstitutionModal({
         substitutions: subs,
       };
     }).filter(c => c.substitutions.length > 0);
+
+    // Last-resort fallback: if nothing was detected in the title, offer a generic
+    // protein/carb/fruit triplet so the patient always sees options.
+    if (blocks.length === 0) {
+      const fallbackPicks: FoodItem[] = [];
+      const proteinDefault = FOOD_DATABASE.find(f => f.name === "Frango grelhado");
+      const carbDefault = FOOD_DATABASE.find(f => f.name === "Arroz integral");
+      const fruitDefault = FOOD_DATABASE.find(f => f.category === "fruta");
+      [proteinDefault, carbDefault, fruitDefault].forEach(f => { if (f) fallbackPicks.push(f); });
+
+      return fallbackPicks.map(food => {
+        const group = getFoodGroup(food.name);
+        const subs = getValidSubstitutions(food.name, undefined, 4);
+        return {
+          current: food,
+          groupLabel: group ? SUBSTITUTION_GROUP_LABELS[group] : null,
+          substitutions: subs,
+        };
+      }).filter(c => c.substitutions.length > 0);
+    }
+
+    return blocks;
   }, [mealTitle]);
 
   const handleConfirm = async () => {
