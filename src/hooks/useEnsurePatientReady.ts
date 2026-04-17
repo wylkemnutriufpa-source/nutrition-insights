@@ -65,6 +65,26 @@ async function runEnsureOnce(
   patientId: string,
   context: string
 ): Promise<EnsureResult> {
+  // 1) Runtime fix primeiro (rápido, com cache de 5min no DB)
+  const { data: fixData, error: fixError } = await supabase.rpc(
+    "run_patient_realtime_fix" as any,
+    { _patient_id: patientId }
+  );
+
+  if (!fixError && fixData) {
+    const fixPayload = fixData as Record<string, unknown>;
+    const fixed = (fixPayload.fixed as number) ?? 0;
+    const success = (fixPayload.success as boolean) ?? false;
+    if (success && fixed > 0) {
+      return {
+        status: "fixed",
+        issues: [`runtime_fix:${fixed}`],
+        actions: [fixPayload],
+      };
+    }
+  }
+
+  // 2) Validação final via ensure_patient_ready
   const { data, error } = await supabase.rpc(
     "ensure_patient_ready" as any,
     { _patient_id: patientId }
