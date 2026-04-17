@@ -14845,6 +14845,39 @@ export type Database = {
         }
         Relationships: []
       }
+      runtime_patient_fixes: {
+        Row: {
+          actions: Json
+          context: string | null
+          created_at: string
+          error_message: string | null
+          id: string
+          issues: Json
+          patient_id: string
+          status: string
+        }
+        Insert: {
+          actions?: Json
+          context?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          issues?: Json
+          patient_id: string
+          status: string
+        }
+        Update: {
+          actions?: Json
+          context?: string | null
+          created_at?: string
+          error_message?: string | null
+          id?: string
+          issues?: Json
+          patient_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       saved_manual_plans: {
         Row: {
           created_at: string
@@ -18434,6 +18467,7 @@ export type Database = {
         Args: { _patient_id: string; _program_id: string; _reason?: string }
         Returns: Json
       }
+      ensure_patient_ready: { Args: { _patient_id: string }; Returns: Json }
       extract_topic_uuid: { Args: { _topic: string }; Returns: string }
       finalize_pipeline_execution: {
         Args: {
