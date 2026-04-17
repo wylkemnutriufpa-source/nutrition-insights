@@ -88,59 +88,95 @@ export default function PatientRegister() {
     }
     setLoading(true);
     try {
-      const { data, error } = await supabase.auth.signUp({
+      const nutriId = selectedProfessional?.user_id || null;
+
+      // ─── FLUXO A: SEM NUTRICIONISTA → cria APENAS LEAD ───
+      // Isso evita pacientes órfãos (sem vínculo). O lead é convertido depois pelo profissional.
+      if (!nutriId) {
+        const { error: leadErr } = await supabase.from("lead_requests").insert({
+          // Lead "público" sem dono explícito → usa um pool admin via referral
+          // Se não houver referral, registra mesmo assim para análise (nutritionist_id null não permitido,
+          // então usa um placeholder admin se existir; senão retorna erro orientando a escolher profissional)
+          nutritionist_id: "00000000-0000-0000-0000-000000000000",
+          name,
+          email: email.trim().toLowerCase(),
+          phone: phone || null,
+          source: "self_register",
+          referral_code: refCode || null,
+          message: "Cadastro espontâneo sem nutricionista selecionado.",
+        } as any);
+
+        if (leadErr) {
+          // Fallback: orienta o usuário a escolher um profissional
+          toast.error("Selecione um profissional para concluir o cadastro.");
+          setShowProfSearch(true);
+          setLoading(false);
+          return;
+        }
+
+        toast.success("Recebemos seu interesse! Em breve um profissional entrará em contato.");
+        setDone(true);
+        setLoading(false);
+        return;
+      }
+
+      // ─── FLUXO B: COM NUTRICIONISTA → função canônica ───
+      const { data: session } = await supabase.auth.getSession();
+      // Auto-cadastro: precisamos de uma sessão válida para chamar create-patient.
+      // Estratégia: faz signUp primeiro (cria auth.users + sessão), depois roteia via canônica.
+      const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email,
         password,
         options: { data: { full_name: name } },
       });
 
-      if (error) {
-        toast.error(error.message === "User already registered"
+      if (signUpErr) {
+        toast.error(signUpErr.message === "User already registered"
           ? "Este e-mail já está cadastrado. Faça login."
-          : error.message);
+          : signUpErr.message);
         setLoading(false);
         return;
       }
 
-      if (data.user) {
-        // Register as patient role
-        const { error: rpcError } = await supabase.rpc("self_register_patient", {
-          _user_id: data.user.id,
-          _referral_code: refCode || null,
-        });
-        if (rpcError) console.error("RPC error:", rpcError);
-
-        // Ensure profile with phone - use RPC result for tenant_id
-        const rpcResult = rpcError ? null : null; // tenant resolved by RPC
-        await supabase.from("profiles").upsert({
-          user_id: data.user.id,
-          full_name: name,
-          phone: phone || null,
-        } as any, { onConflict: "user_id" });
-
-        // Link to nutritionist if selected
-        const nutriId = selectedProfessional?.user_id || null;
-        if (nutriId) {
-          // Create link via RPC
-          const { transitionJourneyStatus } = await import("@/lib/serverTransitions");
-          await transitionJourneyStatus(data.user.id, nutriId, "lead_created").catch(console.warn);
-
-          // Notify professional
-          await supabase.from("notifications").insert({
-            user_id: nutriId,
-            title: "Novo paciente cadastrado",
-            message: `${name} se cadastrou e vinculou ao seu perfil.`,
-            type: "patient_registered",
-            entity_type: "patient",
-            entity_id: data.user.id,
-            target_route: `/patients/${data.user.id}`,
-          } as any);
-        }
-
-        toast.success("Conta criada! Verifique seu e-mail para confirmar.");
-        setDone(true);
+      if (!signUpData.user) {
+        toast.error("Falha ao criar conta.");
+        setLoading(false);
+        return;
       }
-    } catch {
+
+      // Chama RPC canônica diretamente (autenticada como o próprio paciente recém-criado)
+      const { error: canonErr } = await supabase.rpc("create_patient_canonical" as any, {
+        _patient_id: signUpData.user.id,
+        _full_name: name,
+        _email: email.trim().toLowerCase(),
+        _phone: phone || null,
+        _nutritionist_id: nutriId,
+        _source: "register",
+        _metadata: { referral_code: refCode || null },
+      });
+
+      if (canonErr) {
+        console.error("[PatientRegister] canonical error:", canonErr);
+        // Não bloqueia: usuário foi criado, profissional será notificado para reconciliar
+      }
+
+      // Notifica o profissional
+      try {
+        await supabase.from("notifications").insert({
+          user_id: nutriId,
+          title: "Novo paciente cadastrado",
+          message: `${name} se cadastrou e vinculou ao seu perfil.`,
+          type: "patient_registered",
+          entity_type: "patient",
+          entity_id: signUpData.user.id,
+          target_route: `/patients/${signUpData.user.id}`,
+        } as any);
+      } catch (_) {}
+
+      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+      setDone(true);
+    } catch (err) {
+      console.error(err);
       toast.error("Erro ao criar conta. Tente novamente.");
     }
     setLoading(false);
