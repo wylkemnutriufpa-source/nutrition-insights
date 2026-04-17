@@ -29,22 +29,43 @@ function markDismissed() {
 export default function UpdateBanner() {
   const [dismissed, setDismissed] = useState(() => wasDismissedRecently());
   const [updating, setUpdating] = useState(false);
+  const [fallbackNeedRefresh, setFallbackNeedRefresh] = useState(false);
 
   const {
     needRefresh: [needRefresh],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegisteredSW(_swUrl, registration) {
+    onRegisteredSW(swUrl, registration) {
+      console.log("[FJ:SW] Registered:", swUrl);
       if (registration) {
+        // Check immediately if there's already a waiting worker (missed event)
+        if (registration.waiting) {
+          console.log("[FJ:SW] Waiting worker already present at mount");
+          setFallbackNeedRefresh(true);
+        }
+        // Periodic update check
         setInterval(() => {
-          registration.update();
-        }, 5 * 60 * 1000); // check every 5 min instead of 1 min
+          registration.update().catch(() => {});
+        }, 5 * 60 * 1000);
+        // Listen for new updates manually as a fallback
+        registration.addEventListener("updatefound", () => {
+          const newWorker = registration.installing;
+          if (!newWorker) return;
+          newWorker.addEventListener("statechange", () => {
+            if (newWorker.state === "installed" && navigator.serviceWorker.controller) {
+              console.log("[FJ:SW] New version installed, prompting user");
+              setFallbackNeedRefresh(true);
+            }
+          });
+        });
       }
     },
     onRegisterError(error) {
       console.error("[FJ:SW] Registration error:", error);
     },
   });
+
+  const showBanner = needRefresh || fallbackNeedRefresh;
 
   const handleUpdate = useCallback(async () => {
     if (updating) return;
@@ -66,7 +87,7 @@ export default function UpdateBanner() {
     setDismissed(true);
   }, []);
 
-  if (!needRefresh || dismissed) return null;
+  if (!showBanner || dismissed) return null;
 
   return (
     <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] animate-in slide-in-from-bottom-4 fade-in duration-300">
