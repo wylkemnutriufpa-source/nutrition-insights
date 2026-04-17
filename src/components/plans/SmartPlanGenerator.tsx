@@ -1,9 +1,11 @@
 import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
-import { Zap, Brain, Stethoscope, Loader2, Save, AlertTriangle } from "lucide-react";
+import { Zap, Brain, Stethoscope, Loader2, Save, AlertTriangle, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -46,6 +48,30 @@ const MODES: { key: GenerationMode; icon: typeof Zap; label: string; subtitle: s
   },
 ];
 
+const OVERRIDE_BLOCKING_CODES = new Set([
+  "ANAMNESIS_MISSING",
+  "BODY_DATA_MISSING",
+  "GOAL_MISSING",
+]);
+
+interface ProfessionalOverride {
+  weight: string;
+  height: string;
+  age: string;
+  sex: "male" | "female";
+  goal: string;
+  activityLevel: string;
+}
+
+const DEFAULT_OVERRIDE: ProfessionalOverride = {
+  weight: "",
+  height: "",
+  age: "30",
+  sex: "female",
+  goal: "weight_loss",
+  activityLevel: "moderate",
+};
+
 export default function SmartPlanGenerator({ patientId, patientName, onGenerated, onClose }: Props) {
   const { user } = useAuth();
   const [selectedMode, setSelectedMode] = useState<GenerationMode>("quick");
@@ -53,6 +79,11 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
   const [activePlanName, setActivePlanName] = useState<string | null>(null);
   const [showReplaceDialog, setShowReplaceDialog] = useState(false);
+
+  // Professional override (used when patient anamnesis is missing/incomplete)
+  const [showOverride, setShowOverride] = useState(false);
+  const [override, setOverride] = useState<ProfessionalOverride>(DEFAULT_OVERRIDE);
+  const [lastErrorCode, setLastErrorCode] = useState<string | null>(null);
 
   // Check if patient already has an active plan
   useEffect(() => {
@@ -82,10 +113,37 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
     await doGenerate();
   };
 
-  const doGenerate = async () => {
+  const buildOverridePayload = () => {
+    const w = parseFloat(override.weight);
+    const h = parseFloat(override.height);
+    const a = parseInt(override.age);
+    if (!w || w < 20 || !h || h < 80) {
+      toast.error("Informe peso (kg) e altura (cm) válidos.");
+      return null;
+    }
+    return {
+      weight: w,
+      height: h,
+      age: Number.isFinite(a) && a > 0 ? a : 30,
+      sex: override.sex,
+      goal: override.goal,
+      activityLevel: override.activityLevel,
+    };
+  };
+
+  const doGenerate = async (withOverride = false) => {
     if (!user) return;
     setGenerating(true);
     setShowReplaceDialog(false);
+
+    let professionalOverride: ReturnType<typeof buildOverridePayload> = null;
+    if (withOverride) {
+      professionalOverride = buildOverridePayload();
+      if (!professionalOverride) {
+        setGenerating(false);
+        return;
+      }
+    }
 
     try {
       // Ensure session is fresh before calling edge function
@@ -96,7 +154,11 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
         return;
       }
 
-      toast.info(`⚡ Gerando ${MODES.find(m => m.key === selectedMode)?.label}...`);
+      toast.info(
+        withOverride
+          ? "⚙️ Gerando com dados informados pelo profissional..."
+          : `⚡ Gerando ${MODES.find(m => m.key === selectedMode)?.label}...`
+      );
 
       const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
         body: {
@@ -105,10 +167,24 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           isPipeline: false,
           generationMode: selectedMode,
           saveAsTemplate,
+          ...(professionalOverride ? { professionalOverride } : {}),
         },
       });
 
       if (error || !data?.success) {
+        // Edge function returned a structured error code we can recover from
+        const errCode: string | undefined = data?.code;
+        const overrideSupported = !!data?.professional_override_supported;
+
+        if (errCode && OVERRIDE_BLOCKING_CODES.has(errCode) && overrideSupported && !withOverride) {
+          setLastErrorCode(errCode);
+          setShowOverride(true);
+          toast.warning(
+            "Dados do paciente incompletos. Preencha os campos abaixo para gerar o plano agora mesmo."
+          );
+          return;
+        }
+
         const msg = error
           ? await friendlyEdgeFunctionError(error, "Erro ao gerar plano")
           : (data?.error || "Erro desconhecido ao gerar plano");
@@ -193,24 +269,125 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
         />
       </div>
 
+      {/* Professional override panel — appears when patient data is missing */}
+      {showOverride && (
+        <div className="rounded-xl border-2 border-primary/30 bg-primary/5 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-primary" />
+            <p className="text-sm font-semibold">Modo Profissional — Gerar Mesmo Assim</p>
+          </div>
+          <p className="text-xs text-muted-foreground">
+            {lastErrorCode === "ANAMNESIS_MISSING"
+              ? "O paciente ainda não preencheu a anamnese. Informe os dados clínicos básicos para liberar o plano."
+              : lastErrorCode === "BODY_DATA_MISSING"
+              ? "Peso e altura do paciente não estão registrados. Informe abaixo."
+              : "Defina o objetivo clínico para liberar o plano."}
+          </p>
+
+          <div className="grid grid-cols-2 gap-2">
+            <div className="space-y-1">
+              <Label className="text-xs">Peso (kg)</Label>
+              <Input
+                type="number"
+                step="0.1"
+                value={override.weight}
+                onChange={(e) => setOverride({ ...override, weight: e.target.value })}
+                placeholder="Ex: 72"
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Altura (cm)</Label>
+              <Input
+                type="number"
+                value={override.height}
+                onChange={(e) => setOverride({ ...override, height: e.target.value })}
+                placeholder="Ex: 165"
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Idade</Label>
+              <Input
+                type="number"
+                value={override.age}
+                onChange={(e) => setOverride({ ...override, age: e.target.value })}
+                className="h-9"
+              />
+            </div>
+            <div className="space-y-1">
+              <Label className="text-xs">Sexo</Label>
+              <Select value={override.sex} onValueChange={(v) => setOverride({ ...override, sex: v as "male" | "female" })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="female">Feminino</SelectItem>
+                  <SelectItem value="male">Masculino</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label className="text-xs">Objetivo</Label>
+              <Select value={override.goal} onValueChange={(v) => setOverride({ ...override, goal: v })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weight_loss">Emagrecimento</SelectItem>
+                  <SelectItem value="hypertrophy">Hipertrofia</SelectItem>
+                  <SelectItem value="maintenance">Manutenção</SelectItem>
+                  <SelectItem value="performance">Performance</SelectItem>
+                  <SelectItem value="health">Saúde geral</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-1 col-span-2">
+              <Label className="text-xs">Nível de atividade</Label>
+              <Select value={override.activityLevel} onValueChange={(v) => setOverride({ ...override, activityLevel: v })}>
+                <SelectTrigger className="h-9"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="sedentary">Sedentário</SelectItem>
+                  <SelectItem value="light">Leve</SelectItem>
+                  <SelectItem value="moderate">Moderado</SelectItem>
+                  <SelectItem value="active">Ativo</SelectItem>
+                  <SelectItem value="very_active">Muito ativo</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => doGenerate(true)}
+            disabled={generating}
+            className="w-full gap-2"
+            variant="default"
+          >
+            {generating ? (
+              <><Loader2 className="w-4 h-4 animate-spin" /> Gerando...</>
+            ) : (
+              <><ShieldCheck className="w-4 h-4" /> Gerar com dados informados</>
+            )}
+          </Button>
+        </div>
+      )}
+
       {/* Generate button */}
-      <Button
-        onClick={handleGenerate}
-        disabled={generating || !patientId}
-        className="w-full gradient-primary shadow-glow gap-2 h-12 text-base"
-      >
-        {generating ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Gerando plano...
-          </>
-        ) : (
-          <>
-            <Zap className="w-5 h-5" />
-            Gerar Plano em 10s
-          </>
-        )}
-      </Button>
+      {!showOverride && (
+        <Button
+          onClick={handleGenerate}
+          disabled={generating || !patientId}
+          className="w-full gradient-primary shadow-glow gap-2 h-12 text-base"
+        >
+          {generating ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Gerando plano...
+            </>
+          ) : (
+            <>
+              <Zap className="w-5 h-5" />
+              Gerar Plano em 10s
+            </>
+          )}
+        </Button>
+      )}
 
       {onClose && (
         <Button variant="ghost" onClick={onClose} className="w-full text-sm">
@@ -235,7 +412,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={doGenerate} className="gradient-primary">
+            <AlertDialogAction onClick={() => doGenerate(false)} className="gradient-primary">
               Substituir e Gerar Novo
             </AlertDialogAction>
           </AlertDialogFooter>
