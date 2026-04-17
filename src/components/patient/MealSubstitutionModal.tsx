@@ -12,7 +12,7 @@ import {
 import { FOOD_DATABASE, type FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
   getValidSubstitutions, getFoodGroup, SUBSTITUTION_GROUP_LABELS,
-  SMART_LABEL_CONFIG, type SmartLabel, type SubstitutionGroup,
+  SMART_LABEL_CONFIG, findFoodsInTitle, type SmartLabel, type SubstitutionGroup,
 } from "@/lib/substitutionGroups";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
@@ -25,6 +25,12 @@ interface MealSubstitutionModalProps {
   mealPlanId: string;
   patientId: string;
   onSubstitute: (food: FoodItem, originalTitle: string) => void;
+}
+
+interface ComponentBlock {
+  current: FoodItem;
+  groupLabel: string | null;
+  substitutions: ReturnType<typeof getValidSubstitutions>;
 }
 
 function DiffBadge({ diff, unit }: { diff: number; unit: string }) {
@@ -41,25 +47,39 @@ function DiffBadge({ diff, unit }: { diff: number; unit: string }) {
 export default function MealSubstitutionModal({
   open, onOpenChange, mealTitle, mealPlanItemId, mealPlanId, patientId, onSubstitute,
 }: MealSubstitutionModalProps) {
-  const [selected, setSelected] = useState<FoodItem | null>(null);
+  const [selected, setSelected] = useState<{ original: FoodItem; replacement: FoodItem } | null>(null);
   const [confirming, setConfirming] = useState(false);
 
-  const { currentMatch, substitutions, groupLabel } = useMemo(() => {
+  const components: ComponentBlock[] = useMemo(() => {
+    // 1) Try direct/substring match
     const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const query = norm(mealTitle);
-    const match = FOOD_DATABASE.find(f => {
+    const direct = FOOD_DATABASE.find(f => {
       const n = norm(f.name);
       return n === query || query.includes(n) || n.includes(query);
     });
 
-    if (!match) return { currentMatch: null, substitutions: [], groupLabel: null };
-
-    const group = getFoodGroup(match.name);
-    const subs = getValidSubstitutions(match.name, undefined, 3);
-    const label = group ? SUBSTITUTION_GROUP_LABELS[group] : null;
-
-    return { currentMatch: match, substitutions: subs, groupLabel: label };
+    // 2) Fuzzy multi-component detection (e.g. "Cuscuz com ovo" → cuscuz + ovo)
+    const fuzzyFoods = findFoodsInTitle(mealTitle);
+    const seen = new Set<string>();
+    const foods: FoodItem[] = [];
+    if (direct) { foods.push(direct); seen.add(direct.name); }
+    for (const f of fuzzyFoods) {
+      if (!seen.has(f.name)) { foods.push(f); seen.add(f.name); }
+    }
+    // Cap at 3 components to keep UI clean
+    return foods.slice(0, 3).map(food => {
+      const group = getFoodGroup(food.name);
+      const subs = getValidSubstitutions(food.name, undefined, 4);
+      return {
+        current: food,
+        groupLabel: group ? SUBSTITUTION_GROUP_LABELS[group] : null,
+        substitutions: subs,
+      };
+    }).filter(c => c.substitutions.length > 0);
   }, [mealTitle]);
+
+  const totalSubs = components.reduce((acc, c) => acc + c.substitutions.length, 0);
 
   const handleConfirm = async () => {
     if (!selected || !currentMatch) return;
