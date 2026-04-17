@@ -11,7 +11,6 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save, Lock, AlertTriangle, ArrowRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
-import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
