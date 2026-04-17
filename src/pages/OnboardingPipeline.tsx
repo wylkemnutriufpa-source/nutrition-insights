@@ -12,7 +12,7 @@ import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { usePatientPlanStatus } from "@/hooks/usePatientPlanStatus";
 import { useConsentGuard, TERMS_VERSION } from "@/hooks/useConsentGuard";
 import { logAudit } from "@/lib/auditLog";
@@ -201,11 +201,9 @@ export default function OnboardingPipeline() {
     }
   }
 
-  async function handleGoToAnamnesis() {
-    // Use SPA navigation. Hard reload routes through Lovable's auth-bridge,
-    // which lands the patient on /client/dashboard and triggers a guard loop.
-    navigate("/anamnesis?pipeline=true");
-  }
+  // NOTE: Anamnese é parte do mesmo onboarding (não rota separada conceitualmente).
+  // Usamos <Link> real para garantir transição atômica sem rebote.
+  // Pipeline + Anamnese = UMA jornada com mesmo OnboardingExitGuard e progresso.
 
   async function handleSaveBodyData() {
     if (!pipeline || !user) return;
@@ -526,8 +524,10 @@ export default function OnboardingPipeline() {
                       </div>
                     ))}
                   </div>
-                  <Button onClick={handleGoToAnamnesis} className="w-full" size="lg">
-                    Iniciar Anamnese <ArrowRight className="w-4 h-4 ml-2" />
+                  <Button asChild className="w-full" size="lg">
+                    <Link to="/anamnesis?pipeline=true">
+                      Iniciar Anamnese <ArrowRight className="w-4 h-4 ml-2" />
+                    </Link>
                   </Button>
                 </CardContent>
               </Card>

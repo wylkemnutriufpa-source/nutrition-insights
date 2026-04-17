@@ -302,10 +302,19 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
     console.warn("[RouteGuard:PaymentGuarded] Not paid → /payment-required");
     return <Navigate to="/payment-required" replace />;
   }
-  // 3. Force onboarding completion — only allow onboarding-related routes
-  if (isPatient && requirement === "must_complete" && !isOnboardingAllowedRoute(location.pathname)) {
+  // 3. Force onboarding completion — only allow onboarding-related routes.
+  // Defesa extra: se a URL traz ?pipeline=true, é uma transição interna do
+  // próprio fluxo de onboarding e não pode ser interrompida (anti-loop).
+  const isPipelineHandoff = location.search.includes("pipeline=true");
+  if (
+    isPatient &&
+    requirement === "must_complete" &&
+    !isOnboardingAllowedRoute(location.pathname) &&
+    !isPipelineHandoff
+  ) {
     console.warn("[RouteGuard:PaymentGuarded] Onboarding incomplete → /onboarding", {
       pathname: location.pathname,
+      search: location.search,
       allowed: isOnboardingAllowedRoute(location.pathname),
       requirement,
     });
