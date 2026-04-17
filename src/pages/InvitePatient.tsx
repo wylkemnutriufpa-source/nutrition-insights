@@ -117,11 +117,7 @@ export default function InvitePatient() {
     }
   };
 
-  const copyCredentials = () => {
-    navigator.clipboard.writeText(`Email: ${email}\nSenha: ${tempPassword}`);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  const credentialsBlock = `Email: ${email}\nSenha: ${tempPassword}\nLink de onboarding: ${onboardingLink}`;
 
   return (
     <SubscriptionGuard featureName="Convite de Pacientes">
@@ -235,27 +231,74 @@ export default function InvitePatient() {
                 <p className="text-sm text-muted-foreground mt-1">{name} foi cadastrado(a) com sucesso.</p>
               </div>
 
+              <div className="space-y-2 text-left">
+                <p className="text-sm font-semibold text-foreground">📤 Link oficial de onboarding</p>
+                <p className="text-xs text-muted-foreground">
+                  Toda anamnese acontece dentro do onboarding — esse é o único caminho do paciente.
+                  Compartilhe o link abaixo via WhatsApp ou envie por email.
+                </p>
+                <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
+                  <LinkIcon className="w-4 h-4 text-primary shrink-0" />
+                  <code className="text-xs flex-1 truncate">{onboardingLink}</code>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 gap-1"
+                    onClick={() => copyToClipboard(onboardingLink, "link", "Link")}
+                  >
+                    {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                  </Button>
+                </div>
+                <div className="grid grid-cols-2 gap-2 pt-1">
+                  <Button
+                    asChild
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                  >
+                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                      <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                    </a>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="gap-1.5"
+                    onClick={handleSendOnboardingEmail}
+                    disabled={sendingEmail}
+                  >
+                    <Send className="w-3.5 h-3.5" />
+                    {sendingEmail ? "Enviando..." : "Enviar por email"}
+                  </Button>
+                </div>
+              </div>
+
               {method === "magic_link" && (
-                <p className="text-sm text-muted-foreground">
-                  Um email foi enviado para <strong>{email}</strong> com link para definir a senha.
+                <p className="text-xs text-muted-foreground">
+                  Um link inicial também foi enviado para <strong>{email}</strong>.
                 </p>
               )}
 
               {method === "password" && (
-                <div className="space-y-2">
-                  <p className="text-sm text-muted-foreground">Compartilhe as credenciais:</p>
-                  <div className="bg-card border border-border rounded-lg p-3 text-left font-mono text-sm">
+                <div className="space-y-2 text-left">
+                  <p className="text-sm font-semibold text-foreground">🔐 Credenciais geradas</p>
+                  <div className="bg-card border border-border rounded-lg p-3 font-mono text-sm space-y-0.5">
                     <p>Email: {email}</p>
                     <p>Senha: {tempPassword}</p>
                   </div>
-                  <Button variant="outline" size="sm" className="gap-1.5" onClick={copyCredentials}>
-                    {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-                    {copied ? "Copiado!" : "Copiar credenciais"}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5"
+                    onClick={() => copyToClipboard(credentialsBlock, "creds", "Credenciais + link")}
+                  >
+                    {copied === "creds" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied === "creds" ? "Copiado!" : "Copiar tudo (credenciais + link)"}
                   </Button>
                 </div>
               )}
 
-              <div className="flex gap-2 justify-center pt-2">
+              <div className="flex gap-2 justify-center pt-2 flex-wrap">
                 {attendanceMode === "presential" && createdPatientId && (
                   <Button onClick={() => navigate(`/in-office/${createdPatientId}`)} className="gap-2">
                     🏥 Iniciar Consulta Presencial
