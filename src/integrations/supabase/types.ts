@@ -18489,6 +18489,7 @@ export type Database = {
       find_patient_by_email: { Args: { _email: string }; Returns: string }
       fix_all_null_tokens: { Args: never; Returns: undefined }
       fix_patient_integrity: { Args: { _patient_id: string }; Returns: Json }
+      fix_patient_integrity_v2: { Args: { _patient_id: string }; Returns: Json }
       fix_user_null_tokens: { Args: { _user_id: string }; Returns: undefined }
       flag_plan_review_needed: {
         Args: { _patient_id: string; _reason?: string }
