@@ -64,14 +64,21 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
         .select("tenant_id")
         .eq("patient_id", patientId)
         .eq("nutritionist_id", user.id)
+        .eq("status", "active")
         .maybeSingle();
+
+      if (!np?.tenant_id) {
+        toast.error("Vínculo com paciente não encontrado.");
+        setLoading(false);
+        return;
+      }
 
       const { data: plan, error } = await supabase
         .from("meal_plans")
         .insert({
           patient_id: patientId,
           nutritionist_id: user.id,
-          tenant_id: np?.tenant_id || "",
+          tenant_id: np.tenant_id,
           title: "Plano Presencial — " + new Date().toLocaleDateString("pt-BR"),
           plan_status: "draft",
           start_date: new Date().toISOString().split("T")[0],
