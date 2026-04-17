@@ -18120,6 +18120,45 @@ export type Database = {
         }
         Relationships: []
       }
+      public_profile_settings_safe: {
+        Row: {
+          bio: string | null
+          booking_enabled: boolean | null
+          booking_payment_required: boolean | null
+          booking_price: number | null
+          created_at: string | null
+          id: string | null
+          is_public: boolean | null
+          slug: string | null
+          specialties: string[] | null
+          updated_at: string | null
+        }
+        Insert: {
+          bio?: string | null
+          booking_enabled?: boolean | null
+          booking_payment_required?: boolean | null
+          booking_price?: number | null
+          created_at?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          slug?: string | null
+          specialties?: string[] | null
+          updated_at?: string | null
+        }
+        Update: {
+          bio?: string | null
+          booking_enabled?: boolean | null
+          booking_payment_required?: boolean | null
+          booking_price?: number | null
+          created_at?: string | null
+          id?: string | null
+          is_public?: boolean | null
+          slug?: string | null
+          specialties?: string[] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       testimonials_public: {
         Row: {
           avatar_url: string | null
