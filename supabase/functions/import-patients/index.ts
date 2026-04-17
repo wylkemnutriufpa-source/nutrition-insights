@@ -81,7 +81,7 @@ async function ensurePatientBindingIntegrity(
   }
 }
 
-/** Process a single patient import with retries */
+/** Process a single patient import via canonical RPC */
 async function importOnePatient(
   supabase: any,
   email: string,
@@ -91,82 +91,51 @@ async function importOnePatient(
 ): Promise<{ ok: boolean; error?: string }> {
   try {
     const standardPassword = randomTemporaryPassword();
+    let finalId: string | null = null;
 
-    // 1. Try RPC first (fastest path)
-    const { data: patientUserId, error: rpcError } = await supabase.rpc(
-      "create_patient_account",
-      { _email: email, _full_name: fullName, _password: standardPassword }
-    );
+    // 1. Cria via admin API (substitui create_patient_account legada/bloqueada)
+    const { data: created, error: createErr } = await supabase.auth.admin.createUser({
+      email,
+      password: standardPassword,
+      email_confirm: true,
+      user_metadata: { full_name: fullName, role: "patient" },
+    });
 
-    let finalId = patientUserId;
+    if (createErr) {
+      const msg = createErr.message || "";
+      const exists = msg.includes("already been registered") || (createErr as any).code === "email_exists";
+      if (!exists) return { ok: false, error: `${email}: ${msg}` };
 
-    if (rpcError) {
-      console.log(`[import] RPC failed: ${rpcError.message}, trying admin API`);
-
-      // 2. Check if user exists
       const { data: foundId } = await supabase.rpc("find_patient_by_email", { _email: email });
-
       if (foundId) {
-        finalId = foundId;
+        finalId = foundId as string;
       } else {
-        // 3. Create via admin API with standard password
-        const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
-          email,
-          password: standardPassword,
-          email_confirm: true,
-          user_metadata: { full_name: fullName },
-        });
-
-        if (createError) {
-          return { ok: false, error: `${email}: ${createError.message}` };
-        }
-        finalId = newUser.user.id;
-
-        // Fix NULL tokens
-        try { await supabase.rpc("fix_user_null_tokens" as any, { _user_id: finalId }); } catch (_) {}
+        const { data: list } = await supabase.auth.admin.listUsers();
+        const existing = list?.users?.find((u: any) => u.email?.toLowerCase() === email.toLowerCase());
+        if (!existing) return { ok: false, error: `${email}: usuário existe mas não localizado` };
+        finalId = existing.id;
       }
-
-      // Ensure role
-      await supabase
-        .from("user_roles")
-        .upsert({ user_id: finalId, role: "patient" }, { onConflict: "user_id,role" });
-
-      // Ensure profile
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_id")
-        .eq("user_id", finalId)
-        .maybeSingle();
-
-      if (!profile) {
-        await supabase.from("profiles").insert({ user_id: finalId, full_name: fullName, tenant_id: tenantId });
-      }
-    } else if (finalId) {
-      // RPC succeeded — ensure role exists (belt & suspenders)
-      await supabase
-        .from("user_roles")
-        .upsert({ user_id: finalId, role: "patient" }, { onConflict: "user_id,role" });
-
-      // Set name if missing
-      await supabase
-        .from("profiles")
-        .update({ full_name: fullName })
-        .eq("user_id", finalId)
-        .is("full_name", null);
+    } else {
+      finalId = created.user.id;
+      try { await supabase.rpc("fix_user_null_tokens" as any, { _user_id: finalId }); } catch (_) {}
     }
 
-    if (!finalId) {
-      return { ok: false, error: `${email}: ID não gerado` };
-    }
+    if (!finalId) return { ok: false, error: `${email}: ID não gerado` };
 
-    await ensurePatientBindingIntegrity(supabase, finalId, nutritionistId, tenantId);
+    // 2. Função CANÔNICA — único caminho autorizado
+    const { error: canonErr } = await supabase.rpc("create_patient_canonical", {
+      _patient_id: finalId,
+      _full_name: fullName,
+      _email: email,
+      _phone: null,
+      _nutritionist_id: nutritionistId,
+      _source: "import",
+      _metadata: { batch_import: true },
+    });
 
-    // Ensure patient is in same tenant
-    if (tenantId) {
-      await supabase.from("user_tenants").upsert(
-        { user_id: finalId, tenant_id: tenantId, role: "patient" },
-        { onConflict: "user_id,tenant_id" }
-      ).then(() => {});
+    if (canonErr) {
+      console.error(`[import] canonical error for ${email}:`, canonErr);
+      return { ok: false, error: `${email}: ${canonErr.message}` };
     }
 
     return { ok: true };

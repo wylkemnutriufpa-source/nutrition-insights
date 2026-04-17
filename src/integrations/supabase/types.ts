@@ -9225,6 +9225,39 @@ export type Database = {
           },
         ]
       }
+      patient_creation_log: {
+        Row: {
+          created_at: string
+          created_by: string | null
+          id: string
+          metadata: Json | null
+          nutritionist_id: string | null
+          patient_id: string
+          source: string
+          tenant_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          nutritionist_id?: string | null
+          patient_id: string
+          source: string
+          tenant_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          metadata?: Json | null
+          nutritionist_id?: string | null
+          patient_id?: string
+          source?: string
+          tenant_id?: string | null
+        }
+        Relationships: []
+      }
       patient_daily_adherence: {
         Row: {
           checkin_score: number | null
@@ -18349,6 +18382,10 @@ export type Database = {
         Args: { _nutritionist_id: string; _patient_id: string }
         Returns: Json
       }
+      convert_lead_to_patient: {
+        Args: { _lead_id: string; _password_set?: boolean; _patient_id: string }
+        Returns: Json
+      }
       create_nutritionist_account: {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
@@ -18356,6 +18393,18 @@ export type Database = {
       create_patient_account: {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
+      }
+      create_patient_canonical: {
+        Args: {
+          _email: string
+          _full_name: string
+          _metadata?: Json
+          _nutritionist_id?: string
+          _patient_id: string
+          _phone?: string
+          _source?: string
+        }
+        Returns: Json
       }
       create_professional_account: {
         Args: {
