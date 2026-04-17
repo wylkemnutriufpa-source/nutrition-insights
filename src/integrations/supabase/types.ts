@@ -9340,6 +9340,36 @@ export type Database = {
           },
         ]
       }
+      patient_data_audit_log: {
+        Row: {
+          action_taken: string
+          details: Json | null
+          id: string
+          issue_type: string
+          patient_id: string | null
+          run_at: string
+          status: string
+        }
+        Insert: {
+          action_taken: string
+          details?: Json | null
+          id?: string
+          issue_type: string
+          patient_id?: string | null
+          run_at?: string
+          status?: string
+        }
+        Update: {
+          action_taken?: string
+          details?: Json | null
+          id?: string
+          issue_type?: string
+          patient_id?: string | null
+          run_at?: string
+          status?: string
+        }
+        Relationships: []
+      }
       patient_documents: {
         Row: {
           assessment_id: string | null
@@ -18654,6 +18684,7 @@ export type Database = {
         Args: { _contact_method?: string; _patient_id: string }
         Returns: Json
       }
+      normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
       preview_orphan_onboarding_pipelines: {
         Args: never
         Returns: {
@@ -18729,6 +18760,7 @@ export type Database = {
         Returns: Json
       }
       resolve_tenant_for_user: { Args: { _user_id: string }; Returns: string }
+      run_patient_data_audit: { Args: { _dry_run?: boolean }; Returns: Json }
       run_security_audit: { Args: never; Returns: Json }
       save_plan_as_approved: {
         Args: { _nutritionist_id: string; _plan_id: string }
