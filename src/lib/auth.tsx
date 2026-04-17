@@ -107,25 +107,31 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initializeAuth = async () => {
-      // getSession is the reliable source for the initial session
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        // getSession is the reliable source for the initial session
+        const { data: { session } } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      setSession(session);
-      setUser(session?.user ?? null);
+        setSession(session);
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await Promise.all([
-          fetchProfile(session.user.id),
-          fetchRoles(session.user.id),
-        ]);
-        if (mounted) {
-          setLoading(false);
-          checkSubscription();
+        if (session?.user) {
+          // Wrap in Promise.allSettled so one slow/failing query never blocks the app forever
+          await Promise.allSettled([
+            fetchProfile(session.user.id),
+            fetchRoles(session.user.id),
+          ]);
+          if (mounted) {
+            setLoading(false);
+            checkSubscription();
+          }
+        } else {
+          if (mounted) setLoading(false);
         }
-      } else {
-        setLoading(false);
+      } catch (err) {
+        console.error("[Auth] initializeAuth failed:", err);
+        if (mounted) setLoading(false);
       }
     };
 
