@@ -6,6 +6,29 @@ import { Button } from "@/components/ui/button";
 const DISMISS_KEY = "fj:update-dismissed-at";
 const DISMISS_COOLDOWN_MS = 5 * 60 * 1000; // 5 min cooldown after dismiss/update
 
+async function clearRuntimeCaches() {
+  const tasks: Promise<unknown>[] = [];
+
+  if ("caches" in window) {
+    tasks.push(
+      caches.keys().then((keys) => Promise.all(keys.map((key) => caches.delete(key))))
+    );
+  }
+
+  const queryClient = (window as any).__REACT_QUERY_CLIENT__;
+  if (queryClient?.clear) {
+    tasks.push(Promise.resolve(queryClient.clear()));
+  }
+
+  await Promise.allSettled(tasks);
+}
+
+function forceHardReload() {
+  const url = new URL(window.location.href);
+  url.searchParams.set("refresh", String(Date.now()));
+  window.location.replace(url.toString());
+}
+
 function wasDismissedRecently(): boolean {
   try {
     const ts = sessionStorage.getItem(DISMISS_KEY);
@@ -116,12 +139,14 @@ export default function UpdateBanner() {
     markDismissed(); // prevent loop on reload
     try {
       await updateServiceWorker(true);
+      await clearRuntimeCaches();
       setTimeout(() => {
-        window.location.reload();
-      }, 800);
+        forceHardReload();
+      }, 250);
     } catch (err) {
       console.error("[FJ:SW] Update failed, forcing reload:", err);
-      window.location.reload();
+      await clearRuntimeCaches();
+      forceHardReload();
     }
   }, [updating, updateServiceWorker]);
 
