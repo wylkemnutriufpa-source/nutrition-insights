@@ -151,7 +151,19 @@ Deno.serve(async (req) => {
       }
     }
 
-    console.info(`[AUDIT] Run ${runId}: ${issues.length} issues found`);
+    // 6. Run patient audit (auto-cura preventiva)
+    let patientAudit: unknown = null;
+    try {
+      const { data, error: paErr } = await sb.rpc("run_daily_patient_audit");
+      if (paErr) throw paErr;
+      patientAudit = data;
+      console.info("[AUDIT] Patient audit:", JSON.stringify(data));
+    } catch (e) {
+      console.error("[AUDIT] Patient audit failed:", e);
+      patientAudit = { error: e instanceof Error ? e.message : String(e) };
+    }
+
+    console.info(`[AUDIT] Run ${runId}: ${issues.length} plan issues found`);
 
     return new Response(
       JSON.stringify({
@@ -162,6 +174,7 @@ Deno.serve(async (req) => {
           critical: issues.filter((i) => i.severity === "critical").length,
           warning: issues.filter((i) => i.severity === "warning").length,
         },
+        patient_audit: patientAudit,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
