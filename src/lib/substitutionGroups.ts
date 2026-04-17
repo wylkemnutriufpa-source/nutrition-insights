@@ -132,17 +132,78 @@ const FOOD_GROUP_MAP: Record<string, SubstitutionGroup> = {
   "Requeijão light": "laticinio-leve",
 };
 
+const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
+const STOPWORDS = new Set([
+  "com", "de", "da", "do", "e", "a", "o", "ao", "na", "no", "para", "em",
+  "uma", "um", "sem", "ou", "g", "ml", "porcao", "porção", "fatia", "fatias",
+  "col", "sopa", "cha", "chá", "un", "und", "unidade", "unidades",
+]);
+
+function tokenize(s: string): string[] {
+  return norm(s)
+    .replace(/[^a-z0-9\s]/g, " ")
+    .split(/\s+/)
+    .filter(t => t && t.length >= 3 && !STOPWORDS.has(t) && !/^\d+$/.test(t));
+}
+
+/**
+ * Fuzzy find food entries in a title.
+ * Returns all DB foods whose name shares meaningful tokens with the title.
+ */
+export function findFoodsInTitle(title: string): FoodItem[] {
+  const tokens = tokenize(title);
+  if (tokens.length === 0) return [];
+
+  const matches = new Map<string, { food: FoodItem; score: number; group: SubstitutionGroup | null }>();
+
+  for (const food of FOOD_DATABASE) {
+    const foodTokens = tokenize(food.name);
+    if (foodTokens.length === 0) continue;
+
+    // Count how many of the food's tokens appear (or are substrings of) title tokens
+    let hits = 0;
+    for (const ft of foodTokens) {
+      if (tokens.some(t => t === ft || t.includes(ft) || ft.includes(t))) hits++;
+    }
+    if (hits === 0) continue;
+
+    // score: prefer foods where most of their tokens matched
+    const score = hits / foodTokens.length + hits * 0.1;
+    const group = getFoodGroup(food.name);
+    const key = group || food.name;
+    const existing = matches.get(key);
+    if (!existing || score > existing.score) {
+      matches.set(key, { food, score, group });
+    }
+  }
+
+  return Array.from(matches.values())
+    .sort((a, b) => b.score - a.score)
+    .map(m => m.food);
+}
+
 export function getFoodGroup(foodName: string): SubstitutionGroup | null {
   // Try exact match first
   if (FOOD_GROUP_MAP[foodName]) return FOOD_GROUP_MAP[foodName];
 
   // Try normalized match
-  const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
   const query = norm(foodName);
 
   for (const [name, group] of Object.entries(FOOD_GROUP_MAP)) {
     const n = norm(name);
     if (n === query || query.includes(n) || n.includes(query)) return group;
+  }
+
+  // Fuzzy token match as last resort
+  const tokens = tokenize(foodName);
+  if (tokens.length === 0) return null;
+  for (const [name, group] of Object.entries(FOOD_GROUP_MAP)) {
+    const nameTokens = tokenize(name);
+    const allMatch = nameTokens.length > 0 && nameTokens.every(nt =>
+      tokens.some(t => t === nt || t.includes(nt) || nt.includes(t))
+    );
+    if (allMatch) return group;
   }
 
   return null;
