@@ -73,33 +73,47 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
 
     setSaveStatus("saving");
     try {
-      const { data: np } = await supabase
+      const { data: np, error: npErr } = await supabase
         .from("nutritionist_patients")
         .select("tenant_id")
         .eq("patient_id", patientId)
         .eq("nutritionist_id", user.id)
+        .eq("status", "active")
         .maybeSingle();
 
-      const { data: existing } = await supabase
+      if (npErr) throw npErr;
+      if (!np?.tenant_id) {
+        toast.error("Vínculo com paciente não encontrado. Verifique se o paciente está ativo.");
+        setSaveStatus("error");
+        return;
+      }
+
+      const { data: existing, error: existingErr } = await supabase
         .from("patient_anamnesis")
         .select("id")
         .eq("user_id", patientId)
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
+      if (existingErr) throw existingErr;
+
       if (existing) {
-        await supabase
+        const { error: updErr } = await supabase
           .from("patient_anamnesis")
           .update({ answers: current as any, status: "completed" })
           .eq("id", existing.id);
+        if (updErr) throw updErr;
       } else {
-        await supabase
+        const { error: insErr } = await supabase
           .from("patient_anamnesis")
           .insert({
             user_id: patientId,
             answers: current as any,
-            tenant_id: np?.tenant_id || "",
+            tenant_id: np.tenant_id,
             status: "completed",
           });
+        if (insErr) throw insErr;
       }
 
       await supabase
@@ -109,7 +123,9 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
 
       lastSavedRef.current = serialized;
       setSaveStatus("saved");
-    } catch {
+    } catch (err: any) {
+      console.error("[InOfficeStepAnamnesis] save error:", err);
+      toast.error(`Erro ao salvar anamnese: ${err?.message || "tente novamente"}`);
       setSaveStatus("error");
     }
   }, [user?.id, patientId, sessionId]);
