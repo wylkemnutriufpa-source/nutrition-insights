@@ -202,10 +202,9 @@ export default function OnboardingPipeline() {
   }
 
   async function handleGoToAnamnesis() {
-    // Hard navigation to bypass any stale RouteGuard state from the
-    // onboarding pipeline. SPA navigate() was occasionally being short-circuited
-    // by re-renders that caused the patient to stay on /onboarding (loop).
-    window.location.assign("/anamnesis?pipeline=true");
+    // Use SPA navigation. Hard reload routes through Lovable's auth-bridge,
+    // which lands the patient on /client/dashboard and triggers a guard loop.
+    navigate("/anamnesis?pipeline=true");
   }
 
   async function handleSaveBodyData() {
