@@ -7430,6 +7430,36 @@ export type Database = {
           },
         ]
       }
+      onboarding_runtime_errors: {
+        Row: {
+          attempt: number
+          context: string
+          created_at: string
+          error_message: string | null
+          error_payload: Json | null
+          id: string
+          patient_id: string
+        }
+        Insert: {
+          attempt?: number
+          context: string
+          created_at?: string
+          error_message?: string | null
+          error_payload?: Json | null
+          id?: string
+          patient_id: string
+        }
+        Update: {
+          attempt?: number
+          context?: string
+          created_at?: string
+          error_message?: string | null
+          error_payload?: Json | null
+          id?: string
+          patient_id?: string
+        }
+        Relationships: []
+      }
       onboarding_tokens: {
         Row: {
           created_at: string
