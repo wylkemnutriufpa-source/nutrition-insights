@@ -68,7 +68,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       toast.error("Paciente sem email cadastrado — copie o link e envie manualmente.");
       return;
     }
-    if (!acquireActionLock("send_onboarding_link", patientId)) {
+    if (sendingLinkId) {
       toast.info("Envio já em andamento...");
       return;
     }
@@ -83,7 +83,6 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       toast.error(err?.message || "Erro ao reenviar link de onboarding");
     } finally {
       setSendingLinkId(null);
-      releaseActionLock("send_onboarding_link", patientId);
     }
   };
 
