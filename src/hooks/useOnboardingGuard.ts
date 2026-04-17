@@ -152,6 +152,12 @@ export function useOnboardingGuard() {
         table: "nutritionist_patients",
         filter: `patient_id=eq.${user.id}`,
       }, () => check())
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "meal_plans",
+        filter: `patient_id=eq.${user.id}`,
+      }, () => check())
       .subscribe();
 
     return () => {
