@@ -620,8 +620,8 @@ const App = () => (
               <Route path="/challenges" element={<PaymentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/anamnesis" element={<PaymentGuardedPatientRoute><LP section="Anamnese"><PatientReadyGuard context="anamnese"><Anamnesis /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
-              <Route path="/onboarding" element={<PaymentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></PaymentGuardedPatientRoute>} />
-              <Route path="/onboarding-pipeline" element={<PaymentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/onboarding" element={<PaymentGuardedPatientRoute><LP section="Onboarding"><PatientReadyGuard context="onboarding"><OnboardingPipeline /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/onboarding-pipeline" element={<PaymentGuardedPatientRoute><LP section="Onboarding"><PatientReadyGuard context="onboarding_pipeline"><OnboardingPipeline /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
               <Route path="/analyze" element={<PaymentGuardedPatientRoute><LP section="Análise"><AnalyzeMeal /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/shopping-list" element={<PaymentGuardedPatientRoute><LP section="Compras"><ShoppingList /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/my-diet" element={<PaymentGuardedPatientRoute><LP section="Dieta"><PatientReadyGuard context="meal_plan"><PatientMealPlan /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
