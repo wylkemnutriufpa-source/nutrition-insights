@@ -107,27 +107,47 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initializeAuth = async () => {
-      // getSession is the reliable source for the initial session
-      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        // getSession is the reliable source for the initial session
+        const { data: { session } } = await supabase.auth.getSession();
 
-      if (!mounted) return;
+        if (!mounted) return;
 
-      setSession(session);
-      setUser(session?.user ?? null);
+        setSession(session);
+        setUser(session?.user ?? null);
 
-      if (session?.user) {
-        await Promise.all([
-          fetchProfile(session.user.id),
-          fetchRoles(session.user.id),
-        ]);
-        if (mounted) {
-          setLoading(false);
-          checkSubscription();
+        if (session?.user) {
+          // Wrap in Promise.allSettled so one slow/failing query never blocks the app forever
+          await Promise.allSettled([
+            fetchProfile(session.user.id),
+            fetchRoles(session.user.id),
+          ]);
+          if (mounted) {
+            setLoading(false);
+            checkSubscription();
+          }
+        } else {
+          if (mounted) setLoading(false);
         }
-      } else {
-        setLoading(false);
+      } catch (err) {
+        console.error("[Auth] initializeAuth failed:", err);
+        if (mounted) setLoading(false);
       }
     };
+    // Safety net: if loading stays true for >8s, force it off so the UI never gets stuck on a blank/spinner screen
+    let loadingWatchdog: ReturnType<typeof setTimeout> | null = null;
+    const armWatchdog = () => {
+      if (loadingWatchdog) clearTimeout(loadingWatchdog);
+      loadingWatchdog = setTimeout(() => {
+        if (mounted) {
+          console.warn("[Auth] Loading watchdog tripped — forcing loading=false");
+          setLoading(false);
+        }
+      }, 8000);
+    };
+
+    // Arm immediately at mount to protect the very first load too
+    armWatchdog();
 
     initializeAuth();
 
@@ -136,8 +156,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (event, session) => {
         if (event === "INITIAL_SESSION") return;
 
-        if (event === "SIGNED_IN" || event === "TOKEN_REFRESHED") {
+        // Only flip loading=true on SIGNED_IN. TOKEN_REFRESHED should NOT block UI —
+        // refreshing tokens silently in background is normal and shouldn't trigger a splash.
+        if (event === "SIGNED_IN") {
           setLoading(true);
+          armWatchdog();
         }
 
         if (event === "SIGNED_IN" && session?.user) {
@@ -204,12 +227,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 console.warn("[Auth] User has no roles yet, will retry:", session.user.email);
                 // Retry once after a short delay — roles may be created by triggers
                 setTimeout(async () => {
-                  const { data: retryRoles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
-                  const retried = retryRoles?.map((r) => r.role) || [];
-                  if (retried.length > 0) {
-                    setRoles(retried);
+                  try {
+                    const { data: retryRoles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
+                    const retried = retryRoles?.map((r) => r.role) || [];
+                    if (mounted && retried.length > 0) {
+                      setRoles(retried);
+                    }
+                  } catch (err) {
+                    console.error("[Auth] Role retry failed:", err);
+                  } finally {
+                    if (mounted) setLoading(false);
                   }
-                  if (mounted) setLoading(false);
                 }, 2000);
                 return;
               }
@@ -233,6 +261,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
+      if (loadingWatchdog) clearTimeout(loadingWatchdog);
       authSubscription.unsubscribe();
     };
   }, []);
