@@ -267,13 +267,21 @@ export function getValidSubstitutions(
   if (!currentMatch) return [];
 
   const group = getFoodGroup(currentMatch.name);
-  if (!group) return [];
 
-  // Get same-group foods
-  let candidates = FOOD_DATABASE.filter(f => {
-    if (f.name === currentMatch.name) return false;
-    return getFoodGroup(f.name) === group;
-  });
+  // Get same-group foods first; fallback to same-category foods if group is missing or empty
+  let candidates: FoodItem[] = [];
+  if (group) {
+    candidates = FOOD_DATABASE.filter(f => {
+      if (f.name === currentMatch!.name) return false;
+      return getFoodGroup(f.name) === group;
+    });
+  }
+  // Fallback: same broad category (proteina, carboidrato, fruta, etc.)
+  if (candidates.length === 0 && currentMatch.category) {
+    candidates = FOOD_DATABASE.filter(f =>
+      f.name !== currentMatch!.name && f.category === currentMatch!.category
+    );
+  }
 
   // Clinical filters
   if (context?.restrictions?.length) {
