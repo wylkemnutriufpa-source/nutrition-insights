@@ -548,6 +548,7 @@ export default function Anamnesis() {
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
   const [adaptiveStep, setAdaptiveStep] = useState(0);
   const [onboardingBlocked, setOnboardingBlocked] = useState(false);
+  const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(tenantId ?? null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist
@@ -557,13 +558,38 @@ export default function Anamnesis() {
   const q = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
+  // Resolve a guaranteed tenant_id for writes.
+  // `patient_anamnesis.tenant_id` is NOT NULL, so onboarding cannot depend only
+  // on the async tenant context; fall back to the target profile tenant.
+  useEffect(() => {
+    if (tenantId) {
+      setResolvedTenantId(tenantId);
+      return;
+    }
+    if (!targetUserId) return;
+
+    supabase
+      .from("profiles")
+      .select("tenant_id, full_name")
+      .eq("user_id", targetUserId)
+      .maybeSingle()
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("[FJ:Anamnesis] failed to resolve profile tenant:", error);
+          return;
+        }
+        if (data?.tenant_id) setResolvedTenantId(data.tenant_id);
+        if (isNutritionistMode && data?.full_name) setPatientName(data.full_name);
+      });
+  }, [tenantId, targetUserId, isNutritionistMode]);
+
   // Fetch patient name if nutritionist mode
   useEffect(() => {
-    if (isNutritionistMode && forPatientId) {
+    if (isNutritionistMode && forPatientId && !patientName) {
       supabase.from("profiles").select("full_name").eq("user_id", forPatientId).maybeSingle()
         .then(({ data }) => setPatientName(data?.full_name || "Paciente"));
     }
-  }, [isNutritionistMode, forPatientId]);
+  }, [isNutritionistMode, forPatientId, patientName]);
 
   // Check if onboarding is released for patient (non-nutritionist mode)
   useEffect(() => {
@@ -712,13 +738,18 @@ export default function Anamnesis() {
           return;
         }
       } else {
+        if (!resolvedTenantId) {
+          console.error("[FJ:Anamnesis] autosave INSERT blocked: tenant_id unresolved");
+          setAutoSaveStatus("idle");
+          return;
+        }
+
         const insertPayload: any = {
           user_id: targetUserId,
           answers: currentAnswers,
           status: "draft",
+          tenant_id: resolvedTenantId,
         };
-        // Only attach tenant_id if resolved — trigger auto_resolve_tenant_patient_anamnesis handles null case
-        if (tenantId) insertPayload.tenant_id = tenantId;
 
         const { data, error } = await supabase
           .from("patient_anamnesis")
@@ -739,7 +770,7 @@ export default function Anamnesis() {
       console.error("[FJ:Anamnesis] autosave threw:", e);
       setAutoSaveStatus("idle");
     }
-  }, [targetUserId, user, draftId, tenantId]);
+  }, [targetUserId, user, draftId, resolvedTenantId]);
 
   // Debounced autosave on answers change — wait for first user interaction (not just mount)
   useEffect(() => {
@@ -850,8 +881,15 @@ export default function Anamnesis() {
     // Extract clinical flags from adaptive blocks
     const clinicalFlags = extractClinicalFlags(answers);
 
+    if (!resolvedTenantId) {
+      toast.error("Não foi possível identificar seu espaço clínico. Recarregue a página e tente novamente.");
+      setSubmitting(false);
+      return;
+    }
+
     const payload = {
       user_id: targetUserId,
+      tenant_id: resolvedTenantId,
       answers: { ...answers, _extracted_clinical_flags: clinicalFlags },
       computed_tmb: Math.round(tmb),
       computed_tdee: Math.round(tmb * multiplier),
@@ -860,7 +898,6 @@ export default function Anamnesis() {
       computed_carbs: carbs,
       computed_fat: fat,
       status: "completed",
-      ...getTenantIdForInsert(tenantId),
     };
 
     let anamData: any;
@@ -893,16 +930,74 @@ export default function Anamnesis() {
       anamData = data;
     }
 
-    toast.success("Anamnese salva! Gerando análise inteligente... 🧠");
+    // Sync onboarding pipeline FIRST so the patient leaves step 1 immediately,
+    // even if AI/secondary automations are slow or temporarily failing.
+    const { data: syncedPipeline, error: pipelineSyncError } = await supabase
+      .from("onboarding_pipelines" as any)
+      .update({
+        anamnesis_completed: true,
+        status: "pending_body_data",
+        weight: weight,
+        height: height,
+      } as any)
+      .eq("patient_id", targetUserId)
+      .in("status", ["pending_anamnesis", "in_progress"])
+      .select("id")
+      .maybeSingle();
+
+    if (pipelineSyncError) {
+      console.error("[FJ:Anamnesis] pipeline sync failed:", pipelineSyncError);
+    }
+
+    if (syncedPipeline && !isPipelineMode) {
+      setHasActivePipeline(true);
+    }
+
     setSubmitting(false);
+    setCompleted(true);
+
+    // In onboarding pipeline mode, never keep the patient blocked waiting for AI.
+    if (isPipelineMode && !isNutritionistMode) {
+      setAnalyzing(false);
+      toast.success("Anamnese salva! Indo para a próxima etapa do onboarding. ✅");
+
+      void (async () => {
+        try {
+          const flagResult = await processAnamnesisFlags(targetUserId, anamData.id);
+          console.log(`[ClinicalFlags] ${flagResult.flags_generated} flags geradas`);
+
+          const { data: taskResult } = await supabase.functions.invoke("generate-behavioral-tasks", {
+            body: { patient_id: targetUserId },
+          });
+          if (taskResult) {
+            console.log(`[BehavioralTasks] ${taskResult.tasks_generated} tarefas, ${taskResult.messages_generated} mensagens geradas`);
+          }
+        } catch (e: any) {
+          console.error("Flag/task processing error:", e);
+        }
+
+        try {
+          const { data: aiData, error: aiError } = await supabase.functions.invoke("analyze-anamnesis", {
+            body: { anamnesis_id: anamData.id },
+          });
+          if (aiError) throw aiError;
+          if (aiData?.error) throw new Error(aiData.error);
+          setAiResult(aiData);
+        } catch (e: any) {
+          console.error("AI analysis error:", e);
+        }
+      })();
+
+      return;
+    }
+
+    toast.success("Anamnese salva! Gerando análise inteligente... 🧠");
     setAnalyzing(true);
 
-    // Process clinical flags from anamnesis answers (deterministic)
     try {
       const flagResult = await processAnamnesisFlags(targetUserId, anamData.id);
       console.log(`[ClinicalFlags] ${flagResult.flags_generated} flags geradas`);
 
-      // Generate behavioral tasks and messages from flags
       const { data: taskResult } = await supabase.functions.invoke("generate-behavioral-tasks", {
         body: { patient_id: targetUserId },
       });
@@ -913,7 +1008,6 @@ export default function Anamnesis() {
       console.error("Flag/task processing error:", e);
     }
 
-    // Trigger AI analysis
     try {
       const { data: aiData, error: aiError } = await supabase.functions.invoke("analyze-anamnesis", {
         body: { anamnesis_id: anamData.id },
@@ -930,28 +1024,6 @@ export default function Anamnesis() {
     }
 
     setAnalyzing(false);
-    setCompleted(true);
-
-    // Sync onboarding pipeline whenever this patient has a pending anamnesis step.
-    // This keeps imported/manual patients in the correct flow even if they reached
-    // the anamnesis screen outside /onboarding?pipeline=true.
-    const { data: syncedPipeline } = await supabase
-      .from("onboarding_pipelines" as any)
-      .update({
-        anamnesis_completed: true,
-        status: "pending_body_data",
-        weight: weight,
-        height: height,
-      } as any)
-      .eq("patient_id", targetUserId)
-      .in("status", ["pending_anamnesis", "in_progress"])
-      .select("id")
-      .maybeSingle();
-
-    // If we synced a pipeline, ensure isPipelineMode is active so patient gets redirected
-    if (syncedPipeline && !isPipelineMode) {
-      setHasActivePipeline(true);
-    }
   };
 
   // Pipeline mode: auto-redirect back to onboarding pipeline after completion
