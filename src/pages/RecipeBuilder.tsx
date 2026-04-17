@@ -161,12 +161,32 @@ export default function RecipeBuilder() {
         }
       }
 
-      toast.success("Receita salva! 🎉 Seu nutricionista será notificado.");
-      navigate("/recipes");
+      toast.success("Receita salva! 🎉");
+      setSavedDialogOpen(true);
     } catch (err: any) {
       toast.error("Erro ao salvar: " + err.message);
     }
     setSaving(false);
+  };
+
+  // ── Load existing recipe into builder ──
+  const handleLoadRecipe = (r: {
+    title: string;
+    description: string;
+    instructions: string;
+    servings: number;
+    ingredients: RecipeIngredient[];
+    imageUrl: string | null;
+    imagePath: string | null;
+  }) => {
+    setTitle(r.title);
+    setDescription(r.description);
+    setInstructions(r.instructions);
+    setServings(r.servings);
+    setIngredients(r.ingredients);
+    setImageUrl(r.imageUrl);
+    setImagePath(r.imagePath);
+    toast.success(`Receita "${r.title}" carregada — agora você pode fazer o Match Clínico.`);
   };
 
   return (
