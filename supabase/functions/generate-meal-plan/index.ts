@@ -2678,6 +2678,20 @@ serve(async (req) => {
           .maybeSingle()
       : { data: null };
 
+    // ── PROFESSIONAL OVERRIDE ──
+    // When a nutritionist (or admin) is the caller, they can provide
+    // body.professionalOverride = { weight, height, age, sex, goal, activityLevel, restrictions, enabledMeals }
+    // to bypass missing/incomplete anamnesis. This unblocks clinical work
+    // when the patient has not (yet) completed onboarding.
+    const callerIsProfessional =
+      caller.roles.includes("admin") ||
+      caller.roles.includes("nutritionist") ||
+      (userId !== patient_id && userId === requestedNutritionistId);
+    const profOverride = (body.professionalOverride && typeof body.professionalOverride === "object")
+      ? body.professionalOverride
+      : null;
+    const allowProfOverride = callerIsProfessional && !!profOverride;
+
     // ── 1. Get completed anamnesis ──
     let { data: anamnesis, error: anamErr } = await serviceClient
       .from("patient_anamnesis")
@@ -2712,8 +2726,33 @@ serve(async (req) => {
       }
     }
 
+    // If nutritionist provided override, synthesize a minimal anamnesis stub.
+    if (!anamnesis && allowProfOverride) {
+      console.log(`[generate-meal-plan] ⚙️ Professional override engaged for patient ${patient_id} by ${userId}`);
+      anamnesis = {
+        id: null,
+        user_id: patient_id,
+        status: "professional_override",
+        answers: {
+          weight: profOverride.weight,
+          height: profOverride.height,
+          age: profOverride.age ?? 30,
+          sex: profOverride.sex || "male",
+          goal: profOverride.goal,
+          objective: profOverride.goal,
+          activity_level: profOverride.activityLevel || "moderate",
+          restrictions: profOverride.restrictions || [],
+          enabled_meals: profOverride.enabledMeals || null,
+        },
+      } as any;
+    }
+
     if (!anamnesis) {
-      return new Response(JSON.stringify({ error: "Anamnese concluída não encontrada", code: "ANAMNESIS_MISSING" }), {
+      return new Response(JSON.stringify({
+        error: "Anamnese concluída não encontrada. O nutricionista pode preencher os dados manualmente para gerar o plano.",
+        code: "ANAMNESIS_MISSING",
+        professional_override_supported: true,
+      }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
@@ -2721,25 +2760,39 @@ serve(async (req) => {
     const answers = (anamnesis.answers || {}) as Record<string, any>;
 
     // ── 2. Validate weight + height ──
-    const weight = normalizeWeightKg(body.weight ?? latestPipeline?.weight ?? answers.weight);
-    const height = normalizeHeightCm(body.height ?? latestPipeline?.height ?? answers.height);
+    // Professional override takes precedence so the nutritionist can ALWAYS proceed.
+    const weight = normalizeWeightKg(
+      profOverride?.weight ?? body.weight ?? latestPipeline?.weight ?? answers.weight
+    );
+    const height = normalizeHeightCm(
+      profOverride?.height ?? body.height ?? latestPipeline?.height ?? answers.height
+    );
     if (!weight || weight < 20 || !height || height < 80) {
       console.warn(`[generate-meal-plan] Invalid body data for patient ${patient_id}`, {
         rawBodyWeight: body.weight ?? null, rawBodyHeight: body.height ?? null,
         pipelineWeight: latestPipeline?.weight ?? null, pipelineHeight: latestPipeline?.height ?? null,
         anamnesisWeight: answers.weight ?? null, anamnesisHeight: answers.height ?? null,
+        overrideWeight: profOverride?.weight ?? null, overrideHeight: profOverride?.height ?? null,
         normalizedWeight: weight, normalizedHeight: height,
       });
-      return new Response(JSON.stringify({ error: "Peso e altura válidos são obrigatórios", code: "BODY_DATA_MISSING" }), {
+      return new Response(JSON.stringify({
+        error: "Peso e altura válidos são obrigatórios. Informe-os manualmente para gerar o plano.",
+        code: "BODY_DATA_MISSING",
+        professional_override_supported: true,
+      }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
     // ── 3. Goal ──
-    const rawGoal = body.goal || answers.goal || answers.objective || answers.main_goal;
+    const rawGoal = profOverride?.goal || body.goal || answers.goal || answers.objective || answers.main_goal;
     const goal = normalizeGoal(rawGoal);
     if (!goal) {
-      return new Response(JSON.stringify({ error: "Objetivo do paciente não definido", code: "GOAL_MISSING" }), {
+      return new Response(JSON.stringify({
+        error: "Objetivo do paciente não definido. Selecione um objetivo manualmente.",
+        code: "GOAL_MISSING",
+        professional_override_supported: true,
+      }), {
         status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
