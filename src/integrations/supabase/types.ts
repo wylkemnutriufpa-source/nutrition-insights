@@ -8357,6 +8357,7 @@ export type Database = {
           nutritionist_id: string | null
           patient_id: string | null
           severity: string
+          source: string
         }
         Insert: {
           action_taken: string
@@ -8369,6 +8370,7 @@ export type Database = {
           nutritionist_id?: string | null
           patient_id?: string | null
           severity: string
+          source?: string
         }
         Update: {
           action_taken?: string
@@ -8381,6 +8383,7 @@ export type Database = {
           nutritionist_id?: string | null
           patient_id?: string | null
           severity?: string
+          source?: string
         }
         Relationships: []
       }
@@ -10992,6 +10995,30 @@ export type Database = {
           plan_slug?: string | null
           rank_position?: number | null
           total_points?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      patient_realtime_fix_cache: {
+        Row: {
+          fixes_applied: number
+          last_checked_at: string
+          last_result: Json
+          patient_id: string
+          updated_at: string
+        }
+        Insert: {
+          fixes_applied?: number
+          last_checked_at?: string
+          last_result?: Json
+          patient_id: string
+          updated_at?: string
+        }
+        Update: {
+          fixes_applied?: number
+          last_checked_at?: string
+          last_result?: Json
+          patient_id?: string
           updated_at?: string
         }
         Relationships: []
@@ -18916,6 +18943,7 @@ export type Database = {
       resolve_tenant_for_user: { Args: { _user_id: string }; Returns: string }
       run_daily_patient_audit: { Args: never; Returns: Json }
       run_patient_data_audit: { Args: { _dry_run?: boolean }; Returns: Json }
+      run_patient_realtime_fix: { Args: { _patient_id: string }; Returns: Json }
       run_security_audit: { Args: never; Returns: Json }
       save_plan_as_approved: {
         Args: { _nutritionist_id: string; _plan_id: string }
