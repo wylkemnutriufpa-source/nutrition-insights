@@ -1,0 +1,96 @@
+/**
+ * FitJourney — PatientReadyGuard v1.0.0
+ *
+ * Wrapper que bloqueia a renderização de telas críticas do paciente
+ * até `ensure_patient_ready` validar/corrigir o estado.
+ *
+ * Estados:
+ *   loading → "Preparando seu acesso..."
+ *   fixed   → "Corrigindo seu acesso automaticamente..." (transitório, libera em ~300ms)
+ *   ok      → renderiza children
+ *   error   → fallback amigável + retry
+ */
+
+import { ReactNode, useEffect, useState } from "react";
+import { useAuth } from "@/lib/auth";
+import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
+import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+interface Props {
+  children: ReactNode;
+  /** Nome da tela para logging. Ex: "anamnese", "meal_plan", "checkin", "dashboard". */
+  context: string;
+  /** Pacientes específicos (uso no profissional). Default: usuário autenticado. */
+  patientId?: string | null;
+}
+
+export default function PatientReadyGuard({ children, context, patientId }: Props) {
+  const { user, isPatient, loading: authLoading } = useAuth();
+  const targetId = patientId ?? user?.id ?? null;
+
+  const result = useEnsurePatientReady(targetId, {
+    context,
+    // Só roda para pacientes autenticados (ou quando o profissional passou um id explícito)
+    enabled: !authLoading && !!targetId && (isPatient || !!patientId),
+  });
+
+  // Permite "fixed" passar para "ok" quase instantaneamente
+  const [graceDone, setGraceDone] = useState(false);
+  useEffect(() => {
+    if (result.status === "fixed") {
+      const t = setTimeout(() => setGraceDone(true), 300);
+      return () => clearTimeout(t);
+    }
+    setGraceDone(false);
+  }, [result.status]);
+
+  // Profissional sem patientId explícito: não bloqueia nada
+  if (!isPatient && !patientId) return <>{children}</>;
+
+  if (authLoading || result.status === "loading") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] p-8 text-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary mb-3" />
+        <p className="text-sm text-muted-foreground">Preparando seu acesso...</p>
+      </div>
+    );
+  }
+
+  if (result.status === "fixed" && !graceDone) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] p-8 text-center">
+        <ShieldCheck className="h-10 w-10 text-primary mb-3" />
+        <p className="text-sm font-medium text-foreground">
+          Corrigindo seu acesso automaticamente...
+        </p>
+        <p className="text-xs text-muted-foreground mt-1">
+          Isso leva apenas alguns segundos.
+        </p>
+      </div>
+    );
+  }
+
+  if (result.status === "error") {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[40vh] p-8 text-center">
+        <div className="rounded-full bg-destructive/10 p-4 mb-4">
+          <AlertTriangle className="h-8 w-8 text-destructive" />
+        </div>
+        <h2 className="text-lg font-semibold text-foreground mb-1">
+          Estamos ajustando seu acesso
+        </h2>
+        <p className="text-sm text-muted-foreground max-w-md mb-5">
+          Tente novamente em alguns instantes. Nossa equipe já foi notificada
+          automaticamente.
+        </p>
+        <Button onClick={() => window.location.reload()} className="gap-2">
+          <RefreshCw className="h-4 w-4" />
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  return <>{children}</>;
+}
