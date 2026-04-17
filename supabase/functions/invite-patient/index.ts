@@ -154,47 +154,23 @@ Deno.serve(async (req) => {
       patientId = newUser.user.id;
     }
 
-    // Upsert profile
-    const { data: existingProfile } = await adminClient
-      .from("profiles")
-      .select("user_id")
-      .eq("user_id", patientId)
-      .maybeSingle();
-
-    if (existingProfile) {
-      await adminClient.from("profiles").update({
-        full_name: name,
-        phone: phone || null,
-      }).eq("user_id", patientId);
-    } else {
-      const callerTenant = await resolveTenantForUser(adminClient, caller.id);
-      await adminClient.from("profiles").insert({
-        user_id: patientId,
-        full_name: name,
-        phone: phone || null,
-        tenant_id: callerTenant,
-      });
-    }
-
+    // ─── ROTA CANÔNICA: substitui upserts manuais (profile/role/tenant/vínculo/pipeline/lifecycle/log) ───
     const callerTenantLink = await resolveTenantForUser(adminClient, caller.id);
-    await ensurePatientBindingIntegrity(adminClient, patientId, caller.id, callerTenantLink);
-
-    // Assign patient role
-    await adminClient.from("user_roles").upsert({
-      user_id: patientId,
-      role: "patient",
-    }, { onConflict: "user_id,role" });
-
-    // Ensure patient is in same tenant
-    if (callerTenantLink) {
-      await adminClient.from("user_tenants").upsert({
-        user_id: patientId,
-        tenant_id: callerTenantLink,
-        role: "patient",
-      }, { onConflict: "user_id,tenant_id" }).then(() => {});
+    const { error: canonErr } = await adminClient.rpc("create_patient_canonical" as any, {
+      _patient_id: patientId,
+      _full_name: name,
+      _email: normalizedEmail,
+      _phone: phone || null,
+      _nutritionist_id: caller.id,
+      _source: "invite",
+      _metadata: { method: method || "password", invited_by: caller.id },
+    });
+    if (canonErr) {
+      console.error("[invite-patient] canonical error:", canonErr);
+      throw new Error(`Falha na canônica: ${canonErr.message}`);
     }
 
-    // 3) Create in-app notification for the patient about their invite
+    // Notificação para o paciente
     await adminClient.from("notifications").insert({
       user_id: patientId,
       title: "Bem-vindo ao FitJourney! 🎉",
@@ -204,7 +180,7 @@ Deno.serve(async (req) => {
       tenant_id: callerTenantLink,
     });
 
-    // Send magic link if requested
+    // Magic link opcional
     if (method === "magic_link") {
       try {
         await adminClient.auth.admin.generateLink({
