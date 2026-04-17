@@ -11,6 +11,7 @@ import { lazy, Suspense, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import SafePage from "@/components/common/SafePage";
+import PatientReadyGuard from "@/components/common/PatientReadyGuard";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import PageLoader from "@/components/common/PageLoader";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
@@ -608,9 +609,9 @@ const App = () => (
               <Route path="/payment-required" element={<PatientRoute><LP section="Pagamento"><PaymentRequired /></LP></PatientRoute>} />
 
               {/* Patient portal — consent guarded */}
-              <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
-              <Route path="/patient-overview" element={<PaymentGuardedPatientRoute><LP section="Meu Painel"><PatientOverview /></LP></PaymentGuardedPatientRoute>} />
-              <Route path="/my-workouts" element={<PaymentGuardedPatientRoute><LP section="Treinos"><PatientWorkouts /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><PatientReadyGuard context="dashboard"><ClientDashboard /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/patient-overview" element={<PaymentGuardedPatientRoute><LP section="Meu Painel"><PatientReadyGuard context="patient_overview"><PatientOverview /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/my-workouts" element={<PaymentGuardedPatientRoute><LP section="Treinos"><PatientReadyGuard context="workouts"><PatientWorkouts /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
               <Route path="/patient-intelligence" element={<PaymentGuardedPatientRoute><LP section="Inteligência FitJourney"><PatientIntelligence /></LP></PaymentGuardedPatientRoute>} />
 
               {/* Patient-only routes — consent guarded */}
@@ -618,18 +619,18 @@ const App = () => (
               <Route path="/achievements" element={<PaymentGuardedPatientRoute><LP section="Conquistas"><Achievements /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/challenges" element={<PaymentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
-              <Route path="/anamnesis" element={<PaymentGuardedPatientRoute><LP section="Anamnese"><Anamnesis /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/anamnesis" element={<PaymentGuardedPatientRoute><LP section="Anamnese"><PatientReadyGuard context="anamnese"><Anamnesis /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
               <Route path="/onboarding" element={<PaymentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/onboarding-pipeline" element={<PaymentGuardedPatientRoute><LP section="Onboarding"><OnboardingPipeline /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/analyze" element={<PaymentGuardedPatientRoute><LP section="Análise"><AnalyzeMeal /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/shopping-list" element={<PaymentGuardedPatientRoute><LP section="Compras"><ShoppingList /></LP></PaymentGuardedPatientRoute>} />
-              <Route path="/my-diet" element={<PaymentGuardedPatientRoute><LP section="Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/my-diet" element={<PaymentGuardedPatientRoute><LP section="Dieta"><PatientReadyGuard context="meal_plan"><PatientMealPlan /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
               <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/library" element={<PaymentGuardedPatientRoute><LP section="Biblioteca"><Library /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/weight-calculator" element={<PaymentGuardedPatientRoute><LP section="Calculadora"><WeightCalculator /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/water-calculator" element={<PaymentGuardedPatientRoute><LP section="Calculadora"><WaterCalculator /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/health-quiz" element={<PaymentGuardedPatientRoute><LP section="Quiz"><HealthCheckQuiz /></LP></PaymentGuardedPatientRoute>} />
-              <Route path="/checkin" element={<PaymentGuardedPatientRoute><LP section="Check-in"><Checkin /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/checkin" element={<PaymentGuardedPatientRoute><LP section="Check-in"><PatientReadyGuard context="checkin"><Checkin /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
               <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia"><UserGuide /></LP></ProtectedRoute>} />
               <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
               <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação"><SystemPresentation /></LP></ProtectedRoute>} />
