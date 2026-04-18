@@ -590,50 +590,42 @@ export default function Anamnesis() {
     }
   }, [isNutritionistMode, forPatientId, patientName]);
 
-  // Check if onboarding is released for patient (non-nutritionist mode)
+  // 🛡️ ANTI-LOOP HARDENING (v3.0):
+  // Regra clínica nova: "consent aceito ⇒ paciente PODE preencher anamnese".
+  // Removemos o bloqueio por release_status / journey_status / lifecycle.
+  // O guard de consent (PatientReadyGuard / useConsentGuard) já protege a rota.
+  // Mantemos apenas best-effort de sincronizar release_status caso esteja
+  // dessincronizado, mas NUNCA setamos onboardingBlocked=true.
   useEffect(() => {
     if (isNutritionistMode || !targetUserId) return;
+    setOnboardingBlocked(false);
 
     (async () => {
-      // First check journey_status — if onboarding_active or beyond, patient IS released
-      const { data: npData } = await supabase
-        .from("nutritionist_patients")
-        .select("journey_status")
-        .eq("patient_id", targetUserId)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-
-      const js = (npData as any)?.journey_status;
-      const releasedStatuses = [
-        "onboarding_active", "onboarding_completed", "draft_ready_for_review",
-        "plan_published", "active_followup", "clinical_followup_active", "active"
-      ];
-
-      if (js && releasedStatuses.includes(js)) {
-        // Journey says released — also fix pipeline if out of sync
-        setOnboardingBlocked(false);
-        supabase
-          .from("onboarding_pipelines" as any)
-          .update({ release_status: "released" } as any)
+      try {
+        const { data: npData } = await supabase
+          .from("nutritionist_patients")
+          .select("journey_status")
           .eq("patient_id", targetUserId)
-          .neq("release_status", "released");
-        return;
-      }
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      // Fallback: check pipeline directly
-      const { data } = await supabase
-        .from("onboarding_pipelines")
-        .select("release_status")
-        .eq("patient_id", targetUserId)
-        .not("status", "in", '("completed","superseded_by_active_plan","superseded_by_published_plan")')
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+        const js = (npData as any)?.journey_status;
+        const releasedStatuses = [
+          "onboarding_active", "onboarding_completed", "draft_ready_for_review",
+          "plan_published", "active_followup", "clinical_followup_active", "active",
+        ];
 
-      if (data && (data as any).release_status !== "released") {
-        setOnboardingBlocked(true);
+        if (js && releasedStatuses.includes(js)) {
+          void supabase
+            .from("onboarding_pipelines" as any)
+            .update({ release_status: "released" } as any)
+            .eq("patient_id", targetUserId)
+            .neq("release_status", "released");
+        }
+      } catch (e) {
+        console.warn("[FJ:Anamnesis] release-sync best-effort failed (ignorado):", e);
       }
     })();
   }, [targetUserId, isNutritionistMode]);
