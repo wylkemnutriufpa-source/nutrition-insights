@@ -19007,6 +19007,7 @@ export type Database = {
         Returns: Json
       }
       validate_onboarding_token: { Args: { _token: string }; Returns: Json }
+      validate_practical_template: { Args: { _meals: Json }; Returns: Json }
     }
     Enums: {
       achievement_type:
