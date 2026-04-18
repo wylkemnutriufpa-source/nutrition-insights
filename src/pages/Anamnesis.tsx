@@ -688,8 +688,13 @@ export default function Anamnesis() {
       }
 
       if (latestAnamnesis.status === "completed") {
-        // If patient has active pipeline and anamnesis is already done, redirect immediately
-        if (latestPipeline && !isNutritionistMode) {
+        // ⚠️ ANTI-LOOP: Se a paciente chegou aqui via pipeline (?pipeline=true),
+        // NÃO redireciona de volta — o OnboardingPipeline também redireciona pra cá,
+        // criando loop infinito (/onboarding-pipeline ↔ /anamnesis?pipeline=true).
+        // Deixa a paciente ver a tela de anamnese concluída para poder editar ou
+        // clicar "Continuar Onboarding" manualmente.
+        const cameFromPipeline = searchParams.get("pipeline") === "true";
+        if (latestPipeline && !isNutritionistMode && !cameFromPipeline) {
           navigate("/onboarding-pipeline", { replace: true });
           return;
         }
