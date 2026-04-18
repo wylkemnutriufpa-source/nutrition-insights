@@ -710,23 +710,33 @@ export default function DietTemplates() {
                 <div className="space-y-4 mt-2">
                   {(Array.isArray(previewTemplate.meals) && previewTemplate.meals.length > 0) ? previewTemplate.meals.map((mealRaw, mi) => {
                     const multiplier = getCalorieMultiplier(previewTemplate);
-                    // Adapter: templates v2 use `blocks` instead of `foods`. Flatten options into food list.
+                    // Adapter v2.1: templates v2 use `blocks` (modular) instead of `foods` (legacy).
+                    // Flatten ALL options into food list so the preview shows every choice.
                     const meal: any = (() => {
-                      const m: any = mealRaw;
+                      const m: any = mealRaw || {};
                       if (Array.isArray(m.foods) && m.foods.length > 0) return m;
-                      if (Array.isArray(m.blocks) && m.blocks.length > 0) {
-                        const foods = m.blocks.flatMap((b: any) => {
-                          const opts = Array.isArray(b.options) ? b.options : [];
-                          if (opts.length === 0) return [];
-                          const primary = opts[0];
-                          const subs = opts.slice(1).map((o: any) => o.name).filter(Boolean);
+                      const blocks = Array.isArray(m.blocks) ? m.blocks : [];
+                      if (blocks.length > 0) {
+                        const foods = blocks.flatMap((b: any) => {
+                          const opts = Array.isArray(b?.options) ? b.options : [];
+                          if (opts.length === 0) {
+                            // bloco sem options → ainda renderiza um placeholder com label
+                            return [{
+                              name: b?.label || b?.block_type || "Item",
+                              portion: b?.base_quantity || "",
+                              calories: 0, protein: 0, carbs: 0, fat: 0,
+                              substitutions: [],
+                            }];
+                          }
+                          const primary = opts[0] || {};
+                          const subs = opts.slice(1).map((o: any) => o?.name).filter(Boolean);
                           return [{
-                            name: primary.name,
-                            portion: primary.portion || b.base_quantity || "",
-                            calories: primary.calories || 0,
-                            protein: primary.protein || 0,
-                            carbs: primary.carbs || 0,
-                            fat: primary.fat || 0,
+                            name: primary?.name || b?.label || "Item",
+                            portion: primary?.portion || b?.base_quantity || "",
+                            calories: primary?.calories || 0,
+                            protein: primary?.protein || 0,
+                            carbs: primary?.carbs || 0,
+                            fat: primary?.fat || 0,
                             substitutions: subs,
                           }];
                         });
