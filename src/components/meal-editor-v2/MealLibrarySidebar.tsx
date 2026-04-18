@@ -241,7 +241,30 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
     if (matchingMeals.length > 0) {
       const allFoods = matchingMeals.flatMap((meal: any) => {
-        const foods = Array.isArray(meal.foods) ? meal.foods : Array.isArray(meal.items) ? meal.items : [];
+        // Adapter v2: templates práticos usam `blocks` em vez de `foods`.
+        // Achata cada bloco usando a primeira `option` como item principal.
+        let foods: any[] = Array.isArray(meal.foods)
+          ? meal.foods
+          : Array.isArray(meal.items)
+            ? meal.items
+            : [];
+
+        if (foods.length === 0 && Array.isArray(meal.blocks) && meal.blocks.length > 0) {
+          foods = meal.blocks.flatMap((b: any) => {
+            const opts = Array.isArray(b.options) ? b.options : [];
+            if (opts.length === 0) return [];
+            const primary = opts[0];
+            return [{
+              name: primary.name,
+              portion: primary.portion || b.base_quantity || "",
+              calories: primary.calories || 0,
+              protein: primary.protein || 0,
+              carbs: primary.carbs || 0,
+              fat: primary.fat || 0,
+            }];
+          });
+        }
+
         return foods.map((food: any) => ({
           meal_plan_id: planId,
           title: food.name || food.title || meal.name || template.name,
