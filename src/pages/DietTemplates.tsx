@@ -381,6 +381,88 @@ export default function DietTemplates() {
     });
   };
 
+  /**
+   * V2 ADAPTER: For official_v2 templates with `blocks` structure, build meal_plan_items
+   * directly (7 days) instead of delegating to the IFJ engine — which only understands
+   * legacy `foods_structure` from nutritionist_meal_templates.
+   */
+  const applyOfficialV2Template = async (template: DietTemplate): Promise<string> => {
+    const meals: any[] = Array.isArray((template as any).meals) ? (template as any).meals : [];
+    if (meals.length === 0) throw new Error("Template sem refeições configuradas");
+
+    // 1. Create plan
+    const { data: plan, error: planErr } = await (supabase
+      .from("meal_plans")
+      .insert([{
+        patient_id: patientId,
+        nutritionist_id: user!.id,
+        title: template.name + (patientName ? ` - ${patientName}` : ""),
+        description: `Baseado no modelo "${template.name}".`,
+        start_date: new Date().toISOString().split("T")[0],
+        is_active: false,
+        plan_status: "draft",
+        total_calories: getAdjustedCalories(template),
+      }] as any) as any)
+      .select("id")
+      .single();
+    if (planErr || !plan) throw new Error(planErr?.message || "Falha ao criar plano");
+
+    // 2. Build items from blocks (7 days × N meals × M blocks)
+    const items: any[] = [];
+    for (let day = 0; day <= 6; day++) {
+      for (const meal of meals) {
+        const mealType = meal.meal_type || meal.type;
+        if (!mealType) continue;
+
+        const blocks: any[] = Array.isArray(meal.blocks) ? meal.blocks : [];
+        const legacyFoods: any[] = Array.isArray(meal.foods) ? meal.foods : [];
+
+        if (blocks.length > 0) {
+          for (const b of blocks) {
+            const opts: any[] = Array.isArray(b.options) ? b.options : [];
+            if (opts.length === 0) continue;
+            const primary = opts[0];
+            const subs = opts.slice(1).map((o: any) => o?.name).filter(Boolean);
+            const desc = primary.portion || b.base_quantity || "";
+            const subsLine = subs.length > 0 ? `\nSubstituições: ${subs.join(" • ")}` : "";
+            items.push({
+              meal_plan_id: plan.id,
+              day_of_week: day,
+              meal_type: mealType,
+              title: primary.name || b.label || "Item",
+              description: `${desc}${subsLine}`.trim() || null,
+              calories_target: primary.calories || null,
+              protein_target: primary.protein || null,
+              carbs_target: primary.carbs || null,
+              fat_target: primary.fat || null,
+            });
+          }
+        } else if (legacyFoods.length > 0) {
+          for (const f of legacyFoods) {
+            items.push({
+              meal_plan_id: plan.id,
+              day_of_week: day,
+              meal_type: mealType,
+              title: f.name || "Item",
+              description: f.portion || null,
+              calories_target: f.calories || null,
+              protein_target: f.protein || null,
+              carbs_target: f.carbs || null,
+              fat_target: f.fat || null,
+            });
+          }
+        }
+      }
+    }
+
+    if (items.length === 0) throw new Error("Nenhum item gerado a partir dos blocos do template");
+
+    const { error: itemsErr } = await supabase.from("meal_plan_items").insert(items);
+    if (itemsErr) throw new Error(`Falha ao inserir itens: ${itemsErr.message}`);
+
+    return plan.id;
+  };
+
   const handleApplyTemplate = async (template: DietTemplate) => {
     if (!user || !patientId) {
       toast.error("Paciente não selecionado");
@@ -389,37 +471,52 @@ export default function DietTemplates() {
     setApplying(true);
 
     try {
-
-      // ── DELEGATE TO EDGE FUNCTION via wrapper (single source of truth) ──
-      // The generate-meal-plan edge function handles everything:
-      // food selection, macro calculation, visual resolution, substitutions
       let targetPlanId = mealPlanId;
+      let itemsCount = 0;
 
-      const pipelineInput: PipelineInput = {
-        patientId,
-        nutritionistId: user.id,
-        tenantId: "",
-        planTitle: template.name + (patientName ? ` - ${patientName}` : ""),
-        planDescription: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
-        startDate: new Date().toISOString().split("T")[0],
-        existingPlanId: targetPlanId || undefined,
-        templateSlug: template.slug,
-        generationMode: "quick",
-      };
+      // ── PATH A: Official v2 templates with blocks → direct import (no IFJ engine) ──
+      const isV2 = template.template_generation === "official_v2"
+        && Array.isArray((template as any).meals)
+        && (template as any).meals.some((m: any) => Array.isArray(m.blocks) && m.blocks.length > 0);
 
-      const result = await runPlanPipeline(pipelineInput);
+      if (isV2) {
+        targetPlanId = await applyOfficialV2Template(template);
+        // Count items inserted
+        const { count } = await supabase
+          .from("meal_plan_items")
+          .select("*", { count: "exact", head: true })
+          .eq("meal_plan_id", targetPlanId);
+        itemsCount = count || 0;
+        console.log("[DietTemplates] V2 template applied directly:", { planId: targetPlanId, itemsCount });
+      } else {
+        // ── PATH B: Legacy templates → delegate to IFJ engine via edge function ──
+        const pipelineInput: PipelineInput = {
+          patientId,
+          nutritionistId: user.id,
+          tenantId: "",
+          planTitle: template.name + (patientName ? ` - ${patientName}` : ""),
+          planDescription: `Baseado no modelo "${template.name}". ${anamnesis ? "Ajustado conforme anamnese do paciente." : ""}`,
+          startDate: new Date().toISOString().split("T")[0],
+          existingPlanId: targetPlanId || undefined,
+          templateSlug: template.slug,
+          generationMode: "quick",
+        };
 
-      if (!result.success || !result.planId) {
-        throw new Error(result.warnings?.[0] || "Falha ao gerar plano alimentar");
+        const result = await runPlanPipeline(pipelineInput);
+
+        if (!result.success || !result.planId) {
+          throw new Error(result.warnings?.[0] || "Falha ao gerar plano alimentar");
+        }
+
+        targetPlanId = result.planId;
+        itemsCount = result.auditLog.items_total;
+
+        console.log("[DietTemplates] Pipeline completed via edge function:", {
+          planId: targetPlanId,
+          itemsCount,
+          pipelineVersion: result.pipelineVersion,
+        });
       }
-
-      targetPlanId = result.planId;
-
-      console.log("[DietTemplates] Pipeline completed via edge function:", {
-        planId: targetPlanId,
-        itemsCount: result.auditLog.items_total,
-        pipelineVersion: result.pipelineVersion,
-      });
 
       // Activate plan atomically
       const activateResult = await activateMealPlan(targetPlanId);
@@ -427,7 +524,7 @@ export default function DietTemplates() {
         console.warn("[DietTemplates] activateMealPlan fallback:", activateResult.error);
       }
 
-      toast.success(`Plano alimentar gerado com ${result.auditLog.items_total} refeições! 🎉`);
+      toast.success(`Plano alimentar gerado com ${itemsCount} refeições! 🎉`);
       setPreviewOpen(false);
       navigate(`/meal-plans/${targetPlanId}`);
     } catch (e: any) {
