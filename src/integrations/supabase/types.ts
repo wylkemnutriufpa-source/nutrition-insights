@@ -18930,12 +18930,10 @@ export type Database = {
         Args: { _alert_id: string; _resolution_note?: string }
         Returns: Json
       }
-      resolve_patient_lifecycle_state:
-        | { Args: { _patient_id: string }; Returns: Json }
-        | {
-            Args: { p_nutritionist_id?: string; p_patient_id: string }
-            Returns: string
-          }
+      resolve_patient_lifecycle_state: {
+        Args: { _patient_id: string }
+        Returns: Json
+      }
       resolve_patient_plan_status: {
         Args: { _patient_id: string }
         Returns: Json
