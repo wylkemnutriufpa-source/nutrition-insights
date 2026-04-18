@@ -498,39 +498,9 @@ export default function OnboardingPipeline() {
               </Card>
             )}
 
-            {/* Step 1: Anamnesis */}
+            {/* Step 1: Anamnesis — auto-redirect (sem botão para evitar travas no iOS) */}
             {currentStep === 1 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <ClipboardCheck className="w-5 h-5 text-primary" />
-                    Etapa 2: Anamnese
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">
-                    Preencha o questionário completo de anamnese para que possamos entender seu perfil de saúde, objetivos e rotina.
-                  </p>
-                  <div className="grid grid-cols-2 gap-3">
-                    {[
-                      { icon: Heart, label: "Saúde geral" },
-                      { icon: Scale, label: "Composição corporal" },
-                      { icon: Clock, label: "Rotina diária" },
-                      { icon: Utensils, label: "Hábitos alimentares" },
-                    ].map((item) => (
-                      <div key={item.label} className="flex items-center gap-2 p-3 rounded-lg bg-muted/50">
-                        <item.icon className="w-4 h-4 text-primary" />
-                        <span className="text-sm">{item.label}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <Button asChild className="w-full" size="lg">
-                    <Link to="/anamnesis?pipeline=true">
-                      Iniciar Anamnese <ArrowRight className="w-4 h-4 ml-2" />
-                    </Link>
-                  </Button>
-                </CardContent>
-              </Card>
+              <AnamnesisAutoRedirect />
             )}
 
             {/* Step 2: Body Data */}
@@ -715,5 +685,58 @@ export default function OnboardingPipeline() {
         </AnimatePresence>
       </div>
     </DashboardLayout>
+  );
+}
+
+/**
+ * AnamnesisAutoRedirect — substitui o card "Iniciar Anamnese" por redirecionamento
+ * automático para /anamnesis?pipeline=true. Resolve trava no iOS/PWA onde o botão
+ * Link às vezes não dispara navegação. Usa window.location como fallback robusto.
+ */
+function AnamnesisAutoRedirect() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const t1 = setTimeout(() => {
+      try {
+        navigate("/anamnesis?pipeline=true", { replace: true });
+      } catch { /* ignore */ }
+    }, 50);
+
+    const t2 = setTimeout(() => {
+      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/anamnesis")) {
+        window.location.href = "/anamnesis?pipeline=true";
+      }
+    }, 1200);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
+  }, [navigate]);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ClipboardCheck className="w-5 h-5 text-primary" />
+          Etapa 2: Anamnese
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4 text-center py-8">
+        <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
+        <p className="text-sm text-muted-foreground">
+          Abrindo seu questionário de anamnese...
+        </p>
+        <p className="text-xs text-muted-foreground">
+          Se a página não carregar em alguns segundos, toque no botão abaixo:
+        </p>
+        <Button asChild variant="outline" className="w-full">
+          <a href="/anamnesis?pipeline=true">
+            Abrir Anamnese <ArrowRight className="w-4 h-4 ml-2" />
+          </a>
+        </Button>
+      </CardContent>
+    </Card>
   );
 }
