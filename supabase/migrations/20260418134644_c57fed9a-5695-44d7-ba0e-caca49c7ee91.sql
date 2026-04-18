@@ -1,0 +1,1 @@
+DROP FUNCTION IF EXISTS public.resolve_patient_lifecycle_state(p_patient_id uuid, p_nutritionist_id uuid);
