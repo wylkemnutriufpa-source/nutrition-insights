@@ -697,6 +697,20 @@ function AnamnesisAutoRedirect() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    // 📡 telemetria de redirect (ajuda diagnosticar loop em PWA iOS)
+    try {
+      const trace = {
+        ts: new Date().toISOString(),
+        from: "OnboardingPipeline.AnamnesisAutoRedirect",
+        to: "/anamnesis?pipeline=true",
+        href: typeof window !== "undefined" ? window.location.href : "",
+      };
+      const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
+      arr.push(trace);
+      localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
+      console.warn("[FJ:Onboarding] REDIRECT TRIGGERED →", trace);
+    } catch { /* ignore */ }
+
     const t1 = setTimeout(() => {
       try {
         navigate("/anamnesis?pipeline=true", { replace: true });
