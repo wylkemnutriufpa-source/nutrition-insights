@@ -365,12 +365,15 @@ function RootRoute() {
 
   const userRole = isPatient ? "patient" : isAdmin ? "admin" : "professional";
 
+  // Flip bootDone once auth finishes loading. MUST run inside useEffect — calling
+  // setTimeout(setState) during render creates an infinite re-render loop because
+  // every render schedules another state update before the previous one settles.
+  useEffect(() => {
+    if (!loading && !bootDone) setBootDone(true);
+  }, [loading, bootDone]);
+
   // Show page loader while auth is loading
   if (!bootDone) {
-    if (!loading) {
-      // Data ready, mark boot as done
-      setTimeout(() => setBootDone(true), 0);
-    }
     return <PageLoader />;
   }
 
