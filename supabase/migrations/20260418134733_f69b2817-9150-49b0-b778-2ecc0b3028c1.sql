@@ -1,0 +1,1 @@
+ALTER FUNCTION public.resolve_patient_lifecycle_state(uuid) VOLATILE;
