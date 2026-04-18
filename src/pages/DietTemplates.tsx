@@ -391,9 +391,9 @@ export default function DietTemplates() {
     if (meals.length === 0) throw new Error("Template sem refeições configuradas");
 
     // 1. Create plan
-    const { data: plan, error: planErr } = await supabase
+    const { data: plan, error: planErr } = await (supabase
       .from("meal_plans")
-      .insert({
+      .insert([{
         patient_id: patientId,
         nutritionist_id: user!.id,
         title: template.name + (patientName ? ` - ${patientName}` : ""),
@@ -402,7 +402,7 @@ export default function DietTemplates() {
         is_active: false,
         plan_status: "draft",
         total_calories: getAdjustedCalories(template),
-      })
+      }] as any) as any)
       .select("id")
       .single();
     if (planErr || !plan) throw new Error(planErr?.message || "Falha ao criar plano");
@@ -524,7 +524,7 @@ export default function DietTemplates() {
         console.warn("[DietTemplates] activateMealPlan fallback:", activateResult.error);
       }
 
-      toast.success(`Plano alimentar gerado com ${result.auditLog.items_total} refeições! 🎉`);
+      toast.success(`Plano alimentar gerado com ${itemsCount} refeições! 🎉`);
       setPreviewOpen(false);
       navigate(`/meal-plans/${targetPlanId}`);
     } catch (e: any) {
