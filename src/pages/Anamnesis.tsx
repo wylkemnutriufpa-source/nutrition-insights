@@ -657,6 +657,27 @@ export default function Anamnesis() {
       const latestAnamnesis = anamnesisRows?.[0] as any;
       const latestPipeline = pipelineData as any;
 
+      // 📡 TELEMETRIA: registra a decisão de roteamento (lê via window.__fjAnamneseTrace)
+      try {
+        const trace = {
+          ts: new Date().toISOString(),
+          targetUserId,
+          cameFromPipeline: searchParams.get("pipeline") === "true",
+          hasAnamnesis: !!latestAnamnesis,
+          anamnesisStatus: latestAnamnesis?.status ?? null,
+          hasPipeline: !!latestPipeline,
+          pipelineStatus: latestPipeline?.status ?? null,
+          pipelineAnamnesisCompleted: latestPipeline?.anamnesis_completed ?? null,
+        };
+        (window as any).__fjAnamneseTrace = trace;
+        try {
+          const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
+          arr.push(trace);
+          localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
+        } catch { /* ignore */ }
+        console.info("[FJ:Anamnesis] route-decision trace:", trace);
+      } catch { /* ignore */ }
+
       // Detect active pipeline for auto-redirect behavior
       if (latestPipeline && !isNutritionistMode) {
         setHasActivePipeline(true);
@@ -680,16 +701,11 @@ export default function Anamnesis() {
       }
 
       if (latestAnamnesis.status === "completed") {
-        // ⚠️ ANTI-LOOP: Se a paciente chegou aqui via pipeline (?pipeline=true),
-        // NÃO redireciona de volta — o OnboardingPipeline também redireciona pra cá,
-        // criando loop infinito (/onboarding-pipeline ↔ /anamnesis?pipeline=true).
-        // Deixa a paciente ver a tela de anamnese concluída para poder editar ou
-        // clicar "Continuar Onboarding" manualmente.
-        const cameFromPipeline = searchParams.get("pipeline") === "true";
-        if (latestPipeline && !isNutritionistMode && !cameFromPipeline) {
-          navigate("/onboarding-pipeline", { replace: true });
-          return;
-        }
+        // 🛡️ ANTI-LOOP HARDENING (v3.0): NUNCA redirecionar de /anamnesis para
+        // /onboarding-pipeline. O OnboardingPipeline manda a paciente pra cá via
+        // AnamnesisAutoRedirect; se a anamnese também devolvesse pro pipeline,
+        // criaria loop infinito. Aqui apenas exibimos a tela "concluída" — a
+        // paciente decide manualmente continuar (botão "Continuar Onboarding").
         setCompleted(true);
         setDraftId(latestAnamnesis.id);
         const savedAnswers = latestAnamnesis.answers as Record<string, any>;
