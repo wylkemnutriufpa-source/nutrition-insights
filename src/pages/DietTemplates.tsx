@@ -611,9 +611,33 @@ export default function DietTemplates() {
 
                 {/* Meal preview */}
                 <div className="space-y-4 mt-2">
-                  {(Array.isArray(previewTemplate.meals) && previewTemplate.meals.length > 0) ? previewTemplate.meals.map((meal, mi) => {
+                  {(Array.isArray(previewTemplate.meals) && previewTemplate.meals.length > 0) ? previewTemplate.meals.map((mealRaw, mi) => {
                     const multiplier = getCalorieMultiplier(previewTemplate);
-                    const mealCals = (meal.foods || []).reduce((s, f) => s + Math.round((f.calories || 0) * multiplier), 0);
+                    // Adapter: templates v2 use `blocks` instead of `foods`. Flatten options into food list.
+                    const meal: any = (() => {
+                      const m: any = mealRaw;
+                      if (Array.isArray(m.foods) && m.foods.length > 0) return m;
+                      if (Array.isArray(m.blocks) && m.blocks.length > 0) {
+                        const foods = m.blocks.flatMap((b: any) => {
+                          const opts = Array.isArray(b.options) ? b.options : [];
+                          if (opts.length === 0) return [];
+                          const primary = opts[0];
+                          const subs = opts.slice(1).map((o: any) => o.name).filter(Boolean);
+                          return [{
+                            name: primary.name,
+                            portion: primary.portion || b.base_quantity || "",
+                            calories: primary.calories || 0,
+                            protein: primary.protein || 0,
+                            carbs: primary.carbs || 0,
+                            fat: primary.fat || 0,
+                            substitutions: subs,
+                          }];
+                        });
+                        return { ...m, foods };
+                      }
+                      return m;
+                    })();
+                    const mealCals = (meal.foods || []).reduce((s: number, f: any) => s + Math.round((f.calories || 0) * multiplier), 0);
 
                     return (
                       <div key={mi} className="glass rounded-lg p-4">
