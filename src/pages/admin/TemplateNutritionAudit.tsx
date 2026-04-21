@@ -41,6 +41,8 @@ import {
   FileWarning,
   Settings2,
   RotateCcw,
+  History,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 
