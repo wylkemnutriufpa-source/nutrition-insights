@@ -17,6 +17,7 @@ import {
   Dumbbell, CheckCircle2, Clock, Flame, AlertTriangle, Trophy,
   Play, Zap, Timer, ChevronRight, Video, Layers, X
 } from "lucide-react";
+import { groupExercisesForRender } from "@/lib/workoutIntensityUtils";
 
 const GROUP_BADGES: Record<string, { label: string; color: string; icon: string }> = {
   biset: { label: "BISET", color: "bg-blue-500/10 text-blue-400 border border-blue-500/30", icon: "⚡" },
@@ -246,31 +247,7 @@ export default function PatientWorkoutView() {
     return streak;
   })();
 
-  // Group exercises by group_id for rendering
-  const groupExercisesForRender = (exs: any[]) => {
-    const blocks: { type: string; exercises: any[]; groupId: string | null }[] = [];
-    let currentGroupId: string | null = null;
-    let currentBlock: any[] = [];
-
-    exs.forEach((ex) => {
-      const gid = ex.group_id || null;
-
-      if (gid && gid === currentGroupId) {
-        currentBlock.push(ex);
-      } else {
-        if (currentBlock.length > 0) {
-          blocks.push({ type: currentBlock[0].group_type || "single", exercises: currentBlock, groupId: currentGroupId });
-        }
-        currentBlock = [ex];
-        currentGroupId = gid;
-      }
-    });
-    if (currentBlock.length > 0) {
-      blocks.push({ type: currentBlock[0].group_type || "single", exercises: currentBlock, groupId: currentGroupId });
-    }
-    return blocks;
-  };
-
+  // Grouping logic is now in @/lib/workoutIntensityUtils.ts
   const getYouTubeEmbed = (url: string) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/);
     return match ? `https://www.youtube.com/embed/${match[1]}` : null;
@@ -286,7 +263,7 @@ export default function PatientWorkoutView() {
             <h4 className="text-sm font-bold text-destructive">REVISÃO MÉDICA REQUERIDA</h4>
             <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">
               Sua avaliação física indicou alguns pontos que precisam de atenção. 
-              Por segurança, evite exercícios de alta intensidade até que seu profissional faça a liberação.
+              Por segurança, métodos de alta intensidade (bisets, trisets e circuitos) foram bloqueados e você deve evitar exercícios de alta intensidade até que seu profissional faça a liberação.
             </p>
           </div>
         </div>
@@ -388,7 +365,7 @@ export default function PatientWorkoutView() {
                         {/* Exercise preview with group badges */}
                         <div className="space-y-1.5">
                           {exList.slice(0, 5).map((ex: any, i: number) => {
-                            const groupInfo = ex.group_type && ex.group_type !== "single" ? GROUP_BADGES[ex.group_type] : null;
+                            const groupInfo = !requiresMedicalReview && ex.group_type && ex.group_type !== "single" ? GROUP_BADGES[ex.group_type] : null;
                             const isGroupStart = groupInfo && ex.group_order === 0;
 
                             return (
@@ -500,7 +477,7 @@ export default function PatientWorkoutView() {
 
           <div className="space-y-3 mt-2">
             {/* Exercise blocks with grouping */}
-            {groupExercisesForRender(exercises).map((block) => {
+            {groupExercisesForRender(exercises, requiresMedicalReview).map((block) => {
               const groupInfo = block.type !== "single" ? GROUP_BADGES[block.type] : null;
 
               return (

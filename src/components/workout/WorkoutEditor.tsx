@@ -19,6 +19,7 @@ import {
   BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink, Film,
   ShieldAlert
 } from "lucide-react";
+import { hasHighIntensityMethods } from "@/lib/workoutIntensityUtils";
 
 const MUSCLE_GROUPS = [
   "Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Pernas",
@@ -286,6 +287,12 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
       toast.error("Preencha nome e aluno");
       return;
     }
+
+    if (requiresMedicalReview && hasHighIntensityMethods(routines)) {
+      toast.error("Métodos de alta intensidade (bisets/trisets/circuitos) estão bloqueados para este aluno devido à necessidade de revisão médica. Por favor, remova os agrupamentos antes de salvar.");
+      return;
+    }
+
     setSaving(true);
 
     try {
