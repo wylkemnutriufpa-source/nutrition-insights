@@ -18,37 +18,39 @@ vi.mock("@/lib/auth", () => ({
   useAuth: () => ({ user: { id: "patient-test-id" } }),
 }));
 
-const TODAY = new Date().toISOString().split("T")[0];
-const TODAY_DOW = new Date(TODAY + "T12:00:00").getDay();
+// Use vi.hoisted so these constants are available inside the (hoisted) vi.mock factory.
+const { TODAY, TODAY_DOW, ITEMS } = vi.hoisted(() => {
+  const TODAY = new Date().toISOString().split("T")[0];
+  const TODAY_DOW = new Date(TODAY + "T12:00:00").getDay();
+  const ITEMS = [
+    {
+      id: "item-lunch-today",
+      title: "Marmita Carne Magra",
+      description: "Patinho moído 80g\nArroz integral 100g\nBrócolis 60g",
+      meal_type: "lunch",
+      day_of_week: TODAY_DOW,
+      calories_target: 520,
+      protein_target: 35,
+      carbs_target: 50,
+      fat_target: 15,
+    },
+    {
+      id: "item-dinner-other-day",
+      title: "Marmita Frango Grelhado",
+      description: "Frango grelhado 120g\nBatata doce 100g\nSalada verde",
+      meal_type: "dinner",
+      day_of_week: (TODAY_DOW + 1) % 7,
+      calories_target: 480,
+      protein_target: 40,
+      carbs_target: 45,
+      fat_target: 12,
+    },
+  ];
+  return { TODAY, TODAY_DOW, ITEMS };
+});
 
-const ITEMS = [
-  {
-    id: "item-lunch-today",
-    title: "Marmita Carne Magra",
-    description: "Patinho moído 80g\nArroz integral 100g\nBrócolis 60g",
-    meal_type: "lunch",
-    day_of_week: TODAY_DOW,
-    calories_target: 520,
-    protein_target: 35,
-    carbs_target: 50,
-    fat_target: 15,
-  },
-  {
-    id: "item-dinner-other-day",
-    title: "Marmita Frango Grelhado",
-    description: "Frango grelhado 120g\nBatata doce 100g\nSalada verde",
-    meal_type: "dinner",
-    // pick a different day so it shows up in "Completo" / "Semanal" but not "Hoje"
-    day_of_week: (TODAY_DOW + 1) % 7,
-    calories_target: 480,
-    protein_target: 40,
-    carbs_target: 45,
-    fat_target: 12,
-  },
-];
-
-// Chainable Supabase query mock — terminal methods (order/limit/maybeSingle)
-// return a real Promise so `await` resolves to { data, error }.
+// Chainable Supabase query mock — all chain methods return the builder.
+// The builder is a thenable, so `await builder` resolves to { data, error }.
 function makeQueryBuilder(returnData: any) {
   const result = { data: returnData, error: null };
   const builder: any = {
