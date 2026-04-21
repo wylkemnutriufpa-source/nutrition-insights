@@ -211,6 +211,27 @@ export default function TemplateNutritionAudit() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"critical" | "warning" | "ok" | "all">("critical");
+  const [config, setConfig] = useState<AuditConfig>(() => loadConfig());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const updateRule = (key: RuleKey, severity: RuleSeverity) => {
+    setConfig((prev) => {
+      const next = { ...prev, [key]: severity };
+      saveConfig(next);
+      return next;
+    });
+  };
+
+  const resetConfig = () => {
+    setConfig(DEFAULT_CONFIG);
+    saveConfig(DEFAULT_CONFIG);
+    toast.success("Regras restauradas para o padrão");
+  };
+
+  const customizedCount = useMemo(
+    () => RULE_KEYS.filter((k) => config[k] !== DEFAULT_CONFIG[k]).length,
+    [config],
+  );
 
   const fetchTemplates = async () => {
     setLoading(true);
