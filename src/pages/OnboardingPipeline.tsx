@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -75,6 +75,30 @@ export default function OnboardingPipeline() {
   // Sync fallback state — quando RPC de finalização falha mesmo com plano gerado
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncRetrying, setSyncRetrying] = useState(false);
+  // Auto-retry com backoff exponencial: 5s, 10s, 20s, 40s, 80s, 160s (max)
+  const [autoRetryAttempt, setAutoRetryAttempt] = useState(0);
+  const [autoRetryNextAt, setAutoRetryNextAt] = useState<number | null>(null); // epoch ms do próximo retry
+  const [autoRetryCancelled, setAutoRetryCancelled] = useState(false);
+  const [autoRetryCountdown, setAutoRetryCountdown] = useState<number>(0); // segundos restantes
+  // Refs para evitar execuções concorrentes e permitir cancelamento limpo
+  const syncInFlightRef = useRef(false);
+  const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const MAX_AUTO_RETRY_ATTEMPTS = 6;
+  const BASE_RETRY_DELAY_MS = 5_000;
+  const MAX_RETRY_DELAY_MS = 160_000;
+
+  const clearAutoRetryTimers = useCallback(() => {
+    if (autoRetryTimerRef.current) {
+      clearTimeout(autoRetryTimerRef.current);
+      autoRetryTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+  }, []);
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
@@ -386,6 +410,12 @@ export default function OnboardingPipeline() {
    */
   async function runLifecycleSync(pipelineId: string): Promise<boolean> {
     if (!user) return false;
+    // Mutex em memória — impede execuções concorrentes (auto-retry vs manual vs efeito de mount).
+    if (syncInFlightRef.current) {
+      console.debug("runLifecycleSync skipped: another attempt in flight");
+      return false;
+    }
+    syncInFlightRef.current = true;
     const persistFailure = async (msg: string) => {
       setSyncError(msg);
       try {
@@ -424,16 +454,27 @@ export default function OnboardingPipeline() {
         return false;
       }
       await persistSuccess();
+      // Sucesso → reseta auto-retry e cancela timers pendentes
+      setAutoRetryAttempt(0);
+      setAutoRetryNextAt(null);
+      setAutoRetryCountdown(0);
+      setAutoRetryCancelled(false);
+      clearAutoRetryTimers();
       return true;
     } catch (err: any) {
       console.error("Lifecycle sync exception:", err);
       await persistFailure(err?.message || "Falha de rede ao sincronizar onboarding.");
       return false;
+    } finally {
+      syncInFlightRef.current = false;
     }
   }
 
   async function handleRetrySync() {
     if (!pipeline) return;
+    // Reativa o ciclo de auto-retry caso o usuário tenha cancelado anteriormente.
+    setAutoRetryCancelled(false);
+    clearAutoRetryTimers();
     setSyncRetrying(true);
     const ok = await runLifecycleSync(pipeline.id);
     if (ok) {
@@ -443,10 +484,71 @@ export default function OnboardingPipeline() {
       toast.success("Sincronização concluída! Seu plano está em revisão.");
       fetchPipeline();
     } else {
-      toast.error("Ainda não foi possível sincronizar. Tente novamente em alguns instantes.");
+      // Incrementa attempt para que o effect de auto-retry agende a próxima janela
+      setAutoRetryAttempt((n) => n + 1);
+      toast.error("Ainda não foi possível sincronizar. Tentaremos novamente automaticamente.");
     }
     setSyncRetrying(false);
   }
+
+  function handleCancelAutoRetry() {
+    setAutoRetryCancelled(true);
+    setAutoRetryNextAt(null);
+    setAutoRetryCountdown(0);
+    clearAutoRetryTimers();
+    toast.info("Tentativas automáticas pausadas. Use o botão para tentar manualmente.");
+  }
+
+  // Auto-retry com backoff exponencial — só roda quando há sync_pending persistido,
+  // o usuário não cancelou e nenhuma execução está em andamento.
+  useEffect(() => {
+    // Limpa qualquer timer existente antes de reagendar
+    clearAutoRetryTimers();
+
+    if (!pipeline || !syncError || !pipeline.plan_generated) return;
+    if (autoRetryCancelled) return;
+    if (autoRetryAttempt >= MAX_AUTO_RETRY_ATTEMPTS) return;
+    if (syncRetrying || syncInFlightRef.current) return;
+
+    // delay = base * 2^attempt, com teto
+    const delay = Math.min(
+      BASE_RETRY_DELAY_MS * Math.pow(2, autoRetryAttempt),
+      MAX_RETRY_DELAY_MS,
+    );
+    const targetAt = Date.now() + delay;
+    setAutoRetryNextAt(targetAt);
+    setAutoRetryCountdown(Math.ceil(delay / 1000));
+
+    countdownTimerRef.current = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((targetAt - Date.now()) / 1000));
+      setAutoRetryCountdown(remaining);
+      if (remaining <= 0 && countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+    }, 1000);
+
+    autoRetryTimerRef.current = setTimeout(async () => {
+      if (autoRetryCancelled || syncInFlightRef.current || !pipeline) return;
+      const ok = await runLifecycleSync(pipeline.id);
+      if (ok) {
+        await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
+        await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+        await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
+        toast.success("Sincronização concluída automaticamente!");
+        fetchPipeline();
+      } else {
+        // Falha → incrementa attempt e o próprio effect agenda a próxima janela
+        setAutoRetryAttempt((n) => n + 1);
+      }
+    }, delay);
+
+    return () => clearAutoRetryTimers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncError, pipeline?.id, pipeline?.plan_generated, autoRetryAttempt, autoRetryCancelled, syncRetrying]);
+
+  // Cleanup ao desmontar
+  useEffect(() => () => clearAutoRetryTimers(), [clearAutoRetryTimers]);
 
   const currentStep = getCurrentStep();
   const progress = (currentStep / 6) * 100;
@@ -573,19 +675,49 @@ export default function OnboardingPipeline() {
                       Detalhe técnico: {syncError}
                     </p>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRetrySync}
-                    disabled={syncRetrying}
-                    className="border-warning/40 hover:bg-warning/10"
-                  >
-                    {syncRetrying ? (
-                      <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
-                    ) : (
-                      <>Tentar sincronizar novamente</>
+                  {/* Status do auto-retry */}
+                  {!autoRetryCancelled && autoRetryAttempt < MAX_AUTO_RETRY_ATTEMPTS && autoRetryCountdown > 0 && !syncRetrying && (
+                    <p className="text-xs text-warning/90" data-testid="auto-retry-countdown">
+                      Tentativa automática {autoRetryAttempt + 1} de {MAX_AUTO_RETRY_ATTEMPTS} em {autoRetryCountdown}s…
+                    </p>
+                  )}
+                  {autoRetryCancelled && (
+                    <p className="text-xs text-muted-foreground" data-testid="auto-retry-cancelled">
+                      Tentativas automáticas pausadas.
+                    </p>
+                  )}
+                  {autoRetryAttempt >= MAX_AUTO_RETRY_ATTEMPTS && !syncRetrying && (
+                    <p className="text-xs text-destructive" data-testid="auto-retry-exhausted">
+                      Limite de tentativas automáticas atingido. Tente manualmente ou contate o suporte.
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRetrySync}
+                      disabled={syncRetrying}
+                      className="border-warning/40 hover:bg-warning/10"
+                    >
+                      {syncRetrying ? (
+                        <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
+                      ) : (
+                        <>Tentar sincronizar novamente</>
+                      )}
+                    </Button>
+                    {!autoRetryCancelled && autoRetryCountdown > 0 && !syncRetrying && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCancelAutoRetry}
+                        className="text-muted-foreground hover:text-foreground"
+                        data-testid="cancel-auto-retry"
+                      >
+                        Cancelar tentativas automáticas
+                      </Button>
                     )}
-                  </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
