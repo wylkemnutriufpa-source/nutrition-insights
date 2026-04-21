@@ -17,6 +17,7 @@ import {
   RefreshCw, ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
+import { fmtMacro, safeNum } from "@/lib/formatMacros";
 import { useMealPlanEditorV2Store, type MealPlanItem, type MealPlan } from "@/stores/mealPlanEditorV2Store";
 import { slotsToInserts } from "@/lib/mealPlanAutoGenerator";
 import { supabase } from "@/integrations/supabase/client";
@@ -332,7 +333,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                     />
                     {context?.computedKcal && (
                       <p className="text-[10px] text-muted-foreground">
-                        Sugerido: {context.computedKcal} kcal
+                        Sugerido: {fmtMacro(context.computedKcal)} kcal
                       </p>
                     )}
                   </div>
@@ -454,11 +455,11 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                       onClick={() => {
                         setTargetKcal(result.kcalSuggestion.suggestedKcal);
                         setShowKcalSuggestion(false);
-                        toast.success(`Meta ajustada para ${result.kcalSuggestion.suggestedKcal} kcal`);
+                        toast.success(`Meta ajustada para ${fmtMacro(result.kcalSuggestion.suggestedKcal)} kcal`);
                         setStep("params");
                       }}
                     >
-                      Aplicar {result.kcalSuggestion.suggestedKcal} kcal
+                      Aplicar {fmtMacro(result.kcalSuggestion.suggestedKcal)} kcal
                     </Button>
                     <Button
                       size="sm"
@@ -466,7 +467,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                       className="h-7 text-[11px]"
                       onClick={() => setShowKcalSuggestion(false)}
                     >
-                      Manter {targetKcal} kcal
+                      Manter {fmtMacro(targetKcal)} kcal
                     </Button>
                   </div>
                 </div>
@@ -644,10 +645,10 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                                       </p>
                                     </div>
                                     <div className="flex items-center gap-2 text-[9px] text-muted-foreground">
-                                      <span>{sub.targetKcal} kcal</span>
-                                      <span>{Math.round(sub.libraryItem.protein * sub.scaleFactor)}g P</span>
+                                      <span>{fmtMacro(sub.targetKcal)} kcal</span>
+                                      <span>{fmtMacro(safeNum(sub.libraryItem.protein) * safeNum(sub.scaleFactor))}g P</span>
                                       <Badge variant="outline" className="text-[7px] h-3">
-                                        ±{sub.macroDeviation.kcalPct}%
+                                        ±{fmtMacro(sub.macroDeviation.kcalPct)}%
                                       </Badge>
                                     </div>
                                   </div>
