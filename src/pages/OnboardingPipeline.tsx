@@ -67,6 +67,9 @@ export default function OnboardingPipeline() {
   const [generating, setGenerating] = useState(false);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [consentSubmitting, setConsentSubmitting] = useState(false);
+  // Sync fallback state — quando RPC de finalização falha mesmo com plano gerado
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncRetrying, setSyncRetrying] = useState(false);
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
@@ -318,30 +321,77 @@ export default function OnboardingPipeline() {
       // Transition lifecycle: pipeline → draft_ready_for_review (Plano em Revisão)
       // O trigger SQL já sincroniza automaticamente, mas chamamos explicitamente
       // para forçar recálculo do lifecycle e capturar erros visíveis ao usuário.
-      const { data: completionData, error: completionError } = await supabase.rpc(
-        "complete_patient_onboarding_by_patient" as any,
-        { _patient_id: user.id, _pipeline_id: pipeline.id },
-      );
-      if (completionError) {
-        console.error("complete_patient_onboarding_by_patient error:", completionError);
-      } else if (completionData && (completionData as any).success === false) {
-        console.warn("Onboarding completion warning:", (completionData as any).error);
-      }
+      const syncOk = await runLifecycleSync(pipeline.id);
 
       // Invalidar caches dependentes para o dashboard refletir o novo estado
       await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
       await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
       await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
 
-      toast.success(data.multiPlan 
-        ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
-        : "Pré-plano gerado! Aguardando aprovação do profissional."
-      );
+      if (syncOk) {
+        toast.success(data.multiPlan
+          ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
+          : "Pré-plano gerado! Aguardando aprovação do profissional."
+        );
+      } else {
+        // Plan was generated but lifecycle sync failed — surface clear feedback.
+        toast.warning(
+          "Plano gerado, mas a sincronização final está pendente. Use o botão de tentar novamente abaixo.",
+          { duration: 8000 }
+        );
+      }
       fetchPipeline();
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
     }
     setGenerating(false);
+  }
+
+  /**
+   * Executa a RPC de finalização do onboarding com tratamento robusto.
+   * Retorna true se sucesso, false caso contrário (e seta syncError).
+   */
+  async function runLifecycleSync(pipelineId: string): Promise<boolean> {
+    if (!user) return false;
+    try {
+      const { data: completionData, error: completionError } = await supabase.rpc(
+        "complete_patient_onboarding_by_patient" as any,
+        { _patient_id: user.id, _pipeline_id: pipelineId },
+      );
+      if (completionError) {
+        console.error("complete_patient_onboarding_by_patient error:", completionError);
+        setSyncError(completionError.message || "Falha ao sincronizar estado do onboarding.");
+        return false;
+      }
+      if (completionData && (completionData as any).success === false) {
+        const reason = (completionData as any).error || "Sincronização rejeitada pelo servidor.";
+        console.warn("Onboarding completion warning:", reason);
+        setSyncError(reason);
+        return false;
+      }
+      setSyncError(null);
+      return true;
+    } catch (err: any) {
+      console.error("Lifecycle sync exception:", err);
+      setSyncError(err?.message || "Falha de rede ao sincronizar onboarding.");
+      return false;
+    }
+  }
+
+  async function handleRetrySync() {
+    if (!pipeline) return;
+    setSyncRetrying(true);
+    const ok = await runLifecycleSync(pipeline.id);
+    if (ok) {
+      await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
+      await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+      await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
+      toast.success("Sincronização concluída! Seu plano está em revisão.");
+      fetchPipeline();
+    } else {
+      toast.error("Ainda não foi possível sincronizar. Tente novamente em alguns instantes.");
+    }
+    setSyncRetrying(false);
   }
 
   const currentStep = getCurrentStep();
@@ -448,6 +498,45 @@ export default function OnboardingPipeline() {
             })}
           </div>
         </div>
+
+        {/* Sync Fallback Banner — RPC de finalização falhou mesmo com plano gerado */}
+        {syncError && pipeline.plan_generated && (
+          <Card className="border-warning/40 bg-warning/5">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <p className="font-semibold text-warning">
+                      Sincronização pendente
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Seu plano foi gerado com sucesso, mas a sincronização final com o painel
+                      ainda não foi confirmada. Isso pode acontecer por instabilidade momentânea.
+                      Seus dados estão salvos — basta tentar novamente.
+                    </p>
+                    <p className="text-xs text-muted-foreground/80 mt-1 italic">
+                      Detalhe técnico: {syncError}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRetrySync}
+                    disabled={syncRetrying}
+                    className="border-warning/40 hover:bg-warning/10"
+                  >
+                    {syncRetrying ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
+                    ) : (
+                      <>Tentar sincronizar novamente</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Rejection Banner */}
         {pipeline.rejection_reason && pipeline.status === "rejected" && (
