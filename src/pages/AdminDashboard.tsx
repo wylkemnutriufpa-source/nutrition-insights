@@ -1161,7 +1161,21 @@ export default function AdminDashboard() {
             </TabsContent>
 
             {/* ─── Audit Logs ─── */}
-            <TabsContent value="audit" className="mt-4">
+            <TabsContent value="audit" className="mt-4 space-y-4">
+              <Card
+                className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow border-destructive/30"
+                onClick={() => navigate("/admin/template-nutrition-audit")}
+              >
+                <CardContent className="flex items-center gap-4 py-5">
+                  <Shield className="w-8 h-8 text-destructive" />
+                  <div className="flex-1">
+                    <p className="font-display font-semibold">Auditoria Nutricional de Templates</p>
+                    <p className="text-sm text-muted-foreground">
+                      Lista templates com macros faltantes que produzem NaN nos cards de refeição. Use antes do release.
+                    </p>
+                  </div>
+                </CardContent>
+              </Card>
               <AuditLogsEmbed />
             </TabsContent>
           </Tabs>

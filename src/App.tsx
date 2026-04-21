@@ -169,6 +169,7 @@ const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard"));
 const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard"));
 const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin"));
 const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit"));
+const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit"));
 const CoachBodybuilder = lazy(() => import("./pages/CoachBodybuilder"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
@@ -672,6 +673,7 @@ const App = () => (
               <Route path="/admin/meal-coverage" element={<AdminRoute><LP section="Admin"><MealCoverageDashboard /></LP></AdminRoute>} />
               <Route path="/admin/meal-visual-library" element={<AdminRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></AdminRoute>} />
               <Route path="/admin/plan-audit" element={<AdminRoute><LP section="Auditoria de Planos"><PlanBatchAudit /></LP></AdminRoute>} />
+              <Route path="/admin/template-nutrition-audit" element={<AdminRoute><LP section="Auditoria Nutricional"><TemplateNutritionAudit /></LP></AdminRoute>} />
               <Route path="/admin/mission-control" element={<AdminRoute><LP section="Mission Control"><MissionControl /></LP></AdminRoute>} />
               <Route path="/admin/campaigns" element={<AdminRoute><LP section="Campanhas"><CampaignCenter /></LP></AdminRoute>} />
               <Route path="/system-diagnostics" element={<AdminRoute><LP section="System Diagnostics"><SystemDiagnostics /></LP></AdminRoute>} />
