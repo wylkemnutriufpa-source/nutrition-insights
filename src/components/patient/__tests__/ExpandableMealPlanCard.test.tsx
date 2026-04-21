@@ -133,10 +133,6 @@ describe("ExpandableMealPlanCard - description rendering", () => {
     );
 
     await new Promise((r) => setTimeout(r, 200));
-    const html = document.body.innerHTML;
-    const idx = html.lastIndexOf("Hoje —");
-    // eslint-disable-next-line no-console
-    console.log("ITEMS_AREA:", html.substring(idx, idx + 1500));
 
     // Today's lunch item title is visible
     expect(await screen.findByText("Marmita Carne Magra")).toBeInTheDocument();
