@@ -501,13 +501,13 @@ export default function OnboardingPipeline() {
 
         {/* Sync Fallback Banner — RPC de finalização falhou mesmo com plano gerado */}
         {syncError && pipeline.plan_generated && (
-          <Card className="border-amber-500/40 bg-amber-500/5">
+          <Card className="border-warning/40 bg-warning/5">
             <CardContent className="py-4">
               <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <AlertCircle className="w-5 h-5 text-warning shrink-0 mt-0.5" />
                 <div className="flex-1 space-y-2">
                   <div>
-                    <p className="font-semibold text-amber-600 dark:text-amber-400">
+                    <p className="font-semibold text-warning">
                       Sincronização pendente
                     </p>
                     <p className="text-sm text-muted-foreground">
@@ -524,7 +524,7 @@ export default function OnboardingPipeline() {
                     variant="outline"
                     onClick={handleRetrySync}
                     disabled={syncRetrying}
-                    className="border-amber-500/40 hover:bg-amber-500/10"
+                    className="border-warning/40 hover:bg-warning/10"
                   >
                     {syncRetrying ? (
                       <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
