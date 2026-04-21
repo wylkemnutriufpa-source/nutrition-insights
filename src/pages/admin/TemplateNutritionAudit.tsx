@@ -221,21 +221,73 @@ export default function TemplateNutritionAudit() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"critical" | "warning" | "ok" | "all">("critical");
-  const [config, setConfig] = useState<AuditConfig>(() => loadConfig());
+  const [config, setConfig] = useState<AuditConfig>(DEFAULT_CONFIG);
+  const [configLoading, setConfigLoading] = useState(true);
+  const [savingKey, setSavingKey] = useState<RuleKey | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const updateRule = (key: RuleKey, severity: RuleSeverity) => {
-    setConfig((prev) => {
-      const next = { ...prev, [key]: severity };
-      saveConfig(next);
-      return next;
-    });
+  // Initial config load + realtime subscription so all admins stay in sync.
+  useEffect(() => {
+    let mounted = true;
+    setConfigLoading(true);
+    fetchConfigFromDB()
+      .then((c) => {
+        if (mounted) setConfig(c);
+      })
+      .finally(() => {
+        if (mounted) setConfigLoading(false);
+      });
+
+    const channel = supabase
+      .channel("template-audit-rules-config")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "template_audit_rules_config" },
+        () => {
+          fetchConfigFromDB().then((c) => {
+            if (mounted) setConfig(c);
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const updateRule = async (key: RuleKey, severity: RuleSeverity) => {
+    const previous = config[key];
+    setConfig((prev) => ({ ...prev, [key]: severity })); // optimistic
+    setSavingKey(key);
+    try {
+      await upsertRuleInDB(key, severity);
+      toast.success("Regra atualizada para todos os admins");
+    } catch (err) {
+      setConfig((prev) => ({ ...prev, [key]: previous })); // rollback
+      toast.error("Falha ao salvar regra", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setSavingKey(null);
+    }
   };
 
-  const resetConfig = () => {
-    setConfig(DEFAULT_CONFIG);
-    saveConfig(DEFAULT_CONFIG);
-    toast.success("Regras restauradas para o padrão");
+  const resetConfig = async () => {
+    setResetting(true);
+    try {
+      await resetRulesInDB();
+      setConfig(DEFAULT_CONFIG);
+      toast.success("Regras restauradas para o padrão (todos os admins)");
+    } catch (err) {
+      toast.error("Falha ao restaurar regras", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setResetting(false);
+    }
   };
 
   const customizedCount = useMemo(
