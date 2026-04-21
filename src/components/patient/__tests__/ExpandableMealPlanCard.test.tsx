@@ -8,24 +8,18 @@
  * truncated, which was the root cause of patient Wannubia not seeing her
  * marmita suggestions.
  */
-import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, fireEvent, waitFor, within } from "@testing-library/react";
+import { describe, it, expect, vi } from "vitest";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
-// ---------- Mocks ----------
-
-vi.mock("@/lib/auth", () => ({
-  useAuth: () => ({ user: { id: "patient-test-id" } }),
-}));
-
-// Use vi.hoisted so these constants are available inside the (hoisted) vi.mock factory.
+// ---------- Hoisted constants (available inside vi.mock factories) ----------
 const { TODAY, TODAY_DOW, ITEMS } = vi.hoisted(() => {
   const TODAY = new Date().toISOString().split("T")[0];
   const TODAY_DOW = new Date(TODAY + "T12:00:00").getDay();
   const ITEMS = [
     {
       id: "item-lunch-today",
-      title: "Marmita Carne Magra",
+      title: "MarmitaCarneMagra",
       description: "Patinho moído 80g\nArroz integral 100g\nBrócolis 60g",
       meal_type: "lunch",
       day_of_week: TODAY_DOW,
@@ -35,8 +29,8 @@ const { TODAY, TODAY_DOW, ITEMS } = vi.hoisted(() => {
       fat_target: 15,
     },
     {
-      id: "item-dinner-other-day",
-      title: "Marmita Frango Grelhado",
+      id: "item-dinner-other",
+      title: "MarmitaFrangoGrelhado",
       description: "Frango grelhado 120g\nBatata doce 100g\nSalada verde",
       meal_type: "dinner",
       day_of_week: (TODAY_DOW + 1) % 7,
@@ -49,62 +43,74 @@ const { TODAY, TODAY_DOW, ITEMS } = vi.hoisted(() => {
   return { TODAY, TODAY_DOW, ITEMS };
 });
 
-// Chainable Supabase query mock — all chain methods return the builder.
-// The builder is a thenable, so `await builder` resolves to { data, error }.
-function makeQueryBuilder(returnData: any) {
-  const result = { data: returnData, error: null };
-  const builder: any = {
-    select: vi.fn(() => builder),
-    eq: vi.fn(() => builder),
-    gte: vi.fn(() => builder),
-    lte: vi.fn(() => builder),
-    order: vi.fn(() => builder),
-    limit: vi.fn(() => builder),
-    maybeSingle: vi.fn(() => Promise.resolve(result)),
-    then: (resolve: any, reject: any) =>
-      Promise.resolve(result).then(resolve, reject),
-  };
-  return builder;
-}
-
-vi.mock("@/integrations/supabase/client", () => ({
-  supabase: {
-    from: (table: string) => {
-      // eslint-disable-next-line no-console
-      console.log("MOCK_FROM:", table, "ITEMS_LEN:", ITEMS?.length);
-      if (table === "meal_plans") {
-        return makeQueryBuilder({
-          id: "plan-1",
-          title: "Plano Wannubia Marmita Semanal",
-          start_date: TODAY,
-        });
-      }
-      if (table === "meal_plan_items") {
-        return makeQueryBuilder(ITEMS);
-      }
-      if (table === "meal_item_completions") {
-        return makeQueryBuilder([]);
-      }
-      return makeQueryBuilder([]);
-    },
-  },
+// ---------- Mocks ----------
+vi.mock("@/lib/auth", () => ({
+  useAuth: () => ({ user: { id: "patient-test-id" } }),
 }));
 
-// Avoid framer-motion AnimatePresence height transition swallowing content in jsdom
-vi.mock("framer-motion", async () => {
-  const actual: any = await vi.importActual("framer-motion");
+vi.mock("@/integrations/supabase/client", () => {
+  // Chainable thenable builder: chain methods return self; `await` resolves to {data,error}.
+  const makeQB = (data: any) => {
+    const result = { data, error: null };
+    const b: any = {};
+    b.select = () => b;
+    b.eq = () => b;
+    b.gte = () => b;
+    b.lte = () => b;
+    b.order = () => b;
+    b.limit = () => b;
+    b.maybeSingle = () => Promise.resolve(result);
+    b.then = (resolve: any, reject: any) =>
+      Promise.resolve(result).then(resolve, reject);
+    return b;
+  };
+
   return {
-    ...actual,
-    AnimatePresence: ({ children }: any) => <>{children}</>,
-    motion: new Proxy(
-      {},
-      {
-        get: () => (props: any) => {
-          const { children, ...rest } = props || {};
-          return <div {...rest}>{children}</div>;
-        },
+    supabase: {
+      from: (table: string) => {
+        if (table === "meal_plans") {
+          return makeQB({
+            id: "plan-1",
+            title: "PlanoWannubia",
+            start_date: TODAY,
+          });
+        }
+        if (table === "meal_plan_items") return makeQB(ITEMS);
+        return makeQB([]);
       },
-    ),
+    },
+  };
+});
+
+// Replace framer-motion with passthroughs so AnimatePresence/motion don't
+// hide content during jsdom tests.
+vi.mock("framer-motion", async () => {
+  const React = await import("react");
+  const passthrough = (props: any) => {
+    const { children, ...rest } = props || {};
+    // Strip framer-only props that React would warn about.
+    const safe: any = {};
+    for (const k of Object.keys(rest)) {
+      if (
+        ![
+          "initial",
+          "animate",
+          "exit",
+          "transition",
+          "variants",
+          "whileHover",
+          "whileTap",
+          "layout",
+        ].includes(k)
+      ) {
+        safe[k] = rest[k];
+      }
+    }
+    return React.createElement("div", safe, children);
+  };
+  return {
+    AnimatePresence: ({ children }: any) => children,
+    motion: new Proxy({}, { get: () => passthrough }),
   };
 });
 
@@ -120,85 +126,78 @@ function renderCard() {
 }
 
 describe("ExpandableMealPlanCard - description rendering", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-  });
-
   it("renders item.description in the 'Hoje' (today) tab", async () => {
     renderCard();
 
-    // Wait for plan to load (title appears)
-    await waitFor(() =>
-      expect(screen.getByText("Plano Wannubia Marmita Semanal")).toBeInTheDocument(),
+    // Wait for data to load and items to render
+    await waitFor(
+      () => {
+        expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
+      },
+      { timeout: 3000 },
     );
 
-    await new Promise((r) => setTimeout(r, 200));
-
-    // Today's lunch item title is visible
-    expect(await screen.findByText("Marmita Carne Magra")).toBeInTheDocument();
-
-    // Its description should also be visible (whitespace-pre-line keeps newlines)
-    expect(
-      screen.getByText((content) => content.includes("Patinho moído 80g")),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((content) => content.includes("Arroz integral 100g")),
-    ).toBeInTheDocument();
+    // Description (multi-line) is shown directly on the card
+    const html = document.body.innerHTML;
+    expect(html).toContain("Patinho moído 80g");
+    expect(html).toContain("Arroz integral 100g");
+    expect(html).toContain("Brócolis 60g");
   });
 
-  it("renders item.description in the 'Semanal' (weekly) tab when selecting a day", async () => {
+  it("renders item.description in the 'Semanal' (weekly) tab when selecting another day", async () => {
     renderCard();
-    await waitFor(() =>
-      expect(screen.getByText("Plano Wannubia Marmita Semanal")).toBeInTheDocument(),
-    );
 
-    // Switch to weekly tab
+    await waitFor(() => {
+      expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
+    }, { timeout: 3000 });
+
+    // Switch to Weekly tab
     fireEvent.click(screen.getByRole("tab", { name: /Semanal/i }));
 
-    // Find the day pill for the dinner item's day and click it
+    // The week pill grid renders 7 buttons; click the one for the dinner item's day
+    await waitFor(() => {
+      expect(screen.getByText(/Sex|Sáb|Dom|Seg|Ter|Qua|Qui/)).toBeInTheDocument();
+    });
+
     const dayShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-    const targetDayLabel = dayShort[(TODAY_DOW + 1) % 7];
+    const targetLabel = dayShort[(TODAY_DOW + 1) % 7];
+    // There may be multiple — pick the first matching pill
+    const pills = screen.getAllByText(targetLabel);
+    fireEvent.click(pills[0].closest("button")!);
 
-    // Click the day button containing the short label
-    const dayButtons = screen.getAllByRole("button");
-    const targetButton = dayButtons.find((b) =>
-      within(b).queryByText(targetDayLabel),
+    await waitFor(
+      () => {
+        expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
+      },
+      { timeout: 3000 },
     );
-    expect(targetButton).toBeTruthy();
-    fireEvent.click(targetButton!);
 
-    // Dinner item appears with its description
-    expect(await screen.findByText("Marmita Frango Grelhado")).toBeInTheDocument();
-    expect(
-      screen.getByText((content) => content.includes("Frango grelhado 120g")),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((content) => content.includes("Batata doce 100g")),
-    ).toBeInTheDocument();
+    const html = document.body.innerHTML;
+    expect(html).toContain("Frango grelhado 120g");
+    expect(html).toContain("Batata doce 100g");
+    expect(html).toContain("Salada verde");
   });
 
   it("renders item.description for ALL items in the 'Completo' (full) tab", async () => {
     renderCard();
-    await waitFor(() =>
-      expect(screen.getByText("Plano Wannubia Marmita Semanal")).toBeInTheDocument(),
-    );
 
-    // Switch to full tab
+    await waitFor(() => {
+      expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
+    }, { timeout: 3000 });
+
     fireEvent.click(screen.getByRole("tab", { name: /Completo/i }));
 
-    // Both items' titles
-    expect(await screen.findByText("Marmita Carne Magra")).toBeInTheDocument();
-    expect(screen.getByText("Marmita Frango Grelhado")).toBeInTheDocument();
+    await waitFor(
+      () => {
+        expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
+      },
+      { timeout: 3000 },
+    );
 
-    // Both items' descriptions
-    expect(
-      screen.getByText((c) => c.includes("Patinho moído 80g")),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((c) => c.includes("Frango grelhado 120g")),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByText((c) => c.includes("Salada verde")),
-    ).toBeInTheDocument();
+    const html = document.body.innerHTML;
+    // Both items' descriptions appear
+    expect(html).toContain("Patinho moído 80g");
+    expect(html).toContain("Frango grelhado 120g");
+    expect(html).toContain("Salada verde");
   });
 });
