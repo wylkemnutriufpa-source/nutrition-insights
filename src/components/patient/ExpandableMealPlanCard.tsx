@@ -225,17 +225,26 @@ export default function ExpandableMealPlanCard() {
                         const comp = completions.find(c => c.meal_plan_item_id === item.id);
                         const status = comp?.adherence_status;
                         return (
-                          <div key={item.id} className="flex items-center gap-2 pl-5">
-                            {status === "followed" ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0" />
-                              : status === "partial" ? <MinusCircle className="w-3 h-3 text-amber-500 shrink-0" />
-                              : status === "not_followed" ? <AlertCircle className="w-3 h-3 text-red-500 shrink-0" />
-                              : <Circle className="w-3 h-3 text-muted-foreground shrink-0" />}
-                            <span className={`text-xs truncate ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
-                              {item.title}
-                            </span>
-                            {item.calories_target != null && (
-                              <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
-                            )}
+                          <div key={item.id} className="flex items-start gap-2 pl-5">
+                            {status === "followed" ? <CheckCircle2 className="w-3 h-3 text-emerald-500 shrink-0 mt-0.5" />
+                              : status === "partial" ? <MinusCircle className="w-3 h-3 text-amber-500 shrink-0 mt-0.5" />
+                              : status === "not_followed" ? <AlertCircle className="w-3 h-3 text-red-500 shrink-0 mt-0.5" />
+                              : <Circle className="w-3 h-3 text-muted-foreground shrink-0 mt-0.5" />}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2">
+                                <span className={`text-xs font-medium truncate ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
+                                  {item.title}
+                                </span>
+                                {item.calories_target != null && (
+                                  <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
+                                )}
+                              </div>
+                              {item.description && (
+                                <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-pre-line leading-snug">
+                                  {item.description}
+                                </p>
+                              )}
+                            </div>
                           </div>
                         );
                       })}
