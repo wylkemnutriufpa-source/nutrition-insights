@@ -51,6 +51,11 @@ import {
   RotateCcw,
   History,
   Undo2,
+  GitCompare,
+  ArrowRight,
+  Minus,
+  Plus,
+  Equal,
 } from "lucide-react";
 import { toast } from "sonner";
 
