@@ -780,7 +780,7 @@ export default function DietTemplates() {
                             <h4 className="font-display font-semibold text-sm">{meal.title}</h4>
                           </div>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Flame className="w-3 h-3 text-orange-400" /> {mealCals} kcal
+                            <Flame className="w-3 h-3 text-orange-400" /> {fmtMacro(mealCals)} kcal
                           </span>
                         </div>
 
