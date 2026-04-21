@@ -380,10 +380,33 @@ export default function OnboardingPipeline() {
 
   /**
    * Executa a RPC de finalização do onboarding com tratamento robusto.
+   * Persiste o resultado no banco (sync_pending / sync_error) para que o
+   * banner sobreviva a reloads sem depender da redetecção do front.
    * Retorna true se sucesso, false caso contrário (e seta syncError).
    */
   async function runLifecycleSync(pipelineId: string): Promise<boolean> {
     if (!user) return false;
+    const persistFailure = async (msg: string) => {
+      setSyncError(msg);
+      try {
+        await supabase.rpc("mark_onboarding_sync_pending" as any, {
+          _patient_id: user.id,
+          _error_message: msg,
+        });
+      } catch (e) {
+        console.warn("Failed to persist sync_pending flag:", e);
+      }
+    };
+    const persistSuccess = async () => {
+      setSyncError(null);
+      try {
+        await supabase.rpc("clear_onboarding_sync_pending" as any, {
+          _patient_id: user.id,
+        });
+      } catch (e) {
+        console.warn("Failed to clear sync_pending flag:", e);
+      }
+    };
     try {
       const { data: completionData, error: completionError } = await supabase.rpc(
         "complete_patient_onboarding_by_patient" as any,
@@ -391,20 +414,20 @@ export default function OnboardingPipeline() {
       );
       if (completionError) {
         console.error("complete_patient_onboarding_by_patient error:", completionError);
-        setSyncError(completionError.message || "Falha ao sincronizar estado do onboarding.");
+        await persistFailure(completionError.message || "Falha ao sincronizar estado do onboarding.");
         return false;
       }
       if (completionData && (completionData as any).success === false) {
         const reason = (completionData as any).error || "Sincronização rejeitada pelo servidor.";
         console.warn("Onboarding completion warning:", reason);
-        setSyncError(reason);
+        await persistFailure(reason);
         return false;
       }
-      setSyncError(null);
+      await persistSuccess();
       return true;
     } catch (err: any) {
       console.error("Lifecycle sync exception:", err);
-      setSyncError(err?.message || "Falha de rede ao sincronizar onboarding.");
+      await persistFailure(err?.message || "Falha de rede ao sincronizar onboarding.");
       return false;
     }
   }
