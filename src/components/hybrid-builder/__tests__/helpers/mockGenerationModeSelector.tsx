@@ -3,20 +3,16 @@ import { vi } from "vitest";
 /**
  * Shared mock factories and presets for GenerationModeSelector tests.
  *
- * Why this shape: `vi.mock(...)` calls are hoisted to the top of the *test
- * file* by vitest's transformer — they are NOT hoisted across module
- * boundaries. So we can't put `vi.mock(...)` inside this helper and expect
- * it to take effect in the importing test file.
- *
- * Instead, this module exposes:
- *   - A `mockState` object created via `vi.hoisted` so it exists before
- *     the hoisted `vi.mock` factories run.
- *   - `setMockState(opts)` to mutate that state from the test (call BEFORE
- *     `render`).
- *   - `installMocks()` — a single helper that registers ALL the standard
- *     `vi.mock` calls. Test files call this at module top-level. The mock
- *     factories close over `mockState`, so different scenarios just call
- *     `setMockState({...})` before rendering.
+ * Why this shape:
+ *   - `vi.mock(...)` is hoisted to the top of the *test file* by vitest's
+ *     transformer. Calling `vi.mock` from inside a helper function still
+ *     works as long as that helper is invoked at module top-level in the
+ *     test file (which is how `installGenerationModeSelectorMocks()` is
+ *     used below).
+ *   - Mock factories must not capture local closures from the helper (those
+ *     wouldn't exist when the hoisted mocks first run). Instead, factories
+ *     read from a shared object on `globalThis` that tests mutate via
+ *     `setMockState(...)` before each render.
  */
 
 export interface RecipeCounts {
@@ -61,16 +57,27 @@ const DEFAULT_SETTINGS = {
   fixed_min_dinner: 1,
 };
 
-/**
- * Hoisted state container — created before `vi.mock` factories execute.
- * Test files mutate this via `setMockState` before rendering.
- */
-export const mockState = vi.hoisted(() => ({
-  user: { id: "nutri-1" } as { id: string } | null,
-  settings: { ...DEFAULT_SETTINGS },
-  settingsLoading: false,
-  recipes: [] as Array<{ meal_type: string; is_fixed: boolean }>,
-}));
+interface MockState {
+  user: { id: string } | null;
+  settings: typeof DEFAULT_SETTINGS;
+  settingsLoading: boolean;
+  recipes: Array<{ meal_type: string; is_fixed: boolean }>;
+}
+
+const STATE_KEY = "__GMS_MOCK_STATE__";
+
+function getState(): MockState {
+  const g = globalThis as unknown as Record<string, MockState | undefined>;
+  if (!g[STATE_KEY]) {
+    g[STATE_KEY] = {
+      user: { id: "nutri-1" },
+      settings: { ...DEFAULT_SETTINGS },
+      settingsLoading: false,
+      recipes: buildRecipes(READY_COUNTS),
+    };
+  }
+  return g[STATE_KEY] as MockState;
+}
 
 export function buildRecipes(counts: RecipeCounts = {}) {
   const { lunch = 0, dinner = 0, fixedLunch = 0, fixedDinner = 0 } = counts;
@@ -84,28 +91,26 @@ export function buildRecipes(counts: RecipeCounts = {}) {
 
 /** Update the shared mock state. Call BEFORE `render(...)`. */
 export function setMockState(opts: MockStateOptions = {}) {
-  if (opts.counts !== undefined) mockState.recipes = buildRecipes(opts.counts);
-  if (opts.settings !== undefined)
-    mockState.settings = { ...DEFAULT_SETTINGS, ...opts.settings };
-  if (opts.settingsLoading !== undefined) mockState.settingsLoading = opts.settingsLoading;
-  if (opts.user !== undefined) mockState.user = opts.user;
+  const s = getState();
+  if (opts.counts !== undefined) s.recipes = buildRecipes(opts.counts);
+  if (opts.settings !== undefined) s.settings = { ...DEFAULT_SETTINGS, ...opts.settings };
+  if (opts.settingsLoading !== undefined) s.settingsLoading = opts.settingsLoading;
+  if (opts.user !== undefined) s.user = opts.user;
 }
-
-// Initialize with sane defaults so tests don't need to call setMockState
-// when the default scenario is fine.
-mockState.recipes = buildRecipes(READY_COUNTS);
 
 /**
  * Register all `vi.mock(...)` calls needed for GenerationModeSelector.
  * MUST be called at module top-level in the test file (vitest hoists it).
  *
- * Note: paths to sibling components are relative to the *test file*, which
- * lives in `src/components/hybrid-builder/__tests__/`. We assume that
- * convention here.
+ * Sibling-component paths are relative to test files in
+ * `src/components/hybrid-builder/__tests__/`.
  */
 export function installGenerationModeSelectorMocks() {
   vi.mock("@/lib/auth", () => ({
-    useAuth: () => ({ user: mockState.user }),
+    useAuth: () => {
+      const g = globalThis as any;
+      return { user: g[STATE_KEY]?.user ?? { id: "nutri-1" } };
+    },
   }));
 
   vi.mock("@/stores/mealPlanEditorV2Store", () => ({
@@ -123,10 +128,14 @@ export function installGenerationModeSelectorMocks() {
   vi.mock("../MarmitaSettingsDialog", () => ({ default: () => null }));
 
   vi.mock("@/hooks/useMarmitaSettings", () => ({
-    useMarmitaSettings: () => ({
-      settings: mockState.settings,
-      loading: mockState.settingsLoading,
-    }),
+    useMarmitaSettings: () => {
+      const g = globalThis as any;
+      const s = g[STATE_KEY];
+      return {
+        settings: s?.settings ?? DEFAULT_SETTINGS,
+        loading: s?.settingsLoading ?? false,
+      };
+    },
   }));
 
   vi.mock("@/integrations/supabase/client", () => ({
@@ -134,7 +143,10 @@ export function installGenerationModeSelectorMocks() {
       from: () => ({
         select: () => ({
           eq: () => ({
-            eq: () => Promise.resolve({ data: mockState.recipes, error: null }),
+            eq: () => {
+              const g = globalThis as any;
+              return Promise.resolve({ data: g[STATE_KEY]?.recipes ?? [], error: null });
+            },
           }),
         }),
       }),
