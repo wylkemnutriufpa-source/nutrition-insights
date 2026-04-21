@@ -135,9 +135,9 @@ describe("ExpandableMealPlanCard - description rendering", () => {
     // DEBUG dump
     await new Promise((r) => setTimeout(r, 200));
     const html = document.body.innerHTML;
-    const idx = html.indexOf("Marmita");
+    const todayPanel = html.indexOf("content-today");
     // eslint-disable-next-line no-console
-    console.log("MARMITA_CONTEXT:", html.substring(idx, idx + 300));
+    console.log("TODAY_PANEL:", html.substring(todayPanel, todayPanel + 2000));
 
     // Today's lunch item title is visible
     expect(await screen.findByText("Marmita Carne Magra")).toBeInTheDocument();
