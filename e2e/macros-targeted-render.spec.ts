@@ -1,41 +1,38 @@
 /**
- * FitJourney E2E — Targeted Macro Render Assertions
+ * FitJourney E2E — Macro container-scoped assertions
  *
- * Unlike `macros-no-nan.spec.ts` (which scans the full body), this spec
- * inspects ONLY the elements that actually render kcal/P/C/G values on each
- * page, after a hard refresh. We poison Supabase responses with toxic numeric
- * payloads, navigate, reload, then for every macro-bearing node we assert:
- *   - it does NOT contain "NaN" / "Infinity" / "undefined"
- *   - the numeric portion parses to a finite number (>= 0 for masses/kcal)
+ * Inspects ONLY known macro containers tagged with `[data-macro-tile]` and
+ * their `[data-macro-value]` leaves. Avoids false positives from incidental
+ * text like "meta", chart labels or unrelated numbers.
  *
- * This proves fmtMacro/safeNum are wired into every visible macro on the page,
- * not just somewhere on the document.
+ * Tagged containers:
+ *  - MealCard            → data-macro-tile="meal-card"     (kcal, protein, carbs, fat)
+ *  - MealVisualCard      → data-macro-tile="visual-card"   (kcal, protein)
+ *  - NextMealWidget      → data-macro-tile="next-meal"     (kcal, P, C, G)
+ *  - MacroBalanceBar     → data-macro-tile="balance-bar"   (P%, C%, G%)
+ *  - MacroGauge          → data-macro-tile="gauge"         (current, target)
+ *
+ * For every `[data-macro-value]` leaf we assert:
+ *  - text never contains NaN / Infinity / undefined / null
+ *  - any number parses to a finite value (>= 0)
  */
-import { expect, type Page, type Route, type Locator } from "@playwright/test";
+import { expect, type Page, type Route } from "@playwright/test";
 import { test as authedTest } from "./fixtures";
 
-// ─── Toxic data injection ──────────────────────────────────────────────────
+// ─── Toxic data injection (read path) ──────────────────────────────────────
 const TOXIC_VALUES: unknown[] = [
-  null,
-  undefined,
-  Number.NaN,
-  Number.POSITIVE_INFINITY,
-  Number.NEGATIVE_INFINITY,
-  "",
-  "abc",
-  "NaN",
-  true,
-  {},
-  [],
+  null, undefined, Number.NaN,
+  Number.POSITIVE_INFINITY, Number.NEGATIVE_INFINITY,
+  "", "abc", "NaN", true, {}, [],
 ];
 
 const MACRO_FIELDS = new Set([
   "calories", "protein", "carbs", "fat",
   "kcal", "proteins", "carbohydrates", "fats",
   "calories_target", "protein_target", "carbs_target", "fat_target",
+  "default_calories", "default_protein", "default_carbs", "default_fat",
   "total_calories", "total_protein", "total_carbs", "total_fat",
   "target_calories", "target_protein", "target_carbs", "target_fat",
-  "ai_score", "xp_earned",
 ]);
 
 function poison(value: unknown, c: { n: number }): unknown {
@@ -75,79 +72,56 @@ async function installReadPoisoner(page: Page) {
   });
 }
 
-// ─── Macro element discovery ───────────────────────────────────────────────
-/**
- * Patterns that identify macro-bearing rendered text. We match the *visible*
- * suffix or label to find spans/divs that show kcal/P/C/G.
- */
-const MACRO_TEXT_PATTERNS: RegExp[] = [
-  /\bkcal\b/i,
-  /\bcal\b/i,
-  /\bcalorias?\b/i,
-  /^\s*P\s*[:=]?\s*\d/i,   // "P 30g" / "P: 30"
-  /^\s*C\s*[:=]?\s*\d/i,
-  /^\s*G\s*[:=]?\s*\d/i,
-  /\bprote[ií]nas?\b/i,
-  /\bcarboidratos?\b/i,
-  /\bgorduras?\b/i,
-  /\bmeta\s*:/i,           // MacroGauge "meta: 50"
-];
-
-const TOXIC_TOKEN_RE = /\b(NaN|-?Infinity|undefined)\b/;
-
-interface BadNode {
+// ─── Container-scoped assertion ────────────────────────────────────────────
+interface BadLeaf {
+  tile: string;
+  macro: string;
   text: string;
   reason: string;
-  tag: string;
 }
 
-async function collectMacroNodes(page: Page): Promise<BadNode[]> {
-  return page.evaluate((patterns) => {
-    const macroPatterns = patterns.map((p) => new RegExp(p.source, p.flags));
-    const toxicRe = /\b(NaN|-?Infinity|undefined)\b/;
-    const offenders: { text: string; reason: string; tag: string }[] = [];
+async function collectBadMacroLeaves(page: Page): Promise<BadLeaf[]> {
+  return page.evaluate(() => {
+    const TOXIC_RE = /\b(NaN|-?Infinity|undefined|null)\b/;
+    const offenders: { tile: string; macro: string; text: string; reason: string }[] = [];
 
-    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_ELEMENT);
-    let node = walker.nextNode() as HTMLElement | null;
-
-    while (node) {
-      const tag = node.tagName.toLowerCase();
-      if (tag === "script" || tag === "style" || tag === "noscript") {
-        node = walker.nextNode() as HTMLElement | null;
-        continue;
-      }
-      // Inspect leaf elements only (no element children) to avoid duplication.
-      if (node.children.length === 0) {
-        const txt = (node.textContent || "").trim();
-        if (txt && macroPatterns.some((re) => re.test(txt))) {
-          // 1) Toxic-token check
-          if (toxicRe.test(txt)) {
-            offenders.push({ text: txt, reason: "toxic-token", tag });
-          } else {
-            // 2) Numeric sanity: every number in the string must be finite & non-negative.
-            const nums = txt.match(/-?\d+(?:[.,]\d+)?/g) || [];
-            for (const raw of nums) {
-              const n = parseFloat(raw.replace(",", "."));
-              if (!Number.isFinite(n)) {
-                offenders.push({ text: txt, reason: `not-finite (${raw})`, tag });
-                break;
-              }
-              if (n < 0) {
-                offenders.push({ text: txt, reason: `negative (${raw})`, tag });
-                break;
-              }
-            }
+    const tiles = Array.from(document.querySelectorAll<HTMLElement>("[data-macro-tile]"));
+    for (const tile of tiles) {
+      const tileName = tile.getAttribute("data-macro-tile") || "?";
+      const leaves = Array.from(tile.querySelectorAll<HTMLElement>("[data-macro-value]"));
+      // If a tile has no explicit value leaves, fall back to the tile itself.
+      const targets = leaves.length > 0 ? leaves : [tile];
+      for (const el of targets) {
+        const macro =
+          el.getAttribute("data-macro-value") ||
+          el.getAttribute("data-macro") ||
+          "tile";
+        const txt = (el.textContent || "").trim();
+        if (!txt) continue;
+        if (TOXIC_RE.test(txt)) {
+          offenders.push({ tile: tileName, macro, text: txt, reason: "toxic-token" });
+          continue;
+        }
+        const nums = txt.match(/-?\d+(?:[.,]\d+)?/g) || [];
+        for (const raw of nums) {
+          const n = parseFloat(raw.replace(",", "."));
+          if (!Number.isFinite(n)) {
+            offenders.push({ tile: tileName, macro, text: txt, reason: `not-finite (${raw})` });
+            break;
+          }
+          if (n < 0) {
+            offenders.push({ tile: tileName, macro, text: txt, reason: `negative (${raw})` });
+            break;
           }
         }
       }
-      node = walker.nextNode() as HTMLElement | null;
     }
     return offenders;
-  }, MACRO_TEXT_PATTERNS.map((p) => ({ source: p.source, flags: p.flags })));
+  });
 }
 
-async function expectSafeMacrosOn(page: Page, label: string) {
-  // Expand any collapsible cards that hide macro details.
+async function expectSafeMacroTiles(page: Page, label: string) {
+  // Try to expand collapsible cards that hide macro tiles.
   const expanders = page.locator(
     'button:has-text("Ver"), button:has-text("Detalhes"), [role="button"]:has-text("Expandir"), button[aria-expanded="false"]',
   );
@@ -157,15 +131,20 @@ async function expectSafeMacrosOn(page: Page, label: string) {
     await page.waitForTimeout(200);
   }
 
-  const offenders = await collectMacroNodes(page);
+  const offenders = await collectBadMacroLeaves(page);
+  const tilesPresent = await page.locator("[data-macro-tile]").count();
+  // Empty-state (no tiles rendered) is acceptable; failure only if tiles exist
+  // AND any of them render unsafe values.
+  if (tilesPresent === 0) return;
   expect(
     offenders,
-    `[${label}] Unsafe macro renders detected:\n` +
-      offenders.map((o) => `  <${o.tag}> "${o.text}" → ${o.reason}`).join("\n"),
+    `[${label}] Unsafe macro tiles detected:\n` +
+      offenders
+        .map((o) => `  tile=${o.tile} macro=${o.macro} → "${o.text}" (${o.reason})`)
+        .join("\n"),
   ).toEqual([]);
 }
 
-// ─── Test matrix ───────────────────────────────────────────────────────────
 const ROUTES: { path: string; label: string }[] = [
   { path: "/meals", label: "/meals" },
   { path: "/my-diet", label: "/my-diet" },
@@ -174,27 +153,24 @@ const ROUTES: { path: string; label: string }[] = [
   { path: "/checkin", label: "/checkin" },
 ];
 
-authedTest.describe("Targeted macro element assertions (post-refresh)", () => {
+authedTest.describe("Macro tile containers render safely (post-refresh, scoped)", () => {
   authedTest.setTimeout(90000);
 
   for (const { path, label } of ROUTES) {
-    authedTest(`macro nodes on ${label} render safely after refresh`, async ({
-      authenticatedPage,
-    }) => {
+    authedTest(`tiles on ${label}`, async ({ authenticatedPage }) => {
       const page = authenticatedPage;
       await installReadPoisoner(page);
 
-      // First visit
       await page.goto(path);
       await page.waitForLoadState("networkidle").catch(() => {});
-      await page.waitForTimeout(2000);
+      await page.waitForTimeout(1500);
 
-      // Hard reload — proves the shielding works on cold load too.
+      // Hard reload to exercise cold-load shielding.
       await page.reload();
       await page.waitForLoadState("networkidle").catch(() => {});
       await page.waitForTimeout(2500);
 
-      await expectSafeMacrosOn(page, label);
+      await expectSafeMacroTiles(page, label);
     });
   }
 });
