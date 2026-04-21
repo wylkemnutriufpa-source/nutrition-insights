@@ -507,10 +507,18 @@ export default function TemplateNutritionAudit() {
                                 <span className="text-xs text-muted-foreground">Nenhum</span>
                               ) : (
                                 <ul className="text-xs space-y-1">
-                                  {t.issues.map((iss, i) => (
-                                    <li key={i} className="flex items-start gap-1.5">
-                                      <span className="text-destructive">•</span>
-                                      <span>{iss}</span>
+                                  {t.issues.map((iss) => (
+                                    <li key={iss.key} className="flex items-start gap-1.5">
+                                      <span
+                                        className={
+                                          iss.severity === "critical"
+                                            ? "text-destructive"
+                                            : "text-amber-600"
+                                        }
+                                      >
+                                        •
+                                      </span>
+                                      <span>{iss.message}</span>
                                     </li>
                                   ))}
                                 </ul>
