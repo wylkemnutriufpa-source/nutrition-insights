@@ -206,6 +206,33 @@ describe("Marmitas Fixas Semanais — verificação automática", () => {
       expectedCounter: /Almoço fixo 7\/7\s*·\s*Jantar fixo 7\/7/i,
       expectAlert: false,
     },
+    // ─── Cenários ZERO: nenhuma marmita cadastrada de um/ambos os lados ─
+    // Garante que o botão NÃO habilita quando o banco está vazio para
+    // almoço, jantar, ou ambos — e que o alerta de cadastro aparece.
+    {
+      label: "almoço 0/7 e jantar 0/7 (banco vazio) → desabilita",
+      fixedLunch: 0,
+      fixedDinner: 0,
+      expectedDisabled: true,
+      expectedCounter: /Almoço fixo 0\/7\s*·\s*Jantar fixo 0\/7/i,
+      expectAlert: true,
+    },
+    {
+      label: "almoço 0/7 e jantar 7/7 (só jantar cadastrado) → desabilita",
+      fixedLunch: 0,
+      fixedDinner: 7,
+      expectedDisabled: true,
+      expectedCounter: /Almoço fixo 0\/7\s*·\s*Jantar fixo 7\/7/i,
+      expectAlert: true,
+    },
+    {
+      label: "almoço 7/7 e jantar 0/7 (só almoço cadastrado) → desabilita",
+      fixedLunch: 7,
+      fixedDinner: 0,
+      expectedDisabled: true,
+      expectedCounter: /Almoço fixo 7\/7\s*·\s*Jantar fixo 0\/7/i,
+      expectAlert: true,
+    },
   ];
 
   it.each(edgeCases)(
