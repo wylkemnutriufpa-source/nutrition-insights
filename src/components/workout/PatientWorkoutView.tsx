@@ -393,7 +393,7 @@ export default function PatientWorkoutView() {
                         {/* Exercise preview with group badges */}
                         <div className="space-y-1.5">
                           {exList.slice(0, 5).map((ex: any, i: number) => {
-                            const groupInfo = ex.group_type && ex.group_type !== "single" ? GROUP_BADGES[ex.group_type] : null;
+                            const groupInfo = !requiresMedicalReview && ex.group_type && ex.group_type !== "single" ? GROUP_BADGES[ex.group_type] : null;
                             const isGroupStart = groupInfo && ex.group_order === 0;
 
                             return (
