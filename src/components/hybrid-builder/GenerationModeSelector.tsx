@@ -31,6 +31,8 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const store = useMealPlanEditorV2Store();
   const [generating, setGenerating] = useState(false);
   const [view, setView] = useState<View>("menu");
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const { settings: minSettings, loading: settingsLoading } = useMarmitaSettings();
   const [recipeCounts, setRecipeCounts] = useState<{
     lunch: number;
     dinner: number;
@@ -63,8 +65,13 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     return () => { cancelled = true; };
   }, [user]);
 
-  const weeklyReady = recipeCounts.lunch > 0 && recipeCounts.dinner > 0;
-  const fixedReady = recipeCounts.fixedLunch > 0 && recipeCounts.fixedDinner > 0;
+  const weeklyReady =
+    recipeCounts.lunch >= minSettings.weekly_min_lunch &&
+    recipeCounts.dinner >= minSettings.weekly_min_dinner;
+  const fixedReady =
+    recipeCounts.fixedLunch >= minSettings.fixed_min_lunch &&
+    recipeCounts.fixedDinner >= minSettings.fixed_min_dinner;
+  const checksLoading = recipeCounts.loading || settingsLoading;
 
   // Strategy Advisor confirmed → generate plan with strategy context
   const handleStrategyConfirmed = useCallback(async (strategy: NutritionalStrategy, editedMeals: StrategyMealPreview[]) => {
