@@ -15,6 +15,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
@@ -22,6 +39,8 @@ import {
   ShieldAlert,
   Database,
   FileWarning,
+  Settings2,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -48,10 +67,89 @@ type TemplateRow = {
 };
 
 type IssueLevel = "critical" | "warning" | "ok";
+type RuleSeverity = "critical" | "warning" | "ignore";
+
+type RuleKey =
+  | "noItems"
+  | "kcalBaseMissing"
+  | "proteinBaseMissing"
+  | "carbsBaseMissing"
+  | "fatBaseMissing"
+  | "itemsBroken";
+
+type AuditConfig = Record<RuleKey, RuleSeverity>;
+
+const RULE_LABELS: Record<RuleKey, { label: string; description: string; defaultRecommend: RuleSeverity }> = {
+  noItems: {
+    label: "Template sem itens",
+    description: "foods_structure vazio — modal não consegue renderizar refeição.",
+    defaultRecommend: "critical",
+  },
+  kcalBaseMissing: {
+    label: "kcal_base ausente ou zero",
+    description: "Causa divisão por zero no multiplicador de porções → NaN no UI.",
+    defaultRecommend: "critical",
+  },
+  proteinBaseMissing: {
+    label: "protein_base ausente",
+    description: "Macro base de proteína nulo. Pode ser tolerado se itens tiverem proteína própria.",
+    defaultRecommend: "warning",
+  },
+  carbsBaseMissing: {
+    label: "carbs_base ausente",
+    description: "Macro base de carboidrato nulo. Pode ser tolerado se itens tiverem carbo próprio.",
+    defaultRecommend: "warning",
+  },
+  fatBaseMissing: {
+    label: "fat_base ausente",
+    description: "Macro base de gordura nulo. Pode ser tolerado se itens tiverem gordura própria.",
+    defaultRecommend: "warning",
+  },
+  itemsBroken: {
+    label: "Itens com macros inválidos",
+    description: "Algum item do template tem nome vazio ou kcal/protein/carbs/fat nulo → NaN nos cards.",
+    defaultRecommend: "critical",
+  },
+};
+
+const RULE_KEYS = Object.keys(RULE_LABELS) as RuleKey[];
+
+const DEFAULT_CONFIG: AuditConfig = RULE_KEYS.reduce((acc, k) => {
+  acc[k] = RULE_LABELS[k].defaultRecommend;
+  return acc;
+}, {} as AuditConfig);
+
+const CONFIG_STORAGE_KEY = "template-nutrition-audit:config:v1";
+
+function loadConfig(): AuditConfig {
+  if (typeof window === "undefined") return DEFAULT_CONFIG;
+  try {
+    const raw = window.localStorage.getItem(CONFIG_STORAGE_KEY);
+    if (!raw) return DEFAULT_CONFIG;
+    const parsed = JSON.parse(raw) as Partial<AuditConfig>;
+    // Merge — unknown keys ignored, missing keys fall back to default.
+    return RULE_KEYS.reduce((acc, k) => {
+      const v = parsed[k];
+      acc[k] = v === "critical" || v === "warning" || v === "ignore" ? v : DEFAULT_CONFIG[k];
+      return acc;
+    }, {} as AuditConfig);
+  } catch {
+    return DEFAULT_CONFIG;
+  }
+}
+
+function saveConfig(config: AuditConfig): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+  } catch {
+    /* noop — quota / private mode */
+  }
+}
 
 type AuditedTemplate = TemplateRow & {
   level: IssueLevel;
-  issues: string[];
+  issues: { key: RuleKey; message: string; severity: RuleSeverity }[];
   itemsTotal: number;
   itemsBroken: number;
 };
@@ -61,7 +159,6 @@ const isMissingNumber = (v: unknown): boolean =>
 
 const isItemBroken = (item: FoodItem): boolean => {
   if (!item || !item.name || String(item.name).trim() === "") return true;
-  // any macro missing/NaN -> broken (will produce NaN in totals)
   return (
     isMissingNumber(item.kcal) ||
     isMissingNumber(item.protein) ||
@@ -70,32 +167,35 @@ const isItemBroken = (item: FoodItem): boolean => {
   );
 };
 
-function auditTemplate(t: TemplateRow): AuditedTemplate {
-  const issues: string[] = [];
+function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
   const items = Array.isArray(t.foods_structure) ? t.foods_structure : [];
   const itemsTotal = items.length;
   const itemsBroken = items.filter(isItemBroken).length;
 
-  if (itemsTotal === 0) issues.push("Template sem itens (foods_structure vazio)");
+  const triggered: { key: RuleKey; message: string }[] = [];
+
+  if (itemsTotal === 0) triggered.push({ key: "noItems", message: "Template sem itens (foods_structure vazio)" });
   if (isMissingNumber(t.kcal_base) || Number(t.kcal_base) <= 0)
-    issues.push("kcal_base ausente ou zero (causa NaN/divisão por zero)");
-  if (isMissingNumber(t.protein_base)) issues.push("protein_base ausente");
-  if (isMissingNumber(t.carbs_base)) issues.push("carbs_base ausente");
-  if (isMissingNumber(t.fat_base)) issues.push("fat_base ausente");
+    triggered.push({ key: "kcalBaseMissing", message: "kcal_base ausente ou zero (causa NaN/divisão por zero)" });
+  if (isMissingNumber(t.protein_base))
+    triggered.push({ key: "proteinBaseMissing", message: "protein_base ausente" });
+  if (isMissingNumber(t.carbs_base))
+    triggered.push({ key: "carbsBaseMissing", message: "carbs_base ausente" });
+  if (isMissingNumber(t.fat_base)) triggered.push({ key: "fatBaseMissing", message: "fat_base ausente" });
   if (itemsBroken > 0)
-    issues.push(`${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`);
+    triggered.push({
+      key: "itemsBroken",
+      message: `${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`,
+    });
+
+  // Apply user-configured severity, drop ignored.
+  const issues = triggered
+    .map((t) => ({ ...t, severity: config[t.key] }))
+    .filter((i) => i.severity !== "ignore");
 
   let level: IssueLevel = "ok";
-  if (
-    itemsTotal === 0 ||
-    isMissingNumber(t.kcal_base) ||
-    Number(t.kcal_base) <= 0 ||
-    itemsBroken > 0
-  ) {
-    level = "critical";
-  } else if (issues.length > 0) {
-    level = "warning";
-  }
+  if (issues.some((i) => i.severity === "critical")) level = "critical";
+  else if (issues.some((i) => i.severity === "warning")) level = "warning";
 
   return { ...t, level, issues, itemsTotal, itemsBroken };
 }
@@ -111,6 +211,27 @@ export default function TemplateNutritionAudit() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"critical" | "warning" | "ok" | "all">("critical");
+  const [config, setConfig] = useState<AuditConfig>(() => loadConfig());
+  const [settingsOpen, setSettingsOpen] = useState(false);
+
+  const updateRule = (key: RuleKey, severity: RuleSeverity) => {
+    setConfig((prev) => {
+      const next = { ...prev, [key]: severity };
+      saveConfig(next);
+      return next;
+    });
+  };
+
+  const resetConfig = () => {
+    setConfig(DEFAULT_CONFIG);
+    saveConfig(DEFAULT_CONFIG);
+    toast.success("Regras restauradas para o padrão");
+  };
+
+  const customizedCount = useMemo(
+    () => RULE_KEYS.filter((k) => config[k] !== DEFAULT_CONFIG[k]).length,
+    [config],
+  );
 
   const fetchTemplates = async () => {
     setLoading(true);
@@ -135,7 +256,7 @@ export default function TemplateNutritionAudit() {
     fetchTemplates();
   }, []);
 
-  const audited = useMemo(() => rows.map(auditTemplate), [rows]);
+  const audited = useMemo(() => rows.map((r) => auditTemplate(r, config)), [rows, config]);
 
   const counts = useMemo(
     () => ({
@@ -174,10 +295,94 @@ export default function TemplateNutritionAudit() {
               TEMPLATE_NUTRITION_AUDIT v1.0.0 · BLOCKING_RELEASE: {releaseReady ? "no" : "yes"}
             </p>
           </div>
-          <Button onClick={fetchTemplates} variant="outline" size="sm" disabled={loading}>
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
-            Reescanear
-          </Button>
+          <div className="flex items-center gap-2">
+            <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <Settings2 className="w-4 h-4 mr-2" />
+                  Regras
+                  {customizedCount > 0 && (
+                    <Badge variant="secondary" className="ml-2 h-5 px-1.5 text-xs">
+                      {customizedCount}
+                    </Badge>
+                  )}
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-md overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <Settings2 className="w-5 h-5" />
+                    Regras de classificação
+                  </SheetTitle>
+                  <SheetDescription>
+                    Defina o que conta como <strong>crítico</strong> (bloqueia release),{" "}
+                    <strong>atenção</strong> (alerta) ou <strong>ignorar</strong>. As preferências
+                    ficam salvas neste navegador.
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="mt-6 space-y-5">
+                  {RULE_KEYS.map((key) => {
+                    const meta = RULE_LABELS[key];
+                    const current = config[key];
+                    const isCustom = current !== meta.defaultRecommend;
+                    return (
+                      <div key={key} className="space-y-2">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <Label className="text-sm font-semibold flex items-center gap-2">
+                              {meta.label}
+                              {isCustom && (
+                                <Badge variant="outline" className="text-[10px] h-4 px-1">
+                                  custom
+                                </Badge>
+                              )}
+                            </Label>
+                            <p className="text-xs text-muted-foreground mt-0.5">
+                              {meta.description}
+                            </p>
+                            <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                              Padrão recomendado:{" "}
+                              <code className="text-[11px]">{meta.defaultRecommend}</code>
+                            </p>
+                          </div>
+                        </div>
+                        <Select
+                          value={current}
+                          onValueChange={(v) => updateRule(key, v as RuleSeverity)}
+                        >
+                          <SelectTrigger className="h-9">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="critical">Crítico (bloqueia release)</SelectItem>
+                            <SelectItem value="warning">Atenção (apenas alerta)</SelectItem>
+                            <SelectItem value="ignore">Ignorar (não reportar)</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <Separator className="mt-3" />
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="mt-6 flex items-center justify-between gap-2">
+                  <Button variant="ghost" size="sm" onClick={resetConfig}>
+                    <RotateCcw className="w-4 h-4 mr-2" />
+                    Restaurar padrão
+                  </Button>
+                  <Button size="sm" onClick={() => setSettingsOpen(false)}>
+                    Fechar
+                  </Button>
+                </div>
+              </SheetContent>
+            </Sheet>
+
+            <Button onClick={fetchTemplates} variant="outline" size="sm" disabled={loading}>
+              <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
+              Reescanear
+            </Button>
+          </div>
         </div>
 
         {/* Release readiness banner */}
@@ -302,10 +507,18 @@ export default function TemplateNutritionAudit() {
                                 <span className="text-xs text-muted-foreground">Nenhum</span>
                               ) : (
                                 <ul className="text-xs space-y-1">
-                                  {t.issues.map((iss, i) => (
-                                    <li key={i} className="flex items-start gap-1.5">
-                                      <span className="text-destructive">•</span>
-                                      <span>{iss}</span>
+                                  {t.issues.map((iss) => (
+                                    <li key={iss.key} className="flex items-start gap-1.5">
+                                      <span
+                                        className={
+                                          iss.severity === "critical"
+                                            ? "text-destructive"
+                                            : "text-amber-600"
+                                        }
+                                      >
+                                        •
+                                      </span>
+                                      <span>{iss.message}</span>
                                     </li>
                                   ))}
                                 </ul>
