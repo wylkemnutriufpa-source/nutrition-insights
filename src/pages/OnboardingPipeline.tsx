@@ -108,6 +108,22 @@ export default function OnboardingPipeline() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
+  // Auto-detect inconsistent state on mount/reload: if the pipeline has
+  // `plan_generated=true` but `plan_approved=false`, the lifecycle sync
+  // SHOULD have already happened. We re-attempt it silently — if it fails
+  // again, `syncError` is set and the "Sincronização pendente" banner
+  // re-appears, keeping the UI coherent across reloads until the backend
+  // finally confirms the transition.
+  useEffect(() => {
+    if (!pipeline) return;
+    if (!pipeline.plan_generated) return;
+    if (pipeline.plan_approved) return;
+    // Run once per pipeline-id load — ignore the resolved boolean here;
+    // success silently clears `syncError`, failure surfaces the banner.
+    void runLifecycleSync(pipeline.id);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pipeline?.id, pipeline?.plan_generated, pipeline?.plan_approved]);
+
   async function fetchPipeline() {
     if (!user) return;
     const [pipelineRes, anamnesisRes] = await Promise.all([
