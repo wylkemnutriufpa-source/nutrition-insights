@@ -360,6 +360,15 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
       {/* Plan Header */}
       <Card className="border-primary/20 bg-card">
         <CardContent className="p-4 space-y-3">
+          {requiresMedicalReview && (
+            <div className="p-2.5 rounded-lg bg-destructive/10 border border-destructive/20 flex items-center gap-2 mb-2">
+              <ShieldAlert className="w-4 h-4 text-destructive animate-pulse" />
+              <div className="flex-1">
+                <p className="text-[11px] font-bold text-destructive">REVISÃO MÉDICA REQUERIDA</p>
+                <p className="text-[10px] text-destructive/80">Este aluno respondeu positivamente à triagem de prontidão. Métodos de alta intensidade (bisets/trisets) foram bloqueados por segurança.</p>
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <Input
               placeholder="Nome do plano (ex: Hipertrofia 12 semanas)"
@@ -589,17 +598,24 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
                                 <Play className="w-3 h-3 text-primary" />
                               </Button>
                             )}
-                            {eIdx < routine.exercises.length - 1 && (
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="h-7 w-7"
-                                onClick={() => linkToNext(rIdx, eIdx)}
-                                title="Agrupar com próximo (biset/triset)"
-                              >
-                                <Link2 className="w-3 h-3 text-blue-400" />
-                              </Button>
-                            )}
+                             {eIdx < routine.exercises.length - 1 && (
+                               <Button
+                                 variant="ghost"
+                                 size="icon"
+                                 className="h-7 w-7"
+                                 onClick={() => {
+                                   if (requiresMedicalReview) {
+                                     toast.error("Métodos de alta intensidade bloqueados devido à necessidade de revisão médica.");
+                                     return;
+                                   }
+                                   linkToNext(rIdx, eIdx);
+                                 }}
+                                 disabled={requiresMedicalReview}
+                                 title={requiresMedicalReview ? "Bloqueado: Requer revisão médica" : "Agrupar com próximo (biset/triset)"}
+                               >
+                                 <Link2 className={`w-3 h-3 ${requiresMedicalReview ? "text-muted-foreground/30" : "text-blue-400"}`} />
+                               </Button>
+                             )}
                             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => moveExercise(rIdx, eIdx, -1)} disabled={eIdx === 0}>
                               <ChevronUp className="w-3 h-3" />
                             </Button>
