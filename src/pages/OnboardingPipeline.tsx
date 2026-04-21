@@ -321,30 +321,77 @@ export default function OnboardingPipeline() {
       // Transition lifecycle: pipeline → draft_ready_for_review (Plano em Revisão)
       // O trigger SQL já sincroniza automaticamente, mas chamamos explicitamente
       // para forçar recálculo do lifecycle e capturar erros visíveis ao usuário.
-      const { data: completionData, error: completionError } = await supabase.rpc(
-        "complete_patient_onboarding_by_patient" as any,
-        { _patient_id: user.id, _pipeline_id: pipeline.id },
-      );
-      if (completionError) {
-        console.error("complete_patient_onboarding_by_patient error:", completionError);
-      } else if (completionData && (completionData as any).success === false) {
-        console.warn("Onboarding completion warning:", (completionData as any).error);
-      }
+      const syncOk = await runLifecycleSync(pipeline.id);
 
       // Invalidar caches dependentes para o dashboard refletir o novo estado
       await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
       await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
       await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
 
-      toast.success(data.multiPlan 
-        ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
-        : "Pré-plano gerado! Aguardando aprovação do profissional."
-      );
+      if (syncOk) {
+        toast.success(data.multiPlan
+          ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
+          : "Pré-plano gerado! Aguardando aprovação do profissional."
+        );
+      } else {
+        // Plan was generated but lifecycle sync failed — surface clear feedback.
+        toast.warning(
+          "Plano gerado, mas a sincronização final está pendente. Use o botão de tentar novamente abaixo.",
+          { duration: 8000 }
+        );
+      }
       fetchPipeline();
     } catch (err: any) {
       toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
     }
     setGenerating(false);
+  }
+
+  /**
+   * Executa a RPC de finalização do onboarding com tratamento robusto.
+   * Retorna true se sucesso, false caso contrário (e seta syncError).
+   */
+  async function runLifecycleSync(pipelineId: string): Promise<boolean> {
+    if (!user) return false;
+    try {
+      const { data: completionData, error: completionError } = await supabase.rpc(
+        "complete_patient_onboarding_by_patient" as any,
+        { _patient_id: user.id, _pipeline_id: pipelineId },
+      );
+      if (completionError) {
+        console.error("complete_patient_onboarding_by_patient error:", completionError);
+        setSyncError(completionError.message || "Falha ao sincronizar estado do onboarding.");
+        return false;
+      }
+      if (completionData && (completionData as any).success === false) {
+        const reason = (completionData as any).error || "Sincronização rejeitada pelo servidor.";
+        console.warn("Onboarding completion warning:", reason);
+        setSyncError(reason);
+        return false;
+      }
+      setSyncError(null);
+      return true;
+    } catch (err: any) {
+      console.error("Lifecycle sync exception:", err);
+      setSyncError(err?.message || "Falha de rede ao sincronizar onboarding.");
+      return false;
+    }
+  }
+
+  async function handleRetrySync() {
+    if (!pipeline) return;
+    setSyncRetrying(true);
+    const ok = await runLifecycleSync(pipeline.id);
+    if (ok) {
+      await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
+      await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+      await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
+      toast.success("Sincronização concluída! Seu plano está em revisão.");
+      fetchPipeline();
+    } else {
+      toast.error("Ainda não foi possível sincronizar. Tente novamente em alguns instantes.");
+    }
+    setSyncRetrying(false);
   }
 
   const currentStep = getCurrentStep();
