@@ -247,28 +247,26 @@ describe("Marmitas Fixas Semanais — macros nunca renderizam NaN", () => {
 
     expectNoNaNInDom(container);
 
-    // Linha por alimento: "{cal}kcal · P{p}g · C{c}g · G{g}g"
-    const macroLines = screen.getAllByText(/kcal\s*·\s*P\d+(?:\.\d+)?g\s*·\s*C\d+(?:\.\d+)?g\s*·\s*G\d+(?:\.\d+)?g/);
-    expect(macroLines.length).toBeGreaterThan(0);
+    // Texto consolidado (DOM quebra os macros entre <span> e texto livre,
+    // então não dá para usar findByText com regex direto).
+    const fullText = container.textContent || "";
 
-    for (const line of macroLines) {
-      const txt = line.textContent || "";
-      const match = txt.match(/(-?\d+(?:[.,]\d+)?)kcal\s*·\s*P(-?\d+(?:[.,]\d+)?)g\s*·\s*C(-?\d+(?:[.,]\d+)?)g\s*·\s*G(-?\d+(?:[.,]\d+)?)g/);
-      expect(match, `Linha de macro malformada: "${txt}"`).not.toBeNull();
-      const [, kcal, p, c, g] = match!;
+    const macroRegex = /(-?\d+(?:[.,]\d+)?)\s*kcal\s*·\s*P\s*(-?\d+(?:[.,]\d+)?)\s*g\s*·\s*C\s*(-?\d+(?:[.,]\d+)?)\s*g\s*·\s*G\s*(-?\d+(?:[.,]\d+)?)\s*g/g;
+    const matches = Array.from(fullText.matchAll(macroRegex));
+    expect(matches.length, "Nenhuma linha de macro renderizada").toBeGreaterThan(0);
+
+    for (const m of matches) {
+      const [, kcal, p, c, g] = m;
       expectNumeric(kcal);
       expectNumeric(p);
       expectNumeric(c);
       expectNumeric(g);
     }
 
-    // Total da refeição (header): "{N} kcal"
-    const headerKcal = screen.getAllByText(/^\s*\d+\s*kcal\s*$/);
-    expect(headerKcal.length).toBeGreaterThan(0);
-    headerKcal.forEach((el) => {
-      const num = (el.textContent || "").replace("kcal", "").trim();
-      expectNumeric(num);
-    });
+    // Header da refeição: "{N} kcal"
+    const headerMatches = Array.from(fullText.matchAll(/(\d+)\s*kcal/g));
+    expect(headerMatches.length).toBeGreaterThan(0);
+    headerMatches.forEach(([, num]) => expectNumeric(num));
   });
 
   it("v2 (options sem macros): adapter normaliza p/ 0, não renderiza NaN", async () => {
@@ -278,9 +276,10 @@ describe("Marmitas Fixas Semanais — macros nunca renderizam NaN", () => {
 
     expectNoNaNInDom(container);
 
-    // Mesmo com macros faltando, deve ter pelo menos uma linha "0kcal · P0g · C0g · G0g"
-    const macroLines = screen.getAllByText(/kcal\s*·\s*P\d+g\s*·\s*C\d+g\s*·\s*G\d+g/);
-    expect(macroLines.length).toBeGreaterThan(0);
+    const fullText = container.textContent || "";
+    const macroRegex = /(\d+)\s*kcal\s*·\s*P\s*(\d+)\s*g\s*·\s*C\s*(\d+)\s*g\s*·\s*G\s*(\d+)\s*g/g;
+    const matches = Array.from(fullText.matchAll(macroRegex));
+    expect(matches.length).toBeGreaterThan(0);
   });
 
   it("legacy (foods com macros null): UI degrada para 0, sem NaN", async () => {
