@@ -67,6 +67,9 @@ export default function OnboardingPipeline() {
   const [generating, setGenerating] = useState(false);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [consentSubmitting, setConsentSubmitting] = useState(false);
+  // Sync fallback state — quando RPC de finalização falha mesmo com plano gerado
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [syncRetrying, setSyncRetrying] = useState(false);
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
