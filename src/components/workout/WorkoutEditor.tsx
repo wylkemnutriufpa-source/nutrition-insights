@@ -119,6 +119,26 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
   const [libraryTarget, setLibraryTarget] = useState<{ rIdx: number; eIdx: number } | null>(null);
   const [videoLibOpen, setVideoLibOpen] = useState(false);
   const [videoTarget, setVideoTarget] = useState<{ rIdx: number; eIdx: number } | null>(null);
+  const [requiresMedicalReview, setRequiresMedicalReview] = useState(false);
+
+  // ── Load student medical review status ──
+  useEffect(() => {
+    if (!studentId) {
+      setRequiresMedicalReview(false);
+      return;
+    }
+    const checkMedical = async () => {
+      const { data } = await supabase
+        .from("trainer_assessments")
+        .select("requires_medical_review")
+        .eq("patient_id", studentId)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setRequiresMedicalReview(!!data?.requires_medical_review);
+    };
+    checkMedical();
+  }, [studentId]);
 
   // ── Routine Management ──
   const addRoutine = () => setRoutines([...routines, newRoutine(routines.length)]);
