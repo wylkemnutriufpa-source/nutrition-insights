@@ -315,11 +315,23 @@ export default function OnboardingPipeline() {
         action_url: `/patients/${user.id}?tab=onboarding`,
       } as any);
 
-      // Transition lifecycle: onboarding_active → draft_ready_for_review
-      await supabase.rpc("complete_patient_onboarding_by_patient" as any, {
-        _patient_id: user.id,
-        _pipeline_id: pipeline.id,
-      });
+      // Transition lifecycle: pipeline → draft_ready_for_review (Plano em Revisão)
+      // O trigger SQL já sincroniza automaticamente, mas chamamos explicitamente
+      // para forçar recálculo do lifecycle e capturar erros visíveis ao usuário.
+      const { data: completionData, error: completionError } = await supabase.rpc(
+        "complete_patient_onboarding_by_patient" as any,
+        { _patient_id: user.id, _pipeline_id: pipeline.id },
+      );
+      if (completionError) {
+        console.error("complete_patient_onboarding_by_patient error:", completionError);
+      } else if (completionData && (completionData as any).success === false) {
+        console.warn("Onboarding completion warning:", (completionData as any).error);
+      }
+
+      // Invalidar caches dependentes para o dashboard refletir o novo estado
+      await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
+      await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+      await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
 
       toast.success(data.multiPlan 
         ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
