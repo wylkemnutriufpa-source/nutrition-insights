@@ -91,18 +91,21 @@ describe("GenerationModeSelector — partial count scenarios", () => {
       const weeklyBtn = await screen.findByRole("button", { name: WEEKLY_BTN });
       const fixedBtn = await screen.findByRole("button", { name: FIXED_BTN });
 
+      // Wait for the supabase pre-flight to settle (loading "verificando…" gone)
       await waitFor(() => {
-        if (weeklyShouldBeDisabled) {
-          expect(weeklyBtn).toBeDisabled();
-        } else {
-          expect(weeklyBtn).not.toBeDisabled();
-        }
-        if (fixedShouldBeDisabled) {
-          expect(fixedBtn).toBeDisabled();
-        } else {
-          expect(fixedBtn).not.toBeDisabled();
-        }
+        expect(screen.queryAllByText(/verificando…/i)).toHaveLength(0);
       });
+
+      if (weeklyShouldBeDisabled) {
+        expect(weeklyBtn).toBeDisabled();
+      } else {
+        expect(weeklyBtn).not.toBeDisabled();
+      }
+      if (fixedShouldBeDisabled) {
+        expect(fixedBtn).toBeDisabled();
+      } else {
+        expect(fixedBtn).not.toBeDisabled();
+      }
 
       // Alert visibility tracks the disabled state
       if (weeklyShouldBeDisabled) {
