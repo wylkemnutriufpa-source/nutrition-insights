@@ -288,12 +288,9 @@ export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEd
       return;
     }
 
-    if (requiresMedicalReview) {
-      const hasGroups = routines.some(r => r.exercises.some(e => e.group_id && e.group_type !== "single"));
-      if (hasGroups) {
-        toast.error("Métodos de alta intensidade (bisets/trisets/circuitos) estão bloqueados para este aluno devido à necessidade de revisão médica. Por favor, remova os agrupamentos antes de salvar.");
-        return;
-      }
+    if (requiresMedicalReview && hasHighIntensityMethods(routines)) {
+      toast.error("Métodos de alta intensidade (bisets/trisets/circuitos) estão bloqueados para este aluno devido à necessidade de revisão médica. Por favor, remova os agrupamentos antes de salvar.");
+      return;
     }
 
     setSaving(true);
