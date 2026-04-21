@@ -340,6 +340,7 @@ export default function MealPlanEditorV2() {
     }
   };
 
+  const handleValidate = async () => {
     if (!plan || !user) return;
     if (isImmutable) {
       toast.info("🔒 Plano publicado — modo somente leitura. Gere um novo plano para aplicar correções.");
