@@ -248,15 +248,14 @@ describe("Marmitas Fixas Semanais — macros nunca renderizam NaN", () => {
 
   it("v2 (blocks com macros completos): kcal/P/C/G são números válidos", async () => {
     STATE.templates = [buildV2BlocksTemplate()];
-    const { container } = renderPage();
+    renderPage();
     await openPreview();
 
-    expectNoNaNInDom(container);
+    expectNoNaNInDom();
 
-    // Texto consolidado (DOM quebra os macros entre <span> e texto livre,
-    // então não dá para usar findByText com regex direto).
-    const fullText = container.textContent || "";
+    const fullText = getDomText();
 
+    // Linha por alimento: "{cal}kcal · P{p}g · C{c}g · G{g}g"
     const macroRegex = /(-?\d+(?:[.,]\d+)?)\s*kcal\s*·\s*P\s*(-?\d+(?:[.,]\d+)?)\s*g\s*·\s*C\s*(-?\d+(?:[.,]\d+)?)\s*g\s*·\s*G\s*(-?\d+(?:[.,]\d+)?)\s*g/g;
     const matches = Array.from(fullText.matchAll(macroRegex));
     expect(matches.length, "Nenhuma linha de macro renderizada").toBeGreaterThan(0);
@@ -277,12 +276,12 @@ describe("Marmitas Fixas Semanais — macros nunca renderizam NaN", () => {
 
   it("v2 (options sem macros): adapter normaliza p/ 0, não renderiza NaN", async () => {
     STATE.templates = [buildV2BlocksMissingMacros()];
-    const { container } = renderPage();
+    renderPage();
     await openPreview();
 
-    expectNoNaNInDom(container);
+    expectNoNaNInDom();
 
-    const fullText = container.textContent || "";
+    const fullText = getDomText();
     const macroRegex = /(\d+)\s*kcal\s*·\s*P\s*(\d+)\s*g\s*·\s*C\s*(\d+)\s*g\s*·\s*G\s*(\d+)\s*g/g;
     const matches = Array.from(fullText.matchAll(macroRegex));
     expect(matches.length).toBeGreaterThan(0);
@@ -290,27 +289,27 @@ describe("Marmitas Fixas Semanais — macros nunca renderizam NaN", () => {
 
   it("legacy (foods com macros null): UI degrada para 0, sem NaN", async () => {
     STATE.templates = [buildLegacyFoodsTemplate()];
-    const { container } = renderPage();
+    renderPage();
 
     // Legado fica escondido por padrão — abrir o accordion
     const legacyToggle = await screen.findByText(/modelos antigos/i);
     fireEvent.click(legacyToggle);
 
     await openPreview();
-    expectNoNaNInDom(container);
+    expectNoNaNInDom();
   });
 
   it("base_calories = 0 (divisor degenerado): UI não vaza Infinity/NaN", async () => {
     STATE.templates = [buildZeroBaseCaloriesTemplate()];
-    const { container } = renderPage();
+    renderPage();
     await openPreview();
 
-    expectNoNaNInDom(container);
+    expectNoNaNInDom();
   });
 
-  it("regressão screenshot: nenhum macro do modal pode ser NaN", async () => {
-    // Cenário "live": múltiplos templates carregados juntos, simulando o
-    // estado real do banco quando o bug apareceu na captura de tela.
+  it("regressão screenshot: múltiplos templates simultâneos sem NaN no preview", async () => {
+    // Estado real do banco quando o bug apareceu na captura de tela:
+    // mistura de v2 completo, v2 com macros faltando, legado e degenerado.
     STATE.templates = [
       buildV2BlocksTemplate(),
       buildV2BlocksMissingMacros(),
@@ -318,30 +317,25 @@ describe("Marmitas Fixas Semanais — macros nunca renderizam NaN", () => {
       buildZeroBaseCaloriesTemplate(),
     ];
 
-    const { container } = renderPage();
+    renderPage();
 
-    // Abre cada template oficial (v2) e checa a DOM completa
-    const officialNames = [
-      "Marmitas Fixas Semanais", // v2 completo
-    ];
+    // Os 4 templates compartilham o mesmo NOME ("Marmitas Fixas Semanais"),
+    // mas o que importa é abrir um deles e garantir que o modal não vaza
+    // NaN — o bug original aconteceu independente do template específico.
+    const cards = await screen.findAllByText("Marmitas Fixas Semanais");
+    expect(cards.length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(cards[0]);
 
-    for (const name of officialNames) {
-      const cards = await screen.findAllByText(name);
-      fireEvent.click(cards[0]);
-      await waitFor(() => {
-        // O dialog adiciona uma 2ª ocorrência do nome (no header)
-        expect(screen.getAllByText(name).length).toBeGreaterThan(1);
-      });
+    // Espera o dialog abrir (texto "Calorias ajustadas" não aparece sem
+    // anamnesis, então usamos um marcador estável: o título da refeição)
+    await waitFor(() => {
+      expect(screen.getAllByText("Almoço").length).toBeGreaterThan(0);
+    });
 
-      expectNoNaNInDom(container);
+    expectNoNaNInDom();
 
-      // Fecha o modal (Escape)
-      fireEvent.keyDown(document.body, { key: "Escape", code: "Escape" });
-      await waitFor(() => {
-        // Reduz para apenas a ocorrência do card
-        const remaining = screen.queryAllByText(name);
-        expect(remaining.length).toBeLessThanOrEqual(1);
-      });
-    }
+    // Sanidade: pelo menos uma linha de macro renderizada
+    const fullText = getDomText();
+    expect(fullText).toMatch(/kcal\s*·\s*P\s*\d+/);
   });
 });
