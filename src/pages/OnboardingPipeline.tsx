@@ -75,6 +75,30 @@ export default function OnboardingPipeline() {
   // Sync fallback state — quando RPC de finalização falha mesmo com plano gerado
   const [syncError, setSyncError] = useState<string | null>(null);
   const [syncRetrying, setSyncRetrying] = useState(false);
+  // Auto-retry com backoff exponencial: 5s, 10s, 20s, 40s, 80s, 160s (max)
+  const [autoRetryAttempt, setAutoRetryAttempt] = useState(0);
+  const [autoRetryNextAt, setAutoRetryNextAt] = useState<number | null>(null); // epoch ms do próximo retry
+  const [autoRetryCancelled, setAutoRetryCancelled] = useState(false);
+  const [autoRetryCountdown, setAutoRetryCountdown] = useState<number>(0); // segundos restantes
+  // Refs para evitar execuções concorrentes e permitir cancelamento limpo
+  const syncInFlightRef = useRef(false);
+  const autoRetryTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const countdownTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
+  const MAX_AUTO_RETRY_ATTEMPTS = 6;
+  const BASE_RETRY_DELAY_MS = 5_000;
+  const MAX_RETRY_DELAY_MS = 160_000;
+
+  const clearAutoRetryTimers = useCallback(() => {
+    if (autoRetryTimerRef.current) {
+      clearTimeout(autoRetryTimerRef.current);
+      autoRetryTimerRef.current = null;
+    }
+    if (countdownTimerRef.current) {
+      clearInterval(countdownTimerRef.current);
+      countdownTimerRef.current = null;
+    }
+  }, []);
 
   // Body data form
   const [bodyForm, setBodyForm] = useState({ weight: "", height: "" });
