@@ -562,6 +562,11 @@ export default function PatientDetail() {
               </Badge>
               {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
               {patientId && <ActiveProtocolBadge patientId={resolvedPatientId} compact />}
+              {(data as any)?.requiresMedicalReview && (
+                <Badge variant="destructive" className="gap-1 animate-pulse">
+                  <ShieldAlert className="w-3 h-3" /> Revisão Médica Requerida
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
