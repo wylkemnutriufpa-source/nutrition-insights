@@ -361,6 +361,16 @@ export default function DietTemplates() {
     return Number.isFinite(n) ? n : 0;
   };
 
+  // Fallback global de RENDERIZAÇÃO: garante que NENHUM macro seja exibido
+  // como "NaN", "Infinity", "undefined" ou "null" no modal — independente de
+  // bugs upstream em adapters, cálculos ou dados de banco. Sempre retorna
+  // string segura (inteiro arredondado) para uso direto em JSX.
+  const fmtMacro = (v: any): string => {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n)) return "0";
+    return String(Math.round(n));
+  };
+
   const getAdjustedCalories = (template: DietTemplate) => {
     const effective = getEffectiveCalories();
     if (effective && Number.isFinite(effective)) return effective;
@@ -713,9 +723,9 @@ export default function DietTemplates() {
                         Personalizado pela {dataSource === "assessment" ? "Avaliação Física" : "Anamnese"}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Calorias ajustadas de {previewTemplate.base_calories} → <span className="font-bold text-foreground">{getAdjustedCalories(previewTemplate)} kcal/dia</span>
+                        Calorias ajustadas de {fmtMacro(previewTemplate.base_calories)} → <span className="font-bold text-foreground">{fmtMacro(getAdjustedCalories(previewTemplate))} kcal/dia</span>
                         {getEffectiveMacros().protein && (
-                          <> • P: {getEffectiveMacros().protein}g • C: {getEffectiveMacros().carbs}g • G: {getEffectiveMacros().fat}g</>
+                          <> • P: {fmtMacro(getEffectiveMacros().protein)}g • C: {fmtMacro(getEffectiveMacros().carbs)}g • G: {fmtMacro(getEffectiveMacros().fat)}g</>
                         )}
                       </p>
                     </div>
@@ -770,7 +780,7 @@ export default function DietTemplates() {
                             <h4 className="font-display font-semibold text-sm">{meal.title}</h4>
                           </div>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Flame className="w-3 h-3 text-orange-400" /> {mealCals} kcal
+                            <Flame className="w-3 h-3 text-orange-400" /> {fmtMacro(mealCals)} kcal
                           </span>
                         </div>
 
@@ -808,15 +818,15 @@ export default function DietTemplates() {
                                     )}
                                   </div>
                                   <div className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                                    <span className="text-orange-400">{adjusted.calories}kcal</span>
-                                    {" · "}P{adjusted.protein}g · C{adjusted.carbs}g · G{adjusted.fat}g
+                                    <span className="text-orange-400">{fmtMacro(adjusted.calories)}kcal</span>
+                                    {" · "}P{fmtMacro(adjusted.protein)}g · C{fmtMacro(adjusted.carbs)}g · G{fmtMacro(adjusted.fat)}g
                                   </div>
                                 </div>
                               </div>
                             );
                           }) : (
                             <p className="text-xs text-muted-foreground italic">
-                              {(meal as any).pct ? `${Math.round(((meal as any).pct || 0) * 100)}% das calorias diárias (~${Math.round(getAdjustedCalories(previewTemplate) * ((meal as any).pct || 0))} kcal)` : "Sem alimentos detalhados"}
+                              {(meal as any).pct ? `${fmtMacro(safeNum((meal as any).pct) * 100)}% das calorias diárias (~${fmtMacro(getAdjustedCalories(previewTemplate) * safeNum((meal as any).pct))} kcal)` : "Sem alimentos detalhados"}
                             </p>
                           )}
                         </div>
