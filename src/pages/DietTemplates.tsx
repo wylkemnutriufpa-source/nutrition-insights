@@ -361,6 +361,16 @@ export default function DietTemplates() {
     return Number.isFinite(n) ? n : 0;
   };
 
+  // Fallback global de RENDERIZAÇÃO: garante que NENHUM macro seja exibido
+  // como "NaN", "Infinity", "undefined" ou "null" no modal — independente de
+  // bugs upstream em adapters, cálculos ou dados de banco. Sempre retorna
+  // string segura (inteiro arredondado) para uso direto em JSX.
+  const fmtMacro = (v: any): string => {
+    const n = typeof v === "number" ? v : Number(v);
+    if (!Number.isFinite(n)) return "0";
+    return String(Math.round(n));
+  };
+
   const getAdjustedCalories = (template: DietTemplate) => {
     const effective = getEffectiveCalories();
     if (effective && Number.isFinite(effective)) return effective;
