@@ -65,16 +65,16 @@ export default function MealCard({
         </div>
 
         {(safeNum(calories) || safeNum(protein) || safeNum(carbs) || safeNum(fat)) > 0 && (
-          <div className="grid grid-cols-4 gap-2 mt-3">
+          <div className="grid grid-cols-4 gap-2 mt-3" data-macro-tile="meal-card">
             {[
-              { label: "Kcal", value: calories },
-              { label: "Prot", value: protein, unit: "g" },
-              { label: "Carb", value: carbs, unit: "g" },
-              { label: "Gord", value: fat, unit: "g" },
+              { label: "Kcal", value: calories, key: "kcal" },
+              { label: "Prot", value: protein, unit: "g", key: "protein" },
+              { label: "Carb", value: carbs, unit: "g", key: "carbs" },
+              { label: "Gord", value: fat, unit: "g", key: "fat" },
             ].map((m) => (
-              <div key={m.label} className="text-center p-2 rounded-lg bg-muted/50">
+              <div key={m.label} className="text-center p-2 rounded-lg bg-muted/50" data-macro={m.key}>
                 <p className="text-xs text-muted-foreground">{m.label}</p>
-                <p className="font-bold text-sm">
+                <p className="font-bold text-sm" data-macro-value={m.key}>
                   {m.value != null ? `${fmtMacro(m.value)}${m.unit ?? ""}` : "-"}
                 </p>
               </div>
