@@ -261,4 +261,46 @@ describe("Marmitas Fixas Semanais — verificação automática", () => {
       }
     },
   );
+
+  // ─── Regressão: Workspace + Selector com banco vazio ────────────────
+  // Snapshot de estado garantindo que, mesmo sem receitas fixas
+  // cadastradas, o template oficial CONTINUA visível em Workspace >
+  // Templates (não some), enquanto o seletor de modo bloqueia a geração.
+  it("regressão visual: template visível + botão desabilitado quando banco está vazio", async () => {
+    STATE.recipes = buildFixedRecipes(0, 0);
+
+    const { container: workspaceContainer } = render(
+      <WorkspaceTemplates search="" />,
+    );
+
+    // 1. Template oficial permanece listado e marcado como verificado
+    expect(
+      await screen.findByText("Marmitas Fixas Semanais"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Verificados/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 oficiais/i)).toBeInTheDocument();
+
+    // Snapshot estrutural: workspace renderizou cards/headings
+    expect(
+      workspaceContainer.querySelector("h3, h2, [class*='card']"),
+    ).toBeTruthy();
+
+    // 2. Selector renderizado em paralelo: botão fixo desabilitado + alerta
+    render(<GenerationModeSelector patientId="paciente-1" onGenerated={vi.fn()} />);
+
+    const btn = await screen.findByRole("button", {
+      name: /Marmitas Fixas \(Congeladas\)/i,
+    });
+    await waitFor(() => expect(btn).toBeDisabled());
+    expect(btn).toHaveAttribute("disabled");
+
+    // 3. Contador zerado e alerta de cadastro visível
+    expect(
+      screen.getByText(/Almoço fixo 0\/7\s*·\s*Jantar fixo 0\/7/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Cadastre marmitas com/i)).toBeInTheDocument();
+
+    // 4. Snapshot do estado do botão (regressão de estilo/atributo)
+    expect(btn.outerHTML).toMatch(/disabled/);
+  });
 });
