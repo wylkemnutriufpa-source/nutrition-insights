@@ -9875,10 +9875,12 @@ export type Database = {
           has_clinical_alert: boolean
           has_pending_onboarding: boolean
           has_retention_risk: boolean
+          is_onboarding_blocked: boolean | null
           last_checkin_at: string | null
           last_plan_delivery_at: string | null
           lifecycle_state: Database["public"]["Enums"]["patient_lifecycle_status"]
           next_recommended_action: string | null
+          onboarding_block_reason: string | null
           patient_id: string
           risk_score: number | null
           updated_at: string
@@ -9890,10 +9892,12 @@ export type Database = {
           has_clinical_alert?: boolean
           has_pending_onboarding?: boolean
           has_retention_risk?: boolean
+          is_onboarding_blocked?: boolean | null
           last_checkin_at?: string | null
           last_plan_delivery_at?: string | null
           lifecycle_state?: Database["public"]["Enums"]["patient_lifecycle_status"]
           next_recommended_action?: string | null
+          onboarding_block_reason?: string | null
           patient_id: string
           risk_score?: number | null
           updated_at?: string
@@ -9905,10 +9909,12 @@ export type Database = {
           has_clinical_alert?: boolean
           has_pending_onboarding?: boolean
           has_retention_risk?: boolean
+          is_onboarding_blocked?: boolean | null
           last_checkin_at?: string | null
           last_plan_delivery_at?: string | null
           lifecycle_state?: Database["public"]["Enums"]["patient_lifecycle_status"]
           next_recommended_action?: string | null
+          onboarding_block_reason?: string | null
           patient_id?: string
           risk_score?: number | null
           updated_at?: string
