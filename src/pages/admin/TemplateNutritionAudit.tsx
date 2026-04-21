@@ -543,6 +543,127 @@ export default function TemplateNutritionAudit() {
               </SheetContent>
             </Sheet>
 
+            <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <History className="w-4 h-4 mr-2" />
+                  Histórico
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5" />
+                    Histórico de versões
+                  </SheetTitle>
+                  <SheetDescription>
+                    Cada alteração nas regras gera uma versão. Clique em <strong>Reverter</strong>{" "}
+                    para restaurar instantaneamente uma configuração anterior. A reversão também é
+                    registrada como nova versão.
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="mt-4 mb-2 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {versionsLoading
+                      ? "Carregando…"
+                      : `${versions.length} versão(ões) registradas`}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshVersions}
+                    disabled={versionsLoading}
+                  >
+                    <RefreshCw
+                      className={`w-3.5 h-3.5 mr-1.5 ${versionsLoading ? "animate-spin" : ""}`}
+                    />
+                    Atualizar
+                  </Button>
+                </div>
+
+                {versionsLoading && versions.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Carregando histórico…
+                  </div>
+                ) : versions.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhuma versão registrada ainda. Altere uma regra para começar.
+                  </div>
+                ) : (
+                  <ol className="space-y-2 mt-2">
+                    {versions.map((v, idx) => {
+                      const isCurrent = idx === 0;
+                      const isReverting = revertingId === v.id;
+                      const date = new Date(v.created_at);
+                      const ruleCount = Object.keys(v.snapshot || {}).length;
+                      return (
+                        <li
+                          key={v.id}
+                          className={`rounded-md border p-3 text-sm ${
+                            isCurrent ? "border-primary/40 bg-primary/5" : "border-border"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-xs font-semibold">
+                                  #{v.version_number}
+                                </span>
+                                {isCurrent && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] h-4 px-1 border-primary/40 text-primary"
+                                  >
+                                    atual
+                                  </Badge>
+                                )}
+                                <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                                  {v.action}
+                                </Badge>
+                              </div>
+                              <p className="text-sm mt-1 break-words">
+                                {v.change_summary || "(sem descrição)"}
+                              </p>
+                              {v.changed_rule_key && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                                  {v.changed_rule_key}
+                                  {v.previous_severity && v.new_severity
+                                    ? `: ${v.previous_severity} → ${v.new_severity}`
+                                    : v.new_severity
+                                      ? `: → ${v.new_severity}`
+                                      : v.previous_severity
+                                        ? `: ${v.previous_severity} → (removida)`
+                                        : ""}
+                                </p>
+                              )}
+                              <p className="text-[11px] text-muted-foreground mt-1">
+                                {date.toLocaleString()} · {ruleCount} regra(s) no snapshot
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => revertToVersion(v)}
+                              disabled={isCurrent || isReverting || revertingId !== null}
+                              className="shrink-0"
+                            >
+                              <Undo2
+                                className={`w-3.5 h-3.5 mr-1.5 ${
+                                  isReverting ? "animate-spin" : ""
+                                }`}
+                              />
+                              {isReverting ? "Revertendo…" : "Reverter"}
+                            </Button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
+              </SheetContent>
+            </Sheet>
+
             <Button onClick={fetchTemplates} variant="outline" size="sm" disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Reescanear
