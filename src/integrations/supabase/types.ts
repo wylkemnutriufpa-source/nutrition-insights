@@ -5792,6 +5792,39 @@ export type Database = {
         }
         Relationships: []
       }
+      marmita_generation_settings: {
+        Row: {
+          created_at: string
+          fixed_min_dinner: number
+          fixed_min_lunch: number
+          id: string
+          nutritionist_id: string
+          updated_at: string
+          weekly_min_dinner: number
+          weekly_min_lunch: number
+        }
+        Insert: {
+          created_at?: string
+          fixed_min_dinner?: number
+          fixed_min_lunch?: number
+          id?: string
+          nutritionist_id: string
+          updated_at?: string
+          weekly_min_dinner?: number
+          weekly_min_lunch?: number
+        }
+        Update: {
+          created_at?: string
+          fixed_min_dinner?: number
+          fixed_min_lunch?: number
+          id?: string
+          nutritionist_id?: string
+          updated_at?: string
+          weekly_min_dinner?: number
+          weekly_min_lunch?: number
+        }
+        Relationships: []
+      }
       meal_analysis_cache: {
         Row: {
           analysis_result: Json
