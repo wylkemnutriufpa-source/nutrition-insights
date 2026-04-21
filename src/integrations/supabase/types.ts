@@ -16217,6 +16217,27 @@ export type Database = {
         }
         Relationships: []
       }
+      template_audit_rules_config: {
+        Row: {
+          rule_key: string
+          severity: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          rule_key: string
+          severity: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          rule_key?: string
+          severity?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string

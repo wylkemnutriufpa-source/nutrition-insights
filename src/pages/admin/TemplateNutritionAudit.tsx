@@ -119,32 +119,42 @@ const DEFAULT_CONFIG: AuditConfig = RULE_KEYS.reduce((acc, k) => {
   return acc;
 }, {} as AuditConfig);
 
-const CONFIG_STORAGE_KEY = "template-nutrition-audit:config:v1";
+async function fetchConfigFromDB(): Promise<AuditConfig> {
+  const { data, error } = await supabase
+    .from("template_audit_rules_config")
+    .select("rule_key, severity");
 
-function loadConfig(): AuditConfig {
-  if (typeof window === "undefined") return DEFAULT_CONFIG;
-  try {
-    const raw = window.localStorage.getItem(CONFIG_STORAGE_KEY);
-    if (!raw) return DEFAULT_CONFIG;
-    const parsed = JSON.parse(raw) as Partial<AuditConfig>;
-    // Merge — unknown keys ignored, missing keys fall back to default.
-    return RULE_KEYS.reduce((acc, k) => {
-      const v = parsed[k];
-      acc[k] = v === "critical" || v === "warning" || v === "ignore" ? v : DEFAULT_CONFIG[k];
-      return acc;
-    }, {} as AuditConfig);
-  } catch {
-    return DEFAULT_CONFIG;
-  }
+  if (error || !data) return DEFAULT_CONFIG;
+
+  return RULE_KEYS.reduce((acc, k) => {
+    const row = data.find((r) => r.rule_key === k);
+    const sev = row?.severity;
+    acc[k] = sev === "critical" || sev === "warning" || sev === "ignore" ? sev : DEFAULT_CONFIG[k];
+    return acc;
+  }, {} as AuditConfig);
 }
 
-function saveConfig(config: AuditConfig): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
-  } catch {
-    /* noop — quota / private mode */
-  }
+async function upsertRuleInDB(key: RuleKey, severity: RuleSeverity): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const { error } = await supabase.from("template_audit_rules_config").upsert(
+    {
+      rule_key: key,
+      severity,
+      updated_by: userData.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "rule_key" },
+  );
+  if (error) throw error;
+}
+
+async function resetRulesInDB(): Promise<void> {
+  // Delete all rows -> next read returns DEFAULT_CONFIG via fallback merge.
+  const { error } = await supabase
+    .from("template_audit_rules_config")
+    .delete()
+    .neq("rule_key", "__never__");
+  if (error) throw error;
 }
 
 type AuditedTemplate = TemplateRow & {
@@ -211,21 +221,73 @@ export default function TemplateNutritionAudit() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
   const [tab, setTab] = useState<"critical" | "warning" | "ok" | "all">("critical");
-  const [config, setConfig] = useState<AuditConfig>(() => loadConfig());
+  const [config, setConfig] = useState<AuditConfig>(DEFAULT_CONFIG);
+  const [configLoading, setConfigLoading] = useState(true);
+  const [savingKey, setSavingKey] = useState<RuleKey | null>(null);
+  const [resetting, setResetting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
 
-  const updateRule = (key: RuleKey, severity: RuleSeverity) => {
-    setConfig((prev) => {
-      const next = { ...prev, [key]: severity };
-      saveConfig(next);
-      return next;
-    });
+  // Initial config load + realtime subscription so all admins stay in sync.
+  useEffect(() => {
+    let mounted = true;
+    setConfigLoading(true);
+    fetchConfigFromDB()
+      .then((c) => {
+        if (mounted) setConfig(c);
+      })
+      .finally(() => {
+        if (mounted) setConfigLoading(false);
+      });
+
+    const channel = supabase
+      .channel("template-audit-rules-config")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "template_audit_rules_config" },
+        () => {
+          fetchConfigFromDB().then((c) => {
+            if (mounted) setConfig(c);
+          });
+        },
+      )
+      .subscribe();
+
+    return () => {
+      mounted = false;
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
+  const updateRule = async (key: RuleKey, severity: RuleSeverity) => {
+    const previous = config[key];
+    setConfig((prev) => ({ ...prev, [key]: severity })); // optimistic
+    setSavingKey(key);
+    try {
+      await upsertRuleInDB(key, severity);
+      toast.success("Regra atualizada para todos os admins");
+    } catch (err) {
+      setConfig((prev) => ({ ...prev, [key]: previous })); // rollback
+      toast.error("Falha ao salvar regra", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setSavingKey(null);
+    }
   };
 
-  const resetConfig = () => {
-    setConfig(DEFAULT_CONFIG);
-    saveConfig(DEFAULT_CONFIG);
-    toast.success("Regras restauradas para o padrão");
+  const resetConfig = async () => {
+    setResetting(true);
+    try {
+      await resetRulesInDB();
+      setConfig(DEFAULT_CONFIG);
+      toast.success("Regras restauradas para o padrão (todos os admins)");
+    } catch (err) {
+      toast.error("Falha ao restaurar regras", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setResetting(false);
+    }
   };
 
   const customizedCount = useMemo(
@@ -316,59 +378,78 @@ export default function TemplateNutritionAudit() {
                   </SheetTitle>
                   <SheetDescription>
                     Defina o que conta como <strong>crítico</strong> (bloqueia release),{" "}
-                    <strong>atenção</strong> (alerta) ou <strong>ignorar</strong>. As preferências
-                    ficam salvas neste navegador.
+                    <strong>atenção</strong> (alerta) ou <strong>ignorar</strong>. Estas regras são{" "}
+                    <strong>globais</strong> — aplicam-se a todos os admins e atualizam em tempo
+                    real.
                   </SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-6 space-y-5">
-                  {RULE_KEYS.map((key) => {
-                    const meta = RULE_LABELS[key];
-                    const current = config[key];
-                    const isCustom = current !== meta.defaultRecommend;
-                    return (
-                      <div key={key} className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <Label className="text-sm font-semibold flex items-center gap-2">
-                              {meta.label}
-                              {isCustom && (
-                                <Badge variant="outline" className="text-[10px] h-4 px-1">
-                                  custom
-                                </Badge>
-                              )}
-                            </Label>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {meta.description}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                              Padrão recomendado:{" "}
-                              <code className="text-[11px]">{meta.defaultRecommend}</code>
-                            </p>
+                {configLoading ? (
+                  <div className="mt-8 text-center text-sm text-muted-foreground">
+                    Carregando regras…
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-5">
+                    {RULE_KEYS.map((key) => {
+                      const meta = RULE_LABELS[key];
+                      const current = config[key];
+                      const isCustom = current !== meta.defaultRecommend;
+                      const isSaving = savingKey === key;
+                      return (
+                        <div key={key} className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <Label className="text-sm font-semibold flex items-center gap-2">
+                                {meta.label}
+                                {isCustom && (
+                                  <Badge variant="outline" className="text-[10px] h-4 px-1">
+                                    custom
+                                  </Badge>
+                                )}
+                                {isSaving && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    salvando…
+                                  </span>
+                                )}
+                              </Label>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {meta.description}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                                Padrão recomendado:{" "}
+                                <code className="text-[11px]">{meta.defaultRecommend}</code>
+                              </p>
+                            </div>
                           </div>
+                          <Select
+                            value={current}
+                            disabled={isSaving || resetting}
+                            onValueChange={(v) => updateRule(key, v as RuleSeverity)}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="critical">Crítico (bloqueia release)</SelectItem>
+                              <SelectItem value="warning">Atenção (apenas alerta)</SelectItem>
+                              <SelectItem value="ignore">Ignorar (não reportar)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Separator className="mt-3" />
                         </div>
-                        <Select
-                          value={current}
-                          onValueChange={(v) => updateRule(key, v as RuleSeverity)}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="critical">Crítico (bloqueia release)</SelectItem>
-                            <SelectItem value="warning">Atenção (apenas alerta)</SelectItem>
-                            <SelectItem value="ignore">Ignorar (não reportar)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Separator className="mt-3" />
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="mt-6 flex items-center justify-between gap-2">
-                  <Button variant="ghost" size="sm" onClick={resetConfig}>
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetConfig}
+                    disabled={resetting || configLoading}
+                  >
+                    <RotateCcw className={`w-4 h-4 mr-2 ${resetting ? "animate-spin" : ""}`} />
                     Restaurar padrão
                   </Button>
                   <Button size="sm" onClick={() => setSettingsOpen(false)}>
