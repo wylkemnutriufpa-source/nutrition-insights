@@ -22,19 +22,23 @@ interface PartialScenario {
   fixedCountsText?: RegExp;
 }
 
+// Note on counts: the component computes weekly `lunch`/`dinner` from ALL
+// recipes of that meal_type (including fixed ones). So a scenario with
+// `lunch: 7, fixedLunch: 1` shows "Almoço 8/7" in the weekly button.
+
 const scenarios: PartialScenario[] = [
   {
     label: "weekly: lunch meets, dinner does not",
-    counts: { lunch: 7, dinner: 3, fixedLunch: 1, fixedDinner: 1 },
-    weeklyShouldBeDisabled: true,
-    fixedShouldBeDisabled: false,
+    counts: { lunch: 6, dinner: 3, fixedLunch: 1, fixedDinner: 0 },
+    weeklyShouldBeDisabled: true, // dinner 3 < 7
+    fixedShouldBeDisabled: true, // fixedDinner 0 < 1
     weeklyCountsText: /Almoço 7\/7 · Jantar 3\/7/i,
   },
   {
     label: "weekly: dinner meets, lunch does not",
-    counts: { lunch: 4, dinner: 7, fixedLunch: 1, fixedDinner: 1 },
-    weeklyShouldBeDisabled: true,
-    fixedShouldBeDisabled: false,
+    counts: { lunch: 4, dinner: 6, fixedLunch: 0, fixedDinner: 1 },
+    weeklyShouldBeDisabled: true, // lunch 4 < 7
+    fixedShouldBeDisabled: true, // fixedLunch 0 < 1
     weeklyCountsText: /Almoço 4\/7 · Jantar 7\/7/i,
   },
   {
@@ -52,17 +56,17 @@ const scenarios: PartialScenario[] = [
     fixedCountsText: /Almoço fixo 0\/1 · Jantar fixo 3\/1/i,
   },
   {
-    label: "weekly: exact match enables button",
-    counts: { lunch: 7, dinner: 7, fixedLunch: 1, fixedDinner: 1 },
+    label: "exact match enables both buttons",
+    counts: { lunch: 6, dinner: 6, fixedLunch: 1, fixedDinner: 1 },
     weeklyShouldBeDisabled: false,
     fixedShouldBeDisabled: false,
   },
   {
     label: "weekly: lower configured minimum (3+3) is met by partial counts",
-    counts: { lunch: 3, dinner: 4, fixedLunch: 1, fixedDinner: 1 },
+    counts: { lunch: 3, dinner: 4, fixedLunch: 0, fixedDinner: 0 },
     settings: { weekly_min_lunch: 3, weekly_min_dinner: 3 },
     weeklyShouldBeDisabled: false,
-    fixedShouldBeDisabled: false,
+    fixedShouldBeDisabled: true, // default fixed minimums 1+1, fixed counts are 0
     weeklyCountsText: /Almoço 3\/3 · Jantar 4\/3/i,
   },
 ];
