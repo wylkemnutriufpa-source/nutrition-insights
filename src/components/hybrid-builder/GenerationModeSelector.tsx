@@ -252,7 +252,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     } finally {
       setGenerating(false);
     }
-  }, [user, store, patientId, onGenerated, fixedReady]);
+  }, [user, store, patientId, onGenerated, fixedReady, minSettings, recipeCounts]);
   if (view === "strategy") {
     return (
       <StrategyAdvisorPanel
