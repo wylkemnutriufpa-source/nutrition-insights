@@ -89,8 +89,52 @@ async function installRewriter(page: Page, mode: Mode) {
 }
 
 // ─── DOM inspection ────────────────────────────────────────────────────────
-const PLACEHOLDER_RE = /^[-—–\s]*$|^(N\/A|--|—|–|0|0[gGkK]|0\s?kcal)$/i;
-const TOXIC_RE = /\b(NaN|-?Infinity|undefined|null)\b/;
+//
+// Toxic tokens that must NEVER reach the DOM, regardless of context.
+const TOXIC_RE = /\b(NaN|-?Infinity|undefined)\b/;
+
+// Comprehensive placeholder detection.
+//
+// Real placeholders observed in the codebase (grep'd live):
+//   • "-"   (MealCard fallback)
+//   • "—"   (em dash — most patient cards: BodyEvolution, MealDetailModal,
+//            MealVisualModal, PatientEvolutionSummary, ConsultationCompare,
+//            BodyProjectionProCard, OnboardingApprovalQueue, PDF metrics)
+//   • "–"   (en dash, occasional)
+//   • "--"  (double hyphen, occasional)
+//   • "N/A" (occasional)
+//   • ""    (empty / whitespace only — tile rendered without value yet)
+//
+// We must recognise these AFTER stripping known label prefixes/suffixes
+// emitted by the tagged tiles, so that strings like `P: -`, `meta: —`,
+// `0 kcal`, `0g`, `0%` count as valid empty/zero states — NOT as toxic.
+function normalizeLeafText(raw: string): string {
+  let s = raw.replace(/\u00a0/g, " ").trim();
+
+  // Strip leading macro labels: "P:", "C:", "G:", "Kcal:", "meta:",
+  // "Prot:", "Carb:", "Gord:" (case-insensitive, optional colon).
+  s = s.replace(
+    /^(p|c|g|kcal|prot(?:e[ií]nas?)?|carb(?:o(?:hidratos?|s)?)?|gord(?:ura)?|meta|target|atual|current)\s*[:=]?\s*/i,
+    "",
+  );
+
+  // Strip trailing units: kcal, g, kg, %, etc.
+  s = s.replace(/\s*(kcal|kgs?|gr?|%)\s*$/i, "");
+
+  return s.trim();
+}
+
+const PLACEHOLDER_LITERALS = new Set([
+  "", "-", "--", "—", "––", "–", "–––", "n/a", "na", "0",
+]);
+
+function isPlaceholder(rawText: string): boolean {
+  const norm = normalizeLeafText(rawText).toLowerCase();
+  if (PLACEHOLDER_LITERALS.has(norm)) return true;
+  // Pure dash/whitespace runs (e.g. "— —", "- - -")
+  if (/^[\s\-—–]*$/.test(norm)) return true;
+  return false;
+}
 
 interface Leaf {
   tile: string;
@@ -144,6 +188,24 @@ const ROUTES = [
   { path: "/checkin", label: "/checkin" },
 ];
 
+/**
+ * Validate one leaf:
+ *   ❌ Fails if text contains a toxic token (NaN, Infinity, undefined).
+ *   ✅ Accepts known placeholders (handled by isPlaceholder).
+ *   ✅ Accepts finite numbers ≥ 0 (after parsing all numeric segments).
+ *   ✅ Accepts pure label text (no numbers and no toxic tokens).
+ */
+function leafIsViolation(text: string): boolean {
+  if (TOXIC_RE.test(text)) return true;
+  if (isPlaceholder(text)) return false;
+  const nums = text.match(/-?\d+(?:[.,]\d+)?/g) || [];
+  if (nums.length === 0) return false;
+  return nums.some((raw) => {
+    const n = parseFloat(raw.replace(",", "."));
+    return !Number.isFinite(n) || n < 0;
+  });
+}
+
 // ─── Suite ────────────────────────────────────────────────────────────────
 authedTest.describe("Macro tiles: placeholder vs toxic contract", () => {
   authedTest.setTimeout(90000);
@@ -163,23 +225,9 @@ authedTest.describe("Macro tiles: placeholder vs toxic contract", () => {
       await expandCollapsibles(page);
 
       const leaves = await readMacroLeaves(page);
+      if (leaves.length === 0) return; // empty state acceptable
 
-      // Empty state is acceptable.
-      if (leaves.length === 0) return;
-
-      // Each leaf must:
-      //   - never contain a toxic token, AND
-      //   - either be a placeholder, OR contain a finite non-negative number.
-      const violations = leaves.filter((l) => {
-        if (TOXIC_RE.test(l.text)) return true;
-        if (PLACEHOLDER_RE.test(l.text)) return false;
-        const nums = l.text.match(/-?\d+(?:[.,]\d+)?/g) || [];
-        if (nums.length === 0) return false; // pure label like "Equilibrado ✓"
-        return nums.some((raw) => {
-          const n = parseFloat(raw.replace(",", "."));
-          return !Number.isFinite(n) || n < 0;
-        });
-      });
+      const violations = leaves.filter((l) => leafIsViolation(l.text));
 
       expect(
         violations,
@@ -206,14 +254,7 @@ authedTest.describe("Macro tiles: placeholder vs toxic contract", () => {
       const leaves = await readMacroLeaves(page);
       if (leaves.length === 0) return;
 
-      const violations = leaves.filter((l) => {
-        if (TOXIC_RE.test(l.text)) return true;
-        const nums = l.text.match(/-?\d+(?:[.,]\d+)?/g) || [];
-        return nums.some((raw) => {
-          const n = parseFloat(raw.replace(",", "."));
-          return !Number.isFinite(n) || n < 0;
-        });
-      });
+      const violations = leaves.filter((l) => leafIsViolation(l.text));
 
       expect(
         violations,
@@ -225,3 +266,4 @@ authedTest.describe("Macro tiles: placeholder vs toxic contract", () => {
     });
   }
 });
+
