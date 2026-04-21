@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
