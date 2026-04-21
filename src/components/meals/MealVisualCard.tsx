@@ -66,15 +66,15 @@ export default function MealVisualCard({ item, onClick, compact, imageOverride }
 
         {/* Macros */}
         {(safeNum(item.default_calories) > 0 || safeNum(item.default_protein) > 0) && (
-          <div className="flex items-center gap-2 mt-1.5 text-[9px] text-muted-foreground">
+          <div className="flex items-center gap-2 mt-1.5 text-[9px] text-muted-foreground" data-macro-tile="visual-card">
             {item.default_calories != null && (
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-0.5" data-macro="kcal" data-macro-value="kcal">
                 <Flame className="w-2.5 h-2.5 text-orange-400" />
                 {fmtMacro(item.default_calories)}kcal
               </span>
             )}
             {item.default_protein != null && (
-              <span className="flex items-center gap-0.5">
+              <span className="flex items-center gap-0.5" data-macro="protein" data-macro-value="protein">
                 <Beef className="w-2.5 h-2.5 text-red-400" />
                 {fmtMacro(item.default_protein)}g
               </span>

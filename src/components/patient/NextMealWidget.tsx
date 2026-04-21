@@ -158,17 +158,17 @@ export default function NextMealWidget() {
         </div>
 
         {/* Macro pills */}
-        <div className="flex gap-2 mt-3">
-          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">
+        <div className="flex gap-2 mt-3" data-macro-tile="next-meal">
+          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold" data-macro="kcal" data-macro-value="kcal">
             {fmtMacro(nextMeal.total_kcal)} kcal
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-semibold">
+          <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-semibold" data-macro="protein" data-macro-value="protein">
             P {fmtMacro(nextMeal.protein_g)}g
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[10px] font-semibold">
+          <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[10px] font-semibold" data-macro="carbs" data-macro-value="carbs">
             C {fmtMacro(nextMeal.carbs_g)}g
           </span>
-          <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">
+          <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold" data-macro="fat" data-macro-value="fat">
             G {fmtMacro(nextMeal.fat_g)}g
           </span>
         </div>
