@@ -499,6 +499,45 @@ export default function OnboardingPipeline() {
           </div>
         </div>
 
+        {/* Sync Fallback Banner — RPC de finalização falhou mesmo com plano gerado */}
+        {syncError && pipeline.plan_generated && (
+          <Card className="border-amber-500/40 bg-amber-500/5">
+            <CardContent className="py-4">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <div className="flex-1 space-y-2">
+                  <div>
+                    <p className="font-semibold text-amber-600 dark:text-amber-400">
+                      Sincronização pendente
+                    </p>
+                    <p className="text-sm text-muted-foreground">
+                      Seu plano foi gerado com sucesso, mas a sincronização final com o painel
+                      ainda não foi confirmada. Isso pode acontecer por instabilidade momentânea.
+                      Seus dados estão salvos — basta tentar novamente.
+                    </p>
+                    <p className="text-xs text-muted-foreground/80 mt-1 italic">
+                      Detalhe técnico: {syncError}
+                    </p>
+                  </div>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={handleRetrySync}
+                    disabled={syncRetrying}
+                    className="border-amber-500/40 hover:bg-amber-500/10"
+                  >
+                    {syncRetrying ? (
+                      <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
+                    ) : (
+                      <>Tentar sincronizar novamente</>
+                    )}
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Rejection Banner */}
         {pipeline.rejection_reason && pipeline.status === "rejected" && (
           <Card className="border-destructive bg-destructive/5">
