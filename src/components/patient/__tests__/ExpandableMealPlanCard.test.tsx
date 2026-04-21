@@ -130,6 +130,11 @@ describe("ExpandableMealPlanCard - description rendering", () => {
       expect(screen.getByText("Plano Wannubia Marmita Semanal")).toBeInTheDocument(),
     );
 
+    // DEBUG dump
+    await new Promise((r) => setTimeout(r, 200));
+    // eslint-disable-next-line no-console
+    console.log("DOM_DUMP:", document.body.innerHTML.substring(0, 4000));
+
     // Today's lunch item title is visible
     expect(await screen.findByText("Marmita Carne Magra")).toBeInTheDocument();
 
