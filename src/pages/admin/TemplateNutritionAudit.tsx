@@ -67,10 +67,89 @@ type TemplateRow = {
 };
 
 type IssueLevel = "critical" | "warning" | "ok";
+type RuleSeverity = "critical" | "warning" | "ignore";
+
+type RuleKey =
+  | "noItems"
+  | "kcalBaseMissing"
+  | "proteinBaseMissing"
+  | "carbsBaseMissing"
+  | "fatBaseMissing"
+  | "itemsBroken";
+
+type AuditConfig = Record<RuleKey, RuleSeverity>;
+
+const RULE_LABELS: Record<RuleKey, { label: string; description: string; defaultRecommend: RuleSeverity }> = {
+  noItems: {
+    label: "Template sem itens",
+    description: "foods_structure vazio — modal não consegue renderizar refeição.",
+    defaultRecommend: "critical",
+  },
+  kcalBaseMissing: {
+    label: "kcal_base ausente ou zero",
+    description: "Causa divisão por zero no multiplicador de porções → NaN no UI.",
+    defaultRecommend: "critical",
+  },
+  proteinBaseMissing: {
+    label: "protein_base ausente",
+    description: "Macro base de proteína nulo. Pode ser tolerado se itens tiverem proteína própria.",
+    defaultRecommend: "warning",
+  },
+  carbsBaseMissing: {
+    label: "carbs_base ausente",
+    description: "Macro base de carboidrato nulo. Pode ser tolerado se itens tiverem carbo próprio.",
+    defaultRecommend: "warning",
+  },
+  fatBaseMissing: {
+    label: "fat_base ausente",
+    description: "Macro base de gordura nulo. Pode ser tolerado se itens tiverem gordura própria.",
+    defaultRecommend: "warning",
+  },
+  itemsBroken: {
+    label: "Itens com macros inválidos",
+    description: "Algum item do template tem nome vazio ou kcal/protein/carbs/fat nulo → NaN nos cards.",
+    defaultRecommend: "critical",
+  },
+};
+
+const RULE_KEYS = Object.keys(RULE_LABELS) as RuleKey[];
+
+const DEFAULT_CONFIG: AuditConfig = RULE_KEYS.reduce((acc, k) => {
+  acc[k] = RULE_LABELS[k].defaultRecommend;
+  return acc;
+}, {} as AuditConfig);
+
+const CONFIG_STORAGE_KEY = "template-nutrition-audit:config:v1";
+
+function loadConfig(): AuditConfig {
+  if (typeof window === "undefined") return DEFAULT_CONFIG;
+  try {
+    const raw = window.localStorage.getItem(CONFIG_STORAGE_KEY);
+    if (!raw) return DEFAULT_CONFIG;
+    const parsed = JSON.parse(raw) as Partial<AuditConfig>;
+    // Merge — unknown keys ignored, missing keys fall back to default.
+    return RULE_KEYS.reduce((acc, k) => {
+      const v = parsed[k];
+      acc[k] = v === "critical" || v === "warning" || v === "ignore" ? v : DEFAULT_CONFIG[k];
+      return acc;
+    }, {} as AuditConfig);
+  } catch {
+    return DEFAULT_CONFIG;
+  }
+}
+
+function saveConfig(config: AuditConfig): void {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
+  } catch {
+    /* noop — quota / private mode */
+  }
+}
 
 type AuditedTemplate = TemplateRow & {
   level: IssueLevel;
-  issues: string[];
+  issues: { key: RuleKey; message: string; severity: RuleSeverity }[];
   itemsTotal: number;
   itemsBroken: number;
 };
@@ -80,7 +159,6 @@ const isMissingNumber = (v: unknown): boolean =>
 
 const isItemBroken = (item: FoodItem): boolean => {
   if (!item || !item.name || String(item.name).trim() === "") return true;
-  // any macro missing/NaN -> broken (will produce NaN in totals)
   return (
     isMissingNumber(item.kcal) ||
     isMissingNumber(item.protein) ||
@@ -89,32 +167,35 @@ const isItemBroken = (item: FoodItem): boolean => {
   );
 };
 
-function auditTemplate(t: TemplateRow): AuditedTemplate {
-  const issues: string[] = [];
+function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
   const items = Array.isArray(t.foods_structure) ? t.foods_structure : [];
   const itemsTotal = items.length;
   const itemsBroken = items.filter(isItemBroken).length;
 
-  if (itemsTotal === 0) issues.push("Template sem itens (foods_structure vazio)");
+  const triggered: { key: RuleKey; message: string }[] = [];
+
+  if (itemsTotal === 0) triggered.push({ key: "noItems", message: "Template sem itens (foods_structure vazio)" });
   if (isMissingNumber(t.kcal_base) || Number(t.kcal_base) <= 0)
-    issues.push("kcal_base ausente ou zero (causa NaN/divisão por zero)");
-  if (isMissingNumber(t.protein_base)) issues.push("protein_base ausente");
-  if (isMissingNumber(t.carbs_base)) issues.push("carbs_base ausente");
-  if (isMissingNumber(t.fat_base)) issues.push("fat_base ausente");
+    triggered.push({ key: "kcalBaseMissing", message: "kcal_base ausente ou zero (causa NaN/divisão por zero)" });
+  if (isMissingNumber(t.protein_base))
+    triggered.push({ key: "proteinBaseMissing", message: "protein_base ausente" });
+  if (isMissingNumber(t.carbs_base))
+    triggered.push({ key: "carbsBaseMissing", message: "carbs_base ausente" });
+  if (isMissingNumber(t.fat_base)) triggered.push({ key: "fatBaseMissing", message: "fat_base ausente" });
   if (itemsBroken > 0)
-    issues.push(`${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`);
+    triggered.push({
+      key: "itemsBroken",
+      message: `${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`,
+    });
+
+  // Apply user-configured severity, drop ignored.
+  const issues = triggered
+    .map((t) => ({ ...t, severity: config[t.key] }))
+    .filter((i) => i.severity !== "ignore");
 
   let level: IssueLevel = "ok";
-  if (
-    itemsTotal === 0 ||
-    isMissingNumber(t.kcal_base) ||
-    Number(t.kcal_base) <= 0 ||
-    itemsBroken > 0
-  ) {
-    level = "critical";
-  } else if (issues.length > 0) {
-    level = "warning";
-  }
+  if (issues.some((i) => i.severity === "critical")) level = "critical";
+  else if (issues.some((i) => i.severity === "warning")) level = "warning";
 
   return { ...t, level, issues, itemsTotal, itemsBroken };
 }
