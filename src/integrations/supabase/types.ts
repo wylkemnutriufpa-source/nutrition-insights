@@ -7369,6 +7369,10 @@ export type Database = {
           scheduling_criteria: Json | null
           sleep_time: string | null
           status: string
+          sync_attempts: number
+          sync_error: string | null
+          sync_last_attempt_at: string | null
+          sync_pending: boolean
           updated_at: string | null
           use_scheduling_criteria: boolean | null
           wake_time: string | null
@@ -7405,6 +7409,10 @@ export type Database = {
           scheduling_criteria?: Json | null
           sleep_time?: string | null
           status?: string
+          sync_attempts?: number
+          sync_error?: string | null
+          sync_last_attempt_at?: string | null
+          sync_pending?: boolean
           updated_at?: string | null
           use_scheduling_criteria?: boolean | null
           wake_time?: string | null
@@ -7441,6 +7449,10 @@ export type Database = {
           scheduling_criteria?: Json | null
           sleep_time?: string | null
           status?: string
+          sync_attempts?: number
+          sync_error?: string | null
+          sync_last_attempt_at?: string | null
+          sync_pending?: boolean
           updated_at?: string | null
           use_scheduling_criteria?: boolean | null
           wake_time?: string | null
@@ -18594,6 +18606,10 @@ export type Database = {
         Args: { _nutritionist_id: string; _stale_days?: number }
         Returns: Json
       }
+      clear_onboarding_sync_pending: {
+        Args: { _patient_id: string }
+        Returns: undefined
+      }
       complete_patient_onboarding: {
         Args: {
           _nutritionist_id: string
@@ -18959,6 +18975,10 @@ export type Database = {
           program_id: string
           referral_code: string
         }[]
+      }
+      mark_onboarding_sync_pending: {
+        Args: { _error_message: string; _patient_id: string }
+        Returns: undefined
       }
       mark_patient_contacted: {
         Args: { _contact_method?: string; _patient_id: string }

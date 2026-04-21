@@ -44,6 +44,11 @@ interface Pipeline {
   generated_plan_data: any;
   nutritionist_id: string;
   rejection_reason: string | null;
+  // Persisted sync state — survives page reloads even without re-detection
+  sync_pending?: boolean | null;
+  sync_error?: string | null;
+  sync_last_attempt_at?: string | null;
+  sync_attempts?: number | null;
 }
 
 const STEPS = [
@@ -165,6 +170,16 @@ export default function OnboardingPipeline() {
       }
 
       setPipeline(d);
+
+      // Hydrate persisted sync state — keeps the "Sincronização pendente"
+      // banner visible across reloads even before the re-detection effect
+      // runs, ensuring UI coherence with the database.
+      if (d.sync_pending) {
+        setSyncError(d.sync_error || "Sincronização pendente. Tente novamente.");
+      } else {
+        setSyncError(null);
+      }
+
       if (d.weight) setBodyForm({ weight: String(d.weight), height: String(d.height || "") });
       if (d.cooking_preference) {
         setPrefForm({
@@ -365,10 +380,33 @@ export default function OnboardingPipeline() {
 
   /**
    * Executa a RPC de finalização do onboarding com tratamento robusto.
+   * Persiste o resultado no banco (sync_pending / sync_error) para que o
+   * banner sobreviva a reloads sem depender da redetecção do front.
    * Retorna true se sucesso, false caso contrário (e seta syncError).
    */
   async function runLifecycleSync(pipelineId: string): Promise<boolean> {
     if (!user) return false;
+    const persistFailure = async (msg: string) => {
+      setSyncError(msg);
+      try {
+        await supabase.rpc("mark_onboarding_sync_pending" as any, {
+          _patient_id: user.id,
+          _error_message: msg,
+        });
+      } catch (e) {
+        console.warn("Failed to persist sync_pending flag:", e);
+      }
+    };
+    const persistSuccess = async () => {
+      setSyncError(null);
+      try {
+        await supabase.rpc("clear_onboarding_sync_pending" as any, {
+          _patient_id: user.id,
+        });
+      } catch (e) {
+        console.warn("Failed to clear sync_pending flag:", e);
+      }
+    };
     try {
       const { data: completionData, error: completionError } = await supabase.rpc(
         "complete_patient_onboarding_by_patient" as any,
@@ -376,20 +414,20 @@ export default function OnboardingPipeline() {
       );
       if (completionError) {
         console.error("complete_patient_onboarding_by_patient error:", completionError);
-        setSyncError(completionError.message || "Falha ao sincronizar estado do onboarding.");
+        await persistFailure(completionError.message || "Falha ao sincronizar estado do onboarding.");
         return false;
       }
       if (completionData && (completionData as any).success === false) {
         const reason = (completionData as any).error || "Sincronização rejeitada pelo servidor.";
         console.warn("Onboarding completion warning:", reason);
-        setSyncError(reason);
+        await persistFailure(reason);
         return false;
       }
-      setSyncError(null);
+      await persistSuccess();
       return true;
     } catch (err: any) {
       console.error("Lifecycle sync exception:", err);
-      setSyncError(err?.message || "Falha de rede ao sincronizar onboarding.");
+      await persistFailure(err?.message || "Falha de rede ao sincronizar onboarding.");
       return false;
     }
   }
