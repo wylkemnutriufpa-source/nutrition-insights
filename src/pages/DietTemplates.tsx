@@ -826,7 +826,7 @@ export default function DietTemplates() {
                             );
                           }) : (
                             <p className="text-xs text-muted-foreground italic">
-                              {(meal as any).pct ? `${Math.round(((meal as any).pct || 0) * 100)}% das calorias diárias (~${Math.round(getAdjustedCalories(previewTemplate) * ((meal as any).pct || 0))} kcal)` : "Sem alimentos detalhados"}
+                              {(meal as any).pct ? `${fmtMacro(safeNum((meal as any).pct) * 100)}% das calorias diárias (~${fmtMacro(getAdjustedCalories(previewTemplate) * safeNum((meal as any).pct))} kcal)` : "Sem alimentos detalhados"}
                             </p>
                           )}
                         </div>
