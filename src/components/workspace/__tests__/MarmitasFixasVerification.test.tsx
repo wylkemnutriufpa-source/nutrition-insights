@@ -171,4 +171,67 @@ describe("Marmitas Fixas Semanais — verificação automática", () => {
     ).toBeInTheDocument();
     expect(screen.getByText(/Cadastre marmitas com/i)).toBeInTheDocument();
   });
+
+  // ─── Cenários de borda: 1 unidade abaixo do mínimo em cada lado ─────
+  // Garante que o seletor exige AMBOS os lados ≥ mínimo (lógica AND), não OR.
+  const edgeCases: Array<{
+    label: string;
+    fixedLunch: number;
+    fixedDinner: number;
+    expectedDisabled: boolean;
+    expectedCounter: RegExp;
+    expectAlert: boolean;
+  }> = [
+    {
+      label: "almoço 6/7 (faltando 1) e jantar 7/7 → desabilita",
+      fixedLunch: 6,
+      fixedDinner: 7,
+      expectedDisabled: true,
+      expectedCounter: /Almoço fixo 6\/7\s*·\s*Jantar fixo 7\/7/i,
+      expectAlert: true,
+    },
+    {
+      label: "almoço 7/7 e jantar 6/7 (faltando 1) → desabilita",
+      fixedLunch: 7,
+      fixedDinner: 6,
+      expectedDisabled: true,
+      expectedCounter: /Almoço fixo 7\/7\s*·\s*Jantar fixo 6\/7/i,
+      expectAlert: true,
+    },
+    {
+      label: "almoço 7/7 e jantar 7/7 (limite exato) → habilita",
+      fixedLunch: 7,
+      fixedDinner: 7,
+      expectedDisabled: false,
+      expectedCounter: /Almoço fixo 7\/7\s*·\s*Jantar fixo 7\/7/i,
+      expectAlert: false,
+    },
+  ];
+
+  it.each(edgeCases)(
+    "borda: $label",
+    async ({ fixedLunch, fixedDinner, expectedDisabled, expectedCounter, expectAlert }) => {
+      STATE.recipes = buildFixedRecipes(fixedLunch, fixedDinner);
+
+      render(<GenerationModeSelector patientId="paciente-1" onGenerated={vi.fn()} />);
+
+      const btn = await screen.findByRole("button", {
+        name: /Marmitas Fixas \(Congeladas\)/i,
+      });
+
+      await waitFor(() =>
+        expectedDisabled
+          ? expect(btn).toBeDisabled()
+          : expect(btn).not.toBeDisabled(),
+      );
+
+      expect(screen.getByText(expectedCounter)).toBeInTheDocument();
+
+      if (expectAlert) {
+        expect(screen.getByText(/Cadastre marmitas com/i)).toBeInTheDocument();
+      } else {
+        expect(screen.queryByText(/Cadastre marmitas com/i)).not.toBeInTheDocument();
+      }
+    },
+  );
 });
