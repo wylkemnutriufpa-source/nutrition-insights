@@ -16238,6 +16238,45 @@ export type Database = {
         }
         Relationships: []
       }
+      template_audit_rules_versions: {
+        Row: {
+          action: string
+          change_summary: string | null
+          changed_rule_key: string | null
+          created_at: string
+          created_by: string | null
+          id: string
+          new_severity: string | null
+          previous_severity: string | null
+          snapshot: Json
+          version_number: number
+        }
+        Insert: {
+          action: string
+          change_summary?: string | null
+          changed_rule_key?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          new_severity?: string | null
+          previous_severity?: string | null
+          snapshot: Json
+          version_number?: number
+        }
+        Update: {
+          action?: string
+          change_summary?: string | null
+          changed_rule_key?: string | null
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          new_severity?: string | null
+          previous_severity?: string | null
+          snapshot?: Json
+          version_number?: number
+        }
+        Relationships: []
+      }
       tenants: {
         Row: {
           created_at: string
@@ -18999,6 +19038,10 @@ export type Database = {
         Returns: Json
       }
       resolve_tenant_for_user: { Args: { _user_id: string }; Returns: string }
+      revert_template_audit_rules_to_version: {
+        Args: { _version_id: string }
+        Returns: Json
+      }
       run_daily_patient_audit: { Args: never; Returns: Json }
       run_patient_data_audit: { Args: { _dry_run?: boolean }; Returns: Json }
       run_patient_realtime_fix: { Args: { _patient_id: string }; Returns: Json }
@@ -19039,6 +19082,7 @@ export type Database = {
         Args: { _new_state: string; _patient_id: string; _reason?: string }
         Returns: Json
       }
+      snapshot_template_audit_rules: { Args: never; Returns: Json }
       store_whatsapp_token: {
         Args: { _professional_id: string; _token: string }
         Returns: undefined

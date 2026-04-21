@@ -41,6 +41,8 @@ import {
   FileWarning,
   Settings2,
   RotateCcw,
+  History,
+  Undo2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -157,6 +159,38 @@ async function resetRulesInDB(): Promise<void> {
   if (error) throw error;
 }
 
+type RuleVersion = {
+  id: string;
+  version_number: number;
+  snapshot: Record<string, RuleSeverity>;
+  change_summary: string | null;
+  changed_rule_key: string | null;
+  previous_severity: string | null;
+  new_severity: string | null;
+  action: "upsert" | "delete" | "reset" | "manual_snapshot";
+  created_at: string;
+  created_by: string | null;
+};
+
+async function fetchVersionsFromDB(): Promise<RuleVersion[]> {
+  const { data, error } = await supabase
+    .from("template_audit_rules_versions")
+    .select(
+      "id, version_number, snapshot, change_summary, changed_rule_key, previous_severity, new_severity, action, created_at, created_by",
+    )
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error || !data) return [];
+  return data as unknown as RuleVersion[];
+}
+
+async function revertToVersionInDB(versionId: string): Promise<void> {
+  const { error } = await supabase.rpc("revert_template_audit_rules_to_version", {
+    _version_id: versionId,
+  });
+  if (error) throw error;
+}
+
 type AuditedTemplate = TemplateRow & {
   level: IssueLevel;
   issues: { key: RuleKey; message: string; severity: RuleSeverity }[];
@@ -226,6 +260,20 @@ export default function TemplateNutritionAudit() {
   const [savingKey, setSavingKey] = useState<RuleKey | null>(null);
   const [resetting, setResetting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [versions, setVersions] = useState<RuleVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [revertingId, setRevertingId] = useState<string | null>(null);
+
+  const refreshVersions = async () => {
+    setVersionsLoading(true);
+    try {
+      const v = await fetchVersionsFromDB();
+      setVersions(v);
+    } finally {
+      setVersionsLoading(false);
+    }
+  };
 
   // Initial config load + realtime subscription so all admins stay in sync.
   useEffect(() => {
@@ -250,6 +298,13 @@ export default function TemplateNutritionAudit() {
           });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "template_audit_rules_versions" },
+        () => {
+          if (mounted) refreshVersions();
+        },
+      )
       .subscribe();
 
     return () => {
@@ -257,6 +312,35 @@ export default function TemplateNutritionAudit() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Load versions when history sheet opens
+  useEffect(() => {
+    if (historyOpen) refreshVersions();
+  }, [historyOpen]);
+
+  const revertToVersion = async (v: RuleVersion) => {
+    if (
+      !window.confirm(
+        `Reverter para a versão #${v.version_number}?\n\nIsso substituirá todas as regras atuais pelo snapshot desta versão. Uma nova entrada será criada no histórico para que você possa desfazer.`,
+      )
+    ) {
+      return;
+    }
+    setRevertingId(v.id);
+    try {
+      await revertToVersionInDB(v.id);
+      const fresh = await fetchConfigFromDB();
+      setConfig(fresh);
+      toast.success(`Configuração revertida para versão #${v.version_number}`);
+    } catch (err) {
+      toast.error("Falha ao reverter", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setRevertingId(null);
+    }
+  };
+
 
   const updateRule = async (key: RuleKey, severity: RuleSeverity) => {
     const previous = config[key];
@@ -456,6 +540,127 @@ export default function TemplateNutritionAudit() {
                     Fechar
                   </Button>
                 </div>
+              </SheetContent>
+            </Sheet>
+
+            <Sheet open={historyOpen} onOpenChange={setHistoryOpen}>
+              <SheetTrigger asChild>
+                <Button variant="outline" size="sm">
+                  <History className="w-4 h-4 mr-2" />
+                  Histórico
+                </Button>
+              </SheetTrigger>
+              <SheetContent className="w-full sm:max-w-lg overflow-y-auto">
+                <SheetHeader>
+                  <SheetTitle className="flex items-center gap-2">
+                    <History className="w-5 h-5" />
+                    Histórico de versões
+                  </SheetTitle>
+                  <SheetDescription>
+                    Cada alteração nas regras gera uma versão. Clique em <strong>Reverter</strong>{" "}
+                    para restaurar instantaneamente uma configuração anterior. A reversão também é
+                    registrada como nova versão.
+                  </SheetDescription>
+                </SheetHeader>
+
+                <div className="mt-4 mb-2 flex items-center justify-between">
+                  <span className="text-xs text-muted-foreground">
+                    {versionsLoading
+                      ? "Carregando…"
+                      : `${versions.length} versão(ões) registradas`}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={refreshVersions}
+                    disabled={versionsLoading}
+                  >
+                    <RefreshCw
+                      className={`w-3.5 h-3.5 mr-1.5 ${versionsLoading ? "animate-spin" : ""}`}
+                    />
+                    Atualizar
+                  </Button>
+                </div>
+
+                {versionsLoading && versions.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Carregando histórico…
+                  </div>
+                ) : versions.length === 0 ? (
+                  <div className="py-8 text-center text-sm text-muted-foreground">
+                    Nenhuma versão registrada ainda. Altere uma regra para começar.
+                  </div>
+                ) : (
+                  <ol className="space-y-2 mt-2">
+                    {versions.map((v, idx) => {
+                      const isCurrent = idx === 0;
+                      const isReverting = revertingId === v.id;
+                      const date = new Date(v.created_at);
+                      const ruleCount = Object.keys(v.snapshot || {}).length;
+                      return (
+                        <li
+                          key={v.id}
+                          className={`rounded-md border p-3 text-sm ${
+                            isCurrent ? "border-primary/40 bg-primary/5" : "border-border"
+                          }`}
+                        >
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="font-mono text-xs font-semibold">
+                                  #{v.version_number}
+                                </span>
+                                {isCurrent && (
+                                  <Badge
+                                    variant="outline"
+                                    className="text-[10px] h-4 px-1 border-primary/40 text-primary"
+                                  >
+                                    atual
+                                  </Badge>
+                                )}
+                                <Badge variant="secondary" className="text-[10px] h-4 px-1">
+                                  {v.action}
+                                </Badge>
+                              </div>
+                              <p className="text-sm mt-1 break-words">
+                                {v.change_summary || "(sem descrição)"}
+                              </p>
+                              {v.changed_rule_key && (
+                                <p className="text-[11px] text-muted-foreground mt-0.5 font-mono">
+                                  {v.changed_rule_key}
+                                  {v.previous_severity && v.new_severity
+                                    ? `: ${v.previous_severity} → ${v.new_severity}`
+                                    : v.new_severity
+                                      ? `: → ${v.new_severity}`
+                                      : v.previous_severity
+                                        ? `: ${v.previous_severity} → (removida)`
+                                        : ""}
+                                </p>
+                              )}
+                              <p className="text-[11px] text-muted-foreground mt-1">
+                                {date.toLocaleString()} · {ruleCount} regra(s) no snapshot
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => revertToVersion(v)}
+                              disabled={isCurrent || isReverting || revertingId !== null}
+                              className="shrink-0"
+                            >
+                              <Undo2
+                                className={`w-3.5 h-3.5 mr-1.5 ${
+                                  isReverting ? "animate-spin" : ""
+                                }`}
+                              />
+                              {isReverting ? "Revertendo…" : "Reverter"}
+                            </Button>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ol>
+                )}
               </SheetContent>
             </Sheet>
 
