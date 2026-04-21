@@ -19,6 +19,7 @@ import {
   BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink, Film,
   ShieldAlert
 } from "lucide-react";
+import { hasHighIntensityMethods } from "@/lib/workoutIntensityUtils";
 
 const MUSCLE_GROUPS = [
   "Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Pernas",
