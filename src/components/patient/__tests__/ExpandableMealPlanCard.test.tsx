@@ -70,6 +70,8 @@ function makeQueryBuilder(returnData: any) {
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     from: (table: string) => {
+      // eslint-disable-next-line no-console
+      console.log("MOCK_FROM:", table, "ITEMS_LEN:", ITEMS?.length);
       if (table === "meal_plans") {
         return makeQueryBuilder({
           id: "plan-1",
