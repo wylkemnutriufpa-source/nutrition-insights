@@ -91,9 +91,9 @@ export default function PatientGridDashboard() {
   const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
   const visibleRows = [...new Set(visibleCards.map((c) => c.row))].sort();
 
-  // Onboarding is mandatory — block everything until the full onboarding is done
+  // Onboarding blocking logic — only block if essential steps are missing
   const showOnboardingCard = lifecycle.showOnboarding;
-  const blockDashboard = lifecycle.showOnboarding;
+  const blockDashboard = lifecycle.isBlocked;
 
   if (lifecycle.isLoading) {
     return (
