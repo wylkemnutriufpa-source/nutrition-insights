@@ -818,8 +818,8 @@ export default function DietTemplates() {
                                     )}
                                   </div>
                                   <div className="text-right text-xs text-muted-foreground whitespace-nowrap">
-                                    <span className="text-orange-400">{adjusted.calories}kcal</span>
-                                    {" · "}P{adjusted.protein}g · C{adjusted.carbs}g · G{adjusted.fat}g
+                                    <span className="text-orange-400">{fmtMacro(adjusted.calories)}kcal</span>
+                                    {" · "}P{fmtMacro(adjusted.protein)}g · C{fmtMacro(adjusted.carbs)}g · G{fmtMacro(adjusted.fat)}g
                                   </div>
                                 </div>
                               </div>
