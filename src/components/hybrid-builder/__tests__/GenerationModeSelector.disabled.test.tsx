@@ -1,11 +1,12 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import {
-  setupGenerationModeSelectorMocks,
+  installGenerationModeSelectorMocks,
+  setMockState,
   INSUFFICIENT_COUNTS,
 } from "./helpers/mockGenerationModeSelector";
 
-setupGenerationModeSelectorMocks({ counts: INSUFFICIENT_COUNTS });
+installGenerationModeSelectorMocks();
 
 import GenerationModeSelector from "../GenerationModeSelector";
 
@@ -32,7 +33,10 @@ const scenarios: Scenario[] = [
 ];
 
 describe("GenerationModeSelector — disabled state when minimums not met", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setMockState({ counts: INSUFFICIENT_COUNTS });
+  });
 
   it.each(scenarios)(
     "disables the $label button and shows its alert",

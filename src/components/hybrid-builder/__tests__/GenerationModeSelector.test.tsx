@@ -1,17 +1,20 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import {
-  setupGenerationModeSelectorMocks,
+  installGenerationModeSelectorMocks,
+  setMockState,
   READY_COUNTS,
 } from "./helpers/mockGenerationModeSelector";
 
-setupGenerationModeSelectorMocks({ counts: READY_COUNTS });
+installGenerationModeSelectorMocks();
 
-// Imported AFTER mocks are registered.
 import GenerationModeSelector from "../GenerationModeSelector";
 
 describe("GenerationModeSelector — mode hints", () => {
-  beforeEach(() => vi.clearAllMocks());
+  beforeEach(() => {
+    vi.clearAllMocks();
+    setMockState({ counts: READY_COUNTS });
+  });
 
   const cases = [
     {
