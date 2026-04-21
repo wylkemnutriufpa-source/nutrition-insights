@@ -260,6 +260,20 @@ export default function TemplateNutritionAudit() {
   const [savingKey, setSavingKey] = useState<RuleKey | null>(null);
   const [resetting, setResetting] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [historyOpen, setHistoryOpen] = useState(false);
+  const [versions, setVersions] = useState<RuleVersion[]>([]);
+  const [versionsLoading, setVersionsLoading] = useState(false);
+  const [revertingId, setRevertingId] = useState<string | null>(null);
+
+  const refreshVersions = async () => {
+    setVersionsLoading(true);
+    try {
+      const v = await fetchVersionsFromDB();
+      setVersions(v);
+    } finally {
+      setVersionsLoading(false);
+    }
+  };
 
   // Initial config load + realtime subscription so all admins stay in sync.
   useEffect(() => {
@@ -284,6 +298,13 @@ export default function TemplateNutritionAudit() {
           });
         },
       )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "template_audit_rules_versions" },
+        () => {
+          if (mounted) refreshVersions();
+        },
+      )
       .subscribe();
 
     return () => {
@@ -291,6 +312,35 @@ export default function TemplateNutritionAudit() {
       supabase.removeChannel(channel);
     };
   }, []);
+
+  // Load versions when history sheet opens
+  useEffect(() => {
+    if (historyOpen) refreshVersions();
+  }, [historyOpen]);
+
+  const revertToVersion = async (v: RuleVersion) => {
+    if (
+      !window.confirm(
+        `Reverter para a versão #${v.version_number}?\n\nIsso substituirá todas as regras atuais pelo snapshot desta versão. Uma nova entrada será criada no histórico para que você possa desfazer.`,
+      )
+    ) {
+      return;
+    }
+    setRevertingId(v.id);
+    try {
+      await revertToVersionInDB(v.id);
+      const fresh = await fetchConfigFromDB();
+      setConfig(fresh);
+      toast.success(`Configuração revertida para versão #${v.version_number}`);
+    } catch (err) {
+      toast.error("Falha ao reverter", {
+        description: err instanceof Error ? err.message : String(err),
+      });
+    } finally {
+      setRevertingId(null);
+    }
+  };
+
 
   const updateRule = async (key: RuleKey, severity: RuleSeverity) => {
     const previous = config[key];
