@@ -52,10 +52,12 @@ export default function PatientWorkoutView() {
   const [submitting, setSubmitting] = useState(false);
   const [showReward, setShowReward] = useState(false);
 
+  const [requiresMedicalReview, setRequiresMedicalReview] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [plansRes, historyRes] = await Promise.all([
+      const [plansRes, historyRes, assessRes] = await Promise.all([
         supabase
           .from("workout_plans")
           .select("*, workout_routines(*, workout_exercises(*))")
@@ -68,9 +70,17 @@ export default function PatientWorkoutView() {
           .eq("student_id", user.id)
           .order("completed_at", { ascending: false })
           .limit(20),
+        supabase
+          .from("trainer_assessments")
+          .select("requires_medical_review")
+          .eq("patient_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
       setPlans(plansRes.data || []);
       setHistory(historyRes.data || []);
+      setRequiresMedicalReview(!!assessRes.data?.requires_medical_review);
       setLoading(false);
     };
     load();
@@ -244,7 +254,6 @@ export default function PatientWorkoutView() {
 
     exs.forEach((ex) => {
       const gid = ex.group_id || null;
-      const gtype = ex.group_type || "single";
 
       if (gid && gid === currentGroupId) {
         currentBlock.push(ex);
@@ -269,6 +278,20 @@ export default function PatientWorkoutView() {
 
   return (
     <div className="space-y-6">
+      {/* Medical Review Warning */}
+      {requiresMedicalReview && (
+        <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h4 className="text-sm font-bold text-destructive">REVISÃO MÉDICA REQUERIDA</h4>
+            <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">
+              Sua avaliação física indicou alguns pontos que precisam de atenção. 
+              Por segurança, evite exercícios de alta intensidade até que seu profissional faça a liberação.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl">
         <div className="glass-premium rounded-2xl p-6">

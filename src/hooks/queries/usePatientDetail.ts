@@ -115,7 +115,7 @@ export function usePatientDetail(patientId: string | undefined) {
       const today = new Date().toISOString().split("T")[0];
       const sevenDaysAgo = new Date(Date.now() - 7 * 86400000).toISOString().split("T")[0];
 
-      const [timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes] = await Promise.all([
+      const [timelineRes, anamnesisRes, ppRes, protocolsRes, checkRes, subRes, plansRes, mealPlansRes, recipesRes, npRes, adherenceRes, trainerAssessRes] = await Promise.all([
         supabase.from("patient_timeline").select("*").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(50),
         supabase.from("patient_anamnesis").select("*").eq("user_id", patientUserId).order("created_at", { ascending: false }).limit(1),
         withTenantFilter(supabase.from("patient_protocols").select("*").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).order("created_at", { ascending: false }),
@@ -127,6 +127,7 @@ export function usePatientDetail(patientId: string | undefined) {
         supabase.from("recipes").select("*").eq("nutritionist_id", user!.id).eq("is_shared", true).order("created_at", { ascending: false }),
         withTenantFilter(supabase.from("nutritionist_patients").select("id, status, journey_status").in("patient_id", patientIds).eq("nutritionist_id", user!.id), tenantId).limit(1).maybeSingle(),
         supabase.from("meal_item_completions").select("adherence_status, date").in("patient_id", patientIds).gte("date", sevenDaysAgo).lte("date", today),
+        supabase.from("trainer_assessments").select("requires_medical_review").in("patient_id", patientIds).order("created_at", { ascending: false }).limit(1),
       ]);
 
       const protocols = protocolsRes.data || [];
@@ -215,6 +216,7 @@ export function usePatientDetail(patientId: string | undefined) {
           if (total === 0) return 0;
           return Math.round(((followed * 100 + partial * 50) / (total * 100)) * 100);
         })(),
+        requiresMedicalReview: trainerAssessRes.data?.[0]?.requires_medical_review || false,
       };
     },
   });

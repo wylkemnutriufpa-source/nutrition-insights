@@ -23,6 +23,7 @@ export interface PatientInfo {
   checklistAdherence?: number;
   programs?: { id: string; title: string }[];
   prestigePlan?: PrestigePlan | null;
+  requires_medical_review?: boolean;
 }
 
 export interface ProgramInfo {
@@ -225,8 +226,8 @@ export function usePatientsList(params: PatientsListParams = {}) {
 
       const patientIds = allData.map((p: any) => p.patient_id);
 
-      // BATCH queries (7 parallel)
-      const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes, progsRes] = await Promise.all([
+      // BATCH queries (8 parallel)
+      const [profilesRes, statsRes, checklistRes, enrollmentsRes, prestigeRes, pPlansRes, emailsRes, progsRes, assessmentsRes] = await Promise.all([
         withTenantFilter(supabase.from("profiles").select("user_id, full_name, avatar_url").in("user_id", patientIds), tenantId),
         supabase.from("player_stats").select("user_id, last_meal_date, total_xp, current_streak").in("user_id", patientIds),
         withTenantFilter(supabase.from("checklist_tasks").select("patient_id, id, completed").in("patient_id", patientIds).eq("date", today), tenantId),
@@ -241,6 +242,7 @@ export function usePatientsList(params: PatientsListParams = {}) {
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
         supabase.rpc("get_patient_emails", { _patient_ids: patientIds }),
         supabase.from("programs").select("id, title").eq("created_by", userId).eq("is_active", true),
+        supabase.from("trainer_assessments").select("patient_id, requires_medical_review").in("patient_id", patientIds),
       ]);
 
       // Build maps
@@ -282,6 +284,11 @@ export function usePatientsList(params: PatientsListParams = {}) {
         if (e.programs) list.push({ id: e.programs.id, title: e.programs.title });
         enrollmentMap.set(e.patient_id, list);
       });
+      
+      const medicalReviewMap = new Map<string, boolean>();
+      (assessmentsRes.data || []).forEach((a: any) => {
+        if (a.requires_medical_review) medicalReviewMap.set(a.patient_id, true);
+      });
 
       const enriched: PatientInfo[] = allData.map((p: any) => {
         const checkData = checklistMap.get(p.patient_id) || { total: 0, completed: 0 };
@@ -297,6 +304,7 @@ export function usePatientsList(params: PatientsListParams = {}) {
           priorityScore: computeScore(stats, checkData),
           programs: enrollmentMap.get(p.patient_id) || [],
           prestigePlan: prestigeMap.get(p.patient_id) || null,
+          requires_medical_review: medicalReviewMap.get(p.patient_id) || false,
         };
       });
 

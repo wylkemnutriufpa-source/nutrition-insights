@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List, Crown, Settings2
+  LayoutGrid, List, Crown, Settings2, ShieldAlert
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
@@ -204,6 +204,11 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           <div className="flex items-center gap-1.5">
             <h3 className="font-display font-semibold truncate" style={p.prestigePlan?.crown_enabled ? { color: p.prestigePlan.color } : undefined}>{displayName}</h3>
             {p.prestigePlan && <PrestigeBadge plan={p.prestigePlan} allPlans={allPrestigePlans} size="sm" showLabel={false} />}
+            {p.requires_medical_review && (
+              <Badge variant="destructive" className="h-4 px-1.5 text-[9px] gap-0.5 animate-pulse">
+                <ShieldAlert className="w-2.5 h-2.5" /> Revisão
+              </Badge>
+            )}
           </div>
           <div className="flex items-center gap-2 mt-0.5 flex-wrap">
             <span className={`text-xs px-2 py-0.5 rounded-full ${

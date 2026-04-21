@@ -40,7 +40,7 @@ import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueu
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search, ShieldAlert
 } from "lucide-react";
 import { Link2, Copy, RefreshCw } from "lucide-react";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
@@ -562,6 +562,11 @@ export default function PatientDetail() {
               </Badge>
               {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
               {patientId && <ActiveProtocolBadge patientId={resolvedPatientId} compact />}
+              {(data as any)?.requiresMedicalReview && (
+                <Badge variant="destructive" className="gap-1 animate-pulse">
+                  <ShieldAlert className="w-3 h-3" /> Revisão Médica Requerida
+                </Badge>
+              )}
             </div>
             <p className="text-sm text-muted-foreground">
               Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
