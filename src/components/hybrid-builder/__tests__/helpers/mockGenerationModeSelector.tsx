@@ -1,14 +1,22 @@
 import { vi } from "vitest";
 
 /**
- * Shared test helpers for GenerationModeSelector tests.
+ * Shared mock factories and presets for GenerationModeSelector tests.
  *
- * Why: Both "hints" and "disabled state" suites share the same set of
- * external dependencies (auth, store, sonner, sub-panels, settings, supabase).
- * Centralizing the mocks here keeps each test file focused on the scenario it
- * covers and makes adding new scenarios (e.g. partial counts, error states)
- * trivial — just call `setupGenerationModeSelectorMocks(...)` with the
- * counts/settings you want.
+ * Why this shape: `vi.mock(...)` calls are hoisted to the top of the *test
+ * file* by vitest's transformer — they are NOT hoisted across module
+ * boundaries. So we can't put `vi.mock(...)` inside this helper and expect
+ * it to take effect in the importing test file.
+ *
+ * Instead, this module exposes:
+ *   - A `mockState` object created via `vi.hoisted` so it exists before
+ *     the hoisted `vi.mock` factories run.
+ *   - `setMockState(opts)` to mutate that state from the test (call BEFORE
+ *     `render`).
+ *   - `installMocks()` — a single helper that registers ALL the standard
+ *     `vi.mock` calls. Test files call this at module top-level. The mock
+ *     factories close over `mockState`, so different scenarios just call
+ *     `setMockState({...})` before rendering.
  */
 
 export interface RecipeCounts {
@@ -25,14 +33,28 @@ export interface MarmitaSettingsLike {
   fixed_min_dinner?: number;
 }
 
-export interface MockSetupOptions {
+export interface MockStateOptions {
   counts?: RecipeCounts;
   settings?: MarmitaSettingsLike;
   settingsLoading?: boolean;
   user?: { id: string } | null;
 }
 
-const DEFAULT_SETTINGS: Required<MarmitaSettingsLike> = {
+export const READY_COUNTS: RecipeCounts = {
+  lunch: 7,
+  dinner: 7,
+  fixedLunch: 1,
+  fixedDinner: 1,
+};
+
+export const INSUFFICIENT_COUNTS: RecipeCounts = {
+  lunch: 2,
+  dinner: 1,
+  fixedLunch: 0,
+  fixedDinner: 0,
+};
+
+const DEFAULT_SETTINGS = {
   weekly_min_lunch: 7,
   weekly_min_dinner: 7,
   fixed_min_lunch: 1,
@@ -40,9 +62,16 @@ const DEFAULT_SETTINGS: Required<MarmitaSettingsLike> = {
 };
 
 /**
- * Build a recipe array matching the shape returned by the supabase query
- * (`select("meal_type, is_fixed")`) from desired counts.
+ * Hoisted state container — created before `vi.mock` factories execute.
+ * Test files mutate this via `setMockState` before rendering.
  */
+export const mockState = vi.hoisted(() => ({
+  user: { id: "nutri-1" } as { id: string } | null,
+  settings: { ...DEFAULT_SETTINGS },
+  settingsLoading: false,
+  recipes: [] as Array<{ meal_type: string; is_fixed: boolean }>,
+}));
+
 export function buildRecipes(counts: RecipeCounts = {}) {
   const { lunch = 0, dinner = 0, fixedLunch = 0, fixedDinner = 0 } = counts;
   return [
@@ -53,42 +82,31 @@ export function buildRecipes(counts: RecipeCounts = {}) {
   ];
 }
 
-/**
- * Convenience preset: enough recipes to satisfy the default 7+7 / 1+1 minimums.
- */
-export const READY_COUNTS: RecipeCounts = {
-  lunch: 7,
-  dinner: 7,
-  fixedLunch: 1,
-  fixedDinner: 1,
-};
+/** Update the shared mock state. Call BEFORE `render(...)`. */
+export function setMockState(opts: MockStateOptions = {}) {
+  if (opts.counts !== undefined) mockState.recipes = buildRecipes(opts.counts);
+  if (opts.settings !== undefined)
+    mockState.settings = { ...DEFAULT_SETTINGS, ...opts.settings };
+  if (opts.settingsLoading !== undefined) mockState.settingsLoading = opts.settingsLoading;
+  if (opts.user !== undefined) mockState.user = opts.user;
+}
+
+// Initialize with sane defaults so tests don't need to call setMockState
+// when the default scenario is fine.
+mockState.recipes = buildRecipes(READY_COUNTS);
 
 /**
- * Convenience preset: clearly insufficient counts for both modes.
+ * Register all `vi.mock(...)` calls needed for GenerationModeSelector.
+ * MUST be called at module top-level in the test file (vitest hoists it).
+ *
+ * Note: paths to sibling components are relative to the *test file*, which
+ * lives in `src/components/hybrid-builder/__tests__/`. We assume that
+ * convention here.
  */
-export const INSUFFICIENT_COUNTS: RecipeCounts = {
-  lunch: 2,
-  dinner: 1,
-  fixedLunch: 0,
-  fixedDinner: 0,
-};
-
-/**
- * Register all mocks needed to render <GenerationModeSelector /> in isolation.
- * Must be called at module top-level (before the component import) because
- * `vi.mock` is hoisted.
- */
-export function setupGenerationModeSelectorMocks(opts: MockSetupOptions = {}) {
-  const {
-    counts = READY_COUNTS,
-    settings = {},
-    settingsLoading = false,
-    user = { id: "nutri-1" },
-  } = opts;
-  const finalSettings = { ...DEFAULT_SETTINGS, ...settings };
-  const recipes = buildRecipes(counts);
-
-  vi.mock("@/lib/auth", () => ({ useAuth: () => ({ user }) }));
+export function installGenerationModeSelectorMocks() {
+  vi.mock("@/lib/auth", () => ({
+    useAuth: () => ({ user: mockState.user }),
+  }));
 
   vi.mock("@/stores/mealPlanEditorV2Store", () => ({
     useMealPlanEditorV2Store: () => ({ planId: "plan-1", hydrate: vi.fn() }),
@@ -99,17 +117,16 @@ export function setupGenerationModeSelectorMocks(opts: MockSetupOptions = {}) {
   }));
 
   vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
-    default: () => <div>StrategyAdvisorPanel</div>,
+    default: () => null,
   }));
-  vi.mock("../MealRecipeSelector", () => ({
-    default: () => <div>MealRecipeSelector</div>,
-  }));
-  vi.mock("../MarmitaSettingsDialog", () => ({
-    default: () => <div>MarmitaSettingsDialog</div>,
-  }));
+  vi.mock("../MealRecipeSelector", () => ({ default: () => null }));
+  vi.mock("../MarmitaSettingsDialog", () => ({ default: () => null }));
 
   vi.mock("@/hooks/useMarmitaSettings", () => ({
-    useMarmitaSettings: () => ({ settings: finalSettings, loading: settingsLoading }),
+    useMarmitaSettings: () => ({
+      settings: mockState.settings,
+      loading: mockState.settingsLoading,
+    }),
   }));
 
   vi.mock("@/integrations/supabase/client", () => ({
@@ -117,7 +134,7 @@ export function setupGenerationModeSelectorMocks(opts: MockSetupOptions = {}) {
       from: () => ({
         select: () => ({
           eq: () => ({
-            eq: () => Promise.resolve({ data: recipes, error: null }),
+            eq: () => Promise.resolve({ data: mockState.recipes, error: null }),
           }),
         }),
       }),
