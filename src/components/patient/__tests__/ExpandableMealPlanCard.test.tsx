@@ -56,7 +56,7 @@ function makeQueryBuilder(returnData: any) {
     eq: vi.fn(() => builder),
     gte: vi.fn(() => builder),
     lte: vi.fn(() => builder),
-    order: vi.fn(() => Promise.resolve(result)),
+    order: vi.fn(() => builder),
     limit: vi.fn(() => builder),
     maybeSingle: vi.fn(() => Promise.resolve(result)),
     then: (resolve: any, reject: any) =>
