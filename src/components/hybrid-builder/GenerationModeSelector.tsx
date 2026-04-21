@@ -274,15 +274,25 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
 
   return (
     <div className="space-y-4">
-      {/* Header */}
+      {/* Header with settings */}
       <div className="flex items-start gap-3 bg-primary/5 border border-primary/20 rounded-xl p-3">
         <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-        <div>
+        <div className="flex-1 min-w-0">
           <p className="text-xs font-bold text-primary">Escolha o Modo de Geração</p>
           <p className="text-[10px] text-muted-foreground leading-relaxed mt-1">
             Gere um plano pelo <strong>motor automático</strong> ou use uma <strong>receita de marmita</strong> como base.
           </p>
         </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setSettingsOpen(true)}
+          className="shrink-0 h-7 px-2 gap-1 text-[10px]"
+          title="Configurar mínimo de receitas por modo"
+        >
+          <Settings2 className="w-3.5 h-3.5" />
+          Mínimos
+        </Button>
       </div>
 
       {/* Option 1: Strategy Advisor */}
@@ -325,7 +335,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       <div className="space-y-1.5">
         <Button
           onClick={handleWeeklyMarmita}
-          disabled={generating || recipeCounts.loading || !weeklyReady}
+          disabled={generating || checksLoading || !weeklyReady}
           variant="outline"
           className="w-full h-14 text-sm gap-3 border-dashed"
         >
@@ -340,17 +350,19 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
               <div className="text-left flex-1">
                 <p className="font-bold">📅 Cardápio Semanal de Marmitas</p>
                 <p className="text-[10px] text-muted-foreground">
-                  7 dias · {recipeCounts.loading ? "verificando…" : `${recipeCounts.lunch} almoço · ${recipeCounts.dinner} jantar`}
+                  {checksLoading
+                    ? "verificando…"
+                    : `Almoço ${recipeCounts.lunch}/${minSettings.weekly_min_lunch} · Jantar ${recipeCounts.dinner}/${minSettings.weekly_min_dinner}`}
                 </p>
               </div>
             </>
           )}
         </Button>
-        {!recipeCounts.loading && !weeklyReady && (
+        {!checksLoading && !weeklyReady && (
           <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30">
             <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
             <p className="text-[10px] text-destructive leading-relaxed">
-              Receitas insuficientes. Cadastre ao menos <strong>1 almoço</strong> e <strong>1 jantar</strong> em "Receitas/Marmitas" antes de gerar.
+              Mínimo configurado: <strong>{minSettings.weekly_min_lunch} almoço(s)</strong> e <strong>{minSettings.weekly_min_dinner} jantar(es)</strong>. Cadastre mais receitas em "Receitas/Marmitas" ou ajuste o mínimo.
             </p>
           </div>
         )}
@@ -360,7 +372,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       <div className="space-y-1.5">
         <Button
           onClick={handleFixedMarmita}
-          disabled={generating || recipeCounts.loading || !fixedReady}
+          disabled={generating || checksLoading || !fixedReady}
           variant="outline"
           className="w-full h-14 text-sm gap-3 border-dashed border-accent/40 hover:bg-accent/5"
         >
@@ -375,17 +387,19 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
               <div className="text-left flex-1">
                 <p className="font-bold">❄️ Marmitas Fixas (Congeladas)</p>
                 <p className="text-[10px] text-muted-foreground">
-                  Não escala · {recipeCounts.loading ? "verificando…" : `${recipeCounts.fixedLunch} almoço fixo · ${recipeCounts.fixedDinner} jantar fixo`}
+                  {checksLoading
+                    ? "verificando…"
+                    : `Almoço fixo ${recipeCounts.fixedLunch}/${minSettings.fixed_min_lunch} · Jantar fixo ${recipeCounts.fixedDinner}/${minSettings.fixed_min_dinner}`}
                 </p>
               </div>
             </>
           )}
         </Button>
-        {!recipeCounts.loading && !fixedReady && (
+        {!checksLoading && !fixedReady && (
           <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30">
             <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
             <p className="text-[10px] text-destructive leading-relaxed">
-              Marmitas fixas insuficientes. Cadastre ao menos <strong>1 almoço</strong> e <strong>1 jantar</strong> marcados como <strong>"fixos"</strong>.
+              Mínimo configurado: <strong>{minSettings.fixed_min_lunch} almoço(s) fixo(s)</strong> e <strong>{minSettings.fixed_min_dinner} jantar(es) fixo(s)</strong>. Cadastre marmitas com <strong>"fixos"</strong> ou ajuste o mínimo.
             </p>
           </div>
         )}
@@ -394,6 +408,8 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       <div className="text-[9px] text-muted-foreground text-center space-y-0.5">
         <p>✅ Motor clínico calcula macros → Você escolhe o caminho → Plano gerado</p>
       </div>
+
+      <MarmitaSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
