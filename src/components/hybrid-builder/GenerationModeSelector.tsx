@@ -162,6 +162,10 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   // Weekly Marmita → generate full 7-day plan from meal_recipes
   const handleWeeklyMarmita = useCallback(async () => {
     if (!user || !store.planId) return;
+    if (!weeklyReady) {
+      toast.error(`Receitas insuficientes. Cadastre ao menos 1 almoço e 1 jantar em "Receitas/Marmitas".`);
+      return;
+    }
     setGenerating(true);
 
     try {
