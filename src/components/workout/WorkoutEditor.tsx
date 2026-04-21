@@ -16,7 +16,8 @@ import ExerciseLibrary from "./ExerciseLibrary";
 import ExerciseVideoLibrary from "./ExerciseVideoLibrary";
 import {
   Plus, Trash2, Copy, GripVertical, ChevronDown, ChevronUp,
-  BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink, Film
+  BookOpen, Save, Zap, Layers, Play, Dumbbell, Link2, Unlink, Film,
+  ShieldAlert
 } from "lucide-react";
 
 const MUSCLE_GROUPS = [
