@@ -6,6 +6,7 @@ import { withTenantFilter } from "@/lib/tenantQueryHelpers";
 import { supabase } from "@/integrations/supabase/client";
 import { UtensilsCrossed, Clock, ArrowRight } from "lucide-react";
 import { Link } from "react-router-dom";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
 
 interface MealSlot {
   meal_type: string;
@@ -97,10 +98,10 @@ export default function NextMealWidget() {
       if (!selectedMeal || !grouped[selectedMeal]) { setLoading(false); return; }
 
       const mealItems = grouped[selectedMeal];
-      const totalKcal = mealItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-      const totalProtein = mealItems.reduce((s, i) => s + (i.protein_target || 0), 0);
-      const totalCarbs = mealItems.reduce((s, i) => s + (i.carbs_target || 0), 0);
-      const totalFat = mealItems.reduce((s, i) => s + (i.fat_target || 0), 0);
+      const totalKcal = mealItems.reduce((s, i) => s + safeNum(i.calories_target), 0);
+      const totalProtein = mealItems.reduce((s, i) => s + safeNum(i.protein_target), 0);
+      const totalCarbs = mealItems.reduce((s, i) => s + safeNum(i.carbs_target), 0);
+      const totalFat = mealItems.reduce((s, i) => s + safeNum(i.fat_target), 0);
       const summary = mealItems.slice(0, 3).map((i) => i.title).join(", ");
 
       setNextMeal({
@@ -159,16 +160,16 @@ export default function NextMealWidget() {
         {/* Macro pills */}
         <div className="flex gap-2 mt-3">
           <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold">
-            {nextMeal.total_kcal} kcal
+            {fmtMacro(nextMeal.total_kcal)} kcal
           </span>
           <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-semibold">
-            P {nextMeal.protein_g}g
+            P {fmtMacro(nextMeal.protein_g)}g
           </span>
           <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[10px] font-semibold">
-            C {nextMeal.carbs_g}g
+            C {fmtMacro(nextMeal.carbs_g)}g
           </span>
           <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold">
-            G {nextMeal.fat_g}g
+            G {fmtMacro(nextMeal.fat_g)}g
           </span>
         </div>
       </motion.div>

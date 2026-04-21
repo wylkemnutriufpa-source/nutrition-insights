@@ -8,17 +8,19 @@ interface MacroBalanceBarProps {
   compact?: boolean;
 }
 
+import { safeNum } from "@/lib/formatMacros";
+
 export default function MacroBalanceBar({ protein, carbs, fat, calories, compact = false }: MacroBalanceBarProps) {
-  const protCal = protein * 4;
-  const carbCal = carbs * 4;
-  const fatCal = fat * 9;
+  const protCal = safeNum(protein) * 4;
+  const carbCal = safeNum(carbs) * 4;
+  const fatCal = safeNum(fat) * 9;
   const total = protCal + carbCal + fatCal;
 
-  if (total === 0) return null;
+  if (total <= 0) return null;
 
   const protPct = Math.round((protCal / total) * 100);
   const carbPct = Math.round((carbCal / total) * 100);
-  const fatPct = 100 - protPct - carbPct;
+  const fatPct = Math.max(0, 100 - protPct - carbPct);
 
   // Ideal ranges
   const protIdeal = protPct >= 20 && protPct <= 35;

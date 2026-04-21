@@ -10,6 +10,7 @@ import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
+import { fmtMacro } from "@/lib/formatMacros";
 
 interface MealItemCardProps {
   item: MealPlanItem;
@@ -155,12 +156,12 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
             <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
               {item.calories_target != null && (
                 <span className="flex items-center gap-0.5">
-                  <Flame className="w-2.5 h-2.5 text-orange-400" />{item.calories_target}
+                  <Flame className="w-2.5 h-2.5 text-orange-400" />{fmtMacro(item.calories_target)}
                 </span>
               )}
               {item.protein_target != null && (
                 <span className="flex items-center gap-0.5">
-                  <Beef className="w-2.5 h-2.5 text-red-400" />{Number(item.protein_target).toFixed(0)}g
+                  <Beef className="w-2.5 h-2.5 text-red-400" />{fmtMacro(item.protein_target)}g
                 </span>
               )}
             </div>

@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Clock, Sparkles } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { fmtMacro } from "@/lib/formatMacros";
 
 const mealTypeLabels: Record<string, { label: string; emoji: string }> = {
   breakfast: { label: "Café da manhã", emoji: "☕" },
@@ -74,7 +75,7 @@ export default function MealCard({
               <div key={m.label} className="text-center p-2 rounded-lg bg-muted/50">
                 <p className="text-xs text-muted-foreground">{m.label}</p>
                 <p className="font-bold text-sm">
-                  {m.value ?? "-"}{m.value && m.unit ? m.unit : ""}
+                  {m.value != null ? `${fmtMacro(m.value)}${m.unit ?? ""}` : "-"}
                 </p>
               </div>
             ))}

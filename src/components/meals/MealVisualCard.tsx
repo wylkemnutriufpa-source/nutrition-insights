@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import MealVisualPlaceholder from "./MealVisualPlaceholder";
 import type { MealVisualItem } from "@/types/mealVisualLibrary";
 import { MEAL_VISUAL_CATEGORIES } from "@/types/mealVisualLibrary";
+import { fmtMacro } from "@/lib/formatMacros";
 
 interface MealVisualCardProps {
   item: MealVisualItem;
@@ -69,13 +70,13 @@ export default function MealVisualCard({ item, onClick, compact, imageOverride }
             {item.default_calories != null && (
               <span className="flex items-center gap-0.5">
                 <Flame className="w-2.5 h-2.5 text-orange-400" />
-                {item.default_calories}kcal
+                {fmtMacro(item.default_calories)}kcal
               </span>
             )}
             {item.default_protein != null && (
               <span className="flex items-center gap-0.5">
                 <Beef className="w-2.5 h-2.5 text-red-400" />
-                {Number(item.default_protein).toFixed(0)}g
+                {fmtMacro(item.default_protein)}g
               </span>
             )}
             {item.default_portion && (

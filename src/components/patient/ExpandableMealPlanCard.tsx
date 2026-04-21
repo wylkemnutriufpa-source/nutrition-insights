@@ -22,6 +22,7 @@ import {
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion,
 } from "@/components/patient/MealPlanDailyView";
+import { fmtMacro } from "@/lib/formatMacros";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -232,8 +233,8 @@ export default function ExpandableMealPlanCard() {
                             <span className={`text-xs truncate ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
                               {item.title}
                             </span>
-                            {item.calories_target && (
-                              <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{item.calories_target}kcal</span>
+                            {item.calories_target != null && (
+                              <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
                             )}
                           </div>
                         );
@@ -300,8 +301,8 @@ export default function ExpandableMealPlanCard() {
                             <div key={item.id} className="flex items-center gap-2 pl-5 py-0.5">
                               <Circle className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
                               <span className="text-xs truncate">{item.title}</span>
-                              {item.calories_target && (
-                                <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{item.calories_target}kcal</span>
+                              {item.calories_target != null && (
+                                <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
                               )}
                             </div>
                           ))}
@@ -337,8 +338,8 @@ export default function ExpandableMealPlanCard() {
                               <div key={item.id} className="flex items-center gap-2 pl-5 py-0.5">
                                 <Circle className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
                                 <span className="text-xs truncate">{item.title}</span>
-                                {item.calories_target && (
-                                  <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{item.calories_target}kcal</span>
+                                {item.calories_target != null && (
+                                  <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
                                 )}
                               </div>
                             ))}
