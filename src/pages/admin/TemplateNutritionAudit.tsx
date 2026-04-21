@@ -277,6 +277,7 @@ export default function TemplateNutritionAudit() {
   const [versions, setVersions] = useState<RuleVersion[]>([]);
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [revertingId, setRevertingId] = useState<string | null>(null);
+  const [diffVersion, setDiffVersion] = useState<RuleVersion | null>(null);
 
   const refreshVersions = async () => {
     setVersionsLoading(true);
