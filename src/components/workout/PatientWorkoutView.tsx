@@ -291,7 +291,7 @@ export default function PatientWorkoutView() {
             <h4 className="text-sm font-bold text-destructive">REVISÃO MÉDICA REQUERIDA</h4>
             <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">
               Sua avaliação física indicou alguns pontos que precisam de atenção. 
-              Por segurança, evite exercícios de alta intensidade até que seu profissional faça a liberação.
+              Por segurança, métodos de alta intensidade (bisets, trisets e circuitos) foram bloqueados e você deve evitar exercícios de alta intensidade até que seu profissional faça a liberação.
             </p>
           </div>
         </div>
