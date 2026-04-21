@@ -71,6 +71,7 @@ export default function MealPlanEditorV2() {
   const store = useMealPlanEditorV2Store();
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [savingAndPublishing, setSavingAndPublishing] = useState(false);
   const [validating, setValidating] = useState(false);
   const [validationResult, setValidationResult] = useState<ValidationResult | null>(null);
   const [libraryOpen, setLibraryOpen] = useState(false);
