@@ -267,7 +267,79 @@ export default function MealPlanEditorV2() {
     }
   };
 
-  const handleValidate = async () => {
+  // Quick action: combines Save (approve) + Publish in a single click to reduce errors
+  const handleSaveAndPublish = async () => {
+    if (!user || !plan) return;
+    if (isImmutable) {
+      toast.error("🔒 Plano imutável. Crie uma nova versão para editar.");
+      return;
+    }
+    if (!canPublish) {
+      toast.error("🔒 Plano já publicado. Use '♻️ Gerar Novo Plano' para criar uma revisão.");
+      return;
+    }
+
+    const validationStatus = plan.overall_validation_status;
+    if (!validationStatus || validationStatus !== "aprovado") {
+      const proceed = confirm(
+        "⚠️ Este plano ainda não foi validado pelo Motor Clínico.\n\nDeseja SALVAR e PUBLICAR mesmo assim? O paciente verá o plano imediatamente."
+      );
+      if (!proceed) return;
+    } else {
+      const proceed = confirm(
+        "Confirmar SALVAR e PUBLICAR?\n\nO plano será aprovado e enviado ao paciente em uma única ação."
+      );
+      if (!proceed) return;
+    }
+
+    setSavingAndPublishing(true);
+    try {
+      // 1) Flush pending edits
+      await store._flushQueue();
+
+      // 2) Approve (Save)
+      const approveResult = await savePlanAsApproved(plan.id, user.id);
+      if (!approveResult.success) {
+        throw new Error(approveResult.error || "Erro ao aprovar o plano");
+      }
+      store.updatePlan({ plan_status: "approved", updated_at: new Date().toISOString() } as any);
+
+      // 3) Publish to patient
+      const publishResult = await publishMealPlan(plan.id, user.id);
+      if (!publishResult.success) {
+        const rpcData = publishResult.data as Record<string, unknown> | undefined;
+        const rpcMessage = rpcData?.message as string | undefined;
+        const errorCode = rpcData?.error as string | undefined;
+
+        if (errorCode === "VALIDATION_REQUIRED") {
+          toast.error(
+            "⚠️ Plano salvo, mas a publicação requer validação. Clique em 'Validar e Corrigir' antes de publicar.",
+            { duration: 7000 }
+          );
+        } else if (errorCode === "EMPTY_PLAN") {
+          toast.error("❌ Plano salvo, mas não possui refeições para publicar.", { duration: 6000 });
+        } else {
+          throw new Error(rpcMessage || publishResult.error || "Plano salvo, mas houve erro ao publicar");
+        }
+        return;
+      }
+
+      store.updatePlan({
+        plan_status: "published_to_patient",
+        is_active: true,
+        overall_validation_status: "aprovado",
+        updated_at: new Date().toISOString(),
+      } as any);
+
+      toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { duration: 5000 });
+    } catch (err: any) {
+      console.error("[SaveAndPublish] Error:", err);
+      toast.error(err?.message || "Erro ao salvar e publicar. Tente novamente.");
+    } finally {
+      setSavingAndPublishing(false);
+    }
+  };
+
     if (!plan || !user) return;
     if (isImmutable) {
       toast.info("🔒 Plano publicado — modo somente leitura. Gere um novo plano para aplicar correções.");
