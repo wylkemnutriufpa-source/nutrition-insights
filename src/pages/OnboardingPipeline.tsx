@@ -472,6 +472,9 @@ export default function OnboardingPipeline() {
 
   async function handleRetrySync() {
     if (!pipeline) return;
+    // Reativa o ciclo de auto-retry caso o usuário tenha cancelado anteriormente.
+    setAutoRetryCancelled(false);
+    clearAutoRetryTimers();
     setSyncRetrying(true);
     const ok = await runLifecycleSync(pipeline.id);
     if (ok) {
@@ -481,10 +484,71 @@ export default function OnboardingPipeline() {
       toast.success("Sincronização concluída! Seu plano está em revisão.");
       fetchPipeline();
     } else {
-      toast.error("Ainda não foi possível sincronizar. Tente novamente em alguns instantes.");
+      // Incrementa attempt para que o effect de auto-retry agende a próxima janela
+      setAutoRetryAttempt((n) => n + 1);
+      toast.error("Ainda não foi possível sincronizar. Tentaremos novamente automaticamente.");
     }
     setSyncRetrying(false);
   }
+
+  function handleCancelAutoRetry() {
+    setAutoRetryCancelled(true);
+    setAutoRetryNextAt(null);
+    setAutoRetryCountdown(0);
+    clearAutoRetryTimers();
+    toast.info("Tentativas automáticas pausadas. Use o botão para tentar manualmente.");
+  }
+
+  // Auto-retry com backoff exponencial — só roda quando há sync_pending persistido,
+  // o usuário não cancelou e nenhuma execução está em andamento.
+  useEffect(() => {
+    // Limpa qualquer timer existente antes de reagendar
+    clearAutoRetryTimers();
+
+    if (!pipeline || !syncError || !pipeline.plan_generated) return;
+    if (autoRetryCancelled) return;
+    if (autoRetryAttempt >= MAX_AUTO_RETRY_ATTEMPTS) return;
+    if (syncRetrying || syncInFlightRef.current) return;
+
+    // delay = base * 2^attempt, com teto
+    const delay = Math.min(
+      BASE_RETRY_DELAY_MS * Math.pow(2, autoRetryAttempt),
+      MAX_RETRY_DELAY_MS,
+    );
+    const targetAt = Date.now() + delay;
+    setAutoRetryNextAt(targetAt);
+    setAutoRetryCountdown(Math.ceil(delay / 1000));
+
+    countdownTimerRef.current = setInterval(() => {
+      const remaining = Math.max(0, Math.ceil((targetAt - Date.now()) / 1000));
+      setAutoRetryCountdown(remaining);
+      if (remaining <= 0 && countdownTimerRef.current) {
+        clearInterval(countdownTimerRef.current);
+        countdownTimerRef.current = null;
+      }
+    }, 1000);
+
+    autoRetryTimerRef.current = setTimeout(async () => {
+      if (autoRetryCancelled || syncInFlightRef.current || !pipeline) return;
+      const ok = await runLifecycleSync(pipeline.id);
+      if (ok) {
+        await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
+        await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+        await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
+        toast.success("Sincronização concluída automaticamente!");
+        fetchPipeline();
+      } else {
+        // Falha → incrementa attempt e o próprio effect agenda a próxima janela
+        setAutoRetryAttempt((n) => n + 1);
+      }
+    }, delay);
+
+    return () => clearAutoRetryTimers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [syncError, pipeline?.id, pipeline?.plan_generated, autoRetryAttempt, autoRetryCancelled, syncRetrying]);
+
+  // Cleanup ao desmontar
+  useEffect(() => () => clearAutoRetryTimers(), [clearAutoRetryTimers]);
 
   const currentStep = getCurrentStep();
   const progress = (currentStep / 6) * 100;
