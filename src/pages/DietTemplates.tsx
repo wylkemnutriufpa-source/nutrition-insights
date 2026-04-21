@@ -760,7 +760,7 @@ export default function DietTemplates() {
                       }
                       return m;
                     })();
-                    const mealCals = (meal.foods || []).reduce((s: number, f: any) => s + Math.round((f.calories || 0) * multiplier), 0);
+                    const mealCals = (meal.foods || []).reduce((s: number, f: any) => s + Math.round(safeNum(f.calories) * multiplier), 0);
 
                     return (
                       <div key={mi} className="glass rounded-lg p-4">
