@@ -354,24 +354,40 @@ export default function DietTemplates() {
 
   const dataSource = physicalAssessment?.calories_target ? "assessment" : "anamnesis";
 
+  // Coerção numérica defensiva: trata null, undefined, strings, NaN e Infinity como 0.
+  // Sem isso, `Math.round(undefined * 0.99) = NaN` e a UI vaza "NaN" no preview.
+  const safeNum = (v: any): number => {
+    const n = typeof v === "number" ? v : Number(v);
+    return Number.isFinite(n) ? n : 0;
+  };
+
   const getAdjustedCalories = (template: DietTemplate) => {
     const effective = getEffectiveCalories();
-    if (!effective) return template.base_calories;
-    return effective;
+    if (effective && Number.isFinite(effective)) return effective;
+    const base = safeNum(template.base_calories);
+    return base > 0 ? base : 0;
   };
 
   const getCalorieMultiplier = (template: DietTemplate) => {
-    const adjusted = getAdjustedCalories(template);
-    return adjusted / template.base_calories;
+    const base = safeNum(template.base_calories);
+    // Divisor degenerado (base_calories = 0/null/NaN): fallback para 1 (sem ajuste)
+    // ao invés de NaN/Infinity, que vazariam para a UI como "NaNkcal".
+    if (base <= 0) return 1;
+    const adjusted = safeNum(getAdjustedCalories(template));
+    const mult = adjusted / base;
+    return Number.isFinite(mult) ? mult : 1;
   };
 
-  const adjustFood = (food: TemplateFood, multiplier: number) => ({
-    ...food,
-    calories: Math.round(food.calories * multiplier),
-    protein: Math.round(food.protein * multiplier),
-    carbs: Math.round(food.carbs * multiplier),
-    fat: Math.round(food.fat * multiplier),
-  });
+  const adjustFood = (food: TemplateFood, multiplier: number) => {
+    const m = Number.isFinite(multiplier) ? multiplier : 1;
+    return {
+      ...food,
+      calories: Math.round(safeNum(food.calories) * m),
+      protein: Math.round(safeNum(food.protein) * m),
+      carbs: Math.round(safeNum(food.carbs) * m),
+      fat: Math.round(safeNum(food.fat) * m),
+    };
+  };
 
   const toggleSubstitution = (key: string, maxSubs: number) => {
     setActiveSubstitutions((prev) => {
@@ -744,7 +760,7 @@ export default function DietTemplates() {
                       }
                       return m;
                     })();
-                    const mealCals = (meal.foods || []).reduce((s: number, f: any) => s + Math.round((f.calories || 0) * multiplier), 0);
+                    const mealCals = (meal.foods || []).reduce((s: number, f: any) => s + Math.round(safeNum(f.calories) * multiplier), 0);
 
                     return (
                       <div key={mi} className="glass rounded-lg p-4">

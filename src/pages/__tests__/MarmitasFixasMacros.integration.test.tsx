@@ -299,14 +299,11 @@ describe("Marmitas Fixas Semanais — macros nunca renderizam NaN", () => {
     expectNoNaNInDom();
   });
 
-  // ⚠️ BUG CONHECIDO (screenshot reportado): quando `base_calories === 0`,
-  // `getCalorieMultiplier` divide por zero → multiplier = NaN/Infinity →
-  // a UI renderiza literalmente "NaN kcal" e "NaNkcal · PNaNg · CNaNg · GNaNg".
-  //
-  // Usamos `it.fails` para que o teste SINALIZE quando o bug for corrigido
-  // (o teste vai começar a falhar de propósito, forçando atualização).
-  // Ver: src/pages/DietTemplates.tsx → getCalorieMultiplier / adjustFood.
-  it.fails("base_calories = 0 (divisor degenerado): UI ATUALMENTE vaza NaN — bug aberto", async () => {
+  // ✅ BUG CORRIGIDO: `getCalorieMultiplier` agora retorna 1 (fallback) quando
+  // `base_calories <= 0`, e `adjustFood` usa `safeNum` para coagir null/undefined/NaN
+  // para 0 antes de multiplicar. A UI nunca mais renderiza "NaN".
+  // Ver: src/pages/DietTemplates.tsx → safeNum / getCalorieMultiplier / adjustFood.
+  it("base_calories = 0 (divisor degenerado): UI degrada graciosamente, sem NaN", async () => {
     STATE.templates = [buildZeroBaseCaloriesTemplate()];
     renderPage();
     await openPreview();
