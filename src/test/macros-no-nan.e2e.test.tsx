@@ -27,6 +27,15 @@ import { describe, it, expect, vi } from "vitest";
 import { render } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 
+// jsdom não fornece ResizeObserver — recharts (usado por ConsultationCompare) precisa.
+if (typeof (globalThis as any).ResizeObserver === "undefined") {
+  (globalThis as any).ResizeObserver = class {
+    observe() {}
+    unobserve() {}
+    disconnect() {}
+  };
+}
+
 import { fmtMacro, safeNum, safeMultiplier, fmtMacroDecimal } from "@/lib/formatMacros";
 import MacroBalanceBar from "@/components/meals/MacroBalanceBar";
 import MacroGauge from "@/components/recipe/MacroGauge";
