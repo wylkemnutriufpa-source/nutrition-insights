@@ -307,12 +307,21 @@ export default function ExpandableMealPlanCard() {
                             <span className="text-[11px] font-semibold">{mt.label}</span>
                           </div>
                           {mealItems.map(item => (
-                            <div key={item.id} className="flex items-center gap-2 pl-5 py-0.5">
-                              <Circle className="w-2.5 h-2.5 text-muted-foreground shrink-0" />
-                              <span className="text-xs truncate">{item.title}</span>
-                              {item.calories_target != null && (
-                                <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
-                              )}
+                            <div key={item.id} className="flex items-start gap-2 pl-5 py-0.5">
+                              <Circle className="w-2.5 h-2.5 text-muted-foreground shrink-0 mt-1" />
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs font-medium truncate">{item.title}</span>
+                                  {item.calories_target != null && (
+                                    <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
+                                  )}
+                                </div>
+                                {item.description && (
+                                  <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-pre-line leading-snug">
+                                    {item.description}
+                                  </p>
+                                )}
+                              </div>
                             </div>
                           ))}
                         </div>
