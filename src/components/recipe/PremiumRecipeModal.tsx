@@ -2,6 +2,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { X, Clock, Users, Flame, Beef, Wheat, Droplets } from "lucide-react";
+import { fmtMacro } from "@/lib/formatMacros";
 
 interface Recipe {
   id: string;
@@ -86,10 +87,10 @@ export default function PremiumRecipeModal({ recipe, open, onOpenChange }: Props
   const instructions = toStringArray(recipe.instructions);
 
   const macros = [
-    { label: "Kcal", value: recipe.calories_per_serving, icon: Flame, color: "text-orange-500" },
-    { label: "Proteína", value: recipe.protein_per_serving ? `${recipe.protein_per_serving}g` : null, icon: Beef, color: "text-red-500" },
-    { label: "Carboidrato", value: recipe.carbs_per_serving ? `${recipe.carbs_per_serving}g` : null, icon: Wheat, color: "text-amber-500" },
-    { label: "Gordura", value: recipe.fat_per_serving ? `${recipe.fat_per_serving}g` : null, icon: Droplets, color: "text-blue-500" },
+    { label: "Kcal", value: recipe.calories_per_serving != null ? fmtMacro(recipe.calories_per_serving) : null, icon: Flame, color: "text-orange-500" },
+    { label: "Proteína", value: recipe.protein_per_serving != null ? `${fmtMacro(recipe.protein_per_serving)}g` : null, icon: Beef, color: "text-red-500" },
+    { label: "Carboidrato", value: recipe.carbs_per_serving != null ? `${fmtMacro(recipe.carbs_per_serving)}g` : null, icon: Wheat, color: "text-amber-500" },
+    { label: "Gordura", value: recipe.fat_per_serving != null ? `${fmtMacro(recipe.fat_per_serving)}g` : null, icon: Droplets, color: "text-blue-500" },
   ].filter(m => m.value != null);
 
   return (
