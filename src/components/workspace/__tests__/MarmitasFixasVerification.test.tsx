@@ -1,0 +1,174 @@
+/**
+ * Marmitas Fixas Semanais — Verificação Automática (UI)
+ *
+ * Garante que:
+ *   1. O template oficial "Marmitas Fixas Semanais" aparece em
+ *      `WorkspaceTemplates` quando o backend o devolve.
+ *   2. O `GenerationModeSelector` reconhece as 19 marmitas fixas de
+ *      almoço + 19 de jantar e libera o modo "Marmitas Fixas
+ *      (Congeladas)", exibindo o contador 19/X correto.
+ *
+ * Esses testes são "contratos de UI" — falham se alguém remover/renomear
+ * o template oficial ou alterar a lógica de contagem do seletor.
+ */
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+
+// ─── Estado mutável compartilhado entre o teste e o mock supabase ───────
+type RecipeRow = { meal_type: string; is_fixed: boolean };
+type State = {
+  recipes: RecipeRow[];
+  templates: Array<{
+    id: string;
+    name: string;
+    description: string;
+    template_generation: string;
+    meals: unknown[];
+    is_active: boolean;
+  }>;
+  marmitaSettings: {
+    weekly_min_lunch: number;
+    weekly_min_dinner: number;
+    fixed_min_lunch: number;
+    fixed_min_dinner: number;
+  };
+};
+
+const STATE: State = {
+  recipes: [],
+  templates: [],
+  marmitaSettings: {
+    weekly_min_lunch: 7,
+    weekly_min_dinner: 7,
+    fixed_min_lunch: 7,
+    fixed_min_dinner: 7,
+  },
+};
+
+function buildFixedRecipes(fixedLunch: number, fixedDinner: number): RecipeRow[] {
+  return [
+    ...Array.from({ length: fixedLunch }, () => ({ meal_type: "lunch", is_fixed: true })),
+    ...Array.from({ length: fixedDinner }, () => ({ meal_type: "dinner", is_fixed: true })),
+  ];
+}
+
+// ─── Mocks (hoisted) ───────────────────────────────────────────────────
+vi.mock("@/lib/auth", () => ({ useAuth: () => ({ user: { id: "nutri-1" } }) }));
+
+vi.mock("@/stores/mealPlanEditorV2Store", () => ({
+  useMealPlanEditorV2Store: () => ({ planId: "plan-1", hydrate: vi.fn() }),
+}));
+
+vi.mock("sonner", () => ({
+  toast: { info: vi.fn(), success: vi.fn(), error: vi.fn() },
+}));
+
+vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
+  default: () => null,
+}));
+vi.mock("@/components/hybrid-builder/MealRecipeSelector", () => ({
+  default: () => null,
+}));
+vi.mock("@/components/hybrid-builder/MarmitaSettingsDialog", () => ({
+  default: () => null,
+}));
+
+vi.mock("@/hooks/useMarmitaSettings", () => ({
+  useMarmitaSettings: () => ({ settings: STATE.marmitaSettings, loading: false }),
+}));
+
+vi.mock("@/integrations/supabase/client", () => ({
+  supabase: {
+    from: (table: string) => {
+      if (table === "diet_templates") {
+        // select().eq().order().order().limit() → Promise
+        const result = { data: STATE.templates, error: null };
+        const chain: any = {};
+        chain.select = () => chain;
+        chain.eq = () => chain;
+        chain.order = () => chain;
+        chain.limit = () => Promise.resolve(result);
+        return chain;
+      }
+      // meal_recipes (GenerationModeSelector): select().eq().eq() → Promise
+      return {
+        select: () => ({
+          eq: () => ({
+            eq: () => Promise.resolve({ data: STATE.recipes, error: null }),
+          }),
+        }),
+      };
+    },
+    functions: { invoke: vi.fn() },
+  },
+}));
+
+// ─── Imports DEPOIS dos mocks ──────────────────────────────────────────
+import WorkspaceTemplates from "../WorkspaceTemplates";
+import GenerationModeSelector from "../../hybrid-builder/GenerationModeSelector";
+
+describe("Marmitas Fixas Semanais — verificação automática", () => {
+  beforeEach(() => {
+    // Cenário real: template oficial cadastrado + 19 marmitas fixas de cada
+    STATE.templates = [
+      {
+        id: "tpl-marmita",
+        name: "Marmitas Fixas Semanais",
+        description:
+          "Cardápio para pacientes que consomem marmitas congeladas pré-prontas.",
+        template_generation: "official_v2",
+        meals: [],
+        is_active: true,
+      },
+    ];
+    STATE.recipes = buildFixedRecipes(19, 19);
+    STATE.marmitaSettings = {
+      weekly_min_lunch: 7,
+      weekly_min_dinner: 7,
+      fixed_min_lunch: 7,
+      fixed_min_dinner: 7,
+    };
+  });
+
+  it("exibe 'Marmitas Fixas Semanais' como verificado em Workspace > Templates", async () => {
+    render(<WorkspaceTemplates search="" />);
+
+    expect(
+      await screen.findByText("Marmitas Fixas Semanais"),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Verificados/i)).toBeInTheDocument();
+    expect(screen.getByText(/1 oficiais/i)).toBeInTheDocument();
+  });
+
+  it("libera o modo 'Marmitas Fixas (Congeladas)' com 19/7 almoço e 19/7 jantar", async () => {
+    render(<GenerationModeSelector patientId="paciente-1" onGenerated={vi.fn()} />);
+
+    const btn = await screen.findByRole("button", {
+      name: /Marmitas Fixas \(Congeladas\)/i,
+    });
+
+    await waitFor(() => expect(btn).not.toBeDisabled());
+
+    expect(
+      screen.getByText(/Almoço fixo 19\/7\s*·\s*Jantar fixo 19\/7/i),
+    ).toBeInTheDocument();
+
+    expect(screen.queryByText(/Cadastre marmitas com/i)).not.toBeInTheDocument();
+  });
+
+  it("desabilita o modo fixo se o banco voltar a ficar abaixo do mínimo", async () => {
+    STATE.recipes = buildFixedRecipes(3, 19);
+
+    render(<GenerationModeSelector patientId="paciente-1" onGenerated={vi.fn()} />);
+
+    const btn = await screen.findByRole("button", {
+      name: /Marmitas Fixas \(Congeladas\)/i,
+    });
+    await waitFor(() => expect(btn).toBeDisabled());
+
+    expect(
+      screen.getByText(/Almoço fixo 3\/7\s*·\s*Jantar fixo 19\/7/i),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/Cadastre marmitas com/i)).toBeInTheDocument();
+  });
+});
