@@ -219,7 +219,7 @@ const MealItemCard = memo(function MealItemCard({
               {item.title}
             </p>
             {item.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{item.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-6 whitespace-pre-line">{item.description}</p>
             )}
             {impacts.length > 0 && !focusMode && (
               <div className="flex flex-wrap gap-1 mt-1.5">
