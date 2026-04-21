@@ -691,6 +691,17 @@ export default function TemplateNutritionAudit() {
               </SheetContent>
             </Sheet>
 
+            <VersionDiffDialog
+              version={diffVersion}
+              currentConfig={config}
+              onClose={() => setDiffVersion(null)}
+              onConfirmRevert={async (v) => {
+                setDiffVersion(null);
+                await revertToVersion(v, true);
+              }}
+              isReverting={revertingId !== null}
+            />
+
             <Button onClick={fetchTemplates} variant="outline" size="sm" disabled={loading}>
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Reescanear
