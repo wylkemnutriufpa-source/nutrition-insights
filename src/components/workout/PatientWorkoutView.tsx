@@ -247,36 +247,7 @@ export default function PatientWorkoutView() {
     return streak;
   })();
 
-  // Group exercises by group_id for rendering
-  const groupExercisesForRender = (exs: any[]) => {
-    // If medical review is required, block all grouping (high intensity methods)
-    if (requiresMedicalReview) {
-      return exs.map(ex => ({ type: "single", exercises: [ex], groupId: null }));
-    }
-
-    const blocks: { type: string; exercises: any[]; groupId: string | null }[] = [];
-    let currentGroupId: string | null = null;
-    let currentBlock: any[] = [];
-
-    exs.forEach((ex) => {
-      const gid = ex.group_id || null;
-
-      if (gid && gid === currentGroupId) {
-        currentBlock.push(ex);
-      } else {
-        if (currentBlock.length > 0) {
-          blocks.push({ type: currentBlock[0].group_type || "single", exercises: currentBlock, groupId: currentGroupId });
-        }
-        currentBlock = [ex];
-        currentGroupId = gid;
-      }
-    });
-    if (currentBlock.length > 0) {
-      blocks.push({ type: currentBlock[0].group_type || "single", exercises: currentBlock, groupId: currentGroupId });
-    }
-    return blocks;
-  };
-
+  // Grouping logic is now in @/lib/workoutIntensityUtils.ts
   const getYouTubeEmbed = (url: string) => {
     const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/);
     return match ? `https://www.youtube.com/embed/${match[1]}` : null;
