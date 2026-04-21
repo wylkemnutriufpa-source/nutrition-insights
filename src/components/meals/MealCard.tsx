@@ -64,7 +64,7 @@ export default function MealCard({
           )}
         </div>
 
-        {(calories || protein || carbs || fat) && (
+        {(safeNum(calories) || safeNum(protein) || safeNum(carbs) || safeNum(fat)) > 0 && (
           <div className="grid grid-cols-4 gap-2 mt-3">
             {[
               { label: "Kcal", value: calories },
