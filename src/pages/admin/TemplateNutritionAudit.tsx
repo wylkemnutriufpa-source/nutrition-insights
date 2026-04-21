@@ -894,3 +894,232 @@ function StatCard({
     </Card>
   );
 }
+
+const SEVERITY_BADGE: Record<RuleSeverity, string> = {
+  critical: "bg-destructive/15 text-destructive border-destructive/30",
+  warning: "bg-amber-500/15 text-amber-600 border-amber-500/30",
+  ignore: "bg-muted text-muted-foreground border-border",
+};
+
+const SEVERITY_LABEL: Record<RuleSeverity, string> = {
+  critical: "Crítico",
+  warning: "Atenção",
+  ignore: "Ignorar",
+};
+
+type DiffRow = {
+  key: RuleKey;
+  current: RuleSeverity;
+  target: RuleSeverity;
+  changeKind: "same" | "softer" | "stricter" | "added" | "removed";
+};
+
+function classifyChange(current: RuleSeverity, target: RuleSeverity): DiffRow["changeKind"] {
+  if (current === target) return "same";
+  const rank: Record<RuleSeverity, number> = { ignore: 0, warning: 1, critical: 2 };
+  if (target === "ignore" && current !== "ignore") return "removed";
+  if (current === "ignore" && target !== "ignore") return "added";
+  return rank[target] > rank[current] ? "stricter" : "softer";
+}
+
+function VersionDiffDialog({
+  version,
+  currentConfig,
+  onClose,
+  onConfirmRevert,
+  isReverting,
+}: {
+  version: RuleVersion | null;
+  currentConfig: AuditConfig;
+  onClose: () => void;
+  onConfirmRevert: (v: RuleVersion) => void | Promise<void>;
+  isReverting: boolean;
+}) {
+  const open = version !== null;
+
+  const rows: DiffRow[] = useMemo(() => {
+    if (!version) return [];
+    return RULE_KEYS.map((key) => {
+      const current = currentConfig[key];
+      const snap = version.snapshot?.[key];
+      const target: RuleSeverity =
+        snap === "critical" || snap === "warning" || snap === "ignore"
+          ? snap
+          : DEFAULT_CONFIG[key];
+      return {
+        key,
+        current,
+        target,
+        changeKind: classifyChange(current, target),
+      };
+    });
+  }, [version, currentConfig]);
+
+  const changedRows = rows.filter((r) => r.changeKind !== "same");
+  const summary = useMemo(() => {
+    const acc = { stricter: 0, softer: 0, added: 0, removed: 0 };
+    changedRows.forEach((r) => {
+      if (r.changeKind in acc) acc[r.changeKind as keyof typeof acc] += 1;
+    });
+    return acc;
+  }, [changedRows]);
+
+  return (
+    <Dialog open={open} onOpenChange={(v) => !v && onClose()}>
+      <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <GitCompare className="w-5 h-5" />
+            Comparação com versão #{version?.version_number}
+          </DialogTitle>
+          <DialogDescription>
+            Veja exatamente o que mudaria <strong>antes</strong> de reverter. À esquerda a
+            configuração atual, à direita o snapshot histórico que será aplicado.
+          </DialogDescription>
+        </DialogHeader>
+
+        {version && (
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2 text-xs">
+              <Badge variant="outline" className="font-mono">
+                {new Date(version.created_at).toLocaleString()}
+              </Badge>
+              <Badge variant="secondary">{version.action}</Badge>
+              {changedRows.length === 0 ? (
+                <Badge variant="outline" className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
+                  Sem diferenças — idêntica à atual
+                </Badge>
+              ) : (
+                <>
+                  <span className="text-muted-foreground">{changedRows.length} regra(s) afetada(s):</span>
+                  {summary.stricter > 0 && (
+                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">
+                      <Plus className="w-3 h-3 mr-1" />
+                      {summary.stricter} mais rígida(s)
+                    </Badge>
+                  )}
+                  {summary.softer > 0 && (
+                    <Badge variant="outline" className="bg-amber-500/10 text-amber-600 border-amber-500/30">
+                      <Minus className="w-3 h-3 mr-1" />
+                      {summary.softer} mais branda(s)
+                    </Badge>
+                  )}
+                  {summary.added > 0 && (
+                    <Badge variant="outline" className="bg-destructive/10 text-destructive border-destructive/30">
+                      +{summary.added} reativada(s)
+                    </Badge>
+                  )}
+                  {summary.removed > 0 && (
+                    <Badge variant="outline" className="bg-muted text-muted-foreground border-border">
+                      {summary.removed} silenciada(s)
+                    </Badge>
+                  )}
+                </>
+              )}
+            </div>
+
+            <div className="rounded-md border divide-y">
+              <div className="grid grid-cols-[1fr_auto_1fr_auto] gap-2 px-3 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground bg-muted/30">
+                <span>Regra</span>
+                <span className="text-center">Atual</span>
+                <span className="text-center">→ Versão #{version.version_number}</span>
+                <span className="text-right">Impacto</span>
+              </div>
+              {rows.map((r) => {
+                const meta = RULE_LABELS[r.key];
+                const changed = r.changeKind !== "same";
+                return (
+                  <div
+                    key={r.key}
+                    className={`grid grid-cols-[1fr_auto_1fr_auto] gap-2 px-3 py-2.5 items-center text-sm ${
+                      changed ? "bg-amber-500/5" : ""
+                    }`}
+                  >
+                    <div className="min-w-0">
+                      <div className="font-medium truncate">{meta.label}</div>
+                      <div className="text-[11px] text-muted-foreground font-mono truncate">
+                        {r.key}
+                      </div>
+                    </div>
+                    <Badge variant="outline" className={`${SEVERITY_BADGE[r.current]} text-xs`}>
+                      {SEVERITY_LABEL[r.current]}
+                    </Badge>
+                    <div className="flex items-center gap-1.5">
+                      <ArrowRight
+                        className={`w-3.5 h-3.5 ${
+                          changed ? "text-foreground" : "text-muted-foreground/40"
+                        }`}
+                      />
+                      <Badge variant="outline" className={`${SEVERITY_BADGE[r.target]} text-xs`}>
+                        {SEVERITY_LABEL[r.target]}
+                      </Badge>
+                    </div>
+                    <div className="text-xs text-right">
+                      {r.changeKind === "same" && (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          <Equal className="w-3 h-3" /> igual
+                        </span>
+                      )}
+                      {r.changeKind === "stricter" && (
+                        <span className="inline-flex items-center gap-1 text-destructive font-medium">
+                          <Plus className="w-3 h-3" /> mais rígida
+                        </span>
+                      )}
+                      {r.changeKind === "softer" && (
+                        <span className="inline-flex items-center gap-1 text-amber-600 font-medium">
+                          <Minus className="w-3 h-3" /> mais branda
+                        </span>
+                      )}
+                      {r.changeKind === "added" && (
+                        <span className="inline-flex items-center gap-1 text-destructive font-medium">
+                          reativada
+                        </span>
+                      )}
+                      {r.changeKind === "removed" && (
+                        <span className="inline-flex items-center gap-1 text-muted-foreground">
+                          silenciada
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {summary.stricter + summary.added > 0 && (
+              <div className="rounded-md border border-destructive/30 bg-destructive/5 p-3 text-xs text-destructive">
+                <strong>Atenção:</strong> esta reversão tornará {summary.stricter + summary.added}{" "}
+                regra(s) mais rígida(s) — templates que estavam OK podem aparecer como críticos e
+                bloquear o release.
+              </div>
+            )}
+            {summary.softer + summary.removed > 0 && summary.stricter + summary.added === 0 && (
+              <div className="rounded-md border border-amber-500/30 bg-amber-500/5 p-3 text-xs text-amber-700 dark:text-amber-500">
+                Esta reversão é mais permissiva: alguns alertas atuais podem deixar de ser
+                reportados.
+              </div>
+            )}
+          </div>
+        )}
+
+        <DialogFooter className="gap-2 sm:gap-2">
+          <Button variant="ghost" onClick={onClose} disabled={isReverting}>
+            Cancelar
+          </Button>
+          <Button
+            variant={changedRows.length === 0 ? "outline" : "default"}
+            onClick={() => version && onConfirmRevert(version)}
+            disabled={isReverting || changedRows.length === 0}
+          >
+            <Undo2 className={`w-4 h-4 mr-2 ${isReverting ? "animate-spin" : ""}`} />
+            {isReverting
+              ? "Revertendo…"
+              : changedRows.length === 0
+                ? "Nada a reverter"
+                : `Aplicar reversão (${changedRows.length} mudança${changedRows.length > 1 ? "s" : ""})`}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
