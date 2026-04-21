@@ -18,7 +18,7 @@ export default function MacroGauge({ label, value, target, unit, color, icon }: 
   const atTarget = safeTarget > 0 ? Math.abs(safeValue - safeTarget) / safeTarget <= 0.05 : false;
 
   return (
-    <div className="flex flex-col items-center gap-1.5 min-w-[70px]">
+    <div className="flex flex-col items-center gap-1.5 min-w-[70px]" data-macro-tile="gauge" data-macro={label}>
       <div className="relative w-14 h-14">
         {/* Background ring */}
         <svg className="w-full h-full -rotate-90" viewBox="0 0 36 36">
@@ -40,10 +40,10 @@ export default function MacroGauge({ label, value, target, unit, color, icon }: 
         </div>
       </div>
       <div className="text-center">
-        <p className="text-sm font-bold tabular-nums">{fmtMacro(safeValue)}{unit}</p>
+        <p className="text-sm font-bold tabular-nums" data-macro-value="current">{fmtMacro(safeValue)}{unit}</p>
         <p className="text-[10px] text-muted-foreground">{label}</p>
         {safeTarget > 0 && (
-          <p className={`text-[9px] font-medium ${atTarget ? "text-emerald-500" : overTarget ? "text-destructive" : "text-muted-foreground"}`}>
+          <p className={`text-[9px] font-medium ${atTarget ? "text-emerald-500" : overTarget ? "text-destructive" : "text-muted-foreground"}`} data-macro-value="target">
             meta: {fmtMacro(safeTarget)}
           </p>
         )}
