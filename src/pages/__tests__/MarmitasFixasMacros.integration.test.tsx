@@ -78,10 +78,16 @@ import DietTemplates from "../DietTemplates";
  * Mais robusto que checar campo por campo, porque captura QUALQUER
  * lugar onde a UI tenha quebrado o cálculo.
  */
-function expectNoNaNInDom(container: HTMLElement) {
-  const text = container.textContent || "";
+function expectNoNaNInDom(_container?: HTMLElement) {
+  // Radix Dialog renderiza em portal (document.body), então sempre
+  // checamos a árvore COMPLETA — não apenas o container do render().
+  const text = document.body.textContent || "";
   expect(text).not.toMatch(/NaN/);
   expect(text).not.toMatch(/Infinity/);
+}
+
+function getDomText(): string {
+  return document.body.textContent || "";
 }
 
 /**
