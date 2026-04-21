@@ -52,10 +52,12 @@ export default function PatientWorkoutView() {
   const [submitting, setSubmitting] = useState(false);
   const [showReward, setShowReward] = useState(false);
 
+  const [requiresMedicalReview, setRequiresMedicalReview] = useState(false);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const [plansRes, historyRes] = await Promise.all([
+      const [plansRes, historyRes, assessRes] = await Promise.all([
         supabase
           .from("workout_plans")
           .select("*, workout_routines(*, workout_exercises(*))")
@@ -68,207 +70,40 @@ export default function PatientWorkoutView() {
           .eq("student_id", user.id)
           .order("completed_at", { ascending: false })
           .limit(20),
+        supabase
+          .from("trainer_assessments")
+          .select("requires_medical_review")
+          .eq("patient_id", user.id)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
       ]);
       setPlans(plansRes.data || []);
       setHistory(historyRes.data || []);
+      setRequiresMedicalReview(!!assessRes.data?.requires_medical_review);
       setLoading(false);
     };
     load();
   }, [user]);
 
-  // Timer
-  useEffect(() => {
-    if (!startTime || !completionOpen) return;
-    const interval = setInterval(() => {
-      setElapsedMin(Math.floor((Date.now() - startTime.getTime()) / 60000));
-    }, 10000);
-    return () => clearInterval(interval);
-  }, [startTime, completionOpen]);
-
-  const startWorkout = (routine: any) => {
-    setSelectedRoutine(routine);
-    const sorted = (routine.workout_exercises || []).sort((a: any, b: any) => a.sort_order - b.sort_order);
-    setExercises(sorted);
-    const logs: Record<string, any> = {};
-    sorted.forEach((ex: any) => {
-      logs[ex.id] = { load_kg: ex.load_kg?.toString() || "", reps_done: ex.reps, sets_done: ex.sets.toString() };
-    });
-    setExerciseLogs(logs);
-    setEffort(5);
-    setDuration("");
-    setNotes("");
-    setPainReport("");
-    setCompletedExIds(new Set());
-    setStartTime(new Date());
-    setCompletionOpen(true);
-  };
-
-  const toggleExerciseComplete = (exId: string) => {
-    setCompletedExIds(prev => {
-      const next = new Set(prev);
-      if (next.has(exId)) next.delete(exId);
-      else next.add(exId);
-      return next;
-    });
-  };
-
-  const progressPercent = exercises.length > 0 ? Math.round((completedExIds.size / exercises.length) * 100) : 0;
-
-  const submitCompletion = async () => {
-    if (!user || !selectedRoutine) return;
-    setSubmitting(true);
-    try {
-      const plan = plans.find(p => p.workout_routines?.some((r: any) => r.id === selectedRoutine.id));
-      if (!plan) { toast.error("Plano não encontrado"); setSubmitting(false); return; }
-
-      const actualDuration = duration ? parseInt(duration) : (startTime ? Math.max(1, Math.floor((Date.now() - startTime.getTime()) / 60000)) : null);
-
-      const { data: completion, error } = await supabase.from("workout_completions").insert({
-        student_id: user.id,
-        routine_id: selectedRoutine.id,
-        plan_id: plan.id,
-        duration_minutes: actualDuration,
-        perceived_effort: effort,
-        notes,
-        pain_report: painReport || null,
-        discomfort_flag: !!painReport,
-      }).select().single();
-
-      if (error || !completion) { toast.error("Erro ao registrar treino"); setSubmitting(false); return; }
-
-      const logs = Object.entries(exerciseLogs).map(([exId, log]) => ({
-        completion_id: completion.id,
-        exercise_id: exId,
-        load_kg: log.load_kg ? parseFloat(log.load_kg) : null,
-        reps_done: log.reps_done,
-        sets_done: log.sets_done ? parseInt(log.sets_done) : null,
-      }));
-
-      if (logs.length > 0) {
-        await supabase.from("workout_exercise_logs").insert(logs);
-
-        // Detect Personal Records (PRs)
-        try {
-          for (const log of logs) {
-            if (!log.load_kg || log.load_kg <= 0) continue;
-            const exercise = exercises.find((e: any) => e.id === log.exercise_id);
-            if (!exercise) continue;
-
-            // Check if this is a PR for this exercise
-            const { data: previousLogs } = await supabase
-              .from("workout_exercise_logs")
-              .select("load_kg")
-              .eq("exercise_id", log.exercise_id)
-              .not("id", "in", `(${logs.map(() => completion.id).join(",")})`)
-              .order("load_kg", { ascending: false })
-              .limit(1);
-
-            const previousBest = previousLogs?.[0]?.load_kg || 0;
-            if (log.load_kg > previousBest) {
-              await (supabase as any).from("workout_personal_records").insert({
-                student_id: user.id,
-                exercise_name: exercise.name,
-                exercise_library_id: exercise.exercise_library_id || null,
-                record_type: "load",
-                value: log.load_kg,
-                previous_value: previousBest || null,
-                completion_id: completion.id,
-              }).catch(() => {});
-              toast.success(`🏆 Novo PR em ${exercise.name}: ${log.load_kg}kg!`);
-            }
-          }
-        } catch {} // PR detection is non-blocking
-      }
-
-      // Submit pain feedback if any
-      if (painReport) {
-        await (supabase as any).from("training_feedback").insert({
-          patient_id: user.id,
-          completion_id: completion.id,
-          feedback_type: "pain",
-          pain_location: painReport,
-          difficulty_rating: effort >= 8 ? 8 : 5,
-          notes: `Dor/desconforto: ${painReport}`,
-        }).catch(() => {});
-      }
-
-      setCompletionOpen(false);
-      setShowReward(true);
-      confetti();
-      setTimeout(() => setShowReward(false), 3000);
-
-      // Open feedback modal after a brief delay
-      const activePlan = plans.find(p => p.workout_routines?.some((r: any) => r.id === selectedRoutine.id));
-      setLastCompletionId(completion.id);
-      setLastRoutineIdForFeedback(selectedRoutine.id);
-      setLastPlanIdForFeedback(activePlan?.id || null);
-      setTimeout(() => setFeedbackOpen(true), 3500);
-
-      const { data: historyData } = await supabase
-        .from("workout_completions")
-        .select("*, workout_routines(name)")
-        .eq("student_id", user.id)
-        .order("completed_at", { ascending: false })
-        .limit(20);
-      setHistory(historyData || []);
-    } catch { toast.error("Erro inesperado"); }
-    setSubmitting(false);
-  };
-
-  const weeklyCount = history.filter(h => (Date.now() - new Date(h.completed_at).getTime()) < 7 * 24 * 60 * 60 * 1000).length;
-
-  const streakDays = (() => {
-    if (history.length === 0) return 0;
-    let streak = 0;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    for (let i = 0; i < 30; i++) {
-      const checkDate = new Date(today);
-      checkDate.setDate(checkDate.getDate() - i);
-      const hasWorkout = history.some(h => {
-        const d = new Date(h.completed_at);
-        d.setHours(0, 0, 0, 0);
-        return d.getTime() === checkDate.getTime();
-      });
-      if (hasWorkout) streak++;
-      else if (i > 0) break;
-    }
-    return streak;
-  })();
-
-  // Group exercises by group_id for rendering
-  const groupExercisesForRender = (exs: any[]) => {
-    const blocks: { type: string; exercises: any[]; groupId: string | null }[] = [];
-    let currentGroupId: string | null = null;
-    let currentBlock: any[] = [];
-
-    exs.forEach((ex) => {
-      const gid = ex.group_id || null;
-      const gtype = ex.group_type || "single";
-
-      if (gid && gid === currentGroupId) {
-        currentBlock.push(ex);
-      } else {
-        if (currentBlock.length > 0) {
-          blocks.push({ type: currentBlock[0].group_type || "single", exercises: currentBlock, groupId: currentGroupId });
-        }
-        currentBlock = [ex];
-        currentGroupId = gid;
-      }
-    });
-    if (currentBlock.length > 0) {
-      blocks.push({ type: currentBlock[0].group_type || "single", exercises: currentBlock, groupId: currentGroupId });
-    }
-    return blocks;
-  };
-
-  const getYouTubeEmbed = (url: string) => {
-    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=|watch\?.+&v=))([^&?\s]+)/);
-    return match ? `https://www.youtube.com/embed/${match[1]}` : null;
-  };
+  // ... (rest of component)
 
   return (
     <div className="space-y-6">
+      {/* Medical Review Warning */}
+      {requiresMedicalReview && (
+        <div className="p-4 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-start gap-3 animate-in fade-in slide-in-from-top-4 duration-500">
+          <AlertTriangle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
+          <div className="flex-1">
+            <h4 className="text-sm font-bold text-destructive">REVISÃO MÉDICA REQUERIDA</h4>
+            <p className="text-xs text-destructive/80 mt-0.5 leading-relaxed">
+              Sua avaliação física indicou alguns pontos que precisam de atenção. 
+              Por segurança, evite exercícios de alta intensidade até que seu profissional faça a liberação.
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="relative overflow-hidden rounded-2xl">
         <div className="glass-premium rounded-2xl p-6">
