@@ -354,6 +354,11 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
                     ? "verificando…"
                     : `Almoço ${recipeCounts.lunch}/${minSettings.weekly_min_lunch} · Jantar ${recipeCounts.dinner}/${minSettings.weekly_min_dinner}`}
                 </p>
+                {!checksLoading && (
+                  <p className="text-[9px] text-primary/70 mt-0.5">
+                    ℹ️ Verificando mínimo de almoço + jantar para modo semanal
+                  </p>
+                )}
               </div>
             </>
           )}
@@ -391,6 +396,11 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
                     ? "verificando…"
                     : `Almoço fixo ${recipeCounts.fixedLunch}/${minSettings.fixed_min_lunch} · Jantar fixo ${recipeCounts.fixedDinner}/${minSettings.fixed_min_dinner}`}
                 </p>
+                {!checksLoading && (
+                  <p className="text-[9px] text-accent/70 mt-0.5">
+                    ℹ️ Verificando mínimo de almoço + jantar fixos para marmitas congeladas
+                  </p>
+                )}
               </div>
             </>
           )}
