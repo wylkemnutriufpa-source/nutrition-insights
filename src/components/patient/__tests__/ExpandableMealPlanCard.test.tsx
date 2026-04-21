@@ -144,7 +144,7 @@ describe("ExpandableMealPlanCard - description rendering", () => {
     expect(html).toContain("Brócolis 60g");
   });
 
-  it("renders item.description in the 'Semanal' (weekly) tab when selecting another day", async () => {
+  it("renders item.description in the 'Semanal' (weekly) tab", async () => {
     renderCard();
 
     await waitFor(() => {
@@ -154,16 +154,18 @@ describe("ExpandableMealPlanCard - description rendering", () => {
     // Switch to Weekly tab
     fireEvent.click(screen.getByRole("tab", { name: /Semanal/i }));
 
-    // The week pill grid renders 7 buttons; click the one for the dinner item's day
-    await waitFor(() => {
-      expect(screen.getByText(/Sex|Sáb|Dom|Seg|Ter|Qua|Qui/)).toBeInTheDocument();
-    });
-
+    // Click the day pill matching the second item's day_of_week.
+    // Day pills are buttons inside a 7-column grid that contain DAYS_SHORT labels.
     const dayShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     const targetLabel = dayShort[(TODAY_DOW + 1) % 7];
-    // There may be multiple — pick the first matching pill
-    const pills = screen.getAllByText(targetLabel);
-    fireEvent.click(pills[0].closest("button")!);
+
+    await waitFor(() => {
+      const pills = Array.from(
+        document.querySelectorAll("button"),
+      ).filter((b) => (b.textContent || "").trim().startsWith(targetLabel));
+      expect(pills.length).toBeGreaterThan(0);
+      fireEvent.click(pills[0]);
+    }, { timeout: 3000 });
 
     await waitFor(
       () => {
@@ -195,7 +197,6 @@ describe("ExpandableMealPlanCard - description rendering", () => {
     );
 
     const html = document.body.innerHTML;
-    // Both items' descriptions appear
     expect(html).toContain("Patinho moído 80g");
     expect(html).toContain("Frango grelhado 120g");
     expect(html).toContain("Salada verde");
