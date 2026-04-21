@@ -89,13 +89,18 @@ export function buildRecipes(counts: RecipeCounts = {}) {
   ];
 }
 
-/** Update the shared mock state. Call BEFORE `render(...)`. */
+/**
+ * Replace the shared mock state with a fresh snapshot derived from `opts`.
+ * Any field not provided is reset to its default — this prevents leakage
+ * between test cases.
+ * Call BEFORE `render(...)`.
+ */
 export function setMockState(opts: MockStateOptions = {}) {
   const s = getState();
-  if (opts.counts !== undefined) s.recipes = buildRecipes(opts.counts);
-  if (opts.settings !== undefined) s.settings = { ...DEFAULT_SETTINGS, ...opts.settings };
-  if (opts.settingsLoading !== undefined) s.settingsLoading = opts.settingsLoading;
-  if (opts.user !== undefined) s.user = opts.user;
+  s.recipes = buildRecipes(opts.counts ?? READY_COUNTS);
+  s.settings = { ...DEFAULT_SETTINGS, ...(opts.settings ?? {}) };
+  s.settingsLoading = opts.settingsLoading ?? false;
+  s.user = opts.user !== undefined ? opts.user : { id: "nutri-1" };
 }
 
 /**
