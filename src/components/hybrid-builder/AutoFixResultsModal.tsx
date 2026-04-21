@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { CheckCircle2, ArrowRight, Wrench, AlertTriangle, TrendingUp, TrendingDown } from "lucide-react";
 import type { AutoFixResult, AutoFixChange } from "@/lib/autoFixEngine";
+import { fmtMacro, safeNum } from "@/lib/formatMacros";
 
 interface Props {
   open: boolean;
@@ -28,10 +29,11 @@ const CHANGE_LABELS: Record<string, string> = {
 export default function AutoFixResultsModal({ open, onOpenChange, result, wasAlreadyValid, validationMessage }: Props) {
   const { before, after, changes, summary, warnings } = result;
 
-  const calDiff = after.totalCalories - before.totalCalories;
-  const protDiff = after.totalProtein - before.totalProtein;
-  const carbDiff = after.totalCarbs - before.totalCarbs;
-  const fatDiff = after.totalFat - before.totalFat;
+  // safeNum: protege contra null/undefined/NaN vindos do engine antes de subtrair.
+  const calDiff = safeNum(after.totalCalories) - safeNum(before.totalCalories);
+  const protDiff = safeNum(after.totalProtein) - safeNum(before.totalProtein);
+  const carbDiff = safeNum(after.totalCarbs) - safeNum(before.totalCarbs);
+  const fatDiff = safeNum(after.totalFat) - safeNum(before.totalFat);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -115,12 +117,12 @@ function MacroRow({ label, before, after, unit, diff }: { label: string; before:
       <div className="flex items-center justify-between col-span-2 bg-muted/50 rounded px-2 py-1">
         <span className="text-muted-foreground font-medium">{label}</span>
         <div className="flex items-center gap-2">
-          <span className="text-muted-foreground">{Math.round(before)}{unit}</span>
+          <span className="text-muted-foreground">{fmtMacro(before)}{unit}</span>
           <ArrowRight className="w-3 h-3 text-muted-foreground" />
-          <span className="font-semibold text-foreground">{Math.round(after)}{unit}</span>
+          <span className="font-semibold text-foreground">{fmtMacro(after)}{unit}</span>
           <span className={`flex items-center gap-0.5 ${color}`}>
             <Icon className="w-3 h-3" />
-            {diff > 0 ? "+" : ""}{Math.round(diff)}{unit}
+            {diff > 0 ? "+" : ""}{fmtMacro(diff)}{unit}
           </span>
         </div>
       </div>

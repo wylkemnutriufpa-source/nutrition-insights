@@ -14,6 +14,7 @@ import {
   Library, FileDown, Wheat, Droplets, Check, AlertTriangle, ChevronRight,
 } from "lucide-react";
 import { toast } from "sonner";
+import { fmtMacro } from "@/lib/formatMacros";
 
 interface MealLibrarySidebarProps {
   open: boolean;
@@ -504,12 +505,12 @@ function TemplateCard({ template, onInsert }: { template: TemplateRow; onInsert:
         </span>
         {template.kcal_base != null && (
           <span className="flex items-center gap-0.5">
-            <Flame className="w-2.5 h-2.5 text-orange-400" /> {template.kcal_base} kcal
+            <Flame className="w-2.5 h-2.5 text-orange-400" /> {fmtMacro(template.kcal_base)} kcal
           </span>
         )}
         {template.protein_base != null && (
           <span className="flex items-center gap-0.5">
-            <Beef className="w-2.5 h-2.5 text-red-400" /> {Number(template.protein_base).toFixed(0)}g
+            <Beef className="w-2.5 h-2.5 text-red-400" /> {fmtMacro(template.protein_base)}g
           </span>
         )}
         {template.is_global && <Badge variant="outline" className="text-[8px] h-4 px-1">Global</Badge>}
@@ -548,18 +549,18 @@ function DietTemplateCard({ template, onImport }: { template: DietTemplate; onIm
         <Badge variant="outline" className="text-[8px] h-4 px-1.5">{template.diet_style}</Badge>
         <Badge variant="outline" className="text-[8px] h-4 px-1.5">{GOAL_LABELS[template.goal_category] || template.goal_category}</Badge>
         <span className="flex items-center gap-0.5">
-          <Flame className="w-2.5 h-2.5 text-orange-400" /> {template.base_calories} kcal
+          <Flame className="w-2.5 h-2.5 text-orange-400" /> {fmtMacro(template.base_calories)} kcal
         </span>
         {macros && (
           <>
             <span className="flex items-center gap-0.5">
-              <Beef className="w-2.5 h-2.5 text-red-400" /> {macros.protein || 0}%
+              <Beef className="w-2.5 h-2.5 text-red-400" /> {fmtMacro(macros.protein)}%
             </span>
             <span className="flex items-center gap-0.5">
-              <Wheat className="w-2.5 h-2.5 text-amber-500" /> {macros.carbs || 0}%
+              <Wheat className="w-2.5 h-2.5 text-amber-500" /> {fmtMacro(macros.carbs)}%
             </span>
             <span className="flex items-center gap-0.5">
-              <Droplets className="w-2.5 h-2.5 text-blue-400" /> {macros.fat || 0}%
+              <Droplets className="w-2.5 h-2.5 text-blue-400" /> {fmtMacro(macros.fat)}%
             </span>
           </>
         )}

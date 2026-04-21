@@ -14,6 +14,7 @@ import {
   Flame, Beef, Wheat, Droplets, Plus, Loader2, RefreshCcw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { fmtMacro, safeNum } from "@/lib/formatMacros";
 
 // ── Types ───────────────────────────────────────────────────
 interface MealLibraryItem {
@@ -179,7 +180,7 @@ export function MealLibraryModal({
             Inserir em: <strong>{mealLabel}</strong> • <strong>{dayLabel}</strong>
             {patientTargetKcal && (
               <span className="ml-2 text-primary font-semibold">
-                Meta: {patientTargetKcal} kcal/dia
+                Meta: {fmtMacro(patientTargetKcal)} kcal/dia
               </span>
             )}
           </DialogDescription>
@@ -279,10 +280,13 @@ function MealCard({ meal, onInsert, scaleFactor }: {
   onInsert: (m: MealLibraryItem) => void;
   scaleFactor: number | null;
 }) {
-  const adjustedKcal = scaleFactor ? Math.round(meal.base_calories * scaleFactor) : meal.base_calories;
-  const adjustedP = scaleFactor ? Math.round(meal.protein * scaleFactor) : meal.protein;
-  const adjustedC = scaleFactor ? Math.round(meal.carbs * scaleFactor) : meal.carbs;
-  const adjustedF = scaleFactor ? Math.round(meal.fat * scaleFactor) : meal.fat;
+  // Defesa em profundidade: safeNum coage null/undefined/NaN para 0 antes
+  // do cálculo, e fmtMacro garante que o JSX nunca renderize "NaN".
+  const sf = safeNum(scaleFactor) || 1;
+  const adjustedKcal = scaleFactor ? Math.round(safeNum(meal.base_calories) * sf) : safeNum(meal.base_calories);
+  const adjustedP = scaleFactor ? Math.round(safeNum(meal.protein) * sf) : safeNum(meal.protein);
+  const adjustedC = scaleFactor ? Math.round(safeNum(meal.carbs) * sf) : safeNum(meal.carbs);
+  const adjustedF = scaleFactor ? Math.round(safeNum(meal.fat) * sf) : safeNum(meal.fat);
 
   return (
     <button
@@ -298,7 +302,7 @@ function MealCard({ meal, onInsert, scaleFactor }: {
       {/* Macros row */}
       <div className="flex items-center gap-2.5 mt-2 text-[10px]">
         <span className="flex items-center gap-0.5 font-semibold">
-          <Flame className="w-3 h-3 text-orange-400" /> {adjustedKcal}
+          <Flame className="w-3 h-3 text-orange-400" /> {fmtMacro(adjustedKcal)}
           {scaleFactor && scaleFactor !== 1 && (
             <span className="text-muted-foreground ml-0.5">
               <RefreshCcw className="w-2 h-2 inline" />
@@ -306,13 +310,13 @@ function MealCard({ meal, onInsert, scaleFactor }: {
           )}
         </span>
         <span className="flex items-center gap-0.5 text-muted-foreground">
-          <Beef className="w-2.5 h-2.5 text-red-400" /> {adjustedP}g
+          <Beef className="w-2.5 h-2.5 text-red-400" /> {fmtMacro(adjustedP)}g
         </span>
         <span className="flex items-center gap-0.5 text-muted-foreground">
-          <Wheat className="w-2.5 h-2.5 text-amber-500" /> {adjustedC}g
+          <Wheat className="w-2.5 h-2.5 text-amber-500" /> {fmtMacro(adjustedC)}g
         </span>
         <span className="flex items-center gap-0.5 text-muted-foreground">
-          <Droplets className="w-2.5 h-2.5 text-blue-400" /> {adjustedF}g
+          <Droplets className="w-2.5 h-2.5 text-blue-400" /> {fmtMacro(adjustedF)}g
         </span>
       </div>
 
