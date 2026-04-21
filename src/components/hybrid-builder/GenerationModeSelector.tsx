@@ -200,7 +200,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     } finally {
       setGenerating(false);
     }
-  }, [user, store, patientId, onGenerated]);
+  }, [user, store, patientId, onGenerated, weeklyReady]);
 
   // Fixed Marmita → marmitas congeladas, motor ajusta APENAS café/lanches/ceia
   const handleFixedMarmita = useCallback(async () => {
