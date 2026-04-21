@@ -205,6 +205,10 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   // Fixed Marmita → marmitas congeladas, motor ajusta APENAS café/lanches/ceia
   const handleFixedMarmita = useCallback(async () => {
     if (!user || !store.planId) return;
+    if (!fixedReady) {
+      toast.error(`Marmitas fixas insuficientes. Cadastre ao menos 1 almoço e 1 jantar marcados como "fixos" em "Receitas/Marmitas".`);
+      return;
+    }
     setGenerating(true);
 
     try {
