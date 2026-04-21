@@ -332,8 +332,9 @@ export default function TemplateNutritionAudit() {
     if (historyOpen) refreshVersions();
   }, [historyOpen]);
 
-  const revertToVersion = async (v: RuleVersion) => {
+  const revertToVersion = async (v: RuleVersion, skipConfirm = false) => {
     if (
+      !skipConfirm &&
       !window.confirm(
         `Reverter para a versão #${v.version_number}?\n\nIsso substituirá todas as regras atuais pelo snapshot desta versão. Uma nova entrada será criada no histórico para que você possa desfazer.`,
       )
