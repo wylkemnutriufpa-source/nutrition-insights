@@ -172,7 +172,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const handleWeeklyMarmita = useCallback(async () => {
     if (!user || !store.planId) return;
     if (!weeklyReady) {
-      toast.error(`Receitas insuficientes. Cadastre ao menos 1 almoço e 1 jantar em "Receitas/Marmitas".`);
+      toast.error(`Receitas insuficientes. Mínimo configurado: ${minSettings.weekly_min_lunch} almoço(s) + ${minSettings.weekly_min_dinner} jantar(es). Atual: ${recipeCounts.lunch}/${recipeCounts.dinner}.`);
       return;
     }
     setGenerating(true);
@@ -209,13 +209,13 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     } finally {
       setGenerating(false);
     }
-  }, [user, store, patientId, onGenerated, weeklyReady]);
+  }, [user, store, patientId, onGenerated, weeklyReady, minSettings, recipeCounts]);
 
   // Fixed Marmita → marmitas congeladas, motor ajusta APENAS café/lanches/ceia
   const handleFixedMarmita = useCallback(async () => {
     if (!user || !store.planId) return;
     if (!fixedReady) {
-      toast.error(`Marmitas fixas insuficientes. Cadastre ao menos 1 almoço e 1 jantar marcados como "fixos" em "Receitas/Marmitas".`);
+      toast.error(`Marmitas fixas insuficientes. Mínimo configurado: ${minSettings.fixed_min_lunch} almoço(s) fixo(s) + ${minSettings.fixed_min_dinner} jantar(es) fixo(s). Atual: ${recipeCounts.fixedLunch}/${recipeCounts.fixedDinner}.`);
       return;
     }
     setGenerating(true);
