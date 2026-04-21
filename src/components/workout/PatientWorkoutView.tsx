@@ -477,7 +477,7 @@ export default function PatientWorkoutView() {
 
           <div className="space-y-3 mt-2">
             {/* Exercise blocks with grouping */}
-            {groupExercisesForRender(exercises).map((block) => {
+            {groupExercisesForRender(exercises, requiresMedicalReview).map((block) => {
               const groupInfo = block.type !== "single" ? GROUP_BADGES[block.type] : null;
 
               return (
