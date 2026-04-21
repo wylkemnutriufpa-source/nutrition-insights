@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
 
 interface Props {
   label: string;
@@ -10,9 +11,11 @@ interface Props {
 }
 
 export default function MacroGauge({ label, value, target, unit, color, icon }: Props) {
-  const pct = target && target > 0 ? Math.min((value / target) * 100, 150) : 0;
-  const overTarget = target ? value > target * 1.05 : false;
-  const atTarget = target ? Math.abs(value - target) / target <= 0.05 : false;
+  const safeValue = safeNum(value);
+  const safeTarget = safeNum(target);
+  const pct = safeTarget > 0 ? Math.min((safeValue / safeTarget) * 100, 150) : 0;
+  const overTarget = safeTarget > 0 ? safeValue > safeTarget * 1.05 : false;
+  const atTarget = safeTarget > 0 ? Math.abs(safeValue - safeTarget) / safeTarget <= 0.05 : false;
 
   return (
     <div className="flex flex-col items-center gap-1.5 min-w-[70px]">
@@ -37,11 +40,11 @@ export default function MacroGauge({ label, value, target, unit, color, icon }: 
         </div>
       </div>
       <div className="text-center">
-        <p className="text-sm font-bold tabular-nums">{Math.round(value)}{unit}</p>
+        <p className="text-sm font-bold tabular-nums">{fmtMacro(safeValue)}{unit}</p>
         <p className="text-[10px] text-muted-foreground">{label}</p>
-        {target != null && target > 0 && (
+        {safeTarget > 0 && (
           <p className={`text-[9px] font-medium ${atTarget ? "text-emerald-500" : overTarget ? "text-destructive" : "text-muted-foreground"}`}>
-            meta: {Math.round(target)}
+            meta: {fmtMacro(safeTarget)}
           </p>
         )}
       </div>

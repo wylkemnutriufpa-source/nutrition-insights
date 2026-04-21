@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { fmtMacro } from "@/lib/formatMacros";
 
 interface FoodItem {
   name: string;
@@ -472,7 +473,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
                   <div className="flex justify-center mb-1.5">{m.icon}</div>
                   <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                  <p className="font-bold text-base">{m.value != null ? `${Number(m.value).toFixed(0)}${m.unit}` : "—"}</p>
+                  <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
                 </div>
               ))}
             </div>

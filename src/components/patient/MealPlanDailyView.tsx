@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
 import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
@@ -102,10 +103,10 @@ function getMotivationalMessage(pct: number): { emoji: string; message: string; 
 // ── Macro Summary Bar (memoized) ──
 const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem[] }) {
   const totals = useMemo(() => ({
-    calories: items.reduce((s, i) => s + (i.calories_target || 0), 0),
-    protein: items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
-    carbs: items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0),
-    fat: items.reduce((s, i) => s + (Number(i.fat_target) || 0), 0),
+    calories: items.reduce((s, i) => s + safeNum(i.calories_target), 0),
+    protein: items.reduce((s, i) => s + safeNum(i.protein_target), 0),
+    carbs: items.reduce((s, i) => s + safeNum(i.carbs_target), 0),
+    fat: items.reduce((s, i) => s + safeNum(i.fat_target), 0),
   }), [items]);
 
   return (
@@ -113,22 +114,22 @@ const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem
       <div className="glass rounded-xl p-3 text-center">
         <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" />
         <p className="text-xs text-muted-foreground">Calorias</p>
-        <p className="font-display font-bold text-sm">{totals.calories}</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.calories)}</p>
       </div>
       <div className="glass rounded-xl p-3 text-center">
         <Beef className="w-4 h-4 mx-auto text-red-500 mb-1" />
         <p className="text-xs text-muted-foreground">Proteína</p>
-        <p className="font-display font-bold text-sm">{totals.protein.toFixed(0)}g</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.protein)}g</p>
       </div>
       <div className="glass rounded-xl p-3 text-center">
         <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" />
         <p className="text-xs text-muted-foreground">Carbs</p>
-        <p className="font-display font-bold text-sm">{totals.carbs.toFixed(0)}g</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.carbs)}g</p>
       </div>
       <div className="glass rounded-xl p-3 text-center">
         <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1" />
         <p className="text-xs text-muted-foreground">Gordura</p>
-        <p className="font-display font-bold text-sm">{totals.fat.toFixed(0)}g</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.fat)}g</p>
       </div>
     </div>
   );
@@ -234,9 +235,9 @@ const MealItemCard = memo(function MealItemCard({
             )}
             {(item.calories_target || item.protein_target) && (
               <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-                {item.calories_target && <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /> {item.calories_target} kcal</span>}
-                {item.protein_target && <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {item.protein_target}g</span>}
-                {item.carbs_target && <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {item.carbs_target}g</span>}
+                {item.calories_target != null && <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /> {fmtMacro(item.calories_target)} kcal</span>}
+                {item.protein_target != null && <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target)}g</span>}
+                {item.carbs_target != null && <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target)}g</span>}
               </div>
             )}
             <div className="flex gap-1.5 mt-3">
