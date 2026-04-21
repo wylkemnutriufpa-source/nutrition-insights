@@ -192,9 +192,13 @@ export default function PatientGridDashboard() {
 
       {/* If onboarding not done, block access to the rest */}
       {blockDashboard && (
-        <div className="text-center py-8 space-y-3">
-          <p className="text-sm text-muted-foreground">
-            Para acessar seus recursos, conclua todo o onboarding primeiro.
+        <div className="text-center py-8 space-y-4">
+          <div className="bg-destructive/10 text-destructive text-xs font-medium px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 mx-auto">
+            <div className="w-1.5 h-1.5 rounded-full bg-destructive animate-pulse" />
+            Acesso Bloqueado
+          </div>
+          <p className="text-sm text-muted-foreground max-w-xs mx-auto">
+            {lifecycle.blockReason || "Para acessar seus recursos, conclua as etapas essenciais do onboarding primeiro."}
           </p>
           <Button onClick={() => navigate("/onboarding")} className="gap-2">
             <Rocket className="w-4 h-4" /> Continuar Onboarding
