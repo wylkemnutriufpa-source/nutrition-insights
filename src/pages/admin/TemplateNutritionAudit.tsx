@@ -655,20 +655,33 @@ export default function TemplateNutritionAudit() {
                                 {date.toLocaleString()} · {ruleCount} regra(s) no snapshot
                               </p>
                             </div>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => revertToVersion(v)}
-                              disabled={isCurrent || isReverting || revertingId !== null}
-                              className="shrink-0"
-                            >
-                              <Undo2
-                                className={`w-3.5 h-3.5 mr-1.5 ${
-                                  isReverting ? "animate-spin" : ""
-                                }`}
-                              />
-                              {isReverting ? "Revertendo…" : "Reverter"}
-                            </Button>
+                            <div className="flex flex-col gap-1.5 shrink-0">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() => setDiffVersion(v)}
+                                disabled={isCurrent}
+                                className="shrink-0"
+                                title={isCurrent ? "Esta é a versão atual" : "Ver o que mudaria"}
+                              >
+                                <GitCompare className="w-3.5 h-3.5 mr-1.5" />
+                                Comparar
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => revertToVersion(v)}
+                                disabled={isCurrent || isReverting || revertingId !== null}
+                                className="shrink-0 text-xs h-7"
+                              >
+                                <Undo2
+                                  className={`w-3.5 h-3.5 mr-1.5 ${
+                                    isReverting ? "animate-spin" : ""
+                                  }`}
+                                />
+                                {isReverting ? "Revertendo…" : "Reverter direto"}
+                              </Button>
+                            </div>
                           </div>
                         </li>
                       );
