@@ -52,22 +52,22 @@ export default function MacroBalanceBar({ protein, carbs, fat, calories, compact
   }
 
   return (
-    <div className="space-y-1.5">
+    <div className="space-y-1.5" data-macro-tile="balance-bar">
       <div className="flex h-2.5 w-full rounded-full overflow-hidden bg-secondary">
         <div className="bg-red-400 transition-all duration-500" style={{ width: `${protPct}%` }} />
         <div className="bg-amber-400 transition-all duration-500" style={{ width: `${carbPct}%` }} />
         <div className="bg-blue-400 transition-all duration-500" style={{ width: `${fatPct}%` }} />
       </div>
       <div className="flex justify-between text-[10px]">
-        <span className={`flex items-center gap-1 ${protIdeal ? "text-foreground" : "text-orange-500"}`}>
+        <span className={`flex items-center gap-1 ${protIdeal ? "text-foreground" : "text-orange-500"}`} data-macro="protein-pct" data-macro-value="protein-pct">
           <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
           P: {protPct}%
         </span>
-        <span className={`flex items-center gap-1 ${carbIdeal ? "text-foreground" : "text-orange-500"}`}>
+        <span className={`flex items-center gap-1 ${carbIdeal ? "text-foreground" : "text-orange-500"}`} data-macro="carbs-pct" data-macro-value="carbs-pct">
           <span className="w-2 h-2 rounded-full bg-amber-400 inline-block" />
           C: {carbPct}%
         </span>
-        <span className={`flex items-center gap-1 ${fatIdeal ? "text-foreground" : "text-orange-500"}`}>
+        <span className={`flex items-center gap-1 ${fatIdeal ? "text-foreground" : "text-orange-500"}`} data-macro="fat-pct" data-macro-value="fat-pct">
           <span className="w-2 h-2 rounded-full bg-blue-400 inline-block" />
           G: {fatPct}%
         </span>
