@@ -52,6 +52,10 @@ export interface PatientLifecycle {
   onboardingStatus: string | null;
   isLoading: boolean;
 
+  // Blocking logic
+  isBlocked: boolean;
+  blockReason: string | null;
+
   // Computed convenience flags
   showPlan: boolean;
   showOnboarding: boolean;
@@ -80,6 +84,8 @@ const ONBOARDING_STATES: LifecycleState[] = [
 /** Parse RPC result into PatientLifecycle */
 function parseLifecycleResult(r: Record<string, unknown>, refetchFn: () => void): PatientLifecycle {
   const state = (r.lifecycle_state as LifecycleState) || "onboarding_started";
+  const isBlocked = !!r.is_onboarding_blocked;
+  
   return {
     state,
     hasActivePlan: !!r.has_active_plan,
@@ -96,8 +102,14 @@ function parseLifecycleResult(r: Record<string, unknown>, refetchFn: () => void)
     nextRecommendedAction: (r.next_recommended_action as string) || null,
     onboardingStatus: (r.onboarding_status as string) || null,
     isLoading: false,
+    
+    // Blocking logic
+    isBlocked,
+    blockReason: (r.onboarding_block_reason as string) || null,
+
     showPlan: PLAN_STATES.includes(state) || !!r.has_active_plan,
-    showOnboarding: ONBOARDING_STATES.includes(state) && !r.has_active_plan,
+    // Only show onboarding automatically if it's blocked or explicitly needed
+    showOnboarding: (ONBOARDING_STATES.includes(state) && !r.has_active_plan) || isBlocked,
     showNoPlan: state === "onboarding_started" && !r.has_active_plan && !r.has_pending_onboarding,
     showWaitingApproval: state === "plan_pending_production" && !r.has_active_plan,
     showClinicalAlert: state === "clinical_attention",
@@ -125,6 +137,8 @@ const EMPTY: PatientLifecycle = {
   nextRecommendedAction: null,
   onboardingStatus: null,
   isLoading: true,
+  isBlocked: false,
+  blockReason: null,
   showPlan: false,
   showOnboarding: false,
   showNoPlan: false,
