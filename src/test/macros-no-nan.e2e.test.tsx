@@ -117,7 +117,10 @@ describe("formatMacros helpers — entradas tóxicas nunca produzem NaN/Infinity
     expect(safeMultiplier(1800, 0)).toBe(1);
     expect(safeMultiplier(1800, null)).toBe(1);
     expect(safeMultiplier(1800, undefined)).toBe(1);
-    expect(safeMultiplier(NaN, 1800)).toBe(0 / 1800 || 1); // 0
+    // NaN no numerador é coagido a 0 (safeNum), 0/1800 = 0 — número finito
+    const out = safeMultiplier(NaN, 1800);
+    expect(Number.isFinite(out)).toBe(true);
+    expect(out).toBe(0);
   });
 
   it("safeMultiplier — operandos válidos retornam multiplicador correto", () => {
