@@ -29,6 +29,40 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const store = useMealPlanEditorV2Store();
   const [generating, setGenerating] = useState(false);
   const [view, setView] = useState<View>("menu");
+  const [recipeCounts, setRecipeCounts] = useState<{
+    lunch: number;
+    dinner: number;
+    fixedLunch: number;
+    fixedDinner: number;
+    loading: boolean;
+  }>({ lunch: 0, dinner: 0, fixedLunch: 0, fixedDinner: 0, loading: true });
+
+  // Pre-flight check: count available recipes for marmita modes
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("meal_recipes")
+        .select("meal_type, is_fixed")
+        .eq("nutritionist_id", user.id)
+        .eq("is_active", true);
+      if (cancelled) return;
+      if (error) {
+        setRecipeCounts((s) => ({ ...s, loading: false }));
+        return;
+      }
+      const lunch = (data || []).filter((r: any) => r.meal_type === "lunch").length;
+      const dinner = (data || []).filter((r: any) => r.meal_type === "dinner").length;
+      const fixedLunch = (data || []).filter((r: any) => r.meal_type === "lunch" && r.is_fixed).length;
+      const fixedDinner = (data || []).filter((r: any) => r.meal_type === "dinner" && r.is_fixed).length;
+      setRecipeCounts({ lunch, dinner, fixedLunch, fixedDinner, loading: false });
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const weeklyReady = recipeCounts.lunch > 0 && recipeCounts.dinner > 0;
+  const fixedReady = recipeCounts.fixedLunch > 0 && recipeCounts.fixedDinner > 0;
 
   // Strategy Advisor confirmed → generate plan with strategy context
   const handleStrategyConfirmed = useCallback(async (strategy: NutritionalStrategy, editedMeals: StrategyMealPreview[]) => {
