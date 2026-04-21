@@ -170,6 +170,16 @@ export default function OnboardingPipeline() {
       }
 
       setPipeline(d);
+
+      // Hydrate persisted sync state — keeps the "Sincronização pendente"
+      // banner visible across reloads even before the re-detection effect
+      // runs, ensuring UI coherence with the database.
+      if (d.sync_pending) {
+        setSyncError(d.sync_error || "Sincronização pendente. Tente novamente.");
+      } else {
+        setSyncError(null);
+      }
+
       if (d.weight) setBodyForm({ weight: String(d.weight), height: String(d.height || "") });
       if (d.cooking_preference) {
         setPrefForm({
