@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Sparkles, Play, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { useSiteSettings, getSetting } from "@/hooks/useSiteSettings";
 
 function Particle({ delay, x, y, size }: { delay: number; x: string; y: string; size: number }) {
   return (
@@ -41,6 +42,12 @@ const trustBadges = [
 ];
 
 export default function LandingHero() {
+  const { data: siteData } = useSiteSettings();
+  const s = siteData?.map;
+
+  const heroTitle = getSetting(s, "hero_title", "A plataforma de nutrição inteligente para profissionais modernos");
+  const heroSubtitle = getSetting(s, "hero_subtitle", "Gerencie pacientes, crie planos alimentares com IA e acompanhe resultados em tempo real.");
+
   return (
     <section className="relative min-h-screen flex flex-col justify-center items-center text-center px-6 overflow-hidden">
       {/* Background layers */}
@@ -76,10 +83,10 @@ export default function LandingHero() {
           className="max-w-3xl"
         >
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold leading-tight mb-6 text-shimmer">
-            A plataforma de nutrição inteligente para profissionais modernos
+            {heroTitle}
           </h1>
           <p className="text-white/40 text-base md:text-xl leading-relaxed max-w-2xl mx-auto">
-            Gerencie pacientes, crie planos alimentares com IA e acompanhe resultados em tempo real.
+            {heroSubtitle}
           </p>
         </motion.div>
 
