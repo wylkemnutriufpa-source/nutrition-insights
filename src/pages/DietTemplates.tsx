@@ -723,9 +723,9 @@ export default function DietTemplates() {
                         Personalizado pela {dataSource === "assessment" ? "Avaliação Física" : "Anamnese"}
                       </p>
                       <p className="text-muted-foreground text-xs">
-                        Calorias ajustadas de {previewTemplate.base_calories} → <span className="font-bold text-foreground">{getAdjustedCalories(previewTemplate)} kcal/dia</span>
+                        Calorias ajustadas de {fmtMacro(previewTemplate.base_calories)} → <span className="font-bold text-foreground">{fmtMacro(getAdjustedCalories(previewTemplate))} kcal/dia</span>
                         {getEffectiveMacros().protein && (
-                          <> • P: {getEffectiveMacros().protein}g • C: {getEffectiveMacros().carbs}g • G: {getEffectiveMacros().fat}g</>
+                          <> • P: {fmtMacro(getEffectiveMacros().protein)}g • C: {fmtMacro(getEffectiveMacros().carbs)}g • G: {fmtMacro(getEffectiveMacros().fat)}g</>
                         )}
                       </p>
                     </div>
