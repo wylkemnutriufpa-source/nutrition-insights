@@ -47,19 +47,20 @@ const ITEMS = [
   },
 ];
 
-// Chainable Supabase query mock
+// Chainable Supabase query mock — terminal methods (order/limit/maybeSingle)
+// return a real Promise so `await` resolves to { data, error }.
 function makeQueryBuilder(returnData: any) {
+  const result = { data: returnData, error: null };
   const builder: any = {
     select: vi.fn(() => builder),
     eq: vi.fn(() => builder),
     gte: vi.fn(() => builder),
     lte: vi.fn(() => builder),
-    order: vi.fn(() => builder),
+    order: vi.fn(() => Promise.resolve(result)),
     limit: vi.fn(() => builder),
-    maybeSingle: vi.fn(() =>
-      Promise.resolve({ data: returnData, error: null }),
-    ),
-    then: (resolve: any) => resolve({ data: returnData, error: null }),
+    maybeSingle: vi.fn(() => Promise.resolve(result)),
+    then: (resolve: any, reject: any) =>
+      Promise.resolve(result).then(resolve, reject),
   };
   return builder;
 }
