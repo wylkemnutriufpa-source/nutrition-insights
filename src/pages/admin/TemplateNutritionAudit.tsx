@@ -378,59 +378,78 @@ export default function TemplateNutritionAudit() {
                   </SheetTitle>
                   <SheetDescription>
                     Defina o que conta como <strong>crítico</strong> (bloqueia release),{" "}
-                    <strong>atenção</strong> (alerta) ou <strong>ignorar</strong>. As preferências
-                    ficam salvas neste navegador.
+                    <strong>atenção</strong> (alerta) ou <strong>ignorar</strong>. Estas regras são{" "}
+                    <strong>globais</strong> — aplicam-se a todos os admins e atualizam em tempo
+                    real.
                   </SheetDescription>
                 </SheetHeader>
 
-                <div className="mt-6 space-y-5">
-                  {RULE_KEYS.map((key) => {
-                    const meta = RULE_LABELS[key];
-                    const current = config[key];
-                    const isCustom = current !== meta.defaultRecommend;
-                    return (
-                      <div key={key} className="space-y-2">
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <Label className="text-sm font-semibold flex items-center gap-2">
-                              {meta.label}
-                              {isCustom && (
-                                <Badge variant="outline" className="text-[10px] h-4 px-1">
-                                  custom
-                                </Badge>
-                              )}
-                            </Label>
-                            <p className="text-xs text-muted-foreground mt-0.5">
-                              {meta.description}
-                            </p>
-                            <p className="text-[11px] text-muted-foreground/70 mt-0.5">
-                              Padrão recomendado:{" "}
-                              <code className="text-[11px]">{meta.defaultRecommend}</code>
-                            </p>
+                {configLoading ? (
+                  <div className="mt-8 text-center text-sm text-muted-foreground">
+                    Carregando regras…
+                  </div>
+                ) : (
+                  <div className="mt-6 space-y-5">
+                    {RULE_KEYS.map((key) => {
+                      const meta = RULE_LABELS[key];
+                      const current = config[key];
+                      const isCustom = current !== meta.defaultRecommend;
+                      const isSaving = savingKey === key;
+                      return (
+                        <div key={key} className="space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <Label className="text-sm font-semibold flex items-center gap-2">
+                                {meta.label}
+                                {isCustom && (
+                                  <Badge variant="outline" className="text-[10px] h-4 px-1">
+                                    custom
+                                  </Badge>
+                                )}
+                                {isSaving && (
+                                  <span className="text-[10px] text-muted-foreground">
+                                    salvando…
+                                  </span>
+                                )}
+                              </Label>
+                              <p className="text-xs text-muted-foreground mt-0.5">
+                                {meta.description}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground/70 mt-0.5">
+                                Padrão recomendado:{" "}
+                                <code className="text-[11px]">{meta.defaultRecommend}</code>
+                              </p>
+                            </div>
                           </div>
+                          <Select
+                            value={current}
+                            disabled={isSaving || resetting}
+                            onValueChange={(v) => updateRule(key, v as RuleSeverity)}
+                          >
+                            <SelectTrigger className="h-9">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="critical">Crítico (bloqueia release)</SelectItem>
+                              <SelectItem value="warning">Atenção (apenas alerta)</SelectItem>
+                              <SelectItem value="ignore">Ignorar (não reportar)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <Separator className="mt-3" />
                         </div>
-                        <Select
-                          value={current}
-                          onValueChange={(v) => updateRule(key, v as RuleSeverity)}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="critical">Crítico (bloqueia release)</SelectItem>
-                            <SelectItem value="warning">Atenção (apenas alerta)</SelectItem>
-                            <SelectItem value="ignore">Ignorar (não reportar)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <Separator className="mt-3" />
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
 
                 <div className="mt-6 flex items-center justify-between gap-2">
-                  <Button variant="ghost" size="sm" onClick={resetConfig}>
-                    <RotateCcw className="w-4 h-4 mr-2" />
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={resetConfig}
+                    disabled={resetting || configLoading}
+                  >
+                    <RotateCcw className={`w-4 h-4 mr-2 ${resetting ? "animate-spin" : ""}`} />
                     Restaurar padrão
                   </Button>
                   <Button size="sm" onClick={() => setSettingsOpen(false)}>
