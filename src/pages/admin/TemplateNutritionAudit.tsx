@@ -119,32 +119,42 @@ const DEFAULT_CONFIG: AuditConfig = RULE_KEYS.reduce((acc, k) => {
   return acc;
 }, {} as AuditConfig);
 
-const CONFIG_STORAGE_KEY = "template-nutrition-audit:config:v1";
+async function fetchConfigFromDB(): Promise<AuditConfig> {
+  const { data, error } = await supabase
+    .from("template_audit_rules_config")
+    .select("rule_key, severity");
 
-function loadConfig(): AuditConfig {
-  if (typeof window === "undefined") return DEFAULT_CONFIG;
-  try {
-    const raw = window.localStorage.getItem(CONFIG_STORAGE_KEY);
-    if (!raw) return DEFAULT_CONFIG;
-    const parsed = JSON.parse(raw) as Partial<AuditConfig>;
-    // Merge — unknown keys ignored, missing keys fall back to default.
-    return RULE_KEYS.reduce((acc, k) => {
-      const v = parsed[k];
-      acc[k] = v === "critical" || v === "warning" || v === "ignore" ? v : DEFAULT_CONFIG[k];
-      return acc;
-    }, {} as AuditConfig);
-  } catch {
-    return DEFAULT_CONFIG;
-  }
+  if (error || !data) return DEFAULT_CONFIG;
+
+  return RULE_KEYS.reduce((acc, k) => {
+    const row = data.find((r) => r.rule_key === k);
+    const sev = row?.severity;
+    acc[k] = sev === "critical" || sev === "warning" || sev === "ignore" ? sev : DEFAULT_CONFIG[k];
+    return acc;
+  }, {} as AuditConfig);
 }
 
-function saveConfig(config: AuditConfig): void {
-  if (typeof window === "undefined") return;
-  try {
-    window.localStorage.setItem(CONFIG_STORAGE_KEY, JSON.stringify(config));
-  } catch {
-    /* noop — quota / private mode */
-  }
+async function upsertRuleInDB(key: RuleKey, severity: RuleSeverity): Promise<void> {
+  const { data: userData } = await supabase.auth.getUser();
+  const { error } = await supabase.from("template_audit_rules_config").upsert(
+    {
+      rule_key: key,
+      severity,
+      updated_by: userData.user?.id ?? null,
+      updated_at: new Date().toISOString(),
+    },
+    { onConflict: "rule_key" },
+  );
+  if (error) throw error;
+}
+
+async function resetRulesInDB(): Promise<void> {
+  // Delete all rows -> next read returns DEFAULT_CONFIG via fallback merge.
+  const { error } = await supabase
+    .from("template_audit_rules_config")
+    .delete()
+    .neq("rule_key", "__never__");
+  if (error) throw error;
 }
 
 type AuditedTemplate = TemplateRow & {
