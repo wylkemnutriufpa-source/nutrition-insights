@@ -243,7 +243,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     } finally {
       setGenerating(false);
     }
-  }, [user, store, patientId, onGenerated]);
+  }, [user, store, patientId, onGenerated, fixedReady]);
   if (view === "strategy") {
     return (
       <StrategyAdvisorPanel
