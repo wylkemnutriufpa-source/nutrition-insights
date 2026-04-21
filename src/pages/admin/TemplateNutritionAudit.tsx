@@ -15,6 +15,23 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
+import { Separator } from "@/components/ui/separator";
+import {
   AlertTriangle,
   CheckCircle2,
   RefreshCw,
@@ -22,6 +39,8 @@ import {
   ShieldAlert,
   Database,
   FileWarning,
+  Settings2,
+  RotateCcw,
 } from "lucide-react";
 import { toast } from "sonner";
 
