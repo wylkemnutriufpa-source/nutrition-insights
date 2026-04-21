@@ -59,8 +59,12 @@ export default function ConsultationCompare({ patientId }: ConsultationComparePr
   const compareRows = useMemo(() => {
     if (!aData || !bData) return [];
     return FIELDS.map(f => {
-      const vA = aData[f.key] !== null && aData[f.key] !== undefined ? +aData[f.key] : null;
-      const vB = bData[f.key] !== null && bData[f.key] !== undefined ? +bData[f.key] : null;
+      const rawA = aData[f.key];
+      const rawB = bData[f.key];
+      const numA = rawA !== null && rawA !== undefined ? Number(rawA) : NaN;
+      const numB = rawB !== null && rawB !== undefined ? Number(rawB) : NaN;
+      const vA = Number.isFinite(numA) ? numA : null;
+      const vB = Number.isFinite(numB) ? numB : null;
       const delta = vA !== null && vB !== null ? vA - vB : null;
       return { ...f, vA, vB, delta };
     }).filter(r => r.vA !== null || r.vB !== null);
