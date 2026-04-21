@@ -12,6 +12,18 @@ import MarmitaSettingsDialog from "./MarmitaSettingsDialog";
 import { useMarmitaSettings } from "@/hooks/useMarmitaSettings";
 import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
 
+// Constants for mode hints to avoid divergence between weekly and fixed modes
+const MODE_HINTS = {
+  weekly: {
+    text: "Verificando mínimo de almoço + jantar para modo semanal",
+    className: "text-primary/70",
+  },
+  fixed: {
+    text: "Verificando mínimo de almoço + jantar fixos para marmitas congeladas",
+    className: "text-accent/70",
+  },
+} as const;
+
 interface Props {
   patientId: string;
   onGenerated: () => void;
