@@ -44,6 +44,11 @@ interface Pipeline {
   generated_plan_data: any;
   nutritionist_id: string;
   rejection_reason: string | null;
+  // Persisted sync state — survives page reloads even without re-detection
+  sync_pending?: boolean | null;
+  sync_error?: string | null;
+  sync_last_attempt_at?: string | null;
+  sync_attempts?: number | null;
 }
 
 const STEPS = [
