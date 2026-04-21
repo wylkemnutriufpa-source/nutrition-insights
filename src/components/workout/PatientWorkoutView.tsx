@@ -17,6 +17,7 @@ import {
   Dumbbell, CheckCircle2, Clock, Flame, AlertTriangle, Trophy,
   Play, Zap, Timer, ChevronRight, Video, Layers, X
 } from "lucide-react";
+import { groupExercisesForRender } from "@/lib/workoutIntensityUtils";
 
 const GROUP_BADGES: Record<string, { label: string; color: string; icon: string }> = {
   biset: { label: "BISET", color: "bg-blue-500/10 text-blue-400 border border-blue-500/30", icon: "⚡" },
