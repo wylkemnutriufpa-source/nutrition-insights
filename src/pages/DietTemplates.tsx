@@ -19,6 +19,7 @@ import {
   Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw
 } from "lucide-react";
 import { TemplateFoodVisual } from "@/components/meal/TemplateFoodVisual";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
 
 interface DietTemplate {
   id: string;
@@ -354,22 +355,9 @@ export default function DietTemplates() {
 
   const dataSource = physicalAssessment?.calories_target ? "assessment" : "anamnesis";
 
-  // Coerção numérica defensiva: trata null, undefined, strings, NaN e Infinity como 0.
-  // Sem isso, `Math.round(undefined * 0.99) = NaN` e a UI vaza "NaN" no preview.
-  const safeNum = (v: any): number => {
-    const n = typeof v === "number" ? v : Number(v);
-    return Number.isFinite(n) ? n : 0;
-  };
-
-  // Fallback global de RENDERIZAÇÃO: garante que NENHUM macro seja exibido
-  // como "NaN", "Infinity", "undefined" ou "null" no modal — independente de
-  // bugs upstream em adapters, cálculos ou dados de banco. Sempre retorna
-  // string segura (inteiro arredondado) para uso direto em JSX.
-  const fmtMacro = (v: any): string => {
-    const n = typeof v === "number" ? v : Number(v);
-    if (!Number.isFinite(n)) return "0";
-    return String(Math.round(n));
-  };
+  // Helpers de coerção e renderização defensiva vivem em @/lib/formatMacros
+  // (compartilhados com MealLibraryModal, MealLibrarySidebar, AssistedPlanModal,
+  //  AutoFixResultsModal, PremiumRecipeModal, TemplateNutritionAudit).
 
   const getAdjustedCalories = (template: DietTemplate) => {
     const effective = getEffectiveCalories();
