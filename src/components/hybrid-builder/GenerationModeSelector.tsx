@@ -1,6 +1,6 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake } from "lucide-react";
+import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -29,6 +29,40 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const store = useMealPlanEditorV2Store();
   const [generating, setGenerating] = useState(false);
   const [view, setView] = useState<View>("menu");
+  const [recipeCounts, setRecipeCounts] = useState<{
+    lunch: number;
+    dinner: number;
+    fixedLunch: number;
+    fixedDinner: number;
+    loading: boolean;
+  }>({ lunch: 0, dinner: 0, fixedLunch: 0, fixedDinner: 0, loading: true });
+
+  // Pre-flight check: count available recipes for marmita modes
+  useEffect(() => {
+    if (!user) return;
+    let cancelled = false;
+    (async () => {
+      const { data, error } = await supabase
+        .from("meal_recipes")
+        .select("meal_type, is_fixed")
+        .eq("nutritionist_id", user.id)
+        .eq("is_active", true);
+      if (cancelled) return;
+      if (error) {
+        setRecipeCounts((s) => ({ ...s, loading: false }));
+        return;
+      }
+      const lunch = (data || []).filter((r: any) => r.meal_type === "lunch").length;
+      const dinner = (data || []).filter((r: any) => r.meal_type === "dinner").length;
+      const fixedLunch = (data || []).filter((r: any) => r.meal_type === "lunch" && r.is_fixed).length;
+      const fixedDinner = (data || []).filter((r: any) => r.meal_type === "dinner" && r.is_fixed).length;
+      setRecipeCounts({ lunch, dinner, fixedLunch, fixedDinner, loading: false });
+    })();
+    return () => { cancelled = true; };
+  }, [user]);
+
+  const weeklyReady = recipeCounts.lunch > 0 && recipeCounts.dinner > 0;
+  const fixedReady = recipeCounts.fixedLunch > 0 && recipeCounts.fixedDinner > 0;
 
   // Strategy Advisor confirmed → generate plan with strategy context
   const handleStrategyConfirmed = useCallback(async (strategy: NutritionalStrategy, editedMeals: StrategyMealPreview[]) => {
@@ -128,6 +162,10 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   // Weekly Marmita → generate full 7-day plan from meal_recipes
   const handleWeeklyMarmita = useCallback(async () => {
     if (!user || !store.planId) return;
+    if (!weeklyReady) {
+      toast.error(`Receitas insuficientes. Cadastre ao menos 1 almoço e 1 jantar em "Receitas/Marmitas".`);
+      return;
+    }
     setGenerating(true);
 
     try {
@@ -162,11 +200,15 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     } finally {
       setGenerating(false);
     }
-  }, [user, store, patientId, onGenerated]);
+  }, [user, store, patientId, onGenerated, weeklyReady]);
 
   // Fixed Marmita → marmitas congeladas, motor ajusta APENAS café/lanches/ceia
   const handleFixedMarmita = useCallback(async () => {
     if (!user || !store.planId) return;
+    if (!fixedReady) {
+      toast.error(`Marmitas fixas insuficientes. Cadastre ao menos 1 almoço e 1 jantar marcados como "fixos" em "Receitas/Marmitas".`);
+      return;
+    }
     setGenerating(true);
 
     try {
@@ -201,7 +243,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     } finally {
       setGenerating(false);
     }
-  }, [user, store, patientId, onGenerated]);
+  }, [user, store, patientId, onGenerated, fixedReady]);
   if (view === "strategy") {
     return (
       <StrategyAdvisorPanel
@@ -271,51 +313,74 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       </Button>
 
       {/* Option 3: Weekly Marmita Plan */}
-      <Button
-        onClick={handleWeeklyMarmita}
-        disabled={generating}
-        variant="outline"
-        className="w-full h-14 text-sm gap-3 border-dashed"
-      >
-        {generating ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Gerando cardápio...
-          </>
-        ) : (
-          <>
-            <CalendarDays className="w-5 h-5 text-primary" />
-            <div className="text-left">
-              <p className="font-bold">📅 Cardápio Semanal de Marmitas</p>
-              <p className="text-[10px] text-muted-foreground">7 dias completos com marmitas no almoço/jantar</p>
-            </div>
-          </>
+      <div className="space-y-1.5">
+        <Button
+          onClick={handleWeeklyMarmita}
+          disabled={generating || recipeCounts.loading || !weeklyReady}
+          variant="outline"
+          className="w-full h-14 text-sm gap-3 border-dashed"
+        >
+          {generating ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Gerando cardápio...
+            </>
+          ) : (
+            <>
+              <CalendarDays className="w-5 h-5 text-primary" />
+              <div className="text-left flex-1">
+                <p className="font-bold">📅 Cardápio Semanal de Marmitas</p>
+                <p className="text-[10px] text-muted-foreground">
+                  7 dias · {recipeCounts.loading ? "verificando…" : `${recipeCounts.lunch} almoço · ${recipeCounts.dinner} jantar`}
+                </p>
+              </div>
+            </>
+          )}
+        </Button>
+        {!recipeCounts.loading && !weeklyReady && (
+          <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30">
+            <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+            <p className="text-[10px] text-destructive leading-relaxed">
+              Receitas insuficientes. Cadastre ao menos <strong>1 almoço</strong> e <strong>1 jantar</strong> em "Receitas/Marmitas" antes de gerar.
+            </p>
+          </div>
         )}
-      </Button>
+      </div>
 
       {/* Option 4: Fixed Marmita (Frozen) — não escala marmitas */}
-      <Button
-        onClick={handleFixedMarmita}
-        disabled={generating}
-        variant="outline"
-        className="w-full h-14 text-sm gap-3 border-dashed border-accent/40 hover:bg-accent/5"
-      >
-        {generating ? (
-          <>
-            <Loader2 className="w-5 h-5 animate-spin" />
-            Gerando plano...
-          </>
-        ) : (
-          <>
-            <Snowflake className="w-5 h-5 text-accent" />
-            <div className="text-left">
-              <p className="font-bold">❄️ Marmitas Fixas (Congeladas)</p>
-              <p className="text-[10px] text-muted-foreground">Marmitas não escalam · ajusta só café/lanches/ceia</p>
-            </div>
-          </>
+      <div className="space-y-1.5">
+        <Button
+          onClick={handleFixedMarmita}
+          disabled={generating || recipeCounts.loading || !fixedReady}
+          variant="outline"
+          className="w-full h-14 text-sm gap-3 border-dashed border-accent/40 hover:bg-accent/5"
+        >
+          {generating ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Gerando plano...
+            </>
+          ) : (
+            <>
+              <Snowflake className="w-5 h-5 text-accent" />
+              <div className="text-left flex-1">
+                <p className="font-bold">❄️ Marmitas Fixas (Congeladas)</p>
+                <p className="text-[10px] text-muted-foreground">
+                  Não escala · {recipeCounts.loading ? "verificando…" : `${recipeCounts.fixedLunch} almoço fixo · ${recipeCounts.fixedDinner} jantar fixo`}
+                </p>
+              </div>
+            </>
+          )}
+        </Button>
+        {!recipeCounts.loading && !fixedReady && (
+          <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30">
+            <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+            <p className="text-[10px] text-destructive leading-relaxed">
+              Marmitas fixas insuficientes. Cadastre ao menos <strong>1 almoço</strong> e <strong>1 jantar</strong> marcados como <strong>"fixos"</strong>.
+            </p>
+          </div>
         )}
-      </Button>
-
+      </div>
       {/* Info */}
       <div className="text-[9px] text-muted-foreground text-center space-y-0.5">
         <p>✅ Motor clínico calcula macros → Você escolhe o caminho → Plano gerado</p>
