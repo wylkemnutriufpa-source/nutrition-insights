@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import MealVisualPlaceholder from "./MealVisualPlaceholder";
 import type { MealVisualItem } from "@/types/mealVisualLibrary";
 import { MEAL_VISUAL_CATEGORIES } from "@/types/mealVisualLibrary";
-import { fmtMacro } from "@/lib/formatMacros";
+import { fmtMacro, safeNum } from "@/lib/formatMacros";
 
 interface MealVisualCardProps {
   item: MealVisualItem;
