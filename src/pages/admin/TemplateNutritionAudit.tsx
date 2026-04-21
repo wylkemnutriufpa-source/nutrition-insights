@@ -235,7 +235,7 @@ export default function TemplateNutritionAudit() {
     fetchTemplates();
   }, []);
 
-  const audited = useMemo(() => rows.map(auditTemplate), [rows]);
+  const audited = useMemo(() => rows.map((r) => auditTemplate(r, config)), [rows, config]);
 
   const counts = useMemo(
     () => ({
