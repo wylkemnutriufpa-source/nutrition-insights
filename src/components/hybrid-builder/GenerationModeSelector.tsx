@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake, AlertTriangle } from "lucide-react";
+import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake, AlertTriangle, Settings2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
@@ -8,6 +8,8 @@ import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import MealRecipeSelector from "./MealRecipeSelector";
+import MarmitaSettingsDialog from "./MarmitaSettingsDialog";
+import { useMarmitaSettings } from "@/hooks/useMarmitaSettings";
 import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
 
 interface Props {
