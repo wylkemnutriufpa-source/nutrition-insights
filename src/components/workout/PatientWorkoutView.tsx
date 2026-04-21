@@ -248,6 +248,11 @@ export default function PatientWorkoutView() {
 
   // Group exercises by group_id for rendering
   const groupExercisesForRender = (exs: any[]) => {
+    // If medical review is required, block all grouping (high intensity methods)
+    if (requiresMedicalReview) {
+      return exs.map(ex => ({ type: "single", exercises: [ex], groupId: null }));
+    }
+
     const blocks: { type: string; exercises: any[]; groupId: string | null }[] = [];
     let currentGroupId: string | null = null;
     let currentBlock: any[] = [];
