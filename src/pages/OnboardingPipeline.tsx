@@ -410,6 +410,12 @@ export default function OnboardingPipeline() {
    */
   async function runLifecycleSync(pipelineId: string): Promise<boolean> {
     if (!user) return false;
+    // Mutex em memória — impede execuções concorrentes (auto-retry vs manual vs efeito de mount).
+    if (syncInFlightRef.current) {
+      console.debug("runLifecycleSync skipped: another attempt in flight");
+      return false;
+    }
+    syncInFlightRef.current = true;
     const persistFailure = async (msg: string) => {
       setSyncError(msg);
       try {
@@ -448,11 +454,19 @@ export default function OnboardingPipeline() {
         return false;
       }
       await persistSuccess();
+      // Sucesso → reseta auto-retry e cancela timers pendentes
+      setAutoRetryAttempt(0);
+      setAutoRetryNextAt(null);
+      setAutoRetryCountdown(0);
+      setAutoRetryCancelled(false);
+      clearAutoRetryTimers();
       return true;
     } catch (err: any) {
       console.error("Lifecycle sync exception:", err);
       await persistFailure(err?.message || "Falha de rede ao sincronizar onboarding.");
       return false;
+    } finally {
+      syncInFlightRef.current = false;
     }
   }
 
