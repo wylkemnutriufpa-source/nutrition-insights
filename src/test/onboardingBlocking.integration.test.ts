@@ -6,7 +6,7 @@ import { supabase } from "@/integrations/supabase/client";
  * persisted in the `patient_lifecycle_states` table in Supabase.
  */
 describe("Onboarding Blocking Integration — Supabase Persistence", () => {
-  const patientId = uuidv4();
+  const patientId = crypto.randomUUID();
   const nutritionistId = "67f47696-a778-4ada-9ff9-9615fb7a7c48"; // Known dummy nutritionist from previous query
 
   afterAll(async () => {
