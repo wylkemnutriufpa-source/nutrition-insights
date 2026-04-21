@@ -159,6 +159,38 @@ async function resetRulesInDB(): Promise<void> {
   if (error) throw error;
 }
 
+type RuleVersion = {
+  id: string;
+  version_number: number;
+  snapshot: Record<string, RuleSeverity>;
+  change_summary: string | null;
+  changed_rule_key: string | null;
+  previous_severity: string | null;
+  new_severity: string | null;
+  action: "upsert" | "delete" | "reset" | "manual_snapshot";
+  created_at: string;
+  created_by: string | null;
+};
+
+async function fetchVersionsFromDB(): Promise<RuleVersion[]> {
+  const { data, error } = await supabase
+    .from("template_audit_rules_versions")
+    .select(
+      "id, version_number, snapshot, change_summary, changed_rule_key, previous_severity, new_severity, action, created_at, created_by",
+    )
+    .order("created_at", { ascending: false })
+    .limit(100);
+  if (error || !data) return [];
+  return data as unknown as RuleVersion[];
+}
+
+async function revertToVersionInDB(versionId: string): Promise<void> {
+  const { error } = await supabase.rpc("revert_template_audit_rules_to_version", {
+    _version_id: versionId,
+  });
+  if (error) throw error;
+}
+
 type AuditedTemplate = TemplateRow & {
   level: IssueLevel;
   issues: { key: RuleKey; message: string; severity: RuleSeverity }[];
