@@ -675,19 +675,49 @@ export default function OnboardingPipeline() {
                       Detalhe técnico: {syncError}
                     </p>
                   </div>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={handleRetrySync}
-                    disabled={syncRetrying}
-                    className="border-warning/40 hover:bg-warning/10"
-                  >
-                    {syncRetrying ? (
-                      <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
-                    ) : (
-                      <>Tentar sincronizar novamente</>
+                  {/* Status do auto-retry */}
+                  {!autoRetryCancelled && autoRetryAttempt < MAX_AUTO_RETRY_ATTEMPTS && autoRetryCountdown > 0 && !syncRetrying && (
+                    <p className="text-xs text-warning/90" data-testid="auto-retry-countdown">
+                      Tentativa automática {autoRetryAttempt + 1} de {MAX_AUTO_RETRY_ATTEMPTS} em {autoRetryCountdown}s…
+                    </p>
+                  )}
+                  {autoRetryCancelled && (
+                    <p className="text-xs text-muted-foreground" data-testid="auto-retry-cancelled">
+                      Tentativas automáticas pausadas.
+                    </p>
+                  )}
+                  {autoRetryAttempt >= MAX_AUTO_RETRY_ATTEMPTS && !syncRetrying && (
+                    <p className="text-xs text-destructive" data-testid="auto-retry-exhausted">
+                      Limite de tentativas automáticas atingido. Tente manualmente ou contate o suporte.
+                    </p>
+                  )}
+
+                  <div className="flex flex-wrap gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleRetrySync}
+                      disabled={syncRetrying}
+                      className="border-warning/40 hover:bg-warning/10"
+                    >
+                      {syncRetrying ? (
+                        <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
+                      ) : (
+                        <>Tentar sincronizar novamente</>
+                      )}
+                    </Button>
+                    {!autoRetryCancelled && autoRetryCountdown > 0 && !syncRetrying && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={handleCancelAutoRetry}
+                        className="text-muted-foreground hover:text-foreground"
+                        data-testid="cancel-auto-retry"
+                      >
+                        Cancelar tentativas automáticas
+                      </Button>
                     )}
-                  </Button>
+                  </div>
                 </div>
               </div>
             </CardContent>
