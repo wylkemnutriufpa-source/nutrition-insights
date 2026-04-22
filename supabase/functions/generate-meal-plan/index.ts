@@ -2627,7 +2627,7 @@ serve(async (req) => {
 
       const { data: patientProfile } = await serviceClient
         .from("profiles")
-        .select("id, user_id")
+        .select("id, user_id, marmita_mode")
         .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
         .maybeSingle();
 
