@@ -177,6 +177,23 @@ Deno.serve(async (req) => {
     const mealPlan = mealPlansRes.data?.[0];
     const bodyAnalyses = bodyRes.data || [];
 
+    // Fetch recipes for meal plan items
+    const visualItemIds = mealPlan?.meal_plan_items?.map((i: any) => i.visual_library_item_id).filter(Boolean) || [];
+    let recipesMap: Record<string, any> = {};
+    if (visualItemIds.length > 0) {
+      const { data: visualItems } = await supabase
+        .from("meal_visual_library")
+        .select("id, display_name, base_recipe")
+        .in("id", visualItemIds);
+      
+      if (visualItems) {
+        recipesMap = visualItems.reduce((acc: any, item: any) => {
+          if (item.base_recipe) acc[item.id] = item.base_recipe;
+          return acc;
+        }, {});
+      }
+    }
+
     // Deterministic summary (NO AI)
     const executiveSummary = generateExecutiveSummary(profile, assessments, meals, mealPlan, bodyAnalyses);
 
