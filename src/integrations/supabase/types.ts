@@ -5795,6 +5795,8 @@ export type Database = {
       marmita_generation_settings: {
         Row: {
           created_at: string
+          default_fast_instructions: string | null
+          default_practical_instructions: string | null
           fixed_min_dinner: number
           fixed_min_lunch: number
           id: string
@@ -5805,6 +5807,8 @@ export type Database = {
         }
         Insert: {
           created_at?: string
+          default_fast_instructions?: string | null
+          default_practical_instructions?: string | null
           fixed_min_dinner?: number
           fixed_min_lunch?: number
           id?: string
@@ -5815,6 +5819,8 @@ export type Database = {
         }
         Update: {
           created_at?: string
+          default_fast_instructions?: string | null
+          default_practical_instructions?: string | null
           fixed_min_dinner?: number
           fixed_min_lunch?: number
           id?: string
