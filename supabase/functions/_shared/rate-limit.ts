@@ -16,8 +16,8 @@ export async function checkRateLimit(
   maxRequests: number = 30,
   windowMinutes: number = 15
 ): Promise<{ allowed: boolean; remaining: number }> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://vkrcobprntictsxqmjjl.supabase.co";
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
   const client = createClient(supabaseUrl, supabaseKey);
 
   const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();

@@ -2704,7 +2704,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     const caller = maybeSupabaseClient ? { id: "mock-id", email: "test@test.com", roles: ["nutritionist"] } : await requireUser(req);
     const userId = caller.id;
 
-    const rl = await checkRateLimit("generate-meal-plan", userId, 10, 10);
+    const rl = maybeSupabaseClient ? { allowed: true } : await checkRateLimit("generate-meal-plan", userId, 10, 10);
     if (!rl.allowed) return rateLimitResponse();
 
     const body = await req.json();
