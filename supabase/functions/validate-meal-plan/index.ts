@@ -364,12 +364,13 @@ function analyzePracticalAdherence(items: any[], simplicityScore: number, blocke
     return { score, status, factors };
 }
 
-// ── Server ────────────────────────────────────────────────────────────────────
-serve(async (req) => {
+// ── Handler ───────────────────────────────────────────────────────────────────
+export async function handler(req: Request) {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
-        const { meal_plan_id } = await req.json();
+        const body = await req.json().catch(() => ({}));
+        const { meal_plan_id } = body;
         if (!meal_plan_id) throw new Error("Missing meal_plan_id");
 
         const supabase = createClient(
@@ -722,7 +723,11 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: false, errors: [{ rule: "system_error", message: e.message, weight: 0 }] }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-});
+}
+
+if (import.meta.main) {
+    serve(handler);
+}
 
 // ── Decision Helper Functions (inline for edge function context) ──────────────
 
