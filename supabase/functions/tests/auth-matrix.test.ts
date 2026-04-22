@@ -24,7 +24,7 @@ function buildAuthRequest(url: string, body: any, role: "professional" | "nutrit
   });
 }
 
-D2eno.test({
+Deno.test({
   name: "Authorization Matrix: validate-meal-plan enforcement",
   async fn() {
     const mockPlanId = "b3aa9e2a-58b0-432c-a312-00bb8994d384";
