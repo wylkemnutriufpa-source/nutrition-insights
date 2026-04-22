@@ -83,6 +83,10 @@ const mockFetch = (responses: Record<string, any>) => {
       ]), { status: 200 });
     }
     
+    if (url.includes("/rest/v1/nutritionist_patients")) {
+      return new Response(JSON.stringify([{ id: "link-123" }]), { status: 200 });
+    }
+
     // Default empty success
     return new Response(JSON.stringify([]), { status: 200 });
   };
