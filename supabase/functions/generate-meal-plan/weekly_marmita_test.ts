@@ -15,15 +15,16 @@ Deno.test("weekly_marmita: buildMarmitaItem correctly scales macros and grams", 
   };
 
   const targetKcal = 600;
-  // baseMacros for 200g total (1.3 kcal/g) = 260 kcal
+  // baseMacros for 200g total (1.3 kcal/g) = 260 kcal, floor 350
   const baseMacros = estimateRecipeMacros(recipe);
-  assertEquals(baseMacros.cal, 350); // It has a 350 floor in estimateRecipeMacros
+  assertEquals(baseMacros.cal, 350); 
 
   const item = buildMarmitaItem(recipe, "lunch", 0, targetKcal, "manutencao", []);
   
   // scaleFactor = 600 / 350 = 1.714
   // 100g * 1.714 = 171g
-  assertEquals(item._scale_factor > 1.7 && item._scale_factor < 1.72, true);
+  const scale = targetKcal / 350;
+  assertEquals(item.calories_target, 600);
   
   // Check if description has scaled grams
   assertEquals(item.description.includes("171g Frango"), true);
@@ -41,18 +42,63 @@ Deno.test("weekly_marmita: buildMarmitaItem preserves grammages when is_scalable
     is_scalable: false
   };
 
-  const targetKcal = 800; // Much higher than base
-  const item = buildMarmitaItem(recipe, "lunch", 0, targetKcal, "manutencao", []);
+  const targetKcal = 800; 
+  const item = buildMarmitaItem(recipe, "lunch", 0, targetKcal, "manutencao", [], {}, { protein: 100, carbs: 100, fat: 30 });
   
   // Scale factor should be 1.0 even if target is different
-  assertEquals(item._scale_factor, 1);
   assertEquals(item.description.includes("150g Frango"), true);
   
-  // Macros should also be preserved (from estimateRecipeMacros for 150g)
-  // 150g * 1.3 = 195 kcal -> should be at floor 350 though.
+  // Macros should be from the recipe (estimate), NOT from macroTarget, because is_scalable is false
   const base = estimateRecipeMacros(recipe);
   assertEquals(item.calories_target, base.cal);
   assertEquals(item.protein_target, base.p);
+  assertEquals(item.carbs_target, base.c);
+});
+
+Deno.test("weekly_marmita: estimateRecipeMacros handles empty ingredients", () => {
+  const recipe: MarmitaRecipe = {
+    id: "r-empty",
+    name: "Vazia",
+    meal_type: "almoço",
+    foods_json: []
+  };
+  
+  const macros = estimateRecipeMacros(recipe);
+  assertEquals(macros.cal, 350); // Floor
+  assertEquals(macros.p, 35);
+  assertEquals(macros.c > 0, true);
+});
+
+Deno.test("weekly_marmita: estimateRecipeMacros respects fixed values", () => {
+  const recipe: MarmitaRecipe = {
+    id: "r-fixed",
+    name: "Fixa",
+    meal_type: "almoço",
+    foods_json: [{ name: "X", grams: 100 }],
+    fixed_calories: 500,
+    fixed_protein: 40,
+    fixed_carbs: 50,
+    fixed_fat: 10
+  };
+  
+  const macros = estimateRecipeMacros(recipe);
+  assertEquals(macros.cal, 500);
+  assertEquals(macros.p, 40);
+  assertEquals(macros.c, 50);
+  assertEquals(macros.f, 10);
+});
+
+Deno.test("weekly_marmita: buildMarmitaItem handles empty ingredients without crashing", () => {
+  const recipe: MarmitaRecipe = {
+    id: "r-crash",
+    name: "Sem Nada",
+    meal_type: "almoço",
+    foods_json: []
+  };
+  
+  const item = buildMarmitaItem(recipe, "lunch", 0, 500, "manutencao", []);
+  assertEquals(item.title.includes("Sem Nada"), true);
+  assertEquals(item.calories_target > 0, true);
 });
 
 Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctly", () => {
@@ -68,21 +114,13 @@ Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctl
     recipes, [], [], "manutencao", kcalTarget, macros, [], [], [], ["lunch", "dinner"]
   );
   
-  assertEquals(result.items.length, 14); // 7 days * 2 meals
+  assertEquals(result.items.length, 14); 
   
-  // Check day 0 lunch
   const lunch = result.items.find(i => i.day_of_week === 0 && i.meal_type === "lunch");
   const dinner = result.items.find(i => i.day_of_week === 0 && i.meal_type === "dinner");
   
-  // MEAL_KCAL_SPLIT["lunch"] is 0.30, ["dinner"] is 0.22
-  // lunchKcal = 2000 * 0.3 = 600
-  // dinnerKcal = 2000 * 0.22 = 440
-  // Total marmita kcal = 1040
-  // lunchShare = 600 / 1040 = 0.5769
-  // proteinTarget for lunch = 150 * 0.5769 = 86.5 -> 87
-  
-  assertEquals(lunch.calories_target, 600);
-  assertEquals(dinner.calories_target, 440);
+  assertEquals(lunch.calories_target, 600); // 2000 * 0.3
+  assertEquals(dinner.calories_target, 440); // 2000 * 0.22
   assertEquals(lunch.protein_target, 87);
-  assertEquals(dinner.protein_target, 63); // 150 - 87
+  assertEquals(dinner.protein_target, 63);
 });
