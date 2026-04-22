@@ -9,10 +9,13 @@ import {
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
+  Info,
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { safeNum, fmtMacro } from "@/lib/formatMacros";
+import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent } from "@/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
