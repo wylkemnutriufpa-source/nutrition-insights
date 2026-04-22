@@ -3,11 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   AlertTriangle, ClipboardList, ListChecks, FileText, 
-  ArrowRight, X, Sparkles 
+  ArrowRight, X, Sparkles, ShieldCheck, Flame
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isCalorieClamped, isMacroInconsistent } from "@/lib/formatMacros";
 
 interface SmartAlert {
+
   id: string;
   icon: typeof AlertTriangle;
   title: string;
