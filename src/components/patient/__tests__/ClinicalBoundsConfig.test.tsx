@@ -80,6 +80,13 @@ describe("Dynamic Clinical Bounds Configuration", () => {
           ],
           error: null,
         });
+      } else if (table === "checklist_tasks") {
+        query.eq.mockReturnThis();
+        const result = { data: [{ id: "t1", completed: true }], error: null };
+        return { ...query, then: (cb: any) => Promise.resolve(cb(result)) };
+      } else if (table === "patient_protocols") {
+        const result = { data: [], error: null };
+        return { ...query, then: (cb: any) => Promise.resolve(cb(result)) };
       } else {
         query.limit.mockResolvedValue({ data: [], error: null });
         query.maybeSingle.mockResolvedValue({ data: null, error: null });
