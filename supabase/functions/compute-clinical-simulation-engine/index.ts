@@ -285,7 +285,7 @@ const TYPE_TO_DECISION: Record<string, string> = {
   no_change_monitoring: "keep_and_monitor",
 };
 
-Deno.serve(async (req) => {
+export async function handler(req: Request) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -451,4 +451,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}
+
+if (import.meta.main) {
+  Deno.serve(handler);
+}
