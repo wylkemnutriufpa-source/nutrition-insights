@@ -81,6 +81,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
           tenant_id: np.tenant_id,
           title: "Plano Presencial — " + new Date().toLocaleDateString("pt-BR"),
           plan_status: "draft",
+          is_active: false,
           start_date: new Date().toISOString().split("T")[0],
         })
         .select("id")

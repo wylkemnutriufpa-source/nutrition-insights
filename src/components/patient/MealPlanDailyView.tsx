@@ -83,10 +83,11 @@ const IMPACT_TAGS: Record<string, { icon: React.ReactNode; label: string; color:
 
 function getImpactTags(meal: MealPlanItem) {
   const tags: string[] = [];
-  const p = Number(meal.protein_target) || 0;
-  const c = Number(meal.carbs_target) || 0;
-  const f = Number(meal.fat_target) || 0;
-  const cal = meal.calories_target || 0;
+  const meta = meal.metadata || {};
+  const p = Number(meal.protein_target ?? meta.protein_target ?? meta.protein) || 0;
+  const c = Number(meal.carbs_target ?? meta.carbs_target ?? meta.carbs) || 0;
+  const f = Number(meal.fat_target ?? meta.fat_target ?? meta.fat) || 0;
+  const cal = Number(meal.calories_target ?? meta.calories_target ?? meta.calories) || 0;
   if (p > 20) tags.push("recovery");
   if (p > 15 && f > 8) tags.push("satiety");
   if (c > 30 && cal > 200) tags.push("energy");
@@ -106,10 +107,10 @@ function getMotivationalMessage(pct: number): { emoji: string; message: string; 
 // ── Macro Summary Bar (memoized) ──
 const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem[] }) {
   const totals = useMemo(() => ({
-    calories: items.reduce((s, i) => s + safeNum(i.calories_target), 0),
-    protein: items.reduce((s, i) => s + safeNum(i.protein_target), 0),
-    carbs: items.reduce((s, i) => s + safeNum(i.carbs_target), 0),
-    fat: items.reduce((s, i) => s + safeNum(i.fat_target), 0),
+    calories: items.reduce((s, i) => s + safeNum(i.calories_target ?? i.metadata?.calories_target ?? i.metadata?.calories), 0),
+    protein: items.reduce((s, i) => s + safeNum(i.protein_target ?? i.metadata?.protein_target ?? i.metadata?.protein), 0),
+    carbs: items.reduce((s, i) => s + safeNum(i.carbs_target ?? i.metadata?.carbs_target ?? i.metadata?.carbs), 0),
+    fat: items.reduce((s, i) => s + safeNum(i.fat_target ?? i.metadata?.fat_target ?? i.metadata?.fat), 0),
   }), [items]);
 
   return (
@@ -237,32 +238,38 @@ const MealItemCard = memo(function MealItemCard({
               </div>
             )}
             <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-              <div className="flex items-center gap-1">
-                <Flame className="w-3 h-3 text-orange-400" />
-                <span>{fmtMacro(item.calories_target)} kcal</span>
-                {isCalorieClamped(item.calories_target) && (
-                  <TooltipProvider>
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <button 
-                          className="p-0.5 hover:bg-muted rounded-full transition-colors inline-flex items-center"
-                          aria-label={`Aviso de segurança: Calorias ajustadas para ${getCalorieClampValue(item.calories_target)} kcal`}
-                        >
-                          <Info className="w-2.5 h-2.5 text-amber-500" />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent>
-                        <p className="text-[10px]">
-                          Ajustado para {getCalorieClampValue(item.calories_target)} kcal (limite de segurança).
-                        </p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                )}
-              </div>
-              <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target)}g</span>
-              <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target)}g</span>
-              <span className="flex items-center gap-1"><Droplets className="w-3 h-3 text-yellow-400" /> {fmtMacro(item.fat_target)}g</span>
+              {(() => {
+                const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
+                if (cal === null || cal === undefined) return null;
+                return (
+                  <div className="flex items-center gap-1">
+                    <Flame className="w-3 h-3 text-orange-400" />
+                    <span>{fmtMacro(cal)} kcal</span>
+                    {isCalorieClamped(cal) && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="p-0.5 hover:bg-muted rounded-full transition-colors inline-flex items-center"
+                              aria-label={`Aviso de segurança: Calorias ajustadas para ${getCalorieClampValue(cal)} kcal`}
+                            >
+                              <Info className="w-2.5 h-2.5 text-amber-500" />
+                            </button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-[10px]">
+                              Ajustado para {getCalorieClampValue(cal)} kcal (limite de segurança).
+                            </p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                );
+              })()}
+              <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target ?? item.metadata?.protein_target ?? item.metadata?.protein)}g</span>
+              <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target ?? item.metadata?.carbs_target ?? item.metadata?.carbs)}g</span>
+              <span className="flex items-center gap-1"><Droplets className="w-3 h-3 text-yellow-400" /> {fmtMacro(item.fat_target ?? item.metadata?.fat_target ?? item.metadata?.fat)}g</span>
               
               {item.metadata?.prep_time && (
                 <Badge variant="secondary" className="px-1 py-0 h-4 text-[8px] flex items-center gap-0.5 bg-primary/5 text-primary border-primary/10">

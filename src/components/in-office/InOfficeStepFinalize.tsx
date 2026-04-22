@@ -72,7 +72,10 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
     try {
       const { error } = await supabase
         .from("meal_plans")
-        .update({ plan_status: "published_to_patient" })
+        .update({ 
+          plan_status: "published_to_patient",
+          is_active: true 
+        })
         .eq("id", mealPlanId)
         .in("plan_status", ["draft", "draft_auto_generated", "draft_auto_corrected", "under_professional_review"]);
 
