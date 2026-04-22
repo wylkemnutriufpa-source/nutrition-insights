@@ -1576,7 +1576,7 @@ function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibrary
   return best || candidates[0];
 }
 
-function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
+export function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
   // Rough estimate from total grams: ~1.3 kcal/g, with macros from defaults
   const totalGrams = (recipe.foods_json || []).reduce((s, f) => s + (Number(f.grams) || 0), 0);
   const cal = Math.round(totalGrams * 1.3);
