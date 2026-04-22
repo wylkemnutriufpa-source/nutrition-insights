@@ -16,7 +16,7 @@ import {
 
 const MUSCLE_GROUPS = [
   "Todos", "Peito", "Costas", "Ombros", "Bíceps", "Tríceps", "Pernas",
-  "Glúteos", "Panturrilha", "Core", "Cardio"
+  "Quadríceps", "Posterior", "Glúteos", "Panturrilha", "Core", "Cardio", "Outro"
 ];
 
 const EQUIPMENT = [
