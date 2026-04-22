@@ -267,6 +267,13 @@ const CATEGORY_DEFAULT_MACROS: Record<string, { cal: number; p: number; c: numbe
   refeicao: { cal: 300, p: 20, c: 35, f: 10 },
 };
 
+const DEFAULT_VISUAL_FALLBACKS: Record<string, string> = {
+  almoco: "7292bdef-9b4e-4008-be2f-bf0fec7258b3", // arroz-feijao-frango
+  jantar: "7292bdef-9b4e-4008-be2f-bf0fec7258b3",
+  cafe_da_manha: "98756c56-20b1-4024-b88a-6352093701f3", // pão com ovo placeholder (ID exemplo)
+  lanche: "98756c56-20b1-4024-b88a-6352093701f3",
+};
+
 async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
   const { data, error } = await client
     .from("meal_visual_library")
@@ -551,11 +558,24 @@ async function resolveVisualForItems(client: any, planId: string, _items: any[])
 
   if (!insertedItems || insertedItems.length === 0) return 0;
 
-  const updates: { id: string; visual_library_item_id: string }[] = [];
+  const updates: { id: string; visual_library_item_id: string; edit_metadata?: any }[] = [];
   for (const item of insertedItems) {
-    const visualId = resolveVisualFromDescription(item.title || "", item.description || "", aliasMap);
+    let visualId = resolveVisualFromDescription(item.title || "", item.description || "", aliasMap);
+    let isFallback = false;
+
+    if (!visualId) {
+      // Fallback por categoria/meal_type
+      const category = normalize(item.meal_type || "");
+      visualId = DEFAULT_VISUAL_FALLBACKS[category] || null;
+      if (visualId) isFallback = true;
+    }
+
     if (visualId) {
-      updates.push({ id: item.id, visual_library_item_id: visualId });
+      updates.push({ 
+        id: item.id, 
+        visual_library_item_id: visualId,
+        edit_metadata: isFallback ? { asset_status: "pending_asset", fallback_applied: true } : undefined
+      });
     }
   }
 
@@ -582,11 +602,15 @@ async function resolveVisualForItems(client: any, planId: string, _items: any[])
     groupedByVisual.get(u.visual_library_item_id)!.push(u.id);
   }
 
-  const updatePromises = Array.from(groupedByVisual.entries()).map(([visualId, ids]) =>
+  const updatePromises = updates.map(u =>
     client
       .from("meal_plan_items")
-      .update({ visual_library_item_id: visualId, image_url: visualImageMap.get(visualId) || null })
-      .in("id", ids)
+      .update({ 
+        visual_library_item_id: u.visual_library_item_id, 
+        image_url: visualImageMap.get(u.visual_library_item_id) || null,
+        edit_metadata: u.edit_metadata
+      })
+      .eq("id", u.id)
   );
   await Promise.all(updatePromises);
 
