@@ -152,4 +152,5 @@ Deno.test({
   } finally {
     restoreFetch();
   }
+}
 });
