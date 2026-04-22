@@ -1673,9 +1673,14 @@ export function generateWeeklyMarmitaPlan(
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
-  const filteredRecipes = recipes
+  let filteredRecipes = recipes
     .filter(r => !recipeViolatesRestrictions(r, disliked, allergies))
     .filter(r => !recipeIsCannedProtein(r));
+
+  if (fastMarmitaMode) {
+    console.log(`[weekly_marmita] Fast Marmita Mode active. Otimizando instruções.`);
+  }
+
   const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
   const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
 
@@ -1834,7 +1839,11 @@ export function buildMarmitaItem(
   });
 
   const baseDesc = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
-  const finalDescription = finalizeMealDescription(baseDesc, mealType, goal) + "\n\n⏱️ Prática: Aqueça por 3-5 min no micro-ondas.";
+  const finalized = finalizeMealDescription(baseDesc, mealType, goal);
+  const tip = fastMarmitaMode 
+    ? "\n\n⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min. Refeição otimizada para tempo."
+    : "\n\n⏱️ Prática: Aqueça por 3-5 min no micro-ondas.";
+  const finalDescription = finalized + tip;
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
 

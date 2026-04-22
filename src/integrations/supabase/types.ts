@@ -13210,6 +13210,7 @@ export type Database = {
           engagement_index: number | null
           engagement_level: string | null
           experience_mode: string | null
+          fast_marmita_mode: boolean | null
           fit_intelligence_access_mode: string | null
           fit_intelligence_enabled: boolean
           fit_intelligence_expires_at: string | null
@@ -13254,6 +13255,7 @@ export type Database = {
           engagement_index?: number | null
           engagement_level?: string | null
           experience_mode?: string | null
+          fast_marmita_mode?: boolean | null
           fit_intelligence_access_mode?: string | null
           fit_intelligence_enabled?: boolean
           fit_intelligence_expires_at?: string | null
@@ -13298,6 +13300,7 @@ export type Database = {
           engagement_index?: number | null
           engagement_level?: string | null
           experience_mode?: string | null
+          fast_marmita_mode?: boolean | null
           fit_intelligence_access_mode?: string | null
           fit_intelligence_enabled?: boolean
           fit_intelligence_expires_at?: string | null
