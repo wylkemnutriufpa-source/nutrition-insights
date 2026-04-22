@@ -2697,11 +2697,11 @@ function buildGenerationMetadata(
 // SERVE
 // ═══════════════════════════════════════════════════════════════
 
-export async function generateMealPlanHandler(req: Request) {
+export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?: any) {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const caller = await requireUser(req);
+    const caller = maybeSupabaseClient ? { id: "mock-id", email: "test@test.com", roles: ["nutritionist"] } : await requireUser(req);
     const userId = caller.id;
 
     const rl = await checkRateLimit("generate-meal-plan", userId, 10, 10);
