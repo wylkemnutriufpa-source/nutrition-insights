@@ -228,7 +228,7 @@ const BLOCKED_FOODS = CANONICAL_BLOCKED_FOODS;
 // All meal generation is EXCLUSIVELY from meal_visual_library
 // ═══════════════════════════════════════════════════════════════
 
-interface VisualLibraryItem {
+export interface VisualLibraryItem {
   id: string;
   slug: string;
   name: string;
