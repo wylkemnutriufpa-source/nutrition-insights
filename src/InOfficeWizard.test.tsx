@@ -10,7 +10,7 @@ import { WorkspaceContext } from './hooks/useWorkspaceContext';
 import '@testing-library/jest-dom';
 
 // Mock supabase
-const createMockSupabase = () => {
+vi.mock('./integrations/supabase/client', () => {
   const mock = {
     from: vi.fn().mockReturnThis(),
     select: vi.fn().mockReturnThis(),
@@ -33,14 +33,8 @@ const createMockSupabase = () => {
     removeChannel: vi.fn(),
     getChannels: vi.fn(() => []),
   };
-  return mock;
-};
-
-const mockSupabase = createMockSupabase() as any;
-
-vi.mock('./integrations/supabase/client', () => ({
-  supabase: mockSupabase
-}));
+  return { supabase: mock };
+});
 
 // Mock auth
 vi.mock('./lib/auth', () => ({
@@ -112,6 +106,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
       loading: false
     });
     
+    const mockSupabase = supabase as any;
     // Reset defaults
     mockSupabase.maybeSingle.mockResolvedValue({ data: mockProfile, error: null });
     mockSupabase.update.mockResolvedValue({ data: null, error: null });
@@ -124,6 +119,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
   });
 
   it('deve carregar a etapa inicial corretamente', async () => {
+    const mockSupabase = supabase as any;
     mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null }) // Patient profile
       .mockResolvedValueOnce({ data: mockSession, error: null }) // Session
@@ -143,6 +139,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
   });
 
   it('deve avançar para a próxima etapa e persistir no banco', async () => {
+    const mockSupabase = supabase as any;
     mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: mockSession, error: null });
@@ -166,6 +163,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
   });
 
   it('deve permitir voltar para a etapa anterior', async () => {
+    const mockSupabase = supabase as any;
     mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: { ...mockSession, current_step: 2 }, error: null });
@@ -184,6 +182,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
   });
 
   it('deve marcar o plano alimentar como concluído ao sair da etapa 4', async () => {
+    const mockSupabase = supabase as any;
     mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: { ...mockSession, current_step: 4 }, error: null });
