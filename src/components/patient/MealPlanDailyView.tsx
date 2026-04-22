@@ -236,9 +236,9 @@ const MealItemCard = memo(function MealItemCard({
                 })}
               </div>
             )}
-            {(item.calories_target || item.protein_target) && (
+            {(item.calories_target !== null || item.protein_target !== null) && (
               <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-                {item.calories_target != null && (
+                {item.calories_target !== null && (
                   <div className="flex items-center gap-1">
                     <Flame className="w-3 h-3 text-orange-400" />
                     <span>{fmtMacro(item.calories_target)} kcal</span>
