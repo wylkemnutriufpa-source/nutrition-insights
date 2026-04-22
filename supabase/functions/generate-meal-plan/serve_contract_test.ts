@@ -90,10 +90,9 @@ Deno.test({
         headers: { "Authorization": "Bearer token", "Content-Type": "application/json" },
         body: JSON.stringify({ 
           patient_id: "patient-123",
-          meal_plan_id: "plan-123",
           generationMode: "weekly_marmita",
           isPipeline: true,
-          planCount: 1
+          planCount: 2
         }),
       });
 
