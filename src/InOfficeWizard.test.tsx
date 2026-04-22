@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
 import InOfficeWizard from './pages/InOfficeWizard';
 import { BrowserRouter } from 'react-router-dom';
 import { supabase } from './integrations/supabase/client';
@@ -13,14 +13,9 @@ vi.mock('@/components/layout/DashboardLayout', () => ({
   default: ({ children }: any) => <div data-testid="dashboard-layout">{children}</div>
 }));
 
-// Mock child steps to avoid their complex dependencies
+// Mock child steps
 vi.mock('@/components/in-office/InOfficeStepPatient', () => ({
-  default: ({ onNext }: any) => (
-    <div>
-      <div data-testid="step-patient">Etapa Cadastro</div>
-      <button onClick={onNext}>Próximo Cadastro</button>
-    </div>
-  )
+  default: () => <div data-testid="step-patient">Etapa Cadastro</div>
 }));
 
 vi.mock('@/components/in-office/InOfficeStepAnamnesis', () => ({
@@ -71,7 +66,7 @@ vi.mock('./lib/auth', () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock tenant context (not used by wizard directly but maybe by DashboardLayout if it wasn't mocked)
+// Mock tenant context
 vi.mock('./lib/tenantContext', () => ({
   TenantProvider: ({ children }: any) => <>{children}</>,
   useTenant: () => ({ tenantId: 't1' }),
@@ -123,6 +118,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
   const mockUser = { id: 'nutri-123' };
   const mockSession = { id: 'sess-123', current_step: 1, patient_id: 'pat-123' };
   const mockProfile = { full_name: 'Paciente Teste' };
+  const mockNutritionistPatient = { tenant_id: 'tenant-123' };
 
   beforeEach(() => {
     vi.clearAllMocks();
@@ -132,7 +128,16 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     });
     
     const mockSupabase = supabase as any;
-    mockSupabase.maybeSingle.mockResolvedValue({ data: mockProfile, error: null });
+    // Sequential calls during wizard initialization:
+    // 1. profile name (maybeSingle)
+    // 2. existing session (maybeSingle)
+    // 3. (if no session) nutritionist_patient (maybeSingle)
+    // 4. (if no session) create session (insert.single)
+    
+    mockSupabase.maybeSingle
+      .mockResolvedValueOnce({ data: mockProfile, error: null }) // Patient name
+      .mockResolvedValueOnce({ data: mockSession, error: null }); // Session
+    
     mockSupabase.update.mockResolvedValue({ data: null, error: null });
     mockSupabase.insert.mockResolvedValue({ data: { id: 'new' }, error: null });
     mockSupabase.single.mockResolvedValue({ data: mockSession, error: null });
@@ -140,21 +145,21 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
 
   it('deve carregar a etapa inicial e avançar para a próxima', async () => {
     const mockSupabase = supabase as any;
-    // Sequential calls for patient name and then session
-    mockSupabase.maybeSingle
-      .mockResolvedValueOnce({ data: mockProfile, error: null })
-      .mockResolvedValueOnce({ data: mockSession, error: null });
-
-    renderWizard();
     
-    // Wait for content to render
+    await act(async () => {
+      renderWizard();
+    });
+    
+    // Wait for content to render after loading finishes
     await waitFor(() => {
-      expect(screen.getByTestId('step-patient')).toBeInTheDocument();
+      expect(screen.queryByTestId('step-patient')).toBeInTheDocument();
       expect(screen.getByText(/Paciente Teste/)).toBeInTheDocument();
     });
 
     const nextBtn = screen.getByText('Próximo');
-    fireEvent.click(nextBtn);
+    await act(async () => {
+      fireEvent.click(nextBtn);
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('step-anamnesis')).toBeInTheDocument();
@@ -173,15 +178,23 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: mockSession, error: null });
 
-    renderWizard();
+    await act(async () => {
+      renderWizard();
+    });
     
     await waitFor(() => screen.getByText('Anamnese'));
     
     const anamneseStepBtn = screen.getByText('Anamnese');
-    fireEvent.click(anamneseStepBtn);
+    await act(async () => {
+      fireEvent.click(anamneseStepBtn);
+    });
 
     await waitFor(() => {
       expect(screen.getByTestId('step-anamnesis')).toBeInTheDocument();
     });
+    
+    expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
+      current_step: 2
+    }));
   });
 });
