@@ -9,13 +9,16 @@ async function resolveTenant(supabase: any, userId: string): Promise<string | nu
   return data || null;
 }
 
-export async function handler(req: Request, supabaseClient?: any) {
+export async function handler(req: Request, maybeSupabaseClient?: any) {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabase = supabaseClient ?? createClient(
-    Deno.env.get("SUPABASE_URL") ?? "", 
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-  );
+  // Correctly handle supabase client injection for tests vs runtime
+  const supabase = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function")
+    ? maybeSupabaseClient
+    : createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+      );
 
   try {
     const { data: body, response: errorResponse } = await validateBody(req, ClinicalBrainSchema);
