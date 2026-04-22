@@ -131,8 +131,11 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
         <Button variant="outline" onClick={onPrev} className="gap-2">
           <ArrowLeft className="w-4 h-4" /> Voltar
         </Button>
-        <Button onClick={async () => {
-          await supabase.from("in_office_sessions" as any).update({ meal_plan_completed: true } as any).eq("id", sessionId);
+        <Button onClick={() => {
+          // Fire and forget update
+          supabase.from("in_office_sessions" as any)
+            .update({ meal_plan_completed: true } as any)
+            .eq("id", sessionId);
           onNext();
         }} className="gap-2">
           Próximo <ArrowRight className="w-4 h-4" />

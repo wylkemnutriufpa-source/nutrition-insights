@@ -110,10 +110,14 @@ export default function InOfficeWizard() {
       .eq("id", sessionId);
   }, [sessionId]);
 
-  const goNext = useCallback(() => {
+  const goNext = useCallback(async () => {
     const next = Math.min(step + 1, 5);
     setStep(next);
-    saveStep(next);
+    try {
+      await saveStep(next);
+    } catch (e) {
+      console.error("Erro ao salvar progresso:", e);
+    }
   }, [step, saveStep]);
 
   const goPrev = useCallback(() => {

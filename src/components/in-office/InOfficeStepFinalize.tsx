@@ -28,30 +28,38 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
 
   useEffect(() => {
     (async () => {
-      const [sessRes, profRes] = await Promise.all([
-        supabase.from("in_office_sessions" as any).select("*").eq("id", sessionId).maybeSingle(),
-        supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle(),
-      ]);
-      const sess = sessRes.data as any;
-      setSession(sess);
-      setPatientName(profRes.data?.full_name || "Paciente");
+      try {
+        const [sessRes, profRes] = await Promise.all([
+          supabase.from("in_office_sessions" as any).select("*").eq("id", sessionId).maybeSingle(),
+          supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle(),
+        ]);
+        
+        if (sessRes.error) throw sessRes.error;
+        
+        const sess = sessRes.data as any;
+        setSession(sess);
+        setPatientName(profRes.data?.full_name || "Paciente");
 
-      // Check if plan exists and its status
-      if (sess?.meal_plan_id) {
-        setMealPlanId(sess.meal_plan_id);
-        const { data: plan } = await supabase
-          .from("meal_plans")
-          .select("plan_status")
-          .eq("id", sess.meal_plan_id)
-          .maybeSingle();
-        if (plan) {
-          setPlanStatus(plan.plan_status);
-          if (plan.plan_status === "published_to_patient" || plan.plan_status === "approved") {
-            setPublished(true);
+        // Check if plan exists and its status
+        if (sess?.meal_plan_id) {
+          setMealPlanId(sess.meal_plan_id);
+          const { data: plan } = await supabase
+            .from("meal_plans")
+            .select("plan_status")
+            .eq("id", sess.meal_plan_id)
+            .maybeSingle();
+          if (plan) {
+            setPlanStatus(plan.plan_status);
+            if (plan.plan_status === "published_to_patient" || plan.plan_status === "approved") {
+              setPublished(true);
+            }
           }
         }
+      } catch (err) {
+        console.error("Erro ao carregar sessão:", err);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     })();
   }, [sessionId, patientId]);
 

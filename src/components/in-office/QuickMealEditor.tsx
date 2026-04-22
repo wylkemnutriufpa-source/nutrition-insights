@@ -291,7 +291,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
     if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
 
     // Reload current day
-    setCurrentDay(prev => prev); // trigger reload
+    setCurrentDay(currentDay); // trigger reload if needed, but useEffect depends on currentDay anyway
+    setLoading(true); // Force reload state visually
     // Force reload by toggling
     setLoading(true);
     const { data: reloaded } = await supabase
