@@ -179,18 +179,37 @@ Deno.serve(async (req) => {
 
     // Fetch recipes for meal plan items
     const visualItemIds = mealPlan?.meal_plan_items?.map((i: any) => i.visual_library_item_id).filter(Boolean) || [];
+    const mealPlanItemTitles = mealPlan?.meal_plan_items?.map((i: any) => i.title).filter(Boolean) || [];
+    
     let recipesMap: Record<string, any> = {};
-    if (visualItemIds.length > 0) {
+    
+    if (visualItemIds.length > 0 || mealPlanItemTitles.length > 0) {
+      // Fetch from visual library
       const { data: visualItems } = await supabase
         .from("meal_visual_library")
         .select("id, display_name, base_recipe")
         .in("id", visualItemIds);
       
       if (visualItems) {
-        recipesMap = visualItems.reduce((acc: any, item: any) => {
-          if (item.base_recipe) acc[item.id] = item.base_recipe;
-          return acc;
-        }, {});
+        visualItems.forEach((item: any) => {
+          if (item.base_recipe) recipesMap[item.id] = item.base_recipe;
+        });
+      }
+
+      // Fetch from meal recipes (marmitas)
+      const { data: mealRecipes } = await supabase
+        .from("meal_recipes")
+        .select("name, base_recipe")
+        .in("name", mealPlanItemTitles);
+      
+      if (mealRecipes) {
+        mealRecipes.forEach((r: any) => {
+          if (r.base_recipe) {
+            // Find which item uses this recipe name
+            const item = mealPlan.meal_plan_items.find((i: any) => i.title === r.name);
+            if (item) recipesMap[item.id] = r.base_recipe;
+          }
+        });
       }
     }
 
@@ -243,13 +262,13 @@ ${latestAssessment ? `<div class="section">
     ${latestAssessment.fat_mass ? `<div class="metric"><div class="label">Massa Gorda</div><div class="value">${latestAssessment.fat_mass} kg</div></div>` : ''}
 </div>
 
-${mealPlan && visualItemIds.length > 0 ? `<div class="section">
+${mealPlan && Object.keys(recipesMap).length > 0 ? `<div class="section">
   <h2>📖 Livro de Receitas</h2>
   <div style="display: flex; flex-direction: column; gap: 20px;">
     ${mealPlan.meal_plan_items
-      .filter((item: any) => item.visual_library_item_id && recipesMap[item.visual_library_item_id])
+      .filter((item: any) => recipesMap[item.visual_library_item_id] || recipesMap[item.id])
       .map((item: any) => {
-        const recipe = recipesMap[item.visual_library_item_id];
+        const recipe = recipesMap[item.visual_library_item_id] || recipesMap[item.id];
         return `
         <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
           <h3 style="color: #10b981; margin-bottom: 10px;">${recipe.title || item.title}</h3>
