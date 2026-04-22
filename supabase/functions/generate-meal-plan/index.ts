@@ -1840,10 +1840,23 @@ export function buildMarmitaItem(
 
   const baseDesc = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
   const finalized = finalizeMealDescription(baseDesc, mealType, goal);
-  const tip = fastMarmitaMode 
-    ? "\n\n⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min. Refeição otimizada para tempo."
-    : "\n\n⏱️ Prática: Aqueça por 3-5 min no micro-ondas.";
-  const finalDescription = finalized + tip;
+  
+  // Fetch professional settings for instructions
+  const { data: marmitaSettings } = await client
+    .from("marmita_generation_settings")
+    .select("default_practical_instructions, default_fast_instructions")
+    .eq("nutritionist_id", recipe.nutritionist_id)
+    .maybeSingle();
+
+  const customTip = fastMarmitaMode 
+    ? (marmitaSettings?.default_fast_instructions || "⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min. Refeição otimizada para tempo.")
+    : (marmitaSettings?.default_practical_instructions || "⏱️ Prática: Aqueça por 3-5 min no micro-ondas.");
+    
+  // Extract minutes from instruction (e.g. "3-5 min" -> 5)
+  const timeMatch = customTip.match(/(\d+)(?:-(\d+))?\s*min/);
+  const prepTime = timeMatch ? parseInt(timeMatch[2] || timeMatch[1]) : 5;
+
+  const description = finalized + "\n\n" + customTip;
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
