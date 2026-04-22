@@ -113,6 +113,7 @@ Deno.test({
       assertEquals(data.success, true);
       
       const lunch = insertedItems.find((i: any) => i.meal_type === "lunch");
+      console.log("Lunch Description:", lunch.description);
       assertEquals(lunch.description.includes("150g Frango"), true);
       assertEquals(lunch.description.includes("200g Arroz"), true);
       assertEquals(lunch.protein_target, 40);
