@@ -276,17 +276,28 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
     await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", currentDay);
 
     const items = (template.items || []) as MealItem[];
-    const inserts = items.map(item => ({
-      meal_plan_id: mealPlanId,
-      meal_type: item.meal_type,
-      title: item.name,
-      calories_target: item.calories || 0,
-      protein_target: item.protein || 0,
-      carbs_target: item.carbs || 0,
-      fat_target: item.fat || 0,
-      day_of_week: currentDay,
-      item_origin: "in_office_template" as const,
-    }));
+    const totalItems = items.length;
+    
+    const inserts = items.map(item => {
+      // Fallback: se o item individual não tem macros mas o template tem totais, distribuímos
+      // (Útil para "marmitas" onde os macros estão no nível do template)
+      const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
+      const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
+      const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
+      const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
+
+      return {
+        meal_plan_id: mealPlanId,
+        meal_type: item.meal_type,
+        title: item.name,
+        calories_target: cal > 0 ? cal : null,
+        protein_target: prot > 0 ? prot : null,
+        carbs_target: carb > 0 ? carb : null,
+        fat_target: fat > 0 ? fat : null,
+        day_of_week: currentDay,
+        item_origin: "in_office_template" as const,
+      };
+    });
 
     if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
 
@@ -327,20 +338,30 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
   const applyTemplateToWeek = async (template: SavedTemplate) => {
     setSaving(true);
     const items = (template.items || []) as MealItem[];
+    const totalItems = items.length;
 
     for (let day = 1; day <= 7; day++) {
       await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", day);
-      const inserts = items.map(item => ({
-        meal_plan_id: mealPlanId,
-        meal_type: item.meal_type,
-        title: item.name,
-        calories_target: item.calories || 0,
-        protein_target: item.protein || 0,
-        carbs_target: item.carbs || 0,
-        fat_target: item.fat || 0,
-        day_of_week: day,
-        item_origin: "in_office_template" as const,
-      }));
+      
+      const inserts = items.map(item => {
+        const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
+        const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
+        const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
+        const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
+
+        return {
+          meal_plan_id: mealPlanId,
+          meal_type: item.meal_type,
+          title: item.name,
+          calories_target: cal > 0 ? cal : null,
+          protein_target: prot > 0 ? prot : null,
+          carbs_target: carb > 0 ? carb : null,
+          fat_target: fat > 0 ? fat : null,
+          day_of_week: day,
+          item_origin: "in_office_template" as const,
+        };
+      });
+      
       if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
     }
 
