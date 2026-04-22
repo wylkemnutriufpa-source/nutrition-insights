@@ -795,10 +795,10 @@ function groupByBucketInternal(issues: PrioritizedIssue[]) {
 function computeFinalDecisionInternal(overallScore: number, overallPassed: boolean, issues: PrioritizedIssue[]) {
     const hasCritical = issues.some(i => i.severity === "critical");
     if (overallPassed && !hasCritical) {
-        return { decision: "publish_now" as const, reason: "Plano aprovado em todas as dimensões.", confidence: (overallScore >= 85 ? "high" : overallScore >= 75 ? "medium" : "low") as const };
+        return { decision: "publish_now" as const, reason: "Plano aprovado em todas as dimensões.", confidence: (overallScore >= 85 ? "high" : overallScore >= 75 ? "medium" : "low") };
     }
     const blockingCount = issues.filter(i => i.correction_bucket === "bloquear_publicacao").length;
-    return { decision: "suggest_corrections" as const, reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções ou publique como está.`, confidence: (hasCritical ? "high" : "medium") as const };
+    return { decision: "suggest_corrections" as const, reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções ou publique como está.`, confidence: (hasCritical ? "high" : "medium") };
 }
 
 function generateExecutiveSummaryInternal(
