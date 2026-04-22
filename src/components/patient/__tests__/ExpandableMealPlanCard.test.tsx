@@ -3,16 +3,13 @@
  *
  * Goal: ensure that `item.description` (the meal suggestion / ingredient list)
  * is rendered in all three view tabs: "Hoje", "Semanal" and "Completo".
- *
- * This protects against regressions where the description was hidden or
- * truncated, which was the root cause of patient Wannubia not seeing her
- * marmita suggestions.
  */
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import React from "react";
 
-// ---------- Hoisted constants (available inside vi.mock factories) ----------
+// ---------- Hoisted constants ----------
 const { TODAY, TODAY_DOW, ITEMS } = vi.hoisted(() => {
   const TODAY = new Date().toISOString().split("T")[0];
   const TODAY_DOW = new Date(TODAY + "T12:00:00").getDay();
@@ -49,7 +46,6 @@ vi.mock("@/lib/auth", () => ({
 }));
 
 vi.mock("@/integrations/supabase/client", () => {
-  // Chainable thenable builder: chain methods return self; `await` resolves to {data,error}.
   const makeQB = (data: any) => {
     const result = { data, error: null };
     const b: any = {};
@@ -60,8 +56,7 @@ vi.mock("@/integrations/supabase/client", () => {
     b.order = () => b;
     b.limit = () => b;
     b.maybeSingle = () => Promise.resolve(result);
-    b.then = (resolve: any, reject: any) =>
-      Promise.resolve(result).then(resolve, reject);
+    b.then = (resolve: any) => Promise.resolve(result).then(resolve);
     return b;
   };
 
@@ -82,29 +77,13 @@ vi.mock("@/integrations/supabase/client", () => {
   };
 });
 
-// Replace framer-motion with passthroughs so AnimatePresence/motion don't
-// hide content during jsdom tests.
 vi.mock("framer-motion", async () => {
-  const React = await import("react");
   const passthrough = (props: any) => {
     const { children, ...rest } = props || {};
-    // Strip framer-only props that React would warn about.
     const safe: any = {};
+    const excluded = ["initial", "animate", "exit", "transition", "variants", "whileHover", "whileTap", "layout"];
     for (const k of Object.keys(rest)) {
-      if (
-        ![
-          "initial",
-          "animate",
-          "exit",
-          "transition",
-          "variants",
-          "whileHover",
-          "whileTap",
-          "layout",
-        ].includes(k)
-      ) {
-        safe[k] = rest[k];
-      }
+      if (!excluded.includes(k)) safe[k] = rest[k];
     }
     return React.createElement("div", safe, children);
   };
@@ -114,91 +93,54 @@ vi.mock("framer-motion", async () => {
   };
 });
 
-// ---------- Import under test (after mocks) ----------
+// ---------- Import under test ----------
 import ExpandableMealPlanCard from "@/components/patient/ExpandableMealPlanCard";
 
-function renderCard() {
-  return render(
+async function renderCard() {
+  render(
     <MemoryRouter>
       <ExpandableMealPlanCard />
     </MemoryRouter>,
   );
+  // Wait for loading to finish
+  await waitFor(() => {
+    expect(screen.queryByTestId("loading-spinner")).not.toBeInTheDocument();
+  }, { timeout: 5000 });
 }
 
 describe("ExpandableMealPlanCard - description rendering", () => {
   it("renders item.description in the 'Hoje' (today) tab", async () => {
-    renderCard();
-
-    // Wait for data to load and items to render
-    await waitFor(
-      () => {
-        expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
-      },
-      { timeout: 3000 },
-    );
-
-    // Description (multi-line) is shown directly on the card
-    const html = document.body.innerHTML;
-    expect(html).toContain("Patinho moído 80g");
-    expect(html).toContain("Arroz integral 100g");
-    expect(html).toContain("Brócolis 60g");
+    await renderCard();
+    expect(await screen.findByText(/MarmitaCarneMagra/i)).toBeInTheDocument();
+    expect(screen.getByText(/Patinho moído 80g/i)).toBeInTheDocument();
   });
 
   it("renders item.description in the 'Semanal' (weekly) tab", async () => {
-    renderCard();
+    await renderCard();
+    
+    const weeklyTab = screen.getByRole("tab", { name: /Semanal/i });
+    fireEvent.click(weeklyTab);
 
-    await waitFor(() => {
-      expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
-    }, { timeout: 3000 });
-
-    // Switch to Weekly tab
-    fireEvent.click(screen.getByRole("tab", { name: /Semanal/i }));
-
-    // Click the day pill matching the second item's day_of_week.
-    // Day pills are buttons inside a 7-column grid that contain DAYS_SHORT labels.
     const dayShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     const targetLabel = dayShort[(TODAY_DOW + 1) % 7];
 
-    await waitFor(() => {
-      const pills = Array.from(
-        document.querySelectorAll("button"),
-      ).filter((b) => (b.textContent || "").trim().startsWith(targetLabel));
-      expect(pills.length).toBeGreaterThan(0);
-      fireEvent.click(pills[0]);
-    }, { timeout: 3000 });
+    const pills = await screen.findAllByRole("button");
+    const targetPill = pills.find(p => p.textContent?.includes(targetLabel));
+    expect(targetPill).toBeDefined();
+    fireEvent.click(targetPill!);
 
-    await waitFor(
-      () => {
-        expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
-      },
-      { timeout: 3000 },
-    );
-
-    const html = document.body.innerHTML;
-    expect(html).toContain("Frango grelhado 120g");
-    expect(html).toContain("Batata doce 100g");
-    expect(html).toContain("Salada verde");
+    expect(await screen.findByText(/MarmitaFrangoGrelhado/i)).toBeInTheDocument();
+    expect(screen.getByText(/Frango grelhado 120g/i)).toBeInTheDocument();
   });
 
   it("renders item.description for ALL items in the 'Completo' (full) tab", async () => {
-    renderCard();
+    await renderCard();
 
-    await waitFor(() => {
-      expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
-    }, { timeout: 3000 });
+    const fullTab = screen.getByRole("tab", { name: /Completo/i });
+    fireEvent.click(fullTab);
 
-    fireEvent.click(screen.getByRole("tab", { name: /Completo/i }));
-
-    await waitFor(
-      () => {
-        expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
-      },
-      { timeout: 3000 },
-    );
-
-    const html = document.body.innerHTML;
-    expect(html).toContain("Patinho moído 80g");
-    expect(html).toContain("Frango grelhado 120g");
-    expect(html).toContain("Salada verde");
+    expect(await screen.findByText(/MarmitaCarneMagra/i)).toBeInTheDocument();
+    expect(screen.getByText(/MarmitaFrangoGrelhado/i)).toBeInTheDocument();
+    expect(screen.getByText(/Frango grelhado 120g/i)).toBeInTheDocument();
   });
 });

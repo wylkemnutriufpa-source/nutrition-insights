@@ -130,7 +130,7 @@ export default function ExpandableMealPlanCard() {
     return (
       <Card className="border-primary/20 overflow-hidden">
         <div className="p-4 flex items-center justify-center">
-          <div className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          <div data-testid="loading-spinner" className="w-6 h-6 border-2 border-primary border-t-transparent rounded-full animate-spin" />
         </div>
       </Card>
     );
