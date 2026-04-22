@@ -371,7 +371,7 @@ export async function handler(req: Request) {
     try {
         const body = await req.json().catch(() => ({}));
         const { meal_plan_id } = body;
-        if (!meal_plan_id) throw new Error("Missing meal_plan_id");
+        if (!meal_plan_id) return new Response(JSON.stringify({ error: "Missing meal_plan_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL")!,
