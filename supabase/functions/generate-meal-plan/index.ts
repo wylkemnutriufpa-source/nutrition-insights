@@ -2574,8 +2574,11 @@ function buildGenerationMetadata(
 // SERVE
 // ═══════════════════════════════════════════════════════════════
 
+export async function generateMealPlanHandler(req: Request) {
+...
 if (import.meta.main) {
-  serve(async (req) => {
+  serve(generateMealPlanHandler);
+}
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
