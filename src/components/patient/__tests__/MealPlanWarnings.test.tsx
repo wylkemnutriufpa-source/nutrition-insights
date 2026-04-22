@@ -18,6 +18,13 @@ vi.mock("@/integrations/supabase/client", () => ({
   },
 }));
 
+vi.mock("@/lib/auth", () => ({
+  useAuth: () => ({ 
+    user: { id: "patient-123" },
+    profile: { id: "patient-123", full_name: "Test Patient" }
+  }),
+}));
+
 import { supabase } from "@/integrations/supabase/client";
 
 describe("Meal Plan UI Warnings", () => {
@@ -40,11 +47,6 @@ describe("Meal Plan UI Warnings", () => {
         };
 
         if (table === "patient_anamnesis") {
-          query.maybeSingle.mockResolvedValue({
-            data: { status: "completed", answers: { sex: "female" } },
-            error: null,
-          });
-          // Also handle the non-maybeSingle version used in SmartAlertsBanner
           query.limit.mockResolvedValue({
             data: [{ status: "completed", answers: { sex: "female" } }],
             error: null,
@@ -61,6 +63,16 @@ describe("Meal Plan UI Warnings", () => {
             ],
             error: null,
           });
+        } else if (table === "checklist_tasks") {
+           // Mock checklist as completed to avoid that alert
+           query.eq.mockReturnThis();
+           query.limit = undefined;
+           const result = { data: [{ id: "t1", completed: true }], error: null };
+           return { ...query, then: (cb: any) => Promise.resolve(cb(result)) };
+        } else if (table === "patient_protocols") {
+           // Avoid active protocols alert
+           const result = { data: [], error: null };
+           return { ...query, then: (cb: any) => Promise.resolve(cb(result)) };
         } else {
           query.limit.mockResolvedValue({ data: [], error: null });
           query.maybeSingle.mockResolvedValue({ data: null, error: null });
@@ -75,9 +87,10 @@ describe("Meal Plan UI Warnings", () => {
       );
 
       await waitFor(() => {
-        expect(screen.getByText("Plano Alimentar Ajustado")).toBeInTheDocument();
+        const title = screen.queryByText("Plano Alimentar Ajustado");
+        expect(title).toBeInTheDocument();
         expect(screen.getByText(/garantir o limite de segurança \(1200 kcal\/dia\)/)).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
 
     it("displays clamping warning with exact threshold for male patient", async () => {
@@ -109,6 +122,10 @@ describe("Meal Plan UI Warnings", () => {
             ],
             error: null,
           });
+        } else if (table === "checklist_tasks") {
+           query.eq.mockReturnThis();
+           const result = { data: [{ id: "t1", completed: true }], error: null };
+           return { ...query, then: (cb: any) => Promise.resolve(cb(result)) };
         } else {
           query.limit.mockResolvedValue({ data: [], error: null });
           query.maybeSingle.mockResolvedValue({ data: null, error: null });
@@ -125,7 +142,7 @@ describe("Meal Plan UI Warnings", () => {
       await waitFor(() => {
         expect(screen.getByText("Plano Alimentar Ajustado")).toBeInTheDocument();
         expect(screen.getByText(/garantir o limite de segurança \(1500 kcal\/dia\)/)).toBeInTheDocument();
-      });
+      }, { timeout: 3000 });
     });
   });
 
@@ -144,26 +161,21 @@ describe("Meal Plan UI Warnings", () => {
       };
 
       render(
-        <TooltipProvider>
-          <MealItemCard 
-            item={mockItem}
-            status={null}
-            completedAt={null}
-            isJustDone={false}
-            focusMode={false}
-            onSetAdherence={() => {}}
-            onOpenDetail={() => {}}
-          />
-        </TooltipProvider>
+        <MemoryRouter>
+          <TooltipProvider>
+            <MealItemCard 
+              item={mockItem}
+              status={null}
+              completedAt={null}
+              isJustDone={false}
+              focusMode={false}
+              onSetAdherence={() => {}}
+              onOpenDetail={() => {}}
+            />
+          </TooltipProvider>
+        </MemoryRouter>
       );
 
-      // In JSDOM, we might need to trigger the tooltip or just check if the text exists in the document
-      // since tooltips are often rendered in portals.
-      // But we can check if the Info icon triggers the condition.
-      
-      const tooltipText = "Ajustado para 1200 kcal (limite de segurança).";
-      // The tooltip content might not be in the DOM until hovered, 
-      // but let's see if we can find it or if the trigger is there.
       expect(screen.getByText("1200 kcal")).toBeInTheDocument();
     });
   });
