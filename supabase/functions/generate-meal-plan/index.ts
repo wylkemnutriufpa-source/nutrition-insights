@@ -1530,7 +1530,7 @@ function generatePlanFromVisualLibrary(
           const scaledPortion = scaleDescriptionQuantities(portionText, clampedScale) || portionText;
           // Split on " + " to create separate lines
           const portionParts = scaledPortion.split(/\s*\+\s*/);
-          description = portionParts.map(part => `• ${part.trim()}`).join("\n");
+          description = portionParts.map((part: any) => `• ${part.trim()}`).join("\n");
         } else {
           // Last resort: build from display_name with calculated gram portion
           const scaledCalories = Math.round(baseCal * clampedScale);
@@ -1894,7 +1894,7 @@ export async function buildMarmitaItem(
   const { data: marmitaSettings } = await client
     .from("marmita_generation_settings")
     .select("default_practical_instructions, default_fast_instructions")
-    .eq("nutritionist_id", recipe.nutritionist_id)
+    .eq("nutritionist_id", (recipe as any).nutritionist_id)
     .maybeSingle();
 
   const customTip = fastMarmitaMode 
@@ -3687,4 +3687,8 @@ export async function generateMealPlanHandler(req: Request) {
   }
 }
 
-Deno.serve(generateMealPlanHandler);
+export const handler = generateMealPlanHandler;
+
+if (import.meta.main) {
+  Deno.serve(handler);
+}
