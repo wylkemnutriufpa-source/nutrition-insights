@@ -2722,10 +2722,11 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       });
     }
 
-    const serviceClient = createClient(
-      Deno.env.get("SUPABASE_URL")!,
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
-    );
+    const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://vkrcobprntictsxqmjjl.supabase.co";
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const serviceClient = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function") 
+      ? maybeSupabaseClient 
+      : createClient(supabaseUrl, supabaseKey);
 
     // Resolve tenant_id
     const { data: tenantProfile } = await serviceClient
