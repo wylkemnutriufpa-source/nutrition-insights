@@ -1834,7 +1834,7 @@ export function buildMarmitaItem(
   });
 
   const baseDesc = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
-  const description = finalizeMealDescription(baseDesc, mealType, goal) + "\n\n⏱️ Prática: Aqueça por 3-5 min no micro-ondas.";
+  const finalDescription = finalizeMealDescription(baseDesc, mealType, goal) + "\n\n⏱️ Prática: Aqueça por 3-5 min no micro-ondas.";
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
