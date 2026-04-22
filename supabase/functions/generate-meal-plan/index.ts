@@ -2610,6 +2610,19 @@ serve(async (req) => {
       .maybeSingle();
     let resolvedTenantId = tenantProfile?.tenant_id || null;
 
+    // Load patient profile to check identity and modes (Marmita Mode)
+    const { data: patientProfile } = await serviceClient
+      .from("profiles")
+      .select("id, user_id, marmita_mode")
+      .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
+      .maybeSingle();
+
+    // IF patient is in Marmita Mode, force generation to use marmita logic unless an explicit non-default mode was requested
+    if (patientProfile?.marmita_mode && (generationMode === "quick" || generationMode === "smart")) {
+      console.log(`[generate-meal-plan] 🍱 Overriding generationMode to weekly_marmita for patient ${patient_id} (Marmita Mode active)`);
+      generationMode = "weekly_marmita";
+    }
+
     // Authorization guard
     if (!caller.roles.includes("admin")) {
       const callerIsPatient = userId === patient_id;
@@ -2623,18 +2636,6 @@ serve(async (req) => {
           status: 403,
           headers: { ...corsHeaders, "Content-Type": "application/json" },
         });
-      }
-
-      const { data: patientProfile } = await serviceClient
-        .from("profiles")
-        .select("id, user_id, marmita_mode")
-        .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
-      .maybeSingle();
-
-      // IF patient is in Marmita Mode, force generation to use marmita logic unless an explicit non-default mode was requested
-      if (patientProfile?.marmita_mode && (generationMode === "quick" || generationMode === "smart")) {
-        console.log(`[generate-meal-plan] 🍱 Overriding generationMode to weekly_marmita for patient ${patient_id} (Marmita Mode active)`);
-        generationMode = "weekly_marmita";
       }
 
       const patientIdentityIds = Array.from(new Set([
