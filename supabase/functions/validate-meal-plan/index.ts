@@ -728,9 +728,7 @@ export async function handler(req: Request, supabaseClient?: any) {
     }
 }
 
-if (import.meta.main) {
-    serve(handler);
-}
+Deno.serve(handler);
 
 // ── Decision Helper Functions (inline for edge function context) ──────────────
 
