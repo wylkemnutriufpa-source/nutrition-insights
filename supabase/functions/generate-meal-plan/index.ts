@@ -1508,7 +1508,7 @@ function generatePlanFromVisualLibrary(
 // - Image resolution via meal_visual_library by category match
 // ═══════════════════════════════════════════════════════════════
 
-interface MarmitaRecipe {
+export interface MarmitaRecipe {
   id: string;
   name: string;
   meal_type: string; // 'almoço' | 'jantar'
