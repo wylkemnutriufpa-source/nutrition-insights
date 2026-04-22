@@ -171,19 +171,11 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
           <Textarea value={notes} onChange={e => { setNotes(e.target.value); setSaved(false); }} placeholder="Observações do profissional..." rows={3} />
         </div>
 
-        <div className="flex items-center justify-between pt-2">
-          <Button variant="outline" onClick={onPrev} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Voltar
+        <div className="flex items-center justify-end pt-2">
+          <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-primary" /> : <Save className="w-4 h-4" />}
+            {saved ? "Salvo" : "Salvar"}
           </Button>
-          <div className="flex gap-2">
-            <Button variant="outline" onClick={handleSave} disabled={saving} className="gap-2">
-              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : saved ? <Check className="w-4 h-4 text-primary" /> : <Save className="w-4 h-4" />}
-              {saved ? "Salvo" : "Salvar"}
-            </Button>
-            <Button onClick={() => { handleSave(); onNext(); }} className="gap-2">
-              Próximo <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
         </div>
       </CardContent>
     </Card>

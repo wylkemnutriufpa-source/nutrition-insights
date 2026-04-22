@@ -111,26 +111,43 @@ export default function InOfficeWizard() {
   }, [sessionId]);
 
   const goNext = useCallback(async () => {
+    const current = step;
     const next = Math.min(step + 1, 5);
+    
+    // Set step immediately for UI responsiveness
     setStep(next);
+    
+    // Side effects per step
     try {
-      await saveStep(next);
+      if (current === 4) {
+        // Mark meal plan as completed when leaving step 4
+        await supabase.from("in_office_sessions" as any)
+          .update({ meal_plan_completed: true, current_step: next } as any)
+          .eq("id", sessionId);
+      } else {
+        await saveStep(next);
+      }
     } catch (e) {
       console.error("Erro ao salvar progresso:", e);
     }
-  }, [step, saveStep]);
+  }, [step, saveStep, sessionId]);
 
-  const goPrev = useCallback(() => {
+  const goPrev = useCallback(async () => {
     const prev = Math.max(step - 1, 1);
     setStep(prev);
-    saveStep(prev);
+    await saveStep(prev);
   }, [step, saveStep]);
 
   const completeSession = useCallback(async () => {
     if (!sessionId) return;
+    setLoading(true);
     await supabase
       .from("in_office_sessions" as any)
-      .update({ completed_at: new Date().toISOString(), current_step: 5 } as any)
+      .update({ 
+        completed_at: new Date().toISOString(), 
+        current_step: 5,
+        meal_plan_completed: true 
+      } as any)
       .eq("id", sessionId);
     toast.success("Sessão presencial finalizada!");
     navigate(`/patients/${patientId}`);
@@ -148,7 +165,7 @@ export default function InOfficeWizard() {
 
   return (
     <DashboardLayout>
-      <div className="max-w-5xl mx-auto space-y-6">
+      <div className="max-w-5xl mx-auto space-y-6 pb-20">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
@@ -209,20 +226,23 @@ export default function InOfficeWizard() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Nav */}
-        <div className="flex justify-between pt-4 border-t border-border">
+        {/* Nav - Fixed at bottom for accessibility */}
+        <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-4 sm:mx-0 sm:rounded-b-2xl shadow-lg flex justify-between items-center z-10">
           <Button variant="outline" onClick={goPrev} disabled={step === 1} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Anterior
+            <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Anterior</span>
           </Button>
-          {step < 5 ? (
-            <Button onClick={goNext} className="gap-2">
-              Próximo <ArrowRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button onClick={completeSession} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-              <CheckCircle2 className="w-4 h-4" /> Finalizar Sessão
-            </Button>
-          )}
+          
+          <div className="flex gap-2">
+            {step < 5 ? (
+              <Button onClick={goNext} className="gap-2 px-8">
+                Próximo <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button onClick={completeSession} className="gap-2 bg-emerald-600 hover:bg-emerald-700 px-8 shadow-emerald-500/20 shadow-lg">
+                <CheckCircle2 className="w-4 h-4" /> Finalizar Sessão
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </DashboardLayout>

@@ -111,14 +111,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
           <Button onClick={createNewPlan} className="gap-2">
             <Plus className="w-4 h-4" /> Criar Plano Presencial
           </Button>
-          <div className="flex justify-between pt-4">
-            <Button variant="outline" onClick={onPrev} className="gap-2">
-              <ArrowLeft className="w-4 h-4" /> Voltar
-            </Button>
-            <Button variant="ghost" onClick={onNext} className="gap-2 text-muted-foreground">
-              Pular <ArrowRight className="w-4 h-4" />
-            </Button>
-          </div>
+          {/* Navigation is handled by parent wizard */}
         </CardContent>
       </Card>
     );
@@ -127,20 +120,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
   return (
     <div className="space-y-4">
       <QuickMealEditor mealPlanId={mealPlanId} patientId={patientId} sessionId={sessionId} />
-      <div className="flex justify-between pt-2">
-        <Button variant="outline" onClick={onPrev} className="gap-2">
-          <ArrowLeft className="w-4 h-4" /> Voltar
-        </Button>
-        <Button onClick={() => {
-          // Fire and forget update
-          supabase.from("in_office_sessions" as any)
-            .update({ meal_plan_completed: true } as any)
-            .eq("id", sessionId);
-          onNext();
-        }} className="gap-2">
-          Próximo <ArrowRight className="w-4 h-4" />
-        </Button>
-      </div>
+      {/* Navigation is handled by parent wizard */}
     </div>
   );
 }

@@ -155,11 +155,7 @@ export default function InOfficeStepPatient({ patientId, onNext }: Props) {
           </div>
         )}
 
-        <div className="flex justify-end">
-          <Button onClick={onNext} className="gap-2">
-            Iniciar Anamnese <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
+        {/* Navigation is handled by the parent wizard */}
       </CardContent>
     </Card>
   );
