@@ -47,6 +47,12 @@ Deno.test("weekly_marmita: buildMarmitaItem preserves grammages when is_scalable
   // Scale factor should be 1.0 even if target is different
   assertEquals(item._scale_factor, 1);
   assertEquals(item.description.includes("150g Frango"), true);
+  
+  // Macros should also be preserved (from estimateRecipeMacros for 150g)
+  // 150g * 1.3 = 195 kcal -> should be at floor 350 though.
+  const base = estimateRecipeMacros(recipe);
+  assertEquals(item.calories_target, base.cal);
+  assertEquals(item.protein_target, base.p);
 });
 
 Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctly", () => {
