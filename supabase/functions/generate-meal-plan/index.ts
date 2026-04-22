@@ -1605,13 +1605,24 @@ function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibrary
 }
 
 export function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
-  // Rough estimate from total grams: ~1.3 kcal/g, with macros from defaults
+  // Priority 1: Use fixed values if provided (at least calories and protein)
+  if (recipe.fixed_calories != null && recipe.fixed_protein != null) {
+    return {
+      cal: recipe.fixed_calories,
+      p: recipe.fixed_protein,
+      c: recipe.fixed_carbs || 0,
+      f: recipe.fixed_fat || 0
+    };
+  }
+
+  // Priority 2: Rough estimate from total grams: ~1.3 kcal/g, with macros from defaults
   const totalGrams = (recipe.foods_json || []).reduce((s, f) => s + (Number(f.grams) || 0), 0);
-  const cal = Math.round(totalGrams * 1.3);
+  const estimatedCal = Math.round(totalGrams * 1.3);
+  const cal = Math.max(estimatedCal, 350); // Minimum floor for a main meal
   const protein = recipe.meal_type === "almoço" ? 35 : 28;
   const carbs = Math.round(cal * 0.45 / 4);
   const fat = Math.round(cal * 0.25 / 9);
-  return { cal: Math.max(cal, 350), p: protein, c: carbs, f: fat };
+  return { cal, p: protein, c: carbs, f: fat };
 }
 
 async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onlyFixed?: boolean }): Promise<MarmitaRecipe[]> {
@@ -1816,7 +1827,7 @@ export function buildMarmitaItem(
 
   // Scale ingredient grams proportionally — preserve composition
   // Non-seasoning ingredients have a 20g floor; seasonings keep their small amount
-  const scaledFoods = recipe.foods_json.map(f => {
+  const scaledFoods = (recipe.foods_json || []).map(f => {
     const scaled = Math.round((Number(f.grams) || 0) * clampedScale);
     const minGrams = isSeasoning(f.name) ? 1 : 20;
     return { name: f.name, grams: Math.max(minGrams, scaled) };
