@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, act } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import InOfficeWizard from './pages/InOfficeWizard';
 import { BrowserRouter } from 'react-router-dom';
 import { supabase } from './integrations/supabase/client';
@@ -7,7 +7,7 @@ import { useAuth } from './lib/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
-// Mocks simplificados
+// Mocks simplificados para evitar renderização pesada e problemas de contexto
 vi.mock('@/components/layout/DashboardLayout', () => ({
   default: ({ children }: any) => <div data-testid="layout">{children}</div>
 }));
@@ -49,23 +49,7 @@ vi.mock('./lib/auth', () => ({
   useAuth: vi.fn(),
 }));
 
-vi.mock('./lib/tenantContext', () => ({
-  TenantProvider: ({ children }: any) => <>{children}</>,
-  useTenant: () => ({ tenantId: 't1' }),
-  useCurrentTenantId: () => 't1',
-}));
-
-vi.mock('./hooks/useWorkspaceContext', () => ({
-  WorkspaceContext: { Provider: ({ children }: any) => <>{children}</> },
-  useWorkspaceContext: () => ({
-    activeContext: 'professional',
-    setContext: vi.fn(),
-    isHybridUser: false,
-    isProfessionalContext: true,
-    isPatientContext: false,
-  })
-}));
-
+// Mocks globais
 Object.defineProperty(window, 'matchMedia', {
   writable: true,
   value: vi.fn().mockImplementation(query => ({
@@ -106,14 +90,10 @@ describe('InOfficeWizard - Fluxo Completo E2E', () => {
     (useAuth as any).mockReturnValue({ user: mockUser, loading: false });
     
     const mockSupabase = supabase as any;
-    // Mock inicial para passar do loading
-    mockSupabase.maybeSingle.mockImplementation(async (tableName: string) => {
-        return { data: mockProfile, error: null };
-    });
-    // Forçar a sessão inicial
+    // Wizard init sequence: patient profile then session
     mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null }) // nome do paciente
-      .mockResolvedValueOnce({ data: mockSession, error: null }); // sessão
+      .mockResolvedValueOnce({ data: mockSession, error: null }); // sessão ativa
       
     mockSupabase.update.mockResolvedValue({ data: null, error: null });
   });
@@ -122,25 +102,26 @@ describe('InOfficeWizard - Fluxo Completo E2E', () => {
     const mockSupabase = supabase as any;
     renderWizard();
 
-    // Etapa 1
+    // Etapa 1: Cadastro
     await waitFor(() => expect(screen.getByTestId('step-1')).toBeInTheDocument());
     
-    // Avançar para Etapa 2
+    // Avançar para Etapa 2: Anamnese
     fireEvent.click(screen.getByText(/Próximo/i));
     await waitFor(() => expect(screen.getByTestId('step-2')).toBeInTheDocument());
+    expect(mockSupabase.from).toHaveBeenCalledWith('in_office_sessions');
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 2 }));
 
-    // Avançar para Etapa 3
+    // Avançar para Etapa 3: Avaliação
     fireEvent.click(screen.getByText(/Próximo/i));
     await waitFor(() => expect(screen.getByTestId('step-3')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 3 }));
 
-    // Avançar para Etapa 4
+    // Avançar para Etapa 4: Plano
     fireEvent.click(screen.getByText(/Próximo/i));
     await waitFor(() => expect(screen.getByTestId('step-4')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 4 }));
 
-    // Avançar para Etapa 5 (Aqui deve salvar meal_plan_completed: true)
+    // Avançar para Etapa 5: Finalizar (com salvamento de meal_plan_completed: true)
     fireEvent.click(screen.getByText(/Próximo/i));
     await waitFor(() => expect(screen.getByTestId('step-5')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ 
@@ -148,20 +129,22 @@ describe('InOfficeWizard - Fluxo Completo E2E', () => {
       meal_plan_completed: true 
     }));
 
-    // Testar volta (Etapa 5 -> 4)
+    // Testar navegação para trás (Etapa 5 -> 4)
     fireEvent.click(screen.getByText(/Anterior/i));
     await waitFor(() => expect(screen.getByTestId('step-4')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 4 }));
 
-    // Finalizar Sessão (Etapa 5)
+    // Voltar para a Etapa 5 para concluir
     fireEvent.click(screen.getByText(/Próximo/i));
-    await waitFor(() => expect(screen.getByText(/Finalizar Sessão/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByTestId('step-5')).toBeInTheDocument());
     
+    // Finalizar Sessão
     fireEvent.click(screen.getByText(/Finalizar Sessão/i));
     await waitFor(() => {
       expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ 
         completed_at: expect.any(String),
-        current_step: 5 
+        current_step: 5,
+        meal_plan_completed: true
       }));
     });
   });
