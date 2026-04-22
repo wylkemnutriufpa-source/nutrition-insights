@@ -18,7 +18,7 @@ vi.mock('sonner', () => ({
   }
 }));
 
-const createMockChain = (initialData: any = {}) => {
+const createMockChain = () => {
   const chain: any = {
     select: vi.fn(() => chain),
     insert: vi.fn(() => chain),
@@ -32,8 +32,8 @@ const createMockChain = (initialData: any = {}) => {
     or: vi.fn(() => chain),
     order: vi.fn(() => chain),
     limit: vi.fn(() => chain),
-    single: vi.fn(() => Promise.resolve({ data: initialData, error: null })),
-    maybeSingle: vi.fn(() => Promise.resolve({ data: initialData, error: null })),
+    single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
+    maybeSingle: vi.fn(() => Promise.resolve({ data: {}, error: null })),
     ilike: vi.fn(() => chain),
     then: undefined,
   };
@@ -42,7 +42,7 @@ const createMockChain = (initialData: any = {}) => {
 
 vi.mock('../integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn(),
+    from: vi.fn(() => createMockChain()),
     rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
     functions: { invoke: vi.fn(() => Promise.resolve({ data: {}, error: null })) }
   }
@@ -82,14 +82,17 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
 
       (supabase.from as any).mockImplementation((table: string) => {
         const chain = createMockChain();
-        if (table === 'profiles') chain.maybeSingle.mockResolvedValue({ data: { full_name: patient.name, user_id: patient.id }, error: null });
+        if (table === 'profiles') {
+          chain.maybeSingle.mockResolvedValue({ data: { full_name: patient.name, user_id: patient.id }, error: null });
+        }
         if (table === 'in_office_sessions') {
           chain.maybeSingle.mockImplementation(() => Promise.resolve({ data: currentSession, error: null }));
           chain.single.mockImplementation(() => Promise.resolve({ data: currentSession, error: null }));
           chain.update.mockImplementation((data: any) => { 
             Object.assign(currentSession, data); 
-            return Promise.resolve({ error: null }); 
+            return chain; // Chain for .eq()
           });
+          chain.eq.mockImplementation(() => Promise.resolve({ error: null }));
         }
         if (table === 'meal_plans') {
           chain.maybeSingle.mockImplementation(() => Promise.resolve({ data: currentPlan, error: null }));
@@ -100,19 +103,29 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
           });
           chain.update.mockImplementation((data: any) => { 
             if (currentPlan) Object.assign(currentPlan, data); 
-            return { in: () => Promise.resolve({ error: null }) }; 
+            return chain;
           });
+          chain.eq.mockImplementation(() => chain);
+          chain.in.mockImplementation(() => Promise.resolve({ error: null }));
         }
-        if (table === 'nutritionist_patients') chain.maybeSingle.mockResolvedValue({ data: { tenant_id: 't1' }, error: null });
+        if (table === 'nutritionist_patients') {
+          chain.maybeSingle.mockResolvedValue({ data: { tenant_id: 't1' }, error: null });
+        }
         if (table === 'meal_plan_items') {
-          chain.select.mockResolvedValue({ data: [], error: null });
+          chain.select.mockImplementation(() => chain);
+          chain.eq.mockImplementation(() => chain);
+          // O retorno final de uma query select sem .single() deve ser Promise<{data, error}>
+          chain.order = vi.fn(() => Promise.resolve({ data: [], error: null }));
+          // fallback if order not called
+          chain.then = (onRes: any) => Promise.resolve({ data: [], error: null }).then(onRes);
+          
           chain.upsert.mockResolvedValue({ error: null });
-          chain.delete.mockResolvedValue({ error: null });
+          chain.delete.mockReturnValue(chain);
         }
         return chain;
       });
 
-      const { unmount } = render(<Wrapper patientId={patient.id}><InOfficeWizard /></Wrapper>);
+      render(<Wrapper patientId={patient.id}><InOfficeWizard /></Wrapper>);
 
       // Step 1 Load
       expect(await screen.findByText(new RegExp(patient.name, 'i'))).toBeInTheDocument();
@@ -127,10 +140,12 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
 
       // If marmita, check for Duplicar
       if (patient.hasMarmita) {
-        // Wait specifically for the Editor UI to replace the "Create" button
         const dupBtn = await screen.findByText(/Duplicar/i, {}, { timeout: 5000 });
         expect(dupBtn).toBeInTheDocument();
         fireEvent.click(dupBtn);
+        await waitFor(() => {
+          expect(supabase.from).toHaveBeenCalledWith('meal_plan_items');
+        });
       }
 
       // Finalize Session
@@ -149,7 +164,6 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
         expect(currentSession.meal_plan_completed).toBe(true);
       }, { timeout: 5000 });
 
-      unmount();
       vi.clearAllMocks();
     }
   });
