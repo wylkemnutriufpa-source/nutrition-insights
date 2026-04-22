@@ -9,12 +9,12 @@ import { MemoryRouter } from "react-router-dom";
 
 // Mock clinicalConstitution to allow changing constants in tests
 vi.mock("@/lib/clinicalConstitution", async (importOriginal) => {
-  const actual = await importOriginal();
+  const actual = await importOriginal() as any;
   return {
     ...actual,
     CALORIC_DEFICIT_LIMITS: {
       ...actual.CALORIC_DEFICIT_LIMITS,
-      MIN_CALORIES_FEMALE: 1200, // Default
+      MIN_CALORIES_FEMALE: 1200,
     }
   };
 });
