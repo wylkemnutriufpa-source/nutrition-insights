@@ -96,7 +96,7 @@ Deno.test({
     try {
         const req = buildRequest("http://localhost:54321/generate-meal-plan", {
           patient_id: mockPatientId,
-          generation_mode: "fixed_marmita",
+          generationMode: "fixed_marmita",
           weight: 70,
           height: 170
         });
