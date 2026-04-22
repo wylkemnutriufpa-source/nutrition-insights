@@ -237,6 +237,7 @@ const MealItemCard = memo(function MealItemCard({
                 })}
               </div>
             )}
+            <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
               {(() => {
                 const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
                 if (cal === null || cal === undefined) return null;
