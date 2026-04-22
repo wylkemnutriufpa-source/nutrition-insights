@@ -9,10 +9,13 @@ import {
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
+  Info,
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { safeNum, fmtMacro } from "@/lib/formatMacros";
+import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent } from "@/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
@@ -235,9 +238,38 @@ const MealItemCard = memo(function MealItemCard({
             )}
             {(item.calories_target || item.protein_target) && (
               <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-                {item.calories_target != null && <span className="flex items-center gap-1"><Flame className="w-3 h-3 text-orange-400" /> {fmtMacro(item.calories_target)} kcal</span>}
+                {item.calories_target != null && (
+                  <div className="flex items-center gap-1">
+                    <Flame className="w-3 h-3 text-orange-400" />
+                    <span>{fmtMacro(item.calories_target)} kcal</span>
+                    {isCalorieClamped(item.calories_target) && (
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger>
+                            <Info className="w-2.5 h-2.5 text-amber-500" />
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p className="text-[10px]">Ajustado para limite de segurança.</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    )}
+                  </div>
+                )}
                 {item.protein_target != null && <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target)}g</span>}
                 {item.carbs_target != null && <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target)}g</span>}
+                {isMacroInconsistent(item.calories_target || 0, item.protein_target || 0, item.carbs_target || 0, item.fat_target || 0) && (
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger>
+                        <AlertCircle className="w-3 h-3 text-amber-500" />
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p className="text-[10px]">Macros recalculados para precisão calórica.</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
+                )}
               </div>
             )}
             <div className="flex gap-1.5 mt-3">

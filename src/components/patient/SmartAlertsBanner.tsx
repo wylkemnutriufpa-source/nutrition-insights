@@ -3,11 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
   AlertTriangle, ClipboardList, ListChecks, FileText, 
-  ArrowRight, X, Sparkles 
+  ArrowRight, X, Sparkles, ShieldCheck, Flame
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { isCalorieClamped, isMacroInconsistent } from "@/lib/formatMacros";
 
 interface SmartAlert {
+
   id: string;
   icon: typeof AlertTriangle;
   title: string;
@@ -48,10 +50,11 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
     const today = new Date().toISOString().split("T")[0];
 
     // Parallel checks
-    const [anamnesisRes, checklistRes, protocolsRes] = await Promise.all([
+    const [anamnesisRes, checklistRes, protocolsRes, mealPlansRes] = await Promise.all([
       supabase.from("patient_anamnesis").select("id, status").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
       supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId).eq("date", today),
       supabase.from("patient_protocols").select("id, status, protocol_id").eq("patient_id", patientId).eq("status", "active"),
+      supabase.from("meal_plans").select("id").eq("patient_id", patientId).eq("is_active", true).eq("plan_status", "published_to_patient").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     // 1. Anamnesis not filled
@@ -116,6 +119,47 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
         bgColor: "bg-primary/5",
         borderColor: "border-primary/20",
       });
+    }
+
+    setAlerts(detected);
+
+    // 4. Check for meal plan clamping/corrections
+    const activePlan = mealPlansRes.data;
+    if (activePlan) {
+      const { data: items } = await supabase
+        .from("meal_plan_items")
+        .select("calories_target, protein_target, carbs_target, fat_target")
+        .eq("meal_plan_id", activePlan.id)
+        .limit(10); // Check a sample to find systemic issues
+
+      if (items && items.length > 0) {
+        const hasClamping = items.some(i => isCalorieClamped(i.calories_target || 0));
+        const hasConsistencyCorrection = items.some(i => isMacroInconsistent(i.calories_target || 0, i.protein_target || 0, i.carbs_target || 0, i.fat_target || 0));
+
+        if (hasClamping) {
+          detected.push({
+            id: "plan_clamped",
+            icon: Flame,
+            title: "Plano Alimentar Ajustado",
+            message: "Algumas refeições foram ajustadas para garantir o limite mínimo de segurança calórica (1200 kcal/dia).",
+            color: "text-amber-500",
+            bgColor: "bg-amber-500/5",
+            borderColor: "border-amber-500/20",
+          });
+        }
+
+        if (hasConsistencyCorrection) {
+          detected.push({
+            id: "macros_corrected",
+            icon: Sparkles,
+            title: "Correção de Macros",
+            message: "Identificamos pequenas divergências nos macros que foram corrigidas automaticamente para precisão do plano.",
+            color: "text-info",
+            bgColor: "bg-info/5",
+            borderColor: "border-info/20",
+          });
+        }
+      }
     }
 
     setAlerts(detected);

@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import {
   Utensils, CheckCircle2, MinusCircle, AlertCircle, Circle,
   CalendarRange, ChevronLeft, ChevronRight, Smartphone,
-  Flame, Timer, Star, ArrowRight,
+  Flame, Timer, Star, ArrowRight, Info,
 } from "lucide-react";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
@@ -23,6 +23,9 @@ import {
   type MealPlanItem, type MealCompletion, type AdherenceStatus,
 } from "@/components/patient/MealPlanDailyView";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
+import { fmtMacro, isCalorieClamped } from "@/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 import type { MealDetailData } from "@/components/patient/MealPlanDailyView";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
