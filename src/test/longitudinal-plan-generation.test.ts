@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import { LongitudinalPlanSchema, WeeklyPlanSchema } from "../lib/plan-validator";
 
 // ─── Pure simulation logic ───────────
 
@@ -72,7 +73,6 @@ function simulateWeek(p: PatientState, plan: WeeklyPlan): PatientState {
     weight: Number((p.weight + weightChange).toFixed(2)),
     cumulative_deficit: p.cumulative_deficit + actualDeficit,
     // Simulate some adherence fluctuation but keep it deterministic for the test if needed
-    // Here we'll keep it stable to test determinism easier, or use a predictable sequence
     adherence_7d: Math.max(40, Math.min(100, p.adherence_7d + (weightChange < 0 ? 2 : -5))),
   };
 }
@@ -89,11 +89,10 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     cumulative_deficit: 0,
   };
 
-  it("validates determinism: same input produces same plan", () => {
-    const plan1 = generatePlan(initialPatient, 1);
-    const plan2 = generatePlan(initialPatient, 1);
-    expect(plan1).toEqual(plan2);
-    expect(plan1.calories).toBe(2000);
+  it("validates outputs against JSON schema (Zod)", () => {
+    const plan = generatePlan(initialPatient, 1);
+    const result = WeeklyPlanSchema.safeParse(plan);
+    expect(result.success).toBe(true);
   });
 
   it("validates variety: plans change over 10 weeks as state evolves", () => {
@@ -109,9 +108,12 @@ describe("Longitudinal Plan Generation & Determinism", () => {
       currentState = simulateWeek(currentState, plan);
     }
 
-    // Check that Week 1 is different from Week 10 (due to metabolic adaptation/adherence shifts)
+    // Validate entire 10+ week output against Longitudinal schema
+    const longitudinalResult = LongitudinalPlanSchema.safeParse(history);
+    expect(longitudinalResult.success).toBe(true);
+
+    // Check that Week 1 is different from Week 10
     expect(history[0].calories).not.toBe(history[9].calories);
-    // At week 10, calories might be higher due to forced adherence drop at week 6 triggering conservative deficit
     expect(history[9].calories).toBe(2150); 
     expect(history[0].calories).toBe(2000);
     
@@ -128,17 +130,15 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     for (let w = 1; w <= 20; w++) {
       const plan = generatePlan(currentState, w);
       
+      // Use Zod validation for each step
+      expect(WeeklyPlanSchema.safeParse(plan).success).toBe(true);
+      
       // Calories should never drop below a safe minimum
       expect(plan.calories).toBeGreaterThanOrEqual(1200);
       
-      // Macros should always be valid numbers
-      expect(plan.macros.p).toBeGreaterThan(0);
-      expect(plan.macros.c).toBeGreaterThan(0);
-      expect(plan.macros.f).toBeGreaterThan(0);
-      
       currentState = simulateWeek(currentState, plan);
       
-      // Weight should remain within human bounds (not go negative or explode)
+      // Weight should remain within human bounds
       expect(currentState.weight).toBeGreaterThan(40);
       expect(currentState.weight).toBeLessThan(150);
     }
@@ -154,11 +154,11 @@ describe("Longitudinal Plan Generation & Determinism", () => {
       currentState = simulateWeek(currentState, plan);
     }
 
-    // Now re-run from Week 5
     if (stateAtWeek5) {
       const planWeek5 = generatePlan(stateAtWeek5, 5);
       const planWeek5Again = generatePlan(stateAtWeek5, 5);
       expect(planWeek5).toEqual(planWeek5Again);
+      expect(WeeklyPlanSchema.safeParse(planWeek5).success).toBe(true);
     }
   });
 
