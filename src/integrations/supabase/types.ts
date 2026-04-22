@@ -13222,6 +13222,7 @@ export type Database = {
           goal: string | null
           historical_loss_rate: number | null
           id: string
+          marmita_mode: boolean | null
           metabolic_confidence_score: number | null
           metabolic_last_evaluated_at: string | null
           metabolic_phase: string | null
@@ -13265,6 +13266,7 @@ export type Database = {
           goal?: string | null
           historical_loss_rate?: number | null
           id?: string
+          marmita_mode?: boolean | null
           metabolic_confidence_score?: number | null
           metabolic_last_evaluated_at?: string | null
           metabolic_phase?: string | null
@@ -13308,6 +13310,7 @@ export type Database = {
           goal?: string | null
           historical_loss_rate?: number | null
           id?: string
+          marmita_mode?: boolean | null
           metabolic_confidence_score?: number | null
           metabolic_last_evaluated_at?: string | null
           metabolic_phase?: string | null

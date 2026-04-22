@@ -110,6 +110,39 @@ export default function Settings() {
           <p className="text-muted-foreground text-sm">{t("settings.subtitle")}</p>
         </div>
 
+        {/* Marmita Mode — only for patients or professionals editing their profile as patient */}
+        {(!isNutritionist && !isPersonal) && (
+          <Card className="shadow-card border-primary/20">
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <UtensilsCrossed className="w-5 h-5 text-primary" /> Modo Paciente Marmita
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between p-4 rounded-xl bg-muted/50">
+                <div className="flex-1 mr-4">
+                  <p className="font-medium text-sm">Preferência por Marmitas</p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Receba planos alimentares baseados em receitas de marmitas cadastradas para facilitar sua rotina.
+                  </p>
+                </div>
+                <Switch
+                  checked={profile?.marmita_mode || false}
+                  onCheckedChange={async (v) => {
+                    const { error } = await supabase.from("profiles").update({ marmita_mode: v } as any).eq("user_id", user!.id);
+                    if (error) {
+                      toast.error("Erro ao atualizar preferência");
+                    } else {
+                      toast.success("Preferência de marmitas atualizada!");
+                      refreshProfile();
+                    }
+                  }}
+                />
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Experience Mode */}
         <ExperienceModeSwitcher />
 

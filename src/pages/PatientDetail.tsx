@@ -21,6 +21,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import MetabolicRadar from "@/components/dashboard/MetabolicRadar";
 import { AnamnesisInsightsFull } from "@/components/patient/AnamnesisInsightsCard";
@@ -1902,6 +1903,37 @@ export default function PatientDetail() {
                         accessMode={(profile as any)?.fit_intelligence_access_mode || "unlimited"}
                         onToggle={() => invalidate()}
                       />
+                    </div>
+
+                    {/* Marmita Mode Toggle */}
+                    <div className="border-t pt-3">
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <ChefHat className="w-4 h-4 text-primary" />
+                            Modo Paciente Marmita
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Gera planos usando apenas receitas de marmita cadastradas.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={(profile as any)?.marmita_mode || false}
+                          onCheckedChange={async (checked) => {
+                            try {
+                              const { error } = await supabase
+                                .from("profiles")
+                                .update({ marmita_mode: checked } as any)
+                                .eq("user_id", resolvedPatientId);
+                              if (error) throw error;
+                              toast.success(`Modo Marmita ${checked ? "ativado" : "desativado"}!`);
+                              invalidate();
+                            } catch (e: any) {
+                              toast.error("Erro ao atualizar modo marmita");
+                            }
+                          }}
+                        />
+                      </div>
                     </div>
 
                     <div className="border-t pt-3 space-y-2">
