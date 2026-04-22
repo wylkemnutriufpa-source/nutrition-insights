@@ -712,7 +712,12 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
     });
 
     const correction = target - scaledSum;
-    mealGroup[largestIndex].protein_target = Math.max(0, (Number(mealGroup[largestIndex].protein_target) || 0) + correction);
+    const scalableItems = mealGroup.filter(i => i._is_scalable !== false);
+    const targetGroup = scalableItems.length > 0 ? scalableItems : mealGroup;
+    const finalLargestIndex = scalableItems.length > 0 
+      ? mealGroup.indexOf(scalableItems.reduce((a, b) => (Number(b.protein_target) || 0) > (Number(a.protein_target) || 0) ? b : a))
+      : largestIndex;
+    mealGroup[finalLargestIndex].protein_target = Math.max(0, (Number(mealGroup[finalLargestIndex].protein_target) || 0) + correction);
   }
 }
 
