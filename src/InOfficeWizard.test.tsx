@@ -16,7 +16,9 @@ vi.mock('./integrations/supabase/client', () => ({
       select: vi.fn().mockReturnThis(),
       insert: vi.fn().mockReturnThis(),
       update: vi.fn().mockReturnThis(),
+      delete: vi.fn().mockReturnThis(),
       eq: vi.fn().mockReturnThis(),
+      in: vi.fn().mockReturnThis(),
       is: vi.fn().mockReturnThis(),
       order: vi.fn().mockReturnThis(),
       limit: vi.fn().mockReturnThis(),
@@ -24,6 +26,12 @@ vi.mock('./integrations/supabase/client', () => ({
       single: vi.fn(),
     })),
     rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+      unsubscribe: vi.fn(),
+    })),
+    removeChannel: vi.fn(),
   },
 }));
 
@@ -94,27 +102,24 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
       loading: false
     });
     
-    // Reset supabase mocks for each test
     const fromMock = supabase.from as any;
     fromMock().maybeSingle
-      .mockResolvedValue({ data: mockProfile, error: null }); // Default for any profile call
+      .mockResolvedValue({ data: mockProfile, error: null });
     
-    // Specific setups will override this in tests if needed
     fromMock().select.mockReturnThis();
     fromMock().eq.mockReturnThis();
+    fromMock().update.mockResolvedValue({ data: null, error: null });
   });
 
   it('deve carregar a etapa inicial corretamente', async () => {
     const fromMock = supabase.from as any;
-    // 1st call: profiles, 2nd: sessions, 3rd: user_tenants (from TenantProvider)
     fromMock().maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null }) // Profile
       .mockResolvedValueOnce({ data: mockSession, error: null }); // Session
     
     fromMock().select.mockReturnThis();
     fromMock().eq.mockReturnThis();
-    // Mock user_tenants for TenantProvider
-    fromMock().select.mockResolvedValueOnce({ data: [], error: null });
+    fromMock().select.mockResolvedValueOnce({ data: [], error: null }); // user_tenants
 
     renderWizard();
     
@@ -133,7 +138,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     fromMock().maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: mockSession, error: null });
-    fromMock().select.mockResolvedValueOnce({ data: [], error: null }); // user_tenants
+    fromMock().select.mockResolvedValueOnce({ data: [], error: null });
 
     renderWizard();
 
@@ -148,6 +153,10 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     });
 
     expect(supabase.from).toHaveBeenCalledWith('in_office_sessions');
+    const fromCall = fromMock();
+    expect(fromCall.update).toHaveBeenCalledWith(expect.objectContaining({
+      current_step: 2
+    }));
   });
 
   it('deve permitir voltar para a etapa anterior', async () => {
