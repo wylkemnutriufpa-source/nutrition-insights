@@ -23,7 +23,7 @@ import {
   type MealPlanItem, type MealCompletion, type AdherenceStatus,
 } from "@/components/patient/MealPlanDailyView";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
-import { fmtMacro, isCalorieClamped, getCalorieClampValue } from "@/lib/formatMacros";
+import { fmtMacro } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { MealDetailData } from "@/components/patient/MealPlanDailyView";

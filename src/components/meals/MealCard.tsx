@@ -1,7 +1,7 @@
 import { motion } from "framer-motion";
 import { Clock, Sparkles, AlertCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { fmtMacro, safeNum, isMacroInconsistent, isCalorieClamped } from "@/lib/formatMacros";
+import { fmtMacro, safeNum, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
@@ -89,7 +89,7 @@ export default function MealCard({
                 <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
                 <span className="text-[10px] text-amber-700 font-medium">
                   {isCalorieClamped(calories || 0) 
-                    ? "Calorias ajustadas para o limite de segurança." 
+                    ? `Calorias ajustadas para o limite de segurança (${getCalorieClampValue(calories || 0)} kcal).` 
                     : "Macros recalculados para manter consistência calórica."}
                 </span>
               </div>
