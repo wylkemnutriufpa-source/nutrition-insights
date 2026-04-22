@@ -36,7 +36,8 @@ export const ApplyClinicalAdjustmentSchema = z.object({
 
 // compute-clinical-brain input schema
 export const ClinicalBrainSchema = z.object({
-  patient_id: PatientIdSchema,
+  patient_id: PatientIdSchema.optional(),
+  pipeline_run_id: z.string().optional(),
   analysis_depth: z.enum(["shallow", "standard", "deep"]).optional().default("standard"),
 });
 
