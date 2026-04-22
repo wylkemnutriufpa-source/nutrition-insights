@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
 import { validateBody } from "../_shared/validator.ts";
 import { GenerateMealPlanSchema } from "../_shared/schemas.ts";
 import { requireUser } from "../_shared/auth-guard.ts";
@@ -626,6 +625,26 @@ function isBlockedFood(name: string): boolean {
 function isLossGoal(goal: string): boolean {
   return ["lose_weight", "maintain", "improve_health"].includes(goal);
 }
+
+interface RealisticMeal {
+  title: string;
+  description: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
+const SNACKS: RealisticMeal[] = [];
+const SNACKS_MASSA: RealisticMeal[] = [];
+const BREAKFAST_EMAG: RealisticMeal[] = [];
+const BREAKFAST_MASSA: RealisticMeal[] = [];
+const MAIN_EMAG: RealisticMeal[] = [];
+const MAIN_MASSA: RealisticMeal[] = [];
+const DINNER_EMAG: RealisticMeal[] = [];
+const DINNER_MASSA: RealisticMeal[] = [];
+const CEIA: RealisticMeal[] = [];
+const CEIA_MASSA: RealisticMeal[] = [];
 
 function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
   const loss = isLossGoal(goal);
