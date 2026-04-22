@@ -7,18 +7,12 @@
  *
  * Use estes helpers como ÚLTIMA camada antes do JSX, mesmo se o valor já
  * tiver passado por `Math.round` upstream — eles são idempotentes.
- *
- * Ver:
- *   - src/pages/DietTemplates.tsx (origem do bug das marmitas fixas)
- *   - src/pages/__tests__/MarmitasFixasMacros.integration.test.tsx
  */
+import { CALORIC_DEFICIT_LIMITS } from "./clinicalConstitution";
 
 /**
  * Coage qualquer valor para `number` finito. Trata `null`, `undefined`,
  * strings, `NaN`, `Infinity` e `-Infinity` como `0`.
- *
- * Use em CÁLCULOS (multiplicação, divisão, soma) onde um operando inválido
- * propagaria `NaN`/`Infinity`. Sempre retorna número seguro para aritmética.
  */
 export function safeNum(v: unknown): number {
   const n = typeof v === "number" ? v : Number(v);
@@ -27,10 +21,7 @@ export function safeNum(v: unknown): number {
 
 /**
  * Formata um valor numérico para exibição no DOM, retornando sempre uma
- * string segura (inteiro arredondado). Inválidos (`NaN`, `Infinity`, etc.)
- * caem para o fallback (default `"0"`).
- *
- * Use em JSX como última barreira: `<span>{fmtMacro(v)}kcal</span>`.
+ * string segura (inteiro arredondado).
  */
 export function fmtMacro(v: unknown, fallback: string = "0"): string {
   const n = typeof v === "number" ? v : Number(v);
@@ -39,8 +30,7 @@ export function fmtMacro(v: unknown, fallback: string = "0"): string {
 }
 
 /**
- * Variante decimal: preserva uma casa decimal (útil p/ macros granulares
- * como `protein_per_gram * qty` no editor visual). Inválidos → fallback.
+ * Variante decimal: preserva uma casa decimal.
  */
 export function fmtMacroDecimal(v: unknown, decimals: number = 1, fallback: string = "0"): string {
   const n = typeof v === "number" ? v : Number(v);
@@ -50,11 +40,7 @@ export function fmtMacroDecimal(v: unknown, decimals: number = 1, fallback: stri
 }
 
 /**
- * Calcula um multiplicador de escala (alvo/base) protegendo divisão por
- * zero e operandos inválidos. Retorna `1` (sem ajuste) quando degenerado.
- *
- * Caso real: template com `base_calories = 0` causava `NaN`/`Infinity`
- * que vazava para a UI como "NaNkcal".
+ * Calcula um multiplicador de escala (alvo/base) protegendo divisão por zero.
  */
 export function safeMultiplier(target: unknown, base: unknown, fallback: number = 1): number {
   const t = safeNum(target);
@@ -76,11 +62,25 @@ export function isMacroInconsistent(calories: number, p: number, c: number, f: n
 }
 
 /**
- * Checks if calories are likely clamped (e.g., exactly 1200 or 1500)
- * which might indicate a system limit was hit.
+ * Checks if calories are clamped by system safety bounds.
  */
-export function isCalorieClamped(calories: number): boolean {
-  const c = safeNum(calories);
-  return c === 1200; // Common lower bound in our system
+export function isCalorieClamped(calories: number, sex: "male" | "female" = "female"): boolean {
+  const c = Math.round(safeNum(calories));
+  const min = sex === "male" ? CALORIC_DEFICIT_LIMITS.MIN_CALORIES_MALE : CALORIC_DEFICIT_LIMITS.MIN_CALORIES_FEMALE;
+  const max = 4500; // Estabilizado no clinicalMacroEngine
+  return c === min || c === max;
 }
+
+/**
+ * Returns the exact clamp threshold hit, if any.
+ */
+export function getCalorieClampValue(calories: number, sex: "male" | "female" = "female"): number | null {
+  const c = Math.round(safeNum(calories));
+  const min = sex === "male" ? CALORIC_DEFICIT_LIMITS.MIN_CALORIES_MALE : CALORIC_DEFICIT_LIMITS.MIN_CALORIES_FEMALE;
+  const max = 4500;
+  if (c === min) return min;
+  if (c === max) return max;
+  return null;
+}
+
 
