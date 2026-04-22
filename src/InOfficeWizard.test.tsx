@@ -10,30 +10,37 @@ import { WorkspaceContext } from './hooks/useWorkspaceContext';
 import '@testing-library/jest-dom';
 
 // Mock supabase
+const mockSupabase = {
+  from: vi.fn(() => mockSupabase),
+  select: vi.fn(() => mockSupabase),
+  insert: vi.fn(() => mockSupabase),
+  update: vi.fn(() => mockSupabase),
+  delete: vi.fn(() => mockSupabase),
+  eq: vi.fn(() => mockSupabase),
+  in: vi.fn(() => mockSupabase),
+  is: vi.fn(() => mockSupabase),
+  order: vi.fn(() => mockSupabase),
+  limit: vi.fn(() => mockSupabase),
+  maybeSingle: vi.fn(),
+  single: vi.fn(),
+  rpc: vi.fn(),
+  channel: vi.fn(() => ({
+    on: vi.fn().mockReturnThis(),
+    subscribe: vi.fn().mockReturnThis(),
+    unsubscribe: vi.fn(),
+  })),
+  removeChannel: vi.fn(),
+  getChannels: vi.fn(() => []),
+};
+
+// Fix for .then() error in useProfessionalModules
+(mockSupabase.maybeSingle as any).mockReturnValue(Promise.resolve({ data: {}, error: null }));
+(mockSupabase.single as any).mockReturnValue(Promise.resolve({ data: {}, error: null }));
+(mockSupabase.rpc as any).mockReturnValue(Promise.resolve({ data: {}, error: null }));
+(mockSupabase.select as any).mockReturnValue(Promise.resolve({ data: [], error: null })); // For select calls that are awaited directly
+
 vi.mock('./integrations/supabase/client', () => ({
-  supabase: {
-    from: vi.fn(() => ({
-      select: vi.fn().mockReturnThis(),
-      insert: vi.fn().mockReturnThis(),
-      update: vi.fn().mockReturnThis(),
-      delete: vi.fn().mockReturnThis(),
-      eq: vi.fn().mockReturnThis(),
-      in: vi.fn().mockReturnThis(),
-      is: vi.fn().mockReturnThis(),
-      order: vi.fn().mockReturnThis(),
-      limit: vi.fn().mockReturnThis(),
-      maybeSingle: vi.fn(),
-      single: vi.fn(),
-    })),
-    rpc: vi.fn().mockResolvedValue({ data: null, error: null }),
-    channel: vi.fn(() => ({
-      on: vi.fn().mockReturnThis(),
-      subscribe: vi.fn().mockReturnThis(),
-      unsubscribe: vi.fn(),
-    })),
-    removeChannel: vi.fn(),
-    getChannels: vi.fn(() => []),
-  },
+  supabase: mockSupabase
 }));
 
 // Mock auth
@@ -106,36 +113,21 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
       loading: false
     });
     
-    const fromMock = supabase.from as any;
-    // Default mock behavior for profile, session, etc.
-    fromMock().maybeSingle.mockImplementation(async () => {
-      // In a real app we'd check the table name, but here we can just return a promise
-      return { data: mockProfile, error: null };
-    });
-    
-    fromMock().select.mockReturnThis();
-    fromMock().eq.mockReturnThis();
-    fromMock().in.mockReturnThis();
-    fromMock().is.mockReturnThis();
-    fromMock().order.mockReturnThis();
-    fromMock().limit.mockReturnThis();
-    fromMock().update.mockResolvedValue({ data: null, error: null });
-    fromMock().insert.mockResolvedValue({ data: { id: 'new-id' }, error: null });
-    fromMock().single.mockResolvedValue({ data: mockSession, error: null });
-    
-    // Mock rpc for workspace init
-    (supabase.rpc as any).mockResolvedValue({ data: 'ws-123', error: null });
+    // Reset defaults
+    mockSupabase.maybeSingle.mockResolvedValue({ data: mockProfile, error: null });
+    mockSupabase.update.mockResolvedValue({ data: null, error: null });
+    mockSupabase.insert.mockResolvedValue({ data: { id: 'new-id' }, error: null });
+    mockSupabase.single.mockResolvedValue({ data: mockSession, error: null });
+    mockSupabase.rpc.mockResolvedValue({ data: 'ws-123', error: null });
+    mockSupabase.select.mockImplementation(async () => ({ data: [], error: null }));
   });
 
   it('deve carregar a etapa inicial corretamente', async () => {
-    const fromMock = supabase.from as any;
-    // Sequential calls during wizard initialization
-    fromMock().maybeSingle
+    mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null }) // Patient profile
       .mockResolvedValueOnce({ data: mockSession, error: null }) // Session
-      .mockResolvedValueOnce({ data: [], error: null }) // user_tenants (TenantProvider)
-      .mockResolvedValueOnce({ data: { coach_bodybuilder_enabled: true }, error: null }) // professional_profiles (useProfessionalModules)
-      .mockResolvedValueOnce({ data: { id: 'ws-123' }, error: null }); // workspace_profiles (useWorkspace)
+      .mockResolvedValueOnce({ data: { coach_bodybuilder_enabled: true }, error: null }) // professional_profiles
+      .mockResolvedValueOnce({ data: { id: 'ws-123' }, error: null }); // workspace_profiles
 
     renderWizard();
     
@@ -150,8 +142,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
   });
 
   it('deve avançar para a próxima etapa e persistir no banco', async () => {
-    const fromMock = supabase.from as any;
-    fromMock().maybeSingle
+    mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: mockSession, error: null });
 
@@ -167,12 +158,14 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
       expect(anamneseBtn).toHaveClass('bg-primary');
     });
 
-    expect(supabase.from).toHaveBeenCalledWith('in_office_sessions');
+    expect(mockSupabase.from).toHaveBeenCalledWith('in_office_sessions');
+    expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
+      current_step: 2
+    }));
   });
 
   it('deve permitir voltar para a etapa anterior', async () => {
-    const fromMock = supabase.from as any;
-    fromMock().maybeSingle
+    mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: { ...mockSession, current_step: 2 }, error: null });
 
@@ -190,8 +183,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
   });
 
   it('deve marcar o plano alimentar como concluído ao sair da etapa 4', async () => {
-    const fromMock = supabase.from as any;
-    fromMock().maybeSingle
+    mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null })
       .mockResolvedValueOnce({ data: { ...mockSession, current_step: 4 }, error: null });
 
@@ -203,9 +195,8 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     fireEvent.click(nextBtn);
 
     await waitFor(() => {
-      expect(supabase.from).toHaveBeenCalledWith('in_office_sessions');
-      const fromCall = fromMock();
-      expect(fromCall.update).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockSupabase.from).toHaveBeenCalledWith('in_office_sessions');
+      expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
         meal_plan_completed: true,
         current_step: 5
       }));
