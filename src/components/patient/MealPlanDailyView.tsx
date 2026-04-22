@@ -245,8 +245,13 @@ const MealItemCard = memo(function MealItemCard({
                     {isCalorieClamped(item.calories_target) && (
                       <TooltipProvider>
                         <Tooltip>
-                          <TooltipTrigger>
-                            <Info className="w-2.5 h-2.5 text-amber-500" />
+                          <TooltipTrigger asChild>
+                            <button 
+                              className="p-0.5 hover:bg-muted rounded-full transition-colors inline-flex items-center"
+                              aria-label={`Aviso de segurança: Calorias ajustadas para ${getCalorieClampValue(item.calories_target)} kcal`}
+                            >
+                              <Info className="w-2.5 h-2.5 text-amber-500" />
+                            </button>
                           </TooltipTrigger>
                           <TooltipContent>
                             <p className="text-[10px]">
@@ -263,8 +268,13 @@ const MealItemCard = memo(function MealItemCard({
                 {isMacroInconsistent(item.calories_target || 0, item.protein_target || 0, item.carbs_target || 0, item.fat_target || 0) && (
                   <TooltipProvider>
                     <Tooltip>
-                      <TooltipTrigger>
-                        <AlertCircle className="w-3 h-3 text-amber-500" />
+                      <TooltipTrigger asChild>
+                        <button 
+                          className="p-0.5 hover:bg-muted rounded-full transition-colors inline-flex items-center"
+                          aria-label="Aviso: Macros recalculados para precisão calórica"
+                        >
+                          <AlertCircle className="w-3 h-3 text-amber-500" />
+                        </button>
                       </TooltipTrigger>
                       <TooltipContent>
                         <p className="text-[10px]">Macros recalculados para precisão calórica.</p>

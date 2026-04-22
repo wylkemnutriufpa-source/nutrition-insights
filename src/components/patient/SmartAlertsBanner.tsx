@@ -189,6 +189,8 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
         initial={{ opacity: 0, y: -5 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: 5 }}
+        role="alert"
+        aria-live="polite"
         className={`rounded-xl ${current.bgColor} border ${current.borderColor} p-3 flex items-center gap-3`}
       >
         <Icon className={`w-5 h-5 flex-shrink-0 ${current.color}`} />
@@ -206,7 +208,11 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
             {current.actionLabel} <ArrowRight className="w-3 h-3" />
           </Button>
         )}
-        <button onClick={() => dismiss(current.id)} className="text-muted-foreground hover:text-foreground p-1">
+        <button 
+          onClick={() => dismiss(current.id)} 
+          className="text-muted-foreground hover:text-foreground p-1"
+          aria-label="Dispensar alerta"
+        >
           <X className="w-3 h-3" />
         </button>
         {visible.length > 1 && (
