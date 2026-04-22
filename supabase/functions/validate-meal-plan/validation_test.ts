@@ -1,6 +1,6 @@
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { handler } from "./index.ts";
-import { buildRequest, buildToxicRequest, MEAL_PLAN_FIXTURE } from "../_shared/test-harness.ts";
+import { buildRequest, buildToxicRequest, createMockSupabaseClient, MEAL_PLAN_FIXTURE } from "../_shared/test-harness.ts";
 
 const URL = "http://localhost/functions/v1/validate-meal-plan";
 
@@ -20,9 +20,19 @@ Deno.test("validate-meal-plan - invalid payload", async () => {
   assertEquals(data.error, "Missing meal_plan_id");
 });
 
-Deno.test("validate-meal-plan - response schema", async () => {
+Deno.test("validate-meal-plan - valid plan", async () => {
   const req = buildRequest(URL, { meal_plan_id: MEAL_PLAN_FIXTURE.id });
-  const res = await handler(req);
-  // Status might be 500 in test env due to missing env vars, but we validate catch logic
-  assertEquals(res.headers.get("Content-Type"), "application/json");
+  // Mock client returns a plan and some items
+  const mockClient = createMockSupabaseClient({ id: MEAL_PLAN_FIXTURE.id, patient_id: "p1" });
+  
+  const res = await handler(req, mockClient);
+  const data = await res.json();
+  
+  // Should successfully process
+  assertEquals(res.status, 200);
+  assertExists(data.overall_passed);
 });
+
+function assertExists(val: any) {
+  if (val === undefined || val === null) throw new Error("Value should exist");
+}
