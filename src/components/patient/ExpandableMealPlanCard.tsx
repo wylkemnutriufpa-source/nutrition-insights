@@ -22,7 +22,7 @@ import {
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion,
 } from "@/components/patient/MealPlanDailyView";
-import { fmtMacro, isMacroInconsistent, isCalorieClamped } from "@/lib/formatMacros";
+import { fmtMacro, isMacroInconsistent, isCalorieClamped, getCalorieClampValue } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 
