@@ -1615,7 +1615,7 @@ async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onl
   })).filter(r => r.foods_json.length > 0);
 }
 
-function generateWeeklyMarmitaPlan(
+export function generateWeeklyMarmitaPlan(
   recipes: MarmitaRecipe[],
   templates: ResolvedTemplate[],
   visualLibrary: VisualLibraryItem[],
