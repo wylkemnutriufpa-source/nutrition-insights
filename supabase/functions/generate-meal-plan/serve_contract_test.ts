@@ -8,10 +8,16 @@ Deno.env.set("SUPABASE_ANON_KEY", "mock-anon-key");
 Deno.env.set("SUPABASE_SERVICE_ROLE_KEY", "mock-service-key");
 
 // Helper to create a mock Supabase response
-const mockFetch = () => {
+const mockFetch = (onInsert?: (items: any[]) => void) => {
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (input: string | Request | URL, init?: RequestInit) => {
     const url = typeof input === "string" ? input : input instanceof URL ? input.toString() : input.url;
+    
+    if (url.includes("/rest/v1/meal_plan_items") && init?.method === "POST") {
+      const items = JSON.parse(init.body as string);
+      if (onInsert) onInsert(items);
+      return new Response(JSON.stringify(items), { status: 201 });
+    }
     
     if (url.includes("/auth/v1/user")) {
       return new Response(JSON.stringify({
