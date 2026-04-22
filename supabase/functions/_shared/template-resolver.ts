@@ -366,10 +366,19 @@ export function buildMealItemFromTemplate(
 ): any {
   // Use only valid-named foods for totals
   const validAllFoods = scaledFoods.filter(f => f.name && f.name.trim().length > 0);
-  const totalCal = validAllFoods.reduce((s, f) => s + f.calories, 0);
-  const totalP = validAllFoods.reduce((s, f) => s + f.protein, 0);
-  const totalC = validAllFoods.reduce((s, f) => s + f.carbs, 0);
-  const totalF = validAllFoods.reduce((s, f) => s + f.fat, 0);
+  let totalCal = validAllFoods.reduce((s, f) => s + f.calories, 0);
+  let totalP = validAllFoods.reduce((s, f) => s + f.protein, 0);
+  let totalC = validAllFoods.reduce((s, f) => s + f.carbs, 0);
+  let totalF = validAllFoods.reduce((s, f) => s + f.fat, 0);
+
+  // Fallback: If individual food macros were missing in the template structure (common in global templates),
+  // use the template's base macros scaled by the scaleFactor.
+  if (totalCal === 0 && template.kcal_base > 0) {
+    totalCal = template.kcal_base * scaleFactor;
+    totalP = template.protein_base * scaleFactor;
+    totalC = template.carbs_base * scaleFactor;
+    totalF = template.fat_base * scaleFactor;
+  }
 
   // Build description with gram portions — guard against undefined/NaN
   // GUARDRAIL 3: Filter out foods with empty/invalid names before building description

@@ -236,54 +236,58 @@ const MealItemCard = memo(function MealItemCard({
                 })}
               </div>
             )}
-            {(item.calories_target !== null || item.protein_target !== null) && (
-              <div className="flex items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
-                {item.calories_target !== null && (
-                  <div className="flex items-center gap-1">
-                    <Flame className="w-3 h-3 text-orange-400" />
-                    <span>{fmtMacro(item.calories_target)} kcal</span>
-                    {isCalorieClamped(item.calories_target) && (
-                      <TooltipProvider>
-                        <Tooltip>
-                          <TooltipTrigger asChild>
-                            <button 
-                              className="p-0.5 hover:bg-muted rounded-full transition-colors inline-flex items-center"
-                              aria-label={`Aviso de segurança: Calorias ajustadas para ${getCalorieClampValue(item.calories_target)} kcal`}
-                            >
-                              <Info className="w-2.5 h-2.5 text-amber-500" />
-                            </button>
-                          </TooltipTrigger>
-                          <TooltipContent>
-                            <p className="text-[10px]">
-                              Ajustado para {getCalorieClampValue(item.calories_target)} kcal (limite de segurança).
-                            </p>
-                          </TooltipContent>
-                        </Tooltip>
-                      </TooltipProvider>
-                    )}
-                  </div>
-                )}
-                {item.protein_target != null && <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target)}g</span>}
-                {item.carbs_target != null && <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target)}g</span>}
-                {isMacroInconsistent(item.calories_target || 0, item.protein_target || 0, item.carbs_target || 0, item.fat_target || 0) && (
+            <div className="flex flex-wrap items-center gap-3 mt-1.5 text-[10px] text-muted-foreground">
+              <div className="flex items-center gap-1">
+                <Flame className="w-3 h-3 text-orange-400" />
+                <span>{fmtMacro(item.calories_target)} kcal</span>
+                {isCalorieClamped(item.calories_target) && (
                   <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <button 
                           className="p-0.5 hover:bg-muted rounded-full transition-colors inline-flex items-center"
-                          aria-label="Aviso: Macros recalculados para precisão calórica"
+                          aria-label={`Aviso de segurança: Calorias ajustadas para ${getCalorieClampValue(item.calories_target)} kcal`}
                         >
-                          <AlertCircle className="w-3 h-3 text-amber-500" />
+                          <Info className="w-2.5 h-2.5 text-amber-500" />
                         </button>
                       </TooltipTrigger>
                       <TooltipContent>
-                        <p className="text-[10px]">Macros recalculados para precisão calórica.</p>
+                        <p className="text-[10px]">
+                          Ajustado para {getCalorieClampValue(item.calories_target)} kcal (limite de segurança).
+                        </p>
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>
                 )}
               </div>
-            )}
+              <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target)}g</span>
+              <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target)}g</span>
+              <span className="flex items-center gap-1"><Droplets className="w-3 h-3 text-yellow-400" /> {fmtMacro(item.fat_target)}g</span>
+              
+              {item.metadata?.prep_time && (
+                <Badge variant="secondary" className="px-1 py-0 h-4 text-[8px] flex items-center gap-0.5 bg-primary/5 text-primary border-primary/10">
+                  <Sun className="w-2 h-2" /> {item.metadata.prep_time} min
+                </Badge>
+              )}
+
+              {isMacroInconsistent(item.calories_target || 0, item.protein_target || 0, item.carbs_target || 0, item.fat_target || 0) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <button 
+                        className="p-0.5 hover:bg-muted rounded-full transition-colors inline-flex items-center"
+                        aria-label="Aviso: Macros recalculados para precisão calórica"
+                      >
+                        <AlertCircle className="w-3 h-3 text-amber-500" />
+                      </button>
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p className="text-[10px]">Macros recalculados para precisão calórica.</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+            </div>
             <div className="flex gap-1.5 mt-3">
               {ADHERENCE_OPTIONS.map(opt => (
                 <button

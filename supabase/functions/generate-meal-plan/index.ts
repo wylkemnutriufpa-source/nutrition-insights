@@ -1654,7 +1654,8 @@ async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onl
   })).filter(r => r.foods_json.length > 0);
 }
 
-export function generateWeeklyMarmitaPlan(
+export async function generateWeeklyMarmitaPlan(
+  client: any,
   recipes: MarmitaRecipe[],
   templates: ResolvedTemplate[],
   visualLibrary: VisualLibraryItem[],
@@ -1669,7 +1670,8 @@ export function generateWeeklyMarmitaPlan(
   strategy?: string,
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
-): { items: any[]; marmitasUsed: string[] } {
+  fastMarmitaMode: boolean = false,
+): Promise<{ items: any[]; marmitasUsed: string[] }> {
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
@@ -1761,8 +1763,8 @@ export function generateWeeklyMarmitaPlan(
       const protein = detectRecipeProtein(picked);
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
-      items.push(buildMarmitaItem(picked, "lunch", day, lunchKcal, goal, visualLibrary, mealTimes,
-        { protein: lunchProteinTarget, carbs: lunchCarbsTarget, fat: lunchFatTarget }));
+      items.push(await buildMarmitaItem(client, picked, "lunch", day, lunchKcal, goal, visualLibrary, mealTimes,
+        { protein: lunchProteinTarget, carbs: lunchCarbsTarget, fat: lunchFatTarget }, fastMarmitaMode));
       prevLunchProtein = protein;
     }
 
@@ -1776,8 +1778,8 @@ export function generateWeeklyMarmitaPlan(
       const protein = detectRecipeProtein(picked);
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
-      items.push(buildMarmitaItem(picked, "dinner", day, dinnerKcal, goal, visualLibrary, mealTimes,
-        { protein: dinnerProteinTarget, carbs: dinnerCarbsTarget, fat: dinnerFatTarget }));
+      items.push(await buildMarmitaItem(client, picked, "dinner", day, dinnerKcal, goal, visualLibrary, mealTimes,
+        { protein: dinnerProteinTarget, carbs: dinnerCarbsTarget, fat: dinnerFatTarget }, fastMarmitaMode));
       prevDinnerProtein = protein;
     }
   }
@@ -1808,7 +1810,8 @@ function pickMarmita(
   return pool[seed % pool.length];
 }
 
-export function buildMarmitaItem(
+export async function buildMarmitaItem(
+  client: any,
   recipe: MarmitaRecipe,
   mealType: string,
   day: number,
@@ -1817,7 +1820,8 @@ export function buildMarmitaItem(
   visualLibrary: VisualLibraryItem[],
   mealTimes?: Record<string, string>,
   macroTarget?: { protein: number; carbs: number; fat: number },
-): any {
+  fastMarmitaMode: boolean = false,
+): Promise<any> {
   const baseMacros = estimateRecipeMacros(recipe);
   const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
   // If recipe is not scalable, force scale to 1.0 (preserve grammages)
@@ -1857,7 +1861,6 @@ export function buildMarmitaItem(
   const prepTime = timeMatch ? parseInt(timeMatch[2] || timeMatch[1]) : 5;
 
   const description = finalized + "\n\n" + customTip;
-
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
   // If macroTarget provided, prefer it (the engine already split daily macros across slots),
@@ -1869,7 +1872,7 @@ export function buildMarmitaItem(
 
   return {
     title: `🍱 ${recipe.name}`,
-    description: finalDescription,
+    description: description,
     meal_type: mealType,
     day_of_week: day,
     calories_target: Math.round(baseMacros.cal * clampedScale) || 350,
@@ -1878,6 +1881,7 @@ export function buildMarmitaItem(
     fat_target: fatFinal,
     visual_library_item_id: visual?.id || null,
     meal_time: mealTimes?.[mealType] || null,
+    prep_time: prepTime,
     _source: "meal_recipe",
     _recipe_id: recipe.id,
     _recipe_name: recipe.name,
@@ -2689,9 +2693,11 @@ export async function generateMealPlanHandler(req: Request) {
     // Load patient profile to check identity and modes (Marmita Mode)
     const { data: patientProfile } = await serviceClient
       .from("profiles")
-      .select("id, user_id, marmita_mode")
+      .select("id, user_id, marmita_mode, fast_marmita_mode")
       .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
       .maybeSingle();
+
+    const fastMarmitaMode = !!patientProfile?.fast_marmita_mode;
 
     // IF patient is in Marmita Mode, force generation to use marmita logic unless an explicit non-default mode was requested
     if (patientProfile?.marmita_mode && (generationMode === "quick" || generationMode === "smart")) {
@@ -3309,10 +3315,23 @@ export async function generateMealPlanHandler(req: Request) {
       // ── WEEKLY MARMITA MODE (escalável) ──
       const mealRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId);
       console.log(`[generate-meal-plan] weekly_marmita: ${mealRecipes.length} recipes loaded`);
-      const result = generateWeeklyMarmitaPlan(
-        mealRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
-        restrictions, disliked, allergies, enabledMeals, mealTimes,
-        resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+      const result = await generateWeeklyMarmitaPlan(
+        serviceClient,
+        mealRecipes,
+        mealTemplates,
+        visualLibrary,
+        goal,
+        finalKcal,
+        finalMacros,
+        restrictions,
+        disliked,
+        allergies,
+        enabledMeals,
+        mealTimes,
+        resolvedStrategy.strategyId,
+        patientFoodDatabase,
+        recentMeals,
+        fastMarmitaMode
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
