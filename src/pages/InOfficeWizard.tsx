@@ -137,6 +137,7 @@ export default function InOfficeWizard() {
       }
     } catch (e) {
       console.error("Erro ao salvar progresso:", e);
+      toast.error("Erro ao salvar progresso. Verifique sua conexão.");
     }
   }, [step, saveStep, sessionId]);
 
