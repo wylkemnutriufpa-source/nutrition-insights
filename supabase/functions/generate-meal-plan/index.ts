@@ -2629,7 +2629,13 @@ serve(async (req) => {
         .from("profiles")
         .select("id, user_id, marmita_mode")
         .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
-        .maybeSingle();
+      .maybeSingle();
+
+      // IF patient is in Marmita Mode, force generation to use marmita logic unless an explicit non-default mode was requested
+      if (patientProfile?.marmita_mode && (generationMode === "quick" || generationMode === "smart")) {
+        console.log(`[generate-meal-plan] 🍱 Overriding generationMode to weekly_marmita for patient ${patient_id} (Marmita Mode active)`);
+        generationMode = "weekly_marmita";
+      }
 
       const patientIdentityIds = Array.from(new Set([
         patient_id,
