@@ -1,9 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
+import { validateBody } from "../_shared/validator.ts";
+import { SimulationEngineSchema } from "../_shared/schemas.ts";
 
 const ENGINE_VERSION = "1.0.0";
 
@@ -296,8 +294,10 @@ export async function handler(req: Request, supabaseClient?: any) {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
-    const body = await req.json().catch(() => ({}));
-    const targetPatientId = body.patient_id;
+    const { data: body, response: errorResponse } = await validateBody(req, SimulationEngineSchema);
+    // SimulationEngineSchema has optional patient_id and scenario
+    const targetPatientId = body?.patient_id;
+    const targetScenario = body?.scenario;
 
     // Get patients to simulate
     let patientIds: string[] = [];

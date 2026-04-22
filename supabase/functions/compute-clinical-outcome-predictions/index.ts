@@ -1,9 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
-};
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
+import { validateBody } from "../_shared/validator.ts";
+import { OutcomePredictionsSchema } from "../_shared/schemas.ts";
 
 const ENGINE_VERSION = "1.0.0";
 
@@ -239,11 +237,22 @@ export async function handler(req: Request, supabaseClient?: any) {
       Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
     );
 
+    const { data: body, response: errorResponse } = await validateBody(req, OutcomePredictionsSchema);
+    // If body is empty, we still proceed (it validates with defaults)
+    const targetPatientId = body?.patient_id;
+    const windowDays = body?.prediction_window_days || 30;
+
     // 1. Load patients with snapshots
-    const { data: patients } = await supabase
+    let query = supabase
       .from("nutritionist_patients")
       .select("patient_id, nutritionist_id")
       .eq("status", "active");
+    
+    if (targetPatientId) {
+      query = query.eq("patient_id", targetPatientId);
+    }
+
+    const { data: patients } = await query;
 
     if (!patients?.length) {
       return new Response(JSON.stringify({ processed: 0 }), {
