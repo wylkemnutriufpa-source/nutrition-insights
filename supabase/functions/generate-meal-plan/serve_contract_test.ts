@@ -91,7 +91,9 @@ Deno.test({
         body: JSON.stringify({ 
           patient_id: "patient-123",
           meal_plan_id: "plan-123",
-          generationMode: "weekly_marmita"
+          generationMode: "weekly_marmita",
+          isPipeline: true,
+          planCount: 1
         }),
       });
 
@@ -101,12 +103,14 @@ Deno.test({
       assertEquals(res.status, 200);
       assertEquals(data.success, true);
       
-      const lunch = data.items.find((i: any) => i.meal_type === "lunch");
+      const plan = data.plans[0];
+      const items = plan.items;
+      const lunch = items.find((i: any) => i.meal_type === "lunch");
       assertEquals(lunch.description.includes("150g Frango"), true);
       assertEquals(lunch.description.includes("200g Arroz"), true);
       assertEquals(lunch.protein_target, 40);
       
-      const dinner = data.items.find((i: any) => i.meal_type === "dinner");
+      const dinner = items.find((i: any) => i.meal_type === "dinner");
       assertEquals(dinner.description.includes("100g Carne"), true);
       assertEquals(dinner.description.includes("150g Arroz"), true);
       assertEquals(dinner.protein_target, 30);
