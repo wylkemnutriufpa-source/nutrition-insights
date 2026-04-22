@@ -30,6 +30,25 @@ Deno.test("weekly_marmita: buildMarmitaItem correctly scales macros and grams", 
   assertEquals(item.description.includes("171g Arroz"), true);
 });
 
+Deno.test("weekly_marmita: buildMarmitaItem preserves grammages when is_scalable is false", () => {
+  const recipe: MarmitaRecipe = {
+    id: "r2",
+    name: "Frango Fixo",
+    meal_type: "almoço",
+    foods_json: [
+      { name: "Frango", grams: 150 }
+    ],
+    is_scalable: false
+  };
+
+  const targetKcal = 800; // Much higher than base
+  const item = buildMarmitaItem(recipe, "lunch", 0, targetKcal, "manutencao", []);
+  
+  // Scale factor should be 1.0 even if target is different
+  assertEquals(item._scale_factor, 1);
+  assertEquals(item.description.includes("150g Frango"), true);
+});
+
 Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctly", () => {
   const recipes: MarmitaRecipe[] = [
     { id: "l1", name: "Almoço 1", meal_type: "almoço", foods_json: [{ name: "F", grams: 100 }] },
