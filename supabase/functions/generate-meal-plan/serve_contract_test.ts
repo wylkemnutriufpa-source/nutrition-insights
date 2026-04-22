@@ -71,13 +71,25 @@ const mockFetch = (responses: Record<string, any>) => {
         {
           id: "r1",
           name: "Marmita Fixa Frango",
-          meal_type: "lunch",
+          meal_type: "almoço",
           foods_json: [{ name: "Frango", grams: 150 }, { name: "Arroz", grams: 200 }],
           is_fixed: true,
-          is_scalable: false, // PRESERVES GRAMMAGES
+          is_scalable: false,
           fixed_calories: 500,
           fixed_protein: 40,
           fixed_carbs: 50,
+          fixed_fat: 10
+        },
+        {
+          id: "r2",
+          name: "Marmita Fixa Carne",
+          meal_type: "jantar",
+          foods_json: [{ name: "Carne", grams: 100 }, { name: "Arroz", grams: 150 }],
+          is_fixed: true,
+          is_scalable: false,
+          fixed_calories: 400,
+          fixed_protein: 30,
+          fixed_carbs: 40,
           fixed_fat: 10
         }
       ]), { status: 200 });
