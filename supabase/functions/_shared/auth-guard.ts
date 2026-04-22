@@ -30,8 +30,8 @@ export async function requireUser(req: Request): Promise<AuthUser> {
     );
   }
 
-  const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-  const anonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://vkrcobprntictsxqmjjl.supabase.co";
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
 
   const authClient = createClient(supabaseUrl, anonKey, {
     global: { headers: { Authorization: authHeader } },
@@ -53,7 +53,7 @@ export async function requireUser(req: Request): Promise<AuthUser> {
   // Fetch roles from user_roles table using service role for reliability
   const serviceClient = createClient(
     supabaseUrl,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? anonKey,
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
@@ -108,8 +108,8 @@ export async function assertLinkedProfessional(
   if (authUser.roles.includes("admin")) return;
 
   const serviceClient = createClient(
-    Deno.env.get("SUPABASE_URL")!,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
+    Deno.env.get("SUPABASE_URL") ?? "https://vkrcobprntictsxqmjjl.supabase.co",
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "",
     { auth: { autoRefreshToken: false, persistSession: false } }
   );
 
