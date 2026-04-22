@@ -58,9 +58,10 @@ interface Props {
   mealPlanId: string;
   patientId: string;
   sessionId: string;
+  tenantId?: string | null;
 }
 
-export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Props) {
+export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tenantId }: Props) {
   const { user } = useAuth();
   const [blocks, setBlocks] = useState<MealBlock[]>(MEAL_TYPES.map(m => ({ ...m, items: [] })));
   const [currentDay, setCurrentDay] = useState(1);
@@ -159,6 +160,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
         fat_target: food.fat || 0,
         day_of_week: currentDay,
         item_origin: "in_office_manual",
+        tenant_id: tenantId,
       })
       .select("id")
       .single();
@@ -203,6 +205,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       fat_target: item.fat,
       day_of_week: nextDay,
       item_origin: "in_office_duplicated" as const,
+      tenant_id: tenantId,
     }));
     if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
     setTotalDays(Math.max(totalDays, nextDay));
@@ -228,6 +231,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
         fat_target: item.fat,
         day_of_week: day,
         item_origin: "in_office_duplicated" as const,
+        tenant_id: tenantId,
       }));
       if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
     }
@@ -259,10 +263,10 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       template_name: templateName,
       template_type: "day",
       items: templateItems as any,
-      total_calories: totalMacros.calories,
-      total_protein: totalMacros.protein,
-      total_carbs: totalMacros.carbs,
-      total_fat: totalMacros.fat,
+      total_calories: Math.round(totalMacros.calories || 0),
+      total_protein: Math.round(totalMacros.protein || 0),
+      total_carbs: Math.round(totalMacros.carbs || 0),
+      total_fat: Math.round(totalMacros.fat || 0),
     } as any);
     setShowTemplateSave(false);
     setTemplateName("");
@@ -296,6 +300,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
         fat_target: fat > 0 ? fat : null,
         day_of_week: currentDay,
         item_origin: "in_office_template" as const,
+        tenant_id: tenantId,
       };
     });
 
@@ -359,6 +364,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
           fat_target: fat > 0 ? fat : null,
           day_of_week: day,
           item_origin: "in_office_template" as const,
+          tenant_id: tenantId,
         };
       });
       

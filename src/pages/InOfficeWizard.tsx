@@ -15,6 +15,7 @@ import InOfficeStepAnamnesis from "@/components/in-office/InOfficeStepAnamnesis"
 import InOfficeStepAssessment from "@/components/in-office/InOfficeStepAssessment";
 import InOfficeStepMealPlan from "@/components/in-office/InOfficeStepMealPlan";
 import InOfficeStepFinalize from "@/components/in-office/InOfficeStepFinalize";
+import { resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
 
 const STEPS = [
   { id: 1, label: "Cadastro", icon: User },
@@ -25,7 +26,7 @@ const STEPS = [
 ];
 
 export default function InOfficeWizard() {
-  const { patientId } = useParams<{ patientId: string }>();
+  const { patientId: rawPatientId } = useParams<{ patientId: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [step, setStep] = useState(1);
@@ -33,12 +34,19 @@ export default function InOfficeWizard() {
   const [loading, setLoading] = useState(true);
   const [patientName, setPatientName] = useState("");
   const [sessionData, setSessionData] = useState<any>(null);
+  const [resolvedPatientId, setResolvedPatientId] = useState<string | null>(null);
 
   // Load or create session
   useEffect(() => {
-    if (!patientId || !user?.id) return;
+    if (!rawPatientId || !user?.id) return;
     (async () => {
       setLoading(true);
+      
+      // Resolve IDs (id vs user_id)
+      const identity = await resolvePatientIdentity(rawPatientId);
+      const patientId = identity.canonicalId;
+      setResolvedPatientId(patientId);
+
       // Load patient name
       const { data: profile } = await supabase
         .from("profiles")
@@ -99,7 +107,7 @@ export default function InOfficeWizard() {
       }
       setLoading(false);
     })();
-  }, [patientId, user?.id]);
+  }, [rawPatientId, user?.id]);
 
   // Save step progress
   const saveStep = useCallback(async (newStep: number, extras?: Record<string, any>) => {
@@ -129,6 +137,7 @@ export default function InOfficeWizard() {
       }
     } catch (e) {
       console.error("Erro ao salvar progresso:", e);
+      toast.error("Erro ao salvar progresso. Verifique sua conexão.");
     }
   }, [step, saveStep, sessionId]);
 
@@ -150,8 +159,8 @@ export default function InOfficeWizard() {
       } as any)
       .eq("id", sessionId);
     toast.success("Sessão presencial finalizada!");
-    navigate(`/patients/${patientId}`);
-  }, [sessionId, patientId, navigate]);
+    navigate(`/patients/${resolvedPatientId || rawPatientId}`);
+  }, [sessionId, resolvedPatientId, rawPatientId, navigate]);
 
   if (loading) {
     return (
@@ -169,7 +178,7 @@ export default function InOfficeWizard() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Button variant="ghost" size="icon" onClick={() => navigate(`/patients/${patientId}`)}>
+            <Button variant="ghost" size="icon" onClick={() => navigate(`/patients/${resolvedPatientId || rawPatientId}`)}>
               <ArrowLeft className="w-4 h-4" />
             </Button>
             <div>
@@ -218,11 +227,11 @@ export default function InOfficeWizard() {
             exit={{ opacity: 0, x: -20 }}
             transition={{ duration: 0.2 }}
           >
-            {step === 1 && <InOfficeStepPatient patientId={patientId!} onNext={goNext} />}
-            {step === 2 && <InOfficeStepAnamnesis patientId={patientId!} onNext={goNext} onPrev={goPrev} sessionId={sessionId!} />}
-            {step === 3 && <InOfficeStepAssessment patientId={patientId!} onNext={goNext} onPrev={goPrev} sessionId={sessionId!} />}
-            {step === 4 && <InOfficeStepMealPlan patientId={patientId!} onNext={goNext} onPrev={goPrev} sessionId={sessionId!} />}
-            {step === 5 && <InOfficeStepFinalize patientId={patientId!} onPrev={goPrev} onComplete={completeSession} sessionId={sessionId!} />}
+            {step === 1 && <InOfficeStepPatient patientId={resolvedPatientId!} onNext={goNext} />}
+            {step === 2 && <InOfficeStepAnamnesis patientId={resolvedPatientId!} onNext={goNext} onPrev={goPrev} sessionId={sessionId!} />}
+            {step === 3 && <InOfficeStepAssessment patientId={resolvedPatientId!} onNext={goNext} onPrev={goPrev} sessionId={sessionId!} />}
+            {step === 4 && <InOfficeStepMealPlan patientId={resolvedPatientId!} onNext={goNext} onPrev={goPrev} sessionId={sessionId!} />}
+            {step === 5 && <InOfficeStepFinalize patientId={resolvedPatientId!} onPrev={goPrev} onComplete={completeSession} sessionId={sessionId!} />}
           </motion.div>
         </AnimatePresence>
 

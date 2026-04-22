@@ -17,12 +17,24 @@ interface Props {
 export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessionId }: Props) {
   const { user } = useAuth();
   const [mealPlanId, setMealPlanId] = useState<string | null>(null);
+  const [tenantId, setTenantId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!user?.id) return;
     (async () => {
       setLoading(true);
+      
+      // Get tenant first
+      const { data: np } = await supabase
+        .from("nutritionist_patients")
+        .select("tenant_id")
+        .eq("patient_id", patientId)
+        .eq("nutritionist_id", user.id)
+        .maybeSingle();
+      
+      if (np?.tenant_id) setTenantId(np.tenant_id);
+
       // Check if session already has a meal plan
       const { data: session } = await supabase
         .from("in_office_sessions" as any)
@@ -120,7 +132,7 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
 
   return (
     <div className="space-y-4">
-      <QuickMealEditor mealPlanId={mealPlanId} patientId={patientId} sessionId={sessionId} />
+      <QuickMealEditor mealPlanId={mealPlanId} patientId={patientId} sessionId={sessionId} tenantId={tenantId} />
       {/* Navigation is handled by parent wizard */}
     </div>
   );
