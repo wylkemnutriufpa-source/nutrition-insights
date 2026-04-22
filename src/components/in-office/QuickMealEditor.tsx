@@ -259,10 +259,10 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId }: Pr
       template_name: templateName,
       template_type: "day",
       items: templateItems as any,
-      total_calories: totalMacros.calories,
-      total_protein: totalMacros.protein,
-      total_carbs: totalMacros.carbs,
-      total_fat: totalMacros.fat,
+      total_calories: Math.round(totalMacros.calories || 0),
+      total_protein: Math.round(totalMacros.protein || 0),
+      total_carbs: Math.round(totalMacros.carbs || 0),
+      total_fat: Math.round(totalMacros.fat || 0),
     } as any);
     setShowTemplateSave(false);
     setTemplateName("");
