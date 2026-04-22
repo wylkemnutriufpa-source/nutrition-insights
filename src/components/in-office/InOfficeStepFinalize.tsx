@@ -28,13 +28,17 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
 
   useEffect(() => {
     (async () => {
-      const [sessRes, profRes] = await Promise.all([
-        supabase.from("in_office_sessions" as any).select("*").eq("id", sessionId).maybeSingle(),
-        supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle(),
-      ]);
-      const sess = sessRes.data as any;
-      setSession(sess);
-      setPatientName(profRes.data?.full_name || "Paciente");
+      try {
+        const [sessRes, profRes] = await Promise.all([
+          supabase.from("in_office_sessions" as any).select("*").eq("id", sessionId).maybeSingle(),
+          supabase.from("profiles").select("full_name").eq("user_id", patientId).maybeSingle(),
+        ]);
+        
+        if (sessRes.error) throw sessRes.error;
+        
+        const sess = sessRes.data as any;
+        setSession(sess);
+        setPatientName(profRes.data?.full_name || "Paciente");
 
       // Check if plan exists and its status
       if (sess?.meal_plan_id) {
