@@ -50,10 +50,11 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
     const today = new Date().toISOString().split("T")[0];
 
     // Parallel checks
-    const [anamnesisRes, checklistRes, protocolsRes] = await Promise.all([
+    const [anamnesisRes, checklistRes, protocolsRes, mealPlansRes] = await Promise.all([
       supabase.from("patient_anamnesis").select("id, status").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
       supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId).eq("date", today),
       supabase.from("patient_protocols").select("id, status, protocol_id").eq("patient_id", patientId).eq("status", "active"),
+      supabase.from("meal_plans").select("id").eq("patient_id", patientId).eq("is_active", true).eq("plan_status", "published_to_patient").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
     // 1. Anamnesis not filled
