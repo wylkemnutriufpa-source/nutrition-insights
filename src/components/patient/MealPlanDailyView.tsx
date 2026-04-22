@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent } from "@/lib/formatMacros";
+import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { Database } from "@/integrations/supabase/types";
@@ -249,7 +249,9 @@ const MealItemCard = memo(function MealItemCard({
                             <Info className="w-2.5 h-2.5 text-amber-500" />
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p className="text-[10px]">Ajustado para limite de segurança.</p>
+                            <p className="text-[10px]">
+                              Ajustado para {getCalorieClampValue(item.calories_target)} kcal (limite de segurança).
+                            </p>
                           </TooltipContent>
                         </Tooltip>
                       </TooltipProvider>

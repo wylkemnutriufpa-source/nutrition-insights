@@ -6,10 +6,9 @@ import {
   ArrowRight, X, Sparkles, ShieldCheck, Flame
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { isCalorieClamped, isMacroInconsistent } from "@/lib/formatMacros";
+import { isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 
 interface SmartAlert {
-
   id: string;
   icon: typeof AlertTriangle;
   title: string;
@@ -51,14 +50,17 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
 
     // Parallel checks
     const [anamnesisRes, checklistRes, protocolsRes, mealPlansRes] = await Promise.all([
-      supabase.from("patient_anamnesis").select("id, status").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
+      supabase.from("patient_anamnesis").select("id, status, answers").eq("user_id", patientId).order("created_at", { ascending: false }).limit(1),
       supabase.from("checklist_tasks").select("id, completed").eq("patient_id", patientId).eq("date", today),
       supabase.from("patient_protocols").select("id, status, protocol_id").eq("patient_id", patientId).eq("status", "active"),
       supabase.from("meal_plans").select("id").eq("patient_id", patientId).eq("is_active", true).eq("plan_status", "published_to_patient").order("created_at", { ascending: false }).limit(1).maybeSingle(),
     ]);
 
-    // 1. Anamnesis not filled
     const anamnesis = anamnesisRes.data?.[0];
+    const answers = (anamnesis?.answers as any) || {};
+    const patientSex = (answers.sex || "female") as "male" | "female";
+
+    // 1. Anamnesis not filled
     if (!anamnesis || anamnesis.status !== "completed") {
       detected.push({
         id: "anamnesis_missing",
@@ -121,8 +123,6 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
       });
     }
 
-    setAlerts(detected);
-
     // 4. Check for meal plan clamping/corrections
     const activePlan = mealPlansRes.data;
     if (activePlan) {
@@ -130,10 +130,16 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
         .from("meal_plan_items")
         .select("calories_target, protein_target, carbs_target, fat_target")
         .eq("meal_plan_id", activePlan.id)
-        .limit(10); // Check a sample to find systemic issues
+        .limit(20);
 
       if (items && items.length > 0) {
-        const hasClamping = items.some(i => isCalorieClamped(i.calories_target || 0));
+        let clampValue: number | null = null;
+        const hasClamping = items.some(i => {
+          const val = getCalorieClampValue(i.calories_target || 0, patientSex);
+          if (val) clampValue = val;
+          return val !== null;
+        });
+        
         const hasConsistencyCorrection = items.some(i => isMacroInconsistent(i.calories_target || 0, i.protein_target || 0, i.carbs_target || 0, i.fat_target || 0));
 
         if (hasClamping) {
@@ -141,7 +147,7 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
             id: "plan_clamped",
             icon: Flame,
             title: "Plano Alimentar Ajustado",
-            message: "Algumas refeições foram ajustadas para garantir o limite mínimo de segurança calórica (1200 kcal/dia).",
+            message: `Algumas refeições foram ajustadas para garantir o limite de segurança (${clampValue} kcal/dia).`,
             color: "text-amber-500",
             bgColor: "bg-amber-500/5",
             borderColor: "border-amber-500/20",
