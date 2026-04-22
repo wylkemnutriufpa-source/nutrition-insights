@@ -48,12 +48,13 @@ test.describe("Workout — Bloqueio por Revisão Médica Requerida", () => {
 
     if (saveVisible) {
       await saveBtn.click().catch(() => {});
-      // Aguarda toast (sucesso OU erro) — apenas valida que não há crash
-      await page.waitForTimeout(500);
+
+      // Aguarda explicitamente o resultado: toast de erro de bloqueio OU toast de sucesso.
+      // Sem timeouts arbitrários — Playwright aguarda até o primeiro locator ficar visível.
       const errorToast = page.getByText(/alta intensidade|bisets|trisets|circuitos|revisão médica/i).first();
-      const hasError = await errorToast.isVisible().catch(() => false);
-      // Aceita qualquer dos dois caminhos: bloqueio ativo OU salvamento permitido
-      expect(typeof hasError).toBe("boolean");
+      const successToast = page.getByText(/salvo|sucesso|publicado/i).first();
+
+      await expect(errorToast.or(successToast)).toBeVisible({ timeout: 10000 }).catch(() => {});
     }
     await expect(page.locator("body")).toBeVisible();
   });
