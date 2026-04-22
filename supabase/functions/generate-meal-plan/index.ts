@@ -2575,10 +2575,6 @@ function buildGenerationMetadata(
 // ═══════════════════════════════════════════════════════════════
 
 export async function generateMealPlanHandler(req: Request) {
-...
-if (import.meta.main) {
-  serve(generateMealPlanHandler);
-}
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -3551,5 +3547,8 @@ if (import.meta.main) {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  });
+}
+
+if (import.meta.main) {
+  serve(generateMealPlanHandler);
 }
