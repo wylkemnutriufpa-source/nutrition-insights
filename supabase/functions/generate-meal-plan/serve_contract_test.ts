@@ -79,6 +79,10 @@ const mockFetch = (onInsert?: (items: any[]) => void) => {
       return new Response(JSON.stringify([{ id: "link-123" }]), { status: 200 });
     }
     
+    if (url.includes("/rest/v1/meal_plans")) {
+      return new Response(JSON.stringify({ id: "plan-123" }), { status: 200 });
+    }
+    
     return new Response(JSON.stringify([]), { status: 200 });
   };
   return () => { globalThis.fetch = originalFetch; };
@@ -89,16 +93,16 @@ Deno.test({
   sanitizeOps: false,
   sanitizeResources: false,
   fn: async () => {
-    const restoreFetch = mockFetch();
+    let insertedItems: any[] = [];
+    const restoreFetch = mockFetch((items) => { insertedItems = items; });
     try {
       const req = new Request("http://localhost/generate-meal-plan", {
         method: "POST",
         headers: { "Authorization": "Bearer token", "Content-Type": "application/json" },
         body: JSON.stringify({ 
           patient_id: "patient-123",
-          generationMode: "weekly_marmita",
-          isPipeline: true,
-          planCount: 2
+          meal_plan_id: "plan-123",
+          generationMode: "weekly_marmita"
         }),
       });
 
@@ -108,14 +112,12 @@ Deno.test({
       assertEquals(res.status, 200);
       assertEquals(data.success, true);
       
-      const plan = data.plans[0];
-      const items = plan.items;
-      const lunch = items.find((i: any) => i.meal_type === "lunch");
+      const lunch = insertedItems.find((i: any) => i.meal_type === "lunch");
       assertEquals(lunch.description.includes("150g Frango"), true);
       assertEquals(lunch.description.includes("200g Arroz"), true);
       assertEquals(lunch.protein_target, 40);
       
-      const dinner = items.find((i: any) => i.meal_type === "dinner");
+      const dinner = insertedItems.find((i: any) => i.meal_type === "dinner");
       assertEquals(dinner.description.includes("100g Carne"), true);
       assertEquals(dinner.description.includes("150g Arroz"), true);
       assertEquals(dinner.protein_target, 30);
@@ -136,6 +138,6 @@ Deno.test({
     });
 
     const res = await generateMealPlanHandler(req);
-    assertEquals(res.status, 401); // Unauthorized due to missing header
+    assertEquals(res.status, 401);
   }
 });
