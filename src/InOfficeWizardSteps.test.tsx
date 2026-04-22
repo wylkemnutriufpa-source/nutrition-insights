@@ -12,7 +12,7 @@ vi.mock('@/components/layout/DashboardLayout', () => ({
   default: ({ children }: any) => <div data-testid="layout">{children}</div>
 }));
 
-// Mocks dos passos individuais para evitar dependências de outros hooks
+// Mocks dos passos individuais
 vi.mock('@/components/in-office/InOfficeStepPatient', () => ({ default: () => <div data-testid="step-1">Cadastro</div> }));
 vi.mock('@/components/in-office/InOfficeStepAnamnesis', () => ({ default: () => <div data-testid="step-2">Anamnese</div> }));
 vi.mock('@/components/in-office/InOfficeStepAssessment', () => ({ default: () => <div data-testid="step-3">Avaliação</div> }));
@@ -91,10 +91,10 @@ describe('InOfficeWizard - Fluxo de Navegação', () => {
     (useAuth as any).mockReturnValue({ user: mockUser, loading: false });
     
     const mockSupabase = supabase as any;
-    // Wizard init sequence: patient profile then session
-    mockSupabase.maybeSingle
-      .mockResolvedValueOnce({ data: mockProfile, error: null }) // profile name
-      .mockResolvedValueOnce({ data: mockSession, error: null }); // session
+    // Forçamos que todos os chamados iniciais retornem a sessão ativa diretamente
+    mockSupabase.maybeSingle.mockResolvedValue({ data: mockSession, error: null });
+    // Mas o primeiro chamado de perfil precisa retornar o nome
+    mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockProfile, error: null });
     
     mockSupabase.update.mockResolvedValue({ data: null, error: null });
   });
