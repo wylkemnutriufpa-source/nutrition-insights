@@ -1,12 +1,13 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import InOfficeWizard from '../pages/InOfficeWizard';
+import InOfficeWizard from './pages/InOfficeWizard';
 import { BrowserRouter } from 'react-router-dom';
-import { supabase } from '../integrations/supabase/client';
-import { useAuth } from '../lib/auth';
+import { supabase } from './integrations/supabase/client';
+import { useAuth } from './lib/auth';
+import '@testing-library/jest-dom';
 
 // Mock supabase
-vi.mock('../integrations/supabase/client', () => ({
+vi.mock('./integrations/supabase/client', () => ({
   supabase: {
     from: vi.fn(() => ({
       select: vi.fn().mockReturnThis(),
@@ -23,7 +24,7 @@ vi.mock('../integrations/supabase/client', () => ({
 }));
 
 // Mock auth
-vi.mock('../lib/auth', () => ({
+vi.mock('./lib/auth', () => ({
   useAuth: vi.fn(),
 }));
 
