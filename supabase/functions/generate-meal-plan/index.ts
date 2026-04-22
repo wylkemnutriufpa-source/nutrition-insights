@@ -1681,17 +1681,6 @@ export function generateWeeklyMarmitaPlan(
     console.log(`[weekly_marmita] Fast Marmita Mode active. Otimizando instruções.`);
   }
 
-  if (fastMarmitaMode) {
-    console.log(`[weekly_marmita] Fast Marmita Mode active. Otimizando instruções.`);
-  }
-
-  if (fastMarmitaMode) {
-    // Priority to recipes with base_recipe metadata containing low prep time (if available in future)
-    // For now, we prioritize shorter recipe names or specific keywords as proxy if needed,
-    // but the main change is in buildMarmitaItem instructions.
-    console.log(`[weekly_marmita] Fast Marmita Mode active. Otimizando instruções.`);
-  }
-
   const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
   const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
 
