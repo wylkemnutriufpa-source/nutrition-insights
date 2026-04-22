@@ -1888,6 +1888,7 @@ function buildFixedMarmitaItem(
     _recipe_id: recipe.id,
     _recipe_name: recipe.name,
     _is_fixed: true,
+    _is_scalable: false,
     _scale_factor: 1, // forced — no scaling
     _image_url: visual?.image_url || null,
   };
