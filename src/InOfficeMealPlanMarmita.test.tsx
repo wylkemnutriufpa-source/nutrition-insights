@@ -63,63 +63,64 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
     (useAuth as any).mockReturnValue({ user: mockUser, loading: false });
     
     const mockSupabase = supabase as any;
-    const mockQuery = mockSupabase.from();
+    
+    // Mock robusto para o encadeamento do Supabase
+    const createMockChain = () => {
+      const chain: any = {
+        select: vi.fn().mockImplementation(() => chain),
+        insert: vi.fn().mockImplementation(() => chain),
+        update: vi.fn().mockImplementation(() => chain),
+        delete: vi.fn().mockImplementation(() => chain),
+        eq: vi.fn().mockImplementation(() => chain),
+        in: vi.fn().mockImplementation(() => chain),
+        is: vi.fn().mockImplementation(() => chain),
+        order: vi.fn().mockImplementation(() => chain),
+        limit: vi.fn().mockImplementation(() => chain),
+        maybeSingle: vi.fn(),
+        single: vi.fn(),
+        then: vi.fn()
+      };
+      return chain;
+    };
 
-    // Reset complex mocks
-    mockQuery.maybeSingle.mockReset();
-    mockQuery.single.mockReset();
-    mockQuery.select.mockReturnThis();
-
-    // Mock implementation for common patterns
     mockSupabase.from.mockImplementation((table: string) => {
-      return {
-        ...mockQuery,
-        select: vi.fn().mockReturnThis(),
-        eq: vi.fn().mockReturnThis(),
-        in: vi.fn().mockReturnThis(),
-        is: vi.fn().mockReturnThis(),
-        order: vi.fn().mockReturnThis(),
-        limit: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn().mockImplementation(() => {
-          if (table === 'profiles') return Promise.resolve({ data: { full_name: 'Wannubia Teste' }, error: null });
-          if (table === 'in_office_sessions') return Promise.resolve({ data: { id: mockSessionId, current_step: 4, patient_id: mockPatientId, meal_plan_id: mockMealPlanId }, error: null });
-          if (table === 'nutritionist_patients') return Promise.resolve({ data: { tenant_id: 'tenant-789' }, error: null });
-          if (table === 'meal_plans') return Promise.resolve({ data: { id: mockMealPlanId, plan_status: 'draft' }, error: null });
-          return Promise.resolve({ data: null, error: null });
-        }),
-        single: vi.fn().mockImplementation(() => {
-          if (table === 'meal_plans') return Promise.resolve({ data: { id: mockMealPlanId }, error: null });
-          return Promise.resolve({ data: {}, error: null });
-        }),
-        insert: vi.fn().mockImplementation(() => ({
-          select: vi.fn().mockReturnThis(),
-          single: vi.fn().mockResolvedValue({ data: { id: 'new-id' }, error: null }),
-          then: (resolve: any) => resolve({ data: { id: 'new-id' }, error: null })
-        })),
-        update: vi.fn().mockResolvedValue({ data: null, error: null }),
-        delete: vi.fn().mockReturnThis(),
-        // Mocking list results via then
-        then: (resolve: any) => {
-          if (table === 'quick_meal_templates') {
-            return resolve({
-              data: [{
-                id: 'temp-999',
-                template_name: 'Marmita Fitness',
-                total_calories: 500,
-                total_protein: 40,
-                total_carbs: 50,
-                total_fat: 15,
-                items: [{ name: 'Frango com Batata', calories: 0, protein: 0, carbs: 0, fat: 0, meal_type: 'lunch' }]
-              }],
-              error: null
-            });
-          }
-          if (table === 'meal_plan_items') {
-            return resolve({ data: [], error: null });
-          }
+      const chain = createMockChain();
+      
+      chain.maybeSingle.mockImplementation(() => {
+        if (table === 'profiles') return Promise.resolve({ data: { full_name: 'Wannubia Teste' }, error: null });
+        if (table === 'in_office_sessions') return Promise.resolve({ data: { id: mockSessionId, current_step: 4, patient_id: mockPatientId, meal_plan_id: mockMealPlanId }, error: null });
+        if (table === 'nutritionist_patients') return Promise.resolve({ data: { tenant_id: 'tenant-789' }, error: null });
+        if (table === 'meal_plans') return Promise.resolve({ data: { id: mockMealPlanId, plan_status: 'draft' }, error: null });
+        return Promise.resolve({ data: null, error: null });
+      });
+
+      chain.single.mockImplementation(() => {
+        if (table === 'meal_plans') return Promise.resolve({ data: { id: mockMealPlanId }, error: null });
+        return Promise.resolve({ data: { id: 'new-id' }, error: null });
+      });
+
+      chain.then.mockImplementation((resolve: any) => {
+        if (table === 'quick_meal_templates') {
+          return resolve({
+            data: [{
+              id: 'temp-999',
+              template_name: 'Marmita Fitness',
+              total_calories: 500,
+              total_protein: 40,
+              total_carbs: 50,
+              total_fat: 15,
+              items: [{ name: 'Frango com Batata', calories: 0, protein: 0, carbs: 0, fat: 0, meal_type: 'lunch' }]
+            }],
+            error: null
+          });
+        }
+        if (table === 'meal_plan_items') {
           return resolve({ data: [], error: null });
         }
-      };
+        return resolve({ data: [], error: null });
+      });
+
+      return chain;
     });
   });
 
@@ -151,8 +152,8 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
     // Verifica se o Supabase recebeu o insert com os macros do fallback
     const mockSupabase = supabase as any;
     
-    // Procura nos chamados de insert da tabela meal_plan_items
     await waitFor(() => {
+      // Procura nos chamados de insert da tabela meal_plan_items
       const itemInserts = mockSupabase.from.mock.results
         .filter((r: any, i: number) => mockSupabase.from.mock.calls[i][0] === 'meal_plan_items')
         .map((r: any) => r.value.insert.mock.calls)
@@ -175,7 +176,6 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
 
     await waitFor(() => {
       // Verifica se a sessão foi marcada como meal_plan_completed
-      // Temos que procurar nos chamados de update da tabela in_office_sessions
       const sessionUpdates = mockSupabase.from.mock.results
         .filter((r: any, i: number) => mockSupabase.from.mock.calls[i][0] === 'in_office_sessions')
         .map((r: any) => r.value.update.mock.calls)
@@ -189,6 +189,8 @@ describe('InOfficeMealPlan Integration Test - Marmitas e Persistência', () => {
       expect(hasCorrectUpdate).toBe(true);
     });
 
-    expect(screen.getByText(/Finalizar/i)).toBeInTheDocument();
+    // Verifica se chegamos na tela final (usando texto mais específico)
+    expect(screen.getByText(/Resumo da Sessão/i)).toBeInTheDocument();
+    expect(screen.getByText(/Finalizar Sessão/i)).toBeInTheDocument();
   });
 });
