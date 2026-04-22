@@ -89,10 +89,25 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     cumulative_deficit: 0,
   };
 
-  it("validates outputs against JSON schema (Zod)", () => {
+  it("validates outputs against JSON schema (Zod) including calorie/macro consistency", () => {
     const plan = generatePlan(initialPatient, 1);
     const result = WeeklyPlanSchema.safeParse(plan);
+    if (!result.success) {
+      console.error(result.error.errors);
+    }
     expect(result.success).toBe(true);
+
+    // Test a plan with inconsistent macros (should fail)
+    const badPlan = {
+      ...plan,
+      calories: 2000,
+      macros: { p: 10, c: 10, f: 10 } // 10*4 + 10*4 + 10*9 = 170 kcal (!= 2000)
+    };
+    const badResult = WeeklyPlanSchema.safeParse(badPlan);
+    expect(badResult.success).toBe(false);
+    if (!badResult.success) {
+      expect(badResult.error.errors[0].message).toContain("match total calories");
+    }
   });
 
   it("validates variety: plans change over 10 weeks as state evolves", () => {
