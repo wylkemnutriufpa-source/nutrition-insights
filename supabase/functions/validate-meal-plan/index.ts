@@ -365,7 +365,7 @@ function analyzePracticalAdherence(items: any[], simplicityScore: number, blocke
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
-export async function handler(req: Request) {
+export async function handler(req: Request, supabaseClient?: any) {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
@@ -373,9 +373,9 @@ export async function handler(req: Request) {
         const { meal_plan_id } = body;
         if (!meal_plan_id) return new Response(JSON.stringify({ error: "Missing meal_plan_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-        const supabase = createClient(
-            Deno.env.get("SUPABASE_URL")!,
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!
+        const supabase = supabaseClient ?? createClient(
+            Deno.env.get("SUPABASE_URL") ?? "",
+            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
         );
 
         const { data: mealPlan, error: planErr } = await supabase
@@ -586,7 +586,7 @@ export async function handler(req: Request) {
 
         // ── 2. Simplicity Validation ──────────────────────────────────────
         const patientGoal = (answers?.primary_goal || answers?.objective || answers?.goal || "emagrecimento") as string;
-        const simplicityResult = analyzePlanSimplicity(items, patientGoal);
+        const simplicityResult = analyzePlanSimplicity(items, patientGoal) as any;
 
         // ── 3. Practical Adherence Prediction (NEW) ──────────────────────────
         const adherenceResult = analyzePracticalAdherence(items, simplicityResult.score, simplicityResult.blocked_foods.length);

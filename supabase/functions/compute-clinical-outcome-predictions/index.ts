@@ -228,15 +228,16 @@ function classifyConfidence(score: number): string {
   return "baixa_confianca";
 }
 
-Deno.serve(async (req) => {
+export async function handler(req: Request, supabaseClient?: any) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = supabaseClient ?? createClient(
+      Deno.env.get("SUPABASE_URL") ?? "", 
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
     // 1. Load patients with snapshots
     const { data: patients } = await supabase
@@ -321,10 +322,10 @@ Deno.serve(async (req) => {
     const predictions: any[] = [];
 
     for (const pid of patientIds) {
-      const snap = latestSnapshot.get(pid);
-      const perf = perfMap.get(pid);
-      const cluster = clusterMap.get(pid);
-      const physio = physioMap.get(pid);
+      const snap = latestSnapshot.get(pid) as any;
+      const perf = perfMap.get(pid) as any;
+      const cluster = clusterMap.get(pid) as any;
+      const physio = physioMap.get(pid) as any;
 
       const adherence = snap?.adherence_7d ?? 50;
       const weightTrend = snap?.weight_trend_status ?? "stagnated";
@@ -410,4 +411,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}
+
+if (import.meta.main) {
+  Deno.serve(handler);
+}

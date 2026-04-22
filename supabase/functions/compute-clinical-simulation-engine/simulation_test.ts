@@ -1,24 +1,28 @@
-import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
+import { assertEquals, assertExists } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { handler } from "./index.ts";
+import { buildRequest, buildToxicRequest, createMockSupabaseClient, PATIENT_FIXTURE } from "../_shared/test-harness.ts";
 
-Deno.test("compute-clinical-simulation-engine - fallback on empty payload", async () => {
-  const req = new Request("http://localhost/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
-  const res = await handler(req);
-  // It will attempt DB calls, but we can verify it doesn't crash on payload
-  assertEquals(res.status === 200 || res.status === 500, true);
+const URL = "http://localhost/functions/v1/compute-clinical-simulation-engine";
+
+Deno.test("compute-clinical-simulation-engine - empty payload fallback", async () => {
+  const req = buildRequest(URL, {});
+  const mockClient = createMockSupabaseClient({ patient_id: "p1" });
+  const res = await handler(req, mockClient);
+  const data = await res.json();
+  assertEquals(res.status, 200);
+  assertExists(data.processed);
 });
 
 Deno.test("compute-clinical-simulation-engine - toxic payload", async () => {
-  const req = new Request("http://localhost/", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: "not json",
-  });
-  const res = await handler(req);
-  // Should catch and fallback to {}
-  assertEquals(res.status === 200 || res.status === 500, true);
+  const req = buildToxicRequest(URL);
+  const mockClient = createMockSupabaseClient();
+  const res = await handler(req, mockClient);
+  assertEquals(res.status, 200);
+});
+
+Deno.test("compute-clinical-simulation-engine - valid patient", async () => {
+  const req = buildRequest(URL, { patient_id: PATIENT_FIXTURE.id });
+  const mockClient = createMockSupabaseClient({ patient_id: PATIENT_FIXTURE.id });
+  const res = await handler(req, mockClient);
+  assertEquals(res.status, 200);
 });

@@ -285,15 +285,16 @@ const TYPE_TO_DECISION: Record<string, string> = {
   no_change_monitoring: "keep_and_monitor",
 };
 
-export async function handler(req: Request) {
+export async function handler(req: Request, supabaseClient?: any) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = supabaseClient ?? createClient(
+      Deno.env.get("SUPABASE_URL") ?? "", 
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
     const body = await req.json().catch(() => ({}));
     const targetPatientId = body.patient_id;
@@ -361,10 +362,10 @@ export async function handler(req: Request) {
     const allSimulations: any[] = [];
 
     for (const pid of patientIds) {
-      const snap = latestSnap.get(pid);
-      const perf = perfMap.get(pid);
-      const cluster = clusterMap.get(pid);
-      const plan = planMap.get(pid);
+      const snap = latestSnap.get(pid) as any;
+      const perf = perfMap.get(pid) as any;
+      const cluster = clusterMap.get(pid) as any;
+      const plan = planMap.get(pid) as any;
 
       const baseline: Baseline = {
         adherence_7d: snap?.adherence_7d ?? 50,

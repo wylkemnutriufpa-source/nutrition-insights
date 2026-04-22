@@ -11,10 +11,13 @@ async function resolveTenant(supabase: any, userId: string): Promise<string | nu
   return data || null;
 }
 
-Deno.serve(async (req) => {
+export async function handler(req: Request, supabaseClient?: any) {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = supabaseClient ?? createClient(
+    Deno.env.get("SUPABASE_URL") ?? "", 
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
 
   try {
     const body = await req.json().catch(() => ({}));
@@ -304,4 +307,8 @@ Deno.serve(async (req) => {
     console.error("Clinical brain error:", err);
     return new Response(JSON.stringify({ error: err.message }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }
-});
+}
+
+if (import.meta.main) {
+  Deno.serve(handler);
+}

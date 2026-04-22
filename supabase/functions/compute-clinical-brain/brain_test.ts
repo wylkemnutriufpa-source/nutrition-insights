@@ -1,24 +1,21 @@
 import { assertEquals, assertExists } from "https://deno.land/std@0.168.0/testing/asserts.ts";
+import { handler } from "./index.ts";
+import { buildRequest, buildToxicRequest, createMockSupabaseClient } from "../_shared/test-harness.ts";
 
-const FUNCTION_URL = "http://localhost:54321/functions/v1/compute-clinical-brain";
+const URL = "http://localhost/functions/v1/compute-clinical-brain";
 
 Deno.test("compute-clinical-brain - run process for all active", async () => {
-  const res = await fetch(FUNCTION_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({}),
-  });
+  const req = buildRequest(URL, {});
+  const mockClient = createMockSupabaseClient({ patient_id: "p1", nutritionist_id: "n1" });
+  const res = await handler(req, mockClient);
   const data = await res.json();
   assertEquals(res.status, 200);
   assertExists(data.patients_processed);
 });
 
 Deno.test("compute-clinical-brain - invalid payload", async () => {
-  const res = await fetch(FUNCTION_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: "toxic",
-  });
-  // Catches and proceeds with {}
+  const req = buildToxicRequest(URL);
+  const mockClient = createMockSupabaseClient();
+  const res = await handler(req, mockClient);
   assertEquals(res.status, 200);
 });
