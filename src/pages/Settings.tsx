@@ -235,6 +235,9 @@ export default function Settings() {
         {/* PIX Config Manager — only for professionals */}
         {(isNutritionist || isPersonal) && <PixConfigManager />}
 
+        {/* Marmita Settings — only for professionals */}
+        {(isNutritionist || isPersonal) && <MarmitaSettingsCard />}
+
         {/* Agenda Pública */}
         {(isNutritionist || isPersonal) && <PublicAgendaCard />}
 
