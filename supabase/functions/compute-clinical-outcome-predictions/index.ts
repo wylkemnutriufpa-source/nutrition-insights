@@ -228,7 +228,7 @@ function classifyConfidence(score: number): string {
   return "baixa_confianca";
 }
 
-Deno.serve(async (req) => {
+export async function handler(req: Request) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -410,4 +410,8 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}
+
+if (import.meta.main) {
+  Deno.serve(handler);
+}
