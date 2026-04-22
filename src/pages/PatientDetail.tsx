@@ -1905,8 +1905,8 @@ export default function PatientDetail() {
                       />
                     </div>
 
-                    {/* Marmita Mode Toggle */}
-                    <div className="border-t pt-3">
+                    {/* Marmita Mode Toggles */}
+                    <div className="border-t pt-3 space-y-4">
                       <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
                           <Label className="text-sm font-medium flex items-center gap-2">
@@ -1934,6 +1934,35 @@ export default function PatientDetail() {
                           }}
                         />
                       </div>
+
+                      <div className="flex items-center justify-between">
+                        <div className="space-y-0.5">
+                          <Label className="text-sm font-medium flex items-center gap-2">
+                            <Timer className="w-4 h-4 text-amber-500" />
+                            Modo Marmita Rápida
+                          </Label>
+                          <p className="text-xs text-muted-foreground">
+                            Prioriza receitas com menor tempo de preparo e instruções otimizadas.
+                          </p>
+                        </div>
+                        <Switch
+                          checked={(profile as any)?.fast_marmita_mode || false}
+                          onCheckedChange={async (checked) => {
+                            try {
+                              const { error } = await supabase
+                                .from("profiles")
+                                .update({ fast_marmita_mode: checked } as any)
+                                .eq("user_id", resolvedPatientId);
+                              if (error) throw error;
+                              toast.success(`Modo Marmita Rápida ${checked ? "ativado" : "desativado"}!`);
+                              invalidate();
+                            } catch (e: any) {
+                              toast.error("Erro ao atualizar modo marmita rápida");
+                            }
+                          }}
+                        />
+                      </div>
+                    </div>
                     </div>
 
                     <div className="border-t pt-3 space-y-2">
