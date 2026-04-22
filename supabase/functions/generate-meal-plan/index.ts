@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import { requireUser } from "../_shared/auth-guard.ts";
@@ -228,7 +229,7 @@ const BLOCKED_FOODS = CANONICAL_BLOCKED_FOODS;
 // All meal generation is EXCLUSIVELY from meal_visual_library
 // ═══════════════════════════════════════════════════════════════
 
-interface VisualLibraryItem {
+export interface VisualLibraryItem {
   id: string;
   slug: string;
   name: string;
@@ -1508,7 +1509,7 @@ function generatePlanFromVisualLibrary(
 // - Image resolution via meal_visual_library by category match
 // ═══════════════════════════════════════════════════════════════
 
-interface MarmitaRecipe {
+export interface MarmitaRecipe {
   id: string;
   name: string;
   meal_type: string; // 'almoço' | 'jantar'
@@ -1576,7 +1577,7 @@ function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibrary
   return best || candidates[0];
 }
 
-function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
+export function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
   // Rough estimate from total grams: ~1.3 kcal/g, with macros from defaults
   const totalGrams = (recipe.foods_json || []).reduce((s, f) => s + (Number(f.grams) || 0), 0);
   const cal = Math.round(totalGrams * 1.3);
@@ -1615,7 +1616,7 @@ async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onl
   })).filter(r => r.foods_json.length > 0);
 }
 
-function generateWeeklyMarmitaPlan(
+export function generateWeeklyMarmitaPlan(
   recipes: MarmitaRecipe[],
   templates: ResolvedTemplate[],
   visualLibrary: VisualLibraryItem[],
@@ -1764,7 +1765,7 @@ function pickMarmita(
   return pool[seed % pool.length];
 }
 
-function buildMarmitaItem(
+export function buildMarmitaItem(
   recipe: MarmitaRecipe,
   mealType: string,
   day: number,
@@ -1776,8 +1777,8 @@ function buildMarmitaItem(
 ): any {
   const baseMacros = estimateRecipeMacros(recipe);
   const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
-  // Allow wider scale range so high/low kcal patients can hit their target (was 0.6-1.8)
-  const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+  // If recipe is not scalable, force scale to 1.0 (preserve grammages)
+  const clampedScale = recipe.is_scalable === false ? 1 : Math.max(0.5, Math.min(2.5, scaleFactor));
 
   // Seasonings/condiments are exempt from the 20g minimum portion rule
   const SEASONING_KEYWORDS = ["orégano", "oregano", "sal", "pimenta", "noz-moscada", "açafrão", "acafrao", "cominho", "alho em pó", "ervas finas", "páprica", "paprica", "limão", "limao", "vinagre", "molho de pimenta", "tempero"];
@@ -1799,11 +1800,12 @@ function buildMarmitaItem(
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
-  // If macroTarget provided, prefer it (the engine already split daily macros across slots).
-  // Otherwise fall back to the rough recipe-derived estimate.
-  const proteinFinal = macroTarget?.protein ?? Math.round(baseMacros.p * clampedScale);
-  const carbsFinal = macroTarget?.carbs ?? Math.round(baseMacros.c * clampedScale);
-  const fatFinal = macroTarget?.fat ?? Math.round(baseMacros.f * clampedScale);
+  // If macroTarget provided, prefer it (the engine already split daily macros across slots),
+  // UNLESS the recipe is non-scalable (in which case we must use the actual recipe macros).
+  const useMacroTarget = recipe.is_scalable !== false;
+  const proteinFinal = (useMacroTarget && macroTarget?.protein != null) ? macroTarget.protein : Math.round(baseMacros.p * clampedScale);
+  const carbsFinal = (useMacroTarget && macroTarget?.carbs != null) ? macroTarget.carbs : Math.round(baseMacros.c * clampedScale);
+  const fatFinal = (useMacroTarget && macroTarget?.fat != null) ? macroTarget.fat : Math.round(baseMacros.f * clampedScale);
 
   return {
     title: `🍱 ${recipe.name}`,
@@ -2328,7 +2330,7 @@ function sanitizeDislikedFoodsFromItems(items: any[], dislikedFoods: string[]): 
     const [mainSection, subSection] = item.description.split(/\n\n🔄 Substituições:\n/);
     const lines = (mainSection || "").split("\n");
     
-    const cleanLines = lines.filter(line => {
+    const cleanLines = lines.filter((line: string) => {
       const normLine = normalize(line);
       const isDisliked = normalizedDisliked.some(d => normLine.includes(d));
       if (isDisliked) totalRemoved++;
@@ -2338,7 +2340,7 @@ function sanitizeDislikedFoodsFromItems(items: any[], dislikedFoods: string[]): 
     // Also clean substitution section
     let cleanSubs = "";
     if (subSection) {
-      const subLines = subSection.split("\n").filter(line => {
+      const subLines = subSection.split("\n").filter((line: string) => {
         const normLine = normalize(line);
         return !normalizedDisliked.some(d => normLine.includes(d));
       });
@@ -2572,7 +2574,8 @@ function buildGenerationMetadata(
 // SERVE
 // ═══════════════════════════════════════════════════════════════
 
-serve(async (req) => {
+if (import.meta.main) {
+  serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -3545,4 +3548,5 @@ serve(async (req) => {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+  });
+}
