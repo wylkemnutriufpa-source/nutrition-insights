@@ -101,6 +101,9 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     const history: WeeklyPlan[] = [];
 
     for (let w = 1; w <= 12; w++) {
+      // Force an adherence drop at week 6 to trigger strategy change
+      if (w === 6) currentState.adherence_7d = 60;
+      
       const plan = generatePlan(currentState, w);
       history.push(plan);
       currentState = simulateWeek(currentState, plan);
@@ -113,6 +116,8 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     // Ensure variety in strategies if state shifts
     const strategies = new Set(history.map(h => h.strategy));
     expect(strategies.size).toBeGreaterThan(1);
+    expect(strategies.has("deficit")).toBe(true);
+    expect(strategies.has("conservative_deficit")).toBe(true);
   });
 
   it("validates absence of cumulative state bugs (stability)", () => {
