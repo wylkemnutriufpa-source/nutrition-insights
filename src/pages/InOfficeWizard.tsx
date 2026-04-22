@@ -111,26 +111,43 @@ export default function InOfficeWizard() {
   }, [sessionId]);
 
   const goNext = useCallback(async () => {
+    const current = step;
     const next = Math.min(step + 1, 5);
+    
+    // Set step immediately for UI responsiveness
     setStep(next);
+    
+    // Side effects per step
     try {
-      await saveStep(next);
+      if (current === 4) {
+        // Mark meal plan as completed when leaving step 4
+        await supabase.from("in_office_sessions" as any)
+          .update({ meal_plan_completed: true, current_step: next } as any)
+          .eq("id", sessionId);
+      } else {
+        await saveStep(next);
+      }
     } catch (e) {
       console.error("Erro ao salvar progresso:", e);
     }
-  }, [step, saveStep]);
+  }, [step, saveStep, sessionId]);
 
-  const goPrev = useCallback(() => {
+  const goPrev = useCallback(async () => {
     const prev = Math.max(step - 1, 1);
     setStep(prev);
-    saveStep(prev);
+    await saveStep(prev);
   }, [step, saveStep]);
 
   const completeSession = useCallback(async () => {
     if (!sessionId) return;
+    setLoading(true);
     await supabase
       .from("in_office_sessions" as any)
-      .update({ completed_at: new Date().toISOString(), current_step: 5 } as any)
+      .update({ 
+        completed_at: new Date().toISOString(), 
+        current_step: 5,
+        meal_plan_completed: true 
+      } as any)
       .eq("id", sessionId);
     toast.success("Sessão presencial finalizada!");
     navigate(`/patients/${patientId}`);

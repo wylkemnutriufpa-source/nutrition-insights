@@ -169,14 +169,7 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
           </div>
         )}
 
-        <div className="flex items-center justify-between pt-4">
-          <Button variant="outline" onClick={onPrev} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Voltar
-          </Button>
-          <Button onClick={onComplete} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-            <CheckCircle2 className="w-4 h-4" /> Finalizar Sessão
-          </Button>
-        </div>
+        {/* Navigation is handled by parent wizard */}
       </CardContent>
     </Card>
   );

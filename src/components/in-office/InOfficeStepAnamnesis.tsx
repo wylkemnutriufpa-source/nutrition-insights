@@ -209,14 +209,7 @@ export default function InOfficeStepAnamnesis({ patientId, onNext, onPrev, sessi
           ))}
         </div>
 
-        <div className="flex items-center justify-between pt-4">
-          <Button variant="outline" onClick={onPrev} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Voltar
-          </Button>
-          <Button onClick={handleNext} className="gap-2">
-            Próximo <ArrowRight className="w-4 h-4" />
-          </Button>
-        </div>
+        {/* Navigation is handled by the parent wizard */}
       </CardContent>
     </Card>
   );
