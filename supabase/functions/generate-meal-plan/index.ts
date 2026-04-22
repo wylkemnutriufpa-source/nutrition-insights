@@ -3315,10 +3315,23 @@ export async function generateMealPlanHandler(req: Request) {
       // ── WEEKLY MARMITA MODE (escalável) ──
       const mealRecipes = await loadMealRecipes(serviceClient, requestedNutritionistId);
       console.log(`[generate-meal-plan] weekly_marmita: ${mealRecipes.length} recipes loaded`);
-      const result = generateWeeklyMarmitaPlan(
-        mealRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
-        restrictions, disliked, allergies, enabledMeals, mealTimes,
-        resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+      const result = await generateWeeklyMarmitaPlan(
+        serviceClient,
+        mealRecipes,
+        mealTemplates,
+        visualLibrary,
+        goal,
+        finalKcal,
+        finalMacros,
+        restrictions,
+        disliked,
+        allergies,
+        enabledMeals,
+        mealTimes,
+        resolvedStrategy.strategyId,
+        patientFoodDatabase,
+        recentMeals,
+        fastMarmitaMode
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
