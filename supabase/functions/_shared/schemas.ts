@@ -24,9 +24,14 @@ export const ValidateMealPlanSchema = z.object({
 
 // apply-clinical-adjustment input schema
 export const ApplyClinicalAdjustmentSchema = z.object({
+  action: z.enum(["analyze", "suggest", "apply"]),
   patient_id: PatientIdSchema,
-  adjustment_type: z.enum(["kcal", "macros", "meal_split", "protocol"]),
-  adjustment_data: z.record(z.any()),
+  plan_id: z.string().uuid().optional(),
+  adjustments: z.array(z.object({
+    mealItemId: z.string().uuid(),
+    action: z.string(),
+    value: z.any().optional(),
+  })).optional(),
 });
 
 // compute-clinical-brain input schema
