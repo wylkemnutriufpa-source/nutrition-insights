@@ -223,7 +223,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const mealTypeInfo = MEAL_TYPE_LABELS[meal.meal_type || ""] || null;
   const imageUrl = meal.image_url || meta.image_url;
 
-  const hasMacros = meal.calories_target !== null || meal.protein_target !== null || meal.carbs_target !== null || meal.fat_target !== null;
+  const calories = meal.calories_target ?? meta.calories_target ?? meta.calories;
+  const protein = meal.protein_target ?? meta.protein_target ?? meta.protein;
+  const carbs = meal.carbs_target ?? meta.carbs_target ?? meta.carbs;
+  const fat = meal.fat_target ?? meta.fat_target ?? meta.fat;
+
+  const hasMacros = calories !== null || protein !== null || carbs !== null || fat !== null;
 
   const canEdit = !!meal.itemId && !!onRemoveFoodLine;
   const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
@@ -465,10 +470,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
           {hasMacros && (
             <div className="grid grid-cols-4 gap-2">
               {[
-                { label: "Calorias", value: meal.calories_target, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
-                { label: "Proteína", value: meal.protein_target, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
-                { label: "Carbs", value: meal.carbs_target, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
-                { label: "Gordura", value: meal.fat_target, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
+                { label: "Calorias", value: calories, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
+                { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
+                { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
+                { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
               ].map(m => (
                 <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
                   <div className="flex justify-center mb-1.5">{m.icon}</div>

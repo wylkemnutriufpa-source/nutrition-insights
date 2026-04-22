@@ -237,25 +237,29 @@ export default function ExpandableMealPlanCard() {
                                 <span className={`text-xs font-medium truncate ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
                                   {item.title}
                                 </span>
-                                {item.calories_target !== null && (
-                                  <div className="flex items-center gap-1 ml-auto shrink-0">
-                                    <span className="text-[9px] text-muted-foreground">{fmtMacro(item.calories_target)}kcal</span>
-                                    {isCalorieClamped(item.calories_target) && (
-                                      <TooltipProvider>
-                                        <Tooltip>
-                                          <TooltipTrigger>
-                                            <Info className="w-2.5 h-2.5 text-amber-500" />
-                                          </TooltipTrigger>
-                                          <TooltipContent>
-                                            <p className="text-[10px]">
-                                              Ajustado para {getCalorieClampValue(item.calories_target)} kcal (limite de segurança).
-                                            </p>
-                                          </TooltipContent>
-                                        </Tooltip>
-                                      </TooltipProvider>
-                                    )}
-                                  </div>
-                                )}
+                                {(() => {
+                                  const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
+                                  if (cal === null || cal === undefined) return null;
+                                  return (
+                                    <div className="flex items-center gap-1 ml-auto shrink-0">
+                                      <span className="text-[9px] text-muted-foreground">{fmtMacro(cal)}kcal</span>
+                                      {isCalorieClamped(cal) && (
+                                        <TooltipProvider>
+                                          <Tooltip>
+                                            <TooltipTrigger>
+                                              <Info className="w-2.5 h-2.5 text-amber-500" />
+                                            </TooltipTrigger>
+                                            <TooltipContent>
+                                              <p className="text-[10px]">
+                                                Ajustado para {getCalorieClampValue(cal)} kcal (limite de segurança).
+                                              </p>
+                                            </TooltipContent>
+                                          </Tooltip>
+                                        </TooltipProvider>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
                               </div>
                               {item.description && (
                                 <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-pre-line leading-snug">
@@ -330,9 +334,11 @@ export default function ExpandableMealPlanCard() {
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2">
                                   <span className="text-xs font-medium truncate">{item.title}</span>
-                                  {item.calories_target != null && (
-                                    <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
-                                  )}
+                                  {(() => {
+                                    const cal = item.calories_target ?? item.metadata?.calories_target ?? item.metadata?.calories;
+                                    if (cal === null || cal === undefined) return null;
+                                    return <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(cal)}kcal</span>;
+                                  })()}
                                 </div>
                                 {item.description && (
                                   <p className="text-[10px] text-muted-foreground mt-0.5 whitespace-pre-line leading-snug">
