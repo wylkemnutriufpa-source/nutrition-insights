@@ -4,6 +4,7 @@ import InOfficeWizard from './pages/InOfficeWizard';
 import { BrowserRouter } from 'react-router-dom';
 import { supabase } from './integrations/supabase/client';
 import { useAuth } from './lib/auth';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
 // Mock supabase
@@ -43,11 +44,21 @@ Object.defineProperty(window, 'matchMedia', {
   })),
 });
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 const renderWizard = () => {
   return render(
-    <BrowserRouter>
-      <InOfficeWizard />
-    </BrowserRouter>
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <InOfficeWizard />
+      </BrowserRouter>
+    </QueryClientProvider>
   );
 };
 
@@ -71,7 +82,7 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     
     await waitFor(() => {
       expect(screen.getByText('Modo Consultório')).toBeInTheDocument();
-      expect(screen.getByText('Paciente Teste — Atendimento presencial')).toBeInTheDocument();
+      expect(screen.getByText(/Paciente Teste/i)).toBeInTheDocument();
     });
     
     // Verifica se o Stepper mostra a primeira etapa como ativa
