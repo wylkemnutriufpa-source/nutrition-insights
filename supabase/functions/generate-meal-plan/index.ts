@@ -2572,7 +2572,8 @@ function buildGenerationMetadata(
 // SERVE
 // ═══════════════════════════════════════════════════════════════
 
-serve(async (req) => {
+if (import.meta.main) {
+  serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
