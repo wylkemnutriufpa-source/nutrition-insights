@@ -55,3 +55,32 @@ export const MEAL_PLAN_FIXTURE = {
   patient_id: PATIENT_FIXTURE.id,
   title: "Plano de Teste",
 };
+
+/**
+ * Create a chainable mock Supabase client for testing.
+ */
+export function createMockSupabaseClient(data: any = {}) {
+  const chain: any = {
+    from: () => chain,
+    select: () => chain,
+    insert: () => chain,
+    update: () => chain,
+    upsert: () => chain,
+    delete: () => chain,
+    eq: () => chain,
+    neq: () => chain,
+    in: () => chain,
+    is: () => chain,
+    or: () => chain,
+    order: () => chain,
+    limit: () => chain,
+    gte: () => chain,
+    lte: () => chain,
+    single: () => Promise.resolve({ data, error: null }),
+    maybeSingle: () => Promise.resolve({ data, error: null }),
+    rpc: () => Promise.resolve({ data, error: null }),
+    then: (onRes: any) => Promise.resolve({ data: [data], error: null }).then(onRes),
+  };
+  return chain;
+}
+
