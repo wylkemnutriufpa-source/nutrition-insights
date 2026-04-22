@@ -67,20 +67,33 @@ export default function MealCard({
         </div>
 
         {(safeNum(calories) || safeNum(protein) || safeNum(carbs) || safeNum(fat)) > 0 && (
-          <div className="grid grid-cols-4 gap-2 mt-3" data-macro-tile="meal-card">
-            {[
-              { label: "Kcal", value: calories, key: "kcal" },
-              { label: "Prot", value: protein, unit: "g", key: "protein" },
-              { label: "Carb", value: carbs, unit: "g", key: "carbs" },
-              { label: "Gord", value: fat, unit: "g", key: "fat" },
-            ].map((m) => (
-              <div key={m.label} className="text-center p-2 rounded-lg bg-muted/50" data-macro={m.key}>
-                <p className="text-xs text-muted-foreground">{m.label}</p>
-                <p className="font-bold text-sm" data-macro-value={m.key}>
-                  {m.value != null ? `${fmtMacro(m.value)}${m.unit ?? ""}` : "-"}
-                </p>
+          <div className="space-y-2 mt-3">
+            <div className="grid grid-cols-4 gap-2" data-macro-tile="meal-card">
+              {[
+                { label: "Kcal", value: calories, key: "kcal" },
+                { label: "Prot", value: protein, unit: "g", key: "protein" },
+                { label: "Carb", value: carbs, unit: "g", key: "carbs" },
+                { label: "Gord", value: fat, unit: "g", key: "fat" },
+              ].map((m) => (
+                <div key={m.label} className="text-center p-2 rounded-lg bg-muted/50" data-macro={m.key}>
+                  <p className="text-xs text-muted-foreground">{m.label}</p>
+                  <p className="font-bold text-sm" data-macro-value={m.key}>
+                    {m.value != null ? `${fmtMacro(m.value)}${m.unit ?? ""}` : "-"}
+                  </p>
+                </div>
+              ))}
+            </div>
+            
+            {(isMacroInconsistent(calories || 0, protein || 0, carbs || 0, fat || 0) || isCalorieClamped(calories || 0)) && (
+              <div className="flex items-center gap-2 p-2 rounded-md bg-amber-500/10 border border-amber-500/20">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="text-[10px] text-amber-700 font-medium">
+                  {isCalorieClamped(calories || 0) 
+                    ? "Calorias ajustadas para o limite de segurança." 
+                    : "Macros recalculados para manter consistência calórica."}
+                </span>
               </div>
-            ))}
+            )}
           </div>
         )}
 
