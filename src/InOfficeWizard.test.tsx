@@ -5,7 +5,6 @@ import { BrowserRouter } from 'react-router-dom';
 import { supabase } from './integrations/supabase/client';
 import { useAuth } from './lib/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { WorkspaceContext } from './hooks/useWorkspaceContext';
 import '@testing-library/jest-dom';
 
 // Mocks simples para componentes complexos
@@ -52,11 +51,23 @@ vi.mock('./lib/auth', () => ({
   useAuth: vi.fn(),
 }));
 
-// Mock tenant context para evitar erros de renderização profunda
+// Mock tenant context
 vi.mock('./lib/tenantContext', () => ({
   TenantProvider: ({ children }: any) => <>{children}</>,
   useTenant: () => ({ tenantId: 't1' }),
   useCurrentTenantId: () => 't1',
+}));
+
+// Mock workspace context
+vi.mock('./hooks/useWorkspaceContext', () => ({
+  WorkspaceContext: { Provider: ({ children, value }: any) => <>{children}</> },
+  useWorkspaceContext: () => ({
+    activeContext: 'professional',
+    setContext: vi.fn(),
+    isHybridUser: false,
+    isProfessionalContext: true,
+    isPatientContext: false,
+  })
 }));
 
 // Mocks globais do browser
@@ -80,21 +91,11 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
 });
 
-const mockWorkspaceValue = {
-  activeContext: 'professional' as const,
-  setContext: vi.fn(),
-  isHybridUser: false,
-  isProfessionalContext: true,
-  isPatientContext: false,
-};
-
 const renderWizard = () => {
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
-        <WorkspaceContext.Provider value={mockWorkspaceValue}>
-          <InOfficeWizard />
-        </WorkspaceContext.Provider>
+        <InOfficeWizard />
       </BrowserRouter>
     </QueryClientProvider>
   );
@@ -111,21 +112,23 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     
     const mockSupabase = supabase as any;
     // Wizard init sequence
+    mockSupabase.maybeSingle.mockImplementation(async () => ({ data: mockProfile, error: null }));
+    mockSupabase.update.mockResolvedValue({ data: null, error: null });
+    
+    // Specifically handle the session loading
     mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null }) // profile name
-      .mockResolvedValueOnce({ data: mockSession, error: null }); // active session
-    
-    mockSupabase.update.mockResolvedValue({ data: null, error: null });
+      .mockResolvedValueOnce({ data: mockSession, error: null }); // session
   });
 
   it('deve navegar entre as etapas e persistir progresso', async () => {
     const mockSupabase = supabase as any;
     renderWizard();
     
-    // Verifica carregamento inicial
+    // Verifica carregamento inicial (agora aguardando o fim do loading)
     await waitFor(() => {
       expect(screen.getByTestId('step-1')).toBeInTheDocument();
-    });
+    }, { timeout: 4000 });
 
     // Clica no próximo (etapa 1 -> 2)
     const nextBtn = screen.getByText(/Próximo/i);
