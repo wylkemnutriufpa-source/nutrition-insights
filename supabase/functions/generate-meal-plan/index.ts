@@ -696,6 +696,12 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
 
     mealGroup.forEach((item, index) => {
       const current = Number(item.protein_target) || 0;
+      // Skip scaling for non-scalable items
+      if (item._is_scalable === false) {
+        scaledSum += current;
+        return;
+      }
+      
       const next = Math.max(0, Math.round(current * (target / currentTotal)));
       item.protein_target = next;
       scaledSum += next;
@@ -2325,7 +2331,10 @@ function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number
         const newSum = dayItems.reduce((s: number, i: any) => s + (i[c.macro] || 0), 0);
         const diff = c.target - newSum;
         if (diff !== 0 && dayItems.length > 0) {
-          const largest = dayItems.reduce((a: any, b: any) => ((b[c.macro] || 0) > (a[c.macro] || 0) ? b : a));
+          // Only apply correction to scalable items if possible
+          const scalableItems = dayItems.filter(i => i._is_scalable !== false);
+          const targetPool = scalableItems.length > 0 ? scalableItems : dayItems;
+          const largest = targetPool.reduce((a: any, b: any) => ((b[c.macro] || 0) > (a[c.macro] || 0) ? b : a));
           largest[c.macro] += diff;
         }
       }
