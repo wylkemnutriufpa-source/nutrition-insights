@@ -11,10 +11,13 @@ async function resolveTenant(supabase: any, userId: string): Promise<string | nu
   return data || null;
 }
 
-export async function handler(req: Request) {
+export async function handler(req: Request, supabaseClient?: any) {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
-  const supabase = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+  const supabase = supabaseClient ?? createClient(
+    Deno.env.get("SUPABASE_URL") ?? "", 
+    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+  );
 
   try {
     const body = await req.json().catch(() => ({}));

@@ -285,15 +285,16 @@ const TYPE_TO_DECISION: Record<string, string> = {
   no_change_monitoring: "keep_and_monitor",
 };
 
-export async function handler(req: Request) {
+export async function handler(req: Request, supabaseClient?: any) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = supabaseClient ?? createClient(
+      Deno.env.get("SUPABASE_URL") ?? "", 
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
     const body = await req.json().catch(() => ({}));
     const targetPatientId = body.patient_id;

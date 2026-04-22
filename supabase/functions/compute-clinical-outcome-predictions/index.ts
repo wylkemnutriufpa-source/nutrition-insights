@@ -228,15 +228,16 @@ function classifyConfidence(score: number): string {
   return "baixa_confianca";
 }
 
-export async function handler(req: Request) {
+export async function handler(req: Request, supabaseClient?: any) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-    const supabase = createClient(supabaseUrl, serviceKey);
+    const supabase = supabaseClient ?? createClient(
+      Deno.env.get("SUPABASE_URL") ?? "", 
+      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+    );
 
     // 1. Load patients with snapshots
     const { data: patients } = await supabase
