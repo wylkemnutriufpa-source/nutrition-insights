@@ -438,9 +438,14 @@ export default function HybridPlanBuilder() {
       return;
     }
 
-    // Auto engine mode: hard block
-    if (!isManualMode && (!vs || vs !== "aprovado")) {
-      toast.error("❌ Este plano precisa ser validado antes da publicação. Use o botão 'Validar' primeiro.");
+    // Auto engine mode: allow publish with warning if not hard rejected
+    if (!isManualMode && (!vs || (vs !== "aprovado" && vs !== "sugestoes_melhoria"))) {
+      toast.error("❌ Este plano precisa ser validado ou corrigido antes da publicação.");
+      return;
+    }
+
+    if (!isManualMode && vs === "sugestoes_melhoria") {
+      setShowPublishWarning(true);
       return;
     }
 
