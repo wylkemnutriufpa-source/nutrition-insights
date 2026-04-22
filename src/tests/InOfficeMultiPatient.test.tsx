@@ -18,7 +18,7 @@ vi.mock('sonner', () => ({
   }
 }));
 
-const createMockChain = () => {
+const createMockChain = (initialData: any = {}) => {
   const chain: any = {
     select: vi.fn(() => chain),
     insert: vi.fn(() => chain),
@@ -32,10 +32,10 @@ const createMockChain = () => {
     or: vi.fn(() => chain),
     order: vi.fn(() => chain),
     limit: vi.fn(() => chain),
-    single: vi.fn(() => Promise.resolve({ data: {}, error: null })),
-    maybeSingle: vi.fn(() => Promise.resolve({ data: {}, error: null })),
+    single: vi.fn(() => Promise.resolve({ data: initialData, error: null })),
+    maybeSingle: vi.fn(() => Promise.resolve({ data: initialData, error: null })),
     ilike: vi.fn(() => chain),
-    then: undefined,
+    then: (onRes: any) => Promise.resolve({ data: [], error: null }).then(onRes),
   };
   return chain;
 };
@@ -90,9 +90,12 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
           chain.single.mockImplementation(() => Promise.resolve({ data: currentSession, error: null }));
           chain.update.mockImplementation((data: any) => { 
             Object.assign(currentSession, data); 
-            return chain; // Chain for .eq()
+            return chain; 
           });
-          chain.eq.mockImplementation(() => Promise.resolve({ error: null }));
+          chain.eq.mockReturnValue(chain);
+          chain.is.mockReturnValue(chain);
+          // O retorno final de um chain de update pode ser a própria Promise se não houver mais métodos
+          chain.then = (onRes: any) => Promise.resolve({ data: currentSession, error: null }).then(onRes);
         }
         if (table === 'meal_plans') {
           chain.maybeSingle.mockImplementation(() => Promise.resolve({ data: currentPlan, error: null }));
@@ -105,20 +108,17 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
             if (currentPlan) Object.assign(currentPlan, data); 
             return chain;
           });
-          chain.eq.mockImplementation(() => chain);
-          chain.in.mockImplementation(() => Promise.resolve({ error: null }));
+          chain.in.mockImplementation(() => chain);
+          chain.then = (onRes: any) => Promise.resolve({ data: currentPlan, error: null }).then(onRes);
         }
         if (table === 'nutritionist_patients') {
           chain.maybeSingle.mockResolvedValue({ data: { tenant_id: 't1' }, error: null });
         }
         if (table === 'meal_plan_items') {
-          chain.select.mockImplementation(() => chain);
-          chain.eq.mockImplementation(() => chain);
-          // O retorno final de uma query select sem .single() deve ser Promise<{data, error}>
-          chain.order = vi.fn(() => Promise.resolve({ data: [], error: null }));
-          // fallback if order not called
+          chain.select.mockReturnValue(chain);
+          chain.eq.mockReturnValue(chain);
+          chain.order.mockReturnValue(chain);
           chain.then = (onRes: any) => Promise.resolve({ data: [], error: null }).then(onRes);
-          
           chain.upsert.mockResolvedValue({ error: null });
           chain.delete.mockReturnValue(chain);
         }
