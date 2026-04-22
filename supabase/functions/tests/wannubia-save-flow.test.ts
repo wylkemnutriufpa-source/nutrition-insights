@@ -8,8 +8,8 @@ const PATIENT_ID = "b3aa9e2a-58b0-432c-a312-00bb8994d384"; // Wannubia
 const NUTRITIONIST_ID = "9994b710-6006-4fca-9761-dc6afef160a4"; // Wylkem
 const TENANT_ID = "20081963-8db9-4a6c-8181-6a820b86e12f";
 
-const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
-const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://vkrcobprntictsxqmjjl.supabase.co";
+const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? Deno.env.get("SUPABASE_PUBLISHABLE_KEY") ?? "";
 const supabase = createClient(supabaseUrl, serviceKey);
 
 Deno.test({

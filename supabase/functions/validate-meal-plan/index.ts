@@ -371,7 +371,8 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
 
     try {
         const { data: body, response: errorResponse } = await validateBody(req, ValidateMealPlanSchema);
-        if (errorResponse || !body) return errorResponse!;
+        if (errorResponse) return errorResponse;
+        if (!body) return new Response(JSON.stringify({ error: "No body" }), { status: 400 });
 
         const { meal_plan_id } = body as any;
 
