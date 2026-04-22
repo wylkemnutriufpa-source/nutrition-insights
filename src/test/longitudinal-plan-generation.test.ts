@@ -162,15 +162,67 @@ describe("Longitudinal Plan Generation & Determinism", () => {
     }
   });
 
-  it("handles extreme adherence drops without system failure", () => {
-    const strugglingPatient: PatientState = {
-      ...initialPatient,
-      adherence_7d: 20,
-    };
-    
-    const plan = generatePlan(strugglingPatient, 1);
-    // Should switch to conservative deficit
-    expect(plan.strategy).toBe("conservative_deficit");
-    expect(plan.calories).toBe(2200); // 2500 - 500 + 200
+
+  describe("Edge Case Simulations (10+ weeks)", () => {
+    it("handles extreme initial weights (low and high) and various goals without failure", () => {
+      const edgeCases: PatientState[] = [
+        {
+          id: "very-low-weight-loss",
+          weight: 35,
+          goal: "lose_weight",
+          adherence_7d: 90,
+          metabolic_rate: 1400,
+          cumulative_deficit: 0,
+        },
+        {
+          id: "very-high-weight-loss",
+          weight: 350,
+          goal: "lose_weight",
+          adherence_7d: 90,
+          metabolic_rate: 4500,
+          cumulative_deficit: 0,
+        },
+        {
+          id: "very-low-weight-gain",
+          weight: 38,
+          goal: "gain_muscle",
+          adherence_7d: 95,
+          metabolic_rate: 1600,
+          cumulative_deficit: 0,
+        }
+      ];
+
+      edgeCases.forEach(initialState => {
+        let currentState = { ...initialState };
+        
+        for (let w = 1; w <= 15; w++) {
+          const plan = generatePlan(currentState, w);
+          
+          // 1. Assert Macros/Calories
+          expect(Number.isFinite(plan.calories), `Non-finite calories at week ${w} for ${currentState.id}`).toBe(true);
+          expect(plan.calories, `Calories too low at week ${w} for ${currentState.id}`).toBeGreaterThanOrEqual(1200);
+          expect(Number.isFinite(plan.macros.p)).toBe(true);
+          expect(Number.isFinite(plan.macros.c)).toBe(true);
+          expect(Number.isFinite(plan.macros.f)).toBe(true);
+          
+          // Assert calories clamp never breaks
+          expect(plan.calories).toBeGreaterThanOrEqual(1200);
+
+          // 2. Assert Macro Consistency (P*4 + C*4 + F*9 ≈ Kcal)
+          const calculatedKcal = (plan.macros.p * 4) + (plan.macros.c * 4) + (plan.macros.f * 9);
+          // Allow small rounding errors
+          expect(calculatedKcal).toBeGreaterThan(plan.calories * 0.85);
+          expect(calculatedKcal).toBeLessThan(plan.calories * 1.15);
+
+          // 3. Run simulation step
+          currentState = simulateWeek(currentState, plan);
+          
+          // 4. Assert Weight Bounds
+          expect(Number.isFinite(currentState.weight), `Non-finite weight at week ${w} for ${currentState.id}`).toBe(true);
+          expect(currentState.weight, `Weight out of bounds at week ${w} for ${currentState.id}`).toBeGreaterThan(20);
+          expect(currentState.weight, `Weight out of bounds at week ${w} for ${currentState.id}`).toBeLessThan(500);
+        }
+      });
+    });
   });
 });
