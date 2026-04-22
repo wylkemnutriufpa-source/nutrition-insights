@@ -1,5 +1,7 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
+import { validateBody } from "../_shared/validator.ts";
+import { ValidateMealPlanSchema } from "../_shared/schemas.ts";
 import {
   BLOCKED_FOODS as CANONICAL_BLOCKED_FOODS,
   REPLACEMENTS as CANONICAL_REPLACEMENTS,
@@ -369,9 +371,10 @@ export async function handler(req: Request, supabaseClient?: any) {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
-        const body = await req.json().catch(() => ({}));
+        const { data: body, response: errorResponse } = await validateBody(req, ValidateMealPlanSchema);
+        if (errorResponse) return errorResponse;
+
         const { meal_plan_id } = body;
-        if (!meal_plan_id) return new Response(JSON.stringify({ error: "Missing meal_plan_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
         const supabase = supabaseClient ?? createClient(
             Deno.env.get("SUPABASE_URL") ?? "",
