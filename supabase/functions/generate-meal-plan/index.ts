@@ -1799,11 +1799,12 @@ export function buildMarmitaItem(
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
-  // If macroTarget provided, prefer it (the engine already split daily macros across slots).
-  // Otherwise fall back to the rough recipe-derived estimate.
-  const proteinFinal = macroTarget?.protein ?? Math.round(baseMacros.p * clampedScale);
-  const carbsFinal = macroTarget?.carbs ?? Math.round(baseMacros.c * clampedScale);
-  const fatFinal = macroTarget?.fat ?? Math.round(baseMacros.f * clampedScale);
+  // If macroTarget provided, prefer it (the engine already split daily macros across slots),
+  // UNLESS the recipe is non-scalable (in which case we must use the actual recipe macros).
+  const useMacroTarget = recipe.is_scalable !== false;
+  const proteinFinal = (useMacroTarget && macroTarget?.protein != null) ? macroTarget.protein : Math.round(baseMacros.p * clampedScale);
+  const carbsFinal = (useMacroTarget && macroTarget?.carbs != null) ? macroTarget.carbs : Math.round(baseMacros.c * clampedScale);
+  const fatFinal = (useMacroTarget && macroTarget?.fat != null) ? macroTarget.fat : Math.round(baseMacros.f * clampedScale);
 
   return {
     title: `🍱 ${recipe.name}`,
