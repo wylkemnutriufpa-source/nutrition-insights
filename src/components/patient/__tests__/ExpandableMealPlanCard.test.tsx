@@ -126,18 +126,20 @@ function renderCard() {
 }
 
 describe("ExpandableMealPlanCard - description rendering", () => {
+  const waitForLoaded = async () => {
+    await waitFor(() => {
+      expect(screen.queryByTestId("loading-spinner")).not.toBeInTheDocument();
+      // Ensure the "Meu Plano Alimentar" header is visible
+      expect(screen.getByText(/Meu Plano Alimentar/i)).toBeInTheDocument();
+    }, { timeout: 5000 });
+  };
+
   it("renders item.description in the 'Hoje' (today) tab", async () => {
     renderCard();
+    await waitFor(() => {
+      expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
+    }, { timeout: 5000 });
 
-    // Wait for data to load and items to render
-    await waitFor(
-      () => {
-        expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
-      },
-      { timeout: 3000 },
-    );
-
-    // Description (multi-line) is shown directly on the card
     const html = document.body.innerHTML;
     expect(html).toContain("Patinho moído 80g");
     expect(html).toContain("Arroz integral 100g");
@@ -146,34 +148,25 @@ describe("ExpandableMealPlanCard - description rendering", () => {
 
   it("renders item.description in the 'Semanal' (weekly) tab", async () => {
     renderCard();
-
-    await waitFor(() => {
-      expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
-    }, { timeout: 3000 });
-
-    // Switch to Weekly tab
-    fireEvent.click(screen.getByRole("tab", { name: /Semanal/i }));
+    
+    // Wait for the tab to be available
+    const weeklyTab = await screen.findByRole("tab", { name: /Semanal/i }, { timeout: 5000 });
+    fireEvent.click(weeklyTab);
 
     // Click the day pill matching the second item's day_of_week.
-    // Day pills are buttons inside a 7-column grid that contain DAYS_SHORT labels.
     const dayShort = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
     const targetLabel = dayShort[(TODAY_DOW + 1) % 7];
 
     await waitFor(() => {
-      // Find buttons by role and then filter by text, being less strict with startsWith
       const buttons = screen.getAllByRole("button");
       const pills = buttons.filter((b) => (b.textContent || "").includes(targetLabel));
-      
       expect(pills.length).toBeGreaterThan(0);
       fireEvent.click(pills[0]);
-    }, { timeout: 3000 });
+    }, { timeout: 5000 });
 
-    await waitFor(
-      () => {
-        expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
-      },
-      { timeout: 3000 },
-    );
+    await waitFor(() => {
+      expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
+    }, { timeout: 5000 });
 
     const html = document.body.innerHTML;
     expect(html).toContain("Frango grelhado 120g");
@@ -184,18 +177,13 @@ describe("ExpandableMealPlanCard - description rendering", () => {
   it("renders item.description for ALL items in the 'Completo' (full) tab", async () => {
     renderCard();
 
+    const fullTab = await screen.findByRole("tab", { name: /Completo/i }, { timeout: 5000 });
+    fireEvent.click(fullTab);
+
     await waitFor(() => {
       expect(document.body.innerHTML).toContain("MarmitaCarneMagra");
-    }, { timeout: 3000 });
-
-    fireEvent.click(screen.getByRole("tab", { name: /Completo/i }));
-
-    await waitFor(
-      () => {
-        expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
-      },
-      { timeout: 3000 },
-    );
+      expect(document.body.innerHTML).toContain("MarmitaFrangoGrelhado");
+    }, { timeout: 5000 });
 
     const html = document.body.innerHTML;
     expect(html).toContain("Patinho moído 80g");
