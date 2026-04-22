@@ -217,3 +217,5 @@ describe("Meal Plan UI Warnings", () => {
       trigger.focus();
       expect(document.activeElement).toBe(trigger);
     });
+  });
+});
