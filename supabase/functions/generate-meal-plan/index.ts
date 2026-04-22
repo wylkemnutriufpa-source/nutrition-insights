@@ -271,16 +271,16 @@ async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
   const { data, error } = await client
     .from("meal_visual_library")
     .select("id, slug, name, display_name, category, image_url, default_calories, default_protein, default_carbs, default_fat, base_recipe, tags, search_terms, clinical_tags")
-    .eq("is_active", true)
-    .not("image_url", "is", null);
+    .eq("is_active", true);
 
   if (error || !data) {
     console.error("[generate-meal-plan] Failed to load visual library:", error);
     return [];
   }
-  // Only items WITH image; ensure clinical_tags is always an array
+  
+  // Filtragem mais flexível para permitir itens sem imagem mas com fallback visual se necessário
+  // No entanto, para o motor v8.0.0, priorizamos itens com imagens válidas.
   return (data as VisualLibraryItem[])
-    .filter(item => item.image_url && item.image_url.length > 5)
     .map(item => ({ ...item, clinical_tags: item.clinical_tags || [] }));
 }
 
