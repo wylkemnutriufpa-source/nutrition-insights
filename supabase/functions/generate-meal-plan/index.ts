@@ -240,6 +240,7 @@ export interface VisualLibraryItem {
   default_protein: number | null;
   default_carbs: number | null;
   default_fat: number | null;
+  default_portion?: string | null;
   base_recipe: any;
   tags: string[];
   search_terms: string[];
@@ -276,7 +277,7 @@ const DEFAULT_VISUAL_FALLBACKS: Record<string, string> = {
 async function loadVisualLibrary(client: any): Promise<VisualLibraryItem[]> {
   const { data, error } = await client
     .from("meal_visual_library")
-    .select("id, slug, name, display_name, category, image_url, default_calories, default_protein, default_carbs, default_fat, base_recipe, tags, search_terms, clinical_tags")
+    .select("id, slug, name, display_name, category, image_url, default_calories, default_protein, default_carbs, default_fat, default_portion, base_recipe, tags, search_terms, clinical_tags")
     .eq("is_active", true);
 
   if (error || !data) {
