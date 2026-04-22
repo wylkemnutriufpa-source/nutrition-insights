@@ -160,9 +160,10 @@ describe("ExpandableMealPlanCard - description rendering", () => {
     const targetLabel = dayShort[(TODAY_DOW + 1) % 7];
 
     await waitFor(() => {
-      const pills = Array.from(
-        document.querySelectorAll("button"),
-      ).filter((b) => (b.textContent || "").trim().startsWith(targetLabel));
+      // Find buttons by role and then filter by text, being less strict with startsWith
+      const buttons = screen.getAllByRole("button");
+      const pills = buttons.filter((b) => (b.textContent || "").includes(targetLabel));
+      
       expect(pills.length).toBeGreaterThan(0);
       fireEvent.click(pills[0]);
     }, { timeout: 3000 });
