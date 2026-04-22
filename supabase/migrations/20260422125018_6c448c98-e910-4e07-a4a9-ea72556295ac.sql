@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN marmita_mode BOOLEAN DEFAULT false;
