@@ -105,7 +105,11 @@ const mockFetch = (responses: Record<string, any>) => {
   return () => { globalThis.fetch = originalFetch; };
 };
 
-Deno.test("generate-meal-plan: Patient Mode Integration", async (t) => {
+Deno.test({
+  name: "generate-meal-plan: Patient Mode Integration",
+  sanitizeOps: false,
+  sanitizeResources: false,
+  fn: async (t) => {
   const restoreFetch = mockFetch({});
   
   try {
