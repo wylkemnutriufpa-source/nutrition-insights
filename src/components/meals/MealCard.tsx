@@ -1,7 +1,9 @@
 import { motion } from "framer-motion";
-import { Clock, Sparkles } from "lucide-react";
+import { Clock, Sparkles, AlertCircle, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { fmtMacro, safeNum } from "@/lib/formatMacros";
+import { fmtMacro, safeNum, isMacroInconsistent, isCalorieClamped } from "@/lib/formatMacros";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+
 
 const mealTypeLabels: Record<string, { label: string; emoji: string }> = {
   breakfast: { label: "Café da manhã", emoji: "☕" },
