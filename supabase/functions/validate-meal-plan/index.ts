@@ -586,7 +586,7 @@ export async function handler(req: Request, supabaseClient?: any) {
 
         // ── 2. Simplicity Validation ──────────────────────────────────────
         const patientGoal = (answers?.primary_goal || answers?.objective || answers?.goal || "emagrecimento") as string;
-        const simplicityResult = analyzePlanSimplicity(items, patientGoal);
+        const simplicityResult = analyzePlanSimplicity(items, patientGoal) as any;
 
         // ── 3. Practical Adherence Prediction (NEW) ──────────────────────────
         const adherenceResult = analyzePracticalAdherence(items, simplicityResult.score, simplicityResult.blocked_foods.length);
