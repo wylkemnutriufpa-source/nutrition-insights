@@ -237,7 +237,7 @@ export default function ExpandableMealPlanCard() {
                                 <span className={`text-xs font-medium truncate ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
                                   {item.title}
                                 </span>
-                                {item.calories_target != null && (
+                                {item.calories_target !== null && (
                                   <div className="flex items-center gap-1 ml-auto shrink-0">
                                     <span className="text-[9px] text-muted-foreground">{fmtMacro(item.calories_target)}kcal</span>
                                     {isCalorieClamped(item.calories_target) && (
