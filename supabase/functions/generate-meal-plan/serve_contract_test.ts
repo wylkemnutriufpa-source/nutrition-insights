@@ -118,7 +118,8 @@ Deno.test("generate-meal-plan: Patient Mode Integration", async (t) => {
         },
         body: JSON.stringify({ 
           patient_id: "patient-123",
-          generationMode: "weekly_marmita" // Or let marmita_mode trigger it
+          meal_plan_id: "plan-123",
+          generationMode: "weekly_marmita"
         }),
       });
 
