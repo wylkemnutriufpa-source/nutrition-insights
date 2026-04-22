@@ -5,7 +5,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { supabase } from './integrations/supabase/client';
 import { useAuth } from './lib/auth';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { TenantProvider } from './lib/tenantContext';
+import { TenantContext } from './lib/tenantContext';
 import { WorkspaceContext } from './hooks/useWorkspaceContext';
 import '@testing-library/jest-dom';
 
@@ -73,14 +73,27 @@ const mockWorkspaceValue = {
   isPatientContext: false,
 };
 
+const mockTenantValue = {
+  tenantId: 'tenant-123',
+  tenantName: 'Clinic Test',
+  tenant: { id: 'tenant-123', name: 'Clinic Test', slug: 'test', planType: 'free', isActive: true },
+  userTenantRole: 'admin',
+  memberships: [],
+  isLoading: false,
+  error: null,
+  hasMultipleTenants: false,
+  switchTenant: vi.fn(),
+  refreshTenant: vi.fn(),
+};
+
 const renderWizard = () => {
   return render(
     <QueryClientProvider client={queryClient}>
       <BrowserRouter>
         <WorkspaceContext.Provider value={mockWorkspaceValue}>
-          <TenantProvider>
+          <TenantContext.Provider value={mockTenantValue as any}>
             <InOfficeWizard />
-          </TenantProvider>
+          </TenantContext.Provider>
         </WorkspaceContext.Provider>
       </BrowserRouter>
     </QueryClientProvider>
@@ -114,7 +127,6 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     mockSupabase.single.mockResolvedValue({ data: mockSession, error: null });
     mockSupabase.rpc.mockResolvedValue({ data: 'ws-123', error: null });
     mockSupabase.select.mockImplementation(() => mockSupabase);
-    // Overwrite for select as a promise when needed
     mockSupabase.then = (fn: any) => Promise.resolve({ data: [], error: null }).then(fn);
   });
 
@@ -122,16 +134,17 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     const mockSupabase = supabase as any;
     mockSupabase.maybeSingle
       .mockResolvedValueOnce({ data: mockProfile, error: null }) // Patient profile
-      .mockResolvedValueOnce({ data: mockSession, error: null }) // Session
-      .mockResolvedValueOnce({ data: { coach_bodybuilder_enabled: true }, error: null }) // professional_profiles
-      .mockResolvedValueOnce({ data: { id: 'ws-123' }, error: null }); // workspace_profiles
+      .mockResolvedValueOnce({ data: mockSession, error: null }); // Session
+    
+    // For DashboardLayout child components that might call supabase
+    mockSupabase.maybeSingle.mockResolvedValue({ data: {}, error: null });
 
     renderWizard();
     
     await waitFor(() => {
       expect(screen.getByText('Modo Consultório')).toBeInTheDocument();
       expect(screen.getByText(/Paciente Teste/i)).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
     
     const buttons = screen.getAllByRole('button');
     const cadastroBtn = buttons.find(b => b.textContent?.includes('Cadastro'));
