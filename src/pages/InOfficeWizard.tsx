@@ -226,20 +226,23 @@ export default function InOfficeWizard() {
           </motion.div>
         </AnimatePresence>
 
-        {/* Nav */}
-        <div className="flex justify-between pt-4 border-t border-border">
+        {/* Nav - Fixed at bottom for accessibility */}
+        <div className="sticky bottom-0 bg-background/95 backdrop-blur-sm border-t border-border p-4 -mx-4 sm:mx-0 sm:rounded-b-2xl shadow-lg flex justify-between items-center z-10">
           <Button variant="outline" onClick={goPrev} disabled={step === 1} className="gap-2">
-            <ArrowLeft className="w-4 h-4" /> Anterior
+            <ArrowLeft className="w-4 h-4" /> <span className="hidden sm:inline">Anterior</span>
           </Button>
-          {step < 5 ? (
-            <Button onClick={goNext} className="gap-2">
-              Próximo <ArrowRight className="w-4 h-4" />
-            </Button>
-          ) : (
-            <Button onClick={completeSession} className="gap-2 bg-emerald-600 hover:bg-emerald-700">
-              <CheckCircle2 className="w-4 h-4" /> Finalizar Sessão
-            </Button>
-          )}
+          
+          <div className="flex gap-2">
+            {step < 5 ? (
+              <Button onClick={goNext} className="gap-2 px-8">
+                Próximo <ArrowRight className="w-4 h-4" />
+              </Button>
+            ) : (
+              <Button onClick={completeSession} className="gap-2 bg-emerald-600 hover:bg-emerald-700 px-8 shadow-emerald-500/20 shadow-lg">
+                <CheckCircle2 className="w-4 h-4" /> Finalizar Sessão
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </DashboardLayout>
