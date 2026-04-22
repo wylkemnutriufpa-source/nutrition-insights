@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent } from "@/lib/formatMacros";
+import { safeNum, fmtMacro, isCalorieClamped, isMacroInconsistent, getCalorieClampValue } from "@/lib/formatMacros";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 import type { Database } from "@/integrations/supabase/types";
