@@ -1,9 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-};
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
+import { validateBody } from "../_shared/validator.ts";
+import { ClinicalBrainSchema } from "../_shared/schemas.ts";
 
 /** Resolve tenant_id for a given user */
 async function resolveTenant(supabase: any, userId: string): Promise<string | null> {
@@ -20,7 +18,9 @@ export async function handler(req: Request, supabaseClient?: any) {
   );
 
   try {
-    const body = await req.json().catch(() => ({}));
+    const { data: body, response: errorResponse } = await validateBody(req, ClinicalBrainSchema);
+    if (errorResponse) return errorResponse;
+
     const targetPatientId = body.patient_id;
     const pipelineRunId = body.pipeline_run_id;
 
