@@ -1764,7 +1764,7 @@ function pickMarmita(
   return pool[seed % pool.length];
 }
 
-function buildMarmitaItem(
+export function buildMarmitaItem(
   recipe: MarmitaRecipe,
   mealType: string,
   day: number,
