@@ -97,9 +97,11 @@ Deno.test({
         const req = buildRequest("http://localhost:54321/generate-meal-plan", {
           patient_id: mockPatientId,
           generationMode: "fixed_marmita",
-          weight: 70,
-          height: 170,
-          goal: "lose_weight"
+          professionalOverride: {
+            weight: 70,
+            height: 170,
+            goal: "lose_weight"
+          }
         });
         req.headers.set("Authorization", "Bearer mock-token");
 
