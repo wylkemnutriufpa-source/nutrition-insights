@@ -87,8 +87,9 @@ describe("Meal Plan UI Warnings", () => {
       );
 
       await waitFor(() => {
-        const title = screen.queryByText("Plano Alimentar Ajustado");
-        expect(title).toBeInTheDocument();
+        const alert = screen.getByRole("alert");
+        expect(alert).toBeInTheDocument();
+        expect(screen.queryByText("Plano Alimentar Ajustado")).toBeInTheDocument();
         expect(screen.getByText(/garantir o limite de segurança \(1200 kcal\/dia\)/)).toBeInTheDocument();
       }, { timeout: 3000 });
     });
@@ -177,6 +178,42 @@ describe("Meal Plan UI Warnings", () => {
       );
 
       expect(screen.getByText("1200 kcal")).toBeInTheDocument();
+      
+      const trigger = screen.getByLabelText(/Aviso de segurança: Calorias ajustadas para 1200 kcal/);
+      expect(trigger).toBeInTheDocument();
+      expect(trigger.tagName).toBe("BUTTON");
     });
-  });
-});
+    
+    it("is keyboard navigable and accessible", async () => {
+      const mockItem = {
+        id: "item-1",
+        title: "Test Meal",
+        description: "Test Description",
+        meal_type: "lunch" as const,
+        day_of_week: 1,
+        calories_target: 1200,
+        protein_target: 100,
+        carbs_target: 100,
+        fat_target: 44,
+      };
+
+      render(
+        <MemoryRouter>
+          <TooltipProvider>
+            <MealItemCard 
+              item={mockItem}
+              status={null}
+              completedAt={null}
+              isJustDone={false}
+              focusMode={false}
+              onSetAdherence={() => {}}
+              onOpenDetail={() => {}}
+            />
+          </TooltipProvider>
+        </MemoryRouter>
+      );
+
+      const trigger = screen.getByLabelText(/Aviso de segurança: Calorias ajustadas para 1200 kcal/);
+      trigger.focus();
+      expect(document.activeElement).toBe(trigger);
+    });
