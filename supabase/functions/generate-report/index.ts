@@ -241,7 +241,37 @@ ${latestAssessment ? `<div class="section">
     ${latestAssessment.body_fat_percentage ? `<div class="metric"><div class="label">% Gordura</div><div class="value">${latestAssessment.body_fat_percentage}%</div></div>` : ''}
     ${latestAssessment.lean_mass ? `<div class="metric"><div class="label">Massa Magra</div><div class="value">${latestAssessment.lean_mass} kg</div></div>` : ''}
     ${latestAssessment.fat_mass ? `<div class="metric"><div class="label">Massa Gorda</div><div class="value">${latestAssessment.fat_mass} kg</div></div>` : ''}
+</div>
+
+${mealPlan && visualItemIds.length > 0 ? `<div class="section">
+  <h2>📖 Livro de Receitas</h2>
+  <div style="display: flex; flex-direction: column; gap: 20px;">
+    ${mealPlan.meal_plan_items
+      .filter((item: any) => item.visual_library_item_id && recipesMap[item.visual_library_item_id])
+      .map((item: any) => {
+        const recipe = recipesMap[item.visual_library_item_id];
+        return `
+        <div style="background: #fff; border: 1px solid #e5e7eb; border-radius: 8px; padding: 15px;">
+          <h3 style="color: #10b981; margin-bottom: 10px;">${recipe.title || item.title}</h3>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 15px; font-size: 13px;">
+            <div>
+              <p><strong>Ingredientes:</strong></p>
+              <ul style="padding-left: 20px; margin-top: 5px;">
+                ${(recipe.ingredients || []).map((ing: string) => `<li>${ing}</li>`).join('')}
+              </ul>
+            </div>
+            <div>
+              <p><strong>Modo de Preparo:</strong></p>
+              <ol style="padding-left: 20px; margin-top: 5px;">
+                ${(recipe.steps || []).map((step: string) => `<li>${step}</li>`).join('')}
+              </ol>
+            </div>
+          </div>
+          ${recipe.tips ? `<p style="margin-top: 10px; font-size: 12px; color: #666; font-style: italic;">💡 Dica: ${recipe.tips}</p>` : ''}
+        </div>`;
+      }).join('')}
   </div>
+</div>` : ''}
 </div>` : ''}
 
 ${assessments.length > 1 ? `<div class="section">
