@@ -10,8 +10,9 @@ import { toast } from "sonner";
 import {
   Plus, Trash2, Copy, Save, Search,
   Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets,
-  Download, Eye, ArrowRight
+  Download, Eye, ArrowRight, RefreshCw
 } from "lucide-react";
+import { withRetry } from "@/lib/retry";
 import type { Database } from "@/integrations/supabase/types";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
@@ -147,27 +148,33 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
   // Add food to block
   const addFoodToBlock = async (blockType: MealType, food: any) => {
-    const { data: inserted, error } = await supabase
-      .from("meal_plan_items")
-      .insert({
-        meal_plan_id: mealPlanId,
-        meal_type: blockType,
-        title: food.name,
-        description: `${food.serving_size || 100}${food.serving_unit || "g"}`,
-        calories_target: food.calories || 0,
-        protein_target: food.protein || 0,
-        carbs_target: food.carbs || 0,
-        fat_target: food.fat || 0,
-        day_of_week: currentDay,
-        item_origin: "in_office_manual",
-        tenant_id: tenantId,
-      })
-      .select("id")
-      .single();
+    const itemId = crypto.randomUUID();
+    
+    try {
+      await withRetry(async () => {
+        const { error } = await supabase
+          .from("meal_plan_items")
+          .upsert({
+            id: itemId,
+            meal_plan_id: mealPlanId,
+            meal_type: blockType,
+            title: food.name,
+            description: `${food.serving_size || 100}${food.serving_unit || "g"}`,
+            calories_target: food.calories || 0,
+            protein_target: food.protein || 0,
+            carbs_target: food.carbs || 0,
+            fat_target: food.fat || 0,
+            day_of_week: currentDay,
+            item_origin: "in_office_manual",
+            tenant_id: tenantId,
+          });
+        if (error) throw error;
+      }, {
+        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de adicionar item...`),
+      });
 
-    if (!error && inserted) {
       const newItem: MealItem = {
-        id: inserted.id,
+        id: itemId,
         name: food.name,
         calories: food.calories || 0,
         protein: food.protein || 0,
@@ -178,6 +185,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       setBlocks(prev => prev.map(b =>
         b.type === blockType ? { ...b, items: [...b.items, newItem] } : b
       ));
+    } catch (err: any) {
+      toast.error("Falha ao adicionar item: " + err.message);
     }
   };
 
@@ -193,51 +202,94 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const duplicateDay = async () => {
     setSaving(true);
     const nextDay = currentDay + 1;
-    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", nextDay);
-    const allItems = blocks.flatMap(b => b.items);
-    const inserts = allItems.map(item => ({
-      meal_plan_id: mealPlanId,
-      meal_type: item.meal_type,
-      title: item.name,
-      calories_target: item.calories,
-      protein_target: item.protein,
-      carbs_target: item.carbs,
-      fat_target: item.fat,
-      day_of_week: nextDay,
-      item_origin: "in_office_duplicated" as const,
-      tenant_id: tenantId,
-    }));
-    if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
-    setTotalDays(Math.max(totalDays, nextDay));
-    setCurrentDay(nextDay);
-    toast.success(`Dia ${currentDay} duplicado para Dia ${nextDay}`);
-    setSaving(false);
+    try {
+      await withRetry(async () => {
+        // Idempotency: cleanup previous attempt for the same day in this transaction if possible
+        // But since we use upsert with client IDs, we're safe.
+        // However, duplicateDay creates new items. 
+        // We'll delete and re-insert for simplicity in this specific action.
+        await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", nextDay);
+        
+        const allItems = blocks.flatMap(b => b.items);
+        const inserts = allItems.map(item => ({
+          id: crypto.randomUUID(),
+          meal_plan_id: mealPlanId,
+          meal_type: item.meal_type,
+          title: item.name,
+          calories_target: item.calories,
+          protein_target: item.protein,
+          carbs_target: item.carbs,
+          fat_target: item.fat,
+          day_of_week: nextDay,
+          item_origin: "in_office_duplicated" as const,
+          tenant_id: tenantId,
+        }));
+        
+        if (inserts.length > 0) {
+          const { error } = await supabase.from("meal_plan_items").insert(inserts);
+          if (error) throw error;
+        }
+      }, {
+        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de duplicar dia...`),
+      });
+
+      setTotalDays(Math.max(totalDays, nextDay));
+      setCurrentDay(nextDay);
+      toast.success(`Dia ${currentDay} duplicado para Dia ${nextDay}`);
+    } catch (err: any) {
+      toast.error("Erro ao duplicar: " + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Apply to all week
   const applyToWeek = async () => {
     setSaving(true);
     const allItems = blocks.flatMap(b => b.items);
-    for (let day = 1; day <= 7; day++) {
-      if (day === currentDay) continue;
-      await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", day);
-      const inserts = allItems.map(item => ({
-        meal_plan_id: mealPlanId,
-        meal_type: item.meal_type,
-        title: item.name,
-        calories_target: item.calories,
-        protein_target: item.protein,
-        carbs_target: item.carbs,
-        fat_target: item.fat,
-        day_of_week: day,
-        item_origin: "in_office_duplicated" as const,
-        tenant_id: tenantId,
-      }));
-      if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
+    
+    try {
+      await withRetry(async () => {
+        // Clear other days
+        const { error: delErr } = await supabase.from("meal_plan_items")
+          .delete()
+          .eq("meal_plan_id", mealPlanId)
+          .neq("day_of_week", currentDay);
+        if (delErr) throw delErr;
+
+        const allInserts = [];
+        for (let day = 1; day <= 7; day++) {
+          if (day === currentDay) continue;
+          allInserts.push(...allItems.map(item => ({
+            id: crypto.randomUUID(),
+            meal_plan_id: mealPlanId,
+            meal_type: item.meal_type,
+            title: item.name,
+            calories_target: item.calories,
+            protein_target: item.protein,
+            carbs_target: item.carbs,
+            fat_target: item.fat,
+            day_of_week: day,
+            item_origin: "in_office_duplicated" as const,
+            tenant_id: tenantId,
+          })));
+        }
+
+        if (allInserts.length > 0) {
+          const { error: insErr } = await supabase.from("meal_plan_items").insert(allInserts);
+          if (insErr) throw insErr;
+        }
+      }, {
+        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar para a semana...`),
+      });
+
+      setTotalDays(7);
+      toast.success("Plano aplicado para a semana toda!");
+    } catch (err: any) {
+      toast.error("Erro ao aplicar semana: " + err.message);
+    } finally {
+      setSaving(false);
     }
-    setTotalDays(7);
-    toast.success("Plano aplicado para a semana toda!");
-    setSaving(false);
   };
 
   // Save as template
@@ -276,67 +328,77 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   // Apply template to current day
   const applyTemplateToDay = async (template: SavedTemplate) => {
     setSaving(true);
-    // Delete existing items for current day
-    await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", currentDay);
-
-    const items = (template.items || []) as MealItem[];
-    const totalItems = items.length;
     
-    const inserts = items.map(item => {
-      // Fallback: se o item individual não tem macros mas o template tem totais, distribuímos
-      // (Útil para "marmitas" onde os macros estão no nível do template)
-      const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
-      const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
-      const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
-      const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
+    try {
+      await withRetry(async () => {
+        // Delete existing items for current day
+        const { error: delErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", currentDay);
+        if (delErr) throw delErr;
 
-      return {
-        meal_plan_id: mealPlanId,
-        meal_type: item.meal_type,
-        title: item.name,
-        calories_target: cal > 0 ? cal : null,
-        protein_target: prot > 0 ? prot : null,
-        carbs_target: carb > 0 ? carb : null,
-        fat_target: fat > 0 ? fat : null,
-        day_of_week: currentDay,
-        item_origin: "in_office_template" as const,
-        tenant_id: tenantId,
-      };
-    });
+        const items = (template.items || []) as MealItem[];
+        const totalItems = items.length;
+        
+        const inserts = items.map(item => {
+          const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
+          const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
+          const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
+          const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
 
-    if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
+          return {
+            id: crypto.randomUUID(),
+            meal_plan_id: mealPlanId,
+            meal_type: item.meal_type,
+            title: item.name,
+            calories_target: cal > 0 ? cal : null,
+            protein_target: prot > 0 ? prot : null,
+            carbs_target: carb > 0 ? carb : null,
+            fat_target: fat > 0 ? fat : null,
+            day_of_week: currentDay,
+            item_origin: "in_office_template" as const,
+            tenant_id: tenantId,
+          };
+        });
 
-    // Reload current day
-    setCurrentDay(currentDay); // trigger reload if needed, but useEffect depends on currentDay anyway
-    setLoading(true); // Force reload state visually
-    // Force reload by toggling
-    setLoading(true);
-    const { data: reloaded } = await supabase
-      .from("meal_plan_items")
-      .select("*")
-      .eq("meal_plan_id", mealPlanId)
-      .eq("day_of_week", currentDay);
+        if (inserts.length > 0) {
+          const { error: insErr } = await supabase.from("meal_plan_items").insert(inserts);
+          if (insErr) throw insErr;
+        }
+      }, {
+        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template...`),
+      });
 
-    const newBlocks = MEAL_TYPES.map(m => ({
-      ...m,
-      items: (reloaded || [])
-        .filter((i) => i.meal_type === m.type)
-        .map((i) => ({
-          id: i.id,
-          name: i.title || "Item",
-          calories: i.calories_target || 0,
-          protein: i.protein_target || 0,
-          carbs: i.carbs_target || 0,
-          fat: i.fat_target || 0,
-          meal_type: m.type,
-        })),
-    }));
-    setBlocks(newBlocks);
-    setLoading(false);
-    setShowTemplateLoad(false);
-    setPreviewTemplate(null);
-    toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
-    setSaving(false);
+      // Reload state
+      setLoading(true);
+      const { data: reloaded } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("meal_plan_id", mealPlanId)
+        .eq("day_of_week", currentDay);
+
+      const newBlocks = MEAL_TYPES.map(m => ({
+        ...m,
+        items: (reloaded || [])
+          .filter((i) => i.meal_type === m.type)
+          .map((i) => ({
+            id: i.id,
+            name: i.title || "Item",
+            calories: i.calories_target || 0,
+            protein: i.protein_target || 0,
+            carbs: i.carbs_target || 0,
+            fat: i.fat_target || 0,
+            meal_type: m.type,
+          })),
+      }));
+      setBlocks(newBlocks);
+      setLoading(false);
+      setShowTemplateLoad(false);
+      setPreviewTemplate(null);
+      toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
+    } catch (err: any) {
+      toast.error("Erro ao aplicar template: " + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Apply template to whole week
@@ -345,60 +407,76 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     const items = (template.items || []) as MealItem[];
     const totalItems = items.length;
 
-    for (let day = 1; day <= 7; day++) {
-      await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", day);
-      
-      const inserts = items.map(item => {
-        const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
-        const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
-        const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
-        const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
+    try {
+      await withRetry(async () => {
+        // Clear all days
+        const { error: delErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId);
+        if (delErr) throw delErr;
 
-        return {
-          meal_plan_id: mealPlanId,
-          meal_type: item.meal_type,
-          title: item.name,
-          calories_target: cal > 0 ? cal : null,
-          protein_target: prot > 0 ? prot : null,
-          carbs_target: carb > 0 ? carb : null,
-          fat_target: fat > 0 ? fat : null,
-          day_of_week: day,
-          item_origin: "in_office_template" as const,
-          tenant_id: tenantId,
-        };
+        const allInserts = [];
+        for (let day = 1; day <= 7; day++) {
+          allInserts.push(...items.map(item => {
+            const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
+            const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
+            const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
+            const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
+
+            return {
+              id: crypto.randomUUID(),
+              meal_plan_id: mealPlanId,
+              meal_type: item.meal_type,
+              title: item.name,
+              calories_target: cal > 0 ? cal : null,
+              protein_target: prot > 0 ? prot : null,
+              carbs_target: carb > 0 ? carb : null,
+              fat_target: fat > 0 ? fat : null,
+              day_of_week: day,
+              item_origin: "in_office_template" as const,
+              tenant_id: tenantId,
+            };
+          }));
+        }
+        
+        if (allInserts.length > 0) {
+          const { error: insErr } = await supabase.from("meal_plan_items").insert(allInserts);
+          if (insErr) throw insErr;
+        }
+      }, {
+        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template à semana...`),
       });
-      
-      if (inserts.length > 0) await supabase.from("meal_plan_items").insert(inserts);
-    }
 
-    setTotalDays(7);
-    // Reload current day
-    setLoading(true);
-    const { data: reloaded } = await supabase
-      .from("meal_plan_items")
-      .select("*")
-      .eq("meal_plan_id", mealPlanId)
-      .eq("day_of_week", currentDay);
-    const newBlocks = MEAL_TYPES.map(m => ({
-      ...m,
-      items: (reloaded || [])
-        .filter((i) => i.meal_type === m.type)
-        .map((i) => ({
-          id: i.id,
-          name: i.title || "Item",
-          calories: i.calories_target || 0,
-          protein: i.protein_target || 0,
-          carbs: i.carbs_target || 0,
-          fat: i.fat_target || 0,
-          meal_type: m.type,
-        })),
-    }));
-    setBlocks(newBlocks);
-    setLoading(false);
-    setShowTemplateLoad(false);
-    setPreviewTemplate(null);
-    toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
-    setSaving(false);
+      setTotalDays(7);
+      // Reload current day
+      setLoading(true);
+      const { data: reloaded } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("meal_plan_id", mealPlanId)
+        .eq("day_of_week", currentDay);
+      const newBlocks = MEAL_TYPES.map(m => ({
+        ...m,
+        items: (reloaded || [])
+          .filter((i) => i.meal_type === m.type)
+          .map((i) => ({
+            id: i.id,
+            name: i.title || "Item",
+            calories: i.calories_target || 0,
+            protein: i.protein_target || 0,
+            carbs: i.carbs_target || 0,
+            fat: i.fat_target || 0,
+            meal_type: m.type,
+          })),
+      }));
+      setBlocks(newBlocks);
+      setLoading(false);
+      setShowTemplateLoad(false);
+      setPreviewTemplate(null);
+      toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
+    } catch (err: any) {
+      toast.error("Erro ao aplicar template: " + err.message);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Totals
