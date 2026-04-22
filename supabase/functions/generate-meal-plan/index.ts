@@ -2329,7 +2329,7 @@ function sanitizeDislikedFoodsFromItems(items: any[], dislikedFoods: string[]): 
     const [mainSection, subSection] = item.description.split(/\n\n🔄 Substituições:\n/);
     const lines = (mainSection || "").split("\n");
     
-    const cleanLines = lines.filter(line => {
+    const cleanLines = lines.filter((line: string) => {
       const normLine = normalize(line);
       const isDisliked = normalizedDisliked.some(d => normLine.includes(d));
       if (isDisliked) totalRemoved++;
