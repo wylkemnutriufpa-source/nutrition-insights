@@ -3546,4 +3546,5 @@ if (import.meta.main) {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
+}
 });
