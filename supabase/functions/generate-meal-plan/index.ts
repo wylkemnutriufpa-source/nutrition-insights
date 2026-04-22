@@ -1,6 +1,7 @@
-// @ts-nocheck
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
+import { validateBody } from "../_shared/validator.ts";
+import { GenerateMealPlanSchema } from "../_shared/schemas.ts";
 import { requireUser } from "../_shared/auth-guard.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import {
@@ -3642,6 +3643,4 @@ export async function generateMealPlanHandler(req: Request) {
   }
 }
 
-if (import.meta.main) {
-  serve(generateMealPlanHandler);
-}
+Deno.serve(generateMealPlanHandler);
