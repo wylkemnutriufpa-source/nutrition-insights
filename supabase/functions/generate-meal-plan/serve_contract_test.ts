@@ -80,7 +80,7 @@ const mockFetch = (onInsert?: (items: any[]) => void) => {
     }
     
     if (url.includes("/rest/v1/meal_plans")) {
-      return new Response(JSON.stringify({ id: "plan-123" }), { status: 200 });
+      return new Response(JSON.stringify([{ id: "plan-123" }]), { status: 200 });
     }
     
     return new Response(JSON.stringify([]), { status: 200 });
