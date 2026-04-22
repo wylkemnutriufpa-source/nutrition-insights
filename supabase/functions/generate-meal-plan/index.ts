@@ -2317,7 +2317,9 @@ function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number
         } else {
           const factor = c.target / (c.actual || 1);
           for (const item of dayItems) {
-            item[c.macro] = Math.round((item[c.macro] || 0) * factor);
+            if (item._is_scalable !== false) {
+              item[c.macro] = Math.round((item[c.macro] || 0) * factor);
+            }
           }
         }
         const newSum = dayItems.reduce((s: number, i: any) => s + (i[c.macro] || 0), 0);
