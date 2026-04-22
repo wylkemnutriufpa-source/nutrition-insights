@@ -1682,6 +1682,10 @@ export function generateWeeklyMarmitaPlan(
   }
 
   if (fastMarmitaMode) {
+    console.log(`[weekly_marmita] Fast Marmita Mode active. Otimizando instruções.`);
+  }
+
+  if (fastMarmitaMode) {
     // Priority to recipes with base_recipe metadata containing low prep time (if available in future)
     // For now, we prioritize shorter recipe names or specific keywords as proxy if needed,
     // but the main change is in buildMarmitaItem instructions.
