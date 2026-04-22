@@ -22,6 +22,7 @@ vi.mock('./integrations/supabase/client', () => ({
     insert: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
     is: vi.fn().mockReturnThis(),
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
@@ -49,13 +50,10 @@ describe('InOfficeWizard - Fluxo de Etapas', () => {
     (useAuth as any).mockReturnValue({ user: mockUser, loading: false });
     
     const mockSupabase = supabase as any;
-    // Wizard precisa do nome do paciente e da sessão
-    mockSupabase.maybeSingle.mockImplementation(async (q: any) => {
-      // Diferenciação simples baseada na ordem de chamada interna
-      return { data: mockSession, error: null };
-    });
-    // Forçamos a primeira chamada a ser o perfil
-    mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockProfile, error: null });
+    // Mock inicial: profile then session
+    mockSupabase.maybeSingle
+      .mockResolvedValueOnce({ data: mockProfile, error: null })
+      .mockResolvedValueOnce({ data: mockSession, error: null });
     
     mockSupabase.update.mockResolvedValue({ data: null, error: null });
   });
@@ -70,22 +68,32 @@ describe('InOfficeWizard - Fluxo de Etapas', () => {
       </QueryClientProvider>
     );
 
-    // Aguarda o fim do loading
-    await waitFor(() => expect(screen.getByTestId('step-1')).toBeInTheDocument(), { timeout: 4000 });
+    // Aguarda o fim do loading. Se travar aqui, algo nas promessas falhou.
+    await waitFor(() => expect(screen.getByTestId('step-1')).toBeInTheDocument(), { timeout: 5000 });
 
-    // Avançar (1 -> 2)
+    // 1 -> 2
     fireEvent.click(screen.getByText(/Próximo/i));
     await waitFor(() => expect(screen.getByTestId('step-2')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 2 }));
 
-    // Avançar (2 -> 3)
+    // 2 -> 3
     fireEvent.click(screen.getByText(/Próximo/i));
     await waitFor(() => expect(screen.getByTestId('step-3')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 3 }));
 
-    // Voltar (3 -> 2)
+    // 3 -> 4
+    fireEvent.click(screen.getByText(/Próximo/i));
+    await waitFor(() => expect(screen.getByTestId('step-4')).toBeInTheDocument());
+    expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 4 }));
+
+    // 4 -> 5
+    fireEvent.click(screen.getByText(/Próximo/i));
+    await waitFor(() => expect(screen.getByTestId('step-5')).toBeInTheDocument());
+    expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 5, meal_plan_completed: true }));
+
+    // Volta 5 -> 4
     fireEvent.click(screen.getByText(/Anterior/i));
-    await waitFor(() => expect(screen.getByTestId('step-2')).toBeInTheDocument());
-    expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 2 }));
+    await waitFor(() => expect(screen.getByTestId('step-4')).toBeInTheDocument());
+    expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 4 }));
   });
 });
