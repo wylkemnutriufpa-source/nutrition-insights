@@ -122,6 +122,47 @@ export default function SmartAlertsBanner({ patientId, onAction }: Props) {
     }
 
     setAlerts(detected);
+
+    // 4. Check for meal plan clamping/corrections
+    const activePlan = mealPlansRes.data;
+    if (activePlan) {
+      const { data: items } = await supabase
+        .from("meal_plan_items")
+        .select("calories_target, protein_target, carbs_target, fat_target")
+        .eq("meal_plan_id", activePlan.id)
+        .limit(10); // Check a sample to find systemic issues
+
+      if (items && items.length > 0) {
+        const hasClamping = items.some(i => isCalorieClamped(i.calories_target || 0));
+        const hasConsistencyCorrection = items.some(i => isMacroInconsistent(i.calories_target || 0, i.protein_target || 0, i.carbs_target || 0, i.fat_target || 0));
+
+        if (hasClamping) {
+          detected.push({
+            id: "plan_clamped",
+            icon: Flame,
+            title: "Plano Alimentar Ajustado",
+            message: "Algumas refeições foram ajustadas para garantir o limite mínimo de segurança calórica (1200 kcal/dia).",
+            color: "text-amber-500",
+            bgColor: "bg-amber-500/5",
+            borderColor: "border-amber-500/20",
+          });
+        }
+
+        if (hasConsistencyCorrection) {
+          detected.push({
+            id: "macros_corrected",
+            icon: Sparkles,
+            title: "Correção de Macros",
+            message: "Identificamos pequenas divergências nos macros que foram corrigidas automaticamente para precisão do plano.",
+            color: "text-info",
+            bgColor: "bg-info/5",
+            borderColor: "border-info/20",
+          });
+        }
+      }
+    }
+
+    setAlerts(detected);
   };
 
   const dismiss = (id: string) => {
