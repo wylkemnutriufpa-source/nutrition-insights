@@ -2339,7 +2339,7 @@ function sanitizeDislikedFoodsFromItems(items: any[], dislikedFoods: string[]): 
     // Also clean substitution section
     let cleanSubs = "";
     if (subSection) {
-      const subLines = subSection.split("\n").filter(line => {
+      const subLines = subSection.split("\n").filter((line: string) => {
         const normLine = normalize(line);
         return !normalizedDisliked.some(d => normLine.includes(d));
       });
