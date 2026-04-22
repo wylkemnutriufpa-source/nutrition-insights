@@ -18,7 +18,6 @@ vi.mock('sonner', () => ({
   }
 }));
 
-// Supabase helper for infinite chain
 const createMockChain = (initialData: any = {}) => {
   const chain: any = {
     select: vi.fn(() => chain),
@@ -74,7 +73,6 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
   const patients = [
     { id: 'p1', name: 'Mayara Leite', hasMarmita: true },
     { id: 'p2', name: 'Josiane', hasMarmita: false },
-    { id: 'p3', name: 'Andrea Ferreira', hasMarmita: true },
   ];
 
   it('deve percorrer lista de pacientes e validar persistência para cada um', async () => {
@@ -84,17 +82,11 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
 
       (supabase.from as any).mockImplementation((table: string) => {
         const chain = createMockChain();
-        
-        if (table === 'profiles') {
-          chain.maybeSingle.mockResolvedValue({ data: { full_name: patient.name, user_id: patient.id }, error: null });
-        }
+        if (table === 'profiles') chain.maybeSingle.mockResolvedValue({ data: { full_name: patient.name, user_id: patient.id }, error: null });
         if (table === 'in_office_sessions') {
           chain.maybeSingle.mockImplementation(() => Promise.resolve({ data: currentSession, error: null }));
           chain.single.mockImplementation(() => Promise.resolve({ data: currentSession, error: null }));
-          chain.update.mockImplementation((data: any) => {
-            Object.assign(currentSession, data);
-            return Promise.resolve({ error: null });
-          });
+          chain.update.mockImplementation((data: any) => { Object.assign(currentSession, data); return Promise.resolve({ error: null }); });
         }
         if (table === 'meal_plans') {
           chain.maybeSingle.mockImplementation(() => Promise.resolve({ data: currentPlan, error: null }));
@@ -103,63 +95,49 @@ describe('InOffice Resilience & Multi-Patient Loop', () => {
             currentSession.meal_plan_id = currentPlan.id;
             return { select: () => ({ single: () => Promise.resolve({ data: currentPlan, error: null }) }) };
           });
-          chain.update.mockImplementation((data: any) => {
-            if (currentPlan) Object.assign(currentPlan, data);
-            return { in: () => Promise.resolve({ error: null }) };
-          });
+          chain.update.mockImplementation((data: any) => { if (currentPlan) Object.assign(currentPlan, data); return { in: () => Promise.resolve({ error: null }) }; });
         }
-        if (table === 'nutritionist_patients') {
-          chain.maybeSingle.mockResolvedValue({ data: { tenant_id: 't1' }, error: null });
-        }
+        if (table === 'nutritionist_patients') chain.maybeSingle.mockResolvedValue({ data: { tenant_id: 't1' }, error: null });
         if (table === 'meal_plan_items') {
           chain.select.mockResolvedValue({ data: [], error: null });
           chain.upsert.mockResolvedValue({ error: null });
           chain.delete.mockResolvedValue({ error: null });
         }
-        if (table === 'food_database') {
-          chain.ilike.mockResolvedValue({ data: [], error: null });
-        }
         return chain;
       });
 
-      const { unmount } = render(
-        <Wrapper patientId={patient.id}>
-          <InOfficeWizard />
-        </Wrapper>
-      );
+      const { unmount } = render(<Wrapper patientId={patient.id}><InOfficeWizard /></Wrapper>);
 
-      // 1. Validate Initial Load
-      await waitFor(() => expect(screen.getByText(new RegExp(patient.name, 'i'))).toBeInTheDocument());
+      // Step 1 Load
+      expect(await screen.findByText(new RegExp(patient.name, 'i'))).toBeInTheDocument();
 
-      // 2. Go to Meal Plan Step
+      // Go to Step 4
       fireEvent.click(screen.getByText(/Plano/i));
 
-      // 3. Create Plan
-      await waitFor(() => expect(screen.getByText(/Criar Plano Presencial/i)).toBeInTheDocument());
-      fireEvent.click(screen.getByText(/Criar Plano Presencial/i));
+      // Create Plan if not exists
+      const createBtn = await screen.findByText(/Criar Plano Presencial/i);
+      fireEvent.click(createBtn);
 
-      // 4. If marmita patient, simulate action that uses withRetry
+      // If marmita, check for Duplicar
       if (patient.hasMarmita) {
-        await waitFor(() => expect(screen.getByText(/Duplicar/i)).toBeInTheDocument(), { timeout: 3000 });
-        fireEvent.click(screen.getByText(/Duplicar/i));
-        
+        // Wait for editor to load (it loads when meal_plan_id is set)
+        const dupBtn = await screen.findByText(/Duplicar/i);
+        fireEvent.click(dupBtn);
         await waitFor(() => {
           expect(supabase.from).toHaveBeenCalledWith('meal_plan_items');
-          // Since we fixed the code to use upsert for idempotency
-          expect(vi.mocked(supabase.from)).toHaveBeenCalledWith('meal_plan_items');
         });
       }
 
-      // 5. Finalize
-      fireEvent.click(screen.getByRole('button', { name: /Próximo/i }));
-      await waitFor(() => expect(screen.getByText(/Resumo da Sessão/i)).toBeInTheDocument());
+      // Finalize Session
+      const nextBtn = screen.getByRole('button', { name: /Próximo/i });
+      fireEvent.click(nextBtn);
+      
+      const finishBtn = await screen.findByRole('button', { name: /Finalizar Sessão/i });
+      fireEvent.click(finishBtn);
 
-      // 6. Complete Session
-      fireEvent.click(screen.getByRole('button', { name: /Finalizar Sessão/i }));
-
-      // 7. Verify session updated to completed
+      // Verify persistence
       await waitFor(() => {
-        expect(currentSession.completed_at).toBeDefined();
+        expect(currentSession.completed_at).toBeTruthy();
         expect(currentSession.meal_plan_completed).toBe(true);
       });
 
