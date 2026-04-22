@@ -364,13 +364,14 @@ function analyzePracticalAdherence(items: any[], simplicityScore: number, blocke
     return { score, status, factors };
 }
 
-// ── Server ────────────────────────────────────────────────────────────────────
-serve(async (req) => {
+// ── Handler ───────────────────────────────────────────────────────────────────
+export async function handler(req: Request) {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
-        const { meal_plan_id } = await req.json();
-        if (!meal_plan_id) throw new Error("Missing meal_plan_id");
+        const body = await req.json().catch(() => ({}));
+        const { meal_plan_id } = body;
+        if (!meal_plan_id) return new Response(JSON.stringify({ error: "Missing meal_plan_id" }), { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
         const supabase = createClient(
             Deno.env.get("SUPABASE_URL")!,
@@ -722,7 +723,11 @@ serve(async (req) => {
         return new Response(JSON.stringify({ success: false, errors: [{ rule: "system_error", message: e.message, weight: 0 }] }),
             { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
-});
+}
+
+if (import.meta.main) {
+    serve(handler);
+}
 
 // ── Decision Helper Functions (inline for edge function context) ──────────────
 
@@ -790,10 +795,10 @@ function groupByBucketInternal(issues: PrioritizedIssue[]) {
 function computeFinalDecisionInternal(overallScore: number, overallPassed: boolean, issues: PrioritizedIssue[]) {
     const hasCritical = issues.some(i => i.severity === "critical");
     if (overallPassed && !hasCritical) {
-        return { decision: "publish_now" as const, reason: "Plano aprovado em todas as dimensões.", confidence: (overallScore >= 85 ? "high" : overallScore >= 75 ? "medium" : "low") as const };
+        return { decision: "publish_now" as const, reason: "Plano aprovado em todas as dimensões.", confidence: (overallScore >= 85 ? "high" : overallScore >= 75 ? "medium" : "low") };
     }
     const blockingCount = issues.filter(i => i.correction_bucket === "bloquear_publicacao").length;
-    return { decision: "suggest_corrections" as const, reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções ou publique como está.`, confidence: (hasCritical ? "high" : "medium") as const };
+    return { decision: "suggest_corrections" as const, reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções ou publique como está.`, confidence: (hasCritical ? "high" : "medium") };
 }
 
 function generateExecutiveSummaryInternal(
