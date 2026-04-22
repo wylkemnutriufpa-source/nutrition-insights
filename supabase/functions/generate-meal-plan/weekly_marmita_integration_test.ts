@@ -2,7 +2,7 @@ import { assertEquals, assertNotEquals } from "https://deno.land/std@0.168.0/tes
 import { generateWeeklyMarmitaPlan, estimateRecipeMacros, type MarmitaRecipe } from "./index.ts";
 
 Deno.test("weekly_marmita integration: full contract validation", () => {
-  // 1. Setup Mock Data
+  // 1. Setup Mock Data with variety
   const recipes: MarmitaRecipe[] = [
     { 
       id: "r1", name: "Frango com Batata Doce", meal_type: "almoço", 
@@ -23,13 +23,23 @@ Deno.test("weekly_marmita integration: full contract validation", () => {
       id: "r4", name: "Omelete de Forno", meal_type: "jantar", 
       foods_json: [{ name: "Ovo", grams: 120 }, { name: "Queijo", grams: 30 }],
       is_scalable: false // Fixed grammage (Modo Paciente)
+    },
+    { 
+      id: "r5", name: "Lombo Suíno", meal_type: "almoço", 
+      foods_json: [{ name: "Lombo", grams: 150 }],
+      is_scalable: true 
+    },
+    { 
+      id: "r6", name: "Frango Desfiado", meal_type: "jantar", 
+      foods_json: [{ name: "Frango", grams: 120 }],
+      is_scalable: true 
     }
   ];
 
   const kcalTarget = 2000;
   const macros = { protein: 160, carbs: 200, fat: 60 };
 
-  // 2. Generate Plan
+  // 2. Generate Plan for Week 1
   const result = generateWeeklyMarmitaPlan(
     recipes, [], [], "manutencao", kcalTarget, macros, [], [], [], ["lunch", "dinner"]
   );
@@ -49,36 +59,50 @@ Deno.test("weekly_marmita integration: full contract validation", () => {
     assertEquals(item._source, "meal_recipe");
   });
 
-  // 4. Validate Macro Totals per Meal (Scalable vs Fixed)
+  // 4. Validate Macro Totals and Proportions
   // Lunch Target: 2000 * 0.30 = 600
   // Dinner Target: 2000 * 0.22 = 440
   
-  const lunch = result.items.find(i => i.meal_type === "lunch");
-  const dinner = result.items.find(i => i.meal_type === "dinner");
+  const lunchDay0 = result.items.find(i => i.day_of_week === 0 && i.meal_type === "lunch");
+  const dinnerDay0 = result.items.find(i => i.day_of_week === 0 && i.meal_type === "dinner");
 
-  if (lunch && lunch._is_scalable) {
-    assertEquals(lunch.calories_target, 600, "Lunch calories should match target (scalable)");
+  if (lunchDay0 && lunchDay0._is_scalable) {
+    assertEquals(lunchDay0.calories_target, 600, "Lunch calories should match target (scalable)");
+  }
+  if (dinnerDay0 && dinnerDay0._is_scalable) {
+    assertEquals(dinnerDay0.calories_target, 440, "Dinner calories should match target (scalable)");
   }
 
   // 5. Validate Grammage Preservation (Modo Paciente)
-  // Recipe r4 is not scalable. It has 120g Ovo + 30g Queijo = 150g total.
-  // estimateRecipeMacros(r4) = 150 * 1.3 = 195. Math.max(195, 350) = 350 kcal.
   const fixedMeal = result.items.find(i => i._recipe_id === "r4");
   if (fixedMeal) {
     assertEquals(fixedMeal._is_scalable, false);
     assertEquals(fixedMeal.description.includes("120g Ovo"), true, "Should preserve 120g Ovo");
     assertEquals(fixedMeal.description.includes("30g Queijo"), true, "Should preserve 30g Queijo");
-    assertEquals(fixedMeal.calories_target, 350, "Should use original estimated macros (floor 350) for non-scalable");
+    // calories_target for fixed_meal is estimateRecipeMacros(r4) = 350
+    assertEquals(fixedMeal.calories_target, 350);
   }
 
-  // 6. Validate Multiple Weeks (Variety/Consistency)
-  // Calling it again with same parameters should yield same results due to deterministic seeds
+  // 6. Variety Validation: At least 3 different proteins used in a week
+  const proteins = new Set(result.items.map(i => i._recipe_name.split(' ')[0])); // Simple protein detection
+  assertEquals(proteins.size >= 3, true, `Should have variety, found: ${Array.from(proteins)}`);
+
+  // 7. Multi-week consistency
   const week2 = generateWeeklyMarmitaPlan(
     recipes, [], [], "manutencao", kcalTarget, macros, [], [], [], ["lunch", "dinner"]
   );
-  assertEquals(week2.items[0]._recipe_id, result.items[0]._recipe_id, "Deterministic results on same input");
-
-  // In real use, we'd pass recentMeals to ensure variety, but here we just confirm 
-  // that the structure holds for another run.
   assertEquals(week2.items.length, 14);
+  assertEquals(week2.items[0]._recipe_id, result.items[0]._recipe_id, "Selection should be deterministic on same seed/day");
+
+  // 8. Total daily macro sum (Lunch + Dinner in this case as snacks are empty)
+  // Lunch (600) + Dinner (440) = 1040 kcal.
+  // Protein: lunch (87) + dinner (63) = 150 (approx, depending on how it's calculated)
+  // In our test, shadowSnacks are 0, so marmitaPool = dailyTarget.
+  const day0Meals = result.items.filter(i => i.day_of_week === 0);
+  const totalProteinDay0 = day0Meals.reduce((s, i) => s + i.protein_target, 0);
+  // macros.protein is 160.
+  // lunchProteinTarget = Math.round(160 * (600 / (600+440))) = 92
+  // dinnerProteinTarget = 160 - 92 = 68
+  // Total = 160.
+  assertEquals(totalProteinDay0, macros.protein, "Daily protein target should be met by marmitas if no snacks");
 });
