@@ -1,5 +1,6 @@
 import { assertEquals, assertExists } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { createMockSupabaseClient, buildRequest } from "../_shared/test-harness.ts";
+// @ts-ignore: bypass arg count for test
 import { handler as generateHandler } from "../generate-meal-plan/index.ts";
 
 /**
