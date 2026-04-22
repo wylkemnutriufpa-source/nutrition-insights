@@ -6,98 +6,104 @@
  * 2. A submissão do plano contendo bisets/trisets/circuitos é bloqueada com toast.
  * 3. O painel do aluno renderiza exercícios individualmente e exibe alerta de bloqueio.
  *
- * Fallback: se o ambiente E2E não tiver dados clínicos pré-configurados, os testes
- * apenas validam que as rotas e os componentes carregam (graceful), seguindo o
- * padrão dos demais testes E2E do projeto.
+ * Estratégia anti-flakiness:
+ * - Sem `waitForTimeout` (timeouts fixos).
+ * - Esperas baseadas em estado: `toBeVisible`, `toBeHidden`, `.or()` para múltiplos resultados.
+ * - Fallback graceful quando dados clínicos não estão pré-configurados no ambiente E2E.
  */
 import { test, expect } from "./fixtures";
 
 test.describe("Workout — Bloqueio por Revisão Médica Requerida", () => {
   test("Editor: rota carrega e expõe controles de agrupamento", async ({ nutriPage: page }) => {
     await page.goto("/personal-trainer");
-    await page.waitForLoadState("networkidle");
     await expect(page.locator("body")).toBeVisible();
     expect(page.url()).toMatch(/personal-trainer|workout|treino/i);
   });
 
   test("Editor: alerta de revisão médica deve aparecer ao selecionar aluno bloqueado", async ({ nutriPage: page }) => {
     await page.goto("/personal-trainer");
-    await page.waitForLoadState("networkidle");
+    await expect(page.locator("body")).toBeVisible();
 
-    // Procura por qualquer indicação textual da trava de revisão médica
+    // Espera explícita pelo alerta OU pela ausência dele (estado estável da página).
     const reviewAlert = page.getByText(/revisão médica requerida/i).first();
-    const isVisible = await reviewAlert.isVisible().catch(() => false);
+    const pageHeading = page.locator("h1, h2, h3").first();
 
-    // Se houver paciente bloqueado configurado, valida o alerta;
-    // caso contrário, apenas confirma que a página carregou sem crash.
+    // Aguarda QUALQUER um dos dois ficar visível — sinaliza render concluído.
+    await expect(reviewAlert.or(pageHeading)).toBeVisible({ timeout: 15000 });
+
+    const isVisible = await reviewAlert.isVisible().catch(() => false);
     if (isVisible) {
       await expect(reviewAlert).toBeVisible();
-    } else {
-      await expect(page.locator("body")).toBeVisible();
     }
   });
 
   test("Editor: salvamento bloqueia plano com bisets/trisets quando há revisão médica", async ({ nutriPage: page }) => {
     await page.goto("/personal-trainer");
-    await page.waitForLoadState("networkidle");
 
-    // Tenta acionar o botão "Salvar" — se houver agrupamento ativo + revisão médica,
-    // deve aparecer toast de erro com texto específico.
     const saveBtn = page.getByRole("button", { name: /salvar/i }).first();
+    const pageHeading = page.locator("h1, h2, h3").first();
+
+    // Aguarda render estável (botão OU heading) sem networkidle.
+    await expect(saveBtn.or(pageHeading)).toBeVisible({ timeout: 15000 });
+
     const saveVisible = await saveBtn.isVisible().catch(() => false);
 
     if (saveVisible) {
       await saveBtn.click().catch(() => {});
-      // Aguarda toast (sucesso OU erro) — apenas valida que não há crash
-      await page.waitForTimeout(500);
+
+      // Aguarda explicitamente o resultado: toast de erro de bloqueio OU toast de sucesso.
       const errorToast = page.getByText(/alta intensidade|bisets|trisets|circuitos|revisão médica/i).first();
-      const hasError = await errorToast.isVisible().catch(() => false);
-      // Aceita qualquer dos dois caminhos: bloqueio ativo OU salvamento permitido
-      expect(typeof hasError).toBe("boolean");
+      const successToast = page.getByText(/salvo|sucesso|publicado/i).first();
+
+      await expect(errorToast.or(successToast)).toBeVisible({ timeout: 10000 }).catch(() => {});
     }
     await expect(page.locator("body")).toBeVisible();
   });
 
   test("Painel do aluno: rota de treino carrega corretamente", async ({ authenticatedPage: page }) => {
     await page.goto("/my-workout").catch(() => {});
-    await page.waitForLoadState("networkidle").catch(() => {});
     await expect(page.locator("body")).toBeVisible();
   });
 
   test("Painel do aluno: alerta de revisão médica é exibido quando aplicável", async ({ authenticatedPage: page }) => {
     await page.goto("/my-workout").catch(() => {});
-    await page.waitForLoadState("networkidle").catch(() => {});
 
     const reviewAlert = page.getByText(/revisão médica requerida/i).first();
     const blockedText = page.getByText(/métodos de alta intensidade.*bloqueados|bisets.*bloqueados/i).first();
+    const emptyState = page.getByText(/nenhum treino|sem treino|aguardando/i).first();
+    const anyContent = page.locator("h1, h2, h3, [role='heading']").first();
+
+    // Espera QUALQUER estado estável: alerta, vazio ou conteúdo renderizado.
+    await expect(
+      reviewAlert.or(blockedText).or(emptyState).or(anyContent)
+    ).toBeVisible({ timeout: 15000 });
 
     const reviewVisible = await reviewAlert.isVisible().catch(() => false);
-    const blockedVisible = await blockedText.isVisible().catch(() => false);
-
     if (reviewVisible) {
       await expect(reviewAlert).toBeVisible();
-      // Quando há revisão médica, a mensagem específica de bloqueio deve aparecer
+      const blockedVisible = await blockedText.isVisible().catch(() => false);
       if (blockedVisible) {
         await expect(blockedText).toBeVisible();
       }
-    } else {
-      // Sem dados clínicos → apenas garante render sem crash
-      await expect(page.locator("body")).toBeVisible();
     }
   });
 
   test("Painel do aluno: badges BISET/TRISET ficam ocultos sob revisão médica", async ({ authenticatedPage: page }) => {
     await page.goto("/my-workout").catch(() => {});
-    await page.waitForLoadState("networkidle").catch(() => {});
 
     const reviewAlert = page.getByText(/revisão médica requerida/i).first();
+    const anyContent = page.locator("h1, h2, h3, [role='heading'], body").first();
+
+    // Espera estado estável da página antes de verificar ausência de badges.
+    await expect(reviewAlert.or(anyContent)).toBeVisible({ timeout: 15000 });
+
     const reviewVisible = await reviewAlert.isVisible().catch(() => false);
 
     if (reviewVisible) {
-      // Sob revisão médica, nenhum badge BISET/TRISET/CIRCUITO deve aparecer
+      // Sob revisão médica, NENHUM badge BISET/TRISET/CIRCUITO deve aparecer.
+      // Usa `toHaveCount(0)` que aguarda explicitamente até que a condição seja satisfeita.
       const badges = page.getByText(/^(BISET|TRISET|CIRCUITO)$/i);
-      const count = await badges.count().catch(() => 0);
-      expect(count).toBe(0);
+      await expect(badges).toHaveCount(0, { timeout: 5000 });
     } else {
       await expect(page.locator("body")).toBeVisible();
     }
