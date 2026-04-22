@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS fast_marmita_mode BOOLEAN DEFAULT false;
