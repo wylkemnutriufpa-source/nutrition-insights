@@ -1678,6 +1678,10 @@ export function generateWeeklyMarmitaPlan(
     .filter(r => !recipeIsCannedProtein(r));
 
   if (fastMarmitaMode) {
+    console.log(`[weekly_marmita] Fast Marmita Mode active. Otimizando instruções.`);
+  }
+
+  if (fastMarmitaMode) {
     // Priority to recipes with base_recipe metadata containing low prep time (if available in future)
     // For now, we prioritize shorter recipe names or specific keywords as proxy if needed,
     // but the main change is in buildMarmitaItem instructions.
@@ -1842,7 +1846,11 @@ export function buildMarmitaItem(
   });
 
   const baseDesc = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
-  const finalDescription = finalizeMealDescription(baseDesc, mealType, goal) + "\n\n⏱️ Prática: Aqueça por 3-5 min no micro-ondas.";
+  const finalized = finalizeMealDescription(baseDesc, mealType, goal);
+  const tip = fastMarmitaMode 
+    ? "\n\n⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min. Refeição otimizada para tempo."
+    : "\n\n⏱️ Prática: Aqueça por 3-5 min no micro-ondas.";
+  const finalDescription = finalized + tip;
 
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
