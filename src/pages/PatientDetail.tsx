@@ -1963,7 +1963,6 @@ export default function PatientDetail() {
                         />
                       </div>
                     </div>
-                    </div>
 
                     <div className="border-t pt-3 space-y-2">
                       <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">Ações de Identidade (Admin)</p>
