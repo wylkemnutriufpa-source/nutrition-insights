@@ -91,10 +91,13 @@ describe('InOfficeWizard - Fluxo de Navegação', () => {
     (useAuth as any).mockReturnValue({ user: mockUser, loading: false });
     
     const mockSupabase = supabase as any;
-    // Forçamos que todos os chamados iniciais retornem a sessão ativa diretamente
-    mockSupabase.maybeSingle.mockResolvedValue({ data: mockSession, error: null });
-    // Mas o primeiro chamado de perfil precisa retornar o nome
-    mockSupabase.maybeSingle.mockResolvedValueOnce({ data: mockProfile, error: null });
+    
+    // Configura o retorno inicial das chamadas maybeSingle na ordem exata:
+    // 1. profile name (InOfficeWizard:43)
+    // 2. existing session (InOfficeWizard:51)
+    mockSupabase.maybeSingle
+      .mockResolvedValueOnce({ data: mockProfile, error: null })
+      .mockResolvedValueOnce({ data: mockSession, error: null });
     
     mockSupabase.update.mockResolvedValue({ data: null, error: null });
   });
@@ -109,23 +112,27 @@ describe('InOfficeWizard - Fluxo de Navegação', () => {
     }, { timeout: 4000 });
 
     // 1 -> 2
-    fireEvent.click(screen.getByText(/Próximo/i));
+    const nextBtn1 = screen.getByText(/Próximo/i);
+    fireEvent.click(nextBtn1);
     await waitFor(() => expect(screen.getByTestId('step-2')).toBeInTheDocument());
     expect(mockSupabase.from).toHaveBeenCalledWith('in_office_sessions');
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 2 }));
 
     // 2 -> 3
-    fireEvent.click(screen.getByText(/Próximo/i));
+    const nextBtn2 = screen.getByText(/Próximo/i);
+    fireEvent.click(nextBtn2);
     await waitFor(() => expect(screen.getByTestId('step-3')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 3 }));
 
     // 3 -> 4
-    fireEvent.click(screen.getByText(/Próximo/i));
+    const nextBtn3 = screen.getByText(/Próximo/i);
+    fireEvent.click(nextBtn3);
     await waitFor(() => expect(screen.getByTestId('step-4')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 4 }));
 
     // 4 -> 5 (Mark meal plan as completed)
-    fireEvent.click(screen.getByText(/Próximo/i));
+    const nextBtn4 = screen.getByText(/Próximo/i);
+    fireEvent.click(nextBtn4);
     await waitFor(() => expect(screen.getByTestId('step-5')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ 
         current_step: 5,
@@ -133,16 +140,19 @@ describe('InOfficeWizard - Fluxo de Navegação', () => {
     }));
 
     // Test reverse 5 -> 4
-    fireEvent.click(screen.getByText(/Anterior/i));
+    const prevBtn = screen.getByText(/Anterior/i);
+    fireEvent.click(prevBtn);
     await waitFor(() => expect(screen.getByTestId('step-4')).toBeInTheDocument());
     expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({ current_step: 4 }));
 
     // Back to 5
-    fireEvent.click(screen.getByText(/Próximo/i));
+    const nextBtnFinal = screen.getByText(/Próximo/i);
+    fireEvent.click(nextBtnFinal);
     await waitFor(() => expect(screen.getByTestId('step-5')).toBeInTheDocument());
 
     // Finalize
-    fireEvent.click(screen.getByText(/Finalizar Sessão/i));
+    const finalizeBtn = screen.getByText(/Finalizar Sessão/i);
+    fireEvent.click(finalizeBtn);
     await waitFor(() => {
         expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
             completed_at: expect.any(String),
