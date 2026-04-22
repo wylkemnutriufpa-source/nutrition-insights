@@ -63,3 +63,24 @@ export function safeMultiplier(target: unknown, base: unknown, fallback: number 
   const m = t / b;
   return Number.isFinite(m) ? m : fallback;
 }
+
+/**
+ * Checks if macros (P, C, F) match total calories within a tolerance.
+ * Returns true if the difference is more than the tolerance.
+ */
+export function isMacroInconsistent(calories: number, p: number, c: number, f: number, tolerance = 0.05): boolean {
+  const cal = safeNum(calories);
+  if (cal === 0) return false;
+  const calculated = (safeNum(p) * 4) + (safeNum(c) * 4) + (safeNum(f) * 9);
+  return Math.abs(calculated - cal) > (cal * tolerance);
+}
+
+/**
+ * Checks if calories are likely clamped (e.g., exactly 1200 or 1500)
+ * which might indicate a system limit was hit.
+ */
+export function isCalorieClamped(calories: number): boolean {
+  const c = safeNum(calories);
+  return c === 1200; // Common lower bound in our system
+}
+
