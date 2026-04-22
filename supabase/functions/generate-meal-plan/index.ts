@@ -1776,8 +1776,8 @@ export function buildMarmitaItem(
 ): any {
   const baseMacros = estimateRecipeMacros(recipe);
   const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
-  // Allow wider scale range so high/low kcal patients can hit their target (was 0.6-1.8)
-  const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+  // If recipe is not scalable, force scale to 1.0 (preserve grammages)
+  const clampedScale = recipe.is_scalable === false ? 1 : Math.max(0.5, Math.min(2.5, scaleFactor));
 
   // Seasonings/condiments are exempt from the 20g minimum portion rule
   const SEASONING_KEYWORDS = ["orégano", "oregano", "sal", "pimenta", "noz-moscada", "açafrão", "acafrao", "cominho", "alho em pó", "ervas finas", "páprica", "paprica", "limão", "limao", "vinagre", "molho de pimenta", "tempero"];
