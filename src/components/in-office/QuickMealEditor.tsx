@@ -202,31 +202,28 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const duplicateDay = async () => {
     setSaving(true);
     const nextDay = currentDay + 1;
+    const allItems = blocks.flatMap(b => b.items);
+    const inserts = allItems.map(item => ({
+      id: crypto.randomUUID(),
+      meal_plan_id: mealPlanId,
+      meal_type: item.meal_type,
+      title: item.name,
+      calories_target: item.calories,
+      protein_target: item.protein,
+      carbs_target: item.carbs,
+      fat_target: item.fat,
+      day_of_week: nextDay,
+      item_origin: "in_office_duplicated" as const,
+      tenant_id: tenantId,
+    }));
+
     try {
       await withRetry(async () => {
-        // Idempotency: cleanup previous attempt for the same day in this transaction if possible
-        // But since we use upsert with client IDs, we're safe.
-        // However, duplicateDay creates new items. 
-        // We'll delete and re-insert for simplicity in this specific action.
+        // Clear previous state for that day to avoid ghost items if we switched logic
         await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", nextDay);
         
-        const allItems = blocks.flatMap(b => b.items);
-        const inserts = allItems.map(item => ({
-          id: crypto.randomUUID(),
-          meal_plan_id: mealPlanId,
-          meal_type: item.meal_type,
-          title: item.name,
-          calories_target: item.calories,
-          protein_target: item.protein,
-          carbs_target: item.carbs,
-          fat_target: item.fat,
-          day_of_week: nextDay,
-          item_origin: "in_office_duplicated" as const,
-          tenant_id: tenantId,
-        }));
-        
         if (inserts.length > 0) {
-          const { error } = await supabase.from("meal_plan_items").insert(inserts);
+          const { error } = await supabase.from("meal_plan_items").upsert(inserts);
           if (error) throw error;
         }
       }, {
@@ -247,6 +244,23 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const applyToWeek = async () => {
     setSaving(true);
     const allItems = blocks.flatMap(b => b.items);
+    const allInserts: any[] = [];
+    for (let day = 1; day <= 7; day++) {
+      if (day === currentDay) continue;
+      allInserts.push(...allItems.map(item => ({
+        id: crypto.randomUUID(),
+        meal_plan_id: mealPlanId,
+        meal_type: item.meal_type,
+        title: item.name,
+        calories_target: item.calories,
+        protein_target: item.protein,
+        carbs_target: item.carbs,
+        fat_target: item.fat,
+        day_of_week: day,
+        item_origin: "in_office_duplicated" as const,
+        tenant_id: tenantId,
+      })));
+    }
     
     try {
       await withRetry(async () => {
@@ -257,26 +271,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           .neq("day_of_week", currentDay);
         if (delErr) throw delErr;
 
-        const allInserts = [];
-        for (let day = 1; day <= 7; day++) {
-          if (day === currentDay) continue;
-          allInserts.push(...allItems.map(item => ({
-            id: crypto.randomUUID(),
-            meal_plan_id: mealPlanId,
-            meal_type: item.meal_type,
-            title: item.name,
-            calories_target: item.calories,
-            protein_target: item.protein,
-            carbs_target: item.carbs,
-            fat_target: item.fat,
-            day_of_week: day,
-            item_origin: "in_office_duplicated" as const,
-            tenant_id: tenantId,
-          })));
-        }
-
         if (allInserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").insert(allInserts);
+          const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
           if (insErr) throw insErr;
         }
       }, {
@@ -328,39 +324,37 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   // Apply template to current day
   const applyTemplateToDay = async (template: SavedTemplate) => {
     setSaving(true);
-    
+    const items = (template.items || []) as MealItem[];
+    const totalItems = items.length;
+    const inserts = items.map(item => {
+      const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
+      const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
+      const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
+      const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
+
+      return {
+        id: crypto.randomUUID(),
+        meal_plan_id: mealPlanId,
+        meal_type: item.meal_type,
+        title: item.name,
+        calories_target: cal > 0 ? cal : null,
+        protein_target: prot > 0 ? prot : null,
+        carbs_target: carb > 0 ? carb : null,
+        fat_target: fat > 0 ? fat : null,
+        day_of_week: currentDay,
+        item_origin: "in_office_template" as const,
+        tenant_id: tenantId,
+      };
+    });
+
     try {
       await withRetry(async () => {
         // Delete existing items for current day
         const { error: delErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", currentDay);
         if (delErr) throw delErr;
 
-        const items = (template.items || []) as MealItem[];
-        const totalItems = items.length;
-        
-        const inserts = items.map(item => {
-          const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
-          const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
-          const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
-          const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
-
-          return {
-            id: crypto.randomUUID(),
-            meal_plan_id: mealPlanId,
-            meal_type: item.meal_type,
-            title: item.name,
-            calories_target: cal > 0 ? cal : null,
-            protein_target: prot > 0 ? prot : null,
-            carbs_target: carb > 0 ? carb : null,
-            fat_target: fat > 0 ? fat : null,
-            day_of_week: currentDay,
-            item_origin: "in_office_template" as const,
-            tenant_id: tenantId,
-          };
-        });
-
         if (inserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").insert(inserts);
+          const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
           if (insErr) throw insErr;
         }
       }, {
@@ -406,6 +400,29 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     setSaving(true);
     const items = (template.items || []) as MealItem[];
     const totalItems = items.length;
+    const allInserts: any[] = [];
+    for (let day = 1; day <= 7; day++) {
+      allInserts.push(...items.map(item => {
+        const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
+        const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
+        const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
+        const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
+
+        return {
+          id: crypto.randomUUID(),
+          meal_plan_id: mealPlanId,
+          meal_type: item.meal_type,
+          title: item.name,
+          calories_target: cal > 0 ? cal : null,
+          protein_target: prot > 0 ? prot : null,
+          carbs_target: carb > 0 ? carb : null,
+          fat_target: fat > 0 ? fat : null,
+          day_of_week: day,
+          item_origin: "in_office_template" as const,
+          tenant_id: tenantId,
+        };
+      }));
+    }
 
     try {
       await withRetry(async () => {
@@ -413,32 +430,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         const { error: delErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId);
         if (delErr) throw delErr;
 
-        const allInserts = [];
-        for (let day = 1; day <= 7; day++) {
-          allInserts.push(...items.map(item => {
-            const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
-            const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
-            const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
-            const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
-
-            return {
-              id: crypto.randomUUID(),
-              meal_plan_id: mealPlanId,
-              meal_type: item.meal_type,
-              title: item.name,
-              calories_target: cal > 0 ? cal : null,
-              protein_target: prot > 0 ? prot : null,
-              carbs_target: carb > 0 ? carb : null,
-              fat_target: fat > 0 ? fat : null,
-              day_of_week: day,
-              item_origin: "in_office_template" as const,
-              tenant_id: tenantId,
-            };
-          }));
-        }
-        
         if (allInserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").insert(allInserts);
+          const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
           if (insErr) throw insErr;
         }
       }, {
