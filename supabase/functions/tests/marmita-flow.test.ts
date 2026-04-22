@@ -54,7 +54,7 @@ Deno.test({
       strategy: "bikini_protocol"
     });
 
-    const res = await generateHandler(req, mockSupabase);
+    const res = await (generateHandler as any)(req, mockSupabase);
     assertEquals(res.status, 200, "Generation should succeed");
     
     // 2. Assert fallback logic in metadata (simulated here since handler handles DB)
