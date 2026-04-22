@@ -238,7 +238,21 @@ export default function ExpandableMealPlanCard() {
                                   {item.title}
                                 </span>
                                 {item.calories_target != null && (
-                                  <span className="text-[9px] text-muted-foreground ml-auto shrink-0">{fmtMacro(item.calories_target)}kcal</span>
+                                  <div className="flex items-center gap-1 ml-auto shrink-0">
+                                    <span className="text-[9px] text-muted-foreground">{fmtMacro(item.calories_target)}kcal</span>
+                                    {isCalorieClamped(item.calories_target) && (
+                                      <TooltipProvider>
+                                        <Tooltip>
+                                          <TooltipTrigger>
+                                            <Info className="w-2.5 h-2.5 text-amber-500" />
+                                          </TooltipTrigger>
+                                          <TooltipContent>
+                                            <p className="text-[10px]">Calorias limitadas por segurança (mín. 1200 kcal/dia).</p>
+                                          </TooltipContent>
+                                        </Tooltip>
+                                      </TooltipProvider>
+                                    )}
+                                  </div>
                                 )}
                               </div>
                               {item.description && (
