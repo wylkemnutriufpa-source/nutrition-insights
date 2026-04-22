@@ -628,10 +628,26 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
+  
+  // First pass: account for non-scalable items (fixed marmitas)
+  const nonScalableItems = dayItems.filter(i => i._is_scalable === false);
+  const fixedProteinByMeal = new Map<string, number>();
+  for (const item of nonScalableItems) {
+    fixedProteinByMeal.set(item.meal_type, (fixedProteinByMeal.get(item.meal_type) || 0) + (item.protein_target || 0));
+  }
 
   for (const mealType of MEAL_ORDER) {
     const mealGroup = dayItems.filter((item) => item.meal_type === mealType);
     if (mealGroup.length === 0) continue;
+    
+    // If meal group only contains non-scalable items, use their sum as the target
+    if (mealGroup.every(i => i._is_scalable === false)) {
+      const target = fixedProteinByMeal.get(mealType) || 0;
+      mealTargets.set(mealType, target);
+      assigned += target;
+      continue;
+    }
+
     const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
     const target = Math.min(proteinCaps[mealType] ?? baseTarget, baseTarget);
     mealTargets.set(mealType, target);
@@ -680,6 +696,12 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
 
     mealGroup.forEach((item, index) => {
       const current = Number(item.protein_target) || 0;
+      // Skip scaling for non-scalable items
+      if (item._is_scalable === false) {
+        scaledSum += current;
+        return;
+      }
+      
       const next = Math.max(0, Math.round(current * (target / currentTotal)));
       item.protein_target = next;
       scaledSum += next;
@@ -690,7 +712,12 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
     });
 
     const correction = target - scaledSum;
-    mealGroup[largestIndex].protein_target = Math.max(0, (Number(mealGroup[largestIndex].protein_target) || 0) + correction);
+    const scalableItems = mealGroup.filter(i => i._is_scalable !== false);
+    const targetGroup = scalableItems.length > 0 ? scalableItems : mealGroup;
+    const finalLargestIndex = scalableItems.length > 0 
+      ? mealGroup.indexOf(scalableItems.reduce((a, b) => (Number(b.protein_target) || 0) > (Number(a.protein_target) || 0) ? b : a))
+      : largestIndex;
+    mealGroup[finalLargestIndex].protein_target = Math.max(0, (Number(mealGroup[finalLargestIndex].protein_target) || 0) + correction);
   }
 }
 
@@ -1821,6 +1848,7 @@ export function buildMarmitaItem(
     _source: "meal_recipe",
     _recipe_id: recipe.id,
     _recipe_name: recipe.name,
+    _is_scalable: recipe.is_scalable !== false,
     _scale_factor: clampedScale,
     _image_url: visual?.image_url || null,
   };
@@ -1871,6 +1899,7 @@ function buildFixedMarmitaItem(
     _recipe_id: recipe.id,
     _recipe_name: recipe.name,
     _is_fixed: true,
+    _is_scalable: false,
     _scale_factor: 1, // forced — no scaling
     _image_url: visual?.image_url || null,
   };
@@ -2191,12 +2220,19 @@ function reconcileDailyMacros(
 
     const scaledItems: any[] = [];
     for (const item of dayItems) {
+      // Respect non-scalable items (Marmita Mode / Patient Mode)
+      const isScalable = item._is_scalable !== false;
+      const fC = isScalable ? calFactor : 1;
+      const fP = isScalable ? pFactor : 1;
+      const fCarb = isScalable ? cFactor : 1;
+      const fFat = isScalable ? fFactor : 1;
+
       scaledItems.push({
         ...item,
-        calories_target: Math.round((item.calories_target || 0) * calFactor),
-        protein_target: Math.round((item.protein_target || 0) * pFactor),
-        carbs_target: Math.round((item.carbs_target || 0) * cFactor),
-        fat_target: Math.round((item.fat_target || 0) * fFactor),
+        calories_target: Math.round((item.calories_target || 0) * fC),
+        protein_target: Math.round((item.protein_target || 0) * fP),
+        carbs_target: Math.round((item.carbs_target || 0) * fCarb),
+        fat_target: Math.round((item.fat_target || 0) * fFat),
       });
     }
 
@@ -2292,13 +2328,18 @@ function enforceCrossDayConsistency(items: any[], dailyMacros: { protein: number
         } else {
           const factor = c.target / (c.actual || 1);
           for (const item of dayItems) {
-            item[c.macro] = Math.round((item[c.macro] || 0) * factor);
+            if (item._is_scalable !== false) {
+              item[c.macro] = Math.round((item[c.macro] || 0) * factor);
+            }
           }
         }
         const newSum = dayItems.reduce((s: number, i: any) => s + (i[c.macro] || 0), 0);
         const diff = c.target - newSum;
         if (diff !== 0 && dayItems.length > 0) {
-          const largest = dayItems.reduce((a: any, b: any) => ((b[c.macro] || 0) > (a[c.macro] || 0) ? b : a));
+          // Only apply correction to scalable items if possible
+          const scalableItems = dayItems.filter(i => i._is_scalable !== false);
+          const targetPool = scalableItems.length > 0 ? scalableItems : dayItems;
+          const largest = targetPool.reduce((a: any, b: any) => ((b[c.macro] || 0) > (a[c.macro] || 0) ? b : a));
           largest[c.macro] += diff;
         }
       }
@@ -2574,8 +2615,7 @@ function buildGenerationMetadata(
 // SERVE
 // ═══════════════════════════════════════════════════════════════
 
-if (import.meta.main) {
-  serve(async (req) => {
+export async function generateMealPlanHandler(req: Request) {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -3548,5 +3588,8 @@ if (import.meta.main) {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-  });
+}
+
+if (import.meta.main) {
+  serve(generateMealPlanHandler);
 }
