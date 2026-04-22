@@ -362,10 +362,10 @@ export async function handler(req: Request, supabaseClient?: any) {
     const allSimulations: any[] = [];
 
     for (const pid of patientIds) {
-      const snap = latestSnap.get(pid);
-      const perf = perfMap.get(pid);
-      const cluster = clusterMap.get(pid);
-      const plan = planMap.get(pid);
+      const snap = latestSnap.get(pid) as any;
+      const perf = perfMap.get(pid) as any;
+      const cluster = clusterMap.get(pid) as any;
+      const plan = planMap.get(pid) as any;
 
       const baseline: Baseline = {
         adherence_7d: snap?.adherence_7d ?? 50,

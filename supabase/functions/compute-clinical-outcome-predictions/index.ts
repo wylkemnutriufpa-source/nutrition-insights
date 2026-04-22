@@ -322,10 +322,10 @@ export async function handler(req: Request, supabaseClient?: any) {
     const predictions: any[] = [];
 
     for (const pid of patientIds) {
-      const snap = latestSnapshot.get(pid);
-      const perf = perfMap.get(pid);
-      const cluster = clusterMap.get(pid);
-      const physio = physioMap.get(pid);
+      const snap = latestSnapshot.get(pid) as any;
+      const perf = perfMap.get(pid) as any;
+      const cluster = clusterMap.get(pid) as any;
+      const physio = physioMap.get(pid) as any;
 
       const adherence = snap?.adherence_7d ?? 50;
       const weightTrend = snap?.weight_trend_status ?? "stagnated";
