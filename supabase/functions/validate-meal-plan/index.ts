@@ -367,7 +367,7 @@ function analyzePracticalAdherence(items: any[], simplicityScore: number, blocke
 }
 
 // ── Handler ───────────────────────────────────────────────────────────────────
-export async function handler(req: Request, supabaseClient?: any) {
+export async function handler(req: Request, maybeSupabaseClient?: any) {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
     try {
@@ -376,10 +376,13 @@ export async function handler(req: Request, supabaseClient?: any) {
 
         const { meal_plan_id } = body;
 
-        const supabase = supabaseClient ?? createClient(
-            Deno.env.get("SUPABASE_URL") ?? "",
-            Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-        );
+        // Correctly handle supabase client injection for tests vs runtime
+        const supabase = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function")
+            ? maybeSupabaseClient
+            : createClient(
+                Deno.env.get("SUPABASE_URL") ?? "",
+                Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+            );
 
         const { data: mealPlan, error: planErr } = await supabase
             .from("meal_plans")

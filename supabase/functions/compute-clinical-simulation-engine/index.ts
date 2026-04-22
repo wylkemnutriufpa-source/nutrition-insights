@@ -283,16 +283,18 @@ const TYPE_TO_DECISION: Record<string, string> = {
   no_change_monitoring: "keep_and_monitor",
 };
 
-export async function handler(req: Request, supabaseClient?: any) {
+export async function handler(req: Request, maybeSupabaseClient?: any) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = supabaseClient ?? createClient(
-      Deno.env.get("SUPABASE_URL") ?? "", 
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabase = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function")
+      ? maybeSupabaseClient
+      : createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        );
 
     const { data: body, response: errorResponse } = await validateBody(req, SimulationEngineSchema);
     // SimulationEngineSchema has optional patient_id and scenario

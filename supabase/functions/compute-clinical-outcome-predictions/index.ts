@@ -226,16 +226,18 @@ function classifyConfidence(score: number): string {
   return "baixa_confianca";
 }
 
-export async function handler(req: Request, supabaseClient?: any) {
+export async function handler(req: Request, maybeSupabaseClient?: any) {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const supabase = supabaseClient ?? createClient(
-      Deno.env.get("SUPABASE_URL") ?? "", 
-      Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
-    );
+    const supabase = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function")
+      ? maybeSupabaseClient
+      : createClient(
+          Deno.env.get("SUPABASE_URL") ?? "",
+          Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? ""
+        );
 
     const { data: body, response: errorResponse } = await validateBody(req, OutcomePredictionsSchema);
     // If body is empty, we still proceed (it validates with defaults)
