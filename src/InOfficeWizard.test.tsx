@@ -10,34 +10,33 @@ import { WorkspaceContext } from './hooks/useWorkspaceContext';
 import '@testing-library/jest-dom';
 
 // Mock supabase
-const mockSupabase = {
-  from: vi.fn(() => mockSupabase),
-  select: vi.fn(() => mockSupabase),
-  insert: vi.fn(() => mockSupabase),
-  update: vi.fn(() => mockSupabase),
-  delete: vi.fn(() => mockSupabase),
-  eq: vi.fn(() => mockSupabase),
-  in: vi.fn(() => mockSupabase),
-  is: vi.fn(() => mockSupabase),
-  order: vi.fn(() => mockSupabase),
-  limit: vi.fn(() => mockSupabase),
-  maybeSingle: vi.fn(),
-  single: vi.fn(),
-  rpc: vi.fn(),
-  channel: vi.fn(() => ({
-    on: vi.fn().mockReturnThis(),
-    subscribe: vi.fn().mockReturnThis(),
-    unsubscribe: vi.fn(),
-  })),
-  removeChannel: vi.fn(),
-  getChannels: vi.fn(() => []),
+const createMockSupabase = () => {
+  const mock = {
+    from: vi.fn().mockReturnThis(),
+    select: vi.fn().mockReturnThis(),
+    insert: vi.fn().mockReturnThis(),
+    update: vi.fn().mockReturnThis(),
+    delete: vi.fn().mockReturnThis(),
+    eq: vi.fn().mockReturnThis(),
+    in: vi.fn().mockReturnThis(),
+    is: vi.fn().mockReturnThis(),
+    order: vi.fn().mockReturnThis(),
+    limit: vi.fn().mockReturnThis(),
+    maybeSingle: vi.fn(),
+    single: vi.fn(),
+    rpc: vi.fn(),
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+      unsubscribe: vi.fn(),
+    })),
+    removeChannel: vi.fn(),
+    getChannels: vi.fn(() => []),
+  };
+  return mock;
 };
 
-// Fix for .then() error in useProfessionalModules
-(mockSupabase.maybeSingle as any).mockReturnValue(Promise.resolve({ data: {}, error: null }));
-(mockSupabase.single as any).mockReturnValue(Promise.resolve({ data: {}, error: null }));
-(mockSupabase.rpc as any).mockReturnValue(Promise.resolve({ data: {}, error: null }));
-(mockSupabase.select as any).mockReturnValue(Promise.resolve({ data: [], error: null })); // For select calls that are awaited directly
+const mockSupabase = createMockSupabase() as any;
 
 vi.mock('./integrations/supabase/client', () => ({
   supabase: mockSupabase
@@ -119,7 +118,9 @@ describe('InOfficeWizard - Navegação e Persistência', () => {
     mockSupabase.insert.mockResolvedValue({ data: { id: 'new-id' }, error: null });
     mockSupabase.single.mockResolvedValue({ data: mockSession, error: null });
     mockSupabase.rpc.mockResolvedValue({ data: 'ws-123', error: null });
-    mockSupabase.select.mockImplementation(async () => ({ data: [], error: null }));
+    mockSupabase.select.mockImplementation(() => mockSupabase);
+    // Overwrite for select as a promise when needed
+    mockSupabase.then = (fn: any) => Promise.resolve({ data: [], error: null }).then(fn);
   });
 
   it('deve carregar a etapa inicial corretamente', async () => {
