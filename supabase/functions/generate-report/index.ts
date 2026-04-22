@@ -200,13 +200,13 @@ Deno.serve(async (req) => {
       const { data: mealRecipes } = await supabase
         .from("meal_recipes")
         .select("name, base_recipe")
-        .in("name", mealPlanItemTitles);
+        .in("name", mealPlanItemTitles.map(t => t.replace(/^🍱\s*/, '')));
       
       if (mealRecipes) {
         mealRecipes.forEach((r: any) => {
           if (r.base_recipe) {
-            // Find which item uses this recipe name
-            const item = mealPlan.meal_plan_items.find((i: any) => i.title === r.name);
+            // Find which item uses this recipe name (considering emoji prefix)
+            const item = mealPlan.meal_plan_items.find((i: any) => i.title.replace(/^🍱\s*/, '') === r.name);
             if (item) recipesMap[item.id] = r.base_recipe;
           }
         });
