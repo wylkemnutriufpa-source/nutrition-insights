@@ -50,14 +50,21 @@ Deno.test({
         chain.select = () => chain;
         chain.eq = () => chain;
         chain.single = () => Promise.resolve({ 
-          data: { id: "ana-1", user_id: mockPatientId }, 
+          data: { id: "ana-1", user_id: mockPatientId, weight: 70, height: 170 }, 
           error: null 
         });
         chain.maybeSingle = () => Promise.resolve({ 
-          data: { id: "ana-1", user_id: mockPatientId }, 
+          data: { id: "ana-1", user_id: mockPatientId, weight: 70, height: 170 }, 
           error: null 
         });
         chain.update = () => chain;
+      } else if (table === "profiles") {
+        chain.select = () => chain;
+        chain.eq = () => chain;
+        chain.maybeSingle = () => Promise.resolve({ 
+            data: { tenant_id: "tenant-1", weight: 70, height: 170 }, 
+            error: null 
+        });
       } else if (table === "user_roles") {
         chain.select = () => chain;
         chain.eq = () => chain;
@@ -89,7 +96,9 @@ Deno.test({
     try {
         const req = buildRequest("http://localhost:54321/generate-meal-plan", {
           patient_id: mockPatientId,
-          generation_mode: "fixed_marmita"
+          generation_mode: "fixed_marmita",
+          weight: 70,
+          height: 170
         });
         req.headers.set("Authorization", "Bearer mock-token");
 
