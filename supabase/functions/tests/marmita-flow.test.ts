@@ -98,7 +98,8 @@ Deno.test({
           patient_id: mockPatientId,
           generationMode: "fixed_marmita",
           weight: 70,
-          height: 170
+          height: 170,
+          goal: "lose_weight"
         });
         req.headers.set("Authorization", "Bearer mock-token");
 
