@@ -628,10 +628,26 @@ function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: numb
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
+  
+  // First pass: account for non-scalable items (fixed marmitas)
+  const nonScalableItems = dayItems.filter(i => i._is_scalable === false);
+  const fixedProteinByMeal = new Map<string, number>();
+  for (const item of nonScalableItems) {
+    fixedProteinByMeal.set(item.meal_type, (fixedProteinByMeal.get(item.meal_type) || 0) + (item.protein_target || 0));
+  }
 
   for (const mealType of MEAL_ORDER) {
     const mealGroup = dayItems.filter((item) => item.meal_type === mealType);
     if (mealGroup.length === 0) continue;
+    
+    // If meal group only contains non-scalable items, use their sum as the target
+    if (mealGroup.every(i => i._is_scalable === false)) {
+      const target = fixedProteinByMeal.get(mealType) || 0;
+      mealTargets.set(mealType, target);
+      assigned += target;
+      continue;
+    }
+
     const baseTarget = Math.round(dailyProteinTarget * (proteinShares[mealType] || 0));
     const target = Math.min(proteinCaps[mealType] ?? baseTarget, baseTarget);
     mealTargets.set(mealType, target);
@@ -1821,6 +1837,7 @@ export function buildMarmitaItem(
     _source: "meal_recipe",
     _recipe_id: recipe.id,
     _recipe_name: recipe.name,
+    _is_scalable: recipe.is_scalable !== false,
     _scale_factor: clampedScale,
     _image_url: visual?.image_url || null,
   };
@@ -2191,12 +2208,19 @@ function reconcileDailyMacros(
 
     const scaledItems: any[] = [];
     for (const item of dayItems) {
+      // Respect non-scalable items (Marmita Mode / Patient Mode)
+      const isScalable = item._is_scalable !== false;
+      const fC = isScalable ? calFactor : 1;
+      const fP = isScalable ? pFactor : 1;
+      const fCarb = isScalable ? cFactor : 1;
+      const fFat = isScalable ? fFactor : 1;
+
       scaledItems.push({
         ...item,
-        calories_target: Math.round((item.calories_target || 0) * calFactor),
-        protein_target: Math.round((item.protein_target || 0) * pFactor),
-        carbs_target: Math.round((item.carbs_target || 0) * cFactor),
-        fat_target: Math.round((item.fat_target || 0) * fFactor),
+        calories_target: Math.round((item.calories_target || 0) * fC),
+        protein_target: Math.round((item.protein_target || 0) * fP),
+        carbs_target: Math.round((item.carbs_target || 0) * fCarb),
+        fat_target: Math.round((item.fat_target || 0) * fFat),
       });
     }
 
