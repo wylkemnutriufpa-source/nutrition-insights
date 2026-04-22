@@ -1,5 +1,4 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
 import { validateBody } from "../_shared/validator.ts";
 import { ValidateMealPlanSchema } from "../_shared/schemas.ts";
 import {
@@ -372,9 +371,9 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
 
     try {
         const { data: body, response: errorResponse } = await validateBody(req, ValidateMealPlanSchema);
-        if (errorResponse) return errorResponse;
+        if (errorResponse || !body) return errorResponse!;
 
-        const { meal_plan_id } = body;
+        const { meal_plan_id } = body as any;
 
         // Correctly handle supabase client injection for tests vs runtime
         const supabase = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function")
@@ -607,15 +606,15 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             ...clinicalErrors,
             ...(simplicityResult.blocked_foods.length > 0 ? [{
                 rule: "alimentos_bloqueados",
-                message: `${simplicityResult.blocked_foods.length} alimento(s) bloqueado(s): ${[...new Set(simplicityResult.blocked_foods.map(b => b.food))].join(", ")}`,
+                message: `${simplicityResult.blocked_foods.length} alimento(s) bloqueado(s): ${[...new Set(simplicityResult.blocked_foods.map((b: any) => b.food))].join(", ")}`,
                 weight: Math.min(40, simplicityResult.blocked_foods.length * 3),
             }] : []),
         ];
 
         // Generate suggestion list
         const suggestions = simplicityResult.blocked_foods
-            .filter(bf => bf.replacement)
-            .map(bf => ({
+            .filter((bf: any) => bf.replacement)
+            .map((bf: any) => ({
                 before: bf.food,
                 after: bf.replacement,
                 meal_type: bf.meal_type,
@@ -623,8 +622,8 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             }));
 
         // Deduplicate suggestions
-        const uniqueSuggestions = suggestions.filter((s, idx, arr) =>
-            arr.findIndex(x => x.before === s.before && x.day === s.day && x.meal_type === s.meal_type) === idx
+        const uniqueSuggestions = suggestions.filter((s: any, idx: number, arr: any[]) =>
+            arr.findIndex((x: any) => x.before === s.before && x.day === s.day && x.meal_type === s.meal_type) === idx
         );
 
         // ── 4. Clinical Decision Layer (v5) ─────────────────────────────

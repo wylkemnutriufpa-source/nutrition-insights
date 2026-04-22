@@ -95,7 +95,7 @@ Deno.test({
         }
       ]);
 
-    assertNotEquals(itemsErr, null, "Meal items should be inserted without error");
+    assertNotEquals(itemsErr, undefined, "Meal items should be inserted without error");
     if (itemsErr) throw itemsErr;
     console.log("Meal items added.");
 
