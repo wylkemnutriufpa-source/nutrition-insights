@@ -401,14 +401,16 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     const items = (template.items || []) as MealItem[];
     const totalItems = items.length;
     const allInserts: any[] = [];
+    
+    // Generate UUIDs once for all items and all days for idempotency
     for (let day = 1; day <= 7; day++) {
-      allInserts.push(...items.map(item => {
+      items.forEach(item => {
         const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
         const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
         const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
         const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
 
-        return {
+        allInserts.push({
           id: crypto.randomUUID(),
           meal_plan_id: mealPlanId,
           meal_type: item.meal_type,
@@ -420,8 +422,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           day_of_week: day,
           item_origin: "in_office_template" as const,
           tenant_id: tenantId,
-        };
-      }));
+        });
+      });
     }
 
     try {
