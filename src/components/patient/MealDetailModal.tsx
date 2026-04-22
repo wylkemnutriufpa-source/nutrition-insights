@@ -223,7 +223,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const mealTypeInfo = MEAL_TYPE_LABELS[meal.meal_type || ""] || null;
   const imageUrl = meal.image_url || meta.image_url;
 
-  const hasMacros = meal.calories_target || meal.protein_target || meal.carbs_target || meal.fat_target;
+  const hasMacros = meal.calories_target !== null || meal.protein_target !== null || meal.carbs_target !== null || meal.fat_target !== null;
 
   const canEdit = !!meal.itemId && !!onRemoveFoodLine;
   const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
