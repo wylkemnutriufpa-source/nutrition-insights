@@ -186,22 +186,24 @@ describe("MealDetailModal - Validação de Porção", () => {
     );
 
     // Encontrar o botão de editar da primeira linha (Arroz Branco)
-    const editBtns = screen.getAllByRole("button").filter(btn => btn.querySelector(".lucide-pencil"));
-    fireEvent.click(editBtns[0]);
+    // O botão tem um título "Editar Alimento"
+    const editBtn = await screen.findByTitle(/Editar Alimento/i);
+    fireEvent.click(editBtn);
 
-    const portionInput = screen.getByDisplayValue("100g");
-    const saveBtn = screen.getAllByRole("button").find(btn => btn.querySelector(".lucide-check"));
+    const portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
+    
+    const saveBtnEdit = screen.getByRole("button", { name: /Salvar Alterações/i });
     
     // Invalidar
     fireEvent.change(portionInput, { target: { value: "invalid" } });
-    fireEvent.click(saveBtn!);
+    fireEvent.click(saveBtnEdit);
 
     expect(screen.getByText(new RegExp(PORTION_ERROR_MESSAGE, "i"))).toBeInTheDocument();
     expect(mockUpdateItem).not.toHaveBeenCalled();
 
     // Corrigir
     fireEvent.change(portionInput, { target: { value: "120g" } });
-    fireEvent.click(saveBtn!);
+    fireEvent.click(saveBtnEdit);
 
     expect(mockUpdateItem).toHaveBeenCalledWith("item-123", expect.objectContaining({
       description: expect.stringContaining("Arroz Branco — 120g")
