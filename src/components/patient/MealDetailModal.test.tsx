@@ -165,16 +165,30 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn);
     
-    // Verifica se o erro apareceu.
-    // O PORTION_ERROR_MESSAGE é "Use ex: 150g, 2 ovos, 1 fatia"
-    // Usamos queryByText com regex para ser flexível com quebras de linha ou espaços extras
-    const errorMsg = screen.queryByText(/Use ex: 150g/);
-    expect(errorMsg).toBeInTheDocument();
+    // Debug: ver o que está sendo renderizado no modal
+    // screen.debug();
+
+    // A validação de porção é feita no handleAddManualFood.
+    // O erro deve ser exibido em um elemento <p> com a classe text-destructive.
+    // Vamos tentar buscar por papel ou classe se o texto direto falhar por causa da animação/renderização
+    
+    // Tenta novamente encontrar o texto
+    const errorMsg = screen.queryByText((content) => content.includes("Use ex: 150g"));
+    // Se ainda for null, o erro pode não estar sendo disparado ou o saveBtn está desabilitado
+    // mas o saveBtn só desabilita se manualFoodName estiver vazio, e nós definimos "Batata Doce" no beforeEach ou em testes anteriores? 
+    // Não, precisamos definir no teste local.
+    
+    // Corrigindo o teste para garantir que o nome do alimento está preenchido
+    const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
+    fireEvent.change(nameInput, { target: { value: "Teste Erro" } });
+    fireEvent.click(saveBtn);
+
+    expect(screen.getByText(/Use ex: 150g/i)).toBeInTheDocument();
 
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
     // O erro deve sumir
-    expect(screen.queryByText(/Use ex: 150g/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Use ex: 150g/i)).not.toBeInTheDocument();
   });
 });
