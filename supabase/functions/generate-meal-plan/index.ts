@@ -2296,14 +2296,8 @@ function generateFixedMarmitaPlan(
         item.protein_target = Math.round(item.protein_target * portionMultiplier);
         item.carbs_target = Math.round(item.carbs_target * portionMultiplier);
         item.fat_target = Math.round(item.fat_target * portionMultiplier);
-        item.description = `🍱 [PORÇÃO REFORÇADA 1.5x]\n` + item.description.split('\n').map(line => {
-          const gramsMatch = line.match(/(\d+)g/);
-          if (gramsMatch) {
-            const scaled = Math.round(parseInt(gramsMatch[1]) * portionMultiplier);
-            return line.replace(/\d+g/, `${scaled}g`);
-          }
-          return line;
-        }).join('\n');
+        // Description already handled in buildFixedMarmitaItem logic
+        console.log(`[fixed_marmita] Hypertrophy active for dinner: using 1.5x portion`);
       }
 
       items.push(item);
