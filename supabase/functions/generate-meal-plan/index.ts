@@ -896,7 +896,7 @@ function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | 
   return best && best.score > 0 ? best.food : null;
 }
 
-function replaceProteinLineWithServing(description: string, food: DBFood, grams: number): string {
+function replaceProteinLineWithServing(description: string, food: DBFood, grams: number, alert: string | null): string {
   const [mainSection, substitutionsSection] = description.split(/\n\n🔄 Substituições:\n/);
   const aliases = Array.from(new Set([
     normalize(food.food_name || ""),
@@ -919,22 +919,27 @@ function replaceProteinLineWithServing(description: string, food: DBFood, grams:
 
       replaced = true;
 
+      let newline = trimmed;
       if (/(\d+(?:[.,]\d+)?)\s*g\b/i.test(trimmed)) {
-        return trimmed.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${grams}g`);
+        newline = trimmed.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${grams}g`);
+      } else if (/\s+[—-]\s+/.test(trimmed)) {
+        newline = trimmed.replace(/\s+[—-]\s+.*$/, ` — ${grams}g`);
+      } else {
+        newline = `${trimmed} — ${grams}g`;
       }
 
-      if (/\s+[—-]\s+/.test(trimmed)) {
-        return trimmed.replace(/\s+[—-]\s+.*$/, ` — ${grams}g`);
-      }
-
-      return `${trimmed} — ${grams}g`;
+      return newline;
     })
     .filter(Boolean)
     .join("\n");
 
-  const finalMain = replaced
+  let finalMain = replaced
     ? nextMain
     : [`• ${food.food_name} — ${grams}g`, nextMain].filter(Boolean).join("\n");
+
+  if (alert) {
+    finalMain += `\n⚠️ ${alert}`;
+  }
 
   return finalMain + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
 }
@@ -953,12 +958,24 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
     const density = getProteinDensity(matchedFood);
     if (!Number.isFinite(density) || density <= 0) return item;
 
-    const computedServing = clampComputedProteinServing(requiredProtein / density, item.meal_type || "");
-    if (!Number.isFinite(computedServing) || computedServing <= 0) return item;
+    const rawServing = requiredProtein / density;
+    const computedServing = clampComputedProteinServing(rawServing, item.meal_type || "");
+    
+    // Validations
+    const densityWarning = validateNutritionalDensity(matchedFood);
+    const portionAlert = getPortionAlert(roundServingGrams(rawServing), item.meal_type || "", matchedFood.food_name);
+    
+    const combinedAlert = [densityWarning, portionAlert].filter(Boolean).join(" ");
 
     return {
       ...item,
-      description: replaceProteinLineWithServing(item.description, matchedFood, computedServing),
+      metadata: {
+        ...(item.metadata || {}),
+        portion_alert: combinedAlert || null,
+        original_computed_grams: roundServingGrams(rawServing),
+        matched_food_id: matchedFood.id
+      },
+      description: replaceProteinLineWithServing(item.description, matchedFood, computedServing, combinedAlert),
     };
   });
 }
