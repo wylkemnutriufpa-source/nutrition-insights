@@ -17,7 +17,6 @@ vi.mock('@/components/patient/MealPlanDailyView', () => {
     AdherenceCard: () => <div data-testid="adherence-card" />,
     DateNavigator: () => <div data-testid="date-navigator" />,
     MealGroup: ({ mealType, items, completions, onSetAdherence }: any) => {
-      // mealType is sometimes an object {key, label, icon, time}
       const typeKey = typeof mealType === 'string' ? mealType : (mealType?.key || 'unknown');
       return (
         <div data-testid={`meal-group-${typeKey}`}>
@@ -64,11 +63,10 @@ const createMockChain = (data: any = null) => {
     limit: vi.fn(() => chain),
     maybeSingle: vi.fn(() => Promise.resolve({ data, error: null })),
     single: vi.fn(() => Promise.resolve({ data, error: null })),
-    insert: vi.fn(() => ({
+    insert: vi.fn((insertData: any) => ({
       select: () => ({
         single: () => new Promise(resolve => {
-            // Delay resolving to ensure we catch the optimistic state
-            setTimeout(() => resolve({ data: { id: 'real-id', ...data }, error: null }), 50);
+            setTimeout(() => resolve({ data: { id: 'real-id', ...insertData }, error: null }), 50);
         })
       })
     })),
@@ -160,8 +158,25 @@ describe('DailyMealPlanInline - Realtime & Optimistic Simulation', () => {
       toggleButton.click();
     });
 
-    // Estado deve ser COMPLETED imediatamente
     expect(screen.getByTestId('completion-status-item1').textContent).toBe('COMPLETED');
     expect(supabase.from).toHaveBeenCalledWith('meal_item_completions');
+  });
+
+  it('deve atualizar marcações de dieta via Realtime para meal_plan_items', async () => {
+    await act(async () => {
+      render(<DailyMealPlanInline />);
+    });
+    
+    await screen.findByTestId('meal-group-breakfast');
+    expect(realtimeCallbacks['meal_plan_items']).toBeDefined();
+    
+    await act(async () => {
+      realtimeCallbacks['meal_plan_items']({
+        eventType: 'INSERT',
+        new: { id: 'item2', meal_type: 'breakfast', meal_plan_id: 'plan1', day_of_week: new Date().getDay() }
+      });
+    });
+
+    expect(supabase.from).toHaveBeenCalledWith('meal_plan_items');
   });
 });
