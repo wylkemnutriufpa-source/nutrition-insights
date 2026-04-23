@@ -196,6 +196,7 @@ export async function generateMealPlanFromLibrary(
   let fallbackUsed = false;
 
   for (let day = 1; day <= 7; day++) {
+    console.warn(`[ENGINE] Iniciando geração para dia ${day}`);
     for (const mealType of MEAL_TYPES) {
       const targetKcal = Math.round(profile.targetCalories * distribution[mealType]);
       const compatGoals = GOAL_COMPAT[profile.goal] || [profile.goal, "maintenance"];
@@ -265,6 +266,12 @@ export async function generateMealPlanFromLibrary(
       });
       usageCount[selected.item.id] = (usageCount[selected.item.id] || 0) + 1;
     }
+  }
+
+  console.warn("[ENGINE] total slots gerados:", slots.length);
+  if (slots.length < 5) {
+    console.error("[ENGINE] Geração insuficiente detectada", { slots: slots.length });
+    throw new Error("Plano inválido: geração incompleta (menos de 5 itens)");
   }
 
   const metadata: AutoGenMetadata = {
@@ -491,6 +498,12 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
   );
 
   const allItems = nested.flat();
+  console.warn("[DB] itens para salvar (inserts):", allItems.length);
+
+  if (allItems.length < 5) {
+    console.error("[DB] Tentativa de salvar plano incompleto", { count: allItems.length });
+    throw new Error("Plano inválido: geração incompleta (proteção de banco)");
+  }
 
   // ── Sanity guardrail: detect per-item calorie inflation ────
   // If any single item has calories_target above 1200, it's likely set to the

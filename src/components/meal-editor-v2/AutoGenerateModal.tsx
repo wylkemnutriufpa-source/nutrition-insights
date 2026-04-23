@@ -136,7 +136,12 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       // 1. Generate inserts from generated slots
       console.warn("[PLAN] iniciando aplicação ao plano");
       const inserts = await slotsToInserts(result.slots, planId);
-      console.warn("[PLAN] inserts gerados", inserts);
+      console.warn("[PLAN] itens para salvar:", inserts.length);
+
+      if (inserts.length < 3) {
+        console.error("[PLAN] Interrompendo salvamento: plano incompleto");
+        throw new Error("Plano inválido: geração incompleta");
+      }
 
       // Guard: block empty generation
       if (!inserts || inserts.length === 0) {
