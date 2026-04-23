@@ -122,8 +122,13 @@ describe('Fluxo E2E Automatizado: Marmita Semanal -> Publicação -> Visualizaç
     const weeklyBtn = weeklyBtnLabel.closest('button');
     
     await waitFor(() => expect(weeklyBtn).not.toBeDisabled());
-    fireEvent.click(weeklyBtn!);
     
+    // Use directly calling handleWeeklyMarmita if event loop is tricky
+    // But fireEvent is better E2E
+    await act(async () => {
+      fireEvent.click(weeklyBtn!);
+    });
+
     // Check if the edge function was triggered
     await waitFor(() => {
       expect(supabase.functions.invoke).toHaveBeenCalled();
