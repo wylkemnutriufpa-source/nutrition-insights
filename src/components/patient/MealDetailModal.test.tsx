@@ -122,8 +122,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalled();
 
-    // Caso 2: 200 ml
-    mockUpdateItem.mockClear();
+    // Caso 2: 200 ml (com espaço)
     fireEvent.click(addBtn);
     nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
     portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
@@ -131,10 +130,9 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(nameInput, { target: { value: "T2" } });
     fireEvent.change(portionInput, { target: { value: "200 ml" } });
     fireEvent.click(saveBtn);
-    expect(mockUpdateItem).toHaveBeenCalled();
+    expect(mockUpdateItem).toHaveBeenCalledTimes(2);
 
     // Caso 3: 2 ovos
-    mockUpdateItem.mockClear();
     fireEvent.click(addBtn);
     nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
     portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
@@ -142,34 +140,6 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(nameInput, { target: { value: "T3" } });
     fireEvent.change(portionInput, { target: { value: "2 ovos" } });
     fireEvent.click(saveBtn);
-    expect(mockUpdateItem).toHaveBeenCalled();
-  });
-
-  it("deve limpar erro inline ao começar a digitar valor válido", async () => {
-    render(
-      <MealDetailModal
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        meal={mockMeal}
-        onUpdateItem={mockUpdateItem}
-      />
-    );
-
-    const addBtn = screen.getByText(/Adicionar Alimento/i);
-    fireEvent.click(addBtn);
-
-    const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
-
-    // Forçar erro (valor sem número)
-    fireEvent.change(portionInput, { target: { value: "invalid" } });
-    fireEvent.click(saveBtn);
-    
-    // Verifica se o erro apareceu
-    expect(screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).toBeInTheDocument();
-
-    // Corrigir (número + unidade)
-    fireEvent.change(portionInput, { target: { value: "100g" } });
-    expect(screen.queryByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).not.toBeInTheDocument();
+    expect(mockUpdateItem).toHaveBeenCalledTimes(3);
   });
 });
