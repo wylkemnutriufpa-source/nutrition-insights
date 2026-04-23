@@ -7,6 +7,7 @@ import {
   Copy, ClipboardPaste, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { MealItemCard } from "./MealItemCard";
@@ -282,7 +283,7 @@ export function WeeklyGrid() {
                     <div className="absolute top-1 right-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex gap-0.5 z-20">
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); copyCell(day.key, meal.key); }}
+                        onClick={(e) => { e.stopPropagation(); copyCell(day.key, meal.key); toast.success("Refeição copiada para a área de transferência"); }}
                         className="p-1 rounded bg-secondary/80 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
                         title="Copiar Refeição"
                       >
@@ -302,7 +303,7 @@ export function WeeklyGrid() {
                     <div className={`absolute top-1 left-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20`}>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); pasteToCell(day.key, meal.key); }}
+                        onClick={(e) => { e.stopPropagation(); pasteToCell(day.key, meal.key); toast.success("Refeição colada com sucesso"); }}
                         className="p-1 rounded bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30"
                         title="Colar Refeição aqui"
                       >
