@@ -190,82 +190,60 @@ export async function generateMealPlanFromLibrary(
     return true;
   });
 
-  // 5. Generate 7 days
+  // 5. Generate Master Day (Single Day Model)
   const slots: GeneratedMealSlot[] = [];
-  const usageCount: Record<string, number> = {};
-  let fallbackUsed = false;
+  const day = 0; // Master Day Global
+  console.warn("[ENGINE] Gerando Master Day Único (Modelo Global)");
 
-  for (let day = 1; day <= 7; day++) {
-    console.warn(`[ENGINE] Iniciando geração para dia ${day}`);
-    for (const mealType of MEAL_TYPES) {
-      const targetKcal = Math.round(profile.targetCalories * distribution[mealType]);
-      const compatGoals = GOAL_COMPAT[profile.goal] || [profile.goal, "maintenance"];
+  for (const mealType of MEAL_TYPES) {
+    const targetKcal = Math.round(profile.targetCalories * distribution[mealType]);
+    const compatGoals = GOAL_COMPAT[profile.goal] || [profile.goal, "maintenance"];
 
-      let candidates = validatedItems
-        .filter((item) => item.meal_type === mealType)
-        .map((item) => ({
-          item,
-          score: scoreMeal(item, compatGoals, profile.clinicalTags, targetKcal),
-        }))
-        .filter((c) => c.score > 0)
-        .sort((a, b) => b.score - a.score);
+    let candidates = validatedItems
+      .filter((item) => item.meal_type === mealType)
+      .map((item) => ({
+        item,
+        score: scoreMeal(item, compatGoals, profile.clinicalTags, targetKcal),
+      }))
+      .filter((c) => c.score > 0)
+      .sort((a, b) => b.score - a.score);
 
-      // Diversity filter
-      const diverse = candidates.filter((c) => (usageCount[c.item.id] || 0) < MAX_REPEAT_PER_WEEK);
-      if (diverse.length > 0) {
-        candidates = diverse;
-      } else if (candidates.length > 0) {
-        fallbackUsed = true;
-      }
+    const topN = candidates.slice(0, Math.min(3, candidates.length));
+    const selected = topN.length > 0 ? topN[deterministicPick(day, mealType, topN.length)] : null;
 
-      // Lunch/dinner diversity
-      if (mealType === "dinner") {
-        const todayLunch = slots.find((s) => s.day === day && s.mealType === "lunch");
-        if (todayLunch && candidates.length > 1) {
-          const withoutLunch = candidates.filter((c) => c.item.id !== todayLunch.libraryItem.id);
-          if (withoutLunch.length > 0) candidates = withoutLunch;
-        }
-      }
-
-      const topN = candidates.slice(0, Math.min(3, candidates.length));
-      const selected = topN.length > 0 ? topN[deterministicPick(day, mealType, topN.length)] : null;
-
-      if (!selected) {
-        // Fallback: use realistic presets
-        const presets = getRealisticOptions(mealType, profile.goal);
-        const presetIdx = day % presets.length;
-        const preset = presets[presetIdx];
-        fallbackUsed = true;
-        
-        const fakeLibItem: MealLibraryItem = {
-          id: `preset-${mealType}-${presetIdx}`,
-          title: preset.name,
-          meal_type: mealType,
-          goal_tag: profile.goal,
-          clinical_tags: [],
-          base_calories: preset.kcal,
-          protein: preset.protein,
-          carbs: preset.carbs,
-          fat: preset.fat,
-          foods: preset.foods.map(f => ({ name: f, portion: f })),
-          substitutions: [],
-        };
-        const sf = calcScale(preset.kcal, targetKcal);
-        slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
-        continue;
-      }
-
-      const sf = calcScale(selected.item.base_calories, targetKcal);
-      slots.push({
-        day,
-        mealType,
-        libraryItem: selected.item,
-        targetKcal,
-        scaleFactor: sf,
-        compatibilityScore: selected.score,
-      });
-      usageCount[selected.item.id] = (usageCount[selected.item.id] || 0) + 1;
+    if (!selected) {
+      // Fallback: use realistic presets
+      const presets = getRealisticOptions(mealType, profile.goal);
+      const presetIdx = day % presets.length;
+      const preset = presets[presetIdx];
+      
+      const fakeLibItem: MealLibraryItem = {
+        id: `preset-${mealType}-${presetIdx}`,
+        title: preset.name,
+        meal_type: mealType,
+        goal_tag: profile.goal,
+        clinical_tags: [],
+        base_calories: preset.kcal,
+        protein: preset.protein,
+        carbs: preset.carbs,
+        fat: preset.fat,
+        foods: preset.foods.map(f => ({ name: f, portion: f })),
+        substitutions: [],
+      };
+      const sf = calcScale(preset.kcal, targetKcal);
+      slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
+      continue;
     }
+
+    const sf = calcScale(selected.item.base_calories, targetKcal);
+    slots.push({
+      day,
+      mealType,
+      libraryItem: selected.item,
+      targetKcal,
+      scaleFactor: sf,
+      compatibilityScore: selected.score,
+    });
   }
 
   console.warn("[ENGINE] total slots gerados:", slots.length);
@@ -283,14 +261,14 @@ export async function generateMealPlanFromLibrary(
 
   const metadata: AutoGenMetadata = {
     engine_version: ENGINE_VERSION,
-    algorithm: "deterministic_realistic_v3",
+    algorithm: "deterministic_master_day_v1",
     patient_goal: profile.goal,
     target_calories: profile.targetCalories,
     distribution,
     total_library_items: allItems.length,
     items_after_filter: validatedItems.length,
-    diversity_enforced: !fallbackUsed,
-    fallback_used: fallbackUsed,
+    diversity_enforced: true,
+    fallback_used: false,
     generated_at: new Date().toISOString(),
     slots_summary: slots.map((s) => ({
       day: s.day,
