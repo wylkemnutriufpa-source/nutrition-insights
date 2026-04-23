@@ -84,9 +84,8 @@ describe('DailyMealPlanInline - Optimistic Updates & Realtime', () => {
 
   it('deve registrar canal de realtime ao montar', async () => {
     const { render } = await import('@testing-library/react');
-    const DailyMealPlanInlineDefault = (await import('../components/patient/DailyMealPlanInline')).default;
     
-    render(<DailyMealPlanInlineDefault />);
+    render(<DailyMealPlanInline />);
     
     expect(supabase.channel).toHaveBeenCalledWith(expect.stringContaining('patient_meals_inline_'));
     expect(mockChannel.on).toHaveBeenCalledWith('postgres_changes', expect.objectContaining({ table: 'meal_plans' }), expect.any(Function));
