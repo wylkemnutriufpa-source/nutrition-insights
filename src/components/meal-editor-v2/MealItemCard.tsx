@@ -12,7 +12,7 @@ import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { fmtMacro, getPortionWarning } from "@/lib/formatMacros";
+import { fmtMacro, getPortionWarning, isMacroInconsistent } from "@/lib/formatMacros";
 import {
   Tooltip,
   TooltipContent,
@@ -179,7 +179,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                   <Beef className="w-2.5 h-2.5 text-red-400" />{fmtMacro(item.protein_target)}g
                 </span>
               )}
-              {getPortionWarning(item) && (
+            {(getPortionWarning(item) || isMacroInconsistent(item.calories_target || 0, Number(item.protein_target) || 0, Number(item.carbs_target) || 0, Number(item.fat_target) || 0)) && (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -188,8 +188,8 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                       </span>
                     </TooltipTrigger>
                     <TooltipContent side="bottom" className="text-[10px] max-w-[200px] p-2 bg-amber-50 text-amber-900 border-amber-200">
-                      <p className="font-semibold mb-0.5">Alerta de Cálculo</p>
-                      <p>{getPortionWarning(item)}</p>
+                      <p className="font-semibold mb-0.5">Alerta de Plano</p>
+                      <p>{getPortionWarning(item) || "Distribuição de macros fora do padrão esperado para esta refeição."}</p>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
