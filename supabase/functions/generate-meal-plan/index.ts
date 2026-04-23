@@ -653,7 +653,7 @@ const CEIA: RealisticMeal[] = [];
 const CEIA_MASSA: RealisticMeal[] = [];
 
 function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
-  const loss = isLossGoal(goal);
+  const loss = goal === "lose_weight" || goal === "maintain" || goal === "improve_health";
   switch (mealType) {
     case "breakfast": return loss ? BREAKFAST_EMAG : BREAKFAST_MASSA;
     case "morning_snack": return loss ? SNACKS : SNACKS_MASSA;
@@ -674,7 +674,7 @@ function finalizeMealDescription(description: string, mealType: string, goal: st
 function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: number, goal: string) {
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
-  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(!isLossGoal(goal));
+  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(goal === "gain_muscle" || goal === "gain_weight" || goal === "athletic_performance");
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
