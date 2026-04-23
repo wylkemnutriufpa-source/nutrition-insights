@@ -32,6 +32,11 @@ export function logError(section: string, message: string, metadata?: Record<str
   ERROR_BUFFER.push(entry);
   if (ERROR_BUFFER.length > MAX_BUFFER) ERROR_BUFFER.shift();
   console.error(`[FJ:${section}]`, message, metadata ?? "");
+
+  // Dispatch custom event for global error handling UI
+  window.dispatchEvent(new CustomEvent('fj-runtime-error', { 
+    detail: entry 
+  }));
 }
 
 /** Log a structured warning */
