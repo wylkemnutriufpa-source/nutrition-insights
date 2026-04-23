@@ -142,4 +142,35 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalledTimes(3);
   });
+
+  it("deve limpar erro inline ao começar a digitar valor válido", async () => {
+    render(
+      <MealDetailModal
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        meal={mockMeal}
+        onUpdateItem={mockUpdateItem}
+      />
+    );
+
+    const addBtn = screen.getByText(/Adicionar Alimento/i);
+    fireEvent.click(addBtn);
+
+    const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
+
+    // Forçar erro (valor sem número)
+    fireEvent.change(portionInput, { target: { value: "inv" } });
+    fireEvent.click(saveBtn);
+    
+    // Verifica se o erro apareceu
+    const errorMsg = await screen.findByText(/Use ex: 150g, 2 ovos, 1 fatia/i);
+    expect(errorMsg).toBeInTheDocument();
+
+    // Corrigir (número + unidade)
+    fireEvent.change(portionInput, { target: { value: "100g" } });
+    
+    // O erro deve sumir
+    expect(screen.queryByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).not.toBeInTheDocument();
+  });
 });
