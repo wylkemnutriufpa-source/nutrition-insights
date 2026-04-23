@@ -5,13 +5,14 @@ import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
-  ImageIcon, Search, Plus, Pencil, Check,
+  ImageIcon, Search, Plus, Pencil, Check, Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtMacro } from "@/lib/formatMacros";
+import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 
 interface FoodItem {
   name: string;
@@ -49,6 +50,8 @@ interface MealDetailModalProps {
   onRemoveFoodLine?: (itemId: string, newDescription: string) => void;
   /** Called when image is changed */
   onChangeImage?: (itemId: string, newImageUrl: string) => void;
+  /** Full item update */
+  onUpdateItem?: (itemId: string, patch: Partial<MealPlanItem>) => void;
 }
 
 const MEAL_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -177,8 +180,7 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
   return newSubs;
 }
 
-
-export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage }: MealDetailModalProps) {
+export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageSearch, setImageSearch] = useState("");
@@ -186,6 +188,16 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const [loadingImages, setLoadingImages] = useState(false);
   const [manualSubInput, setManualSubInput] = useState("");
   const [showManualSubInput, setShowManualSubInput] = useState(false);
+  
+  // New Editing states
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState("");
+  const [editingLineIdx, setEditingLineIdx] = useState<number | null>(null);
+  const [lineValue, setLineValue] = useState("");
+  const [editingSubLineIdx, setEditingSubLineIdx] = useState<number | null>(null);
+  const [subLineValue, setSubLineValue] = useState("");
+  const [showManualFoodInput, setShowManualFoodInput] = useState(false);
+  const [manualFoodInput, setManualFoodInput] = useState("");
 
   // Fetch visual library images when picker opens
   useEffect(() => {
@@ -210,6 +222,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       });
   }, [showImagePicker]);
 
+  useEffect(() => {
+    if (meal) {
+      setTitleValue(meal.title);
+    }
+  }, [meal]);
+
   if (!meal) return null;
 
   const meta = meal.metadata || {};
@@ -230,9 +248,21 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
   const hasMacros = calories !== null || protein !== null || carbs !== null || fat !== null;
 
-  const canEdit = !!meal.itemId && !!onRemoveFoodLine;
+  const canEdit = !!meal.itemId && (!!onRemoveFoodLine || !!onUpdateItem);
   const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
   const hasDescriptionLines = foodLines.length > 0;
+
+  const handleUpdateTitle = () => {
+    if (!canEdit || !meal.itemId || !titleValue.trim() || titleValue === meal.title) {
+      setEditingTitle(false);
+      return;
+    }
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { title: titleValue.trim() });
+    }
+    setEditingTitle(false);
+    toast.success("Nome da refeição atualizado");
+  };
 
   const handleRemoveLine = (lineIdx: number) => {
     if (!canEdit || !meal.itemId) return;
@@ -242,7 +272,43 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
     const remainingFoodLines = foodLines.filter((_, i) => !newRemoved.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, substitutionLines);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+  };
+
+  const handleUpdateLine = (lineIdx: number) => {
+    if (!canEdit || !meal.itemId || !lineValue.trim()) {
+      setEditingLineIdx(null);
+      return;
+    }
+    const newLine = lineValue.trim().startsWith("•") ? lineValue.trim() : `• ${lineValue.trim()}`;
+    const newFoodLines = foodLines.map((l, i) => i === lineIdx ? newLine : l);
+    const newDescription = rebuildDescription(newFoodLines, substitutionLines);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+    setEditingLineIdx(null);
+    toast.success("Alimento atualizado");
+  };
+
+  const handleAddManualFood = () => {
+    if (!canEdit || !meal.itemId || !manualFoodInput.trim()) return;
+    const newLine = manualFoodInput.trim().startsWith("•") ? manualFoodInput.trim() : `• ${manualFoodInput.trim()}`;
+    const newFoodLines = [...foodLines, newLine];
+    const newDescription = rebuildDescription(newFoodLines, substitutionLines);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+    setManualFoodInput("");
+    setShowManualFoodInput(false);
+    toast.success("Alimento adicionado");
   };
 
   const handleRemoveSubLine = (lineIdx: number) => {
@@ -250,7 +316,29 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newSubs = substitutionLines.filter((_, i) => i !== lineIdx);
     const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, newSubs);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+  };
+
+  const handleUpdateSubLine = (lineIdx: number) => {
+    if (!canEdit || !meal.itemId || !subLineValue.trim()) {
+      setEditingSubLineIdx(null);
+      return;
+    }
+    const newLine = subLineValue.trim().startsWith("•") ? subLineValue.trim() : `• ${subLineValue.trim()}`;
+    const newSubs = substitutionLines.map((l, i) => i === lineIdx ? newLine : l);
+    const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
+    const newDescription = rebuildDescription(remainingFoodLines, newSubs);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+    setEditingSubLineIdx(null);
+    toast.success("Substituição atualizada");
   };
 
   const handleRegenerateSubstitutions = () => {
@@ -258,7 +346,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
     const newSubs = generateSubstitutionsFromFoodLines(remainingFoodLines, meal.meal_type || "");
     const newDescription = rebuildDescription(remainingFoodLines, newSubs);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
     toast.success(`🔄 ${newSubs.length} substituições regeneradas com porções`);
   };
 
@@ -268,7 +360,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newSubs = [...substitutionLines, newLine];
     const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, newSubs);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
     setManualSubInput("");
     setShowManualSubInput(false);
     toast.success("✅ Substituição adicionada manualmente");
@@ -295,6 +391,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       setShowManualSubInput(false);
       setManualSubInput("");
       setImageSearch("");
+      setEditingTitle(false);
+      setEditingLineIdx(null);
+      setEditingSubLineIdx(null);
+      setShowManualFoodInput(false);
     }
     onOpenChange(v);
   };
