@@ -668,7 +668,7 @@ function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
 // Description functions imported from _shared/meal-description.ts (canonical source)
 // Wrapper to adapt isGainGoal boolean to goal string for backward compatibility
 function finalizeMealDescription(description: string, mealType: string, goal: string): string {
-  return canonicalFinalizeMealDescription(description, mealType, !isLossGoal(goal));
+  return canonicalFinalizeMealDescription(description, mealType, goal === "gain_muscle" || goal === "gain_weight" || goal === "athletic_performance");
 }
 
 function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: number, goal: string) {
