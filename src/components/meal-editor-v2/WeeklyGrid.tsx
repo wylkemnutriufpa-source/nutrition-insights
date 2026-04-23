@@ -197,18 +197,23 @@ export function WeeklyGrid() {
                 {/* HUD nutricional compacto */}
                 <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5 mt-1 text-[9px] text-muted-foreground">
                   <span className="flex items-center gap-0.5">
-                    <Flame className="w-2.5 h-2.5 text-orange-400" />{t.calories}
+                    <Flame className="w-2.5 h-2.5 text-orange-400" />
+                    {plan?.totals_status === "incomplete" && t.calories === 0 ? "..." : (isNaN(t.calories) ? "—" : t.calories)}
                   </span>
                   <span className="flex items-center gap-0.5">
-                    <Beef className="w-2.5 h-2.5 text-red-400" />{t.protein.toFixed(0)}g
+                    <Beef className="w-2.5 h-2.5 text-red-400" />
+                    {plan?.totals_status === "incomplete" && t.protein === 0 ? "..." : (isNaN(t.protein) ? "—" : t.protein.toFixed(0))}g
                   </span>
                   <span className="flex items-center gap-0.5">
-                    <Wheat className="w-2.5 h-2.5 text-amber-500" />{t.carbs.toFixed(0)}g
+                    <Wheat className="w-2.5 h-2.5 text-amber-500" />
+                    {plan?.totals_status === "incomplete" && t.carbs === 0 ? "..." : (isNaN(t.carbs) ? "—" : t.carbs.toFixed(0))}g
                   </span>
                   <span className="flex items-center gap-0.5">
-                    <Droplets className="w-2.5 h-2.5 text-blue-400" />{t.fat.toFixed(0)}g
+                    <Droplets className="w-2.5 h-2.5 text-blue-400" />
+                    {plan?.totals_status === "incomplete" && t.fat === 0 ? "..." : (isNaN(t.fat) ? "—" : t.fat.toFixed(0))}g
                   </span>
                 </div>
+
               </div>
             );
           })}
