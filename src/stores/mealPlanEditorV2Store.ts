@@ -523,9 +523,27 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Update plan metadata ──────────────────────────────────
   updatePlan: (patch) => {
+    const prevPlan = get().plan;
+    const planId = get().planId;
+    if (!planId) return;
+
     set((s) => ({
       plan: s.plan ? { ...s.plan, ...patch } as MealPlan : s.plan,
     }));
+
+    get()._enqueue({
+      key: `updatePlan:${planId}`,
+      itemIds: [],
+      queuedAt: Date.now(),
+      persist: async () => {
+        const { error } = await supabase
+          .from("meal_plans")
+          .update(patch as any)
+          .eq("id", planId);
+        if (error) throw error;
+      },
+      rollback: () => set({ plan: prevPlan }),
+    });
   },
 
   // ── Internal: enqueue operation ───────────────────────────
