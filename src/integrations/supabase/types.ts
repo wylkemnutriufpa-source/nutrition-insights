@@ -6332,6 +6332,10 @@ export type Database = {
           therapeutic_effectiveness_status: string | null
           therapeutic_efficacy_score: number | null
           title: string
+          total_calories: number | null
+          total_carbs: number | null
+          total_fat: number | null
+          total_protein: number | null
           total_target_calories: number | null
           total_target_carbs: number | null
           total_target_fat: number | null
@@ -6372,6 +6376,10 @@ export type Database = {
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title: string
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
           total_target_calories?: number | null
           total_target_carbs?: number | null
           total_target_fat?: number | null
@@ -6412,6 +6420,10 @@ export type Database = {
           therapeutic_effectiveness_status?: string | null
           therapeutic_efficacy_score?: number | null
           title?: string
+          total_calories?: number | null
+          total_carbs?: number | null
+          total_fat?: number | null
+          total_protein?: number | null
           total_target_calories?: number | null
           total_target_carbs?: number | null
           total_target_fat?: number | null
