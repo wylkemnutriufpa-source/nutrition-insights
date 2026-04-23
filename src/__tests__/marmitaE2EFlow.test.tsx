@@ -40,6 +40,13 @@ vi.mock('@/lib/auth', () => ({
   AuthProvider: ({ children }: any) => <div>{children}</div>
 }));
 
+vi.mock('@/stores/mealPlanEditorV2Store', () => ({
+  useMealPlanEditorV2Store: () => ({
+    planId: 'plan-789',
+    hydrate: vi.fn().mockResolvedValue(undefined)
+  })
+}));
+
 vi.mock('@/lib/tenantContext', () => ({
   useTenant: () => ({ tenantId: 'tenant-123' })
 }));
