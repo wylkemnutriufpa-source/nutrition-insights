@@ -1968,36 +1968,47 @@ export async function generateWeeklyMarmitaPlan(
   const dinnerFatTarget = Math.max(0, marmitaFatPool - lunchFatTarget);
 
   for (let day = 0; day < 7; day++) {
+    // Add non-marmita items for this day
     for (const it of shadowItems.filter(i => i.day_of_week === day)) {
       items.push(it);
     }
 
-    // Lunch — avoid yesterday's lunch AND yesterday's dinner protein
+    // Lunch
     if (mealTypes.includes("lunch")) {
       const avoidSet = new Set<string>();
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
-      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, seed + day);
+      
+      // Seed logic: variety per day + per patient
+      const currentSeed = seed + day * 13;
+      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, currentSeed);
       const protein = detectRecipeProtein(picked);
+      
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
+      
       items.push(await buildMarmitaItem(client, picked, "lunch", day, lunchKcal, goal, visualLibrary, mealTimes,
         { protein: lunchProteinTarget, carbs: lunchCarbsTarget, fat: lunchFatTarget }, fastMarmitaMode));
+      
       prevLunchProtein = protein;
     }
 
-    // Dinner — different protein than today's lunch AND yesterday's dinner
+    // Dinner
     if (mealTypes.includes("dinner")) {
       const avoidSet = new Set<string>();
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
-      // Use a varying seed so we cycle through proteins instead of repeating the modulo result
-      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, seed + day * 7 + 13);
+      
+      const currentSeed = seed + day * 13 + 71; // Shifted seed for dinner
+      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, currentSeed);
       const protein = detectRecipeProtein(picked);
+      
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
+      
       items.push(await buildMarmitaItem(client, picked, "dinner", day, dinnerKcal, goal, visualLibrary, mealTimes,
         { protein: dinnerProteinTarget, carbs: dinnerCarbsTarget, fat: dinnerFatTarget }, fastMarmitaMode));
+      
       prevDinnerProtein = protein;
     }
   }
