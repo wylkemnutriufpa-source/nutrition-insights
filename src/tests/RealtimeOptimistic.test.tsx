@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import { DailyMealPlanInline } from '../components/patient/DailyMealPlanInline';
+import DailyMealPlanInline from '../components/patient/DailyMealPlanInline';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../lib/auth';
 import React from 'react';
