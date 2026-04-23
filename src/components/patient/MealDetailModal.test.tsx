@@ -100,7 +100,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     expect(mockUpdateItem).not.toHaveBeenCalled();
   });
 
-  it("deve aceitar variações como espaços e decimais (ex: 1.5kg, 200 ml, 0.5kg)", () => {
+  it("deve aceitar variações como espaços e decimais (ex: 1.5kg, 200 ml, 2 ovos)", () => {
     render(
       <MealDetailModal
         open={true}
@@ -111,26 +111,41 @@ describe("MealDetailModal - Validação de Porção", () => {
     );
 
     const addBtn = screen.getByText(/Adicionar Alimento/i);
+
+    // Caso 1: 1.5kg
     fireEvent.click(addBtn);
-
-    const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
-
-    // Testar um por um
+    let nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
+    let portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    let saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
     fireEvent.change(nameInput, { target: { value: "T1" } });
     fireEvent.change(portionInput, { target: { value: "1.5kg" } });
     fireEvent.click(saveBtn);
-    expect(mockUpdateItem).toHaveBeenCalledTimes(1);
+    expect(mockUpdateItem).toHaveBeenCalledWith("item-123", expect.objectContaining({
+      description: expect.stringContaining("1.5kg")
+    }));
 
+    // Caso 2: 200 ml
+    fireEvent.click(addBtn);
+    nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
+    portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
     fireEvent.change(nameInput, { target: { value: "T2" } });
     fireEvent.change(portionInput, { target: { value: "200 ml" } });
     fireEvent.click(saveBtn);
-    expect(mockUpdateItem).toHaveBeenCalledTimes(2);
+    expect(mockUpdateItem).toHaveBeenCalledWith("item-123", expect.objectContaining({
+      description: expect.stringContaining("200 ml")
+    }));
 
+    // Caso 3: 2 ovos
+    fireEvent.click(addBtn);
+    nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
+    portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
     fireEvent.change(nameInput, { target: { value: "T3" } });
     fireEvent.change(portionInput, { target: { value: "2 ovos" } });
     fireEvent.click(saveBtn);
-    expect(mockUpdateItem).toHaveBeenCalledTimes(3);
+    expect(mockUpdateItem).toHaveBeenCalledWith("item-123", expect.objectContaining({
+      description: expect.stringContaining("2 ovos")
+    }));
   });
 });
