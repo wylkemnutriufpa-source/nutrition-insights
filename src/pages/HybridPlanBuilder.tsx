@@ -741,18 +741,14 @@ export default function HybridPlanBuilder() {
             )}
           </div>
         </div>
-      </div>
-      <DragOverlay dropAnimation={null}>
-        {activeDragData && (
-          <div className="px-3 py-2 rounded-lg bg-card border border-primary shadow-lg text-xs font-medium flex items-center gap-2 pointer-events-none">
-            <span>{activeDragData.type === "food" ? "🍎" : activeDragData.type === "recipe" ? "🍳" : "🔁"}</span>
-            <span className="truncate max-w-[180px]">{activeDragData.label}</span>
-          </div>
-        )}
-      </DragOverlay>
+        <DragOverlay dropAnimation={null}>
+          {activeDragData && (
+            <div className="px-3 py-2 rounded-lg bg-card border border-primary shadow-lg text-xs font-medium flex items-center gap-2 pointer-events-none">
+              <span>{activeDragData.type === "food" ? "🍎" : activeDragData.type === "recipe" ? "🍳" : "🔁"}</span>
+              <span className="truncate max-w-[180px]">{activeDragData.label}</span>
             </div>
-          </div>
-        </div>
+          )}
+        </DragOverlay>
       </DndContext>
     </DashboardLayout>
   );
