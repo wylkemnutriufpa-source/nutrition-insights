@@ -56,6 +56,7 @@ import {
   buildFoodDescriptionFromItems,
   syncProteinDescriptionPortions,
 } from "../_shared/meal-description.ts";
+import { scaleRecipeByMacros, type RecipeIngredient } from "../_shared/recipe-scaling-engine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
