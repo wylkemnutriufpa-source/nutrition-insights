@@ -10,6 +10,9 @@ import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorP
 import MealRecipeSelector from "./MealRecipeSelector";
 import MarmitaSettingsDialog from "./MarmitaSettingsDialog";
 import { useMarmitaSettings } from "@/hooks/useMarmitaSettings";
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
+import { Fingerprint } from "lucide-react";
 import type { NutritionalStrategy, StrategyMealPreview } from "@/lib/strategyAdvisor";
 
 // Constants for mode hints to avoid divergence between weekly and fixed modes
@@ -44,6 +47,8 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const [generating, setGenerating] = useState(false);
   const [view, setView] = useState<View>("menu");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [useFixedSeed, setUseFixedSeed] = useState(true);
+
   const { settings: minSettings, loading: settingsLoading } = useMarmitaSettings();
   const [recipeCounts, setRecipeCounts] = useState<{
     lunch: number;
@@ -199,6 +204,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           meal_plan_id: store.planId,
           isPipeline: false,
           generationMode: "weekly_marmita",
+          useFixedSeed: useFixedSeed,
         },
       });
 
@@ -242,6 +248,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           meal_plan_id: store.planId,
           isPipeline: false,
           generationMode: "fixed_marmita",
+          useFixedSeed: useFixedSeed,
         },
       });
 
@@ -342,6 +349,30 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           <p className="text-[10px] text-muted-foreground">Escolher receita → escalar porções → gerar plano</p>
         </div>
       </Button>
+
+      {/* Seed Fixa Settings */}
+      <div className="flex items-center justify-between px-4 py-2 bg-muted/40 rounded-lg border border-border/50">
+        <div className="flex items-center gap-2">
+          <Fingerprint className="w-4 h-4 text-primary/70" />
+          <div className="flex flex-col">
+            <Label htmlFor="fixed-seed" className="text-xs font-semibold cursor-pointer">Semente Fixa (Seed)</Label>
+            <span className="text-[9px] text-muted-foreground font-mono">
+              PID: {patientId.slice(0, 8)}...
+            </span>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <span className="text-[10px] text-muted-foreground mr-1">
+            {useFixedSeed ? "Ativada" : "Aleatória"}
+          </span>
+          <Switch 
+            id="fixed-seed" 
+            checked={useFixedSeed} 
+            onCheckedChange={setUseFixedSeed}
+            className="scale-75"
+          />
+        </div>
+      </div>
 
       {/* Option 3: Weekly Marmita Plan */}
       <div className="space-y-1.5">
