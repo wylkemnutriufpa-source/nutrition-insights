@@ -15,7 +15,8 @@ import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
 import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
-  UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock, Users
+  UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock, Users,
+  AlertTriangle, RefreshCw
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
@@ -23,6 +24,7 @@ import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidge
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
+import { safeNum } from "@/lib/formatMacros";
 import WorkoutRequestButton from "@/components/patient/WorkoutRequestButton";
 import NutritionistStatusBanner from "@/components/chat/NutritionistStatusBanner";
 import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
@@ -124,6 +126,10 @@ export default function ClientDashboard() {
   const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
+
+  // Schema consistency check: detect plans with missing/zero macros
+  const hasInconsistentPlan = lifecycle.showPlan && 
+    (safeNum(lifecycle.plan?.total_calories) === 0 && (lifecycle.planId));
 
   // Single React Query for all dashboard data — cached, deduped, auto-refreshed
   const { data: dashData, isLoading: loading } = useQuery({
@@ -281,10 +287,34 @@ export default function ClientDashboard() {
     );
   }
 
-   return (
+    return (
     <DashboardLayout>
       <OnboardingProgressModal />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
+        {/* Schema Inconsistency Alert */}
+        {hasInconsistentPlan && (
+          <motion.div variants={item}>
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-amber-600">Sincronização do plano pendente</p>
+                <p className="text-xs text-amber-600/80 mt-0.5">
+                  Seu plano alimentar foi gerado, mas os valores nutricionais ainda estão sendo calculados. 
+                  Isso pode levar alguns instantes.
+                </p>
+                <Button 
+                  variant="link" 
+                  size="sm" 
+                  className="p-0 h-auto text-xs text-amber-600 font-bold mt-2"
+                  onClick={() => lifecycle.refetch()}
+                >
+                  <RefreshCw className="w-3 h-3 mr-1" /> Atualizar agora
+                </Button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Premium Header */}
         <motion.div variants={item}>
           <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
