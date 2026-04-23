@@ -4,8 +4,10 @@ import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Plus, Check, ArrowLeftRight, Search,
   Flame, Beef, Wheat, Droplets, Zap, Bookmark,
+  Copy, ClipboardPaste, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { MealItemCard } from "./MealItemCard";
@@ -47,7 +49,7 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 export function WeeklyGrid() {
-  const { items, syncingMap, planId, addItem, swapCells } = useMealPlanEditorV2Store();
+  const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell } = useMealPlanEditorV2Store();
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
@@ -278,16 +280,35 @@ export function WeeklyGrid() {
                 >
                   {/* Drag handle */}
                   {cellItems.length > 0 && (
-                    <div className="absolute top-1 right-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-60 transition-opacity flex gap-0.5">
+                    <div className="absolute top-1 right-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex gap-0.5 z-20">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); copyCell(day.key, meal.key); toast.success("Refeição copiada para a área de transferência"); }}
+                        className="p-1 rounded bg-secondary/80 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                        title="Copiar Refeição"
+                      >
+                        <Copy className="w-3 h-3" />
+                      </button>
                       <button
                         type="button"
                         onClick={(e) => { e.stopPropagation(); openSaveTemplate(day.key, meal.key); }}
-                        className="p-0.5 rounded hover:bg-accent/50"
+                        className="p-1 rounded bg-secondary/80 hover:bg-accent/50 text-muted-foreground"
                         title="Salvar como modelo"
                       >
-                        <Bookmark className="w-3 h-3 text-muted-foreground" />
+                        <Bookmark className="w-3 h-3" />
                       </button>
-                      <ArrowLeftRight className="w-3 h-3 text-muted-foreground mt-0.5" />
+                    </div>
+                  )}
+                  {clipboardItems && clipboardItems.length > 0 && (
+                    <div className={`absolute top-1 left-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20`}>
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); pasteToCell(day.key, meal.key); toast.success("Refeição colada com sucesso"); }}
+                        className="p-1 rounded bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30"
+                        title="Colar Refeição aqui"
+                      >
+                        <ClipboardPaste className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   )}
                   {isDragOvr && dragSource && (

@@ -2,8 +2,9 @@ import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera, SlidersHorizontal,
-  AlertTriangle,
+  AlertTriangle, RefreshCcw,
 } from "lucide-react";
+import { toast } from "sonner";
 import { MacroEditDialog } from "./MacroEditDialog";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
@@ -25,7 +26,7 @@ interface MealItemCardProps {
 }
 
 export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
-  const { updateItem, deleteItem, duplicateItem } = useMealPlanEditorV2Store();
+  const { updateItem, deleteItem, duplicateItem, copyItem } = useMealPlanEditorV2Store();
   const { openMealDetail, setOnRemoveFoodLine, setOnChangeImage, setOnUpdateItem } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
@@ -219,11 +220,19 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               </button>
               <button
                 type="button"
+                onClick={(e) => { e.stopPropagation(); copyItem(item.id); toast.success(`"${item.title}" copiado`); }}
+                className="p-0.5 rounded hover:bg-accent/50 text-primary"
+                title="Copiar Alimento"
+              >
+                <CopyPlus className="w-2.5 h-2.5" />
+              </button>
+              <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); duplicateItem(item.id); }}
                 className="p-0.5 rounded hover:bg-accent/50"
                 title="Duplicar"
               >
-                <CopyPlus className="w-2.5 h-2.5 text-muted-foreground" />
+                <RefreshCcw className="w-2.5 h-2.5 text-muted-foreground" />
               </button>
               <button
                 type="button"
