@@ -19083,6 +19083,13 @@ export type Database = {
         Args: { _alert_id: string; _resolution_note?: string }
         Returns: Json
       }
+      resolve_lifecycle_states_batch: {
+        Args: { _patient_ids: string[] }
+        Returns: {
+          patient_id: string
+          state_data: Json
+        }[]
+      }
       resolve_patient_lifecycle_state: {
         Args: { _patient_id: string }
         Returns: Json
