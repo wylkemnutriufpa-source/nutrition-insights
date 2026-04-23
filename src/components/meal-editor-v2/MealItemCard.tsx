@@ -171,6 +171,21 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                   <Beef className="w-2.5 h-2.5 text-red-400" />{fmtMacro(item.protein_target)}g
                 </span>
               )}
+              {getPortionWarning(item) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center">
+                        <AlertTriangle className="w-2.5 h-2.5 text-amber-500 animate-pulse" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-[10px] max-w-[200px] p-2 bg-amber-50 text-amber-900 border-amber-200">
+                      <p className="font-semibold mb-0.5">Alerta de Cálculo</p>
+                      <p>{getPortionWarning(item)}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
             </div>
             {isSyncing && (
               <span className="inline-flex items-center gap-1 mt-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
