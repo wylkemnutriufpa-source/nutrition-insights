@@ -416,9 +416,9 @@ export default function DietTemplates() {
         is_active: false,
         plan_status: "draft",
         total_calories: getAdjustedCalories(template),
-        total_protein: template.protein || 0,
-        total_carbs: template.carbohydrates || 0,
-        total_fat: template.fat || 0,
+        total_protein: (template as any).protein || (template as any).macro_ratio?.protein || 0,
+        total_carbs: (template as any).carbohydrates || (template as any).macro_ratio?.carbs || 0,
+        total_fat: (template as any).fat || (template as any).macro_ratio?.fat || 0,
       }] as any) as any)
       .select("id")
       .single();
