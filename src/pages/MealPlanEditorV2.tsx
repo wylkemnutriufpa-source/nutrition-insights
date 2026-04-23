@@ -184,8 +184,11 @@ export default function MealPlanEditorV2() {
     );
     if (!proceed) return;
 
+    console.warn("[PLAN] botão clicado");
+    console.warn("[PLAN] função iniciou");
     setGeneratingNew(true);
     try {
+      console.warn("[PLAN] chamando edge function via pipeline");
       const result = await runPlanPipeline({
         patientId: plan.patient_id,
         nutritionistId: user.id,
@@ -195,9 +198,13 @@ export default function MealPlanEditorV2() {
         generationMode: "smart",
       });
 
+      console.warn("[PLAN] resposta recebida", result);
       if (!result.success || !result.planId) {
+        console.error("[PLAN] erro - resposta sem sucesso ou planId", result);
         throw new Error(result.warnings?.[0] || "Erro ao gerar novo plano");
       }
+
+      console.warn("[PLAN] plano gerado:", result.planId);
 
       // Clear editor sessionStorage cache for current plan
       try { sessionStorage.removeItem(`meal-plan-editor:${plan.id}`); } catch {}
