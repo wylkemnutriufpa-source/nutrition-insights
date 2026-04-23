@@ -223,14 +223,14 @@ export function WeeklyGrid() {
         {MEAL_TYPES.map((meal) => (
           <div key={meal.key} className="grid grid-cols-[160px_1fr] gap-4 mb-4">
             {/* Row label */}
-            <div className="glass rounded-xl p-4 flex flex-col justify-center border-l-4 border-primary/30">
+            <div className="glass rounded-xl p-4 flex flex-col justify-center border-l-4 border-primary/30 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className={`p-2 rounded-lg bg-primary/10 ${meal.color}`}>
+                <div className={`p-2.5 rounded-xl bg-primary/10 ${meal.color} shadow-inner`}>
                   {meal.icon}
                 </div>
                 <div>
-                  <span className="font-display text-xs font-bold block">{meal.label}</span>
-                  <span className="text-[9px] text-muted-foreground">1 Principal + Substituições</span>
+                  <span className="font-display text-[13px] font-bold block text-foreground tracking-tight">{meal.label}</span>
+                  <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + Alternativas</span>
                 </div>
               </div>
             </div>
@@ -277,54 +277,54 @@ export function WeeklyGrid() {
                     setDragOver(null);
                     setDragSource(null);
                   }}
-                  className={`glass rounded-xl p-4 min-h-[140px] flex flex-col group relative transition-all duration-300 shadow-sm border border-primary/5 bg-gradient-to-br from-background to-primary/[0.02] ${
+                  className={`glass rounded-2xl p-5 min-h-[160px] flex flex-col group relative transition-all duration-300 shadow-sm border border-primary/5 bg-gradient-to-br from-background via-background to-primary/[0.03] ${
                     isDragSrc ? "opacity-50 scale-95 border-primary/50" : ""
-                  } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.01]" : "hover:border-primary/20"
+                  } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.01]" : "hover:border-primary/20 hover:shadow-md"
                   } ${cellItems.length > 0 ? "cursor-grab active:cursor-grabbing" : ""}`}
                 >
                   {/* Drag handle */}
                   {cellItems.length > 0 && (
-                    <div className="absolute top-1 right-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex gap-0.5 z-20">
+                    <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex gap-1 z-20">
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); copyCell(day.key, meal.key); toast.success("Refeição copiada para a área de transferência"); }}
-                        className="p-1 rounded bg-secondary/80 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                        onClick={(e) => { e.stopPropagation(); copyCell(day, meal.key); toast.success("Refeição copiada"); }}
+                        className="p-1.5 rounded-lg bg-secondary/90 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors shadow-sm"
                         title="Copiar Refeição"
                       >
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); openSaveTemplate(day.key, meal.key); }}
-                        className="p-1 rounded bg-secondary/80 hover:bg-accent/50 text-muted-foreground"
+                        onClick={(e) => { e.stopPropagation(); openSaveTemplate(day, meal.key); }}
+                        className="p-1.5 rounded-lg bg-secondary/90 hover:bg-accent/50 text-muted-foreground shadow-sm"
                         title="Salvar como modelo"
                       >
-                        <Bookmark className="w-3 h-3" />
+                        <Bookmark className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
                   {clipboardItems && clipboardItems.length > 0 && (
-                    <div className={`absolute top-1 left-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20`}>
+                    <div className={`absolute top-2 left-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all z-20`}>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); pasteToCell(day.key, meal.key); toast.success("Refeição colada com sucesso"); }}
-                        className="p-1 rounded bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30"
+                        onClick={(e) => { e.stopPropagation(); pasteToCell(day, meal.key); toast.success("Refeição colada"); }}
+                        className="p-1.5 rounded-lg bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30 shadow-sm"
                         title="Colar Refeição aqui"
                       >
-                        <ClipboardPaste className="w-3.5 h-3.5" />
+                        <ClipboardPaste className="w-4 h-4" />
                       </button>
                     </div>
                   )}
                   {isDragOvr && dragSource && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10 pointer-events-none">
-                      <span className="text-[10px] font-semibold text-primary flex items-center gap-1">
-                        <ArrowLeftRight className="w-3.5 h-3.5" /> Trocar
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-2xl z-10 pointer-events-none backdrop-blur-[1px]">
+                      <span className="text-xs font-bold text-primary flex items-center gap-1.5 bg-background/80 px-3 py-1.5 rounded-full shadow-sm">
+                        <ArrowLeftRight className="w-4 h-4" /> Trocar
                       </span>
                     </div>
                   )}
 
                   {/* Items */}
-                  <div className="flex-1 space-y-1.5">
+                  <div className="flex-1 space-y-2">
                     <AnimatePresence initial={false}>
                       {cellItems.map((item) => (
                         <MealItemCard
@@ -337,33 +337,33 @@ export function WeeklyGrid() {
                   </div>
 
                   {/* Quick-add & Library */}
-                  <div onClick={(e) => e.stopPropagation()} className="mt-1">
-                    <div className="space-y-1">
+                  <div onClick={(e) => e.stopPropagation()} className="mt-4 pt-3 border-t border-primary/5">
+                    <div className="space-y-2">
                       {quickAddKey === cellKey && (
-                        <div className="flex gap-1">
+                        <div className="flex gap-1.5 animate-in slide-in-from-top-1 duration-200">
                           <Input
                             autoFocus
                             value={quickAddText}
                             onChange={(e) => setQuickAddText(e.target.value)}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") handleQuickAdd(day.key, meal.key);
+                              if (e.key === "Enter") handleQuickAdd(day, meal.key);
                               if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
                             }}
                             placeholder="Ex: 2 ovos cozidos"
-                            className="h-7 text-[11px]"
+                            className="h-8 text-xs rounded-xl"
                           />
                           <Button
                             size="icon"
-                            className="h-7 w-7 shrink-0"
-                            onClick={() => handleQuickAdd(day.key, meal.key)}
+                            className="h-8 w-8 shrink-0 rounded-xl"
+                            onClick={() => handleQuickAdd(day, meal.key)}
                             disabled={!quickAddText.trim()}
                           >
-                            <Check className="w-3 h-3" />
+                            <Check className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       )}
 
-                      <div className="grid grid-cols-3 gap-1">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => {
@@ -371,13 +371,13 @@ export function WeeklyGrid() {
                             setQuickAddText("");
                             setFoodSearchKey(null);
                           }}
-                          className={`flex items-center justify-center gap-1 text-[10px] py-1 rounded border transition-colors ${
+                          className={`flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border transition-all ${
                             quickAddKey === cellKey
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                              ? "border-primary bg-primary/10 text-primary shadow-inner"
+                              : "border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5"
                           }`}
                         >
-                          <Plus className="w-3 h-3" /> Manual
+                          <Plus className="w-3.5 h-3.5" /> Manual
                         </button>
                         <button
                           type="button"
@@ -386,44 +386,96 @@ export function WeeklyGrid() {
                             setQuickAddKey(null);
                             setQuickAddText("");
                           }}
-                          className={`flex items-center justify-center gap-1 text-[10px] py-1 rounded border transition-colors ${
+                          className={`flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border transition-all ${
                             foodSearchKey === cellKey
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                              ? "border-primary bg-primary/10 text-primary shadow-inner"
+                              : "border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5"
                           }`}
                         >
-                          <Search className="w-3 h-3" /> Alimento
+                          <Search className="w-3.5 h-3.5" /> Alimento
                         </button>
                         <button
                           type="button"
-                          onClick={() => openMealLibraryModal(day.key, meal.key)}
-                          className="flex items-center justify-center gap-1 text-[10px] py-1 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                          onClick={() => openMealLibraryModal(day, meal.key)}
+                          className="flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
                           title="Substituir pela biblioteca"
                         >
-                          <Utensils className="w-3 h-3" /> Subst.
+                          <Utensils className="w-3.5 h-3.5" /> Subst.
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-1">
+                      <div className="grid grid-cols-1 gap-2">
                         <button
                           type="button"
-                          onClick={() => openLibrary(day.key, meal.key)}
-                          className="flex items-center justify-center gap-1 text-[10px] py-1 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                          onClick={() => openLibrary(day, meal.key)}
+                          className="flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
                           title="Meus Modelos"
                         >
-                          <Zap className="w-3 h-3" /> Modelos
+                          <Zap className="w-3.5 h-3.5" /> Meus Modelos
                         </button>
                       </div>
 
                       {foodSearchKey === cellKey && (
-                        <FoodSearchInline day={day.key} mealType={meal.key} onClose={() => setFoodSearchKey(null)} />
+                        <FoodSearchInline day={day} mealType={meal.key} onClose={() => setFoodSearchKey(null)} />
                       )}
                     </div>
                   </div>
                 </div>
               );
-            })}
+            })()}
           </div>
+        ))}
+
+        {/* Global totals footer */}
+        <div className="grid grid-cols-[160px_1fr] gap-4 mt-6">
+          <div className="glass rounded-xl p-4 flex items-center bg-primary/5 shadow-sm border border-primary/10">
+            <span className="font-display text-xs font-bold text-primary tracking-wider uppercase">BALANÇO GLOBAL</span>
+          </div>
+          {(() => {
+            const t = getDayTotals(0);
+            return (
+              <div className="glass rounded-xl p-4 bg-primary/5 shadow-sm border border-primary/10">
+                <div className="flex justify-around items-center h-full">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Flame className="w-4 h-4 text-orange-500" />
+                      <span className="text-sm font-bold text-foreground">{t.calories}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Kcal Totais</span>
+                  </div>
+                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Beef className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-bold text-foreground">{t.protein.toFixed(0)}g</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Proteínas</span>
+                  </div>
+                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Wheat className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm font-bold text-foreground">{t.carbs.toFixed(0)}g</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Carbos</span>
+                  </div>
+                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Droplets className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-bold text-foreground">{t.fat.toFixed(0)}g</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Gorduras</span>
+                  </div>
+                </div>
+              </div>
+            );
+          })()}
+        </div>
+      </div>
+    </>
+  );
+}
         ))}
 
         {/* Day totals */}
