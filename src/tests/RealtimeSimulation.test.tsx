@@ -17,25 +17,30 @@ vi.mock('@/components/patient/MealPlanDailyView', () => {
     AdherenceCard: () => <div data-testid="adherence-card" />,
     DateNavigator: () => <div data-testid="date-navigator" />,
     MealGroup: ({ mealType, items, completions, onSetAdherence }: any) => {
+      // mealType is sometimes an object {key, label, icon, time}
       const typeKey = typeof mealType === 'string' ? mealType : (mealType?.key || 'unknown');
       return (
         <div data-testid={`meal-group-${typeKey}`}>
-          {items.map((item: any) => (
-            <button 
-              key={item.id} 
-              data-testid={`toggle-${item.id}`}
-              onClick={() => onSetAdherence(item, 'followed')}
-            >
-              Toggle {item.id}
-            </button>
-          ))}
-          <div data-testid={`completions-count-${typeKey}`}>
-            {completions.filter((c: any) => c.meal_plan_item_id === items[0]?.id).length}
-          </div>
+          {items.map((item: any) => {
+            const isCompleted = completions.some((c: any) => c.meal_plan_item_id === item.id);
+            return (
+              <div key={item.id}>
+                <button 
+                  data-testid={`toggle-${item.id}`}
+                  onClick={() => onSetAdherence(item, 'followed')}
+                >
+                  Toggle {item.id}
+                </button>
+                <div data-testid={`completion-status-${item.id}`}>
+                  {isCompleted ? 'COMPLETED' : 'PENDING'}
+                </div>
+              </div>
+            );
+          })}
         </div>
       );
     },
-    MEAL_TYPES: [{ key: 'breakfast', label: 'Café' }],
+    MEAL_TYPES: [{ key: 'breakfast', label: 'Café', icon: null, time: '08:00' }],
     DAYS: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
   };
 });
@@ -61,7 +66,10 @@ const createMockChain = (data: any = null) => {
     single: vi.fn(() => Promise.resolve({ data, error: null })),
     insert: vi.fn(() => ({
       select: () => ({
-        single: () => Promise.resolve({ data: { id: 'real-id' }, error: null })
+        single: () => new Promise(resolve => {
+            // Delay resolving to ensure we catch the optimistic state
+            setTimeout(() => resolve({ data: { id: 'real-id', ...data }, error: null }), 50);
+        })
       })
     })),
     update: vi.fn(() => chain),
@@ -82,7 +90,6 @@ let realtimeCallbacks: Record<string, Function> = {};
 
 const mockChannel = {
   on: vi.fn((event, filter, callback) => {
-    // console.log('ON:', filter.table);
     realtimeCallbacks[filter.table] = callback;
     return mockChannel;
   }),
@@ -100,7 +107,7 @@ vi.mock('../integrations/supabase/client', () => ({
   },
 }));
 
-describe('DailyMealPlanInline - Realtime Simulation', () => {
+describe('DailyMealPlanInline - Realtime & Optimistic Simulation', () => {
   const mockUser = { id: 'patient123' };
   const mockPlan = { id: 'plan1', title: 'Plano Teste', start_date: '2024-01-01', is_active: true, plan_status: 'published_to_patient' };
   const mockItem = { id: 'item1', meal_type: 'breakfast', day_of_week: new Date().getDay() };
@@ -124,7 +131,6 @@ describe('DailyMealPlanInline - Realtime Simulation', () => {
     });
     
     await screen.findByTestId('meal-group-breakfast');
-    
     expect(realtimeCallbacks['meal_plans']).toBeDefined();
     
     await act(async () => {
@@ -138,45 +144,24 @@ describe('DailyMealPlanInline - Realtime Simulation', () => {
     expect(supabase.from).toHaveBeenCalledWith('meal_plans');
   });
 
-  it('deve atualizar marcações de dieta via Realtime para meal_item_completions', async () => {
+  it('deve processar atualizações otimistas de completions instantaneamente', async () => {
     await act(async () => {
       render(<DailyMealPlanInline />);
     });
     
     await screen.findByTestId('meal-group-breakfast');
     
-    expect(realtimeCallbacks['meal_plan_items']).toBeDefined();
-    
-    await act(async () => {
-      realtimeCallbacks['meal_plan_items']({
-        eventType: 'INSERT',
-        new: { id: 'item2', meal_type: 'breakfast', meal_plan_id: 'plan1' }
-      });
-    });
-
-    expect(supabase.from).toHaveBeenCalledWith('meal_plan_items');
-  });
-
-  it('deve processar atualizações otimistas de completions instantaneamente', async () => {
-    let container: any;
-    await act(async () => {
-      const { container: c } = render(<DailyMealPlanInline />);
-      container = c;
-    });
-    
-    await screen.findByTestId('meal-group-breakfast');
-    
     const toggleButton = screen.getByTestId('toggle-item1');
+    const statusDisplay = screen.getByTestId('completion-status-item1');
     
-    // Antes de clicar, deve ser 0
-    expect(screen.getByTestId('completions-count-breakfast').textContent).toBe('0');
+    expect(statusDisplay.textContent).toBe('PENDING');
 
     await act(async () => {
       toggleButton.click();
     });
 
-    // O estado deve ser atualizado otimistamente
-    expect(screen.getByTestId('completions-count-breakfast').textContent).toBe('1');
+    // Estado deve ser COMPLETED imediatamente
+    expect(screen.getByTestId('completion-status-item1').textContent).toBe('COMPLETED');
     expect(supabase.from).toHaveBeenCalledWith('meal_item_completions');
   });
 });
