@@ -37,6 +37,7 @@ export type LifecycleState =
 
 export interface PatientLifecycle {
   state: LifecycleState;
+  plan: any | null;
   hasActivePlan: boolean;
   hasPendingOnboarding: boolean;
   hasClinicalAlert: boolean;
@@ -88,6 +89,7 @@ function parseLifecycleResult(r: Record<string, unknown>, refetchFn: () => void)
   
   return {
     state,
+    plan: r.plan || null,
     hasActivePlan: !!r.has_active_plan,
     hasPendingOnboarding: !!r.has_pending_onboarding,
     hasClinicalAlert: !!r.has_clinical_alert,
@@ -123,6 +125,7 @@ function parseLifecycleResult(r: Record<string, unknown>, refetchFn: () => void)
 
 const EMPTY: PatientLifecycle = {
   state: "loading",
+  plan: null,
   hasActivePlan: false,
   hasPendingOnboarding: false,
   hasClinicalAlert: false,
