@@ -2140,6 +2140,7 @@ export async function buildMarmitaItem(
 
   const description = finalized + "\n\n" + customTip;
   const visual = findVisualForRecipe(recipe, visualLibrary);
+  console.log(`[buildMarmitaItem] ${recipe.name} | protein: ${recipe.protein_type || 'auto'} | visual: ${visual?.id || 'none'} | url: ${visual?.image_url || 'none'}`);
 
   return {
     title: `🍱 ${recipe.name}`,
@@ -2199,6 +2200,7 @@ function buildFixedMarmitaItem(
   
   const finalDescription = finalizeMealDescription(description, mealType, goal);
   const visual = findVisualForRecipe(recipe, visualLibrary);
+  console.log(`[buildFixedMarmitaItem] ${recipe.name} | protein: ${recipe.protein_type || 'auto'} | visual: ${visual?.id || 'none'} | url: ${visual?.image_url || 'none'}`);
 
   return {
     title: `🍱 ${recipe.name} (Marmita Fixa)`,
