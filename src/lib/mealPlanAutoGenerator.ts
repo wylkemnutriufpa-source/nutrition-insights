@@ -289,6 +289,7 @@ export async function generateMealPlanFromLibrary(
     })),
   };
 
+  console.warn("[PLAN] engine finalizou geração", { success: true, slots: slots.length });
   return { success: true, slots, metadata, warnings };
 }
 
