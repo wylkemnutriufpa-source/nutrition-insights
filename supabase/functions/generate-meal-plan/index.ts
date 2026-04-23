@@ -815,6 +815,17 @@ function getProteinDensity(food: DBFood): number {
   return proteinPerPortion / portionGrams;
 }
 
+function validateNutritionalDensity(food: DBFood): string | null {
+  const density = getProteinDensity(food);
+  const name = food.food_name.toLowerCase();
+  
+  if (density > 0.45) return `Densidade proteica excessiva (${Math.round(density * 100)}%). Verifique cadastro.`;
+  if (density < 0.04 && (name.includes("carne") || name.includes("frango") || name.includes("peixe") || name.includes("ovo"))) {
+    return `Densidade proteica muito baixa para proteína animal (${Math.round(density * 100)}%).`;
+  }
+  return null;
+}
+
 function roundServingGrams(value: number): number {
   if (!Number.isFinite(value) || value <= 0) return 0;
   if (value >= 20) return Math.max(5, Math.round(value / 5) * 5);
@@ -827,6 +838,26 @@ function clampComputedProteinServing(grams: number, mealType: string): number {
     return Math.min(180, Math.max(80, roundServingGrams(grams)));
   }
   return Math.min(100, Math.max(30, roundServingGrams(grams)));
+}
+
+function getPortionAlert(grams: number, mealType: string, foodName: string): string | null {
+  const isMain = ["lunch", "dinner"].includes(mealType);
+  const name = foodName.toLowerCase();
+  
+  if (isMain) {
+    if (grams > 180) return `Porção elevada (${grams}g). Sugerido max 180g.`;
+    if (grams < 80) return `Porção reduzida (${grams}g). Sugerido min 80g.`;
+  } else {
+    if (grams > 100) return `Porção elevada para lanche (${grams}g). Sugerido max 100g.`;
+    if (grams < 30) return `Porção irrelevante para lanche (${grams}g).`;
+  }
+
+  // Specific for eggs (1 egg ~ 50g)
+  if (name.includes("ovo") || name.includes("omelete")) {
+    if (grams > 160) return `Porção de ovos elevada (${grams}g ≈ 3-4 ovos).`;
+  }
+
+  return null;
 }
 
 function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
