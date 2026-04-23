@@ -106,6 +106,10 @@ async function renderCard() {
   await waitFor(() => {
     expect(screen.queryByTestId("loading-spinner")).not.toBeInTheDocument();
   }, { timeout: 5000 });
+
+  // Expand the card
+  const expandBtn = screen.getByRole("button", { name: /Meu Plano Alimentar/i });
+  fireEvent.click(expandBtn);
 }
 
 describe("ExpandableMealPlanCard - description rendering", () => {
