@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
         registerType: "autoUpdate",
       // We register manually via useRegisterSW in UpdateBanner
       injectRegister: false,
-      includeAssets: ["favicon.ico", "pwa-192x192.png", "pwa-512x512.png"],
+      includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-512x512.png"],
       workbox: {
         // Let the new SW claim clients only after user clicks "Atualizar agora"
           clientsClaim: true,
