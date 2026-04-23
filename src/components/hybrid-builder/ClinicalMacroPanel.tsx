@@ -1,5 +1,5 @@
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
-import { Flame, Beef, Wheat, Droplets, AlertTriangle, CheckCircle2, Target } from "lucide-react";
+import { Flame, Beef, Wheat, Droplets, AlertTriangle, CheckCircle2, Target, Loader2 } from "lucide-react";
 
 interface Props {
   targetKcal?: number;
@@ -9,7 +9,8 @@ interface Props {
 }
 
 export default function ClinicalMacroPanel({ targetKcal, targetProtein, targetCarbs, targetFat }: Props) {
-  const { items } = useMealPlanEditorV2Store();
+  const { items, plan } = useMealPlanEditorV2Store();
+  const isIncomplete = plan?.totals_status === "incomplete";
 
   const dayMap = new Map<number, typeof items>();
   items.forEach((item) => {
@@ -22,14 +23,15 @@ export default function ClinicalMacroPanel({ targetKcal, targetProtein, targetCa
   const daysWithItems = dayMap.size || 1;
 
   const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
-  const totalCarbs = items.reduce((s, i) => s + (i.carbs_target || 0), 0);
-  const totalFat = items.reduce((s, i) => s + (i.fat_target || 0), 0);
+  const totalProt = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+  const totalCarbs = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
+  const totalFat = items.reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
 
   const avgKcal = totalKcal / daysWithItems;
   const avgProt = totalProt / daysWithItems;
   const avgCarbs = totalCarbs / daysWithItems;
   const avgFat = totalFat / daysWithItems;
+
 
   const macros = [
     { label: "Calorias", icon: <Flame className="w-3.5 h-3.5" />, current: avgKcal, target: targetKcal, unit: "kcal", color: "bg-primary" },
@@ -67,9 +69,11 @@ export default function ClinicalMacroPanel({ targetKcal, targetProtein, targetCa
                   <span className="text-muted-foreground">{m.label}</span>
                 </div>
                 <span className={`font-mono font-semibold ${isOk ? "text-primary" : "text-warning"}`}>
-                  {Math.round(m.current)}{m.unit}
+                  {isIncomplete && m.current === 0 ? "..." : (isNaN(m.current) ? "—" : Math.round(m.current))}
+                  {m.unit}
                   {m.target && <span className="text-muted-foreground font-normal"> / {Math.round(m.target)}{m.unit}</span>}
                 </span>
+
               </div>
               {m.target && (
                 <div className="relative h-2 bg-muted rounded-full overflow-hidden">
@@ -85,7 +89,13 @@ export default function ClinicalMacroPanel({ targetKcal, targetProtein, targetCa
       </div>
 
       <div className="space-y-1.5">
-        {allOk && (
+        {isIncomplete && (
+          <div className="flex items-center gap-2 text-xs text-blue-600 bg-blue-500/10 rounded-lg p-2 animate-pulse">
+            <Loader2 className="w-3.5 h-3.5 shrink-0 animate-spin" />
+            <span>Recalculando totais nutricionais...</span>
+          </div>
+        )}
+        {allOk && !isIncomplete && (
           <div className="flex items-center gap-2 text-xs text-primary bg-primary/10 rounded-lg p-2">
             <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
             <span>Macros dentro da meta</span>
@@ -98,6 +108,7 @@ export default function ClinicalMacroPanel({ targetKcal, targetProtein, targetCa
           </div>
         ))}
       </div>
+
 
       <div className="border-t border-border pt-3 space-y-1 text-[10px] text-muted-foreground">
         <p>{items.length} refeições • {daysWithItems} dias preenchidos</p>

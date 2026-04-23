@@ -165,10 +165,11 @@ export default function BuilderTopbar({
       </div>
 
       <div className="flex items-center gap-4 text-xs overflow-x-auto pb-1">
-        <MacroChip icon={<Flame className="w-3 h-3" />} label="Kcal" current={totalKcal} target={targetKcal} />
-        <MacroChip icon={<Beef className="w-3 h-3" />} label="Prot" current={totalProt} target={targetProtein} unit="g" />
-        <MacroChip icon={<Wheat className="w-3 h-3" />} label="Carb" current={totalCarbs} target={targetCarbs} unit="g" />
-        <MacroChip icon={<Droplets className="w-3 h-3" />} label="Gord" current={totalFat} target={targetFat} unit="g" />
+        <MacroChip icon={<Flame className="w-3 h-3" />} label="Kcal" current={totalKcal} target={targetKcal} isIncomplete={plan?.totals_status === "incomplete"} />
+        <MacroChip icon={<Beef className="w-3 h-3" />} label="Prot" current={totalProt} target={targetProtein} unit="g" isIncomplete={plan?.totals_status === "incomplete"} />
+        <MacroChip icon={<Wheat className="w-3 h-3" />} label="Carb" current={totalCarbs} target={targetCarbs} unit="g" isIncomplete={plan?.totals_status === "incomplete"} />
+        <MacroChip icon={<Droplets className="w-3 h-3" />} label="Gord" current={totalFat} target={targetFat} unit="g" isIncomplete={plan?.totals_status === "incomplete"} />
+
         <div className="ml-auto text-muted-foreground">
           {items.length} refeições
         </div>
@@ -178,8 +179,8 @@ export default function BuilderTopbar({
   );
 }
 
-function MacroChip({ icon, label, current, target, unit = "" }: {
-  icon: React.ReactNode; label: string; current: number; target?: number; unit?: string;
+function MacroChip({ icon, label, current, target, unit = "", isIncomplete }: {
+  icon: React.ReactNode; label: string; current: number; target?: number; unit?: string; isIncomplete?: boolean;
 }) {
   const delta = target ? current - target : 0;
   const overUnder = target ? (Math.abs(delta) / target > 0.1 ? (delta > 0 ? "over" : "under") : "ok") : "ok";
@@ -190,8 +191,9 @@ function MacroChip({ icon, label, current, target, unit = "" }: {
       {icon}
       <span className="text-muted-foreground">{label}:</span>
       <span className={`font-semibold ${target ? colorClass : "text-foreground"}`}>
-        {Math.round(current)}{unit}
+        {isIncomplete && current === 0 ? "..." : (isNaN(current) ? "—" : Math.round(current))}{unit}
       </span>
+
       {target && (
         <span className="text-muted-foreground">/ {Math.round(target)}{unit}</span>
       )}
