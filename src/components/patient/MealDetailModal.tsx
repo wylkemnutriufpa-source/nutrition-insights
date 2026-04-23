@@ -5,13 +5,15 @@ import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
-  ImageIcon, Search, Plus, Pencil, Check, Settings2,
+  ImageIcon, Search, Plus, Pencil, Check, Settings2, AlertTriangle,
+  SlidersHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtMacro } from "@/lib/formatMacros";
+import { fmtMacro, isMacroInconsistent } from "@/lib/formatMacros";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import {
   validatePortion,
@@ -210,7 +212,56 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const [linePortionError, setLinePortionError] = useState<string | null>(null);
   const [manualPortionError, setManualPortionError] = useState<string | null>(null);
 
+  const [editingMacros, setEditingMacros] = useState(false);
+  const [macroValues, setMacroValues] = useState({
+    calories: "",
+    protein: "",
+    carbs: "",
+    fat: "",
+  });
 
+  const findFoodInDatabase = (text: string) => {
+    const q = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+    return FOOD_DATABASE.find(f => {
+      const n = f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+      return n === q || q.includes(n) || n.includes(q);
+    });
+  };
+
+  const recalculateMacrosFromDescription = (description: string) => {
+    const { foodLines } = parseDescriptionLines(description);
+    let totalCal = 0, totalProt = 0, totalCarb = 0, totalFat = 0;
+    
+    foodLines.forEach(line => {
+      const content = line.startsWith("•") ? line.slice(1).trim() : line;
+      const name = content.split("—")[0]?.trim() || content;
+      const match = findFoodInDatabase(name);
+      if (match) {
+        // Simple scaling based on grams if possible
+        const portionMatch = content.match(/—\s*(\d+)\s*g/i);
+        const dbPortionMatch = match.portion.match(/(\d+)\s*g/i);
+        
+        let scale = 1;
+        if (portionMatch && dbPortionMatch) {
+          const grams = parseInt(portionMatch[1]);
+          const dbGrams = parseInt(dbPortionMatch[1]);
+          if (dbGrams > 0) scale = grams / dbGrams;
+        }
+
+        totalCal += match.calories * scale;
+        totalProt += match.protein * scale;
+        totalCarb += match.carbs * scale;
+        totalFat += match.fat * scale;
+      }
+    });
+
+    return {
+      calories_target: Math.round(totalCal),
+      protein_target: Math.round(totalProt),
+      carbs_target: Math.round(totalCarb),
+      fat_target: Math.round(totalFat),
+    };
+  };
   // Fetch visual library images when picker opens
   useEffect(() => {
     if (!showImagePicker) return;
@@ -237,6 +288,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   useEffect(() => {
     if (meal) {
       setTitleValue(meal.title);
+      setMacroValues({
+        calories: String(meal.calories_target ?? ""),
+        protein: String(meal.protein_target ?? ""),
+        carbs: String(meal.carbs_target ?? ""),
+        fat: String(meal.fat_target ?? ""),
+      });
     }
   }, [meal]);
 
@@ -285,7 +342,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const remainingFoodLines = foodLines.filter((_, i) => !newRemoved.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, substitutionLines);
     if (onUpdateItem) {
-      onUpdateItem(meal.itemId, { description: newDescription });
+      const macroPatch = recalculateMacrosFromDescription(newDescription);
+      onUpdateItem(meal.itemId, { description: newDescription, ...macroPatch });
     } else if (onRemoveFoodLine) {
       onRemoveFoodLine(meal.itemId, newDescription);
     }
@@ -310,7 +368,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newFoodLines = foodLines.map((l, i) => i === lineIdx ? newLine : l);
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     if (onUpdateItem) {
-      onUpdateItem(meal.itemId, { description: newDescription });
+      const macroPatch = recalculateMacrosFromDescription(newDescription);
+      onUpdateItem(meal.itemId, { description: newDescription, ...macroPatch });
     } else if (onRemoveFoodLine) {
       onRemoveFoodLine(meal.itemId, newDescription);
     }
@@ -334,7 +393,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newFoodLines = [...foodLines, newLine];
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     if (onUpdateItem) {
-      onUpdateItem(meal.itemId, { description: newDescription });
+      const macroPatch = recalculateMacrosFromDescription(newDescription);
+      onUpdateItem(meal.itemId, { description: newDescription, ...macroPatch });
     } else if (onRemoveFoodLine) {
       onRemoveFoodLine(meal.itemId, newDescription);
     }
@@ -403,6 +463,19 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     toast.success("✅ Substituição adicionada manualmente");
   };
 
+  const handleSaveMacros = () => {
+    if (!canEdit || !meal.itemId || !onUpdateItem) return;
+    const patch = {
+      calories_target: macroValues.calories ? Number(macroValues.calories) : null,
+      protein_target: macroValues.protein ? Number(macroValues.protein) : null,
+      carbs_target: macroValues.carbs ? Number(macroValues.carbs) : null,
+      fat_target: macroValues.fat ? Number(macroValues.fat) : null,
+    };
+    onUpdateItem(meal.itemId, patch);
+    setEditingMacros(false);
+    toast.success("Macros atualizados manualmente");
+  };
+
   const handleSelectImage = (newUrl: string) => {
     if (!meal.itemId || !onChangeImage) return;
     onChangeImage(meal.itemId, newUrl);
@@ -425,6 +498,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       setManualSubInput("");
       setImageSearch("");
       setEditingTitle(false);
+      setEditingMacros(false);
       setEditingLineIdx(null);
       setLinePortionError(null);
       setEditingSubLineIdx(null);
@@ -649,22 +723,73 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-8 space-y-6 max-h-[calc(90vh-160px)]">
           {/* Macros */}
-          {hasMacros && (
+          {(hasMacros || editingMacros) && (
             <div className="space-y-3">
-              <div className="grid grid-cols-4 gap-2">
-                {[
-                  { label: "Calorias", value: calories, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
-                  { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
-                  { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
-                  { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
-                ].map(m => (
-                  <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
-                    <div className="flex justify-center mb-1.5">{m.icon}</div>
-                    <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                    <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
-                  </div>
-                ))}
+              <div className="flex items-center justify-between mb-1">
+                <div className="flex items-center gap-2">
+                  <Flame className="w-5 h-5 text-primary" />
+                  <h4 className="font-semibold text-base">Macros Sugeridos</h4>
+                  {isMacroInconsistent(calories, protein, carbs, fat) && (
+                    <Badge variant="outline" className="text-[9px] bg-destructive/10 text-destructive border-destructive/20 animate-pulse">
+                      <AlertTriangle className="w-2.5 h-2.5 mr-1" /> Fora do padrão
+                    </Badge>
+                  )}
+                </div>
+                {canEdit && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-7 px-2 text-xs text-primary"
+                    onClick={() => setEditingMacros(!editingMacros)}
+                  >
+                    <SlidersHorizontal className="w-3.5 h-3.5 mr-1.5" />
+                    {editingMacros ? "Cancelar" : "Ajustar"}
+                  </Button>
+                )}
               </div>
+              
+              {editingMacros ? (
+                <div className="grid grid-cols-4 gap-2 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                  {[
+                    { key: "calories", label: "Kcal", icon: <Flame className="w-3.5 h-3.5 text-orange-500" /> },
+                    { key: "protein", label: "Prot (g)", icon: <Beef className="w-3.5 h-3.5 text-red-500" /> },
+                    { key: "carbs", label: "Carb (g)", icon: <Wheat className="w-3.5 h-3.5 text-amber-500" /> },
+                    { key: "fat", label: "Gord (g)", icon: <Droplets className="w-3.5 h-3.5 text-yellow-500" /> },
+                  ].map(m => (
+                    <div key={m.key} className="space-y-1">
+                      <label className="text-[9px] font-medium text-muted-foreground flex items-center gap-1">
+                        {m.icon} {m.label}
+                      </label>
+                      <Input
+                        type="number"
+                        value={macroValues[m.key as keyof typeof macroValues]}
+                        onChange={e => setMacroValues(prev => ({ ...prev, [m.key]: e.target.value }))}
+                        className="h-8 text-xs p-1 px-2"
+                      />
+                    </div>
+                  ))}
+                  <div className="col-span-4 mt-2">
+                    <Button size="sm" className="w-full h-8" onClick={handleSaveMacros}>
+                      <Check className="w-3.5 h-3.5 mr-1.5" /> Salvar Macros
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-4 gap-2">
+                  {[
+                    { label: "Calorias", value: calories, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
+                    { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
+                    { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
+                    { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
+                  ].map(m => (
+                    <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
+                      <div className="flex justify-center mb-1.5">{m.icon}</div>
+                      <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                      <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           )}
 
