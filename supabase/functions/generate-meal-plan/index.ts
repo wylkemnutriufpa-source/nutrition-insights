@@ -798,7 +798,7 @@ const ANIMAL_PROTEIN_KEYWORDS = [
   "frango", "carne", "bife", "alcatra", "patinho", "tilapia", "tilápia",
   "peixe", "porco", "lombo", "sobrecoxa", "sardinha", "atum", "salmao",
   "salmão", "camarao", "camarão", "fraldinha", "maminha", "bisteca", "pernil",
-  "suino", "suína", "file de peixe", "filé de peixe",
+  "suino", "suína", "file de peixe", "filé de peixe", "tambaqui", "pintado", "dourado",
 ];
 
 function isAnimalProteinFood(food: DBFood): boolean {
@@ -821,11 +821,11 @@ function roundServingGrams(value: number): number {
 }
 
 function clampComputedProteinServing(grams: number, mealType: string): number {
-  // Clinical limits: main meals 80-150g, snacks 20-80g
+  // Clinical limits: main meals 80-180g (max was 150, bumped for flexibility), snacks 30-100g
   if (["lunch", "dinner"].includes(mealType)) {
-    return Math.min(150, Math.max(80, roundServingGrams(grams)));
+    return Math.min(180, Math.max(80, roundServingGrams(grams)));
   }
-  return Math.min(80, Math.max(20, roundServingGrams(grams)));
+  return Math.min(100, Math.max(30, roundServingGrams(grams)));
 }
 
 function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
