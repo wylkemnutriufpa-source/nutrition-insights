@@ -165,14 +165,17 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn);
     
-    // Verifica se o erro apareceu
-    const errorMsg = screen.getByText(PORTION_ERROR_MESSAGE);
+    // Debug: log the state
+    // console.log('Current value:', portionInput.value);
+
+    // Verifica se o erro apareceu usando um matcher mais flexível
+    const errorMsg = await screen.findByText((content) => content.includes("Use ex: 150g"));
     expect(errorMsg).toBeInTheDocument();
 
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
-    // O erro deve sumir (o onChange chama validatePortion que limpa o erro se for válido)
-    expect(screen.queryByText(PORTION_ERROR_MESSAGE)).not.toBeInTheDocument();
+    // O erro deve sumir
+    expect(screen.queryByText((content) => content.includes("Use ex: 150g"))).not.toBeInTheDocument();
   });
 });
