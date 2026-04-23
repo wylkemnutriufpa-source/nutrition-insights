@@ -1711,12 +1711,10 @@ async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onl
 
   let query = client
     .from("meal_recipes")
-    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
+    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat, created_at")
     .eq("is_active", true);
 
   if (isAdmin) {
-    // If admin, we don't restrict to nutritionistId because they might want to use any recipe in the tenant
-    // But since RLS is tenant-isolated, we can just load all active recipes they have access to
     console.log(`[loadMealRecipes] Admin mode: loading all active meal recipes for context`);
   } else {
     query = query.or(`nutritionist_id.eq.${nutritionistId},nutritionist_id.is.null`);
@@ -1741,6 +1739,7 @@ async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onl
     fixed_protein: r.fixed_protein != null ? Number(r.fixed_protein) : null,
     fixed_carbs: r.fixed_carbs != null ? Number(r.fixed_carbs) : null,
     fixed_fat: r.fixed_fat != null ? Number(r.fixed_fat) : null,
+    created_at: r.created_at,
   })).filter(r => r.foods_json.length > 0);
 }
 
@@ -1774,12 +1773,23 @@ export async function generateWeeklyMarmitaPlan(
               const needsReplacement = food.name && marmitaPlaceholders.some(p => food.name.includes(p));
               if (needsReplacement) {
                 const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
-                const candidates = (recipes || []).filter(r => r.meal_type === typeKey);
+                const candidates = (recipes || [])
+                  .filter(r => r.meal_type === typeKey)
+                  .sort((a, b) => {
+                    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+                    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+                    return dateB - dateA;
+                  });
+
                 if (candidates.length > 0) {
-                  const picked = candidates[Math.floor(Math.random() * candidates.length)];
-                  console.log(`[weekly_marmita_fix] Replacing "${food.name}" with "${picked.name}"`);
+                  // Prioritize the 19 recipes from today/yesterday by taking from the top of the sorted list
+                  // We still use some randomness among the top candidates to avoid exact repetition if possible
+                  const topCount = Math.min(candidates.length, 25); 
+                  const picked = candidates[Math.floor(Math.random() * topCount)];
+                  
+                  console.log(`[template-marmita-fix] Replacing "${food.name}" with "${picked.name}" (Recent)`);
                   food.name = picked.name;
-                  if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar")) {
+                  if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar") || meal.title.includes("marmita")) {
                     meal.title = `🍱 ${picked.name}`;
                   }
                 }
