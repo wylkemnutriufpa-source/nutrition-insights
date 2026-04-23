@@ -9,7 +9,6 @@ import { queryKeys } from "./queryKeys";
 export function usePatientDashboard() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
-
   const queryClient = useQueryClient();
 
   // Setup Realtime listener for published plans
@@ -17,7 +16,7 @@ export function usePatientDashboard() {
     if (!user?.id) return;
 
     const channel = supabase
-      .channel(`patient_plan_sync:${user.id}`)
+      .channel(`patient_dashboard_sync:${user.id}`)
       .on(
         'postgres_changes',
         {
@@ -27,13 +26,24 @@ export function usePatientDashboard() {
           filter: `patient_id=eq.${user.id}`,
         },
         async (payload) => {
-          // Optimistic update: If a new plan is published, we can briefly show a toast or trigger a faster refresh
-          if (payload.eventType === 'UPDATE' && payload.new.plan_status === 'published_to_patient' && payload.new.is_active) {
-             // We could manually update query cache here for "active plan" if it were in a separate query,
-             // but since it's inside the dashboard big query, we invalidate.
-          }
+          console.log('[Realtime] Meal plan change detected:', payload.eventType);
           
-          // Invalidate dashboard query when any plan changes (publish/archive)
+          // Invalidate dashboard query when any plan changes (publish/archive/update)
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.dashboard.patient(user.id),
+          });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'patient_lifecycle_states',
+          filter: `patient_id=eq.${user.id}`,
+        },
+        async (payload) => {
+          console.log('[Realtime] Lifecycle state change detected');
           queryClient.invalidateQueries({
             queryKey: queryKeys.dashboard.patient(user.id),
           });
@@ -46,14 +56,38 @@ export function usePatientDashboard() {
     };
   }, [user?.id, queryClient]);
 
+  const { data: lifecycleState } = useQuery({
+    queryKey: ['lifecycle', user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data, error } = await supabase.rpc('resolve_patient_lifecycle_state', {
+        _patient_id: user!.id
+      });
+      if (error) throw error;
+      return data;
+    },
+    staleTime: 60 * 1000,
+  });
+
   return useQuery({
-    queryKey: [...queryKeys.dashboard.patient(user?.id ?? ""), tenantId],
-    enabled: !!user,
-    staleTime: 30 * 1000, // Increased staleTime as we now have Realtime sync
+    queryKey: [...queryKeys.dashboard.patient(user?.id ?? ""), tenantId, lifecycleState?.state],
+    enabled: !!user && !!lifecycleState,
+    staleTime: 30 * 1000,
     gcTime: 5 * 60 * 1000,
     queryFn: async () => {
       const userId = user!.id;
       const today = new Date().toISOString().split("T")[0];
+
+      // If patient is paused or closed, we can return early or restricted data
+      if (lifecycleState?.state === 'closed' || lifecycleState?.state === 'paused') {
+        return {
+          stats: null,
+          checklistTasks: [],
+          recentMeals: [],
+          unreadMessages: 0,
+          lifecycle: lifecycleState
+        };
+      }
 
       // Single RPC for counts + stats
       const { data: rpcStats, error: rpcError } = await supabase.rpc(
@@ -61,19 +95,16 @@ export function usePatientDashboard() {
         { _patient_id: userId }
       );
 
-      // Full data still needs row-level fetches for checklist items, meals, anamnesis
       const [checkRes, anamRes, mealsRes] = await Promise.all([
         withTenantFilter(supabase.from("checklist_tasks").select("*").eq("patient_id", userId).eq("date", today), tenantId).order("category"),
         supabase.from("patient_anamnesis").select("*").eq("user_id", userId).eq("status", "completed").order("created_at", { ascending: false }).limit(1),
         supabase.from("meals").select("*").eq("user_id", userId).order("logged_at", { ascending: false }).limit(3),
       ]);
 
-      // Use RPC stats when available, fallback to client-side
       const unreadMessages = rpcError ? 0 : ((rpcStats as any)?.unread_messages || 0);
       const stats = rpcError ? null : ((rpcStats as any)?.stats || null);
       const nextAppointment = rpcError ? null : ((rpcStats as any)?.next_appointment || null);
 
-      // If RPC failed, fetch stats and appointment separately
       if (rpcError) {
         const [statsRes, aptRes, msgRes] = await Promise.all([
           supabase.from("player_stats").select("*").eq("user_id", userId).maybeSingle(),
@@ -87,6 +118,7 @@ export function usePatientDashboard() {
           nextAppointment: aptRes.data?.[0] || null,
           recentMeals: mealsRes.data || [],
           unreadMessages: msgRes.count || 0,
+          lifecycle: lifecycleState
         };
       }
 
@@ -97,6 +129,7 @@ export function usePatientDashboard() {
         nextAppointment,
         recentMeals: mealsRes.data || [],
         unreadMessages,
+        lifecycle: lifecycleState
       };
     },
   });
