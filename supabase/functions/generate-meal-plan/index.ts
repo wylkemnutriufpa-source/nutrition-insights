@@ -2035,47 +2035,51 @@ export async function buildMarmitaItem(
   macroTarget?: { protein: number; carbs: number; fat: number },
   fastMarmitaMode: boolean = false,
 ): Promise<any> {
-  const baseMacros = estimateRecipeMacros(recipe);
   const isHypertrophy = goal === "gain_muscle" || goal === "gain_weight";
   
-  // Rule: If Hypertrophy, we want 1.5x or 2.0x units.
-  const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
-  let clampedScale = 1;
-  
-  if (recipe.is_scalable === false) {
-    if (isHypertrophy) {
-      // Step-based scaling for hypertrophy: 1.5 or 2.0
-      clampedScale = scaleFactor >= 1.75 ? 2.0 : (scaleFactor >= 1.25 ? 1.5 : 1.0);
-    } else {
-      clampedScale = 1;
-    }
+  // MOTOR DE AJUSTE (Etapa 3)
+  // Use the new scaling engine if the recipe is scalable
+  let scaled;
+  if (recipe.is_scalable !== false && macroTarget) {
+    scaled = scaleRecipeByMacros(recipe.foods_json, macroTarget);
   } else {
-    clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+    // Proportional fallback or fixed
+    const baseMacros = estimateRecipeMacros(recipe);
+    const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
+    let clampedScale = 1;
+    
+    if (recipe.is_scalable === false) {
+      clampedScale = isHypertrophy ? (scaleFactor >= 1.25 ? 1.5 : 1.0) : 1.0;
+    } else {
+      clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+    }
+
+    const items = recipe.foods_json.map(f => ({
+      ...f,
+      grams: Math.round((Number(f.grams) || 0) * clampedScale)
+    }));
+    
+    scaled = {
+      items,
+      totals: {
+        cal: Math.round(baseMacros.cal * clampedScale),
+        p: Math.round(baseMacros.p * clampedScale),
+        c: Math.round(baseMacros.c * clampedScale),
+        f: Math.round(baseMacros.f * clampedScale)
+      }
+    };
   }
 
-  // Seasonings/condiments are exempt from the 20g minimum portion rule
-  const SEASONING_KEYWORDS = ["orégano", "oregano", "sal", "pimenta", "noz-moscada", "açafrão", "acafrao", "cominho", "alho em pó", "ervas finas", "páprica", "paprica", "limão", "limao", "vinagre", "molho de pimenta", "tempero"];
-  function isSeasoning(name: string): boolean {
-    const n = name.toLowerCase();
-    return SEASONING_KEYWORDS.some(k => n.includes(k));
-  }
+  // OUTPUT PARA O PACIENTE (Etapa 4)
+  const ingredientsLines = scaled.items
+    .filter(f => f.grams > 5 || (f.name && f.name.length > 3))
+    .map(f => `${f.name}: ${f.grams}g`)
+    .join("\n");
 
-  // Scale ingredient grams proportionally — preserve composition
-  const scaledFoods = (recipe.foods_json || []).map(f => {
-    const scaled = Math.round((Number(f.grams) || 0) * clampedScale);
-    const minGrams = isSeasoning(f.name) ? 1 : 20;
-    return { name: f.name, grams: Math.max(minGrams, scaled) };
-  });
-
-  // NEW: "Marmita Unit" representation instead of separated ingredients
-  const compositionStr = (recipe.foods_json || []).map(f => f.name).join(", ");
-  const baseDesc = clampedScale > 1 
-    ? `📦 ${clampedScale} Unidades: ${recipe.name}\n• Marmita congelada pronta para consumo\n• [PORÇÃO REFORÇADA ${clampedScale}x]\n• Composição: ${compositionStr}`
-    : `📦 1 Unidade: ${recipe.name}\n• Marmita congelada pronta para consumo\n• Composição: ${compositionStr}`;
-  
+  const baseDesc = `🍱 ${recipe.name}\n\n${ingredientsLines}`;
   const finalized = finalizeMealDescription(baseDesc, mealType, goal);
   
-  // Fetch professional settings for instructions
+  // Fetch professional settings
   const { data: marmitaSettings } = await client
     .from("marmita_generation_settings")
     .select("default_practical_instructions, default_fast_instructions")
@@ -2083,32 +2087,24 @@ export async function buildMarmitaItem(
     .maybeSingle();
 
   const customTip = fastMarmitaMode 
-    ? (marmitaSettings?.default_fast_instructions || "⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min. Refeição otimizada para tempo.")
+    ? (marmitaSettings?.default_fast_instructions || "⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min.")
     : (marmitaSettings?.default_practical_instructions || "⏱️ Prática: Aqueça por 3-5 min no micro-ondas.");
     
-  // Extract minutes from instruction (e.g. "3-5 min" -> 5)
   const timeMatch = customTip.match(/(\d+)(?:-(\d+))?\s*min/);
   const prepTime = timeMatch ? parseInt(timeMatch[2] || timeMatch[1]) : 5;
 
   const description = finalized + "\n\n" + customTip;
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
-  // If macroTarget provided, prefer it (the engine already split daily macros across slots),
-  // UNLESS the recipe is non-scalable (in which case we must use the actual recipe macros).
-  const useMacroTarget = recipe.is_scalable !== false;
-  const proteinFinal = (useMacroTarget && macroTarget?.protein != null) ? macroTarget.protein : Math.round(baseMacros.p * clampedScale);
-  const carbsFinal = (useMacroTarget && macroTarget?.carbs != null) ? macroTarget.carbs : Math.round(baseMacros.c * clampedScale);
-  const fatFinal = (useMacroTarget && macroTarget?.fat != null) ? macroTarget.fat : Math.round(baseMacros.f * clampedScale);
-
   return {
     title: `🍱 ${recipe.name}`,
     description: description,
     meal_type: mealType,
     day_of_week: day,
-    calories_target: Math.round(baseMacros.cal * clampedScale) || 350,
-    protein_target: proteinFinal,
-    carbs_target: carbsFinal,
-    fat_target: fatFinal,
+    calories_target: scaled.totals.cal,
+    protein_target: scaled.totals.p,
+    carbs_target: scaled.totals.c,
+    fat_target: scaled.totals.f,
     visual_library_item_id: visual?.id || null,
     meal_time: mealTimes?.[mealType] || null,
     prep_time: prepTime,
@@ -2116,7 +2112,7 @@ export async function buildMarmitaItem(
     _recipe_id: recipe.id,
     _recipe_name: recipe.name,
     _is_scalable: recipe.is_scalable !== false,
-    _scale_factor: clampedScale,
+    _scale_factor: 1, // Scaling is internal now
     _image_url: visual?.image_url || null,
   };
 }
