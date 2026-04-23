@@ -104,8 +104,8 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
       </QueryClientProvider>
     );
 
-    // Clica no botão Publicar
-    const publishBtn = await screen.findByText(/Publicar Plano/i);
+    // Clica no botão Publicar (específico para o botão, não o label)
+    const publishBtn = await screen.findByRole('button', { name: /Publicar Plano/i });
     fireEvent.click(publishBtn);
 
     await waitFor(() => {
