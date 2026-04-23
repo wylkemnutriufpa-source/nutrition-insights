@@ -122,7 +122,8 @@ export default function DailyMealPlanInline() {
 
       const currentItems = allItemsData || [];
       setAllItems(currentItems);
-      setItems(currentItems.filter(i => i.day_of_week === dayOfWeek));
+      // Modelo GLOBAL: usa apenas itens do dia 0 (plan único)
+      setItems(currentItems.filter(i => i.is_primary));
 
       const { data: completionsData } = await supabase
         .from("meal_item_completions")
@@ -336,18 +337,11 @@ export default function DailyMealPlanInline() {
     );
   }
 
-  // ─── WEEKLY VIEW ───
+  // ─── SINGLE DAY VIEW (GLOBAL) ───
   if (showWeekly) {
-    const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
-    return (
-      <div className="space-y-4">
-        <div className="flex items-center justify-between">
-          <Button variant="ghost" size="sm" className="gap-1.5 text-xs" onClick={() => setShowWeekly(false)}>
-            <ChevronLeft className="w-4 h-4" /> Voltar ao dia
-          </Button>
-          <h3 className="font-display font-bold text-base">Plano Semanal</h3>
-          <div className="w-20" />
-        </div>
+    // Redirect weekly request to showing substitutions instead of different days
+    setShowWeekly(false);
+  }
 
         <AnimatePresence>
           {isMobile && showRotateHint && (

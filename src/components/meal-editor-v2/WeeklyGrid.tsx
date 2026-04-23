@@ -184,67 +184,71 @@ export function WeeklyGrid() {
     <>
       <div className="overflow-x-auto">
         {/* Day headers */}
-        <div className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mb-1 sticky top-0 z-20 bg-background pb-1">
-          <div className="glass rounded-lg p-3 flex items-center">
-            <span className="font-display text-xs font-bold text-primary">REFEIÇÃO</span>
+        <div className="grid grid-cols-[160px_1fr] gap-4 mb-6 sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 border-b border-primary/10">
+          <div className="glass rounded-xl p-4 flex items-center bg-primary/5">
+            <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">REFEIÇÃO</span>
           </div>
-          {DAYS.map((day) => {
-            const t = getDayTotals(day.key);
-            return (
-              <div key={day.key} className="glass rounded-lg p-2 text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <span className="font-display text-xs font-bold">{day.short}</span>
-                  <DayBlockActions dayKey={day.key} dayLabel={day.label} />
+          <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
+            <div>
+              <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">PLANO ÚNICO (GLOBAL)</span>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Modelo de Dia Único com Substituições Inteligentes</p>
+            </div>
+            {(() => {
+              const t = getDayTotals(0);
+              return (
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Kcal</span>
+                    <span className="text-xs font-bold text-orange-500">{t.calories}</span>
+                  </div>
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Prot</span>
+                    <span className="text-xs font-bold text-red-500">{t.protein.toFixed(0)}g</span>
+                  </div>
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Carb</span>
+                    <span className="text-xs font-bold text-amber-500">{t.carbs.toFixed(0)}g</span>
+                  </div>
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Gord</span>
+                    <span className="text-xs font-bold text-blue-500">{t.fat.toFixed(0)}g</span>
+                  </div>
                 </div>
-                {/* HUD nutricional compacto */}
-                <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5 mt-1 text-[9px] text-muted-foreground">
-                  <span className="flex items-center gap-0.5">
-                    <Flame className="w-2.5 h-2.5 text-orange-400" />
-                    {plan?.totals_status === "incomplete" && t.calories === 0 ? "..." : (isNaN(t.calories) ? "—" : t.calories)}
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Beef className="w-2.5 h-2.5 text-red-400" />
-                    {plan?.totals_status === "incomplete" && t.protein === 0 ? "..." : (isNaN(t.protein) ? "—" : t.protein.toFixed(0))}g
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Wheat className="w-2.5 h-2.5 text-amber-500" />
-                    {plan?.totals_status === "incomplete" && t.carbs === 0 ? "..." : (isNaN(t.carbs) ? "—" : t.carbs.toFixed(0))}g
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Droplets className="w-2.5 h-2.5 text-blue-400" />
-                    {plan?.totals_status === "incomplete" && t.fat === 0 ? "..." : (isNaN(t.fat) ? "—" : t.fat.toFixed(0))}g
-                  </span>
-                </div>
-
-              </div>
-            );
-          })}
+              );
+            })()}
+          </div>
         </div>
 
         {/* Meal rows */}
         {MEAL_TYPES.map((meal) => (
-          <div key={meal.key} className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mb-1">
+          <div key={meal.key} className="grid grid-cols-[160px_1fr] gap-4 mb-4">
             {/* Row label */}
-            <div className="glass rounded-lg p-3 flex flex-col justify-center">
-              <div className="flex items-center gap-2">
-                <span className={meal.color}>{meal.icon}</span>
-                <span className="font-display text-[11px] font-semibold">{meal.label}</span>
+            <div className="glass rounded-xl p-4 flex flex-col justify-center border-l-4 border-primary/30">
+              <div className="flex items-center gap-3">
+                <div className={`p-2 rounded-lg bg-primary/10 ${meal.color}`}>
+                  {meal.icon}
+                </div>
+                <div>
+                  <span className="font-display text-xs font-bold block">{meal.label}</span>
+                  <span className="text-[9px] text-muted-foreground">1 Principal + Substituições</span>
+                </div>
               </div>
             </div>
 
-            {/* Day cells */}
-            {DAYS.map((day) => {
-              const cellItems = getItems(day.key, meal.key);
-              const cellKey = `${day.key}-${meal.key}`;
-              const isDragSrc = dragSource?.day === day.key && dragSource?.mealType === meal.key;
-              const isDragOvr = dragOver?.day === day.key && dragOver?.mealType === meal.key;
+            {/* Day cell (Day 0 only) */}
+            {(() => {
+              const day = 0;
+              const cellItems = getItems(day, meal.key);
+              const cellKey = `${day}-${meal.key}`;
+              const isDragSrc = dragSource?.day === day && dragSource?.mealType === meal.key;
+              const isDragOvr = dragOver?.day === day && dragOver?.mealType === meal.key;
 
               return (
                 <div
-                  key={day.key}
+                  key={day}
                   draggable={cellItems.length > 0}
                   onDragStart={(e) => {
-                    setDragSource({ day: day.key, mealType: meal.key });
+                    setDragSource({ day, mealType: meal.key });
                     e.dataTransfer.effectAllowed = "move";
                     e.dataTransfer.setData("text/plain", cellKey);
                   }}
@@ -253,7 +257,7 @@ export function WeeklyGrid() {
                     e.preventDefault();
                     const hasExternalItem = Array.from(e.dataTransfer.types).includes("application/json");
                     e.dataTransfer.dropEffect = hasExternalItem ? "copy" : "move";
-                    if (!isDragOvr) setDragOver({ day: day.key, mealType: meal.key });
+                    if (!isDragOvr) setDragOver({ day, mealType: meal.key });
                   }}
                   onDragLeave={() => { if (isDragOvr) setDragOver(null); }}
                   onDrop={(e) => {
@@ -263,19 +267,19 @@ export function WeeklyGrid() {
                     if (draggedItem && planId) {
                       addItem(buildVisualLibraryMealInsert({
                         planId,
-                        day: day.key,
+                        day,
                         mealType: meal.key,
                         item: draggedItem,
                       }));
-                    } else if (dragSource && !(dragSource.day === day.key && dragSource.mealType === meal.key)) {
-                      swapCells(dragSource.day, dragSource.mealType, day.key, meal.key);
+                    } else if (dragSource && !(dragSource.day === day && dragSource.mealType === meal.key)) {
+                      swapCells(dragSource.day, dragSource.mealType, day, meal.key);
                     }
                     setDragOver(null);
                     setDragSource(null);
                   }}
-                  className={`glass rounded-lg p-2 min-h-[100px] flex flex-col group relative transition-all duration-200 ${
+                  className={`glass rounded-xl p-4 min-h-[140px] flex flex-col group relative transition-all duration-300 shadow-sm border border-primary/5 bg-gradient-to-br from-background to-primary/[0.02] ${
                     isDragSrc ? "opacity-50 scale-95 border-primary/50" : ""
-                  } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.02]" : "hover:border-primary/30"
+                  } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.01]" : "hover:border-primary/20"
                   } ${cellItems.length > 0 ? "cursor-grab active:cursor-grabbing" : ""}`}
                 >
                   {/* Drag handle */}
