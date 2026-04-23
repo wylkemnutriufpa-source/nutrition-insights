@@ -703,9 +703,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     <div className="space-y-1">
                       <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">Porção</label>
                       <Input
-                        placeholder="Ex: 150g"
+                        placeholder={PORTION_PLACEHOLDER}
                         value={manualFoodPortion}
-                        list="portion-units"
+                        list={PORTION_DATALIST_ID}
                         className={`h-9 text-sm ${manualPortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                         onChange={e => {
                           const val = e.target.value;
@@ -759,7 +759,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">Porção</label>
                             <Input
                               value={linePortionValue}
-                              list="portion-units"
+                              list={PORTION_DATALIST_ID}
+                              placeholder={PORTION_PLACEHOLDER}
                               className={`h-9 text-sm ${linePortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                               onChange={e => {
                                 const val = e.target.value;
