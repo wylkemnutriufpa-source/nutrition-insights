@@ -1787,7 +1787,12 @@ function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibrary
   }
 
   // FALLBACK: default image or first candidate
-  return best || candidates[0];
+  return best || candidates[0] || { 
+    id: "default-marmita", 
+    image_url: "/images/marmitas/default.jpg",
+    name: "marmita-default",
+    display_name: "Marmita"
+  } as any;
 }
 
 export function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
