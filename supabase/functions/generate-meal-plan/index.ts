@@ -1996,63 +1996,71 @@ export async function generateWeeklyMarmitaPlan(
   const items: any[] = [];
   const marmitasUsedSet = new Set<string>();
   const proteinsUsedThisWeek = new Set<string>();
-  let prevLunchProtein: string | null = null;
-  let prevDinnerProtein: string | null = null;
-
-  // For non-marmita meals (breakfast/snacks), reuse template/visual library generator output
-  const nonMarmitaMealTypes = mealTypes.filter(m => m !== "lunch" && m !== "dinner");
-  let shadowItems: any[] = [];
+  
+  // ESTRATÉGIA DE CONSISTÊNCIA SEMANAL (MODELO DEFINITIVO)
+  // 1. Definir alvos de macros por REFEIÇÃO uma única vez (baseado no Dia 0)
+  const mealTypesArr = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
+  const nonMarmitaMealTypes = mealTypesArr.filter(m => m !== "lunch" && m !== "dinner");
+  
+  // Gerar snacks para o Dia 0 para servir como base de macros
+  let baseShadowItems: any[] = [];
   if (nonMarmitaMealTypes.length > 0) {
-    const hasTpl = templates.length > 0;
-    if (hasTpl) {
+    if (templates.length > 0) {
       const result = generatePlanWithTemplates(
         templates, visualLibrary, goal, targetKcal, targetMacros,
         restrictions, disliked, allergies, seed, nonMarmitaMealTypes, mealTimes,
         strategyId, patientFoodDatabase, recentMeals,
       );
-      shadowItems = result.items;
+      baseShadowItems = result.items.filter(i => i.day_of_week === 0);
     } else {
-      shadowItems = generatePlanFromVisualLibrary(
-        visualLibrary, goal, kcalTarget, macros,
+      baseShadowItems = generatePlanFromVisualLibrary(
+        visualLibrary, goal, targetKcal, targetMacros,
         restrictions, disliked, allergies, seed, nonMarmitaMealTypes, mealTimes,
-      );
+      ).filter(i => i.day_of_week === 0);
     }
   }
 
-  // Compute kcal targets per slot
-  const lunchKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["lunch"] || 0.30));
-  const dinnerKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT["dinner"] || 0.22));
-  // Compute residual macros for marmita slots = daily target − sum(shadow snacks day 0)
-  const day0Shadow = shadowItems.filter(i => i.day_of_week === 0);
-  const shadowProtein = day0Shadow.reduce((s, i) => s + (i.protein_target || 0), 0);
-  const shadowCarbs = day0Shadow.reduce((s, i) => s + (i.carbs_target || 0), 0);
-  const shadowFat = day0Shadow.reduce((s, i) => s + (i.fat_target || 0), 0);
-  const marmitaProteinPool = Math.max(0, macros.protein - shadowProtein);
-  const marmitaCarbsPool = Math.max(0, macros.carbs - shadowCarbs);
-  const marmitaFatPool = Math.max(0, macros.fat - shadowFat);
+  // Alvos fixos por refeição (Meal Targets)
+  const lunchKcal = Math.round(targetKcal * (MEAL_KCAL_SPLIT["lunch"] || 0.30));
+  const dinnerKcal = Math.round(targetKcal * (MEAL_KCAL_SPLIT["dinner"] || 0.22));
+  
+  const shadowProtein = baseShadowItems.reduce((s, i) => s + (i.protein_target || 0), 0);
+  const shadowCarbs = baseShadowItems.reduce((s, i) => s + (i.carbs_target || 0), 0);
+  const shadowFat = baseShadowItems.reduce((s, i) => s + (i.fat_target || 0), 0);
+  
+  const marmitaProteinPool = Math.max(0, targetMacros.protein - shadowProtein);
+  const marmitaCarbsPool = Math.max(0, targetMacros.carbs - shadowCarbs);
+  const marmitaFatPool = Math.max(0, targetMacros.fat - shadowFat);
+  
   const lunchShare = lunchKcal / Math.max(1, lunchKcal + dinnerKcal);
-  // Clinical Correction: Target macros for marmitas are now derived directly from TDEE/Daily Target
-  // We ensure the SUM of (Marmitas + Snacks) matches the daily goal.
-  const lunchProteinTarget = Math.round(marmitaProteinPool * lunchShare);
-  const dinnerProteinTarget = Math.max(0, marmitaProteinPool - lunchProteinTarget);
-  const lunchCarbsTarget = Math.round(marmitaCarbsPool * lunchShare);
-  const dinnerCarbsTarget = Math.max(0, marmitaCarbsPool - lunchCarbsTarget);
-  const lunchFatTarget = Math.round(marmitaFatPool * lunchShare);
-  const dinnerFatTarget = Math.max(0, marmitaFatPool - lunchFatTarget);
+  
+  const fixedLunchMacros = {
+    protein: Math.round(marmitaProteinPool * lunchShare),
+    carbs: Math.round(marmitaCarbsPool * lunchShare),
+    fat: Math.round(marmitaFatPool * lunchShare)
+  };
+  
+  const fixedDinnerMacros = {
+    protein: Math.max(0, marmitaProteinPool - fixedLunchMacros.protein),
+    carbs: Math.max(0, marmitaCarbsPool - fixedLunchMacros.carbs),
+    fat: Math.max(0, marmitaFatPool - fixedLunchMacros.fat)
+  };
+
+  let prevLunchProtein: string | null = null;
+  let prevDinnerProtein: string | null = null;
 
   for (let day = 0; day < 7; day++) {
-    // Add non-marmita items for this day
-    for (const it of shadowItems.filter(i => i.day_of_week === day)) {
-      items.push(it);
+    // 2. Garantir que SNACKS usem os mesmos macros todos os dias (Cópia do Dia 0)
+    for (const baseItem of baseShadowItems) {
+      items.push({ ...baseItem, day_of_week: day });
     }
 
-    // Lunch
-    if (mealTypes.includes("lunch")) {
+    // 3. Ajustar MARMITAS para bater os mesmos macros fixos todos os dias
+    if (mealTypesArr.includes("lunch")) {
       const avoidSet = new Set<string>();
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
       
-      // Seed logic: variety per day + per patient
       const currentSeed = seed + day * 13;
       const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, currentSeed);
       const protein = detectRecipeProtein(picked);
@@ -2061,18 +2069,17 @@ export async function generateWeeklyMarmitaPlan(
       marmitasUsedSet.add(picked.name);
       
       items.push(await buildMarmitaItem(client, picked, "lunch", day, lunchKcal, goal, visualLibrary, mealTimes,
-        { protein: lunchProteinTarget, carbs: lunchCarbsTarget, fat: lunchFatTarget }, fastMarmitaMode));
+        fixedLunchMacros, fastMarmitaMode));
       
       prevLunchProtein = protein;
     }
 
-    // Dinner
-    if (mealTypes.includes("dinner")) {
+    if (mealTypesArr.includes("dinner")) {
       const avoidSet = new Set<string>();
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
       
-      const currentSeed = seed + day * 13 + 71; // Shifted seed for dinner
+      const currentSeed = seed + day * 13 + 71;
       const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, currentSeed);
       const protein = detectRecipeProtein(picked);
       
@@ -2080,7 +2087,7 @@ export async function generateWeeklyMarmitaPlan(
       marmitasUsedSet.add(picked.name);
       
       items.push(await buildMarmitaItem(client, picked, "dinner", day, dinnerKcal, goal, visualLibrary, mealTimes,
-        { protein: dinnerProteinTarget, carbs: dinnerCarbsTarget, fat: dinnerFatTarget }, fastMarmitaMode));
+        fixedDinnerMacros, fastMarmitaMode));
       
       prevDinnerProtein = protein;
     }
