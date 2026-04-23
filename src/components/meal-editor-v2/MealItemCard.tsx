@@ -11,7 +11,13 @@ import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { fmtMacro } from "@/lib/formatMacros";
+import { fmtMacro, getPortionWarning } from "@/lib/formatMacros";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MealItemCardProps {
   item: MealPlanItem;
