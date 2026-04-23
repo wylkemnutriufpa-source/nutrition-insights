@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera, SlidersHorizontal,
+  AlertTriangle,
 } from "lucide-react";
 import { MacroEditDialog } from "./MacroEditDialog";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
