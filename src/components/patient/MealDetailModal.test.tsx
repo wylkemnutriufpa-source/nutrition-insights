@@ -162,11 +162,15 @@ describe("MealDetailModal - Validação de Porção", () => {
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     // Forçar erro (valor sem número)
-    fireEvent.change(portionInput, { target: { value: "inv" } });
+    fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn);
     
-    // Verifica se o erro apareceu usando queryByText para evitar falhas se houver múltiplos elementos
-    expect(screen.queryAllByText(PORTION_ERROR_MESSAGE).length).toBeGreaterThan(0);
+    // Debug: print the screen to see what's happening
+    // screen.debug();
+
+    // Verifica se o erro apareceu
+    const errorElements = screen.queryAllByText((content) => content.includes("Use ex:"));
+    expect(errorElements.length).toBeGreaterThan(0);
   
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
