@@ -320,11 +320,13 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             generated_plan_id: data.plans[0].mealPlanId,
             generated_plan_data: { ...data, selectedIndex: 0 },
             plan_generated: true,
+            status: "pending_approval" // Force status to allow approval actions
           } as any)
           .eq("id", pipeline.id);
 
         toast.success(`${data.plans.length} opções de plano geradas! Escolha a melhor opção.`);
         fetchPipeline();
+
       } else {
         // Single plan fallback
         const newPlanId = data.mealPlanId;
