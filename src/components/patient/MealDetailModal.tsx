@@ -137,6 +137,13 @@ const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPorti
   vegetable: { foods: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"], defaultPortion: "50g" },
 };
 
+const PORTION_UNITS = [
+  "g", "kg", "ml", "l", "unidade", "unidades", "fatia", "fatias", 
+  "ovo", "ovos", "colher", "colheres", "xicara", "xicaras", 
+  "pote", "potes", "scoop", "scoops"
+];
+
+
 function normalizeForMatch(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -200,6 +207,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const [showManualFoodInput, setShowManualFoodInput] = useState(false);
   const [manualFoodName, setManualFoodName] = useState("");
   const [manualFoodPortion, setManualFoodPortion] = useState("");
+  const [linePortionError, setLinePortionError] = useState<string | null>(null);
+  const [manualPortionError, setManualPortionError] = useState<string | null>(null);
+
 
   // Fetch visual library images when picker opens
   useEffect(() => {
@@ -296,9 +306,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     }
     
     if (linePortionValue.trim() && !validatePortion(linePortionValue)) {
-      toast.error("Formato de porção inválido. Use ex: 150g, 2 ovos, 1 fatia");
+      setLinePortionError("Use ex: 150g, 2 ovos, 1 fatia");
       return;
     }
+
 
     const name = lineNameValue.trim();
     const portion = linePortionValue.trim();
@@ -319,9 +330,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!canEdit || !meal.itemId || !manualFoodName.trim()) return;
     
     if (manualFoodPortion.trim() && !validatePortion(manualFoodPortion)) {
-      toast.error("Formato de porção inválido. Use ex: 150g, 2 ovos, 1 fatia");
+      setManualPortionError("Use ex: 150g, 2 ovos, 1 fatia");
       return;
     }
+
 
     const name = manualFoodName.trim();
     const portion = manualFoodPortion.trim();
@@ -422,10 +434,13 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       setImageSearch("");
       setEditingTitle(false);
       setEditingLineIdx(null);
+      setLinePortionError(null);
       setEditingSubLineIdx(null);
       setShowManualFoodInput(false);
       setManualFoodName("");
       setManualFoodPortion("");
+      setManualPortionError(null);
+
     }
     onOpenChange(v);
   };
@@ -433,67 +448,79 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   // Image picker sub-view
   if (showImagePicker) {
     return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
-          <div className="px-6 pt-6 pb-3 space-y-3">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-base">
-                <ImageIcon className="w-5 h-5 text-primary" />
-                Trocar Imagem da Refeição
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                Selecione uma imagem do banco de alimentos
-              </DialogDescription>
-            </DialogHeader>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar alimento..."
-                value={imageSearch}
-                onChange={e => setImageSearch(e.target.value)}
-                className="pl-9 h-9 text-sm"
-                autoFocus
-              />
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto px-4 pb-6 max-h-[calc(90vh-180px)]">
-            {loadingImages ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">Carregando...</div>
-            ) : filteredImages.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">Nenhuma imagem encontrada</div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {filteredImages.map(img => (
-                  <button
-                    key={img.id}
-                    type="button"
-                    onClick={() => handleSelectImage(img.image_url)}
-                    className="group rounded-xl overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/30 transition-all"
-                  >
-                    <div className="aspect-square relative">
-                      <img src={img.image_url} alt={img.name} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                        <Check className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                    <p className="text-[10px] font-medium px-1.5 py-1 truncate text-center">{img.name}</p>
-                  </button>
-                ))}
+      <>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+          <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
+            {/* ... same content ... */}
+            <div className="px-6 pt-6 pb-3 space-y-3">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <ImageIcon className="w-5 h-5 text-primary" />
+                  Trocar Imagem da Refeição
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Selecione uma imagem do banco de alimentos
+                </DialogDescription>
+              </DialogHeader>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar alimento..."
+                  value={imageSearch}
+                  onChange={e => setImageSearch(e.target.value)}
+                  className="pl-9 h-9 text-sm"
+                  autoFocus
+                />
               </div>
-            )}
-          </div>
-          <div className="px-6 pb-4">
-            <Button variant="outline" size="sm" className="w-full" onClick={() => setShowImagePicker(false)}>
-              Voltar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 pb-6 max-h-[calc(90vh-180px)]">
+              {loadingImages ? (
+                <div className="text-center py-10 text-muted-foreground text-sm">Carregando...</div>
+              ) : filteredImages.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground text-sm">Nenhuma imagem encontrada</div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {filteredImages.map(img => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => handleSelectImage(img.image_url)}
+                      className="group rounded-xl overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/30 transition-all"
+                    >
+                      <div className="aspect-square relative">
+                        <img src={img.image_url} alt={img.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <Check className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-medium px-1.5 py-1 truncate text-center">{img.name}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-6 pb-4">
+              <Button variant="outline" size="sm" className="w-full" onClick={() => setShowImagePicker(false)}>
+                Voltar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <datalist id="portion-units">
+          {PORTION_UNITS.map(unit => (
+            <option key={unit} value={unit} />
+          ))}
+        </datalist>
+      </>
     );
+
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+
       <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl backdrop-blur-sm fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
         {/* Hero Photo */}
         {imageUrl && (
@@ -684,14 +711,24 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       <Input
                         placeholder="Ex: 150g"
                         value={manualFoodPortion}
-                        onChange={e => setManualFoodPortion(e.target.value)}
+                        list="portion-units"
+                        className={`h-9 text-sm ${manualPortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        onChange={e => {
+                          setManualFoodPortion(e.target.value);
+                          if (manualPortionError) setManualPortionError(null);
+                        }}
                         onKeyDown={e => {
                           if (e.key === "Enter") handleAddManualFood();
                           if (e.key === "Escape") setShowManualFoodInput(false);
                         }}
-                        className="h-9 text-sm"
                       />
+                      {manualPortionError && (
+                        <p className="text-[10px] text-destructive font-medium px-1 animate-in fade-in slide-in-from-top-1">
+                          {manualPortionError}
+                        </p>
+                      )}
                     </div>
+
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" className="flex-1 h-8" onClick={handleAddManualFood} disabled={!manualFoodName.trim()}>
@@ -727,14 +764,24 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">Porção</label>
                             <Input
                               value={linePortionValue}
-                              onChange={e => setLinePortionValue(e.target.value)}
+                              list="portion-units"
+                              className={`h-9 text-sm ${linePortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                              onChange={e => {
+                                setLinePortionValue(e.target.value);
+                                if (linePortionError) setLinePortionError(null);
+                              }}
                               onKeyDown={e => {
                                 if (e.key === "Enter") handleUpdateLine(idx);
                                 if (e.key === "Escape") setEditingLineIdx(null);
                               }}
-                              className="h-9 text-sm"
                             />
+                            {linePortionError && (
+                              <p className="text-[10px] text-destructive font-medium px-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                                {linePortionError}
+                              </p>
+                            )}
                           </div>
+
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" className="flex-1 h-8" onClick={() => handleUpdateLine(idx)}>
@@ -772,6 +819,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                               setEditingLineIdx(idx);
                               setLineNameValue(foodName);
                               setLinePortionValue(portion || "");
+                              setLinePortionError(null);
+
                             }}
                             className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
                             title="Editar Alimento"
@@ -1071,5 +1120,13 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         </div>
       </DialogContent>
     </Dialog>
-  );
+
+    <datalist id="portion-units">
+      {PORTION_UNITS.map(unit => (
+        <option key={unit} value={unit} />
+      ))}
+    </datalist>
+  </>
+);
 }
+
