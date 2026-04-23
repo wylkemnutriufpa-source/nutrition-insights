@@ -957,6 +957,12 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
     const requiredProtein = Number(item.protein_target) || 0;
     if (requiredProtein <= 0 || !item.description) return item;
 
+    // BLOQUEIO CRÍTICO: Proteína por refeição acima de limites fisiológicos normais (>70g)
+    // Isso evita o erro de "200g de proteína" mencionado pelo usuário.
+    if (requiredProtein > 70) {
+      throw new Error(`BLOQUEIO DE SEGURANÇA: Meta de proteína (${requiredProtein.toFixed(1)}g) excessiva detectada em ${item.meal_type || 'refeição'}. Verifique o cálculo de macros.`);
+    }
+
     const matchedFood = resolveProteinFoodForItem(item, proteinFoods);
     if (!matchedFood) return item;
 
@@ -966,6 +972,19 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
     const rawServing = requiredProtein / density;
     const computedServing = clampComputedProteinServing(rawServing, item.meal_type || "");
     
+    // Verificação de divergência (Calculado vs Cadastrado)
+    const proteinProvided = computedServing * density;
+    const divergence = Math.abs(proteinProvided - requiredProtein);
+    
+    // Se a divergência for maior que 15g de proteína (equivale a ~75g de carne), bloqueia.
+    // Isso indica que o clamping ou o banco de dados está gerando um erro "grotesco".
+    if (divergence > 15) {
+      throw new Error(
+        `DIVERGÊNCIA CRÍTICA: Proteína calculada (${requiredProtein.toFixed(1)}g) vs provida pela porção (${proteinProvided.toFixed(1)}g) em "${matchedFood.food_name}". ` +
+        `Diferença de ${divergence.toFixed(1)}g excede o limite de segurança de 15g. Envio bloqueado.`
+      );
+    }
+
     // Validations
     const densityWarning = validateNutritionalDensity(matchedFood);
     const portionAlert = getPortionAlert(roundServingGrams(rawServing), item.meal_type || "", matchedFood.food_name);
@@ -978,7 +997,10 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
         ...(item.metadata || {}),
         portion_alert: combinedAlert || null,
         original_computed_grams: roundServingGrams(rawServing),
-        matched_food_id: matchedFood.id
+        matched_food_id: matchedFood.id,
+        calculated_protein: Number(requiredProtein.toFixed(1)),
+        provided_protein: Number(proteinProvided.toFixed(1)),
+        protein_divergence: Number(divergence.toFixed(1))
       },
       description: replaceProteinLineWithServing(item.description, matchedFood, computedServing, combinedAlert),
     };
