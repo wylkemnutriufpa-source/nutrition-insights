@@ -1705,18 +1705,40 @@ export async function generateWeeklyMarmitaPlan(
   templates: ResolvedTemplate[],
   visualLibrary: VisualLibraryItem[],
   goal: string,
-  kcalTarget: number,
-  macros: { protein: number; carbs: number; fat: number },
+  targetKcal: number,
+  targetMacros: { protein: number; carbs: number; fat: number },
   restrictions: string[],
   disliked: string[],
   allergies: string[],
-  enabledMeals?: string[],
+  enabledMeals: string[],
   mealTimes?: Record<string, string>,
-  strategy?: string,
+  strategyId?: string,
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
   fastMarmitaMode: boolean = false,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
+  // NEW: Detect and replace "Marmita congelada do dia" in templates
+  for (const tpl of templates) {
+    for (const meal of tpl.meals) {
+      if (meal.foods) {
+        for (const food of meal.foods) {
+          if (food.name && (food.name.includes("Marmita congelada do dia") || food.name.includes("Marmita do dia"))) {
+            // Filter recipes by meal type
+            const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
+            const candidates = recipes.filter(r => r.meal_type === typeKey);
+            if (candidates.length > 0) {
+              // Random pick for variety
+              const picked = candidates[Math.floor(Math.random() * candidates.length)];
+              food.name = picked.name;
+              food.original_name = "Marmita congelada do dia";
+              // If it's a fixed recipe, we'll handle scaling later or use its fixed values
+            }
+          }
+        }
+      }
+    }
+  }
+...
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
