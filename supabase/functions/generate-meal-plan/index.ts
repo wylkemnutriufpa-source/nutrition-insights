@@ -857,6 +857,11 @@ function getPortionAlert(grams: number, mealType: string, foodName: string): str
     if (grams > 160) return `Porção de ovos elevada (${grams}g ≈ 3-4 ovos).`;
   }
 
+  // Specific for fish (sometimes higher volume is OK, but >220g is too much)
+  if (name.includes("peixe") || name.includes("tilapia") || name.includes("tambaqui")) {
+    if (grams > 220) return `Porção de peixe muito elevada (${grams}g).`;
+  }
+
   return null;
 }
 
