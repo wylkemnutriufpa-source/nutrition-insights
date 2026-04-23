@@ -6219,6 +6219,57 @@ export type Database = {
           },
         ]
       }
+      meal_plan_meal_targets: {
+        Row: {
+          calories_target: number | null
+          carbs_target: number | null
+          created_at: string | null
+          fat_target: number | null
+          id: string
+          meal_plan_id: string
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          protein_target: number | null
+          updated_at: string | null
+        }
+        Insert: {
+          calories_target?: number | null
+          carbs_target?: number | null
+          created_at?: string | null
+          fat_target?: number | null
+          id?: string
+          meal_plan_id: string
+          meal_type: Database["public"]["Enums"]["meal_type"]
+          protein_target?: number | null
+          updated_at?: string | null
+        }
+        Update: {
+          calories_target?: number | null
+          carbs_target?: number | null
+          created_at?: string | null
+          fat_target?: number | null
+          id?: string
+          meal_plan_id?: string
+          meal_type?: Database["public"]["Enums"]["meal_type"]
+          protein_target?: number | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_meal_targets_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_meal_targets_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_simplification_audit: {
         Row: {
           created_at: string
