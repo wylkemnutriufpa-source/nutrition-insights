@@ -57,6 +57,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
 
   // Overridable fields
   const [goal, setGoal] = useState("weight_loss");
+  const [planType, setPlanType] = useState<"normal" | "marmita">("normal");
   const [targetKcal, setTargetKcal] = useState(2000);
   const [targetProtein, setTargetProtein] = useState(120);
   const [targetCarbs, setTargetCarbs] = useState(250);
@@ -71,6 +72,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
     if (p) {
       setProfile(p);
       setGoal(p.goal);
+      setPlanType(p.planType || "normal");
       setTargetKcal(p.targetCalories);
       setTargetProtein(p.targetProtein);
       setTargetCarbs(p.targetCarbs);
@@ -99,6 +101,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
     const profileInput: PatientProfile = {
       patientId: plan?.patient_id || "",
       goal,
+      planType,
       targetCalories: targetKcal,
       targetProtein,
       targetCarbs,
@@ -129,7 +132,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
     if (res.warnings.length > 0) {
       toast.warning(`${res.warnings.length} aviso(s) durante geração`);
     }
-  }, [planId, plan?.patient_id, goal, targetKcal, targetProtein, targetCarbs, targetFat, rejectedFoods, profile]);
+  }, [planId, plan?.patient_id, goal, planType, targetKcal, targetProtein, targetCarbs, targetFat, rejectedFoods, profile]);
 
   const handleApply = useCallback(async () => {
     if (!result || !planId) return;
@@ -191,6 +194,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
         .from("meal_plans")
         .update({
           plan_status: "draft_auto_generated",
+          plan_type: planType,
           generation_source: "meal_library_engine",
           generation_metadata: result.metadata as unknown as Json,
           updated_at: new Date().toISOString(),
@@ -199,6 +203,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
 
       useMealPlanEditorV2Store.getState().updatePlan({
         plan_status: "draft_auto_generated",
+        plan_type: planType,
         generation_source: "meal_library_engine",
         generation_metadata: result.metadata as unknown as Json,
         updated_at: new Date().toISOString(),
@@ -283,6 +288,20 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
                     {Object.entries(GOAL_LABELS).map(([k, v]) => (
                       <SelectItem key={k} value={k}>{v}</SelectItem>
                     ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Plan Type */}
+              <div className="space-y-1.5">
+                <Label className="text-xs">Modelo de Dieta</Label>
+                <Select value={planType} onValueChange={(v: any) => setPlanType(v)}>
+                  <SelectTrigger className="h-9 text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="normal">Alimentação Normal (Avulso)</SelectItem>
+                    <SelectItem value="marmita">Modelo Marmitaria (Refeição Pronta)</SelectItem>
                   </SelectContent>
                 </Select>
               </div>

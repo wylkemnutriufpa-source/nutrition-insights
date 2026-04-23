@@ -46,11 +46,13 @@ export interface MealLibraryItem {
   fat: number;
   foods: { name: string; portion: string }[];
   substitutions: { replace: string; options: string[] }[];
+  plan_type: "normal" | "marmita";
 }
 
 export interface PatientProfile {
   patientId: string;
   goal: string;
+  planType: "normal" | "marmita";
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;
@@ -152,6 +154,10 @@ export async function generateMealPlanFromLibrary(
 
   let allItems = (rawItems || []) as unknown as MealLibraryItem[];
   
+  // 1.5 FILTER: Exact plan_type match (CRITICAL RULE)
+  console.warn(`[ENGINE] Aplicando filtro de tipo: ${profile.planType}`);
+  allItems = allItems.filter(item => item.plan_type === profile.planType);
+
   // 2. FILTER: Remove items with blocked or banned foods
   allItems = allItems.filter(item => {
     if (!Array.isArray(item.foods)) return true;
@@ -229,6 +235,7 @@ export async function generateMealPlanFromLibrary(
         fat: preset.fat,
         foods: preset.foods.map(f => ({ name: f, portion: f })),
         substitutions: [],
+        plan_type: profile.planType,
       };
       const sf = calcScale(preset.kcal, targetKcal);
       slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
@@ -248,6 +255,13 @@ export async function generateMealPlanFromLibrary(
 
   console.warn("[ENGINE] total slots gerados:", slots.length);
   
+  // 6. VALIDATION: Check for type consistency (CRITICAL GUARD)
+  const mixedTypes = slots.some(s => s.libraryItem.plan_type !== profile.planType);
+  if (mixedTypes) {
+    console.error("[ENGINE] Inconsistência de tipo detectada!", { expected: profile.planType });
+    throw new Error("Inconsistência de tipo de plano: mistura de marmita com normal detectada.");
+  }
+
   if (slots.length < 5) {
     console.warn("[RECOVERY] Geração insuficiente detectada (< 5), acionando fallback de presets");
     const recoveryResult = generateFromPresets(profile, distribution);
@@ -311,6 +325,7 @@ function generateFromPresets(
         fat: preset.fat,
         foods: preset.foods.map(f => ({ name: f, portion: f })),
         substitutions: [],
+        plan_type: profile.planType,
       };
 
       const sf = calcScale(preset.kcal, targetKcal);
@@ -601,6 +616,7 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
       return {
         patientId,
         goal: "maintenance",
+        planType: "normal",
         targetCalories: baseCal,
         targetProtein: Math.round(weight * 1.6),
         targetCarbs: Math.round(baseCal * 0.45 / 4),
@@ -645,6 +661,7 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
   return {
     patientId,
     goal,
+    planType: (anamnesis as any).plan_type || "normal",
     targetCalories: Number(anamnesis.computed_kcal_target) || 2000,
     targetProtein: Number(anamnesis.computed_protein) || 120,
     targetCarbs: Number(anamnesis.computed_carbs) || 250,

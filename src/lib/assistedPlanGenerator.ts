@@ -47,6 +47,7 @@ export interface AssistedPlanParams {
   proteinLevel: ProteinLevel;
   rejectedFoods: string[];
   goal: string;
+  planType: "normal" | "marmita";
 }
 
 export interface PatientContext {
@@ -312,7 +313,8 @@ export async function generateAssistedPlan(
   const { data: rawItems } = await supabase
     .from("meal_library" as any)
     .select("*")
-    .eq("is_active", true);
+    .eq("is_active", true)
+    .eq("plan_type", params.planType); // CRITICAL: Exact type match
 
   let allItems = (rawItems || []) as unknown as MealLibraryItem[];
   
