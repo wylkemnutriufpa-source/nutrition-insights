@@ -2577,6 +2577,11 @@ function syncPlanDescriptionsWithProteinTargets(originalItems: any[], adjustedIt
     const original = originalItems[index];
     if (!original?.description) return item;
 
+    // SKIP MARMITAS: They already have their descriptions scaled internally by the Recipe Engine
+    if (item._source === "meal_recipe") {
+      return item;
+    }
+
     return {
       ...item,
       description: syncProteinDescriptionPortions(
