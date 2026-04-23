@@ -1786,7 +1786,7 @@ export async function generateWeeklyMarmitaPlan(
       const result = generatePlanWithTemplates(
         templates, visualLibrary, goal, kcalTarget, macros,
         restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
-        strategy, patientFoodDatabase, recentMeals,
+        strategyId, patientFoodDatabase, recentMeals,
       );
       shadowItems = result.items;
     } else {
