@@ -265,10 +265,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const hasDescriptionLines = foodLines.length > 0;
 
   const validatePortion = (portion: string): boolean => {
-    if (!portion.trim()) return true; // Empty is fine (handled by component)
-    // Accept "150g", "2 ovos", "1.5L", "200 ml", "1 fatia", "3 unidades"
-    // Pattern: number (integer or decimal) + space? + unit (g, kg, ml, l, unidade(s), fatia(s), ovo(s), colher(es))
-    const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|fatia|fatias)$/i;
+    if (!portion.trim()) return true; 
+    // Aceita "150g", "2 ovos", "1.5L", "200 ml", "0.5kg", "2 ovos"
+    // Regex flexível para números (inteiros/decimais), espaços opcionais e unidades permitidas
+    const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|copo|copos|un|unid)$/i;
     return regex.test(portion.trim());
   };
 
