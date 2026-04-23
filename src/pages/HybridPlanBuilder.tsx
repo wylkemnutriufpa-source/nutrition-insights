@@ -547,7 +547,7 @@ export default function HybridPlanBuilder() {
 
             <QuickAdjustPanel />
 
-            <div className="flex-1 flex overflow-hidden">
+            <div className="flex-1 flex overflow-hidden flex-col">
 
           {/* Immutable plan banner */}
           {isImmutable && (
@@ -750,6 +750,7 @@ export default function HybridPlanBuilder() {
           </div>
         )}
       </DragOverlay>
+            </div>
           </div>
         </div>
       </DndContext>
