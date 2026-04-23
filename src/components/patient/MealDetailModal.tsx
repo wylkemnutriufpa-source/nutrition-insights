@@ -510,7 +510,37 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     <UtensilsCrossed className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <DialogTitle className="text-lg font-bold leading-tight">{meal.title}</DialogTitle>
+                    <div className="flex items-center gap-2 group/title">
+                      {editingTitle ? (
+                        <div className="flex gap-1 items-center flex-1">
+                          <Input
+                            autoFocus
+                            value={titleValue}
+                            onChange={e => setTitleValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") handleUpdateTitle();
+                              if (e.key === "Escape") setEditingTitle(false);
+                            }}
+                            className="h-8 text-lg font-bold py-0"
+                          />
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleUpdateTitle}>
+                            <Check className="w-4 h-4 text-primary" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <DialogTitle className="text-lg font-bold leading-tight">{meal.title}</DialogTitle>
+                          {canEdit && (
+                            <button
+                              onClick={() => { setEditingTitle(true); setTitleValue(meal.title); }}
+                              className="p-1 rounded hover:bg-primary/10 opacity-0 group-hover/title:opacity-100 transition-opacity"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-primary" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                     <DialogDescription className="text-xs mt-0.5">
                       {mealTypeInfo
                         ? `${mealTypeInfo.emoji} ${mealTypeInfo.label}`
@@ -528,7 +558,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     onClick={() => setShowImagePicker(true)}
                   >
                     <ImageIcon className="w-3.5 h-3.5" />
-                    Adicionar Imagem
+                    Trocar Imagem
                   </Button>
                 )}
               </div>
