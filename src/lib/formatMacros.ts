@@ -25,7 +25,7 @@ export function safeNum(v: unknown): number {
  */
 export function fmtMacro(v: unknown, fallback: string = "0"): string {
   const n = typeof v === "number" ? v : Number(v);
-  if (!Number.isFinite(n)) return fallback;
+  if (!Number.isFinite(n) || n <= 0) return fallback;
   return String(Math.round(n));
 }
 
