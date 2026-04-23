@@ -140,7 +140,7 @@ const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPorti
 const PORTION_UNITS = [
   "g", "kg", "ml", "l", "unidade", "unidades", "fatia", "fatias", 
   "ovo", "ovos", "colher", "colheres", "xicara", "xicaras", 
-  "pote", "potes", "scoop", "scoops"
+  "pote", "potes", "scoop", "scoops", "copo", "copos", "fatia", "fatias"
 ];
 
 
@@ -265,10 +265,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const hasDescriptionLines = foodLines.length > 0;
 
   const validatePortion = (portion: string): boolean => {
-    if (!portion.trim()) return true; // Empty is fine (handled by component)
-    // Accept "150g", "2 ovos", "1.5L", "200 ml", "1 fatia", "3 unidades"
-    // Pattern: number (integer or decimal) + space? + unit (g, kg, ml, l, unidade(s), fatia(s), ovo(s), colher(es))
-    const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|fatia|fatias)$/i;
+    if (!portion.trim()) return true; 
+    // Aceita "150g", "2 ovos", "1.5L", "200 ml", "0.5kg", "2 ovos"
+    // Regex flexível para números (inteiros/decimais), espaços opcionais e unidades permitidas
+    const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|copo|copos|un|unid)$/i;
     return regex.test(portion.trim());
   };
 
@@ -508,9 +508,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         </Dialog>
 
         <datalist id="portion-units">
-          {PORTION_UNITS.map(unit => (
-            <option key={unit} value={unit} />
-          ))}
+          {(manualFoodName || lineNameValue ? 
+            PORTION_UNITS.map(unit => {
+              const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
+              const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
+              const num = numMatch ? numMatch[1] : "";
+              return <option key={unit} value={`${num}${unit}`} />;
+            }) : 
+            PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
+          )}
         </datalist>
       </>
     );
@@ -714,8 +720,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                         list="portion-units"
                         className={`h-9 text-sm ${manualPortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                         onChange={e => {
-                          setManualFoodPortion(e.target.value);
-                          if (manualPortionError) setManualPortionError(null);
+                          const val = e.target.value;
+                          setManualFoodPortion(val);
+                          if (validatePortion(val)) setManualPortionError(null);
                         }}
                         onKeyDown={e => {
                           if (e.key === "Enter") handleAddManualFood();
@@ -767,8 +774,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                               list="portion-units"
                               className={`h-9 text-sm ${linePortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                               onChange={e => {
-                                setLinePortionValue(e.target.value);
-                                if (linePortionError) setLinePortionError(null);
+                                const val = e.target.value;
+                                setLinePortionValue(val);
+                                if (validatePortion(val)) setLinePortionError(null);
                               }}
                               onKeyDown={e => {
                                 if (e.key === "Enter") handleUpdateLine(idx);
@@ -1122,9 +1130,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     </Dialog>
 
     <datalist id="portion-units">
-      {PORTION_UNITS.map(unit => (
-        <option key={unit} value={unit} />
-      ))}
+      {(manualFoodName || lineNameValue ? 
+        PORTION_UNITS.map(unit => {
+          const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
+          const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
+          const num = numMatch ? numMatch[1] : "";
+          return <option key={unit} value={`${num}${unit}`} />;
+        }) : 
+        PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
+      )}
     </datalist>
   </>
 );
