@@ -91,7 +91,9 @@ describe("MealDetailModal - Validação de Porção", () => {
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     fireEvent.change(nameInput, { target: { value: "Batata Doce" } });
-    fireEvent.change(portionInput, { target: { value: "inválido" } });
+    
+    // Teste com valor que falha na regex (sem unidade)
+    fireEvent.change(portionInput, { target: { value: "100" } });
     fireEvent.click(saveBtn);
 
     expect(screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).toBeInTheDocument();
@@ -115,6 +117,8 @@ describe("MealDetailModal - Validação de Porção", () => {
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
+    // "2 ovos" deve falhar se não estiver na lista de unidades permitidas da regex
+    // ou se a regex não bater. "1.5kg" com decimal "." e "200 ml" com espaço.
     const validPortions = ["1.5kg", "200 ml", "0.5kg", "2 ovos"];
 
     validPortions.forEach(portion => {
@@ -122,6 +126,10 @@ describe("MealDetailModal - Validação de Porção", () => {
       fireEvent.change(nameInput, { target: { value: "Teste" } });
       fireEvent.change(portionInput, { target: { value: portion } });
       fireEvent.click(saveBtn);
+      
+      if (!mockUpdateItem.mock.calls.length) {
+         console.error(`Portion failed validation: ${portion}`);
+      }
       expect(mockUpdateItem).toHaveBeenCalled();
     });
   });
@@ -142,12 +150,12 @@ describe("MealDetailModal - Validação de Porção", () => {
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
-    // Forçar erro
-    fireEvent.change(portionInput, { target: { value: "erro" } });
+    // Forçar erro (sem número)
+    fireEvent.change(portionInput, { target: { value: "g" } });
     fireEvent.click(saveBtn);
     expect(screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).toBeInTheDocument();
 
-    // Corrigir
+    // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     expect(screen.queryByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).not.toBeInTheDocument();
   });
