@@ -17,22 +17,25 @@ vi.mock('@/components/patient/MealPlanDailyView', () => {
     MacroSummary: () => <div data-testid="macro-summary" />,
     AdherenceCard: () => <div data-testid="adherence-card" />,
     DateNavigator: () => <div data-testid="date-navigator" />,
-    MealGroup: ({ mealType, items, completions, onSetAdherence }: any) => (
-      <div data-testid={`meal-group-${mealType}`}>
-        {items.map((item: any) => (
-          <button 
-            key={item.id} 
-            data-testid={`toggle-${item.id}`}
-            onClick={() => onSetAdherence(item, 'followed')}
-          >
-            Toggle {item.id}
-          </button>
-        ))}
-        <div data-testid={`completions-count-${mealType}`}>
-          {completions.filter((c: any) => c.meal_plan_item_id === items[0]?.id).length}
+    MealGroup: ({ mealType, items, completions, onSetAdherence }: any) => {
+      const typeKey = typeof mealType === 'string' ? mealType : (mealType?.key || 'unknown');
+      return (
+        <div data-testid={`meal-group-${typeKey}`}>
+          {items.map((item: any) => (
+            <button 
+              key={item.id} 
+              data-testid={`toggle-${item.id}`}
+              onClick={() => onSetAdherence(item, 'followed')}
+            >
+              Toggle {item.id}
+            </button>
+          ))}
+          <div data-testid={`completions-count-${typeKey}`}>
+            {completions.filter((c: any) => c.meal_plan_item_id === items[0]?.id).length}
+          </div>
         </div>
-      </div>
-    ),
+      );
+    },
     MEAL_TYPES: [{ key: 'breakfast', label: 'Café' }],
     DAYS: ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado'],
   };
