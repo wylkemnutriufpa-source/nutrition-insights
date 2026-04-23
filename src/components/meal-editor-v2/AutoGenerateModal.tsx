@@ -111,7 +111,9 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
 
     // Seed with patient ID + timestamp for unique plans
     setGenerationSeed(plan?.patient_id || "", Date.now() % 1000);
+    console.warn("[PLAN] chamando generateMealPlanFromLibrary");
     const res = await generateMealPlanFromLibrary(profileInput, DEFAULT_DIST);
+    console.warn("[PLAN] resposta do gerador", res);
     setResult(res);
     setStep("preview");
 
@@ -132,7 +134,9 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
 
     try {
       // 1. Generate inserts from generated slots
+      console.warn("[PLAN] iniciando aplicação ao plano");
       const inserts = await slotsToInserts(result.slots, planId);
+      console.warn("[PLAN] inserts gerados", inserts);
 
       // Guard: block empty generation
       if (!inserts || inserts.length === 0) {
@@ -141,12 +145,14 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       }
 
       // 2. Insert new items FIRST (safe: if this fails, old plan remains intact)
+      console.warn("[PLAN] inserindo itens no banco");
       const { data: savedItems, error: insertError } = await supabase
         .from("meal_plan_items")
         .insert(inserts)
         .select();
 
       if (insertError) {
+        console.error("[PLAN] erro na inserção", insertError);
         console.error("[AutoGenerate] Insert error:", insertError);
         toast.error("Erro ao salvar refeições geradas: " + insertError.message);
         return;
@@ -187,6 +193,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       // 6. Persist snapshot to sessionStorage
       useMealPlanEditorV2Store.getState()._persistSnapshot();
 
+      console.warn("[PLAN] plano aplicado e sincronizado com sucesso");
       toast.success(`Plano gerado com ${savedItems?.length || 0} refeições! Revise e salve.`);
     } catch (err: any) {
       console.error("[AutoGenerate] Error:", err);

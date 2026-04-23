@@ -109,7 +109,7 @@ export interface AutoGenMetadata {
 }
 
 // ── Constants ────────────────────────────────────────────────
-const ENGINE_VERSION = "3.0.0";
+const ENGINE_VERSION = "3.1.0-debug";
 const MAX_REPEAT_PER_WEEK = 2;
 const MEAL_TYPES: (keyof MealDistribution)[] = [
   "breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack",
@@ -141,6 +141,7 @@ export async function generateMealPlanFromLibrary(
   profile: PatientProfile,
   distribution: MealDistribution = DEFAULT_DISTRIBUTION,
 ): Promise<AutoGenerationResult> {
+  console.warn("[PLAN] engine iniciou geração determinística v3.1");
   const warnings: string[] = [];
 
   // 1. Fetch all active library items
@@ -422,6 +423,7 @@ function normalizeGeneratedDayForStorage(day: number) {
 }
 
 export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string) {
+  console.warn("[PLAN] convertendo slots para inserts", { count: slots.length, planId });
   type MealTypeEnum = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
 
   const nested = await Promise.all(
