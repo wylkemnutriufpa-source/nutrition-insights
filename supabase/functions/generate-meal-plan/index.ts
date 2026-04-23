@@ -1709,24 +1709,25 @@ export interface MarmitaRecipe {
   fixed_carbs?: number | null;
   fixed_fat?: number | null;
   created_at?: string;
+  protein_type?: string;
+  visual_library_item_id?: string;
 }
 
 const PROTEIN_KEYWORDS: Array<{ key: string; matches: string[] }> = [
-  { key: "frango", matches: ["frango", "sobrecoxa", "peito de frango", "coxa"] },
-  { key: "carne_bovina", matches: ["patinho", "alcatra", "acém", "carne moída", "carne bovina", "almôndega", "hambúrguer de boi", "estrogonofe", "bife"] },
-  { key: "peixe", matches: ["peixe", "tilápia", "salmão", "merluza", "pescada", "atum"] },
-  { key: "porco", matches: ["porco", "lombo", "pernil"] },
-  { key: "ovo", matches: ["ovo", "omelete"] },
-  { key: "vegetariano", matches: ["grão de bico", "lentilha", "feijão preto", "soja", "tofu", "proteína vegetal"] },
-  { key: "frutos_mar", matches: ["camarão", "lula", "polvo", "fruto do mar"] },
+  { key: "FRANGO", matches: ["frango", "galinhada", "hambúrguer de frango"] },
+  { key: "CARNE", matches: ["carne", "patinho", "bolonhesa", "vaca", "estrogonofe", "massa integral", "bolinhas de carne"] },
+  { key: "PORCO", matches: ["pernil", "suíno", "porco"] },
 ];
 
 function detectRecipeProtein(recipe: MarmitaRecipe): string {
+  // Use explicit protein_type if available from DB
+  if (recipe.protein_type) return recipe.protein_type;
+
   const text = (recipe.name + " " + (recipe.foods_json || []).map(f => f.name).join(" ")).toLowerCase();
   for (const p of PROTEIN_KEYWORDS) {
-    if (p.matches.some(m => text.includes(m))) return p.key;
+    if (p.matches.some(m => text.includes(m.toLowerCase()))) return p.key;
   }
-  return "outros";
+  return "FRANGO"; // Fallback as per objective
 }
 
 function recipeViolatesRestrictions(
@@ -1818,7 +1819,7 @@ async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onl
 
   let query = client
     .from("meal_recipes")
-    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat, created_at")
+    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat, created_at, protein_type, visual_library_item_id")
     .eq("is_active", true);
 
   if (isAdmin) {
