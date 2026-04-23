@@ -6,7 +6,7 @@ import { VitePWA } from "vite-plugin-pwa";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
-  // No custom defines needed — VitePWA handles versioning via precache manifest
+  base: "/",
   server: {
     host: "::",
     port: 8080,
