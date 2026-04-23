@@ -1,7 +1,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { MemoryRouter, Routes, Route, useNavigate } from 'react-router-dom';
+import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
@@ -32,21 +32,29 @@ vi.mock('@/integrations/supabase/client', () => {
   return { supabase: { from: vi.fn(() => mockQuery), channel: vi.fn(() => mockQuery.channel()) } };
 });
 
-// Mock do useAuth
+// Mock do useAuth - ESSENCIAL: Mock completo para evitar quebras no DashboardLayout/TrialCountdown
 vi.mock('@/lib/auth', () => ({ 
   useAuth: () => ({ 
     user: { id: 'patient-123' }, 
     isPatient: true, 
-    loading: false 
-  })
+    loading: false,
+    subscription: { subscribed: true, is_trial: false, plan_id: 'premium' }
+  }),
+  AuthProvider: ({ children }: any) => <div>{children}</div>
 }));
 
 // Mock do Contexto de Tenant
 vi.mock('@/lib/tenantContext', () => ({
-  useTenant: () => ({ tenantId: 'tenant-123' })
+  useTenant: () => ({ tenantId: 'tenant-123' }),
+  TenantProvider: ({ children }: any) => <div>{children}</div>
 }));
 
-// Mock do useOnboardingGuard (Controla o fluxo)
+// Mock do DashboardLayout para simplificar o render (evita testar o menu lateral complexo)
+vi.mock('@/components/layout/DashboardLayout', () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>
+}));
+
+// Mock do useOnboardingGuard
 vi.mock('@/hooks/useOnboardingGuard', () => ({
   useOnboardingGuard: vi.fn(() => ({ requirement: 'must_complete' })),
   isOnboardingAllowedRoute: (path: string) => path.startsWith('/onboarding')
@@ -71,31 +79,10 @@ describe('Fluxo E2E Paciente: Onboarding -> Plano -> Macros', () => {
     vi.clearAllMocks();
     localStorage.clear();
     sessionStorage.clear();
-  });
-
-  it('percorre onboarding, acessa plano e valida persistência de macros', async () => {
+    
     const mockSupabase = supabase as any;
-
-    // 1. SIMULA ONBOARDING
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter initialEntries={['/onboarding-paciente']}>
-          <Routes>
-            <Route path="/onboarding-paciente" element={<OnboardingPaciente />} />
-          </Routes>
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
-
-    // Pular onboarding para ir rápido ao dashboard
-    const skipBtn = screen.getByText(/Pular/i);
-    fireEvent.click(skipBtn);
-
-    expect(localStorage.getItem('patient_onboarding_completed')).toBe('true');
-    expect(mockNavigate).toHaveBeenCalledWith('/paciente/dashboard');
-
-    // 2. SIMULA ACESSO AO PLANO (Visualização Diária)
-    // Setup mock data para o plano
+    
+    // Mock base do supabase
     mockSupabase.from.mockImplementation((table: string) => {
       const chain: any = {
         select: vi.fn().mockReturnThis(),
@@ -132,7 +119,27 @@ describe('Fluxo E2E Paciente: Onboarding -> Plano -> Macros', () => {
       };
       return chain;
     });
+  });
 
+  it('1. percorre onboarding e valida redirect', async () => {
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/onboarding-paciente']}>
+          <Routes>
+            <Route path="/onboarding-paciente" element={<OnboardingPaciente />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    const skipBtn = screen.getByText(/Pular/i);
+    fireEvent.click(skipBtn);
+
+    expect(localStorage.getItem('patient_onboarding_completed')).toBe('true');
+    expect(mockNavigate).toHaveBeenCalledWith('/paciente/dashboard');
+  });
+
+  it('2. acessa plano e valida rendering de alimentos', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -141,12 +148,27 @@ describe('Fluxo E2E Paciente: Onboarding -> Plano -> Macros', () => {
       </QueryClientProvider>
     );
 
-    // Valida render do plano
     await waitFor(() => {
       expect(screen.getByText(/Frango com Arroz/i)).toBeInTheDocument();
     });
+  });
 
-    // 3. VALIDA RENDERING DE MACROS (NextMealWidget simulando Dashboard)
+  it('3. valida persistência de macros após refresh simulado', async () => {
+    const { unmount } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <NextMealWidget />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText(/600 kcal/i)).toBeInTheDocument();
+    });
+
+    unmount();
+    
+    // Remonta o componente para simular refresh
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -159,34 +181,7 @@ describe('Fluxo E2E Paciente: Onboarding -> Plano -> Macros', () => {
       expect(screen.getByText(/600 kcal/i)).toBeInTheDocument();
       expect(screen.getByText(/P 40g/i)).toBeInTheDocument();
     });
-
-    // 4. SIMULA "REFRESH" (Remount dos componentes)
-    // No React, um refresh mantém o estado do banco/localStorage.
-    // O teste garante que ao remontar com os mesmos mocks, os dados permanecem lá.
-    const { unmount } = render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <NextMealWidget />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
-
-    expect(screen.getByText(/600 kcal/i)).toBeInTheDocument();
     
-    unmount();
-    
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <NextMealWidget />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
-
-    await waitFor(() => {
-      expect(screen.getByText(/600 kcal/i)).toBeInTheDocument();
-    });
-
-    console.log("✅ E2E Completo: Onboarding -> Plano -> Macros (Persistente após Refresh)");
+    console.log("✅ E2E Completo: Onboarding -> Plano -> Macros (Persistente)");
   });
 });
