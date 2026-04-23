@@ -254,11 +254,12 @@ export default function ClientDashboard() {
   useEffect(() => {
     if (!journeyLoading && journeyStatus === "onboarding_active") {
       // Check if patient already has an active plan — if so, don't redirect
+      // Only redirect if there is NO plan_status='published_to_patient' and no active plan
       supabase
         .from("meal_plans")
         .select("id", { count: "exact", head: true })
         .eq("patient_id", user?.id ?? "")
-        .eq("is_active", true)
+        .in("plan_status", ["published_to_patient", "published"])
         .then(({ count }) => {
           if ((count ?? 0) === 0) {
             navigate("/onboarding", { replace: true });
