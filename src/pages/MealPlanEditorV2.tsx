@@ -244,18 +244,7 @@ export default function MealPlanEditorV2() {
 
       const result = await publishMealPlan(plan.id, user.id);
       if (!result.success) {
-        const rpcData = result.data as Record<string, unknown> | undefined;
-        const rpcMessage = rpcData?.message as string | undefined;
-        const errorCode = rpcData?.error as string | undefined;
-
-        if (errorCode === "VALIDATION_REQUIRED") {
-          toast.error("⚠️ Validação obrigatória! Clique em 'Validar' antes de publicar.", { duration: 6000 });
-        } else if (errorCode === "EMPTY_PLAN") {
-          toast.error("❌ O plano não possui refeições. Adicione itens antes de publicar.", { duration: 5000 });
-        } else {
-          throw new Error(rpcMessage || result.error || "Erro ao publicar");
-        }
-        return;
+        throw new Error(result.error || "Erro ao publicar");
       }
       store.updatePlan({ plan_status: "published_to_patient", is_active: true, overall_validation_status: "aprovado", updated_at: new Date().toISOString() } as any);
       toast.success("✅ Plano publicado para o paciente!");
@@ -307,21 +296,7 @@ export default function MealPlanEditorV2() {
       // 3) Publish to patient
       const publishResult = await publishMealPlan(plan.id, user.id);
       if (!publishResult.success) {
-        const rpcData = publishResult.data as Record<string, unknown> | undefined;
-        const rpcMessage = rpcData?.message as string | undefined;
-        const errorCode = rpcData?.error as string | undefined;
-
-        if (errorCode === "VALIDATION_REQUIRED") {
-          toast.error(
-            "⚠️ Plano salvo, mas a publicação requer validação. Clique em 'Validar e Corrigir' antes de publicar.",
-            { duration: 7000 }
-          );
-        } else if (errorCode === "EMPTY_PLAN") {
-          toast.error("❌ Plano salvo, mas não possui refeições para publicar.", { duration: 6000 });
-        } else {
-          throw new Error(rpcMessage || publishResult.error || "Plano salvo, mas houve erro ao publicar");
-        }
-        return;
+        throw new Error(publishResult.error || "Plano salvo, mas houve erro ao publicar");
       }
 
       store.updatePlan({
