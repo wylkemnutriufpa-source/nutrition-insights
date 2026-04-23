@@ -127,13 +127,14 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
       // Keep pending approval status only when the onboarding is actually complete.
       const patientStepsDone = !!p.anamnesis_completed && !!p.body_data_completed && !!p.preferences_completed;
-      if (p.plan_generated && !p.plan_approved && patientStepsDone && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
+      if (p.plan_generated && !p.plan_approved && patientStepsDone && !["pending_approval", "completed", "rejected", "review"].includes(p.status)) {
         await supabase
           .from("onboarding_pipelines" as any)
           .update({ status: "pending_approval" } as any)
           .eq("id", p.id);
         setPipeline({ ...p, status: "pending_approval" });
       }
+
     }
     setLoading(false);
   }
@@ -319,11 +320,13 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             generated_plan_id: data.plans[0].mealPlanId,
             generated_plan_data: { ...data, selectedIndex: 0 },
             plan_generated: true,
+            status: "pending_approval" // Force status to allow approval actions
           } as any)
           .eq("id", pipeline.id);
 
         toast.success(`${data.plans.length} opções de plano geradas! Escolha a melhor opção.`);
         fetchPipeline();
+
       } else {
         // Single plan fallback
         const newPlanId = data.mealPlanId;
@@ -333,8 +336,10 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             generated_plan_id: newPlanId,
             generated_plan_data: data,
             plan_generated: true,
+            status: "pending_approval" // Force status
           } as any)
           .eq("id", pipeline.id);
+
 
         const finalized = await finalizeGeneratedMealPlan({
           planId: newPlanId,
@@ -857,14 +862,42 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
           </div>
         )}
 
-        {/* Completed state */}
+        {/* Completed state - still show options to regenerate if needed */}
         {pipeline.status === "completed" && (
-          <div className="text-center py-4 space-y-2">
-            <CheckCircle2 className="w-8 h-8 text-success mx-auto" />
-            <p className="text-sm text-muted-foreground">Onboarding completo. Plano ativo.</p>
-            {useScheduling && <Badge variant="outline"><CalendarClock className="w-3 h-3 mr-1" /> Programação automática ativa</Badge>}
+          <div className="text-center py-4 space-y-4 border-t mt-4">
+            <div className="space-y-2">
+              <CheckCircle2 className="w-8 h-8 text-emerald-500 mx-auto" />
+              <p className="text-sm font-medium">Onboarding completo. Plano ativo.</p>
+              {useScheduling && <Badge variant="outline"><CalendarClock className="w-3 h-3 mr-1" /> Programação automática ativa</Badge>}
+            </div>
+            
+            <div className="flex flex-col gap-2 max-w-xs mx-auto">
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="gap-2"
+                onClick={() => {
+                  const planId = selectedPlanId || pipeline.generated_plan_id || pipeline.generated_plan_data?.mealPlanId;
+                  if (planId) navigate(`/meal-plans/${planId}`);
+                }}
+              >
+                <FileText className="w-4 h-4" />
+                Abrir Plano Atual
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="gap-2 text-muted-foreground hover:text-primary"
+                disabled={openingEditor}
+                onClick={handleGenerateNewPlan}
+              >
+                {openingEditor ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+                Gerar Novo Plano (Regenerar)
+              </Button>
+            </div>
           </div>
         )}
+
 
         {/* Dead-end recovery: all plans rejected / no active plan */}
         {pipeline.plan_generated && !pipeline.plan_approved && pipeline.status !== "completed" && !pipeline.generated_plan_data?.plans?.some((p: any) => p) && (
