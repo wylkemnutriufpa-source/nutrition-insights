@@ -45,7 +45,9 @@ test('Professional can manage meal plans with manual adjustments and copy/paste'
   await page.click('button[title="Editar macros"]');
   
   await expect(page.locator('text=Editar Macros — Ovos mexidos')).toBeVisible();
-  await page.fill('input[placeholder="g"]', '25'); // Protein field (using placeholder 'g')
+  // Target protein field specifically
+  const proteinInput = page.locator('div:has(label:has-text("Proteína")) >> input');
+  await proteinInput.fill('25');
   await page.click('button:has-text("Salvar")');
 
   // Verify updated macros in UI
