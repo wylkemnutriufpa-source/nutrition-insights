@@ -1335,7 +1335,7 @@ function generatePlanWithTemplates(
     const usedProteinsToday = new Set<string>();
 
     for (const mealType of mealTypes) {
-      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+      const currentTargetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
 
       // ── STEP 1: Try template resolver ──
       if (!usedTemplateIds.has(mealType)) usedTemplateIds.set(mealType, new Set());
@@ -1496,7 +1496,7 @@ function generatePlanFromVisualLibrary(
 
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
-      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+      const currentKcalTarget = Math.round(targetKcal * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
 
       // Collect candidates from matching categories — NO FALLBACK
@@ -1783,10 +1783,10 @@ export async function generateWeeklyMarmitaPlan(
 
                 if (candidates.length > 0) {
                   // Prioritize the 19 recipes from today/yesterday by taking from the top of the sorted list
-                  // We still use some randomness among the top candidates to avoid exact repetition if possible
-                  const topCount = Math.min(candidates.length, 25); 
-                  const picked = candidates[Math.floor(Math.random() * topCount)];
-                  
+                  // Always pick the absolute newest recipe for the first day, then pick from top available
+                  // The user requested exactly the 19 recipes registered today, sorted by date.
+                  const picked = candidates[0]; // Strict: pick the newest one available for this type
+
                   console.log(`[template-marmita-fix] Replacing "${food.name}" with "${picked.name}" (Recent)`);
                   food.name = picked.name;
                   if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar") || meal.title.includes("marmita")) {
@@ -1846,7 +1846,7 @@ export async function generateWeeklyMarmitaPlan(
     const hasTpl = templates.length > 0;
     if (hasTpl) {
       const result = generatePlanWithTemplates(
-        templates, visualLibrary, goal, kcalTarget, macros,
+        templates, visualLibrary, goal, targetKcal, targetMacros,
         restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
         strategyId, patientFoodDatabase, recentMeals,
       );
