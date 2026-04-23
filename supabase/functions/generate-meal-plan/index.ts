@@ -404,8 +404,8 @@ function seedHash(str: string): number {
 }
 
 /** Generate a unique seed per generation call. If useFixedSeed is true, use patientId as seed for stability. */
-function generationSeed(patientId: string, optionOffset: number = 0, useFixedSeed: boolean = false): number {
-  const base = seedHash(patientId);
+function generationSeed(patientId: string, optionOffset: number = 0, useFixedSeed: boolean = false, goal: string = ""): number {
+  const base = seedHash(patientId + (goal ? `_${goal}` : ""));
   if (useFixedSeed) return base + optionOffset * 997;
   // Use minutes since epoch so each call (even seconds apart) gets a different seed
   const timePart = Math.floor(Date.now() / 60000);
