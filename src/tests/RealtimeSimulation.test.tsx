@@ -158,20 +158,25 @@ describe('DailyMealPlanInline - Realtime Simulation', () => {
   });
 
   it('deve processar atualizações otimistas de completions instantaneamente', async () => {
+    let container: any;
     await act(async () => {
-      render(<DailyMealPlanInline />);
+      const { container: c } = render(<DailyMealPlanInline />);
+      container = c;
     });
     
     await screen.findByTestId('meal-group-breakfast');
     
     const toggleButton = screen.getByTestId('toggle-item1');
     
+    // Antes de clicar, deve ser 0
+    expect(screen.getByTestId('completions-count-breakfast').textContent).toBe('0');
+
     await act(async () => {
       toggleButton.click();
     });
 
-    const completionsDisplay = screen.getByTestId('completions-count-breakfast');
-    expect(completionsDisplay.textContent).toBe('1');
+    // O estado deve ser atualizado otimistamente
+    expect(screen.getByTestId('completions-count-breakfast').textContent).toBe('1');
     expect(supabase.from).toHaveBeenCalledWith('meal_item_completions');
   });
 });
