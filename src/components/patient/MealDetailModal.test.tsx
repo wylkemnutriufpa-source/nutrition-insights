@@ -160,36 +160,20 @@ describe("MealDetailModal - Validação de Porção", () => {
 
     const portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
-
-    // Forçar erro (valor sem número)
+    const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
+    
+    fireEvent.change(nameInput, { target: { value: "Teste Erro" } });
     fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn);
-    
-    // Debug: ver o que está sendo renderizado no modal
-    // screen.debug();
 
-    // A validação de porção é feita no handleAddManualFood.
-    // O erro deve ser exibido em um elemento <p> com a classe text-destructive.
-    // Vamos tentar buscar por papel ou classe se o texto direto falhar por causa da animação/renderização
-    
-    // Tenta novamente encontrar o texto
-    const errorMsg = screen.queryByText((content) => content.includes("Use ex: 150g"));
-    // Se ainda for null, o erro pode não estar sendo disparado ou o saveBtn está desabilitado
-    // mas o saveBtn só desabilita se manualFoodName estiver vazio, e nós definimos "Batata Doce" no beforeEach ou em testes anteriores? 
-    // Não, precisamos definir no teste local.
-    
-    // Corrigindo o teste para garantir que o nome do alimento está preenchido
-    const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    fireEvent.change(nameInput, { target: { value: "Teste Erro" } });
-    fireEvent.click(saveBtn);
-
-    expect(screen.getByText(/Use ex: 150g/i)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(PORTION_ERROR_MESSAGE, "i"))).toBeInTheDocument();
 
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
     // O erro deve sumir
-    expect(screen.queryByText(/Use ex: 150g/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(new RegExp(PORTION_ERROR_MESSAGE, "i"))).not.toBeInTheDocument();
+  });
 
   it("deve validar porção ao editar um alimento existente", async () => {
     render(
@@ -202,18 +186,17 @@ describe("MealDetailModal - Validação de Porção", () => {
     );
 
     // Encontrar o botão de editar da primeira linha (Arroz Branco)
-    // No componente, cada linha tem um botão <Button variant="ghost" size="icon" onClick={() => handleStartEditLine(i, line)}>
     const editBtns = screen.getAllByRole("button").filter(btn => btn.querySelector(".lucide-pencil"));
     fireEvent.click(editBtns[0]);
 
     const portionInput = screen.getByDisplayValue("100g");
-    const saveBtn = screen.getByRole("button").find(btn => btn.querySelector(".lucide-check"));
+    const saveBtn = screen.getAllByRole("button").find(btn => btn.querySelector(".lucide-check"));
     
     // Invalidar
     fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn!);
 
-    expect(screen.getByText(PORTION_ERROR_MESSAGE)).toBeInTheDocument();
+    expect(screen.getByText(new RegExp(PORTION_ERROR_MESSAGE, "i"))).toBeInTheDocument();
     expect(mockUpdateItem).not.toHaveBeenCalled();
 
     // Corrigir
