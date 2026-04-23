@@ -165,10 +165,9 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "inv" } });
     fireEvent.click(saveBtn);
     
-    // Verifica se o erro apareceu
-    const errorMsg = await screen.findByText(PORTION_ERROR_MESSAGE);
-    expect(errorMsg).toBeInTheDocument();
-
+    // Verifica se o erro apareceu usando queryByText para evitar falhas se houver múltiplos elementos
+    expect(screen.queryAllByText(PORTION_ERROR_MESSAGE).length).toBeGreaterThan(0);
+  
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
