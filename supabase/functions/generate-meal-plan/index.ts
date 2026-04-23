@@ -386,6 +386,11 @@ const normalizeHeightCm = sharedNormalizeHeightCm;
 const normalizeAge = sharedNormalizeAge;
 const normalizeActivityLevel = sharedNormalizeActivityLevel;
 
+function isLossGoal(goal: string): boolean {
+  const norm = goal.toLowerCase();
+  return norm.includes("lose") || norm.includes("emagrecer") || norm.includes("deficit") || norm.includes("weight_loss");
+}
+
 // ── Seeded pseudo-random for patient-specific variety ──
 // Uses time-based entropy so each generation produces different results
 function seedHash(str: string): number {
