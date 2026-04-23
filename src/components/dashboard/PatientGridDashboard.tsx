@@ -4,10 +4,13 @@ import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/lib/auth";
-import { useState, useEffect, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
+import { useQueryClient } from "@tanstack/react-query";
+import { queryKeys } from "@/hooks/queries/queryKeys";
+import { supabase } from "@/integrations/supabase/client";
 import FitJourneyTimeline from "@/components/timeline/FitJourneyTimeline";
 import InlineExperienceToggle from "@/components/dashboard/InlineExperienceToggle";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
@@ -80,6 +83,41 @@ export default function PatientGridDashboard() {
   const { user } = useAuth();
   const expUI = useExperienceUI();
   const lifecycle = usePatientLifecycleState();
+
+  const queryClient = useQueryClient();
+
+  // Setup Realtime listener for published plans to ensure instant reflection on the dashboard
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`patient_dashboard_realtime:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'meal_plans',
+          filter: `patient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          console.log("[Sync] Meal plan changed, invalidating dashboard:", payload);
+          // Invalidate all relevant patient dashboard queries
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.dashboard.patient(user.id),
+          });
+          // Also invalidate specific meal plan queries
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.mealPlans.all(user.id),
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
 
   useEffect(() => {
     if (!user?.id || lifecycle.isLoading) return;
