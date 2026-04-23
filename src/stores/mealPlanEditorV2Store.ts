@@ -54,6 +54,7 @@ interface EditorV2State {
   clearAllItems: () => void;
   moveItem: (itemId: string, targetDay: number, targetMealType: MealType) => void;
   duplicateItem: (itemId: string) => void;
+  copyItem: (itemId: string) => void;
   copyCell: (day: number, mealType: MealType) => void;
   pasteToCell: (day: number, mealType: MealType) => void;
   swapCells: (
@@ -479,6 +480,11 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   },
 
   // ── Clipboard actions ─────────────────────────────────────
+  copyItem: (itemId) => {
+    const item = get().items.find((i) => i.id === itemId);
+    if (item) set({ clipboardItems: [item] });
+  },
+
   copyCell: (day, mealType) => {
     const toCopy = get().items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
     if (toCopy.length === 0) return;

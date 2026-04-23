@@ -25,7 +25,7 @@ interface MealItemCardProps {
 }
 
 export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
-  const { updateItem, deleteItem, duplicateItem } = useMealPlanEditorV2Store();
+  const { updateItem, deleteItem, duplicateItem, copyItem } = useMealPlanEditorV2Store();
   const { openMealDetail, setOnRemoveFoodLine, setOnChangeImage, setOnUpdateItem } = useMealDetail();
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
@@ -219,11 +219,19 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               </button>
               <button
                 type="button"
+                onClick={(e) => { e.stopPropagation(); copyItem(item.id); toast.success(`"${item.title}" copiado`); }}
+                className="p-0.5 rounded hover:bg-accent/50 text-primary"
+                title="Copiar Alimento"
+              >
+                <CopyPlus className="w-2.5 h-2.5" />
+              </button>
+              <button
+                type="button"
                 onClick={(e) => { e.stopPropagation(); duplicateItem(item.id); }}
                 className="p-0.5 rounded hover:bg-accent/50"
                 title="Duplicar"
               >
-                <CopyPlus className="w-2.5 h-2.5 text-muted-foreground" />
+                <RefreshCcw className="w-2.5 h-2.5 text-muted-foreground" />
               </button>
               <button
                 type="button"
