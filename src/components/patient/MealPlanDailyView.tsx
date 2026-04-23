@@ -118,22 +118,22 @@ const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem
       <div className="glass rounded-xl p-3 text-center">
         <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" />
         <p className="text-xs text-muted-foreground">Calorias</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.calories)}</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.calories, "...")}</p>
       </div>
       <div className="glass rounded-xl p-3 text-center">
         <Beef className="w-4 h-4 mx-auto text-red-500 mb-1" />
         <p className="text-xs text-muted-foreground">Proteína</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.protein)}g</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.protein, "...")}g</p>
       </div>
       <div className="glass rounded-xl p-3 text-center">
         <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" />
         <p className="text-xs text-muted-foreground">Carbs</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.carbs)}g</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.carbs, "...")}g</p>
       </div>
       <div className="glass rounded-xl p-3 text-center">
         <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1" />
         <p className="text-xs text-muted-foreground">Gordura</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.fat)}g</p>
+        <p className="font-display font-bold text-sm">{fmtMacro(totals.fat, "...")}g</p>
       </div>
     </div>
   );
@@ -244,7 +244,7 @@ const MealItemCard = memo(function MealItemCard({
                 return (
                   <div className="flex items-center gap-1">
                     <Flame className="w-3 h-3 text-orange-400" />
-                    <span>{fmtMacro(cal)} kcal</span>
+                    <span>{fmtMacro(cal, "...")} kcal</span>
                     {isCalorieClamped(cal) && (
                       <TooltipProvider>
                         <Tooltip>
@@ -267,9 +267,9 @@ const MealItemCard = memo(function MealItemCard({
                   </div>
                 );
               })()}
-              <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target ?? item.metadata?.protein_target ?? item.metadata?.protein)}g</span>
-              <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target ?? item.metadata?.carbs_target ?? item.metadata?.carbs)}g</span>
-              <span className="flex items-center gap-1"><Droplets className="w-3 h-3 text-yellow-400" /> {fmtMacro(item.fat_target ?? item.metadata?.fat_target ?? item.metadata?.fat)}g</span>
+              <span className="flex items-center gap-1"><Beef className="w-3 h-3 text-red-400" /> {fmtMacro(item.protein_target ?? item.metadata?.protein_target ?? item.metadata?.protein, "...")}g</span>
+              <span className="flex items-center gap-1"><Wheat className="w-3 h-3 text-amber-400" /> {fmtMacro(item.carbs_target ?? item.metadata?.carbs_target ?? item.metadata?.carbs, "...")}g</span>
+              <span className="flex items-center gap-1"><Droplets className="w-3 h-3 text-yellow-400" /> {fmtMacro(item.fat_target ?? item.metadata?.fat_target ?? item.metadata?.fat, "...")}g</span>
               
               {item.metadata?.prep_time && (
                 <Badge variant="secondary" className="px-1 py-0 h-4 text-[8px] flex items-center gap-0.5 bg-primary/5 text-primary border-primary/10">
