@@ -1750,10 +1750,31 @@ function recipeIsCannedProtein(recipe: MarmitaRecipe): boolean {
 }
 
 function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibraryItem[]): VisualLibraryItem | null {
+  // PRIORITY 1: Explicitly associated image in DB
+  if (recipe.visual_library_item_id) {
+    const directMatch = visualLibrary.find(v => v.id === recipe.visual_library_item_id);
+    if (directMatch) return directMatch;
+  }
+
+  // PRIORITY 2: Classification by protein type (Mandatory as per objective)
+  const protein = detectRecipeProtein(recipe);
+  const proteinImageMap: Record<string, string> = {
+    'FRANGO': 'db86423f-bf3a-4eb8-b660-1d2f2dc559f6', // Arroz com Frango
+    'CARNE': '251548b1-05af-416f-8cfd-967ba4f42d9f', // Arroz com Carne
+    'PORCO': 'a015d108-a1ad-4b84-85f0-310626246289', // Filé de Porco
+  };
+
+  const proteinImageId = proteinImageMap[protein];
+  if (proteinImageId) {
+    const proteinMatch = visualLibrary.find(v => v.id === proteinImageId);
+    if (proteinMatch) return proteinMatch;
+  }
+
+  // PRIORITY 3: Fuzzy match (Legacy fallback)
   const targetCategories = recipe.meal_type === "almoço" ? ["almoco"] : ["jantar", "almoco"];
   const candidates = visualLibrary.filter(v => targetCategories.includes(v.category) && v.image_url);
   if (candidates.length === 0) return null;
-  // Try fuzzy match on name keywords
+  
   const recipeText = recipe.name.toLowerCase();
   const tokens = recipeText.split(/[\s,/-]+/).filter(t => t.length >= 4);
   let best: VisualLibraryItem | null = null;
@@ -1763,6 +1784,8 @@ function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibrary
     const score = tokens.reduce((s, t) => s + (cText.includes(t) ? 1 : 0), 0);
     if (score > bestScore) { bestScore = score; best = c; }
   }
+
+  // FALLBACK: default image or first candidate
   return best || candidates[0];
 }
 
