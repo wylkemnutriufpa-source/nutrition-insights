@@ -2286,6 +2286,45 @@ export type Database = {
           },
         ]
       }
+      clinical_engine_audit_logs: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          image_url: string | null
+          marmita_name: string | null
+          meal_plan_id: string | null
+          metadata: Json | null
+          patient_id: string
+          protein_type: string | null
+          resolution_source: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          image_url?: string | null
+          marmita_name?: string | null
+          meal_plan_id?: string | null
+          metadata?: Json | null
+          patient_id: string
+          protein_type?: string | null
+          resolution_source?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          image_url?: string | null
+          marmita_name?: string | null
+          meal_plan_id?: string | null
+          metadata?: Json | null
+          patient_id?: string
+          protein_type?: string | null
+          resolution_source?: string | null
+        }
+        Relationships: []
+      }
       clinical_experiment_assignments: {
         Row: {
           assigned_at: string
@@ -6483,10 +6522,10 @@ export type Database = {
           meal_type: string
           name: string
           nutritionist_id: string
-          protein_type: string | null
+          protein_type: string
           tenant_id: string | null
           updated_at: string
-          visual_library_item_id: string | null
+          visual_library_item_id: string
         }
         Insert: {
           base_recipe?: Json | null
@@ -6504,10 +6543,10 @@ export type Database = {
           meal_type?: string
           name: string
           nutritionist_id: string
-          protein_type?: string | null
+          protein_type?: string
           tenant_id?: string | null
           updated_at?: string
-          visual_library_item_id?: string | null
+          visual_library_item_id?: string
         }
         Update: {
           base_recipe?: Json | null
@@ -6525,12 +6564,19 @@ export type Database = {
           meal_type?: string
           name?: string
           nutritionist_id?: string
-          protein_type?: string | null
+          protein_type?: string
           tenant_id?: string | null
           updated_at?: string
-          visual_library_item_id?: string | null
+          visual_library_item_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_meal_recipes_visual_library"
+            columns: ["visual_library_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_visual_library"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "meal_recipes_tenant_id_fkey"
             columns: ["tenant_id"]
