@@ -227,7 +227,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isNutritionist, isAdmin, subscription } = useAuth();
+  const { user, loading, isNutritionist, isAdmin } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) {
     console.warn("[RouteGuard:Nutritionist] No user → /auth");
@@ -237,10 +237,7 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
     console.warn("[RouteGuard:Nutritionist] Not nutritionist/admin → /", { isNutritionist, isAdmin });
     return <Navigate to="/" replace />;
   }
-  if (!isAdmin && !subscription.subscribed && !subscription.is_trial) {
-    console.warn("[RouteGuard:Nutritionist] No subscription → /pricing");
-    return <Navigate to="/pricing" replace />;
-  }
+  // REMOVED: Automatic redirect to /pricing based on subscription status to ensure "Zero Blocks"
   return <>{children}</>;
 }
 
@@ -256,17 +253,14 @@ function PersonalRoute({ children }: { children: React.ReactNode }) {
 }
 
 function ProfessionalRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isNutritionist, isPersonal, isAdmin, subscription } = useAuth();
+  const { user, loading, isNutritionist, isPersonal, isAdmin } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (!isNutritionist && !isPersonal && !isAdmin) {
     console.warn("[RouteGuard:Professional] Not professional → /", { isNutritionist, isPersonal, isAdmin });
     return <Navigate to="/" replace />;
   }
-  if (!isAdmin && !subscription.subscribed && !subscription.is_trial) {
-    console.warn("[RouteGuard:Professional] No subscription → /pricing");
-    return <Navigate to="/pricing" replace />;
-  }
+  // REMOVED: Automatic redirect to /pricing based on subscription status to ensure "Zero Blocks"
   return <>{children}</>;
 }
 
