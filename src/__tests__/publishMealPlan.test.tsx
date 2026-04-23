@@ -158,8 +158,11 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
     // Valida que o paciente vê 2000 kcal e não zero ou NaN
     const kcalPill = await screen.findByText(/2000 kcal/i);
     expect(kcalPill).toBeInTheDocument();
-    expect(screen.queryByText(/0 kcal/i)).not.toBeInTheDocument();
     
+    // Verificamos que o texto "0 kcal" não existe (usando string literal para bater com o formato do fmtMacro se estivesse zerado)
+    const allText = document.body.textContent || "";
+    expect(allText).not.toContain("0 kcal");
+
     console.log("✅ E2E Publicação: Status mudou para 'published_to_patient' e macros exibidos corretamente.");
   });
 });
