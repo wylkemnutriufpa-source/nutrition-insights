@@ -254,6 +254,14 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
   const hasDescriptionLines = foodLines.length > 0;
 
+  const validatePortion = (portion: string): boolean => {
+    if (!portion.trim()) return true; // Empty is fine (handled by component)
+    // Accept "150g", "2 ovos", "1.5L", "200 ml", "1 fatia", "3 unidades"
+    // Pattern: number (integer or decimal) + space? + unit (g, kg, ml, l, unidade(s), fatia(s), ovo(s), colher(es))
+    const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|fatia|fatias)$/i;
+    return regex.test(portion.trim());
+  };
+
   const handleUpdateTitle = () => {
     if (!canEdit || !meal.itemId || !titleValue.trim() || titleValue === meal.title) {
       setEditingTitle(false);
@@ -286,6 +294,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       setEditingLineIdx(null);
       return;
     }
+    
+    if (linePortionValue.trim() && !validatePortion(linePortionValue)) {
+      toast.error("Formato de porção inválido. Use ex: 150g, 2 ovos, 1 fatia");
+      return;
+    }
+
     const name = lineNameValue.trim();
     const portion = linePortionValue.trim();
     const newLine = `• ${name}${portion ? ` — ${portion}` : ""}`;
@@ -303,6 +317,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
   const handleAddManualFood = () => {
     if (!canEdit || !meal.itemId || !manualFoodName.trim()) return;
+    
+    if (manualFoodPortion.trim() && !validatePortion(manualFoodPortion)) {
+      toast.error("Formato de porção inválido. Use ex: 150g, 2 ovos, 1 fatia");
+      return;
+    }
+
     const name = manualFoodName.trim();
     const portion = manualFoodPortion.trim();
     const newLine = `• ${name}${portion ? ` — ${portion}` : ""}`;

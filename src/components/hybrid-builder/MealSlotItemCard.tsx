@@ -98,13 +98,23 @@ export default function MealSlotItemCard({
           {isEditing ? (
             <div className="flex items-center gap-1">
               <Input
-                type="number"
+                type="text"
                 value={editGrams}
                 onChange={(e) => setEditGrams(e.target.value)}
-                className="h-5 w-16 text-[10px] px-1"
+                placeholder="Ex: 150g"
+                className={`h-5 w-20 text-[10px] px-1 ${
+                  editGrams.trim() && !/^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops)$/i.test(editGrams.trim())
+                  ? "border-destructive text-destructive"
+                  : ""
+                }`}
                 autoFocus
                 onKeyDown={(e) => {
-                  if (e.key === "Enter") onApplyGramsChange(item);
+                  if (e.key === "Enter") {
+                    if (editGrams.trim() && !/^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops)$/i.test(editGrams.trim())) {
+                      return;
+                    }
+                    onApplyGramsChange(item);
+                  }
                   if (e.key === "Escape") setEditingId(null);
                 }}
               />
