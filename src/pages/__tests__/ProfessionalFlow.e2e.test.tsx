@@ -69,7 +69,12 @@ vi.mock("@/integrations/supabase/client", () => ({
     rpc: vi.fn().mockResolvedValue({ data: { success: true }, error: null }),
     functions: {
       invoke: vi.fn().mockResolvedValue({ data: { success: true, mealPlanId: "new-plan-1" }, error: null })
-    }
+    },
+    channel: vi.fn(() => ({
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn().mockReturnThis(),
+      unsubscribe: vi.fn().mockReturnThis(),
+    }))
   }
 }));
 
@@ -125,8 +130,10 @@ describe("E2E Professional Flow: Patient -> Plan -> Protocol", () => {
     renderWithProviders(<Protocols />);
 
     await waitFor(() => {
-      expect(screen.getByText("Protocolos")).toBeDefined();
+      // Usar RegEx para ser mais flexível (pode vir como "Protocolos Nutricionais")
+      expect(screen.getByText(/Protocolos/)).toBeDefined();
     });
   });
 });
+
 
