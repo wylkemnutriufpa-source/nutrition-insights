@@ -1335,7 +1335,7 @@ function generatePlanWithTemplates(
     const usedProteinsToday = new Set<string>();
 
     for (const mealType of mealTypes) {
-      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+      const currentTargetKcal = Math.round(targetKcal * (MEAL_KCAL_SPLIT[mealType] || 0.15));
 
       // ── STEP 1: Try template resolver ──
       if (!usedTemplateIds.has(mealType)) usedTemplateIds.set(mealType, new Set());
