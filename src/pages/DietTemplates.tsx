@@ -416,7 +416,10 @@ export default function DietTemplates() {
         is_active: false,
         plan_status: "draft",
         total_calories: getAdjustedCalories(template),
-      }] as any) as any)
+        total_protein: template.protein || 0,
+        total_carbs: template.carbohydrates || 0,
+        total_fat: template.fat || 0,
+      }])
       .select("id")
       .single();
     if (planErr || !plan) throw new Error(planErr?.message || "Falha ao criar plano");
