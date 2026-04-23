@@ -32,6 +32,9 @@ interface EditorV2State {
   hydrated: boolean;
   hydrating: boolean;
 
+  // ── Clipboard ─────────────────────────────────────────────
+  clipboardItems: MealPlanItem[] | null;
+
   // ── Sync ──────────────────────────────────────────────────
   syncStatus: SyncStatus;
   syncingMap: Record<string, boolean>;
@@ -51,6 +54,8 @@ interface EditorV2State {
   clearAllItems: () => void;
   moveItem: (itemId: string, targetDay: number, targetMealType: MealType) => void;
   duplicateItem: (itemId: string) => void;
+  copyCell: (day: number, mealType: MealType) => void;
+  pasteToCell: (day: number, mealType: MealType) => void;
   swapCells: (
     srcDay: number, srcMeal: MealType,
     dstDay: number, dstMeal: MealType
@@ -187,6 +192,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   hydrating: false,
   syncStatus: "idle",
   syncingMap: {},
+  clipboardItems: null,
   pendingOps: [],
   lastSavedAt: null,
 
@@ -470,6 +476,35 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       was_auto_corrected: item.was_auto_corrected,
       edit_metadata: getMetadataFromItem(item),
     });
+  },
+
+  // ── Clipboard actions ─────────────────────────────────────
+  copyCell: (day, mealType) => {
+    const toCopy = get().items.filter((i) => i.day_of_week === day && i.meal_type === mealType);
+    if (toCopy.length === 0) return;
+    set({ clipboardItems: toCopy });
+  },
+
+  pasteToCell: (day, mealType) => {
+    const { clipboardItems, planId, addItems } = get();
+    if (!clipboardItems || clipboardItems.length === 0 || !planId) return;
+
+    const inserts = clipboardItems.map((item) => ({
+      meal_plan_id: planId,
+      title: item.title,
+      description: item.description,
+      meal_type: mealType,
+      day_of_week: day,
+      calories_target: item.calories_target,
+      protein_target: item.protein_target,
+      carbs_target: item.carbs_target,
+      fat_target: item.fat_target,
+      visual_library_item_id: (item as any).visual_library_item_id,
+      image_url: (item as any).image_url,
+      item_origin: (item as any).item_origin || "manual",
+    } as TablesInsert<"meal_plan_items">));
+
+    addItems(inserts);
   },
 
   // ── Swap two cells ────────────────────────────────────────

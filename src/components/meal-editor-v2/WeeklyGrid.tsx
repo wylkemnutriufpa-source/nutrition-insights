@@ -4,6 +4,7 @@ import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Plus, Check, ArrowLeftRight, Search,
   Flame, Beef, Wheat, Droplets, Zap, Bookmark,
+  Copy, ClipboardPaste, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -47,7 +48,7 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 export function WeeklyGrid() {
-  const { items, syncingMap, planId, addItem, swapCells } = useMealPlanEditorV2Store();
+  const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell } = useMealPlanEditorV2Store();
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
