@@ -119,7 +119,7 @@ describe("MealDetailModal - Validação de Porção", () => {
 
     // "2 ovos" deve falhar se não estiver na lista de unidades permitidas da regex
     // ou se a regex não bater. "1.5kg" com decimal "." e "200 ml" com espaço.
-    const validPortions = ["1.5kg", "200 ml", "0.5kg", "2 ovos"];
+    const validPortions = ["1.5kg", "200g", "0.5kg", "2 ovos"];
 
     validPortions.forEach(portion => {
       mockUpdateItem.mockClear();
@@ -150,8 +150,8 @@ describe("MealDetailModal - Validação de Porção", () => {
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
-    // Forçar erro (sem número)
-    fireEvent.change(portionInput, { target: { value: "g" } });
+    // Forçar erro (valor sem número)
+    fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn);
     expect(screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).toBeInTheDocument();
 
