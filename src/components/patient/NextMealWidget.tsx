@@ -40,6 +40,7 @@ export default function NextMealWidget() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const [nextMeal, setNextMeal] = useState<MealSlot | null>(null);
+  const [totalsStatus, setTotalsStatus] = useState<string>("ok");
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,7 +53,7 @@ export default function NextMealWidget() {
       const { data: plan } = await withTenantFilter(
         supabase
           .from("meal_plans")
-          .select("id")
+          .select("id, totals_status")
           .eq("patient_id", userId)
           .eq("is_active", true)
           .order("created_at", { ascending: false })
@@ -61,6 +62,7 @@ export default function NextMealWidget() {
       ).maybeSingle();
 
       if (!plan) { setLoading(false); return; }
+      setTotalsStatus(plan.totals_status || "ok");
 
       const dayOfWeek = (new Date().getDay() + 6) % 7;
 
@@ -158,19 +160,28 @@ export default function NextMealWidget() {
         </div>
 
         {/* Macro pills with zero-protection fallbacks using fmtMacro default behavior */}
-        <div className="flex gap-2 mt-3" data-macro-tile="next-meal">
-          <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold" data-macro="kcal" data-macro-value="kcal">
-            {fmtMacro(nextMeal.total_kcal, "...")} kcal
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-semibold" data-macro="protein" data-macro-value="protein">
-            P {fmtMacro(nextMeal.protein_g, "...")}g
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[10px] font-semibold" data-macro="carbs" data-macro-value="carbs">
-            C {fmtMacro(nextMeal.carbs_g, "...")}g
-          </span>
-          <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold" data-macro="fat" data-macro-value="fat">
-            G {fmtMacro(nextMeal.fat_g, "...")}g
-          </span>
+        <div className="flex flex-col gap-2 mt-3">
+          <div className="flex gap-2" data-macro-tile="next-meal">
+            <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary text-[10px] font-semibold" data-macro="kcal" data-macro-value="kcal">
+              {fmtMacro(nextMeal.total_kcal, "...")} kcal
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-accent/10 text-accent text-[10px] font-semibold" data-macro="protein" data-macro-value="protein">
+              P {fmtMacro(nextMeal.protein_g, "...")}g
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-warning/10 text-warning text-[10px] font-semibold" data-macro="carbs" data-macro-value="carbs">
+              C {fmtMacro(nextMeal.carbs_g, "...")}g
+            </span>
+            <span className="px-2 py-0.5 rounded-full bg-destructive/10 text-destructive text-[10px] font-semibold" data-macro="fat" data-macro-value="fat">
+              G {fmtMacro(nextMeal.fat_g, "...")}g
+            </span>
+          </div>
+          
+          {(totalsStatus === "incomplete" || nextMeal.total_kcal === 0) && (
+            <div className="flex items-center gap-1.5 px-2 py-1 bg-amber-500/5 rounded-lg border border-amber-500/10">
+              <Clock className="w-3 h-3 text-amber-500 animate-pulse" />
+              <span className="text-[9px] text-amber-600 font-medium">Sincronizando macros...</span>
+            </div>
+          )}
         </div>
       </motion.div>
     </Link>

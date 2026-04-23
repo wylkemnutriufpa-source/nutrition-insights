@@ -436,7 +436,7 @@ export default function DailyMealPlanInline() {
       />
 
       {/* Macros */}
-      <MacroSummary items={items} />
+      <MacroSummary items={items} totalsStatus={plan?.totals_status} />
 
       {/* Emotional feedback */}
       {isToday && dailyAdherence > 0 && (
