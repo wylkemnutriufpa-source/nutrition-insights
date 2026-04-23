@@ -258,9 +258,9 @@ export default function MealPlanEditorV2() {
     try {
       await store._flushQueue();
 
-      const result = await publishMealPlan(plan.id, user.id);
-      if (!result.success) {
-        throw new Error(result.error || "Erro ao publicar");
+      const result = await supabase.rpc('activate_meal_plan', { _plan_id: plan.id });
+      if (result.error) {
+        throw new Error(result.error.message || "Erro ao publicar");
       }
       // Recalcula totais após publicar (não bloqueia)
       const totals = await calculatePlanTotals(plan.id);
@@ -321,9 +321,9 @@ export default function MealPlanEditorV2() {
       store.updatePlan({ plan_status: "approved", updated_at: new Date().toISOString() } as any);
 
       // 3) Publish to patient
-      const publishResult = await publishMealPlan(plan.id, user.id);
-      if (!publishResult.success) {
-        throw new Error(publishResult.error || "Plano salvo, mas houve erro ao publicar");
+      const publishResult = await supabase.rpc('activate_meal_plan', { _plan_id: plan.id });
+      if (publishResult.error) {
+        throw new Error(publishResult.error.message || "Plano salvo, mas houve erro ao publicar");
       }
 
       // Recalcula totais consolidados — não bloqueia em caso de falha
