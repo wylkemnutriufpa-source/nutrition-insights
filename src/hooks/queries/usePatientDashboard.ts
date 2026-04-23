@@ -26,7 +26,13 @@ export function usePatientDashboard() {
           table: 'meal_plans',
           filter: `patient_id=eq.${user.id}`,
         },
-        () => {
+        async (payload) => {
+          // Optimistic update: If a new plan is published, we can briefly show a toast or trigger a faster refresh
+          if (payload.eventType === 'UPDATE' && payload.new.plan_status === 'published_to_patient' && payload.new.is_active) {
+             // We could manually update query cache here for "active plan" if it were in a separate query,
+             // but since it's inside the dashboard big query, we invalidate.
+          }
+          
           // Invalidate dashboard query when any plan changes (publish/archive)
           queryClient.invalidateQueries({
             queryKey: queryKeys.dashboard.patient(user.id),
