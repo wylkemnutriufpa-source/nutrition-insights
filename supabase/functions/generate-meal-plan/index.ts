@@ -1783,10 +1783,10 @@ export async function generateWeeklyMarmitaPlan(
 
                 if (candidates.length > 0) {
                   // Prioritize the 19 recipes from today/yesterday by taking from the top of the sorted list
-                  // We still use some randomness among the top candidates to avoid exact repetition if possible
-                  const topCount = Math.min(candidates.length, 25); 
-                  const picked = candidates[Math.floor(Math.random() * topCount)];
-                  
+                  // Always pick the absolute newest recipe for the first day, then pick from top available
+                  // The user requested exactly the 19 recipes registered today, sorted by date.
+                  const picked = candidates[0]; // Strict: pick the newest one available for this type
+
                   console.log(`[template-marmita-fix] Replacing "${food.name}" with "${picked.name}" (Recent)`);
                   food.name = picked.name;
                   if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar") || meal.title.includes("marmita")) {
