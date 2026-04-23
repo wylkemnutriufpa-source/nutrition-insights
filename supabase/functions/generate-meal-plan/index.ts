@@ -2723,10 +2723,20 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     }
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://vkrcobprntictsxqmjjl.supabase.co";
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    const supabaseKey = serviceRoleKey ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+    
     const serviceClient = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function") 
       ? maybeSupabaseClient 
       : createClient(supabaseUrl, supabaseKey);
+
+    // Create a client with the user's auth token for RLS-sensitive checks if service role is missing
+    const authHeader = req.headers.get("Authorization");
+    const authClient = (!maybeSupabaseClient && authHeader)
+      ? createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY") ?? "", {
+          global: { headers: { Authorization: authHeader } },
+        })
+      : serviceClient;
 
     // Resolve tenant_id
     const { data: tenantProfile } = await serviceClient
@@ -2772,7 +2782,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         patientProfile?.user_id,
       ].filter(Boolean)));
 
-      const { data: activeLink } = await serviceClient
+      // Use authClient for the link check to ensure RLS doesn't block it
+      const { data: activeLink } = await authClient
         .from("nutritionist_patients")
         .select("id")
         .in("patient_id", patientIdentityIds)
