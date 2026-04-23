@@ -13,6 +13,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtMacro } from "@/lib/formatMacros";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import {
+  validatePortion,
+  getPortionAutocompleteOptions,
+  PORTION_ERROR_MESSAGE,
+  PORTION_PLACEHOLDER,
+  PORTION_DATALIST_ID,
+} from "@/lib/portionValidation";
 
 interface FoodItem {
   name: string;
@@ -137,13 +144,6 @@ const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPorti
   vegetable: { foods: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"], defaultPortion: "50g" },
 };
 
-const PORTION_UNITS = [
-  "g", "kg", "ml", "l", "unidade", "unidades", "fatia", "fatias", 
-  "ovo", "ovos", "colher", "colheres", "xicara", "xicaras", 
-  "pote", "potes", "scoop", "scoops", "copo", "copos", "un", "unid"
-];
-
-
 function normalizeForMatch(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -264,14 +264,6 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
   const hasDescriptionLines = foodLines.length > 0;
 
-  const validatePortion = (portion: string): boolean => {
-    if (!portion.trim()) return true; 
-    // Aceita "150g", "2 ovos", "1.5L", "200 ml", "0.5kg", "2 ovos"
-    // Regex flexível para números (inteiros/decimais), espaços opcionais e unidades permitidas
-    const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|copo|copos|un|unid)$/i;
-    return regex.test(portion.trim());
-  };
-
   const handleUpdateTitle = () => {
     if (!canEdit || !meal.itemId || !titleValue.trim() || titleValue === meal.title) {
       setEditingTitle(false);
@@ -306,7 +298,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     }
     
     if (linePortionValue.trim() && !validatePortion(linePortionValue)) {
-      setLinePortionError("Use ex: 150g, 2 ovos, 1 fatia");
+      setLinePortionError(PORTION_ERROR_MESSAGE);
       return;
     }
 
@@ -330,7 +322,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!canEdit || !meal.itemId || !manualFoodName.trim()) return;
     
     if (manualFoodPortion.trim() && !validatePortion(manualFoodPortion)) {
-      setManualPortionError("Use ex: 150g, 2 ovos, 1 fatia");
+      setManualPortionError(PORTION_ERROR_MESSAGE);
       return;
     }
 
