@@ -74,7 +74,8 @@ vi.mock("@/integrations/supabase/client", () => ({
       on: vi.fn().mockReturnThis(),
       subscribe: vi.fn().mockReturnThis(),
       unsubscribe: vi.fn().mockReturnThis(),
-    }))
+    })),
+    removeChannel: vi.fn().mockResolvedValue(null)
   }
 }));
 
@@ -130,10 +131,12 @@ describe("E2E Professional Flow: Patient -> Plan -> Protocol", () => {
     renderWithProviders(<Protocols />);
 
     await waitFor(() => {
-      // Usar RegEx para ser mais flexível (pode vir como "Protocolos Nutricionais")
-      expect(screen.getByText(/Protocolos/)).toBeDefined();
+      // Usar RegEx mais específico para o título h1
+      const heading = screen.getByRole("heading", { level: 1, name: /Protocolos Nutricionais/i });
+      expect(heading).toBeDefined();
     });
   });
 });
+
 
 
