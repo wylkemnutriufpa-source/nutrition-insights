@@ -6441,6 +6441,7 @@ export type Database = {
         Row: {
           adherence_score: number | null
           clinical_score: number | null
+          clinical_status: string | null
           created_at: string
           description: string | null
           editor_version: string | null
@@ -6462,6 +6463,7 @@ export type Database = {
           plan_status: string
           plan_type: string | null
           previous_plan_id: string | null
+          quality_alerts: Json | null
           requires_regeneration: boolean | null
           simplicity_score: number | null
           start_date: string
@@ -6488,6 +6490,7 @@ export type Database = {
         Insert: {
           adherence_score?: number | null
           clinical_score?: number | null
+          clinical_status?: string | null
           created_at?: string
           description?: string | null
           editor_version?: string | null
@@ -6509,6 +6512,7 @@ export type Database = {
           plan_status?: string
           plan_type?: string | null
           previous_plan_id?: string | null
+          quality_alerts?: Json | null
           requires_regeneration?: boolean | null
           simplicity_score?: number | null
           start_date: string
@@ -6535,6 +6539,7 @@ export type Database = {
         Update: {
           adherence_score?: number | null
           clinical_score?: number | null
+          clinical_status?: string | null
           created_at?: string
           description?: string | null
           editor_version?: string | null
@@ -6556,6 +6561,7 @@ export type Database = {
           plan_status?: string
           plan_type?: string | null
           previous_plan_id?: string | null
+          quality_alerts?: Json | null
           requires_regeneration?: boolean | null
           simplicity_score?: number | null
           start_date?: string
@@ -19364,6 +19370,7 @@ export type Database = {
         Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json
       }
+      validate_clinical_quality: { Args: { p_plan_id: string }; Returns: Json }
       validate_onboarding_token: { Args: { _token: string }; Returns: Json }
       validate_plan_integrity: { Args: { p_plan_id: string }; Returns: Json }
       validate_practical_template: { Args: { _meals: Json }; Returns: Json }

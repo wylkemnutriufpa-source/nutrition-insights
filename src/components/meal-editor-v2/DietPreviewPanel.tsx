@@ -37,6 +37,9 @@ export default function DietPreviewPanel() {
   const weekKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
   const daysWithItems = new Set(items.map((i) => i.day_of_week)).size;
   const avgKcal = daysWithItems > 0 ? Math.round(weekKcal / daysWithItems) : 0;
+  
+  const clinicalScore = (plan as any)?.clinical_score || 0;
+  const qualityAlerts = (plan as any)?.quality_alerts || [];
 
   return (
     <div className="space-y-4">
@@ -57,10 +60,12 @@ export default function DietPreviewPanel() {
             <p className="text-[10px] text-muted-foreground">Dias preenchidos</p>
           </div>
           <div className="text-center">
-            <p className="text-lg font-bold text-foreground">
-              {plan?.overall_validation_status === "aprovado" ? "✅" : "⏳"}
+            <p className={`text-lg font-bold ${
+              clinicalScore >= 90 ? "text-green-500" : clinicalScore >= 70 ? "text-amber-500" : "text-red-500"
+            }`}>
+              {clinicalScore}
             </p>
-            <p className="text-[10px] text-muted-foreground">Validação</p>
+            <p className="text-[10px] text-muted-foreground">Score Clínico</p>
           </div>
         </div>
       </div>
