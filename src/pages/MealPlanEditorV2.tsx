@@ -31,6 +31,7 @@ import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs
 import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
+import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
 import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
 import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
@@ -215,8 +216,23 @@ export default function MealPlanEditorV2() {
 
       const approveResult = await savePlanAsApproved(plan.id, user!.id);
       if (!approveResult.success) throw new Error(approveResult.error || "Erro ao aprovar");
-      store.updatePlan({ plan_status: "approved", updated_at: new Date().toISOString() } as any);
-      toast.success("Plano salvo com sucesso!");
+
+      // Garante consistência dos totais (não bloqueia em caso de falha)
+      const totals = await calculatePlanTotals(plan.id);
+      store.updatePlan({
+        plan_status: "approved",
+        total_calories: totals.total_calories,
+        total_protein: totals.total_protein,
+        total_carbs: totals.total_carbs,
+        total_fat: totals.total_fat,
+        updated_at: new Date().toISOString(),
+      } as any);
+
+      if (totals.totals_status === "incomplete") {
+        toast.success("Plano salvo. Totais serão recalculados em segundo plano.");
+      } else {
+        toast.success("Plano salvo com sucesso!");
+      }
     } catch (err: any) {
       console.error("[Save] Error:", err);
       toast.error("Erro ao salvar: " + (err?.message || "Tente novamente"));
@@ -246,7 +262,18 @@ export default function MealPlanEditorV2() {
       if (!result.success) {
         throw new Error(result.error || "Erro ao publicar");
       }
-      store.updatePlan({ plan_status: "published_to_patient", is_active: true, overall_validation_status: "aprovado", updated_at: new Date().toISOString() } as any);
+      // Recalcula totais após publicar (não bloqueia)
+      const totals = await calculatePlanTotals(plan.id);
+      store.updatePlan({
+        plan_status: "published_to_patient",
+        is_active: true,
+        overall_validation_status: "aprovado",
+        total_calories: totals.total_calories,
+        total_protein: totals.total_protein,
+        total_carbs: totals.total_carbs,
+        total_fat: totals.total_fat,
+        updated_at: new Date().toISOString(),
+      } as any);
       toast.success("✅ Plano publicado para o paciente!");
     } catch (err: any) {
       console.error("[Publish] Error:", err);
@@ -299,14 +326,25 @@ export default function MealPlanEditorV2() {
         throw new Error(publishResult.error || "Plano salvo, mas houve erro ao publicar");
       }
 
+      // Recalcula totais consolidados — não bloqueia em caso de falha
+      const totals = await calculatePlanTotals(plan.id);
+
       store.updatePlan({
         plan_status: "published_to_patient",
         is_active: true,
         overall_validation_status: "aprovado",
+        total_calories: totals.total_calories,
+        total_protein: totals.total_protein,
+        total_carbs: totals.total_carbs,
+        total_fat: totals.total_fat,
         updated_at: new Date().toISOString(),
       } as any);
 
-      toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { duration: 5000 });
+      if (totals.totals_status === "incomplete") {
+        toast.success("✅ Plano publicado. Os totais nutricionais serão recalculados em segundo plano.", { duration: 5000 });
+      } else {
+        toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { duration: 5000 });
+      }
     } catch (err: any) {
       console.error("[SaveAndPublish] Error:", err);
       toast.error(err?.message || "Erro ao salvar e publicar. Tente novamente.");
