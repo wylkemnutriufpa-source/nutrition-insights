@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen, fireEvent } from "@testing-library/react";
-import { MealDetailModal } from "../MealDetailModal";
+import { MealDetailModal } from "./MealDetailModal";
 import "@testing-library/jest-dom";
 
 // Mock do toast para evitar erros
