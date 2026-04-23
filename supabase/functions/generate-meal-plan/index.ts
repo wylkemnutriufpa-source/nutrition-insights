@@ -1705,18 +1705,40 @@ export async function generateWeeklyMarmitaPlan(
   templates: ResolvedTemplate[],
   visualLibrary: VisualLibraryItem[],
   goal: string,
-  kcalTarget: number,
-  macros: { protein: number; carbs: number; fat: number },
+  targetKcal: number,
+  targetMacros: { protein: number; carbs: number; fat: number },
   restrictions: string[],
   disliked: string[],
   allergies: string[],
-  enabledMeals?: string[],
+  enabledMeals: string[],
   mealTimes?: Record<string, string>,
-  strategy?: string,
+  strategyId?: string,
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
   fastMarmitaMode: boolean = false,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
+  // NEW: Detect and replace "Marmita congelada do dia" in templates
+  if (templates) {
+    for (const tpl of templates) {
+      if (tpl.meals) {
+        for (const meal of tpl.meals) {
+          if (meal.foods) {
+            for (const food of meal.foods) {
+              if (food.name && (food.name.includes("Marmita congelada do dia") || food.name.includes("Marmita do dia") || food.name === "Marmita Selecionada (Almoço)" || food.name === "Marmita Selecionada (Jantar)")) {
+                const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
+                const candidates = (recipes || []).filter(r => r.meal_type === typeKey);
+                if (candidates.length > 0) {
+                  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+                  food.name = picked.name;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
@@ -1764,7 +1786,7 @@ export async function generateWeeklyMarmitaPlan(
       const result = generatePlanWithTemplates(
         templates, visualLibrary, goal, kcalTarget, macros,
         restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
-        strategy, patientFoodDatabase, recentMeals,
+        strategyId, patientFoodDatabase, recentMeals,
       );
       shadowItems = result.items;
     } else {
