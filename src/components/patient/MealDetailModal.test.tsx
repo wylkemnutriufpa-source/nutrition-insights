@@ -60,7 +60,7 @@ describe("MealDetailModal - Validação de Porção", () => {
 
     const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/i });
+    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     fireEvent.change(nameInput, { target: { value: "Batata Doce" } });
     fireEvent.change(portionInput, { target: { value: "200g" } });
@@ -85,7 +85,7 @@ describe("MealDetailModal - Validação de Porção", () => {
 
     const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/i });
+    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     fireEvent.change(nameInput, { target: { value: "Batata Doce" } });
     
@@ -114,7 +114,7 @@ describe("MealDetailModal - Validação de Porção", () => {
 
     const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/i });
+    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     const validPortions = ["1.5kg", "200 ml", "0.5kg", "2 ovos"];
 
@@ -141,7 +141,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(addBtn);
 
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/i });
+    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     // Provocar erro
     fireEvent.change(portionInput, { target: { value: "errado" } });
