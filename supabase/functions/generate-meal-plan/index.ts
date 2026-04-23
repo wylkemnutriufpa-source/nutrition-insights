@@ -3575,6 +3575,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
 
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
+    // const seed already defined above for single plan flow
+
     
     // ── TEMPLATE-FIRST PIPELINE: Templates → Visual Library fallback ──
     let rawPlanItems: any[];
