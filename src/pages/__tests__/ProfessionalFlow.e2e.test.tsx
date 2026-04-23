@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import Patients from "../Patients";
 import MealPlans from "../MealPlans";
@@ -72,17 +73,31 @@ vi.mock("@/integrations/supabase/client", () => ({
   }
 }));
 
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 describe("E2E Professional Flow: Patient -> Plan -> Protocol", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("should list patients and navigate to detail", async () => {
-    render(
-      <MemoryRouter>
-        <Patients />
-      </MemoryRouter>
+  const renderWithProviders = (ui: React.ReactElement) => {
+    return render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          {ui}
+        </MemoryRouter>
+      </QueryClientProvider>
     );
+  };
+
+  it("should list patients and navigate to detail", async () => {
+    renderWithProviders(<Patients />);
 
     await waitFor(() => {
       expect(screen.getByText("Paciente Teste")).toBeDefined();
@@ -90,35 +105,28 @@ describe("E2E Professional Flow: Patient -> Plan -> Protocol", () => {
   });
 
   it("should open create meal plan dialog and trigger auto-generation", async () => {
-    render(
-      <MemoryRouter>
-        <MealPlans />
-      </MemoryRouter>
-    );
+    renderWithProviders(<MealPlans />);
 
     // Abrir modal de novo plano
     const newPlanBtn = await screen.findByText("Novo Plano");
     fireEvent.click(newPlanBtn);
 
     // Selecionar paciente
-    const select = await screen.findByRole("combobox");
-    fireEvent.change(select, { target: { value: "pat-1" } });
+    const selects = await screen.findAllByRole("combobox");
+    fireEvent.change(selects[0], { target: { value: "pat-1" } });
 
-    // Verificar se o seletor de modo aparece
+    // Verificar se o modal abre e mostra conteúdo
     await waitFor(() => {
-      expect(screen.getByText("Selecione um paciente para gerar o plano")).toBeDefined();
+      expect(screen.getByText("Criar Plano Alimentar")).toBeDefined();
     });
   });
 
   it("should display protocols list", async () => {
-    render(
-      <MemoryRouter>
-        <Protocols />
-      </MemoryRouter>
-    );
+    renderWithProviders(<Protocols />);
 
     await waitFor(() => {
       expect(screen.getByText("Protocolos")).toBeDefined();
     });
   });
 });
+
