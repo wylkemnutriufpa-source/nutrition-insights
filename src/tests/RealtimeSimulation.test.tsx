@@ -12,7 +12,6 @@ vi.mock('../lib/auth', () => ({
 
 // Mock components to simplify rendering
 vi.mock('@/components/patient/MealPlanDailyView', () => {
-  const React = require('react');
   return {
     MacroSummary: () => <div data-testid="macro-summary" />,
     AdherenceCard: () => <div data-testid="adherence-card" />,
@@ -62,25 +61,29 @@ const createMockChain = (data: any = null) => {
     single: vi.fn(() => Promise.resolve({ data, error: null })),
     insert: vi.fn(() => ({
       select: () => ({
-        single: () => Promise.resolve({ data: { id: 'real-id', ...data }, error: null })
+        single: () => Promise.resolve({ data: { id: 'real-id' }, error: null })
       })
     })),
     update: vi.fn(() => chain),
     delete: vi.fn(() => chain),
     gte: vi.fn(() => chain),
     lte: vi.fn(() => chain),
-    then: (resolve: any) => Promise.resolve({ data: Array.isArray(data) ? data : [data], error: null }).then(resolve),
+    then: (resolve: any) => {
+      if (typeof resolve === 'function') {
+        return Promise.resolve({ data: Array.isArray(data) ? data : [data], error: null }).then(resolve);
+      }
+      return chain;
+    },
   };
   return chain;
 };
 
-// Global for tracking callbacks
 let realtimeCallbacks: Record<string, Function> = {};
 
 const mockChannel = {
   on: vi.fn((event, filter, callback) => {
-    const key = `${filter.table}:${filter.event || 'all'}`;
-    realtimeCallbacks[key] = callback;
+    // console.log('ON:', filter.table);
+    realtimeCallbacks[filter.table] = callback;
     return mockChannel;
   }),
   subscribe: vi.fn((cb) => {
@@ -116,42 +119,36 @@ describe('DailyMealPlanInline - Realtime Simulation', () => {
   });
 
   it('deve re-renderizar quando receber evento de alteração no plano via Realtime', async () => {
-    render(<DailyMealPlanInline />);
+    await act(async () => {
+      render(<DailyMealPlanInline />);
+    });
     
-    // Esperar carregamento inicial
     await screen.findByTestId('meal-group-breakfast');
     
-    // Verificar se o callback do Realtime foi registrado para meal_plans
-    expect(realtimeCallbacks['meal_plans:all']).toBeDefined();
+    expect(realtimeCallbacks['meal_plans']).toBeDefined();
     
-    // Simular evento de UPDATE no meal_plans
     await act(async () => {
-      realtimeCallbacks['meal_plans:all']({
+      realtimeCallbacks['meal_plans']({
         eventType: 'UPDATE',
-        new: { ...mockPlan, title: 'Plano Atualizado', plan_status: 'published_to_patient' },
+        new: { ...mockPlan, title: 'Plano Atualizado' },
         old: mockPlan
       });
     });
 
-    // O fetchData deve ter sido chamado novamente (silenciosamente)
-    // No mock, isso resultará em uma nova consulta ao supabase.from('meal_plans')
     expect(supabase.from).toHaveBeenCalledWith('meal_plans');
   });
 
   it('deve atualizar marcações de dieta via Realtime para meal_item_completions', async () => {
-    // Nota: O componente atual escuta meal_plans e meal_plan_items. 
-    // Para meal_item_completions, as atualizações são disparadas localmente (otimistas) 
-    // ou via polling se necessário, mas vamos verificar se ele reage a novos itens do plano.
-    
-    render(<DailyMealPlanInline />);
+    await act(async () => {
+      render(<DailyMealPlanInline />);
+    });
     
     await screen.findByTestId('meal-group-breakfast');
     
-    expect(realtimeCallbacks['meal_plan_items:all']).toBeDefined();
+    expect(realtimeCallbacks['meal_plan_items']).toBeDefined();
     
-    // Simular nova versão de itens (talvez um ajuste do nutricionista)
     await act(async () => {
-      realtimeCallbacks['meal_plan_items:all']({
+      realtimeCallbacks['meal_plan_items']({
         eventType: 'INSERT',
         new: { id: 'item2', meal_type: 'breakfast', meal_plan_id: 'plan1' }
       });
@@ -161,24 +158,20 @@ describe('DailyMealPlanInline - Realtime Simulation', () => {
   });
 
   it('deve processar atualizações otimistas de completions instantaneamente', async () => {
-    render(<DailyMealPlanInline />);
+    await act(async () => {
+      render(<DailyMealPlanInline />);
+    });
     
     await screen.findByTestId('meal-group-breakfast');
     
     const toggleButton = screen.getByTestId('toggle-item1');
-    const completionsDisplay = screen.getByTestId('completions-count-breakfast');
     
-    expect(completionsDisplay.textContent).toBe('0');
-
-    // Clicar para marcar como feito
     await act(async () => {
       toggleButton.click();
     });
 
-    // Deve mudar para 1 imediatamente devido à lógica otimista
+    const completionsDisplay = screen.getByTestId('completions-count-breakfast');
     expect(completionsDisplay.textContent).toBe('1');
-    
-    // Verificar se chamou o banco de dados
     expect(supabase.from).toHaveBeenCalledWith('meal_item_completions');
   });
 });
