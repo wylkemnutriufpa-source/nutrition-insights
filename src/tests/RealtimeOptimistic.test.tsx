@@ -97,7 +97,6 @@ describe('DailyMealPlanInline - Optimistic Updates & Realtime', () => {
     // or use a more advanced setup. For now, we validate the presence of the logic.
     
     const { render, screen, fireEvent } = await import('@testing-library/react');
-    const DailyMealPlanInlineDefault = (await import('../components/patient/DailyMealPlanInline')).default;
     
     // Mock the completions to be empty initially
     (supabase.from as any).mockImplementation((table: string) => {
@@ -116,7 +115,7 @@ describe('DailyMealPlanInline - Optimistic Updates & Realtime', () => {
       return createMockChain();
     });
 
-    render(<DailyMealPlanInlineDefault />);
+    render(<DailyMealPlanInline />);
     
     // Wait for load
     await screen.findByTestId('meal-group');
