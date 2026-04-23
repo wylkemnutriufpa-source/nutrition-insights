@@ -1496,7 +1496,7 @@ function generatePlanFromVisualLibrary(
 
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
-      const targetKcal = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+      const currentKcalTarget = Math.round(targetKcal * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
 
       // Collect candidates from matching categories — NO FALLBACK
