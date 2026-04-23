@@ -52,12 +52,9 @@ describe('Fluxo E2E Automatizado: Marmita Semanal -> Publicação -> Visualizaç
 
   beforeEach(() => {
     vi.clearAllMocks();
-  });
-
-  it('deve reproduzir o fluxo completo sem macros zeradas ou loops', async () => {
-    const mockSupabase = supabase as any;
     
-    // Configura o mock do supabase para retornar dados válidos em todas as chamadas
+    // Default mock behavior
+    const mockSupabase = supabase as any;
     mockSupabase.from.mockImplementation((table: string) => {
       const chain: any = {
         select: vi.fn().mockReturnThis(),
@@ -99,12 +96,13 @@ describe('Fluxo E2E Automatizado: Marmita Semanal -> Publicação -> Visualizaç
       return chain;
     });
 
-    // NUTRICIONISTA: GERAR PLANO SEMANAL
     mockSupabase.functions.invoke.mockResolvedValue({ 
       data: { success: true, mealPlanId: mockPlanId, items_count: 14 }, 
       error: null 
     });
+  });
 
+  it('1. Nutricionista deve conseguir disparar geração de marmita semanal', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -113,23 +111,20 @@ describe('Fluxo E2E Automatizado: Marmita Semanal -> Publicação -> Visualizaç
       </QueryClientProvider>
     );
 
-    // Simulate clicking the weekly marmita button
-    // It's the button that contains "Cardápio Semanal"
     const weeklyBtnLabel = await screen.findByText(/Cardápio Semanal de Marmitas/i);
     const weeklyBtn = weeklyBtnLabel.closest('button');
-    expect(weeklyBtn).not.toBeDisabled();
     
-    await act(async () => {
-      fireEvent.click(weeklyBtn!);
-    });
+    await waitFor(() => expect(weeklyBtn).not.toBeDisabled());
+    fireEvent.click(weeklyBtn!);
     
     await waitFor(() => {
-      expect(mockSupabase.functions.invoke).toHaveBeenCalled();
-    }, { timeout: 5000 });
+      expect(supabase.functions.invoke).toHaveBeenCalledWith('generate-meal-plan', expect.objectContaining({
+        body: expect.objectContaining({ generationMode: 'weekly_marmita' })
+      }));
+    });
+  });
 
-    // LIMPAR E RENDERIZAR VISUALIZAÇÃO PACIENTE
-    document.body.innerHTML = '';
-    
+  it('2. Paciente deve visualizar macros corretos (sem zerar)', async () => {
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
@@ -138,9 +133,9 @@ describe('Fluxo E2E Automatizado: Marmita Semanal -> Publicação -> Visualizaç
       </QueryClientProvider>
     );
 
-    // Valida que Kcal NÃO está zerada (2000 kcal do mock)
     const kcalPill = await screen.findByText(/2000 kcal/i);
     expect(kcalPill).toBeInTheDocument();
     expect(screen.queryByText(/0 kcal/i)).not.toBeInTheDocument();
+    expect(screen.getByText(/P 150g/i)).toBeInTheDocument();
   });
 });
