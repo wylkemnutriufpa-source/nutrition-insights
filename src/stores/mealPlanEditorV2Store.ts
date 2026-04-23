@@ -64,6 +64,7 @@ interface EditorV2State {
 
   // Plan-level
   updatePlan: (patch: Partial<MealPlan>) => void;
+  recalculateMealPlan: (delta: { protein?: number; carbs?: number; calories?: number }) => void;
 
   // Internal helpers
   _enqueue: (op: PendingOp) => void;
@@ -187,6 +188,69 @@ async function resolveVisualsForItems(items: MealPlanItem[]) {
 
 // ── Store ────────────────────────────────────────────────────
 export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
+  recalculateMealPlan: (delta) => {
+    console.warn("[QUICK_ADJUST] Aplicando delta clínico", delta);
+    const { items, planId, plan } = get();
+    if (!planId || items.length === 0) return;
+
+    const prevItems = [...items];
+    const masterItems = items.filter(i => i.day_of_week === 0);
+    const totalProt = masterItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+    const totalCarb = masterItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
+    const totalKcal = masterItems.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+
+    // Determinar Fatores de Escala
+    const pScale = delta.protein ? (totalProt + delta.protein) / totalProt : 1;
+    const cScale = delta.carbs ? (totalCarb + delta.carbs) / totalCarb : 1;
+    const kScale = delta.calories ? (totalKcal + delta.calories) / totalKcal : 1;
+
+    const updatedItems = items.map(item => {
+      if (item.day_of_week !== 0) return item;
+
+      const nextProt = item.protein_target ? Number(item.protein_target) * pScale : 0;
+      const nextCarb = item.carbs_target ? Number(item.carbs_target) * cScale : 0;
+      const nextKcal = item.calories_target ? Number(item.calories_target) * kScale : 0;
+      
+      let nextDescription = item.description;
+      if (nextDescription) {
+        nextDescription = nextDescription.replace(/(\d+)\s*g/g, (match, grams) => {
+          const g = parseFloat(grams);
+          const scale = (item.carbs_target && Number(item.carbs_target) > Number(item.protein_target)) ? cScale : (pScale || kScale);
+          return `${Math.round(g * scale)}g`;
+        });
+      }
+
+      return {
+        ...item,
+        protein_target: Math.round(nextProt * 10) / 10,
+        carbs_target: Math.round(nextCarb * 10) / 10,
+        calories_target: Math.round(nextKcal),
+        description: nextDescription,
+        is_manually_edited: true,
+      };
+    });
+
+    set({ items: updatedItems });
+
+    get()._enqueue({
+      key: `recalculate:${Date.now()}`,
+      itemIds: updatedItems.map(i => i.id).filter(id => !id.startsWith("temp-")),
+      queuedAt: Date.now(),
+      persist: async () => {
+        const toUpdate = updatedItems.filter(i => !i.id.startsWith("temp-"));
+        if (toUpdate.length === 0) return;
+        const { error } = await supabase
+          .from("meal_plan_items")
+          .upsert(toUpdate.map(i => ({
+            ...sanitizeMealPlanItemInsert(i),
+            id: i.id
+          })));
+        if (error) throw error;
+      },
+      rollback: () => set({ items: prevItems }),
+    });
+  },
+
   planId: null,
   plan: null,
   patientName: "",

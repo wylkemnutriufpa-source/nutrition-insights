@@ -25,11 +25,12 @@ import { logAudit } from "@/lib/auditLog";
 import { validateMealPlan } from "@/lib/mealPlanValidationFlow";
 import type { ComposerMode } from "@/lib/mealComposer";
 
-import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock } from "lucide-react";
+import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MealType } from "@/stores/mealPlanEditorV2Store";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
+import { QuickAdjustPanel } from "@/components/meal-editor-v2/QuickAdjustPanel";
 
 export default function HybridPlanBuilder() {
   // Recipe expansion: load recipe_items → match foods → create individual meal_plan_items
@@ -524,25 +525,29 @@ export default function HybridPlanBuilder() {
         onDragEnd={(event) => { setActiveDragData(null); handleDragEnd(event); }}
         onDragCancel={() => { dragStartYRef.current = null; setActiveDragData(null); }}
       >
-        <div className="space-y-3">
-          {/* Topbar */}
-          <BuilderTopbar
-            patientName={store.patientName}
-            saving={saving}
-            publishing={publishing}
-            validating={validating}
-            onBack={() => plan?.patient_id ? navigate(`/patients/${plan.patient_id}`) : navigate("/meal-plans")}
-            onSave={handleSave}
-            onValidate={handleValidate}
-            onPublish={handlePublish}
-            onSaveAsTemplate={() => setSaveTemplateOpen(true)}
-            lockedValidationMode={lockedValidationMode}
-            onRename={async (newTitle) => {
-              store.updatePlan({ title: newTitle, updated_at: new Date().toISOString() } as any);
-              await supabase.from("meal_plans").update({ title: newTitle }).eq("id", plan.id);
-              toast.success("Plano renomeado!");
-            }}
-          />
+        <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden space-y-3">
+            <BuilderTopbar
+              patientName={store.patientName}
+              saving={saving}
+              publishing={publishing}
+              validating={validating}
+              onBack={() => plan?.patient_id ? navigate(`/patients/${plan.patient_id}`) : navigate("/meal-plans")}
+              onSave={handleSave}
+              onValidate={handleValidate}
+              onPublish={handlePublish}
+              onSaveAsTemplate={() => setSaveTemplateOpen(true)}
+              lockedValidationMode={lockedValidationMode}
+              onRename={async (newTitle) => {
+                store.updatePlan({ title: newTitle, updated_at: new Date().toISOString() } as any);
+                await supabase.from("meal_plans").update({ title: newTitle }).eq("id", plan.id);
+                toast.success("Plano renomeado!");
+              }}
+            />
+
+            <QuickAdjustPanel />
+
+            <div className="flex-1 flex overflow-hidden flex-col">
 
           {/* Immutable plan banner */}
           {isImmutable && (
@@ -736,6 +741,9 @@ export default function HybridPlanBuilder() {
             )}
           </div>
         </div>
+      </div>
+    </div>
+  </div>
         <DragOverlay dropAnimation={null}>
           {activeDragData && (
             <div className="px-3 py-2 rounded-lg bg-card border border-primary shadow-lg text-xs font-medium flex items-center gap-2 pointer-events-none">
