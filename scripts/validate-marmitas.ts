@@ -28,7 +28,7 @@ async function validateMarmitas() {
   const results = [];
   let totalErrors = 0;
 
-  for (const m of marmitas) {
+  for (const m of marmitas as any[]) {
     const errors = [];
     
     // Check protein_type
@@ -73,7 +73,6 @@ async function validateMarmitas() {
 
   if (totalErrors > 0) {
     console.error("⚠️ SHIELDING FAILED: Some marmitas are broken.");
-    // Deno.exit(1); // Don't exit yet, let's see the full report
   } else {
     console.log("💎 SHIELDING SUCCESS: All marmitas are compliant.");
   }
