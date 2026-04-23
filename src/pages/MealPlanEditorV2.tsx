@@ -159,6 +159,10 @@ export default function MealPlanEditorV2() {
   const clinicalStatus = (plan as any).clinical_status || "pending_evaluation";
   const clinicalScore = (plan as any).clinical_score || 0;
   const qualityAlerts = (plan as any).quality_alerts || [];
+  
+  // Extra checks to handle case where plan totals might be used for score
+  const totalCalories = (plan as any).total_calories || 0;
+  const totalProtein = (plan as any).total_protein || 0;
   const isImmutable = IMMUTABLE_STATUSES.includes(planStatus);
   const canPublish = !["published", "published_to_patient"].includes(planStatus);
   
