@@ -621,14 +621,65 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <ChefHat className="w-5 h-5 text-primary" />
                 <h4 className="font-semibold text-base">Composição</h4>
                 {canEdit && (
-                  <span className="text-[10px] text-muted-foreground ml-auto">Clique no ✕ para remover</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="ml-auto h-7 px-2 gap-1.5 text-xs text-primary"
+                    onClick={() => setShowManualFoodInput(true)}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Adicionar Alimento
+                  </Button>
                 )}
               </div>
+              
+              {showManualFoodInput && (
+                <div className="flex gap-1.5 mb-3">
+                  <Input
+                    autoFocus
+                    placeholder="Ex: Frango — 150g"
+                    value={manualFoodInput}
+                    onChange={e => setManualFoodInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") handleAddManualFood();
+                      if (e.key === "Escape") setShowManualFoodInput(false);
+                    }}
+                    className="h-9 text-sm"
+                  />
+                  <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleAddManualFood} disabled={!manualFoodInput.trim()}>
+                    <Check className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
               <ul className="space-y-1.5">
                 {foodLines.map((line, idx) => {
                   if (removedLines.has(idx)) return null;
                   const isBullet = line.startsWith("•");
                   const displayText = isBullet ? line.slice(1).trim() : line;
+
+                  if (editingLineIdx === idx) {
+                    return (
+                      <li key={idx} className="flex gap-1.5 items-center">
+                        <Input
+                          autoFocus
+                          value={lineValue}
+                          onChange={e => setLineValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") handleUpdateLine(idx);
+                            if (e.key === "Escape") setEditingLineIdx(null);
+                          }}
+                          className="h-9 text-sm flex-1"
+                        />
+                        <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => handleUpdateLine(idx)}>
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setEditingLineIdx(null)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </li>
+                    );
+                  }
 
                   // Extract portion if present (e.g., "Frango — 150g")
                   const portionMatch = displayText.match(/—\s*(.+)$/);
@@ -636,7 +687,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                   const portion = portionMatch ? portionMatch[1].trim() : null;
 
                   return (
-                    <li key={idx} className="flex items-center gap-2 text-sm bg-secondary/30 rounded-lg px-3 py-2 group/line">
+                    <li key={idx} className="flex items-center gap-2 text-sm bg-secondary/30 rounded-lg px-3 py-2 group/line hover:bg-secondary/50 transition-colors">
                       <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
                       <span className="flex-1 font-medium text-[13px]">{foodName}</span>
                       {portion && (
@@ -645,18 +696,32 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                           {portion}
                         </span>
                       )}
-                      {canEdit && isBullet && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveLine(idx);
-                          }}
-                          className="p-1 rounded-full hover:bg-destructive/20 opacity-0 group-hover/line:opacity-100 transition-opacity shrink-0"
-                          title={`Remover ${foodName}`}
-                        >
-                          <X className="w-3.5 h-3.5 text-destructive" />
-                        </button>
+                      {canEdit && (
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingLineIdx(idx);
+                              setLineValue(displayText);
+                            }}
+                            className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-primary" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveLine(idx);
+                            }}
+                            className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
+                            title="Remover"
+                          >
+                            <X className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        </div>
                       )}
                     </li>
                   );
