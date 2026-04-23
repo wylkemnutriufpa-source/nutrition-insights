@@ -124,7 +124,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     expect(mockUpdateItem).toHaveBeenCalledTimes(1);
 
     fireEvent.change(nameInput, { target: { value: "T2" } });
-    fireEvent.change(portionInput, { target: { value: "200ml" } });
+    fireEvent.change(portionInput, { target: { value: "200 ml" } });
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalledTimes(2);
 
