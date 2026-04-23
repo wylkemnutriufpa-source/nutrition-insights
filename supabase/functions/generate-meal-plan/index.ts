@@ -560,40 +560,72 @@ async function resolveVisualForItems(client: any, planId: string, _items: any[])
 
   const { data: insertedItems } = await client
     .from("meal_plan_items")
-    .select("id, title, description")
+    .select("id, title, description, meal_type, edit_metadata")
     .eq("meal_plan_id", planId);
 
   if (!insertedItems || insertedItems.length === 0) return 0;
 
-  const updates: { id: string; visual_library_item_id: string; edit_metadata?: any }[] = [];
+  const updates: any[] = [];
+  const auditLogs: any[] = [];
+
   for (const item of insertedItems) {
     let visualId = resolveVisualFromDescription(item.title || "", item.description || "", aliasMap);
     let isFallback = false;
+    let resolutionSource = "library";
+
+    // SHIELDING LAYER: If item is a marmita, it should already have its recipe metadata in edit_metadata or we can look it up
+    const isMarmita = item.edit_metadata?.source === "meal_recipe";
+    const recipeId = item.edit_metadata?.recipe_id;
+
+    if (!visualId && isMarmita && recipeId) {
+      // Try to recover from recipe directly if normal resolution failed
+      const { data: recipe } = await client.from("meal_recipes").select("visual_library_item_id, protein_type").eq("id", recipeId).single();
+      if (recipe?.visual_library_item_id) {
+        visualId = recipe.visual_library_item_id;
+        resolutionSource = "recipe_fixed";
+      }
+    }
 
     if (!visualId) {
       // Fallback por categoria/meal_type
       const category = normalize(item.meal_type || "");
       visualId = DEFAULT_VISUAL_FALLBACKS[category] || null;
-      if (visualId) isFallback = true;
+      if (visualId) {
+        isFallback = true;
+        resolutionSource = "fallback_category";
+      }
+    }
+
+    // Ultimate fallback if still null (Shielding rule: NEVER NULL)
+    if (!visualId) {
+      visualId = DEFAULT_VISUAL_FALLBACKS["almoco"]; // Global default
+      isFallback = true;
+      resolutionSource = "ultimate_fallback";
     }
 
     if (visualId) {
       updates.push({ 
         id: item.id, 
         visual_library_item_id: visualId,
-        edit_metadata: isFallback ? { asset_status: "pending_asset", fallback_applied: true } : undefined
+        edit_metadata: { 
+          ...(item.edit_metadata || {}), 
+          asset_status: isFallback ? "pending_asset" : "verified", 
+          fallback_applied: isFallback,
+          resolution_source: resolutionSource
+        }
       });
     }
   }
 
   if (updates.length === 0) return 0;
 
-  // Load image URLs from visual library to copy into items
+  // Load image URLs
   const visualIds = [...new Set(updates.map(u => u.visual_library_item_id))];
   const { data: visualItems } = await client
     .from("meal_visual_library")
     .select("id, image_url")
     .in("id", visualIds);
+  
   const visualImageMap = new Map<string, string>();
   if (visualItems) {
     for (const vi of visualItems) {
@@ -601,28 +633,42 @@ async function resolveVisualForItems(client: any, planId: string, _items: any[])
     }
   }
 
-  const groupedByVisual = new Map<string, string[]>();
-  for (const u of updates) {
-    if (!groupedByVisual.has(u.visual_library_item_id)) {
-      groupedByVisual.set(u.visual_library_item_id, []);
-    }
-    groupedByVisual.get(u.visual_library_item_id)!.push(u.id);
-  }
-
-  const updatePromises = updates.map(u =>
-    client
+  const updatePromises = updates.map(u => {
+    const imageUrl = visualImageMap.get(u.visual_library_item_id) || "/images/marmitas/default.jpg";
+    return client
       .from("meal_plan_items")
       .update({ 
         visual_library_item_id: u.visual_library_item_id, 
-        image_url: visualImageMap.get(u.visual_library_item_id) || null,
+        image_url: imageUrl,
         edit_metadata: u.edit_metadata
       })
-      .eq("id", u.id)
-  );
+      .eq("id", u.id);
+  });
+  
   await Promise.all(updatePromises);
+
+  // AUDIT LOGGING (MANDATORY FOR SHIELDING)
+  try {
+    const { data: planInfo } = await client.from("meal_plans").select("patient_id").eq("id", planId).single();
+    if (planInfo) {
+      const logs = updates.map(u => ({
+        patient_id: planInfo.patient_id,
+        meal_plan_id: planId,
+        event_type: "visual_resolution",
+        marmita_name: _items.find((i: any) => i.id === u.id)?.title || "Unknown",
+        image_url: visualImageMap.get(u.visual_library_item_id),
+        resolution_source: u.edit_metadata?.resolution_source,
+        metadata: { item_id: u.id, visual_id: u.visual_library_item_id }
+      }));
+      await client.from("clinical_engine_audit_logs").insert(logs);
+    }
+  } catch (logErr) {
+    console.warn("Non-blocking audit log error:", logErr);
+  }
 
   return updates.length;
 }
+
 
 function isBlockedFood(name: string): boolean {
   // Uses local normalize (strips non-alphanumeric) for consistency with this engine's text processing
