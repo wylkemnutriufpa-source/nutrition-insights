@@ -3991,11 +3991,17 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       created_by: userId,
     });
 
+    // ──── STEP 8: Clinical Post-Validation Guard ────
+    const { data: issues } = await serviceClient.rpc("validate_plan_integrity", { p_plan_id: finalMealPlanId });
+    const validationStatus = (issues && issues.length > 0) ? "invalid" : "valid";
+
     return new Response(
       JSON.stringify({
         success: true,
         mealPlanId: finalMealPlanId,
         plan_status: "draft_auto_generated",
+        validation_status: validationStatus,
+        issues: issues || [],
         items_count: planItems.length,
         tips_count: tips.length,
         generation_mode: generationMode,

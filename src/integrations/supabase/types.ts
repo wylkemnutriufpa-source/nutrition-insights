@@ -2870,6 +2870,48 @@ export type Database = {
         }
         Relationships: []
       }
+      clinical_plan_audit_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          issues: Json | null
+          patient_id: string | null
+          plan_id: string | null
+          validation_status: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          issues?: Json | null
+          patient_id?: string | null
+          plan_id?: string | null
+          validation_status: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          issues?: Json | null
+          patient_id?: string | null
+          plan_id?: string | null
+          validation_status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinical_plan_audit_logs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "clinical_plan_audit_logs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       clinical_population_patterns: {
         Row: {
           avg_response_score: number | null
@@ -19164,7 +19206,13 @@ export type Database = {
         Args: { _contact_method?: string; _patient_id: string }
         Returns: Json
       }
-      migrate_all_plans_to_new_model: { Args: never; Returns: undefined }
+      migrate_all_plans_to_new_model: {
+        Args: never
+        Returns: {
+          count_items_removed: number
+          count_plans: number
+        }[]
+      }
       normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
       preview_orphan_onboarding_pipelines: {
         Args: never
@@ -19317,6 +19365,7 @@ export type Database = {
         Returns: Json
       }
       validate_onboarding_token: { Args: { _token: string }; Returns: Json }
+      validate_plan_integrity: { Args: { p_plan_id: string }; Returns: Json }
       validate_practical_template: { Args: { _meals: Json }; Returns: Json }
     }
     Enums: {
