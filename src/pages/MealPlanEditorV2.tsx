@@ -156,6 +156,9 @@ export default function MealPlanEditorV2() {
   const isPublished = planState.isEffective;
   const isApproved = planState.isApproved;
   const planStatus = (plan as any).plan_status || "draft";
+  const clinicalStatus = (plan as any).clinical_status || "pending_evaluation";
+  const clinicalScore = (plan as any).clinical_score || 0;
+  const qualityAlerts = (plan as any).quality_alerts || [];
   const isImmutable = IMMUTABLE_STATUSES.includes(planStatus);
   const canPublish = !["published", "published_to_patient"].includes(planStatus);
   
