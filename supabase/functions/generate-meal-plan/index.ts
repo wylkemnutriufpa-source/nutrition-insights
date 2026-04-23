@@ -799,6 +799,7 @@ const ANIMAL_PROTEIN_KEYWORDS = [
   "peixe", "porco", "lombo", "sobrecoxa", "sardinha", "atum", "salmao",
   "salmão", "camarao", "camarão", "fraldinha", "maminha", "bisteca", "pernil",
   "suino", "suína", "file de peixe", "filé de peixe", "tambaqui", "pintado", "dourado",
+  "ovo", "ovos", "omelete",
 ];
 
 function isAnimalProteinFood(food: DBFood): boolean {
@@ -814,6 +815,17 @@ function getProteinDensity(food: DBFood): number {
   return proteinPerPortion / portionGrams;
 }
 
+function validateNutritionalDensity(food: DBFood): string | null {
+  const density = getProteinDensity(food);
+  const name = food.food_name.toLowerCase();
+  
+  if (density > 0.45) return `Densidade proteica excessiva (${Math.round(density * 100)}%). Verifique cadastro.`;
+  if (density < 0.04 && (name.includes("carne") || name.includes("frango") || name.includes("peixe") || name.includes("ovo"))) {
+    return `Densidade proteica muito baixa para proteína animal (${Math.round(density * 100)}%).`;
+  }
+  return null;
+}
+
 function roundServingGrams(value: number): number {
   if (!Number.isFinite(value) || value <= 0) return 0;
   if (value >= 20) return Math.max(5, Math.round(value / 5) * 5);
@@ -826,6 +838,31 @@ function clampComputedProteinServing(grams: number, mealType: string): number {
     return Math.min(180, Math.max(80, roundServingGrams(grams)));
   }
   return Math.min(100, Math.max(30, roundServingGrams(grams)));
+}
+
+function getPortionAlert(grams: number, mealType: string, foodName: string): string | null {
+  const isMain = ["lunch", "dinner"].includes(mealType);
+  const name = foodName.toLowerCase();
+  
+  if (isMain) {
+    if (grams > 180) return `Porção elevada (${grams}g). Sugerido max 180g.`;
+    if (grams < 80) return `Porção reduzida (${grams}g). Sugerido min 80g.`;
+  } else {
+    if (grams > 100) return `Porção elevada para lanche (${grams}g). Sugerido max 100g.`;
+    if (grams < 30) return `Porção irrelevante para lanche (${grams}g).`;
+  }
+
+  // Specific for eggs (1 egg ~ 50g)
+  if (name.includes("ovo") || name.includes("omelete")) {
+    if (grams > 160) return `Porção de ovos elevada (${grams}g ≈ 3-4 ovos).`;
+  }
+
+  // Specific for fish (sometimes higher volume is OK, but >220g is too much)
+  if (name.includes("peixe") || name.includes("tilapia") || name.includes("tambaqui")) {
+    if (grams > 220) return `Porção de peixe muito elevada (${grams}g).`;
+  }
+
+  return null;
 }
 
 function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | null {
@@ -864,7 +901,7 @@ function resolveProteinFoodForItem(item: any, proteinFoods: DBFood[]): DBFood | 
   return best && best.score > 0 ? best.food : null;
 }
 
-function replaceProteinLineWithServing(description: string, food: DBFood, grams: number): string {
+function replaceProteinLineWithServing(description: string, food: DBFood, grams: number, alert: string | null): string {
   const [mainSection, substitutionsSection] = description.split(/\n\n🔄 Substituições:\n/);
   const aliases = Array.from(new Set([
     normalize(food.food_name || ""),
@@ -887,22 +924,27 @@ function replaceProteinLineWithServing(description: string, food: DBFood, grams:
 
       replaced = true;
 
+      let newline = trimmed;
       if (/(\d+(?:[.,]\d+)?)\s*g\b/i.test(trimmed)) {
-        return trimmed.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${grams}g`);
+        newline = trimmed.replace(/(\d+(?:[.,]\d+)?)\s*g\b/i, `${grams}g`);
+      } else if (/\s+[—-]\s+/.test(trimmed)) {
+        newline = trimmed.replace(/\s+[—-]\s+.*$/, ` — ${grams}g`);
+      } else {
+        newline = `${trimmed} — ${grams}g`;
       }
 
-      if (/\s+[—-]\s+/.test(trimmed)) {
-        return trimmed.replace(/\s+[—-]\s+.*$/, ` — ${grams}g`);
-      }
-
-      return `${trimmed} — ${grams}g`;
+      return newline;
     })
     .filter(Boolean)
     .join("\n");
 
-  const finalMain = replaced
+  let finalMain = replaced
     ? nextMain
     : [`• ${food.food_name} — ${grams}g`, nextMain].filter(Boolean).join("\n");
+
+  if (alert) {
+    finalMain += `\n⚠️ ${alert}`;
+  }
 
   return finalMain + (substitutionsSection ? `\n\n🔄 Substituições:\n${substitutionsSection}` : "");
 }
@@ -921,12 +963,24 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
     const density = getProteinDensity(matchedFood);
     if (!Number.isFinite(density) || density <= 0) return item;
 
-    const computedServing = clampComputedProteinServing(requiredProtein / density, item.meal_type || "");
-    if (!Number.isFinite(computedServing) || computedServing <= 0) return item;
+    const rawServing = requiredProtein / density;
+    const computedServing = clampComputedProteinServing(rawServing, item.meal_type || "");
+    
+    // Validations
+    const densityWarning = validateNutritionalDensity(matchedFood);
+    const portionAlert = getPortionAlert(roundServingGrams(rawServing), item.meal_type || "", matchedFood.food_name);
+    
+    const combinedAlert = [densityWarning, portionAlert].filter(Boolean).join(" ");
 
     return {
       ...item,
-      description: replaceProteinLineWithServing(item.description, matchedFood, computedServing),
+      metadata: {
+        ...(item.metadata || {}),
+        portion_alert: combinedAlert || null,
+        original_computed_grams: roundServingGrams(rawServing),
+        matched_food_id: matchedFood.id
+      },
+      description: replaceProteinLineWithServing(item.description, matchedFood, computedServing, combinedAlert),
     };
   });
 }

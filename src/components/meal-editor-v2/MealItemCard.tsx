@@ -2,6 +2,7 @@ import { useState, useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import {
   Flame, Beef, PencilLine, CopyPlus, X, Loader2, Check, Eye, Camera, SlidersHorizontal,
+  AlertTriangle,
 } from "lucide-react";
 import { MacroEditDialog } from "./MacroEditDialog";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
@@ -10,7 +11,13 @@ import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
-import { fmtMacro } from "@/lib/formatMacros";
+import { fmtMacro, getPortionWarning } from "@/lib/formatMacros";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 interface MealItemCardProps {
   item: MealPlanItem;
@@ -163,6 +170,21 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                 <span className="flex items-center gap-0.5">
                   <Beef className="w-2.5 h-2.5 text-red-400" />{fmtMacro(item.protein_target)}g
                 </span>
+              )}
+              {getPortionWarning(item) && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <span className="flex items-center">
+                        <AlertTriangle className="w-2.5 h-2.5 text-amber-500 animate-pulse" />
+                      </span>
+                    </TooltipTrigger>
+                    <TooltipContent side="bottom" className="text-[10px] max-w-[200px] p-2 bg-amber-50 text-amber-900 border-amber-200">
+                      <p className="font-semibold mb-0.5">Alerta de Cálculo</p>
+                      <p>{getPortionWarning(item)}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
               )}
             </div>
             {isSyncing && (
