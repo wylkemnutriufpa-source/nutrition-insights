@@ -10,6 +10,7 @@ import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import SafePage from "@/components/common/SafePage";
 import PatientReadyGuard from "@/components/common/PatientReadyGuard";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
@@ -503,6 +504,7 @@ const App = () => (
         </Helmet>
         <Toaster />
         <Sonner />
+        <GlobalErrorBoundary />
         <BrowserRouter basename="/">
           <AuthProvider>
             <TenantProvider>
