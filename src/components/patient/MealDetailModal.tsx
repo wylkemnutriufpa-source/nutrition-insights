@@ -609,19 +609,21 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-8 space-y-6 max-h-[calc(90vh-160px)]">
           {/* Macros */}
           {hasMacros && (
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                { label: "Calorias", value: calories, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
-                { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
-                { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
-                { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
-              ].map(m => (
-                <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
-                  <div className="flex justify-center mb-1.5">{m.icon}</div>
-                  <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                  <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
-                </div>
-              ))}
+            <div className="space-y-3">
+              <div className="grid grid-cols-4 gap-2">
+                {[
+                  { label: "Calorias", value: calories, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
+                  { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
+                  { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
+                  { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
+                ].map(m => (
+                  <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
+                    <div className="flex justify-center mb-1.5">{m.icon}</div>
+                    <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                    <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           )}
 
