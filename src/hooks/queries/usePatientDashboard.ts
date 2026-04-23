@@ -64,7 +64,7 @@ export function usePatientDashboard() {
         _patient_id: user!.id
       });
       if (error) throw error;
-      return data;
+      return data as { state: string; show_onboarding: boolean; show_plan: boolean; has_active_plan: boolean };
     },
     staleTime: 60 * 1000,
   });
