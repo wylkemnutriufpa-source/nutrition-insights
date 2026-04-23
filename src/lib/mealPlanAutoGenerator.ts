@@ -661,6 +661,7 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
   return {
     patientId,
     goal,
+    planType: (anamnesis as any).plan_type || "normal",
     targetCalories: Number(anamnesis.computed_kcal_target) || 2000,
     targetProtein: Number(anamnesis.computed_protein) || 120,
     targetCarbs: Number(anamnesis.computed_carbs) || 250,
