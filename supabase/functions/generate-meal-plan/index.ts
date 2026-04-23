@@ -630,9 +630,7 @@ function isBlockedFood(name: string): boolean {
   return BLOCKED_FOODS.some(blocked => n.includes(normalize(blocked)));
 }
 
-function isLossGoal(goal: string): boolean {
-  return ["lose_weight", "maintain", "improve_health"].includes(goal);
-}
+// Duplicated function removed
 
 interface RealisticMeal {
   title: string;
