@@ -1709,24 +1709,25 @@ export interface MarmitaRecipe {
   fixed_carbs?: number | null;
   fixed_fat?: number | null;
   created_at?: string;
+  protein_type?: string;
+  visual_library_item_id?: string;
 }
 
 const PROTEIN_KEYWORDS: Array<{ key: string; matches: string[] }> = [
-  { key: "frango", matches: ["frango", "sobrecoxa", "peito de frango", "coxa"] },
-  { key: "carne_bovina", matches: ["patinho", "alcatra", "acém", "carne moída", "carne bovina", "almôndega", "hambúrguer de boi", "estrogonofe", "bife"] },
-  { key: "peixe", matches: ["peixe", "tilápia", "salmão", "merluza", "pescada", "atum"] },
-  { key: "porco", matches: ["porco", "lombo", "pernil"] },
-  { key: "ovo", matches: ["ovo", "omelete"] },
-  { key: "vegetariano", matches: ["grão de bico", "lentilha", "feijão preto", "soja", "tofu", "proteína vegetal"] },
-  { key: "frutos_mar", matches: ["camarão", "lula", "polvo", "fruto do mar"] },
+  { key: "FRANGO", matches: ["frango", "galinhada", "hambúrguer de frango"] },
+  { key: "CARNE", matches: ["carne", "patinho", "bolonhesa", "vaca", "estrogonofe", "massa integral", "bolinhas de carne"] },
+  { key: "PORCO", matches: ["pernil", "suíno", "porco"] },
 ];
 
 function detectRecipeProtein(recipe: MarmitaRecipe): string {
+  // Use explicit protein_type if available from DB
+  if (recipe.protein_type) return recipe.protein_type;
+
   const text = (recipe.name + " " + (recipe.foods_json || []).map(f => f.name).join(" ")).toLowerCase();
   for (const p of PROTEIN_KEYWORDS) {
-    if (p.matches.some(m => text.includes(m))) return p.key;
+    if (p.matches.some(m => text.includes(m.toLowerCase()))) return p.key;
   }
-  return "outros";
+  return "FRANGO"; // Fallback as per objective
 }
 
 function recipeViolatesRestrictions(
@@ -1750,10 +1751,31 @@ function recipeIsCannedProtein(recipe: MarmitaRecipe): boolean {
 }
 
 function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibraryItem[]): VisualLibraryItem | null {
+  // PRIORITY 1: Explicitly associated image in DB
+  if (recipe.visual_library_item_id) {
+    const directMatch = visualLibrary.find(v => v.id === recipe.visual_library_item_id);
+    if (directMatch) return directMatch;
+  }
+
+  // PRIORITY 2: Classification by protein type (Mandatory as per objective)
+  const protein = detectRecipeProtein(recipe);
+  const proteinImageMap: Record<string, string> = {
+    'FRANGO': 'db86423f-bf3a-4eb8-b660-1d2f2dc559f6', // Arroz com Frango
+    'CARNE': '251548b1-05af-416f-8cfd-967ba4f42d9f', // Arroz com Carne
+    'PORCO': 'a015d108-a1ad-4b84-85f0-310626246289', // Filé de Porco
+  };
+
+  const proteinImageId = proteinImageMap[protein];
+  if (proteinImageId) {
+    const proteinMatch = visualLibrary.find(v => v.id === proteinImageId);
+    if (proteinMatch) return proteinMatch;
+  }
+
+  // PRIORITY 3: Fuzzy match (Legacy fallback)
   const targetCategories = recipe.meal_type === "almoço" ? ["almoco"] : ["jantar", "almoco"];
   const candidates = visualLibrary.filter(v => targetCategories.includes(v.category) && v.image_url);
   if (candidates.length === 0) return null;
-  // Try fuzzy match on name keywords
+  
   const recipeText = recipe.name.toLowerCase();
   const tokens = recipeText.split(/[\s,/-]+/).filter(t => t.length >= 4);
   let best: VisualLibraryItem | null = null;
@@ -1763,7 +1785,14 @@ function findVisualForRecipe(recipe: MarmitaRecipe, visualLibrary: VisualLibrary
     const score = tokens.reduce((s, t) => s + (cText.includes(t) ? 1 : 0), 0);
     if (score > bestScore) { bestScore = score; best = c; }
   }
-  return best || candidates[0];
+
+  // FALLBACK: default image or first candidate
+  return best || candidates[0] || { 
+    id: "default-marmita", 
+    image_url: "/images/marmitas/default.jpg",
+    name: "marmita-default",
+    display_name: "Marmita"
+  } as any;
 }
 
 export function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: number; c: number; f: number } {
@@ -1795,7 +1824,7 @@ async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onl
 
   let query = client
     .from("meal_recipes")
-    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat, created_at")
+    .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat, created_at, protein_type, visual_library_item_id")
     .eq("is_active", true);
 
   if (isAdmin) {

@@ -6483,8 +6483,10 @@ export type Database = {
           meal_type: string
           name: string
           nutritionist_id: string
+          protein_type: string | null
           tenant_id: string | null
           updated_at: string
+          visual_library_item_id: string | null
         }
         Insert: {
           base_recipe?: Json | null
@@ -6502,8 +6504,10 @@ export type Database = {
           meal_type?: string
           name: string
           nutritionist_id: string
+          protein_type?: string | null
           tenant_id?: string | null
           updated_at?: string
+          visual_library_item_id?: string | null
         }
         Update: {
           base_recipe?: Json | null
@@ -6521,8 +6525,10 @@ export type Database = {
           meal_type?: string
           name?: string
           nutritionist_id?: string
+          protein_type?: string | null
           tenant_id?: string | null
           updated_at?: string
+          visual_library_item_id?: string | null
         }
         Relationships: [
           {
@@ -6530,6 +6536,13 @@ export type Database = {
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_recipes_visual_library_item_id_fkey"
+            columns: ["visual_library_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_visual_library"
             referencedColumns: ["id"]
           },
         ]
