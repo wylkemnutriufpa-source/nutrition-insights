@@ -1696,13 +1696,14 @@ export interface MarmitaRecipe {
   id: string;
   name: string;
   meal_type: string; // 'almoço' | 'jantar'
-  foods_json: Array<{ name: string; grams: number }>;
+  foods_json: RecipeIngredient[];
   is_fixed?: boolean;
   is_scalable?: boolean;
   fixed_calories?: number | null;
   fixed_protein?: number | null;
   fixed_carbs?: number | null;
   fixed_fat?: number | null;
+  created_at?: string;
 }
 
 const PROTEIN_KEYWORDS: Array<{ key: string; matches: string[] }> = [
