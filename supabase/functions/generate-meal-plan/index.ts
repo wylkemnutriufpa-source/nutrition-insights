@@ -630,9 +630,7 @@ function isBlockedFood(name: string): boolean {
   return BLOCKED_FOODS.some(blocked => n.includes(normalize(blocked)));
 }
 
-function isLossGoal(goal: string): boolean {
-  return ["lose_weight", "maintain", "improve_health"].includes(goal);
-}
+// Duplicated function removed
 
 interface RealisticMeal {
   title: string;
@@ -655,7 +653,7 @@ const CEIA: RealisticMeal[] = [];
 const CEIA_MASSA: RealisticMeal[] = [];
 
 function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
-  const loss = isLossGoal(goal);
+  const loss = goal === "lose_weight" || goal === "maintain" || goal === "improve_health";
   switch (mealType) {
     case "breakfast": return loss ? BREAKFAST_EMAG : BREAKFAST_MASSA;
     case "morning_snack": return loss ? SNACKS : SNACKS_MASSA;
@@ -670,13 +668,13 @@ function getMealOptions(mealType: string, goal: string): RealisticMeal[] {
 // Description functions imported from _shared/meal-description.ts (canonical source)
 // Wrapper to adapt isGainGoal boolean to goal string for backward compatibility
 function finalizeMealDescription(description: string, mealType: string, goal: string): string {
-  return canonicalFinalizeMealDescription(description, mealType, !isLossGoal(goal));
+  return canonicalFinalizeMealDescription(description, mealType, goal === "gain_muscle" || goal === "gain_weight" || goal === "athletic_performance");
 }
 
 function rebalanceProteinTargetsByMeal(dayItems: any[], dailyProteinTarget: number, goal: string) {
   if (!Number.isFinite(dailyProteinTarget) || dailyProteinTarget <= 0 || dayItems.length === 0) return;
 
-  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(!isLossGoal(goal));
+  const { shares: proteinShares, caps: proteinCaps } = getProteinDistribution(goal === "gain_muscle" || goal === "gain_weight" || goal === "athletic_performance");
 
   const mealTargets = new Map<string, number>();
   let assigned = 0;
@@ -2140,6 +2138,7 @@ export async function buildMarmitaItem(
 
   const description = finalized + "\n\n" + customTip;
   const visual = findVisualForRecipe(recipe, visualLibrary);
+  console.log(`[buildMarmitaItem] ${recipe.name} | protein: ${recipe.protein_type || 'auto'} | visual: ${visual?.id || 'none'} | url: ${visual?.image_url || 'none'}`);
 
   return {
     title: `🍱 ${recipe.name}`,
@@ -2199,6 +2198,7 @@ function buildFixedMarmitaItem(
   
   const finalDescription = finalizeMealDescription(description, mealType, goal);
   const visual = findVisualForRecipe(recipe, visualLibrary);
+  console.log(`[buildFixedMarmitaItem] ${recipe.name} | protein: ${recipe.protein_type || 'auto'} | visual: ${visual?.id || 'none'} | url: ${visual?.image_url || 'none'}`);
 
   return {
     title: `🍱 ${recipe.name} (Marmita Fixa)`,
