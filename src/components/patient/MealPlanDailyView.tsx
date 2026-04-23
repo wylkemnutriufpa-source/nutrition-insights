@@ -9,7 +9,7 @@ import {
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
-  Info,
+  Info, Clock,
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
