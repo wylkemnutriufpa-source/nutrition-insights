@@ -499,16 +499,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
           </DialogContent>
         </Dialog>
 
-        <datalist id="portion-units">
-          {(manualFoodName || lineNameValue ? 
-            PORTION_UNITS.map(unit => {
-              const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
-              const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
-              const num = numMatch ? numMatch[1] : "";
-              return <option key={unit} value={`${num}${unit}`} />;
-            }) : 
-            PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
-          )}
+        <datalist id={PORTION_DATALIST_ID}>
+          {getPortionAutocompleteOptions(
+            editingLineIdx !== null ? linePortionValue : manualFoodPortion,
+          ).map((opt) => (
+            <option key={opt} value={opt} />
+          ))}
         </datalist>
       </>
     );
@@ -1121,16 +1117,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       </DialogContent>
     </Dialog>
 
-    <datalist id="portion-units">
-      {(manualFoodName || lineNameValue ? 
-        PORTION_UNITS.map(unit => {
-          const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
-          const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
-          const num = numMatch ? numMatch[1] : "";
-          return <option key={unit} value={`${num}${unit}`} />;
-        }) : 
-        PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
-      )}
+    <datalist id={PORTION_DATALIST_ID}>
+      {getPortionAutocompleteOptions(
+        editingLineIdx !== null ? linePortionValue : manualFoodPortion,
+      ).map((opt) => (
+        <option key={opt} value={opt} />
+      ))}
     </datalist>
   </>
 );
