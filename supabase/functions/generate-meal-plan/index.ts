@@ -2163,41 +2163,44 @@ function generateFixedMarmitaPlan(
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
 ): { items: any[]; marmitasUsed: string[]; warning?: string } {
+  console.log(`[fixed_marmita] Starting generation for ${goal}. Total recipes: ${fixedRecipes.length}`);
+
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
   const filteredRecipes = fixedRecipes
     .filter(r => !recipeViolatesRestrictions(r, disliked, allergies))
     .filter(r => !recipeIsCannedProtein(r));
-  const lunchRecipes = filteredRecipes.filter(r => r.meal_type === "almoço");
-  const dinnerRecipes = filteredRecipes.filter(r => r.meal_type === "jantar");
+
+  // Sort recipes by date descending (user wants newest first/most recent)
+  const sortedRecipes = [...filteredRecipes].sort((a, b) => {
+    const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
+    const dateB = b.created_at ? new Date(b.created_at).getTime() : 0;
+    return dateB - dateA;
+  });
+
+  const lunchRecipes = sortedRecipes.filter(r => r.meal_type === "almoço");
+  const dinnerRecipes = sortedRecipes.filter(r => r.meal_type === "jantar");
 
   if (lunchRecipes.length === 0 || dinnerRecipes.length === 0) {
     throw new Error(`[fixed_marmita] Marmitas fixas insuficientes (almoço: ${lunchRecipes.length}, jantar: ${dinnerRecipes.length}). Cadastre marmitas com is_fixed=true.`);
   }
 
-  // Pre-compute proteins (for variety)
-  const lunchByProtein = new Map<string, MarmitaRecipe[]>();
-  const dinnerByProtein = new Map<string, MarmitaRecipe[]>();
-  for (const r of lunchRecipes) {
-    const p = detectRecipeProtein(r);
-    if (!lunchByProtein.has(p)) lunchByProtein.set(p, []);
-    lunchByProtein.get(p)!.push(r);
-  }
-  for (const r of dinnerRecipes) {
-    const p = detectRecipeProtein(r);
-    if (!dinnerByProtein.has(p)) dinnerByProtein.set(p, []);
-    dinnerByProtein.get(p)!.push(r);
-  }
+  // Pre-compute pools for variety tracking
+  const lunchPool = [...lunchRecipes];
+  const dinnerPool = [...dinnerRecipes];
 
-  // Pick representative marmitas to compute "fixed kcal cost" per day (use day 0 picks as reference)
-  // Marmitas are FIXED — we pick once per day, get their macros, and the REMAINDER goes to snacks.
   const items: any[] = [];
   const marmitasUsedSet = new Set<string>();
-  const proteinsUsedThisWeek = new Set<string>();
-  let prevLunchProtein: string | null = null;
-  let prevDinnerProtein: string | null = null;
+  const weeklyUsageCount = new Map<string, number>(); // Name -> Count
+  
+  let prevLunchName: string | null = null;
+  let prevDinnerName: string | null = null;
   let warning: string | undefined;
+
+  // Hypertrophy adjustment (Etapa 4)
+  const isHypertrophy = goal === "gain_muscle" || goal === "gain_weight";
+  const portionMultiplier = isHypertrophy ? 1.5 : 1.0;
 
   for (let day = 0; day < 7; day++) {
     let dayMarmitaCal = 0;
@@ -2205,40 +2208,86 @@ function generateFixedMarmitaPlan(
     let dayMarmitaC = 0;
     let dayMarmitaF = 0;
 
-    // Lunch (FIXED)
+    // ── LUNCH SELECTION ──
     if (mealTypes.includes("lunch")) {
-      const avoid = new Set<string>();
-      if (prevLunchProtein) avoid.add(prevLunchProtein);
-      if (prevDinnerProtein) avoid.add(prevDinnerProtein);
-      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoid, day);
-      const proteinKey = detectRecipeProtein(picked);
-      proteinsUsedThisWeek.add(proteinKey);
+      // Logic: Pick from newest, avoiding same-day repetition and max 2x/week
+      const candidates = lunchPool.filter(r => {
+        if (r.name === prevLunchName) return false; // Not same as yesterday's lunch
+        if (r.name === prevDinnerName) return false; // Not same as yesterday's dinner
+        const count = weeklyUsageCount.get(r.name) || 0;
+        return count < 2; // Max 2x per week
+      });
+
+      const picked = candidates.length > 0 ? candidates[0] : lunchPool[day % lunchPool.length];
+      
+      const count = weeklyUsageCount.get(picked.name) || 0;
+      weeklyUsageCount.set(picked.name, count + 1);
       marmitasUsedSet.add(picked.name);
+      
       const item = buildFixedMarmitaItem(picked, "lunch", day, goal, visualLibrary, mealTimes);
+      
+      // Apply Hypertrophy portion adjustment
+      if (isHypertrophy) {
+        item.calories_target = Math.round(item.calories_target * portionMultiplier);
+        item.protein_target = Math.round(item.protein_target * portionMultiplier);
+        item.carbs_target = Math.round(item.carbs_target * portionMultiplier);
+        item.fat_target = Math.round(item.fat_target * portionMultiplier);
+        item.description = `🍱 [PORÇÃO REFORÇADA 1.5x]\n` + item.description.split('\n').map(line => {
+          const gramsMatch = line.match(/(\d+)g/);
+          if (gramsMatch) {
+            const scaled = Math.round(parseInt(gramsMatch[1]) * portionMultiplier);
+            return line.replace(/\d+g/, `${scaled}g`);
+          }
+          return line;
+        }).join('\n');
+      }
+
       items.push(item);
       dayMarmitaCal += item.calories_target;
       dayMarmitaP += item.protein_target;
       dayMarmitaC += item.carbs_target;
       dayMarmitaF += item.fat_target;
-      prevLunchProtein = proteinKey;
+      prevLunchName = picked.name;
     }
 
-    // Dinner (FIXED)
+    // ── DINNER SELECTION ──
     if (mealTypes.includes("dinner")) {
-      const avoid = new Set<string>();
-      if (prevLunchProtein) avoid.add(prevLunchProtein);
-      if (prevDinnerProtein) avoid.add(prevDinnerProtein);
-      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoid, day * 7 + 13);
-      const proteinKey = detectRecipeProtein(picked);
-      proteinsUsedThisWeek.add(proteinKey);
+      const candidates = dinnerPool.filter(r => {
+        if (r.name === prevLunchName) return false; // Not same as today's lunch
+        if (r.name === prevDinnerName) return false; // Not same as yesterday's dinner
+        const count = weeklyUsageCount.get(r.name) || 0;
+        return count < 2; // Max 2x per week
+      });
+
+      const picked = candidates.length > 0 ? candidates[0] : dinnerPool[(day + 3) % dinnerPool.length];
+      
+      const count = weeklyUsageCount.get(picked.name) || 0;
+      weeklyUsageCount.set(picked.name, count + 1);
       marmitasUsedSet.add(picked.name);
+      
       const item = buildFixedMarmitaItem(picked, "dinner", day, goal, visualLibrary, mealTimes);
+      
+      if (isHypertrophy) {
+        item.calories_target = Math.round(item.calories_target * portionMultiplier);
+        item.protein_target = Math.round(item.protein_target * portionMultiplier);
+        item.carbs_target = Math.round(item.carbs_target * portionMultiplier);
+        item.fat_target = Math.round(item.fat_target * portionMultiplier);
+        item.description = `🍱 [PORÇÃO REFORÇADA 1.5x]\n` + item.description.split('\n').map(line => {
+          const gramsMatch = line.match(/(\d+)g/);
+          if (gramsMatch) {
+            const scaled = Math.round(parseInt(gramsMatch[1]) * portionMultiplier);
+            return line.replace(/\d+g/, `${scaled}g`);
+          }
+          return line;
+        }).join('\n');
+      }
+
       items.push(item);
       dayMarmitaCal += item.calories_target;
       dayMarmitaP += item.protein_target;
       dayMarmitaC += item.carbs_target;
       dayMarmitaF += item.fat_target;
-      prevDinnerProtein = proteinKey;
+      prevDinnerName = picked.name;
     }
 
     // Compute REMAINDER for snacks/breakfast/ceia
