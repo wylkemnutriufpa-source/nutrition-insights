@@ -28,7 +28,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   }
 }));
 
-import { PORTION_ERROR_MESSAGE, PORTION_PLACE_HOLDER_TEXT } from "@/lib/portionValidation"; // Oops, wait, I need to check the actual exports
+import { PORTION_ERROR_MESSAGE, PORTION_PLACEHOLDER } from "@/lib/portionValidation";
 
 describe("MealDetailModal - Validação de Porção", () => {
   const mockMeal = {
@@ -65,7 +65,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(addBtn);
 
     const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    const portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     fireEvent.change(nameInput, { target: { value: "Batata Doce" } });
@@ -89,7 +89,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(addBtn);
 
     const nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    const portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     fireEvent.change(nameInput, { target: { value: "Batata Doce" } });
@@ -98,7 +98,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "100" } });
     fireEvent.click(saveBtn);
 
-    expect(screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).toBeInTheDocument();
+    expect(screen.getByText(PORTION_ERROR_MESSAGE)).toBeInTheDocument();
     expect(mockUpdateItem).not.toHaveBeenCalled();
   });
 
@@ -117,7 +117,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     // Caso 1: 1.5kg
     fireEvent.click(addBtn);
     let nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    let portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    let portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     let saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
     fireEvent.change(nameInput, { target: { value: "T1" } });
     fireEvent.change(portionInput, { target: { value: "1.5kg" } });
@@ -127,7 +127,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     // Caso 2: 200 ml (com espaço)
     fireEvent.click(addBtn);
     nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
     fireEvent.change(nameInput, { target: { value: "T2" } });
     fireEvent.change(portionInput, { target: { value: "200 ml" } });
@@ -137,7 +137,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     // Caso 3: 2 ovos
     fireEvent.click(addBtn);
     nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
     fireEvent.change(nameInput, { target: { value: "T3" } });
     fireEvent.change(portionInput, { target: { value: "2 ovos" } });
@@ -158,7 +158,7 @@ describe("MealDetailModal - Validação de Porção", () => {
     const addBtn = screen.getByText(/Adicionar Alimento/i);
     fireEvent.click(addBtn);
 
-    const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
+    const portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     // Forçar erro (valor sem número)
@@ -166,13 +166,13 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(saveBtn);
     
     // Verifica se o erro apareceu
-    const errorMsg = await screen.findByText(/Use ex: 150g, 2 ovos, 1 fatia/i);
+    const errorMsg = await screen.findByText(PORTION_ERROR_MESSAGE);
     expect(errorMsg).toBeInTheDocument();
 
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
     // O erro deve sumir
-    expect(screen.queryByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).not.toBeInTheDocument();
+    expect(screen.queryByText(PORTION_ERROR_MESSAGE)).not.toBeInTheDocument();
   });
 });
