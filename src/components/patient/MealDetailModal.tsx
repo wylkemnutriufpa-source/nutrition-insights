@@ -269,7 +269,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     // Aceita "150g", "2 ovos", "1.5L", "200 ml", "0.5kg", "2 ovos"
     // Regex flexível para números (inteiros/decimais), espaços opcionais e unidades permitidas
     const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|copo|copos|un|unid)$/i;
-    return regex.test(portion.trim());
+    const isValid = regex.test(portion.trim());
+    console.log(`Validating portion: "${portion}" -> ${isValid}`);
+    return isValid;
   };
 
   const handleUpdateTitle = () => {
