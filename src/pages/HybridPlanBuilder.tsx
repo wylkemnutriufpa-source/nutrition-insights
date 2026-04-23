@@ -750,9 +750,7 @@ export default function HybridPlanBuilder() {
           </div>
         )}
       </DragOverlay>
-      </DndContext>
-    </div>
-  </DashboardLayout>
-);
-}
+        </DndContext>
+      </DashboardLayout>
+    );
 }
