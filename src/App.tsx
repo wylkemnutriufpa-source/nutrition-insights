@@ -283,46 +283,21 @@ function PatientRoute({ children }: { children: React.ReactNode }) {
 
 function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
-  const { hasPaid, loading: paymentLoading } = usePaymentGuard();
-  const { requirement } = useOnboardingGuard();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
   const location = useLocation();
-  if (loading || paymentLoading || requirement === "loading" || consentLoading) return <PageLoader />;
+
+  if (loading || consentLoading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
-  // Professionals and admins are NEVER blocked by patient guards
+
   const isProfessional = isNutritionist || isPersonal || isAdmin;
   if (isProfessional) return <>{children}</>;
 
-  // 1. Consent check — patients without consent MUST accept before anything else
+  // Only mandatory redirect is for Consent if not provided
   const consentAllowedRoutes = ["/consent-required", "/auth", "/settings", "/reset-password"];
   if (isPatient && !hasConsent && !consentAllowedRoutes.some(r => location.pathname.startsWith(r))) {
-    console.warn("[RouteGuard:PaymentGuarded] No consent → /consent-required");
     return <Navigate to="/consent-required" replace />;
   }
 
-  // 2. Payment check
-  if (isPatient && !hasPaid) {
-    console.warn("[RouteGuard:PaymentGuarded] Not paid → /payment-required");
-    return <Navigate to="/payment-required" replace />;
-  }
-  // 3. Force onboarding completion — only allow onboarding-related routes.
-  // Defesa extra: se a URL traz ?pipeline=true, é uma transição interna do
-  // próprio fluxo de onboarding e não pode ser interrompida (anti-loop).
-  const isPipelineHandoff = location.search.includes("pipeline=true");
-  if (
-    isPatient &&
-    requirement === "must_complete" &&
-    !isOnboardingAllowedRoute(location.pathname) &&
-    !isPipelineHandoff
-  ) {
-    console.warn("[RouteGuard:PaymentGuarded] Onboarding incomplete → /onboarding", {
-      pathname: location.pathname,
-      search: location.search,
-      allowed: isOnboardingAllowedRoute(location.pathname),
-      requirement,
-    });
-    return <Navigate to="/onboarding" replace />;
-  }
   return <>{children}</>;
 }
 
@@ -387,13 +362,8 @@ function RootRoute() {
   if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
     return <Navigate to="/store" replace />;
   }
-  // Patients with INCOMPLETE onboarding → straight to /onboarding (avoids
-  // dashboard→guard-bounce→onboarding loop that was breaking handoff to /anamnesis)
+  // Patients go to client dashboard by default, no mandatory onboarding flow
   if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
-    if (requirement === "loading") return <PageLoader />;
-    if (requirement === "must_complete") {
-      return <Navigate to="/onboarding" replace />;
-    }
     return <Navigate to="/client/dashboard" replace />;
   }
   if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
