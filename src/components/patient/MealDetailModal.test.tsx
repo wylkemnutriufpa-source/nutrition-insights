@@ -28,6 +28,8 @@ vi.mock("@/integrations/supabase/client", () => ({
   }
 }));
 
+import { PORTION_ERROR_MESSAGE, PORTION_PLACE_HOLDER_TEXT } from "@/lib/portionValidation"; // Oops, wait, I need to check the actual exports
+
 describe("MealDetailModal - Validação de Porção", () => {
   const mockMeal = {
     title: "Refeição Teste",
