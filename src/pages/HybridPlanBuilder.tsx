@@ -25,11 +25,12 @@ import { logAudit } from "@/lib/auditLog";
 import { validateMealPlan } from "@/lib/mealPlanValidationFlow";
 import type { ComposerMode } from "@/lib/mealComposer";
 
-import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock } from "lucide-react";
+import { Loader2, AlertTriangle, PanelLeftOpen, PanelRightOpen, Lock, Unlock, Settings2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import type { MealType } from "@/stores/mealPlanEditorV2Store";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
+import { QuickAdjustPanel } from "@/components/meal-editor-v2/QuickAdjustPanel";
 
 export default function HybridPlanBuilder() {
   // Recipe expansion: load recipe_items → match foods → create individual meal_plan_items

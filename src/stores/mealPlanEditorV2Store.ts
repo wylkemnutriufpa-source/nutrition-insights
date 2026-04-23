@@ -64,6 +64,7 @@ interface EditorV2State {
 
   // Plan-level
   updatePlan: (patch: Partial<MealPlan>) => void;
+  recalculateMealPlan: (delta: { protein?: number; carbs?: number; calories?: number }) => void;
 
   // Internal helpers
   _enqueue: (op: PendingOp) => void;
