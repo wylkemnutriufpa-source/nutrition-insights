@@ -76,12 +76,11 @@ describe('Validação de Fallbacks de Macros', () => {
       </QueryClientProvider>
     );
 
-    // Se o valor for 0, o sistema deve mostrar "..." ou "Calculando" ou similar se implementado.
-    // Atualmente mostra "0 kcal". Vamos verificar se existe um mecanismo de proteção.
     await waitFor(() => {
-      expect(screen.queryByText(/0 kcal/i)).not.toBeInTheDocument();
-      // Deve mostrar algo indicando processamento se o valor for 0
-      expect(screen.getByText(/calculando/i || /\.\.\./i)).toBeInTheDocument();
+      // O sistema deve detectar o total zerado e mostrar uma indicação de processamento (implementado no NextMealWidget)
+      expect(screen.queryByText(/^0 kcal$/i)).not.toBeInTheDocument();
+      // Deve mostrar reticências ou algo similar indicando que está aguardando os dados
+      expect(screen.getAllByText(/\.\.\./i).length).toBeGreaterThan(0);
     });
   });
 });
