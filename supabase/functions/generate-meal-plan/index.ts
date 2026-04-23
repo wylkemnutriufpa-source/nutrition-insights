@@ -397,9 +397,10 @@ function seedHash(str: string): number {
   return Math.abs(hash);
 }
 
-/** Generate a unique seed per generation call — combines patient identity with current time */
-function generationSeed(patientId: string, optionOffset: number = 0): number {
+/** Generate a unique seed per generation call. If useFixedSeed is true, use patientId as seed for stability. */
+function generationSeed(patientId: string, optionOffset: number = 0, useFixedSeed: boolean = false): number {
   const base = seedHash(patientId);
+  if (useFixedSeed) return base + optionOffset * 997;
   // Use minutes since epoch so each call (even seconds apart) gets a different seed
   const timePart = Math.floor(Date.now() / 60000);
   return base + timePart * 31 + optionOffset * 997;
@@ -1836,7 +1837,11 @@ export async function generateWeeklyMarmitaPlan(
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
   fastMarmitaMode: boolean = false,
+  seed: number = 0,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
+  const kcalTarget = targetKcal;
+  const macros = targetMacros;
+
   // NEW: Detect and replace "Marmita congelada do dia" in templates
   // NEW: Detect and replace "Marmita" placeholders in templates
   const marmitaPlaceholders = ["Marmita congelada do dia", "Marmita do dia", "Marmita Selecionada", "marmita do dia"];
@@ -1923,14 +1928,14 @@ export async function generateWeeklyMarmitaPlan(
     if (hasTpl) {
       const result = generatePlanWithTemplates(
         templates, visualLibrary, goal, targetKcal, targetMacros,
-        restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
+        restrictions, disliked, allergies, seed, nonMarmitaMealTypes, mealTimes,
         strategyId, patientFoodDatabase, recentMeals,
       );
       shadowItems = result.items;
     } else {
       shadowItems = generatePlanFromVisualLibrary(
         visualLibrary, goal, kcalTarget, macros,
-        restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
+        restrictions, disliked, allergies, seed, nonMarmitaMealTypes, mealTimes,
       );
     }
   }
@@ -1964,7 +1969,7 @@ export async function generateWeeklyMarmitaPlan(
       const avoidSet = new Set<string>();
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
-      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, day);
+      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, seed + day);
       const protein = detectRecipeProtein(picked);
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
@@ -1979,7 +1984,7 @@ export async function generateWeeklyMarmitaPlan(
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
       // Use a varying seed so we cycle through proteins instead of repeating the modulo result
-      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, day * 7 + 13);
+      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, seed + day * 7 + 13);
       const protein = detectRecipeProtein(picked);
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
@@ -3597,7 +3602,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         resolvedStrategy.strategyId,
         patientFoodDatabase,
         recentMeals,
-        fastMarmitaMode
+        fastMarmitaMode,
+        seed
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
