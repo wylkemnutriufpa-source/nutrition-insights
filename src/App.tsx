@@ -503,7 +503,7 @@ const App = () => (
         </Helmet>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/">
           <AuthProvider>
             <TenantProvider>
             <ExperienceModeProvider>
