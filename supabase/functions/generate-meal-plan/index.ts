@@ -1846,7 +1846,7 @@ export async function generateWeeklyMarmitaPlan(
     const hasTpl = templates.length > 0;
     if (hasTpl) {
       const result = generatePlanWithTemplates(
-        templates, visualLibrary, goal, kcalTarget, macros,
+        templates, visualLibrary, goal, targetKcal, targetMacros,
         restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
         strategyId, patientFoodDatabase, recentMeals,
       );
