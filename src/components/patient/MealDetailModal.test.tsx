@@ -165,14 +165,15 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn);
     
-    // Verifica se o erro apareceu. Usamos queryAllByText para lidar com possíveis duplicatas ou quebras de texto
-    const errorMsg = screen.queryAllByText((content) => content.includes("Use ex: 150g"));
-    expect(errorMsg.length).toBeGreaterThan(0);
+    // Verifica se o erro apareceu.
+    // O PORTION_ERROR_MESSAGE é "Use ex: 150g, 2 ovos, 1 fatia"
+    const errorMsg = screen.getByText(PORTION_ERROR_MESSAGE);
+    expect(errorMsg).toBeInTheDocument();
 
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
-    // O erro deve sumir
-    expect(screen.queryByText((content) => content.includes("Use ex: 150g"))).not.toBeInTheDocument();
+    // O erro deve sumir (porque onChange chama validatePortion que limpa o erro se for válido)
+    expect(screen.queryByText(PORTION_ERROR_MESSAGE)).not.toBeInTheDocument();
   });
 });
