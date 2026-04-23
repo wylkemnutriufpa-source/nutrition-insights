@@ -1842,10 +1842,10 @@ export async function generateWeeklyMarmitaPlan(
   const kcalTarget = targetKcal;
   const macros = targetMacros;
 
-  // NEW: Detect and replace "Marmita congelada do dia" in templates
-  // NEW: Detect and replace "Marmita" placeholders in templates
+  // NEW: Detect and replace "Marmita" placeholders in templates with rotation
   const marmitaPlaceholders = ["Marmita congelada do dia", "Marmita do dia", "Marmita Selecionada", "marmita do dia"];
   if (templates) {
+    let globalMarmitaCounter = seed;
     for (const tpl of templates) {
       if (tpl.meals) {
         for (const meal of tpl.meals) {
@@ -1863,12 +1863,11 @@ export async function generateWeeklyMarmitaPlan(
                   });
 
                 if (candidates.length > 0) {
-                  // Prioritize the 19 recipes from today/yesterday by taking from the top of the sorted list
-                  // Always pick the absolute newest recipe for the first day, then pick from top available
-                  // The user requested exactly the 19 recipes registered today, sorted by date.
-                  const picked = candidates[0]; // Strict: pick the newest one available for this type
+                  // Rotation: Use a counter to cycle through the 19 recipes
+                  const picked = candidates[globalMarmitaCounter % candidates.length];
+                  globalMarmitaCounter++;
 
-                  console.log(`[template-marmita-fix] Replacing "${food.name}" with "${picked.name}" (Recent)`);
+                  console.log(`[template-marmita-fix] Replacing "${food.name}" with "${picked.name}" (Rotation)`);
                   food.name = picked.name;
                   if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar") || meal.title.includes("marmita")) {
                     meal.title = `🍱 ${picked.name}`;
@@ -2035,9 +2034,22 @@ export async function buildMarmitaItem(
   fastMarmitaMode: boolean = false,
 ): Promise<any> {
   const baseMacros = estimateRecipeMacros(recipe);
+  const isHypertrophy = goal === "gain_muscle" || goal === "gain_weight";
+  
+  // Rule: If Hypertrophy, we want 1.5x or 2.0x units.
   const scaleFactor = baseMacros.cal > 0 ? targetKcal / baseMacros.cal : 1;
-  // If recipe is not scalable, force scale to 1.0 (preserve grammages)
-  const clampedScale = recipe.is_scalable === false ? 1 : Math.max(0.5, Math.min(2.5, scaleFactor));
+  let clampedScale = 1;
+  
+  if (recipe.is_scalable === false) {
+    if (isHypertrophy) {
+      // Step-based scaling for hypertrophy: 1.5 or 2.0
+      clampedScale = scaleFactor >= 1.75 ? 2.0 : (scaleFactor >= 1.25 ? 1.5 : 1.0);
+    } else {
+      clampedScale = 1;
+    }
+  } else {
+    clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+  }
 
   // Seasonings/condiments are exempt from the 20g minimum portion rule
   const SEASONING_KEYWORDS = ["orégano", "oregano", "sal", "pimenta", "noz-moscada", "açafrão", "acafrao", "cominho", "alho em pó", "ervas finas", "páprica", "paprica", "limão", "limao", "vinagre", "molho de pimenta", "tempero"];
@@ -2047,14 +2059,18 @@ export async function buildMarmitaItem(
   }
 
   // Scale ingredient grams proportionally — preserve composition
-  // Non-seasoning ingredients have a 20g floor; seasonings keep their small amount
   const scaledFoods = (recipe.foods_json || []).map(f => {
     const scaled = Math.round((Number(f.grams) || 0) * clampedScale);
     const minGrams = isSeasoning(f.name) ? 1 : 20;
     return { name: f.name, grams: Math.max(minGrams, scaled) };
   });
 
-  const baseDesc = scaledFoods.map(f => `• ${f.grams}g ${f.name}`).join("\n");
+  // NEW: "Marmita Unit" representation instead of separated ingredients
+  const compositionStr = (recipe.foods_json || []).map(f => f.name).join(", ");
+  const baseDesc = clampedScale > 1 
+    ? `📦 ${clampedScale} Unidades: ${recipe.name}\n• Marmita congelada pronta para consumo\n• [PORÇÃO REFORÇADA ${clampedScale}x]\n• Composição: ${compositionStr}`
+    : `📦 1 Unidade: ${recipe.name}\n• Marmita congelada pronta para consumo\n• Composição: ${compositionStr}`;
+  
   const finalized = finalizeMealDescription(baseDesc, mealType, goal);
   
   // Fetch professional settings for instructions
@@ -2128,8 +2144,15 @@ function buildFixedMarmitaItem(
     cal = est.cal; p = est.p; c = est.c; f = est.f;
   }
 
-  // Description uses ORIGINAL grams — no scaling allowed
-  const description = (recipe.foods_json || []).map(food => `• ${food.grams}g ${food.name}`).join("\n");
+  // NEW: "Marmita Unit" representation for Fixed Mode
+  const isHypertrophy = goal === "gain_muscle" || goal === "gain_weight";
+  const portionMultiplier = isHypertrophy ? 1.5 : 1.0;
+  
+  const compositionStr = (recipe.foods_json || []).map(f => f.name).join(", ");
+  const description = portionMultiplier > 1
+    ? `📦 ${portionMultiplier} Unidades: ${recipe.name}\n• Marmita congelada (Fixa)\n• [PORÇÃO REFORÇADA ${portionMultiplier}x]\n• Composição: ${compositionStr}`
+    : `📦 1 Unidade: ${recipe.name}\n• Marmita congelada (Fixa)\n• Composição: ${compositionStr}`;
+  
   const finalDescription = finalizeMealDescription(description, mealType, goal);
   const visual = findVisualForRecipe(recipe, visualLibrary);
 
@@ -2239,14 +2262,8 @@ function generateFixedMarmitaPlan(
         item.protein_target = Math.round(item.protein_target * portionMultiplier);
         item.carbs_target = Math.round(item.carbs_target * portionMultiplier);
         item.fat_target = Math.round(item.fat_target * portionMultiplier);
-        item.description = `🍱 [PORÇÃO REFORÇADA 1.5x]\n` + item.description.split('\n').map(line => {
-          const gramsMatch = line.match(/(\d+)g/);
-          if (gramsMatch) {
-            const scaled = Math.round(parseInt(gramsMatch[1]) * portionMultiplier);
-            return line.replace(/\d+g/, `${scaled}g`);
-          }
-          return line;
-        }).join('\n');
+        // The description is now already formatted in buildFixedMarmitaItem
+        // No need to split and scale again here, as we already have the multiplier logic there.
       }
 
       items.push(item);
@@ -2279,14 +2296,8 @@ function generateFixedMarmitaPlan(
         item.protein_target = Math.round(item.protein_target * portionMultiplier);
         item.carbs_target = Math.round(item.carbs_target * portionMultiplier);
         item.fat_target = Math.round(item.fat_target * portionMultiplier);
-        item.description = `🍱 [PORÇÃO REFORÇADA 1.5x]\n` + item.description.split('\n').map(line => {
-          const gramsMatch = line.match(/(\d+)g/);
-          if (gramsMatch) {
-            const scaled = Math.round(parseInt(gramsMatch[1]) * portionMultiplier);
-            return line.replace(/\d+g/, `${scaled}g`);
-          }
-          return line;
-        }).join('\n');
+        // Description already handled in buildFixedMarmitaItem logic
+        console.log(`[fixed_marmita] Hypertrophy active for dinner: using 1.5x portion`);
       }
 
       items.push(item);
@@ -2971,10 +2982,10 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
 
     const fastMarmitaMode = !!patientProfile?.fast_marmita_mode;
 
-    // IF patient is in Marmita Mode, force generation to use marmita logic unless an explicit non-default mode was requested
+    // IF patient is in Marmita Mode, force generation to use fixed_marmita (strictly ready-to-eat products)
     if (patientProfile?.marmita_mode && (generationMode === "quick" || generationMode === "smart")) {
-      console.log(`[generate-meal-plan] 🍱 Overriding generationMode to weekly_marmita for patient ${patient_id} (Marmita Mode active)`);
-      generationMode = "weekly_marmita";
+      console.log(`[generate-meal-plan] 🍱 Overriding generationMode to fixed_marmita for patient ${patient_id} (Marmita Mode active)`);
+      generationMode = "fixed_marmita";
     }
 
     // Authorization guard
