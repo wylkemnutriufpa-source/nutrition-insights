@@ -522,10 +522,58 @@ export default function MealPlanEditorV2() {
                   </>
                 )}
               </div>
+          </div>
+        </div>
+
+        {/* ── Intelligence Layer ─────────────────────────────────── */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className={`p-4 rounded-xl border flex flex-col gap-2 transition-all ${
+            clinicalScore >= 90 ? "bg-green-500/10 border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]" : 
+            clinicalScore >= 70 ? "bg-amber-500/10 border-amber-500/20 shadow-[0_0_15px_rgba(245,158,11,0.1)]" : 
+            "bg-red-500/10 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]"
+          }`}>
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-bold flex items-center gap-2">
+                <Sparkles className={`w-4 h-4 ${clinicalScore >= 90 ? "text-green-500" : clinicalScore >= 70 ? "text-amber-500" : "text-red-500"}`} />
+                Score Clínico: {clinicalScore}
+              </h3>
+              <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wider ${
+                clinicalScore >= 90 ? "bg-green-500 text-white" : 
+                clinicalScore >= 70 ? "bg-amber-500 text-white" : 
+                "bg-red-500 text-white"
+              }`}>
+                {clinicalScore >= 90 ? "Excelente" : clinicalScore >= 70 ? "Bom" : "Ajuste Necessário"}
+              </span>
             </div>
+            <div className="w-full bg-muted/30 h-1.5 rounded-full overflow-hidden mt-1">
+              <div 
+                className={`h-full transition-all duration-1000 ${
+                  clinicalScore >= 90 ? "bg-green-500" : clinicalScore >= 70 ? "bg-amber-500" : "bg-red-500"
+                }`}
+                style={{ width: `${clinicalScore}%` }}
+              />
+            </div>
+            <p className="text-[10px] text-muted-foreground mt-1">Baseado na distribuição de macros e calorias clínicas.</p>
           </div>
 
-          <div className="flex items-center gap-2 flex-wrap justify-end">
+          {qualityAlerts.length > 0 && (
+            <div className="md:col-span-2 p-4 rounded-xl border bg-card/50 flex flex-col gap-2 overflow-hidden border-border/50">
+              <h3 className="text-xs font-bold text-muted-foreground flex items-center gap-2 mb-1">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-500" /> Alertas de Qualidade Nutricional
+              </h3>
+              <div className="flex flex-wrap gap-2 overflow-y-auto max-h-[60px] pr-2 custom-scrollbar">
+                {qualityAlerts.map((alert: string, idx: number) => (
+                  <span key={idx} className="text-[10px] bg-muted/80 px-2 py-1 rounded border border-border/50 text-foreground/80 flex items-center gap-1.5 animate-in fade-in slide-in-from-left-2 duration-300">
+                    <div className="w-1 h-1 rounded-full bg-amber-500" />
+                    {alert}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+
+        <div className="flex items-center gap-2 flex-wrap justify-end">
             {store.hydrating && (
               <div className="flex items-center gap-2 text-xs text-muted-foreground">
                 <Loader2 className="w-3.5 h-3.5 animate-spin" />
