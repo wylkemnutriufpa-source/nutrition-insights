@@ -137,6 +137,13 @@ const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPorti
   vegetable: { foods: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"], defaultPortion: "50g" },
 };
 
+const PORTION_UNITS = [
+  "g", "kg", "ml", "l", "unidade", "unidades", "fatia", "fatias", 
+  "ovo", "ovos", "colher", "colheres", "xicara", "xicaras", 
+  "pote", "potes", "scoop", "scoops"
+];
+
+
 function normalizeForMatch(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -200,6 +207,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const [showManualFoodInput, setShowManualFoodInput] = useState(false);
   const [manualFoodName, setManualFoodName] = useState("");
   const [manualFoodPortion, setManualFoodPortion] = useState("");
+  const [linePortionError, setLinePortionError] = useState<string | null>(null);
+  const [manualPortionError, setManualPortionError] = useState<string | null>(null);
+
 
   // Fetch visual library images when picker opens
   useEffect(() => {
@@ -296,9 +306,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     }
     
     if (linePortionValue.trim() && !validatePortion(linePortionValue)) {
-      toast.error("Formato de porção inválido. Use ex: 150g, 2 ovos, 1 fatia");
+      setLinePortionError("Use ex: 150g, 2 ovos, 1 fatia");
       return;
     }
+
 
     const name = lineNameValue.trim();
     const portion = linePortionValue.trim();
@@ -319,9 +330,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!canEdit || !meal.itemId || !manualFoodName.trim()) return;
     
     if (manualFoodPortion.trim() && !validatePortion(manualFoodPortion)) {
-      toast.error("Formato de porção inválido. Use ex: 150g, 2 ovos, 1 fatia");
+      setManualPortionError("Use ex: 150g, 2 ovos, 1 fatia");
       return;
     }
+
 
     const name = manualFoodName.trim();
     const portion = manualFoodPortion.trim();
@@ -422,10 +434,13 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       setImageSearch("");
       setEditingTitle(false);
       setEditingLineIdx(null);
+      setLinePortionError(null);
       setEditingSubLineIdx(null);
       setShowManualFoodInput(false);
       setManualFoodName("");
       setManualFoodPortion("");
+      setManualPortionError(null);
+
     }
     onOpenChange(v);
   };
@@ -772,6 +787,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                               setEditingLineIdx(idx);
                               setLineNameValue(foodName);
                               setLinePortionValue(portion || "");
+                              setLinePortionError(null);
+
                             }}
                             className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
                             title="Editar Alimento"
