@@ -5,13 +5,14 @@ import { Separator } from "@/components/ui/separator";
 import {
   Flame, Beef, Wheat, Droplets, Clock, ChefHat, Target,
   Shuffle, Leaf, UtensilsCrossed, ScrollText, X, Ruler, RefreshCw,
-  ImageIcon, Search, Plus, Pencil, Check,
+  ImageIcon, Search, Plus, Pencil, Check, Settings2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtMacro } from "@/lib/formatMacros";
+import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 
 interface FoodItem {
   name: string;
@@ -49,6 +50,8 @@ interface MealDetailModalProps {
   onRemoveFoodLine?: (itemId: string, newDescription: string) => void;
   /** Called when image is changed */
   onChangeImage?: (itemId: string, newImageUrl: string) => void;
+  /** Full item update */
+  onUpdateItem?: (itemId: string, patch: Partial<MealPlanItem>) => void;
 }
 
 const MEAL_TYPE_LABELS: Record<string, { label: string; emoji: string }> = {
@@ -177,8 +180,7 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
   return newSubs;
 }
 
-
-export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage }: MealDetailModalProps) {
+export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageSearch, setImageSearch] = useState("");
@@ -186,6 +188,16 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const [loadingImages, setLoadingImages] = useState(false);
   const [manualSubInput, setManualSubInput] = useState("");
   const [showManualSubInput, setShowManualSubInput] = useState(false);
+  
+  // New Editing states
+  const [editingTitle, setEditingTitle] = useState(false);
+  const [titleValue, setTitleValue] = useState("");
+  const [editingLineIdx, setEditingLineIdx] = useState<number | null>(null);
+  const [lineValue, setLineValue] = useState("");
+  const [editingSubLineIdx, setEditingSubLineIdx] = useState<number | null>(null);
+  const [subLineValue, setSubLineValue] = useState("");
+  const [showManualFoodInput, setShowManualFoodInput] = useState(false);
+  const [manualFoodInput, setManualFoodInput] = useState("");
 
   // Fetch visual library images when picker opens
   useEffect(() => {
@@ -210,6 +222,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       });
   }, [showImagePicker]);
 
+  useEffect(() => {
+    if (meal) {
+      setTitleValue(meal.title);
+    }
+  }, [meal]);
+
   if (!meal) return null;
 
   const meta = meal.metadata || {};
@@ -230,9 +248,21 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
   const hasMacros = calories !== null || protein !== null || carbs !== null || fat !== null;
 
-  const canEdit = !!meal.itemId && !!onRemoveFoodLine;
+  const canEdit = !!meal.itemId && (!!onRemoveFoodLine || !!onUpdateItem);
   const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
   const hasDescriptionLines = foodLines.length > 0;
+
+  const handleUpdateTitle = () => {
+    if (!canEdit || !meal.itemId || !titleValue.trim() || titleValue === meal.title) {
+      setEditingTitle(false);
+      return;
+    }
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { title: titleValue.trim() });
+    }
+    setEditingTitle(false);
+    toast.success("Nome da refeição atualizado");
+  };
 
   const handleRemoveLine = (lineIdx: number) => {
     if (!canEdit || !meal.itemId) return;
@@ -242,7 +272,43 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
     const remainingFoodLines = foodLines.filter((_, i) => !newRemoved.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, substitutionLines);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+  };
+
+  const handleUpdateLine = (lineIdx: number) => {
+    if (!canEdit || !meal.itemId || !lineValue.trim()) {
+      setEditingLineIdx(null);
+      return;
+    }
+    const newLine = lineValue.trim().startsWith("•") ? lineValue.trim() : `• ${lineValue.trim()}`;
+    const newFoodLines = foodLines.map((l, i) => i === lineIdx ? newLine : l);
+    const newDescription = rebuildDescription(newFoodLines, substitutionLines);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+    setEditingLineIdx(null);
+    toast.success("Alimento atualizado");
+  };
+
+  const handleAddManualFood = () => {
+    if (!canEdit || !meal.itemId || !manualFoodInput.trim()) return;
+    const newLine = manualFoodInput.trim().startsWith("•") ? manualFoodInput.trim() : `• ${manualFoodInput.trim()}`;
+    const newFoodLines = [...foodLines, newLine];
+    const newDescription = rebuildDescription(newFoodLines, substitutionLines);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+    setManualFoodInput("");
+    setShowManualFoodInput(false);
+    toast.success("Alimento adicionado");
   };
 
   const handleRemoveSubLine = (lineIdx: number) => {
@@ -250,7 +316,29 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newSubs = substitutionLines.filter((_, i) => i !== lineIdx);
     const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, newSubs);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+  };
+
+  const handleUpdateSubLine = (lineIdx: number) => {
+    if (!canEdit || !meal.itemId || !subLineValue.trim()) {
+      setEditingSubLineIdx(null);
+      return;
+    }
+    const newLine = subLineValue.trim().startsWith("•") ? subLineValue.trim() : `• ${subLineValue.trim()}`;
+    const newSubs = substitutionLines.map((l, i) => i === lineIdx ? newLine : l);
+    const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
+    const newDescription = rebuildDescription(remainingFoodLines, newSubs);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
+    setEditingSubLineIdx(null);
+    toast.success("Substituição atualizada");
   };
 
   const handleRegenerateSubstitutions = () => {
@@ -258,7 +346,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
     const newSubs = generateSubstitutionsFromFoodLines(remainingFoodLines, meal.meal_type || "");
     const newDescription = rebuildDescription(remainingFoodLines, newSubs);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
     toast.success(`🔄 ${newSubs.length} substituições regeneradas com porções`);
   };
 
@@ -268,7 +360,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newSubs = [...substitutionLines, newLine];
     const remainingFoodLines = foodLines.filter((_, i) => !removedLines.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, newSubs);
-    onRemoveFoodLine!(meal.itemId, newDescription);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+    } else if (onRemoveFoodLine) {
+      onRemoveFoodLine(meal.itemId, newDescription);
+    }
     setManualSubInput("");
     setShowManualSubInput(false);
     toast.success("✅ Substituição adicionada manualmente");
@@ -295,6 +391,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       setShowManualSubInput(false);
       setManualSubInput("");
       setImageSearch("");
+      setEditingTitle(false);
+      setEditingLineIdx(null);
+      setEditingSubLineIdx(null);
+      setShowManualFoodInput(false);
     }
     onOpenChange(v);
   };
@@ -410,7 +510,37 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     <UtensilsCrossed className="w-6 h-6 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <DialogTitle className="text-lg font-bold leading-tight">{meal.title}</DialogTitle>
+                    <div className="flex items-center gap-2 group/title">
+                      {editingTitle ? (
+                        <div className="flex gap-1 items-center flex-1">
+                          <Input
+                            autoFocus
+                            value={titleValue}
+                            onChange={e => setTitleValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") handleUpdateTitle();
+                              if (e.key === "Escape") setEditingTitle(false);
+                            }}
+                            className="h-8 text-lg font-bold py-0"
+                          />
+                          <Button size="icon" variant="ghost" className="h-8 w-8" onClick={handleUpdateTitle}>
+                            <Check className="w-4 h-4 text-primary" />
+                          </Button>
+                        </div>
+                      ) : (
+                        <>
+                          <DialogTitle className="text-lg font-bold leading-tight">{meal.title}</DialogTitle>
+                          {canEdit && (
+                            <button
+                              onClick={() => { setEditingTitle(true); setTitleValue(meal.title); }}
+                              className="p-1 rounded hover:bg-primary/10 opacity-0 group-hover/title:opacity-100 transition-opacity"
+                            >
+                              <Pencil className="w-3.5 h-3.5 text-primary" />
+                            </button>
+                          )}
+                        </>
+                      )}
+                    </div>
                     <DialogDescription className="text-xs mt-0.5">
                       {mealTypeInfo
                         ? `${mealTypeInfo.emoji} ${mealTypeInfo.label}`
@@ -428,7 +558,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     onClick={() => setShowImagePicker(true)}
                   >
                     <ImageIcon className="w-3.5 h-3.5" />
-                    Adicionar Imagem
+                    Trocar Imagem
                   </Button>
                 )}
               </div>
@@ -491,14 +621,65 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <ChefHat className="w-5 h-5 text-primary" />
                 <h4 className="font-semibold text-base">Composição</h4>
                 {canEdit && (
-                  <span className="text-[10px] text-muted-foreground ml-auto">Clique no ✕ para remover</span>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="ml-auto h-7 px-2 gap-1.5 text-xs text-primary"
+                    onClick={() => setShowManualFoodInput(true)}
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    Adicionar Alimento
+                  </Button>
                 )}
               </div>
+              
+              {showManualFoodInput && (
+                <div className="flex gap-1.5 mb-3">
+                  <Input
+                    autoFocus
+                    placeholder="Ex: Frango — 150g"
+                    value={manualFoodInput}
+                    onChange={e => setManualFoodInput(e.target.value)}
+                    onKeyDown={e => {
+                      if (e.key === "Enter") handleAddManualFood();
+                      if (e.key === "Escape") setShowManualFoodInput(false);
+                    }}
+                    className="h-9 text-sm"
+                  />
+                  <Button size="icon" className="h-9 w-9 shrink-0" onClick={handleAddManualFood} disabled={!manualFoodInput.trim()}>
+                    <Check className="w-4 h-4" />
+                  </Button>
+                </div>
+              )}
+
               <ul className="space-y-1.5">
                 {foodLines.map((line, idx) => {
                   if (removedLines.has(idx)) return null;
                   const isBullet = line.startsWith("•");
                   const displayText = isBullet ? line.slice(1).trim() : line;
+
+                  if (editingLineIdx === idx) {
+                    return (
+                      <li key={idx} className="flex gap-1.5 items-center">
+                        <Input
+                          autoFocus
+                          value={lineValue}
+                          onChange={e => setLineValue(e.target.value)}
+                          onKeyDown={e => {
+                            if (e.key === "Enter") handleUpdateLine(idx);
+                            if (e.key === "Escape") setEditingLineIdx(null);
+                          }}
+                          className="h-9 text-sm flex-1"
+                        />
+                        <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => handleUpdateLine(idx)}>
+                          <Check className="w-4 h-4" />
+                        </Button>
+                        <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setEditingLineIdx(null)}>
+                          <X className="w-4 h-4" />
+                        </Button>
+                      </li>
+                    );
+                  }
 
                   // Extract portion if present (e.g., "Frango — 150g")
                   const portionMatch = displayText.match(/—\s*(.+)$/);
@@ -506,7 +687,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                   const portion = portionMatch ? portionMatch[1].trim() : null;
 
                   return (
-                    <li key={idx} className="flex items-center gap-2 text-sm bg-secondary/30 rounded-lg px-3 py-2 group/line">
+                    <li key={idx} className="flex items-center gap-2 text-sm bg-secondary/30 rounded-lg px-3 py-2 group/line hover:bg-secondary/50 transition-colors">
                       <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
                       <span className="flex-1 font-medium text-[13px]">{foodName}</span>
                       {portion && (
@@ -515,18 +696,32 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                           {portion}
                         </span>
                       )}
-                      {canEdit && isBullet && (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            handleRemoveLine(idx);
-                          }}
-                          className="p-1 rounded-full hover:bg-destructive/20 opacity-0 group-hover/line:opacity-100 transition-opacity shrink-0"
-                          title={`Remover ${foodName}`}
-                        >
-                          <X className="w-3.5 h-3.5 text-destructive" />
-                        </button>
+                      {canEdit && (
+                        <div className="flex items-center gap-0.5 opacity-0 group-hover/line:opacity-100 transition-opacity">
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingLineIdx(idx);
+                              setLineValue(displayText);
+                            }}
+                            className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
+                            title="Editar"
+                          >
+                            <Pencil className="w-3.5 h-3.5 text-primary" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleRemoveLine(idx);
+                            }}
+                            className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
+                            title="Remover"
+                          >
+                            <X className="w-3.5 h-3.5 text-destructive" />
+                          </button>
+                        </div>
                       )}
                     </li>
                   );
@@ -645,13 +840,36 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     const isBullet = line.startsWith("•");
                     const content = isBullet ? line.slice(1).trim() : line;
 
+                    if (editingSubLineIdx === idx) {
+                      return (
+                        <div key={idx} className="flex gap-1.5 items-center">
+                          <Input
+                            autoFocus
+                            value={subLineValue}
+                            onChange={e => setSubLineValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") handleUpdateSubLine(idx);
+                              if (e.key === "Escape") setEditingSubLineIdx(null);
+                            }}
+                            className="h-9 text-xs flex-1"
+                          />
+                          <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => handleUpdateSubLine(idx)}>
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setEditingSubLineIdx(null)}>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    }
+
                     // Parse "Food → Alt1 (100g), Alt2 (80g)"
                     const arrowParts = content.split("→");
                     const originalFood = arrowParts[0]?.trim() || content;
                     const alternatives = arrowParts[1]?.trim() || "";
 
                     return (
-                      <div key={idx} className="rounded-lg bg-secondary/40 p-3 group/subline">
+                      <div key={idx} className="rounded-lg bg-secondary/40 p-3 group/subline hover:bg-secondary/60 transition-colors">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
                             <p className="text-xs font-medium text-muted-foreground mb-1.5">
@@ -679,17 +897,31 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             </div>
                           </div>
                           {canEdit && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSubLine(idx);
-                              }}
-                              className="p-1 rounded-full hover:bg-destructive/20 opacity-0 group-hover/subline:opacity-100 transition-opacity shrink-0"
-                              title="Remover substituição"
-                            >
-                              <X className="w-3 h-3 text-destructive" />
-                            </button>
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover/subline:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingSubLineIdx(idx);
+                                  setSubLineValue(content);
+                                }}
+                                className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
+                                title="Editar"
+                              >
+                                <Pencil className="w-3.5 h-3.5 text-primary" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveSubLine(idx);
+                                }}
+                                className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
+                                title="Remover"
+                              >
+                                <X className="w-3.5 h-3.5 text-destructive" />
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
