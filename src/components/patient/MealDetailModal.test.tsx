@@ -186,9 +186,9 @@ describe("MealDetailModal - Validação de Porção", () => {
     );
 
     // Encontrar o botão de editar da primeira linha (Arroz Branco)
-    // O botão tem um título "Editar Alimento"
-    const editBtn = await screen.findByTitle(/Editar Alimento/i);
-    fireEvent.click(editBtn);
+    // Os botões têm title="Editar Alimento" — getAllByTitle pega ambos (Arroz e Frango)
+    const editBtns = screen.getAllByTitle(/Editar Alimento/i);
+    fireEvent.click(editBtns[0]);
 
     const portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
     
