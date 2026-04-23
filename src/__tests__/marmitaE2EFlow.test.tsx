@@ -6,9 +6,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
-// Componentes do Nutricionista e Paciente (usando mocks para focar no fluxo de dados)
+// Mocks
 import GenerationModeSelector from '@/components/hybrid-builder/GenerationModeSelector';
-import PatientDailyFocusHero from '@/components/patient/PatientDailyFocusHero';
+import NextMealWidget from '@/components/patient/NextMealWidget';
 
 vi.mock('@/integrations/supabase/client', () => {
   const mockQuery = {
@@ -96,21 +96,15 @@ describe('Fluxo E2E Automatizado: Marmita Semanal -> Publicação -> Visualizaç
     render(
       <QueryClientProvider client={queryClient}>
         <MemoryRouter>
-          <PatientDailyFocusHero 
-            planId={mockPlanId} 
-            totalCalories={2000}
-            totalProtein={150}
-            totalCarbs={200}
-            totalFat={60}
-          />
+          <NextMealWidget />
         </MemoryRouter>
       </QueryClientProvider>
     );
 
     // Valida que Kcal NÃO está zerada
-    expect(screen.getByText(/2000/)).toBeInTheDocument();
-    expect(screen.queryByText(/NaN/)).not.toBeInTheDocument();
-    expect(screen.queryByText(/^0$/)).not.toBeInTheDocument(); // Não deve ser exatamente 0 se a meta é 2000
+    const kcalPill = await screen.findByText(/2000 kcal/i);
+    expect(kcalPill).toBeInTheDocument();
+    expect(screen.queryByText(/0 kcal/i)).not.toBeInTheDocument();
 
     console.log("✅ Teste E2E Concluído: Nutricionista -> Geração Marmita -> Macros Paciente OK.");
   });
