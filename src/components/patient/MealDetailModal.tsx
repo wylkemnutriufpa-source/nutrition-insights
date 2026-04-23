@@ -13,6 +13,13 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { fmtMacro } from "@/lib/formatMacros";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import {
+  validatePortion,
+  getPortionAutocompleteOptions,
+  PORTION_ERROR_MESSAGE,
+  PORTION_PLACEHOLDER,
+  PORTION_DATALIST_ID,
+} from "@/lib/portionValidation";
 
 interface FoodItem {
   name: string;
@@ -137,13 +144,6 @@ const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPorti
   vegetable: { foods: ["alface", "tomate", "brócolis", "cenoura", "couve", "repolho", "chuchu", "abobrinha"], defaultPortion: "50g" },
 };
 
-const PORTION_UNITS = [
-  "g", "kg", "ml", "l", "unidade", "unidades", "fatia", "fatias", 
-  "ovo", "ovos", "colher", "colheres", "xicara", "xicaras", 
-  "pote", "potes", "scoop", "scoops", "copo", "copos", "un", "unid"
-];
-
-
 function normalizeForMatch(t: string): string {
   return t.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -264,14 +264,6 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const { foodLines, substitutionLines } = parseDescriptionLines(meal.description);
   const hasDescriptionLines = foodLines.length > 0;
 
-  const validatePortion = (portion: string): boolean => {
-    if (!portion.trim()) return true; 
-    // Aceita "150g", "2 ovos", "1.5L", "200 ml", "0.5kg", "2 ovos"
-    // Regex flexível para números (inteiros/decimais), espaços opcionais e unidades permitidas
-    const regex = /^\d+(?:[.,]\d+)?\s*(?:g|kg|ml|l|unidade|unidades|fatia|fatias|ovo|ovos|colher|colheres|xicara|xicaras|pote|potes|scoop|scoops|copo|copos|un|unid)$/i;
-    return regex.test(portion.trim());
-  };
-
   const handleUpdateTitle = () => {
     if (!canEdit || !meal.itemId || !titleValue.trim() || titleValue === meal.title) {
       setEditingTitle(false);
@@ -306,7 +298,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     }
     
     if (linePortionValue.trim() && !validatePortion(linePortionValue)) {
-      setLinePortionError("Use ex: 150g, 2 ovos, 1 fatia");
+      setLinePortionError(PORTION_ERROR_MESSAGE);
       return;
     }
 
@@ -330,7 +322,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!canEdit || !meal.itemId || !manualFoodName.trim()) return;
     
     if (manualFoodPortion.trim() && !validatePortion(manualFoodPortion)) {
-      setManualPortionError("Use ex: 150g, 2 ovos, 1 fatia");
+      setManualPortionError(PORTION_ERROR_MESSAGE);
       return;
     }
 
@@ -507,16 +499,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
           </DialogContent>
         </Dialog>
 
-        <datalist id="portion-units">
-          {(manualFoodName || lineNameValue ? 
-            PORTION_UNITS.map(unit => {
-              const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
-              const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
-              const num = numMatch ? numMatch[1] : "";
-              return <option key={unit} value={`${num}${unit}`} />;
-            }) : 
-            PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
-          )}
+        <datalist id={PORTION_DATALIST_ID}>
+          {getPortionAutocompleteOptions(
+            editingLineIdx !== null ? linePortionValue : manualFoodPortion,
+          ).map((opt) => (
+            <option key={opt} value={opt} />
+          ))}
         </datalist>
       </>
     );
@@ -715,9 +703,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     <div className="space-y-1">
                       <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">Porção</label>
                       <Input
-                        placeholder="Ex: 150g"
+                        placeholder={PORTION_PLACEHOLDER}
                         value={manualFoodPortion}
-                        list="portion-units"
+                        list={PORTION_DATALIST_ID}
                         className={`h-9 text-sm ${manualPortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                         onChange={e => {
                           const val = e.target.value;
@@ -771,7 +759,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">Porção</label>
                             <Input
                               value={linePortionValue}
-                              list="portion-units"
+                              list={PORTION_DATALIST_ID}
+                              placeholder={PORTION_PLACEHOLDER}
                               className={`h-9 text-sm ${linePortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                               onChange={e => {
                                 const val = e.target.value;
@@ -1129,16 +1118,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       </DialogContent>
     </Dialog>
 
-    <datalist id="portion-units">
-      {(manualFoodName || lineNameValue ? 
-        PORTION_UNITS.map(unit => {
-          const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
-          const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
-          const num = numMatch ? numMatch[1] : "";
-          return <option key={unit} value={`${num}${unit}`} />;
-        }) : 
-        PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
-      )}
+    <datalist id={PORTION_DATALIST_ID}>
+      {getPortionAutocompleteOptions(
+        editingLineIdx !== null ? linePortionValue : manualFoodPortion,
+      ).map((opt) => (
+        <option key={opt} value={opt} />
+      ))}
     </datalist>
   </>
 );
