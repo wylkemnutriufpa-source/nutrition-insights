@@ -159,9 +159,11 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
     const kcalPill = await screen.findByText(/2000 kcal/i);
     expect(kcalPill).toBeInTheDocument();
     
-    // Verificamos que o texto "0 kcal" não existe (usando string literal para bater com o formato do fmtMacro se estivesse zerado)
-    const allText = document.body.textContent || "";
-    expect(allText).not.toContain("0 kcal");
+    // Verificamos que o widget mostra exatamente os 2000 kcal do nosso mock
+    // O texto "0 kcal" não deve estar presente no contexto do NextMealWidget
+    const nextMealContainer = document.querySelector('[data-macro-tile="next-meal"]');
+    expect(nextMealContainer?.textContent).not.toContain("0 kcal");
+    expect(nextMealContainer?.textContent).toContain("2000 kcal");
 
     console.log("✅ E2E Publicação: Status mudou para 'published_to_patient' e macros exibidos corretamente.");
   });
