@@ -1,4 +1,5 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
@@ -9,10 +10,41 @@ export function usePatientDashboard() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
 
+  const queryClient = useQueryClient();
+
+  // Setup Realtime listener for published plans
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const channel = supabase
+      .channel(`patient_plan_sync:${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'meal_plans',
+          filter: `patient_id=eq.${user.id}`,
+        },
+        () => {
+          // Invalidate dashboard query when any plan changes (publish/archive)
+          queryClient.invalidateQueries({
+            queryKey: queryKeys.dashboard.patient(user.id),
+          });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, queryClient]);
+
   return useQuery({
     queryKey: [...queryKeys.dashboard.patient(user?.id ?? ""), tenantId],
     enabled: !!user,
-    staleTime: 5 * 1000,
+    staleTime: 30 * 1000, // Increased staleTime as we now have Realtime sync
+    gcTime: 5 * 60 * 1000,
     queryFn: async () => {
       const userId = user!.id;
       const today = new Date().toISOString().split("T")[0];
