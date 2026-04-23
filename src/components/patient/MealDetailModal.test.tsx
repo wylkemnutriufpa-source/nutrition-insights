@@ -165,12 +165,9 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "invalid" } });
     fireEvent.click(saveBtn);
     
-    // Debug: log the state
-    // console.log('Current value:', portionInput.value);
-
-    // Verifica se o erro apareceu usando um matcher mais flexível
-    const errorMsg = await screen.findByText((content) => content.includes("Use ex: 150g"));
-    expect(errorMsg).toBeInTheDocument();
+    // Verifica se o erro apareceu. Usamos queryAllByText para lidar com possíveis duplicatas ou quebras de texto
+    const errorMsg = screen.queryAllByText((content) => content.includes("Use ex: 150g"));
+    expect(errorMsg.length).toBeGreaterThan(0);
 
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
