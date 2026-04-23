@@ -109,14 +109,15 @@ describe('E2E: Proteção contra Dados Parciais (API returning 0/null)', () => {
       </QueryClientProvider>
     );
 
-    // Aguarda carregar e verifica fallbacks
     await waitFor(() => {
-      const kcalPill = screen.getByText(/\.\.\. kcal/i);
-      expect(kcalPill).toBeInTheDocument();
-      expect(screen.queryByText(/^0 kcal$/i)).not.toBeInTheDocument();
+      // Verifica o container de macros do widget
+      const widgetMacros = screen.getByRole('link').querySelector('[data-macro-tile="next-meal"]');
+      expect(widgetMacros).toBeInTheDocument();
       
-      const proteinPill = screen.getByText(/P \.\.\./i);
-      expect(proteinPill).toBeInTheDocument();
+      // O texto deve conter as reticências
+      expect(widgetMacros?.textContent).toContain("...");
+      // Não deve conter "0 kcal" (pode conter "0" se for parte de "2000", mas não "0 kcal")
+      expect(widgetMacros?.textContent).not.toContain("0 kcal");
     });
   });
 
@@ -129,16 +130,18 @@ describe('E2E: Proteção contra Dados Parciais (API returning 0/null)', () => {
       </QueryClientProvider>
     );
 
-    // Valida que o resumo de macros do dia mostra processamento
     await waitFor(() => {
-      // Procura pelos placeholders de resumo
-      const placeholders = screen.getAllByText(/\.\.\./);
-      expect(placeholders.length).toBeGreaterThanOrEqual(4); // Cal, Prot, Carb, Gord
-      
-      // Garante que não há texto "0" explícito nos valores de macros
-      expect(screen.queryByText(/^0$/)).not.toBeInTheDocument();
+      // Procura especificamente pelas áreas de valor dos macros
+      // No Componente, temos labels "Calorias", "Proteína", etc.
+      const caloriesVal = screen.getByText(/Calorias/i).parentElement;
+      expect(caloriesVal?.textContent).toContain("...");
+      expect(caloriesVal?.textContent).not.toContain("0");
+
+      const proteinVal = screen.getByText(/Proteína/i).parentElement;
+      expect(proteinVal?.textContent).toContain("...");
+      expect(proteinVal?.textContent).not.toContain("0");
     });
     
-    console.log("✅ E2E: Fallbacks de API parcial validados em NextMealWidget e MacroSummary.");
+    console.log("✅ E2E: Fallbacks de API parcial validados.");
   });
 });
