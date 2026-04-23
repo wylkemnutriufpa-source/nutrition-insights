@@ -3464,7 +3464,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     }
 
     const useFixedSeed = !!body.useFixedSeed;
-    const seed = generationSeed(patient_id, planOptionIndex, useFixedSeed);
+    const seed = generationSeed(patient_id, planOptionIndex, useFixedSeed, goal);
 
     // ── Multi-plan flow ──
     if (isPipeline && planCount > 1 && !meal_plan_id) {
