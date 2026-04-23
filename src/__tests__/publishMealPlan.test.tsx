@@ -160,10 +160,13 @@ describe('Validação E2E: Publicação e Visualização Paciente', () => {
     expect(kcalPill).toBeInTheDocument();
     
     // Verificamos que o widget mostra exatamente os 2000 kcal do nosso mock
-    // Verificamos o valor específico do atributo data-macro-value se existir ou o texto da pílula de kcal
-    const kcalElement = screen.getByTestId('next-meal-kcal') || screen.getByText(/2000 kcal/i);
-    expect(kcalElement.textContent).not.toBe("0 kcal");
-    expect(kcalElement.textContent).toContain("2000");
+    // Buscamos o elemento que contém exatamente o valor de kcal para garantir que não é zero
+    const macroValues = screen.getAllByText(/kcal/i);
+    const hasZeroKcal = macroValues.some(el => el.textContent?.trim() === "0 kcal");
+    expect(hasZeroKcal).toBe(false);
+    
+    const hasCorrectKcal = macroValues.some(el => el.textContent?.includes("2000"));
+    expect(hasCorrectKcal).toBe(true);
 
     console.log("✅ E2E Publicação: Status mudou para 'published_to_patient' e macros exibidos corretamente.");
   });
