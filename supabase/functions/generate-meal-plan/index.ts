@@ -1952,6 +1952,8 @@ export async function generateWeeklyMarmitaPlan(
   const marmitaCarbsPool = Math.max(0, macros.carbs - shadowCarbs);
   const marmitaFatPool = Math.max(0, macros.fat - shadowFat);
   const lunchShare = lunchKcal / Math.max(1, lunchKcal + dinnerKcal);
+  // Clinical Correction: Target macros for marmitas are now derived directly from TDEE/Daily Target
+  // We ensure the SUM of (Marmitas + Snacks) matches the daily goal.
   const lunchProteinTarget = Math.round(marmitaProteinPool * lunchShare);
   const dinnerProteinTarget = Math.max(0, marmitaProteinPool - lunchProteinTarget);
   const lunchCarbsTarget = Math.round(marmitaCarbsPool * lunchShare);
