@@ -508,9 +508,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         </Dialog>
 
         <datalist id="portion-units">
-          {PORTION_UNITS.map(unit => (
-            <option key={unit} value={unit} />
-          ))}
+          {(manualFoodName || lineNameValue ? 
+            PORTION_UNITS.map(unit => {
+              const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
+              const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
+              const num = numMatch ? numMatch[1] : "";
+              return <option key={unit} value={`${num}${unit}`} />;
+            }) : 
+            PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
+          )}
         </datalist>
       </>
     );
@@ -714,8 +720,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                         list="portion-units"
                         className={`h-9 text-sm ${manualPortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                         onChange={e => {
-                          setManualFoodPortion(e.target.value);
-                          if (manualPortionError) setManualPortionError(null);
+                          const val = e.target.value;
+                          setManualFoodPortion(val);
+                          if (validatePortion(val)) setManualPortionError(null);
                         }}
                         onKeyDown={e => {
                           if (e.key === "Enter") handleAddManualFood();
@@ -767,8 +774,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                               list="portion-units"
                               className={`h-9 text-sm ${linePortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
                               onChange={e => {
-                                setLinePortionValue(e.target.value);
-                                if (linePortionError) setLinePortionError(null);
+                                const val = e.target.value;
+                                setLinePortionValue(val);
+                                if (validatePortion(val)) setLinePortionError(null);
                               }}
                               onKeyDown={e => {
                                 if (e.key === "Enter") handleUpdateLine(idx);
@@ -1122,9 +1130,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     </Dialog>
 
     <datalist id="portion-units">
-      {PORTION_UNITS.map(unit => (
-        <option key={unit} value={unit} />
-      ))}
+      {(manualFoodName || lineNameValue ? 
+        PORTION_UNITS.map(unit => {
+          const currentVal = (editingLineIdx !== null ? linePortionValue : manualFoodPortion).trim();
+          const numMatch = currentVal.match(/^(\d+(?:[.,]\d+)?)/);
+          const num = numMatch ? numMatch[1] : "";
+          return <option key={unit} value={`${num}${unit}`} />;
+        }) : 
+        PORTION_UNITS.map(unit => <option key={unit} value={unit} />)
+      )}
     </datalist>
   </>
 );
