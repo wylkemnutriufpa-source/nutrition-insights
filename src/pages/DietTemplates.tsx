@@ -419,7 +419,7 @@ export default function DietTemplates() {
         total_protein: template.protein || 0,
         total_carbs: template.carbohydrates || 0,
         total_fat: template.fat || 0,
-      }])
+      }] as any) as any)
       .select("id")
       .single();
     if (planErr || !plan) throw new Error(planErr?.message || "Falha ao criar plano");
