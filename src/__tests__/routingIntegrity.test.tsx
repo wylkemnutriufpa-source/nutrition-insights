@@ -9,16 +9,17 @@ vi.mock("@/components/common/SafePage", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div data-testid="safe-page">{children}</div>,
 }));
 
-// Mock main pages
-const pages = [
-  "Landing", "PatientLanding", "PersonalLanding", "AffiliateLanding", 
-  "BiquiniBrancoLanding", "Auth", "Index", "ResetPassword",
-  "PrivacyPolicy", "TermsOfUse", "AccountDeletion"
-];
-
-pages.forEach(page => {
-  vi.mock(`@/pages/${page}`, () => ({ default: () => <div data-testid={`${page.toLowerCase()}-page`}>{page}</div> }));
-});
+// Static mocks for the pages to avoid hoisting issues in loops
+vi.mock("@/pages/Landing", () => ({ default: () => <div data-testid="landing-page">Landing</div> }));
+vi.mock("@/pages/PatientLanding", () => ({ default: () => <div data-testid="patientlanding-page">Patient Landing</div> }));
+vi.mock("@/pages/PersonalLanding", () => ({ default: () => <div data-testid="personallanding-page">Personal Landing</div> }));
+vi.mock("@/pages/AffiliateLanding", () => ({ default: () => <div data-testid="affiliatelanding-page">Affiliate Landing</div> }));
+vi.mock("@/pages/BiquiniBrancoLanding", () => ({ default: () => <div data-testid="biquinibrancolanding-page">Biquini Branco</div> }));
+vi.mock("@/pages/Auth", () => ({ default: () => <div data-testid="auth-page">Auth</div> }));
+vi.mock("@/pages/ResetPassword", () => ({ default: () => <div data-testid="resetpassword-page">Reset Password</div> }));
+vi.mock("@/pages/PrivacyPolicy", () => ({ default: () => <div data-testid="privacypolicy-page">Privacy</div> }));
+vi.mock("@/pages/TermsOfUse", () => ({ default: () => <div data-testid="termsofuse-page">Terms</div> }));
+vi.mock("@/pages/AccountDeletion", () => ({ default: () => <div data-testid="accountdeletion-page">Account Deletion</div> }));
 
 describe("Routing Integrity Suite", () => {
   beforeEach(() => {
