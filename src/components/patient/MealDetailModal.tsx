@@ -300,7 +300,6 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   };
 
   const handleUpdateLine = (lineIdx: number) => {
-    console.log(`handleUpdateLine called for idx ${lineIdx} with name "${lineNameValue}" and portion "${linePortionValue}"`);
     if (!canEdit || !meal.itemId || !lineNameValue.trim()) {
       setEditingLineIdx(null);
       return;
@@ -328,7 +327,6 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   };
 
   const handleAddManualFood = () => {
-    console.log(`handleAddManualFood called with name "${manualFoodName}" and portion "${manualFoodPortion}"`);
     if (!canEdit || !meal.itemId || !manualFoodName.trim()) return;
     
     if (manualFoodPortion.trim() && !validatePortion(manualFoodPortion)) {

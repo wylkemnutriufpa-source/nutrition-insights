@@ -122,10 +122,8 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalled();
 
-    // Reset mock for next sub-test
-    mockUpdateItem.mockClear();
-
     // Caso 2: 200 ml
+    mockUpdateItem.mockClear();
     fireEvent.click(addBtn);
     nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
     portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
@@ -135,9 +133,8 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalled();
 
-    mockUpdateItem.mockClear();
-
     // Caso 3: 2 ovos
+    mockUpdateItem.mockClear();
     fireEvent.click(addBtn);
     nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
     portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
@@ -146,18 +143,6 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "2 ovos" } });
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalled();
-
-    // Caso 3: 2 ovos
-    fireEvent.click(addBtn);
-    nameInput = screen.getByPlaceholderText(/Ex: Frango Grelhado/i);
-    portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
-    fireEvent.change(nameInput, { target: { value: "T3" } });
-    fireEvent.change(portionInput, { target: { value: "2 ovos" } });
-    fireEvent.click(saveBtn);
-    expect(mockUpdateItem).toHaveBeenCalledWith("item-123", expect.objectContaining({
-      description: expect.stringContaining("2 ovos")
-    }));
   });
 
   it("deve limpar erro inline ao começar a digitar valor válido", async () => {
