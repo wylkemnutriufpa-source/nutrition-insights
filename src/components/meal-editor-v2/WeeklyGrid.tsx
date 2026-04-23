@@ -473,52 +473,7 @@ export function WeeklyGrid() {
           })()}
         </div>
       </div>
-    </>
-  );
-}
-        ))}
 
-        {/* Day totals */}
-        <div className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mt-2">
-          <div className="glass rounded-lg p-3 flex items-center">
-            <span className="font-display text-xs font-bold text-primary">TOTAL DIÁRIO</span>
-          </div>
-          {DAYS.map((day) => {
-            const t = getDayTotals(day.key);
-            return (
-              <div key={day.key} className="glass rounded-lg p-2 border-primary/20">
-                <div className="grid grid-cols-2 gap-1 text-[10px]">
-                  <div className="flex items-center gap-1">
-                    <Flame className="w-3 h-3 text-orange-400" />
-                    <span className="font-semibold">{t.calories}</span>
-                    <span className="text-muted-foreground">kcal</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Beef className="w-3 h-3 text-red-400" />
-                    <span className="font-semibold">{t.protein.toFixed(0)}g</span>
-                    <span className="text-muted-foreground">prot</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Wheat className="w-3 h-3 text-amber-500" />
-                    <span className="font-semibold">{t.carbs.toFixed(0)}g</span>
-                    <span className="text-muted-foreground">carb</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Droplets className="w-3 h-3 text-blue-400" />
-                    <span className="font-semibold">{t.fat.toFixed(0)}g</span>
-                    <span className="text-muted-foreground">gord</span>
-                  </div>
-                </div>
-                <div className="mt-1.5">
-                  <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} compact />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Library sidebar */}
       <MealLibrarySidebar
         open={libraryOpen}
         onOpenChange={setLibraryOpen}
@@ -526,7 +481,6 @@ export function WeeklyGrid() {
         targetMealType={libraryTarget.mealType}
       />
 
-      {/* Save template dialog */}
       <SaveTemplateDialog
         open={saveTemplateOpen}
         onOpenChange={setSaveTemplateOpen}
@@ -534,7 +488,6 @@ export function WeeklyGrid() {
         mealType={saveTemplateMealType}
       />
 
-      {/* Meal Library Modal (banco de refeições) */}
       <MealLibraryModal
         open={mlModalOpen}
         onOpenChange={setMlModalOpen}
