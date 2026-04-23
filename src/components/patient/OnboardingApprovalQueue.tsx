@@ -336,8 +336,10 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
             generated_plan_id: newPlanId,
             generated_plan_data: data,
             plan_generated: true,
+            status: "pending_approval" // Force status
           } as any)
           .eq("id", pipeline.id);
+
 
         const finalized = await finalizeGeneratedMealPlan({
           planId: newPlanId,
