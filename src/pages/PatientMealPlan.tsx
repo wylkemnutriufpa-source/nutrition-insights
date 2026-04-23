@@ -106,7 +106,7 @@ export default function PatientMealPlan() {
 
     const { data: planData } = await supabase
       .from("meal_plans")
-      .select("id, title, start_date")
+      .select("id, title, start_date, totals_status")
       .eq("patient_id", user.id)
       .eq("is_active", true)
       .eq("plan_status", "published_to_patient")
@@ -460,7 +460,7 @@ export default function PatientMealPlan() {
                 allMarked={allMarked}
               />
 
-              <MacroSummary items={items} />
+              <MacroSummary items={items} totalsStatus={plan?.totals_status} />
 
               <div className="space-y-6">
                 {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
