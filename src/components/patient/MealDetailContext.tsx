@@ -30,6 +30,15 @@ export function MealDetailProvider({ children }: { children: React.ReactNode }) 
   const [changeImageFn, setChangeImageFn] = useState<((itemId: string, newImageUrl: string) => void) | null>(null);
   const [updateItemFn, setUpdateItemFn] = useState<((itemId: string, patch: Partial<MealPlanItem>) => void) | null>(null);
 
+  const handleUpdateItem = useCallback((itemId: string, patch: Partial<MealPlanItem>) => {
+    if (updateItemFn) updateItemFn(itemId, patch);
+    // Update local state to reflect changes in modal
+    setSelected(prev => {
+      if (!prev || prev.itemId !== itemId) return prev;
+      return { ...prev, ...patch };
+    });
+  }, [updateItemFn]);
+
   const openMealDetail = useCallback((meal: MealDetailData) => {
     setSelected(meal);
   }, []);
@@ -55,7 +64,7 @@ export function MealDetailProvider({ children }: { children: React.ReactNode }) 
         meal={selected}
         onRemoveFoodLine={removeFn || undefined}
         onChangeImage={changeImageFn || undefined}
-        onUpdateItem={updateItemFn || undefined}
+        onUpdateItem={handleUpdateItem}
       />
     </MealDetailContext.Provider>
   );
