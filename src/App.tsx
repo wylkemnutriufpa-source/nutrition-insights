@@ -362,13 +362,8 @@ function RootRoute() {
   if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
     return <Navigate to="/store" replace />;
   }
-  // Patients with INCOMPLETE onboarding → straight to /onboarding (avoids
-  // dashboard→guard-bounce→onboarding loop that was breaking handoff to /anamnesis)
+  // Patients go to client dashboard by default, no mandatory onboarding flow
   if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
-    if (requirement === "loading") return <PageLoader />;
-    if (requirement === "must_complete") {
-      return <Navigate to="/onboarding" replace />;
-    }
     return <Navigate to="/client/dashboard" replace />;
   }
   if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
