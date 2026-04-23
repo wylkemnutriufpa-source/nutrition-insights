@@ -1,5 +1,5 @@
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
-import { Flame, Beef, Wheat, Droplets, AlertTriangle, CheckCircle2, Target } from "lucide-react";
+import { Flame, Beef, Wheat, Droplets, AlertTriangle, CheckCircle2, Target, Loader2 } from "lucide-react";
 
 interface Props {
   targetKcal?: number;
