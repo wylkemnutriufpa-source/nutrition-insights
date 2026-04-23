@@ -235,6 +235,7 @@ export async function generateMealPlanFromLibrary(
         fat: preset.fat,
         foods: preset.foods.map(f => ({ name: f, portion: f })),
         substitutions: [],
+        plan_type: profile.planType,
       };
       const sf = calcScale(preset.kcal, targetKcal);
       slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
@@ -615,6 +616,7 @@ export async function loadPatientProfile(patientId: string): Promise<PatientProf
       return {
         patientId,
         goal: "maintenance",
+        planType: "normal",
         targetCalories: baseCal,
         targetProtein: Math.round(weight * 1.6),
         targetCarbs: Math.round(baseCal * 0.45 / 4),
