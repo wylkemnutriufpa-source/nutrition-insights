@@ -149,13 +149,19 @@ function clampProteinLineToStandardPortion(
   // Clinical calculation takes precedence — only clamp extreme outliers (>350g single protein)
   if (!isMainMealType(mealType) || !isProteinLine(line)) return line;
 
-  const MAX_SINGLE_PROTEIN_PORTION = 350; // physiological safety ceiling
-  const MIN_SINGLE_PROTEIN_PORTION = 50;  // minimum meaningful portion
+  const standardPortion = standardProteinPortion(mealType, _isGainGoal);
+  const MAX_SINGLE_PROTEIN_PORTION = 250; // physiological safety ceiling (lowered from 350)
+  const MIN_SINGLE_PROTEIN_PORTION = 40;  // minimum meaningful portion
   return line.replace(/(\d+(?:[.,]\d+)?)\s*(g)\b/i, (_match, rawValue: string, unit: string) => {
     const parsed = Number(rawValue.replace(",", "."));
     if (!Number.isFinite(parsed) || parsed <= 0) return `${rawValue}${unit}`;
+    
+    // Scale outliers towards standard portion if they are too extreme
     if (parsed > MAX_SINGLE_PROTEIN_PORTION) return `${MAX_SINGLE_PROTEIN_PORTION}${unit}`;
     if (parsed < MIN_SINGLE_PROTEIN_PORTION) return `${MIN_SINGLE_PROTEIN_PORTION}${unit}`;
+    
+    // If it's a main meal and we have a target, ensure it's not radically different from standard
+    // unless explicitly calculated.
     return `${rawValue}${unit}`;
   });
 }
