@@ -1298,6 +1298,39 @@ function generatePlanWithTemplates(
   // Prevents 150g/120g/130g jitter for the same protein across the week.
   const stableBackbone = new Map<string, { foods: any[]; scaleFactor: number; picked: any }>();
 
+  // NEW: Detect and replace "Marmita" placeholders in templates before day loop
+  const marmitaPlaceholders = ["Marmita congelada do dia", "Marmita do dia", "Marmita Selecionada", "marmita do dia"];
+  if (templates && dbFoods && dbFoods.length > 0) {
+    console.log(`[template-marmita-fix] Checking for marmita placeholders in ${templates.length} templates using ${dbFoods.length} recipes`);
+    for (const tpl of templates) {
+      if (tpl.meals) {
+        for (const meal of tpl.meals) {
+          if (meal.foods) {
+            for (const food of meal.foods) {
+              const needsReplacement = food.name && marmitaPlaceholders.some(p => food.name.includes(p));
+              if (needsReplacement) {
+                const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
+                const candidates = dbFoods.filter(r => r.meal_type === typeKey);
+                if (candidates.length > 0) {
+                  const seed = generationSeed(String(planOptionIndex), (templates.indexOf(tpl) + 1) * 100);
+                  const picked = candidates[seed % candidates.length];
+                  console.log(`[template-marmita-fix] Replacing "${food.name}" with "${picked.name}" in template "${tpl.name}"`);
+                  food.name = picked.name;
+                  // Also update title if it's generic
+                  if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar")) {
+                    meal.title = `🍱 ${picked.name}`;
+                  }
+                } else {
+                  console.warn(`[template-marmita-fix] No candidates found for ${typeKey} to replace "${food.name}"`);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
   for (let day = 0; day < 7; day++) {
     const usedProteinsToday = new Set<string>();
 
@@ -1672,11 +1705,23 @@ export function estimateRecipeMacros(recipe: MarmitaRecipe): { cal: number; p: n
 
 async function loadMealRecipes(client: any, nutritionistId: string, opts?: { onlyFixed?: boolean }): Promise<MarmitaRecipe[]> {
   // Load recipes owned by this nutritionist + global ones (nutritionist_id IS NULL)
+  // Check if current user is an admin to potentially load all tenant recipes
+  const { data: userRoles } = await client.from("user_roles").select("role").eq("user_id", nutritionistId);
+  const isAdmin = userRoles?.some((r: any) => r.role === "admin");
+
   let query = client
     .from("meal_recipes")
     .select("id, name, meal_type, foods_json, nutritionist_id, is_fixed, is_scalable, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
-    .eq("is_active", true)
-    .or(`nutritionist_id.eq.${nutritionistId},nutritionist_id.is.null`);
+    .eq("is_active", true);
+
+  if (isAdmin) {
+    // If admin, we don't restrict to nutritionistId because they might want to use any recipe in the tenant
+    // But since RLS is tenant-isolated, we can just load all active recipes they have access to
+    console.log(`[loadMealRecipes] Admin mode: loading all active meal recipes for context`);
+  } else {
+    query = query.or(`nutritionist_id.eq.${nutritionistId},nutritionist_id.is.null`);
+  }
+
   if (opts?.onlyFixed) {
     query = query.eq("is_fixed", true);
   }
@@ -1718,18 +1763,25 @@ export async function generateWeeklyMarmitaPlan(
   fastMarmitaMode: boolean = false,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
   // NEW: Detect and replace "Marmita congelada do dia" in templates
+  // NEW: Detect and replace "Marmita" placeholders in templates
+  const marmitaPlaceholders = ["Marmita congelada do dia", "Marmita do dia", "Marmita Selecionada", "marmita do dia"];
   if (templates) {
     for (const tpl of templates) {
       if (tpl.meals) {
         for (const meal of tpl.meals) {
           if (meal.foods) {
             for (const food of meal.foods) {
-              if (food.name && (food.name.includes("Marmita congelada do dia") || food.name.includes("Marmita do dia") || food.name === "Marmita Selecionada (Almoço)" || food.name === "Marmita Selecionada (Jantar)")) {
+              const needsReplacement = food.name && marmitaPlaceholders.some(p => food.name.includes(p));
+              if (needsReplacement) {
                 const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
                 const candidates = (recipes || []).filter(r => r.meal_type === typeKey);
                 if (candidates.length > 0) {
                   const picked = candidates[Math.floor(Math.random() * candidates.length)];
+                  console.log(`[weekly_marmita_fix] Replacing "${food.name}" with "${picked.name}"`);
                   food.name = picked.name;
+                  if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar")) {
+                    meal.title = `🍱 ${picked.name}`;
+                  }
                 }
               }
             }
