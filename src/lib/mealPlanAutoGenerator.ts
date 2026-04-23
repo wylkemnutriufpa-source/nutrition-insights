@@ -271,13 +271,13 @@ export async function generateMealPlanFromLibrary(
   console.warn("[ENGINE] total slots gerados:", slots.length);
   
   if (slots.length < 5) {
-    console.warn("[RECOVERY] Geração insuficiente detectada, tentando auto-correção via presets");
+    console.warn("[RECOVERY] Geração insuficiente detectada (< 5), acionando fallback de presets");
     const recoveryResult = generateFromPresets(profile, distribution);
     if (recoveryResult.slots.length >= 4) {
-      console.warn("[RECOVERY] Auto-correção bem sucedida", { slots: recoveryResult.slots.length });
+      console.warn("[RECOVERY] Auto-correção via presets bem sucedida", { slots: recoveryResult.slots.length });
       return recoveryResult;
     }
-    console.error("[ENGINE] Auto-correção falhou", { slots: recoveryResult.slots.length });
+    console.error("[ENGINE] Auto-correção via presets também falhou", { slots: recoveryResult.slots.length });
     throw new Error("Plano inválido: geração incompleta (auto-correção falhou)");
   }
 
