@@ -1,5 +1,5 @@
-import { describe, it, expect, vi } from "vitest";
-import { render, screen, fireEvent } from "@testing-library/react";
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { render, screen, fireEvent, cleanup } from "@testing-library/react";
 import { MealDetailModal } from "./MealDetailModal";
 import "@testing-library/jest-dom";
 
@@ -44,6 +44,11 @@ describe("MealDetailModal - Validação de Porção", () => {
   const mockUpdateItem = vi.fn();
   const mockOnOpenChange = vi.fn();
 
+  beforeEach(() => {
+    vi.clearAllMocks();
+    cleanup();
+  });
+
   it("deve permitir salvar quando a porção está em formato válido (número + unidade)", async () => {
     render(
       <MealDetailModal
@@ -54,7 +59,6 @@ describe("MealDetailModal - Validação de Porção", () => {
       />
     );
 
-    // Abrir formulário de adicionar alimento
     const addBtn = screen.getByText(/Adicionar Alimento/i);
     fireEvent.click(addBtn);
 
@@ -66,7 +70,6 @@ describe("MealDetailModal - Validação de Porção", () => {
     fireEvent.change(portionInput, { target: { value: "200g" } });
     fireEvent.click(saveBtn);
 
-    // Verifica se a função de update foi chamada (indicando sucesso na validação)
     expect(mockUpdateItem).toHaveBeenCalled();
   });
 
@@ -88,14 +91,10 @@ describe("MealDetailModal - Validação de Porção", () => {
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
     fireEvent.change(nameInput, { target: { value: "Batata Doce" } });
-    
-    // Testando formato inválido (apenas texto)
-    fireEvent.change(portionInput, { target: { value: "muito" } });
+    fireEvent.change(portionInput, { target: { value: "inválido" } });
     fireEvent.click(saveBtn);
 
-    // Deve mostrar mensagem de erro inline
     expect(screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).toBeInTheDocument();
-    // Não deve ter chamado o update
     expect(mockUpdateItem).not.toHaveBeenCalled();
   });
 
@@ -143,15 +142,13 @@ describe("MealDetailModal - Validação de Porção", () => {
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
-    // Provocar erro
-    fireEvent.change(portionInput, { target: { value: "errado" } });
+    // Forçar erro
+    fireEvent.change(portionInput, { target: { value: "erro" } });
     fireEvent.click(saveBtn);
     expect(screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).toBeInTheDocument();
 
-    // Corrigir valor - digitando '1' já deve ser inválido mas '100g' deve ser válido
+    // Corrigir
     fireEvent.change(portionInput, { target: { value: "100g" } });
-    
-    // O erro deve sumir porque validatePortion("100g") é true e limpa o erro
     expect(screen.queryByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).not.toBeInTheDocument();
   });
 });
