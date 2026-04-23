@@ -1734,11 +1734,10 @@ export async function generateWeeklyMarmitaPlan(
               // If it's a fixed recipe, we'll handle scaling later or use its fixed values
             }
           }
-        }
       }
     }
   }
-...
+
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
 
