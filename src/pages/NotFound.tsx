@@ -1,9 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
+import { useEffect } from "react";
 
 export default function NotFound() {
+  const location = useLocation();
+
+  useEffect(() => {
+    console.error(`[Router] 404 Not Found: ${location.pathname}`);
+  }, [location.pathname]);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <motion.div
@@ -17,6 +24,8 @@ export default function NotFound() {
         <h1 className="font-display text-2xl font-bold mb-2">Página não encontrada</h1>
         <p className="text-muted-foreground mb-6">
           A página que você procura não existe ou foi movida.
+          <br />
+          <span className="text-xs opacity-50 font-mono">{location.pathname}</span>
         </p>
         <div className="flex gap-3 justify-center">
           <Button variant="outline" onClick={() => window.history.back()} className="gap-2">
