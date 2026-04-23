@@ -261,14 +261,14 @@ export async function generateMealPlanFromLibrary(
 
   const metadata: AutoGenMetadata = {
     engine_version: ENGINE_VERSION,
-    algorithm: "deterministic_realistic_v3",
+    algorithm: "deterministic_master_day_v1",
     patient_goal: profile.goal,
     target_calories: profile.targetCalories,
     distribution,
     total_library_items: allItems.length,
     items_after_filter: validatedItems.length,
-    diversity_enforced: !fallbackUsed,
-    fallback_used: fallbackUsed,
+    diversity_enforced: true,
+    fallback_used: false,
     generated_at: new Date().toISOString(),
     slots_summary: slots.map((s) => ({
       day: s.day,
