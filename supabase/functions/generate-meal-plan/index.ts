@@ -1718,22 +1718,23 @@ export async function generateWeeklyMarmitaPlan(
   fastMarmitaMode: boolean = false,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
   // NEW: Detect and replace "Marmita congelada do dia" in templates
-  for (const tpl of templates) {
-    for (const meal of tpl.meals) {
-      if (meal.foods) {
-        for (const food of meal.foods) {
-          if (food.name && (food.name.includes("Marmita congelada do dia") || food.name.includes("Marmita do dia"))) {
-            // Filter recipes by meal type
-            const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
-            const candidates = recipes.filter(r => r.meal_type === typeKey);
-            if (candidates.length > 0) {
-              // Random pick for variety
-              const picked = candidates[Math.floor(Math.random() * candidates.length)];
-              food.name = picked.name;
-              food.original_name = "Marmita congelada do dia";
-              // If it's a fixed recipe, we'll handle scaling later or use its fixed values
+  if (templates) {
+    for (const tpl of templates) {
+      if (tpl.meals) {
+        for (const meal of tpl.meals) {
+          if (meal.foods) {
+            for (const food of meal.foods) {
+              if (food.name && (food.name.includes("Marmita congelada do dia") || food.name.includes("Marmita do dia") || food.name === "Marmita Selecionada (Almoço)" || food.name === "Marmita Selecionada (Jantar)")) {
+                const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
+                const candidates = (recipes || []).filter(r => r.meal_type === typeKey);
+                if (candidates.length > 0) {
+                  const picked = candidates[Math.floor(Math.random() * candidates.length)];
+                  food.name = picked.name;
+                }
+              }
             }
           }
+        }
       }
     }
   }
