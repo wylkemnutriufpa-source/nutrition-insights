@@ -525,25 +525,29 @@ export default function HybridPlanBuilder() {
         onDragEnd={(event) => { setActiveDragData(null); handleDragEnd(event); }}
         onDragCancel={() => { dragStartYRef.current = null; setActiveDragData(null); }}
       >
-        <div className="space-y-3">
-          {/* Topbar */}
-          <BuilderTopbar
-            patientName={store.patientName}
-            saving={saving}
-            publishing={publishing}
-            validating={validating}
-            onBack={() => plan?.patient_id ? navigate(`/patients/${plan.patient_id}`) : navigate("/meal-plans")}
-            onSave={handleSave}
-            onValidate={handleValidate}
-            onPublish={handlePublish}
-            onSaveAsTemplate={() => setSaveTemplateOpen(true)}
-            lockedValidationMode={lockedValidationMode}
-            onRename={async (newTitle) => {
-              store.updatePlan({ title: newTitle, updated_at: new Date().toISOString() } as any);
-              await supabase.from("meal_plans").update({ title: newTitle }).eq("id", plan.id);
-              toast.success("Plano renomeado!");
-            }}
-          />
+        <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
+          <div className="flex-1 flex flex-col overflow-hidden space-y-3">
+            <BuilderTopbar
+              patientName={store.patientName}
+              saving={saving}
+              publishing={publishing}
+              validating={validating}
+              onBack={() => plan?.patient_id ? navigate(`/patients/${plan.patient_id}`) : navigate("/meal-plans")}
+              onSave={handleSave}
+              onValidate={handleValidate}
+              onPublish={handlePublish}
+              onSaveAsTemplate={() => setSaveTemplateOpen(true)}
+              lockedValidationMode={lockedValidationMode}
+              onRename={async (newTitle) => {
+                store.updatePlan({ title: newTitle, updated_at: new Date().toISOString() } as any);
+                await supabase.from("meal_plans").update({ title: newTitle }).eq("id", plan.id);
+                toast.success("Plano renomeado!");
+              }}
+            />
+
+            <QuickAdjustPanel />
+
+            <div className="flex-1 flex overflow-hidden">
 
           {/* Immutable plan banner */}
           {isImmutable && (
