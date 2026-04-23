@@ -2508,12 +2508,26 @@ function validatePlanBeforeSave(
   }
 
   // Rule 3: Calorie deviation <= 5%
-... (keep existing code)
+  const day0Items = items.filter(i => i.day_of_week === 0);
+  if (day0Items.length > 0) {
+    const sumCal = day0Items.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
+    const calDev = dailyKcal > 0 ? Math.abs(sumCal - dailyKcal) / dailyKcal : 0;
+    if (calDev > 0.05) {
+      errors.push(`Calorie deviation ${(calDev * 100).toFixed(1)}% exceeds 5% tolerance (sum=${sumCal}, target=${dailyKcal})`);
+    }
 
+    // Rule 4: Protein within clinical range
+    const sumP = day0Items.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
+    const proteinPerKg = sumP / weight;
+    const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
+    if (proteinPerKg < proteinRange.min * 0.9 || proteinPerKg > proteinRange.max * 1.1) {
+      errors.push(`Protein ${proteinPerKg.toFixed(2)}g/kg outside clinical range ${proteinRange.min}-${proteinRange.max}g/kg for goal=${goal}`);
+    }
   }
-
+  
   return { valid: errors.length === 0, errors };
 }
+
 
 async function safeDeletePlan(client: any, planId: string) {
   const { error } = await client.from("meal_plans").delete().eq("id", planId);
