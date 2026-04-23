@@ -699,14 +699,24 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       <Input
                         placeholder="Ex: 150g"
                         value={manualFoodPortion}
-                        onChange={e => setManualFoodPortion(e.target.value)}
+                        list="portion-units"
+                        className={`h-9 text-sm ${manualPortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                        onChange={e => {
+                          setManualFoodPortion(e.target.value);
+                          if (manualPortionError) setManualPortionError(null);
+                        }}
                         onKeyDown={e => {
                           if (e.key === "Enter") handleAddManualFood();
                           if (e.key === "Escape") setShowManualFoodInput(false);
                         }}
-                        className="h-9 text-sm"
                       />
+                      {manualPortionError && (
+                        <p className="text-[10px] text-destructive font-medium px-1 animate-in fade-in slide-in-from-top-1">
+                          {manualPortionError}
+                        </p>
+                      )}
                     </div>
+
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" className="flex-1 h-8" onClick={handleAddManualFood} disabled={!manualFoodName.trim()}>
@@ -742,14 +752,24 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             <label className="text-[10px] font-semibold text-muted-foreground uppercase px-1">Porção</label>
                             <Input
                               value={linePortionValue}
-                              onChange={e => setLinePortionValue(e.target.value)}
+                              list="portion-units"
+                              className={`h-9 text-sm ${linePortionError ? "border-destructive focus-visible:ring-destructive" : ""}`}
+                              onChange={e => {
+                                setLinePortionValue(e.target.value);
+                                if (linePortionError) setLinePortionError(null);
+                              }}
                               onKeyDown={e => {
                                 if (e.key === "Enter") handleUpdateLine(idx);
                                 if (e.key === "Escape") setEditingLineIdx(null);
                               }}
-                              className="h-9 text-sm"
                             />
+                            {linePortionError && (
+                              <p className="text-[10px] text-destructive font-medium px-1 mt-1 animate-in fade-in slide-in-from-top-1">
+                                {linePortionError}
+                              </p>
+                            )}
                           </div>
+
                         </div>
                         <div className="flex gap-2">
                           <Button size="sm" className="flex-1 h-8" onClick={() => handleUpdateLine(idx)}>
