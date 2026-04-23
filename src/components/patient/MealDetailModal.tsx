@@ -448,67 +448,79 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   // Image picker sub-view
   if (showImagePicker) {
     return (
-      <Dialog open={open} onOpenChange={handleOpenChange}>
-        <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
-          <div className="px-6 pt-6 pb-3 space-y-3">
-            <DialogHeader>
-              <DialogTitle className="flex items-center gap-2 text-base">
-                <ImageIcon className="w-5 h-5 text-primary" />
-                Trocar Imagem da Refeição
-              </DialogTitle>
-              <DialogDescription className="text-xs">
-                Selecione uma imagem do banco de alimentos
-              </DialogDescription>
-            </DialogHeader>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                placeholder="Buscar alimento..."
-                value={imageSearch}
-                onChange={e => setImageSearch(e.target.value)}
-                className="pl-9 h-9 text-sm"
-                autoFocus
-              />
-            </div>
-          </div>
-          <div className="flex-1 overflow-y-auto px-4 pb-6 max-h-[calc(90vh-180px)]">
-            {loadingImages ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">Carregando...</div>
-            ) : filteredImages.length === 0 ? (
-              <div className="text-center py-10 text-muted-foreground text-sm">Nenhuma imagem encontrada</div>
-            ) : (
-              <div className="grid grid-cols-3 gap-2">
-                {filteredImages.map(img => (
-                  <button
-                    key={img.id}
-                    type="button"
-                    onClick={() => handleSelectImage(img.image_url)}
-                    className="group rounded-xl overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/30 transition-all"
-                  >
-                    <div className="aspect-square relative">
-                      <img src={img.image_url} alt={img.name} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                        <Check className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
-                      </div>
-                    </div>
-                    <p className="text-[10px] font-medium px-1.5 py-1 truncate text-center">{img.name}</p>
-                  </button>
-                ))}
+      <>
+        <Dialog open={open} onOpenChange={handleOpenChange}>
+          <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
+            {/* ... same content ... */}
+            <div className="px-6 pt-6 pb-3 space-y-3">
+              <DialogHeader>
+                <DialogTitle className="flex items-center gap-2 text-base">
+                  <ImageIcon className="w-5 h-5 text-primary" />
+                  Trocar Imagem da Refeição
+                </DialogTitle>
+                <DialogDescription className="text-xs">
+                  Selecione uma imagem do banco de alimentos
+                </DialogDescription>
+              </DialogHeader>
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar alimento..."
+                  value={imageSearch}
+                  onChange={e => setImageSearch(e.target.value)}
+                  className="pl-9 h-9 text-sm"
+                  autoFocus
+                />
               </div>
-            )}
-          </div>
-          <div className="px-6 pb-4">
-            <Button variant="outline" size="sm" className="w-full" onClick={() => setShowImagePicker(false)}>
-              Voltar
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            </div>
+            <div className="flex-1 overflow-y-auto px-4 pb-6 max-h-[calc(90vh-180px)]">
+              {loadingImages ? (
+                <div className="text-center py-10 text-muted-foreground text-sm">Carregando...</div>
+              ) : filteredImages.length === 0 ? (
+                <div className="text-center py-10 text-muted-foreground text-sm">Nenhuma imagem encontrada</div>
+              ) : (
+                <div className="grid grid-cols-3 gap-2">
+                  {filteredImages.map(img => (
+                    <button
+                      key={img.id}
+                      type="button"
+                      onClick={() => handleSelectImage(img.image_url)}
+                      className="group rounded-xl overflow-hidden border border-border hover:border-primary hover:ring-2 hover:ring-primary/30 transition-all"
+                    >
+                      <div className="aspect-square relative">
+                        <img src={img.image_url} alt={img.name} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
+                          <Check className="w-6 h-6 text-white opacity-0 group-hover:opacity-100 transition-opacity" />
+                        </div>
+                      </div>
+                      <p className="text-[10px] font-medium px-1.5 py-1 truncate text-center">{img.name}</p>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div className="px-6 pb-4">
+              <Button variant="outline" size="sm" className="w-full" onClick={() => setShowImagePicker(false)}>
+                Voltar
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        <datalist id="portion-units">
+          {PORTION_UNITS.map(unit => (
+            <option key={unit} value={unit} />
+          ))}
+        </datalist>
+      </>
     );
+
   }
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <>
+      <Dialog open={open} onOpenChange={handleOpenChange}>
+
       <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl backdrop-blur-sm fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
         {/* Hero Photo */}
         {imageUrl && (
