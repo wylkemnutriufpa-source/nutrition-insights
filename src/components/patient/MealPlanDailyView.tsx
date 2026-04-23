@@ -9,7 +9,7 @@ import {
   Utensils, Coffee, Apple, Cookie, Moon, Sun, Flame,
   Trophy, Beef, Wheat, Droplets, AlertCircle, MinusCircle,
   Shield, Zap, Award, TrendingUp, UtensilsCrossed, ArrowRightLeft,
-  Info,
+  Info, Clock,
 } from "lucide-react";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
@@ -105,7 +105,7 @@ function getMotivationalMessage(pct: number): { emoji: string; message: string; 
 }
 
 // ── Macro Summary Bar (memoized) ──
-const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem[] }) {
+const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: { items: MealPlanItem[], totalsStatus?: string }) {
   const totals = useMemo(() => ({
     calories: items.reduce((s, i) => s + safeNum(i.calories_target ?? i.metadata?.calories_target ?? i.metadata?.calories), 0),
     protein: items.reduce((s, i) => s + safeNum(i.protein_target ?? i.metadata?.protein_target ?? i.metadata?.protein), 0),
@@ -113,28 +113,41 @@ const MacroSummary = memo(function MacroSummary({ items }: { items: MealPlanItem
     fat: items.reduce((s, i) => s + safeNum(i.fat_target ?? i.metadata?.fat_target ?? i.metadata?.fat), 0),
   }), [items]);
 
+  const isIncomplete = totalsStatus === 'incomplete' || (totals.calories === 0 && items.length > 0);
+
   return (
-    <div className="grid grid-cols-4 gap-2">
-      <div className="glass rounded-xl p-3 text-center">
-        <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" />
-        <p className="text-xs text-muted-foreground">Calorias</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.calories, "...")}</p>
+    <div className="space-y-3">
+      <div className="grid grid-cols-4 gap-2">
+        <div className="glass rounded-xl p-3 text-center">
+          <Flame className="w-4 h-4 mx-auto text-orange-500 mb-1" />
+          <p className="text-xs text-muted-foreground">Calorias</p>
+          <p className="font-display font-bold text-sm" data-macro="kcal">{fmtMacro(totals.calories, "...")}</p>
+        </div>
+        <div className="glass rounded-xl p-3 text-center">
+          <Beef className="w-4 h-4 mx-auto text-red-500 mb-1" />
+          <p className="text-xs text-muted-foreground">Proteína</p>
+          <p className="font-display font-bold text-sm" data-macro="protein">{fmtMacro(totals.protein, "...")}g</p>
+        </div>
+        <div className="glass rounded-xl p-3 text-center">
+          <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" />
+          <p className="text-xs text-muted-foreground">Carbs</p>
+          <p className="font-display font-bold text-sm" data-macro="carbs">{fmtMacro(totals.carbs, "...")}g</p>
+        </div>
+        <div className="glass rounded-xl p-3 text-center">
+          <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1" />
+          <p className="text-xs text-muted-foreground">Gordura</p>
+          <p className="font-display font-bold text-sm" data-macro="fat">{fmtMacro(totals.fat, "...")}g</p>
+        </div>
       </div>
-      <div className="glass rounded-xl p-3 text-center">
-        <Beef className="w-4 h-4 mx-auto text-red-500 mb-1" />
-        <p className="text-xs text-muted-foreground">Proteína</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.protein, "...")}g</p>
-      </div>
-      <div className="glass rounded-xl p-3 text-center">
-        <Wheat className="w-4 h-4 mx-auto text-amber-500 mb-1" />
-        <p className="text-xs text-muted-foreground">Carbs</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.carbs, "...")}g</p>
-      </div>
-      <div className="glass rounded-xl p-3 text-center">
-        <Droplets className="w-4 h-4 mx-auto text-yellow-500 mb-1" />
-        <p className="text-xs text-muted-foreground">Gordura</p>
-        <p className="font-display font-bold text-sm">{fmtMacro(totals.fat, "...")}g</p>
-      </div>
+      
+      {isIncomplete && (
+        <div className="flex items-center gap-2 px-3 py-2 bg-amber-500/10 border border-amber-500/20 rounded-lg animate-pulse" data-testid="macros-sync-alert">
+          <Clock className="w-3.5 h-3.5 text-amber-500" />
+          <p className="text-[10px] text-amber-600 font-medium leading-tight">
+            Valores nutricionais em cálculo... Atualizando em instantes.
+          </p>
+        </div>
+      )}
     </div>
   );
 });

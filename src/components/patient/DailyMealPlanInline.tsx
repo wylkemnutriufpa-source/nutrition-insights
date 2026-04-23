@@ -34,6 +34,7 @@ interface MealPlan {
   id: string;
   title: string;
   start_date: string;
+  totals_status?: string;
 }
 
 function getWeekDates(dateStr: string) {
@@ -93,7 +94,7 @@ export default function DailyMealPlanInline() {
 
     const { data: planData } = await supabase
       .from("meal_plans")
-      .select("id, title, start_date")
+      .select("id, title, start_date, totals_status")
       .eq("patient_id", user.id)
       .eq("is_active", true)
       .eq("plan_status", "published_to_patient")
@@ -436,7 +437,7 @@ export default function DailyMealPlanInline() {
       />
 
       {/* Macros */}
-      <MacroSummary items={items} />
+      <MacroSummary items={items} totalsStatus={plan?.totals_status} />
 
       {/* Emotional feedback */}
       {isToday && dailyAdherence > 0 && (
