@@ -163,19 +163,16 @@ describe("MealDetailModal - Validação de Porção", () => {
 
     // Forçar erro (valor sem número)
     fireEvent.change(portionInput, { target: { value: "invalid" } });
-    
-    // O erro deve aparecer on change agora que unificamos a validação e resetamos o erro no onChange
-    // No componente: onChange={e => { ... if (validatePortion(val)) setManualPortionError(null); }}
-    // Mas o erro é setado no handleAddManualFood (click do saveBtn)
     fireEvent.click(saveBtn);
     
-    // Tenta encontrar o texto de erro exato
-    expect(screen.getByText(PORTION_ERROR_MESSAGE)).toBeInTheDocument();
-  
+    // Verifica se o erro apareceu
+    const errorMsg = screen.getByText(PORTION_ERROR_MESSAGE);
+    expect(errorMsg).toBeInTheDocument();
+
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
-    // O erro deve sumir
+    // O erro deve sumir (o onChange chama validatePortion que limpa o erro se for válido)
     expect(screen.queryByText(PORTION_ERROR_MESSAGE)).not.toBeInTheDocument();
   });
 });
