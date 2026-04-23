@@ -357,7 +357,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           <div className="flex flex-col">
             <Label htmlFor="fixed-seed" className="text-xs font-semibold cursor-pointer">Semente Fixa (Seed)</Label>
             <span className="text-[9px] text-muted-foreground font-mono">
-              PID: {patientId.slice(0, 8)}...
+              VALOR: {patientId ? (Math.abs(patientId.split('').reduce((a, b) => { a = ((a << 5) - a) + b.charCodeAt(0); return a & a }, 0)) % 10000) : "---"}
             </span>
           </div>
         </div>
