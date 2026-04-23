@@ -79,6 +79,7 @@ export default function DailyMealPlanInline() {
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
   const [weekCompletions, setWeekCompletions] = useState<MealCompletion[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [showWeekly, setShowWeekly] = useState(false);
   const [showRotateHint, setShowRotateHint] = useState(true);
@@ -88,56 +89,114 @@ export default function DailyMealPlanInline() {
   const isToday = date === new Date().toISOString().split("T")[0];
   const weekDates = useMemo(() => getWeekDates(date), [date]);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isSilent = false) => {
     if (!user) return;
-    setLoading(true);
+    if (!isSilent) setLoading(true);
+    else setIsRefreshing(true);
 
-    const { data: planData } = await supabase
-      .from("meal_plans")
-      .select("id, title, start_date, totals_status")
-      .eq("patient_id", user.id)
-      .eq("is_active", true)
-      .eq("plan_status", "published_to_patient")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    try {
+      const { data: planData } = await supabase
+        .from("meal_plans")
+        .select("id, title, start_date, totals_status")
+        .eq("patient_id", user.id)
+        .eq("is_active", true)
+        .eq("plan_status", "published_to_patient")
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
 
-    if (!planData) { setLoading(false); return; }
-    setPlan(planData);
+      if (!planData) { 
+        setPlan(null);
+        setItems([]);
+        setLoading(false); 
+        setIsRefreshing(false);
+        return; 
+      }
+      setPlan(planData);
 
-    const { data: allItemsData } = await supabase
-      .from("meal_plan_items")
-      .select("*")
-      .eq("meal_plan_id", planData.id)
-      .order("created_at");
+      const { data: allItemsData } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("meal_plan_id", planData.id)
+        .order("created_at");
 
-    setAllItems(allItemsData || []);
-    setItems((allItemsData || []).filter(i => i.day_of_week === dayOfWeek));
+      const currentItems = allItemsData || [];
+      setAllItems(currentItems);
+      setItems(currentItems.filter(i => i.day_of_week === dayOfWeek));
 
-    const { data: completionsData } = await supabase
-      .from("meal_item_completions")
-      .select("*")
-      .eq("patient_id", user.id)
-      .eq("meal_plan_id", planData.id)
-      .eq("date", date);
+      const { data: completionsData } = await supabase
+        .from("meal_item_completions")
+        .select("*")
+        .eq("patient_id", user.id)
+        .eq("meal_plan_id", planData.id)
+        .eq("date", date);
 
-    setCompletions((completionsData || []) as unknown as MealCompletion[]);
+      setCompletions((completionsData || []) as unknown as MealCompletion[]);
 
-    const weekStart = getWeekDates(date)[0];
-    const weekEnd = getWeekDates(date)[6];
-    const { data: weekData } = await supabase
-      .from("meal_item_completions")
-      .select("*")
-      .eq("patient_id", user.id)
-      .eq("meal_plan_id", planData.id)
-      .gte("date", weekStart)
-      .lte("date", weekEnd);
+      const weekStart = weekDates[0];
+      const weekEnd = weekDates[6];
+      const { data: weekData } = await supabase
+        .from("meal_item_completions")
+        .select("*")
+        .eq("patient_id", user.id)
+        .eq("meal_plan_id", planData.id)
+        .gte("date", weekStart)
+        .lte("date", weekEnd);
 
-    setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
-    setLoading(false);
-  }, [user, date, dayOfWeek]);
+      setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
+    } catch (error) {
+      console.error("Error fetching meal plan data:", error);
+    } finally {
+      setLoading(false);
+      setIsRefreshing(false);
+    }
+  }, [user, date, dayOfWeek, weekDates]);
 
-  useEffect(() => { fetchData(); }, [fetchData]);
+  useEffect(() => { 
+    fetchData(); 
+
+    if (!user?.id) return;
+
+    // Realtime subscription for instant updates when a plan is published
+    const channel = supabase
+      .channel(`patient_meals_inline_${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'meal_plans',
+          filter: `patient_id=eq.${user.id}`
+        },
+        (payload) => {
+          // If status changes to published or active changes, refresh silently
+          if (
+            (payload.eventType === 'UPDATE' || payload.eventType === 'INSERT') && 
+            (payload.new.plan_status === 'published_to_patient' || payload.new.is_active)
+          ) {
+            fetchData(true);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'meal_plan_items',
+        },
+        () => {
+          // This might be too frequent, but meal_plan_items don't change often for a published plan
+          // except during the initial generation/sync phase.
+          fetchData(true);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user?.id, fetchData]);
 
   const setAdherence = useCallback(async (item: MealPlanItem, status: AdherenceStatus, forDate?: string) => {
     if (!user || !plan) return;
@@ -161,27 +220,70 @@ export default function DailyMealPlanInline() {
     const existing = relevantCompletions.find(c => c.meal_plan_item_id === item.id);
 
     if (existing && existing.adherence_status === status) {
-      await supabase.from("meal_item_completions").delete().eq("id", existing.id);
-      fetchData();
+      // Optimistic delete
+      setCompletions(prev => prev.filter(c => c.id !== existing.id));
+      setWeekCompletions(prev => prev.filter(c => c.id !== existing.id));
+      
+      const { error } = await supabase.from("meal_item_completions").delete().eq("id", existing.id);
+      if (error) {
+        toast.error("Erro ao remover marcação");
+        fetchData(true);
+      }
       return;
     }
 
     if (existing) {
-      await supabase.from("meal_item_completions").update({
+      // Optimistic update
+      const updated = { ...existing, adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString() };
+      setCompletions(prev => prev.map(c => c.id === existing.id ? updated : c));
+      setWeekCompletions(prev => prev.map(c => c.id === existing.id ? updated : c));
+
+      const { error } = await supabase.from("meal_item_completions").update({
         adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString(),
       }).eq("id", existing.id);
+      
+      if (error) {
+        toast.error("Erro ao atualizar marcação");
+        fetchData(true);
+      }
     } else {
-      await supabase.from("meal_item_completions").insert({
+      // Optimistic insert
+      const tempId = crypto.randomUUID();
+      const newItem = {
+        id: tempId,
+        patient_id: user.id,
+        meal_plan_item_id: item.id,
+        meal_plan_id: plan.id,
+        date: targetDate,
+        adherence_status: status,
+        completed: status === "followed",
+        completed_at: new Date().toISOString(),
+      } as unknown as MealCompletion;
+
+      setCompletions(prev => [...prev, newItem]);
+      if (targetDate >= weekDates[0] && targetDate <= weekDates[6]) {
+        setWeekCompletions(prev => [...prev, newItem]);
+      }
+
+      const { data, error } = await supabase.from("meal_item_completions").insert({
         patient_id: user.id, meal_plan_item_id: item.id, meal_plan_id: plan.id,
         date: targetDate, adherence_status: status, completed: status === "followed", completed_at: new Date().toISOString(),
-      });
+      }).select().single();
+
+      if (error) {
+        toast.error("Erro ao salvar marcação");
+        fetchData(true);
+      } else if (data) {
+        // Replace temp item with real data
+        setCompletions(prev => prev.map(c => c.id === tempId ? (data as unknown as MealCompletion) : c));
+        setWeekCompletions(prev => prev.map(c => c.id === tempId ? (data as unknown as MealCompletion) : c));
+      }
     }
 
     if (status === "followed") {
       toast.success("✅ Refeição seguida! +10 XP");
     }
-    fetchData();
-  }, [user, plan, date, completions, weekCompletions, fetchData]);
+  }, [user, plan, date, completions, weekCompletions, weekDates, fetchData]);
 
   const changeDate = useCallback((offset: number) => {
     const d = new Date(date);
@@ -404,12 +506,21 @@ export default function DailyMealPlanInline() {
     <div className="space-y-4">
       {/* Header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h2 className="font-display text-lg font-bold flex items-center gap-2">
-            <Utensils className="w-5 h-5 text-primary" />
-            Plano do Dia
-          </h2>
-          <p className="text-xs text-muted-foreground">{plan.title}</p>
+        <div className="flex-1">
+          <div className="flex items-center gap-2">
+            <h2 className="font-display text-lg font-bold flex items-center gap-2">
+              <Utensils className="w-5 h-5 text-primary" />
+              Plano do Dia
+            </h2>
+            {isRefreshing && (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="w-3 h-3 border-2 border-primary/40 border-t-transparent rounded-full animate-spin"
+              />
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{plan.title}</p>
         </div>
         <Button
           variant="outline"
