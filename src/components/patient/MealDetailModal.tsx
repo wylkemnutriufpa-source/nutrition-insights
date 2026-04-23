@@ -544,7 +544,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                           {canEdit && (
                             <button
                               onClick={() => { setEditingTitle(true); setTitleValue(meal.title); }}
-                              className="p-1 rounded hover:bg-primary/10 opacity-0 group-hover/title:opacity-100 transition-opacity"
+                              className="p-1 rounded hover:bg-primary/10 sm:opacity-0 group-hover/title:opacity-100 transition-opacity"
                             >
                               <Pencil className="w-3.5 h-3.5 text-primary" />
                             </button>
