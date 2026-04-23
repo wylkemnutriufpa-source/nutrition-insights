@@ -1,7 +1,7 @@
 import { assertEquals, assertNotEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { generateWeeklyMarmitaPlan, type MarmitaRecipe } from "./index.ts";
 
-Deno.test("weekly_marmita integration: full contract validation", () => {
+Deno.test("weekly_marmita integration: full contract validation", async () => {
   // 1. Setup Mock Data with variety
   const recipes: MarmitaRecipe[] = [
     { 
@@ -39,9 +39,11 @@ Deno.test("weekly_marmita integration: full contract validation", () => {
   const kcalTarget = 2000;
   const macros = { protein: 160, carbs: 200, fat: 60 };
 
-  // 2. Generate Plan for Week 1
-  const result = generateWeeklyMarmitaPlan(
-    recipes, [], [], "manutencao", kcalTarget, macros, [], [], [], ["lunch", "dinner"]
+  // 2. Generate Plan for Week 1 (Updated with new signature)
+  const result = await generateWeeklyMarmitaPlan(
+    {} as any, // serviceClient mock
+    recipes, [], [], "manutencao", kcalTarget, macros, [], [], [], ["lunch", "dinner"],
+    undefined, undefined, undefined, undefined, false
   );
 
   // 3. Validate JSON structure & Length
