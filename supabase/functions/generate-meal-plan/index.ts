@@ -2158,14 +2158,15 @@ function buildFixedMarmitaItem(
     cal = est.cal; p = est.p; c = est.c; f = est.f;
   }
 
-  // NEW: "Marmita Unit" representation for Fixed Mode
+  // OUTPUT PARA O PACIENTE (Etapa 4) - Fixed Mode
   const isHypertrophy = goal === "gain_muscle" || goal === "gain_weight";
   const portionMultiplier = isHypertrophy ? 1.5 : 1.0;
   
-  const compositionStr = (recipe.foods_json || []).map(f => f.name).join(", ");
-  const description = portionMultiplier > 1
-    ? `📦 ${portionMultiplier} Unidades: ${recipe.name}\n• Marmita congelada (Fixa)\n• [PORÇÃO REFORÇADA ${portionMultiplier}x]\n• Composição: ${compositionStr}`
-    : `📦 1 Unidade: ${recipe.name}\n• Marmita congelada (Fixa)\n• Composição: ${compositionStr}`;
+  const ingredientsLines = recipe.foods_json
+    .map(f => `${f.name}: ${Math.round(f.grams * portionMultiplier)}g`)
+    .join("\n");
+
+  const description = `🍱 ${recipe.name}\n\n${ingredientsLines}`;
   
   const finalDescription = finalizeMealDescription(description, mealType, goal);
   const visual = findVisualForRecipe(recipe, visualLibrary);
