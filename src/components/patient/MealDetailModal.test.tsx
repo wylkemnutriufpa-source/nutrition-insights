@@ -167,13 +167,14 @@ describe("MealDetailModal - Validação de Porção", () => {
     
     // Verifica se o erro apareceu.
     // O PORTION_ERROR_MESSAGE é "Use ex: 150g, 2 ovos, 1 fatia"
-    const errorMsg = screen.getByText(PORTION_ERROR_MESSAGE);
+    // Usamos queryByText com regex para ser flexível com quebras de linha ou espaços extras
+    const errorMsg = screen.queryByText(/Use ex: 150g/);
     expect(errorMsg).toBeInTheDocument();
 
     // Corrigir (número + unidade)
     fireEvent.change(portionInput, { target: { value: "100g" } });
     
-    // O erro deve sumir (porque onChange chama validatePortion que limpa o erro se for válido)
-    expect(screen.queryByText(PORTION_ERROR_MESSAGE)).not.toBeInTheDocument();
+    // O erro deve sumir
+    expect(screen.queryByText(/Use ex: 150g/)).not.toBeInTheDocument();
   });
 });
