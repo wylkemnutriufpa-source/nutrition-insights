@@ -1108,5 +1108,13 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         </div>
       </DialogContent>
     </Dialog>
-  );
+
+    <datalist id="portion-units">
+      {PORTION_UNITS.map(unit => (
+        <option key={unit} value={unit} />
+      ))}
+    </datalist>
+  </>
+);
 }
+
