@@ -13,81 +13,42 @@ interface MappedError {
 }
 
 const ERROR_MAP: Record<string, MappedError> = {
+  "column \"total_calories\" does not exist": {
+    userMessage: "Inconsistência de dados: a coluna 'total_calories' está ausente no banco. Por favor, atualize o sistema.",
+    errorKey: "missing_column_total_calories",
+    isSystemError: true,
+  },
+  "column \"total_carbs\" does not exist": {
+    userMessage: "Inconsistência de dados: a coluna 'total_carbs' está ausente no banco. Por favor, atualize o sistema.",
+    errorKey: "missing_column_total_carbs",
+    isSystemError: true,
+  },
+  "column \"total_protein\" does not exist": {
+    userMessage: "Inconsistência de dados: a coluna 'total_protein' está ausente no banco. Por favor, atualize o sistema.",
+    errorKey: "missing_column_total_protein",
+    isSystemError: true,
+  },
+  "column \"total_fat\" does not exist": {
+    userMessage: "Inconsistência de dados: a coluna 'total_fat' está ausente no banco. Por favor, atualize o sistema.",
+    errorKey: "missing_column_total_fat",
+    isSystemError: true,
+  },
+  "column": {
+    userMessage: "Erro de esquema: uma coluna esperada não foi encontrada no banco de dados. Contate o suporte técnico.",
+    errorKey: "generic_schema_error",
+    isSystemError: true,
+  },
+  "relation": {
+    userMessage: "Erro de banco: uma tabela ou relação necessária está ausente. Contate o suporte técnico.",
+    errorKey: "missing_relation",
+    isSystemError: true,
+  },
   TENANT_RESOLUTION_FAILED: {
     userMessage: "Erro de configuração: sua conta não está vinculada a uma clínica ativa. Entre em contato com o suporte.",
     errorKey: "tenant_resolution_failed",
     isSystemError: true,
   },
-  EMPTY_PLAN: {
-    userMessage: "Não é possível publicar ou aprovar um plano sem refeições. Adicione itens ao plano primeiro.",
-    errorKey: "empty_plan",
-    isSystemError: false,
-  },
-  VALIDATION_REQUIRED: {
-    userMessage: "O plano precisa ser validado e aprovado pelo Motor Clínico antes de ser publicado.",
-    errorKey: "validation_required",
-    isSystemError: false,
-  },
-  PLAN_NOT_FOUND: {
-    userMessage: "Plano alimentar não encontrado.",
-    errorKey: "plan_not_found",
-    isSystemError: false,
-  },
-  "violates row-level security": {
-    userMessage: "Sem permissão para realizar esta ação. Verifique se está logado corretamente.",
-    errorKey: "rls_violation",
-    isSystemError: false,
-  },
-  "violates not-null constraint": {
-    userMessage: "Dados incompletos. Preencha todos os campos obrigatórios.",
-    errorKey: "not_null_violation",
-    isSystemError: false,
-  },
-  "violates foreign key constraint": {
-    userMessage: "Referência inválida. O registro vinculado não existe ou foi removido.",
-    errorKey: "fk_violation",
-    isSystemError: false,
-  },
-  "duplicate key value violates unique constraint": {
-    userMessage: "Este registro já existe. Não é possível criar duplicatas.",
-    errorKey: "unique_violation",
-    isSystemError: false,
-  },
-  ANAMNESIS_MISSING: {
-    userMessage: "Anamnese concluída não encontrada. O paciente precisa preencher a anamnese antes de gerar o plano.",
-    errorKey: "anamnesis_missing",
-    isSystemError: false,
-  },
-  ANAMNESIS_QUERY_ERROR: {
-    userMessage: "Erro ao buscar dados da anamnese. Tente novamente.",
-    errorKey: "anamnesis_query_error",
-    isSystemError: true,
-  },
-  BODY_DATA_MISSING: {
-    userMessage: "Peso e altura válidos são obrigatórios para gerar o plano. Verifique a anamnese do paciente.",
-    errorKey: "body_data_missing",
-    isSystemError: false,
-  },
-  GOAL_MISSING: {
-    userMessage: "Objetivo do paciente não definido. Verifique a anamnese do paciente.",
-    errorKey: "goal_missing",
-    isSystemError: false,
-  },
-  PATIENT_ID_MISSING: {
-    userMessage: "ID do paciente não informado. Tente novamente.",
-    errorKey: "patient_id_missing",
-    isSystemError: false,
-  },
-  TENANT_NOT_FOUND: {
-    userMessage: "Erro de configuração: clínica não encontrada. Entre em contato com o suporte.",
-    errorKey: "tenant_not_found",
-    isSystemError: true,
-  },
-  PLAN_AUTH_FORBIDDEN: {
-    userMessage: "Sem permissão para gerar plano para este paciente.",
-    errorKey: "plan_auth_forbidden",
-    isSystemError: false,
-  },
+  // ... keep existing entries
   PATIENT_LINK_MISSING: {
     userMessage: "Este paciente não está vinculado ao profissional responsável. Verifique o vínculo antes de gerar o plano.",
     errorKey: "patient_link_missing",
