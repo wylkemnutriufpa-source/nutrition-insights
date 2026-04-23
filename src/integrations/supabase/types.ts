@@ -6076,6 +6076,7 @@ export type Database = {
           id: string
           is_active: boolean
           meal_type: string
+          plan_type: string | null
           protein: number
           substitutions: Json | null
           title: string
@@ -6091,6 +6092,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           meal_type: string
+          plan_type?: string | null
           protein?: number
           substitutions?: Json | null
           title: string
@@ -6106,6 +6108,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           meal_type?: string
+          plan_type?: string | null
           protein?: number
           substitutions?: Json | null
           title?: string
