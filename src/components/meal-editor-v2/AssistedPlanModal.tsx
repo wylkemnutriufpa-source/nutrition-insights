@@ -123,6 +123,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
       proteinLevel,
       rejectedFoods: rejectedFoods.split(",").map(s => s.trim()).filter(Boolean),
       goal,
+      planType,
     };
 
     const res = await generateAssistedPlan(params, context);
@@ -135,7 +136,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
     if (res.warnings.length > 0) {
       toast.warning(`${res.warnings.length} aviso(s) durante geração`);
     }
-  }, [context, targetKcal, mealCount, subsPerMeal, complexity, focus, proteinLevel, rejectedFoods, goal]);
+  }, [context, targetKcal, mealCount, subsPerMeal, complexity, focus, proteinLevel, rejectedFoods, goal, planType]);
 
   // ── SAFE APPLICATION: Insert first, delete after ──
   const handleApply = useCallback(async () => {
