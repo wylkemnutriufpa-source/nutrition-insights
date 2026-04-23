@@ -840,13 +840,36 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     const isBullet = line.startsWith("•");
                     const content = isBullet ? line.slice(1).trim() : line;
 
+                    if (editingSubLineIdx === idx) {
+                      return (
+                        <div key={idx} className="flex gap-1.5 items-center">
+                          <Input
+                            autoFocus
+                            value={subLineValue}
+                            onChange={e => setSubLineValue(e.target.value)}
+                            onKeyDown={e => {
+                              if (e.key === "Enter") handleUpdateSubLine(idx);
+                              if (e.key === "Escape") setEditingSubLineIdx(null);
+                            }}
+                            className="h-9 text-xs flex-1"
+                          />
+                          <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => handleUpdateSubLine(idx)}>
+                            <Check className="w-4 h-4" />
+                          </Button>
+                          <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setEditingSubLineIdx(null)}>
+                            <X className="w-4 h-4" />
+                          </Button>
+                        </div>
+                      );
+                    }
+
                     // Parse "Food → Alt1 (100g), Alt2 (80g)"
                     const arrowParts = content.split("→");
                     const originalFood = arrowParts[0]?.trim() || content;
                     const alternatives = arrowParts[1]?.trim() || "";
 
                     return (
-                      <div key={idx} className="rounded-lg bg-secondary/40 p-3 group/subline">
+                      <div key={idx} className="rounded-lg bg-secondary/40 p-3 group/subline hover:bg-secondary/60 transition-colors">
                         <div className="flex items-start justify-between gap-2">
                           <div className="flex-1">
                             <p className="text-xs font-medium text-muted-foreground mb-1.5">
@@ -874,17 +897,31 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             </div>
                           </div>
                           {canEdit && (
-                            <button
-                              type="button"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleRemoveSubLine(idx);
-                              }}
-                              className="p-1 rounded-full hover:bg-destructive/20 opacity-0 group-hover/subline:opacity-100 transition-opacity shrink-0"
-                              title="Remover substituição"
-                            >
-                              <X className="w-3 h-3 text-destructive" />
-                            </button>
+                            <div className="flex items-center gap-0.5 opacity-0 group-hover/subline:opacity-100 transition-opacity">
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setEditingSubLineIdx(idx);
+                                  setSubLineValue(content);
+                                }}
+                                className="p-1.5 rounded-full hover:bg-primary/10 transition-colors"
+                                title="Editar"
+                              >
+                                <Pencil className="w-3.5 h-3.5 text-primary" />
+                              </button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveSubLine(idx);
+                                }}
+                                className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
+                                title="Remover"
+                              >
+                                <X className="w-3.5 h-3.5 text-destructive" />
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
