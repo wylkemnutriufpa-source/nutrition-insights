@@ -190,5 +190,64 @@ describe("MealDetailModal - Validação de Porção", () => {
     
     // O erro deve sumir
     expect(screen.queryByText(/Use ex: 150g/i)).not.toBeInTheDocument();
+
+  it("deve validar porção ao editar um alimento existente", async () => {
+    render(
+      <MealDetailModal
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        meal={mockMeal}
+        onUpdateItem={mockUpdateItem}
+      />
+    );
+
+    // Encontrar o botão de editar da primeira linha (Arroz Branco)
+    // No componente, cada linha tem um botão <Button variant="ghost" size="icon" onClick={() => handleStartEditLine(i, line)}>
+    const editBtns = screen.getAllByRole("button").filter(btn => btn.querySelector(".lucide-pencil"));
+    fireEvent.click(editBtns[0]);
+
+    const portionInput = screen.getByDisplayValue("100g");
+    const saveBtn = screen.getByRole("button").find(btn => btn.querySelector(".lucide-check"));
+    
+    // Invalidar
+    fireEvent.change(portionInput, { target: { value: "invalid" } });
+    fireEvent.click(saveBtn!);
+
+    expect(screen.getByText(PORTION_ERROR_MESSAGE)).toBeInTheDocument();
+    expect(mockUpdateItem).not.toHaveBeenCalled();
+
+    // Corrigir
+    fireEvent.change(portionInput, { target: { value: "120g" } });
+    fireEvent.click(saveBtn!);
+
+    expect(mockUpdateItem).toHaveBeenCalledWith("item-123", expect.objectContaining({
+      description: expect.stringContaining("Arroz Branco — 120g")
+    }));
+  });
+
+  it("deve mostrar sugestões de autocomplete ao digitar um número", async () => {
+    render(
+      <MealDetailModal
+        open={true}
+        onOpenChange={mockOnOpenChange}
+        meal={mockMeal}
+        onUpdateItem={mockUpdateItem}
+      />
+    );
+
+    const addBtn = screen.getByText(/Adicionar Alimento/i);
+    fireEvent.click(addBtn);
+
+    const portionInput = screen.getByPlaceholderText(PORTION_PLACEHOLDER);
+    fireEvent.change(portionInput, { target: { value: "150" } });
+
+    // O datalist deve ter as opções
+    const datalist = document.getElementById("portion-units");
+    expect(datalist).toBeInTheDocument();
+    expect(datalist?.childNodes.length).toBeGreaterThan(0);
+    
+    const options = Array.from(datalist?.childNodes as NodeListOf<HTMLOptionElement>).map(opt => opt.value);
+    expect(options).toContain("150g");
+    expect(options).toContain("150ml");
   });
 });
