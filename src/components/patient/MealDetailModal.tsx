@@ -140,7 +140,7 @@ const CLIENT_SUBSTITUTION_GROUPS: Record<string, { foods: string[]; defaultPorti
 const PORTION_UNITS = [
   "g", "kg", "ml", "l", "unidade", "unidades", "fatia", "fatias", 
   "ovo", "ovos", "colher", "colheres", "xicara", "xicaras", 
-  "pote", "potes", "scoop", "scoops"
+  "pote", "potes", "scoop", "scoops", "copo", "copos", "fatia", "fatias"
 ];
 
 
