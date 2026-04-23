@@ -127,13 +127,14 @@ export default function OnboardingApprovalQueue({ patientId, patientName }: Prop
 
       // Keep pending approval status only when the onboarding is actually complete.
       const patientStepsDone = !!p.anamnesis_completed && !!p.body_data_completed && !!p.preferences_completed;
-      if (p.plan_generated && !p.plan_approved && patientStepsDone && p.status !== "pending_approval" && p.status !== "completed" && p.status !== "rejected") {
+      if (p.plan_generated && !p.plan_approved && patientStepsDone && !["pending_approval", "completed", "rejected", "review"].includes(p.status)) {
         await supabase
           .from("onboarding_pipelines" as any)
           .update({ status: "pending_approval" } as any)
           .eq("id", p.id);
         setPipeline({ ...p, status: "pending_approval" });
       }
+
     }
     setLoading(false);
   }
