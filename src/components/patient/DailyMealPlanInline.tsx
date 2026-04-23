@@ -71,7 +71,7 @@ function RotatePhoneHint({ onDismiss }: { onDismiss: () => void }) {
   );
 }
 
-export default function DailyMealPlanInline() {
+export function DailyMealPlanInline() {
   const { user } = useAuth();
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
