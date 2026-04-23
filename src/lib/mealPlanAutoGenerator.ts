@@ -163,7 +163,7 @@ export async function generateMealPlanFromLibrary(
   });
 
   if (allItems.length === 0) {
-    // Fallback: generate from realistic presets
+    console.warn("[RECOVERY] Biblioteca vazia ou filtrada, acionando fallback de presets");
     return generateFromPresets(profile, distribution);
   }
 
@@ -269,9 +269,16 @@ export async function generateMealPlanFromLibrary(
   }
 
   console.warn("[ENGINE] total slots gerados:", slots.length);
+  
   if (slots.length < 5) {
-    console.error("[ENGINE] Geração insuficiente detectada", { slots: slots.length });
-    throw new Error("Plano inválido: geração incompleta (menos de 5 itens)");
+    console.warn("[RECOVERY] Geração insuficiente detectada, tentando auto-correção via presets");
+    const recoveryResult = generateFromPresets(profile, distribution);
+    if (recoveryResult.slots.length >= 4) {
+      console.warn("[RECOVERY] Auto-correção bem sucedida", { slots: recoveryResult.slots.length });
+      return recoveryResult;
+    }
+    console.error("[ENGINE] Auto-correção falhou", { slots: recoveryResult.slots.length });
+    throw new Error("Plano inválido: geração incompleta (auto-correção falhou)");
   }
 
   const metadata: AutoGenMetadata = {

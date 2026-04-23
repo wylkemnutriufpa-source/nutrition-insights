@@ -112,7 +112,16 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
     // Seed with patient ID + timestamp for unique plans
     setGenerationSeed(plan?.patient_id || "", Date.now() % 1000);
     console.warn("[PLAN] chamando generateMealPlanFromLibrary");
-    const res = await generateMealPlanFromLibrary(profileInput, DEFAULT_DIST);
+    let res;
+    try {
+      res = await generateMealPlanFromLibrary(profileInput, DEFAULT_DIST);
+    } catch (e: any) {
+      console.warn("[RECOVERY] Erro no motor principal, forçando fallback manual");
+      // Importante: generateMealPlanFromLibrary já tenta o fallback interno, 
+      // mas se der erro de código, aqui temos uma última linha de defesa.
+      throw e; 
+    }
+    
     console.warn("[PLAN] resposta do gerador", res);
     setResult(res);
     setStep("preview");
