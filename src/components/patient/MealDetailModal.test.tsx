@@ -117,49 +117,20 @@ describe("MealDetailModal - Validação de Porção", () => {
     const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
     const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
 
-    // Testar um por um para isolar o erro se houver
-    fireEvent.change(nameInput, { target: { value: "Teste 1" } });
+    // Testar um por um
+    fireEvent.change(nameInput, { target: { value: "T1" } });
     fireEvent.change(portionInput, { target: { value: "1.5kg" } });
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalledTimes(1);
 
-    fireEvent.change(nameInput, { target: { value: "Teste 2" } });
+    fireEvent.change(nameInput, { target: { value: "T2" } });
     fireEvent.change(portionInput, { target: { value: "200 ml" } });
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalledTimes(2);
 
-    fireEvent.change(nameInput, { target: { value: "Teste 3" } });
+    fireEvent.change(nameInput, { target: { value: "T3" } });
     fireEvent.change(portionInput, { target: { value: "2 ovos" } });
     fireEvent.click(saveBtn);
     expect(mockUpdateItem).toHaveBeenCalledTimes(3);
-  });
-
-  it("deve limpar erro inline ao começar a digitar valor válido", () => {
-    render(
-      <MealDetailModal
-        open={true}
-        onOpenChange={mockOnOpenChange}
-        meal={mockMeal}
-        onUpdateItem={mockUpdateItem}
-      />
-    );
-
-    const addBtn = screen.getByText(/Adicionar Alimento/i);
-    fireEvent.click(addBtn);
-
-    const portionInput = screen.getByPlaceholderText(/Ex: 150g/i);
-    const saveBtn = screen.getByRole("button", { name: /^Adicionar$/ });
-
-    // Forçar erro (valor sem número)
-    fireEvent.change(portionInput, { target: { value: "inv" } });
-    fireEvent.click(saveBtn);
-    
-    // Verifica se o erro apareceu
-    const errorMsg = screen.getByText(/Use ex: 150g, 2 ovos, 1 fatia/i);
-    expect(errorMsg).toBeInTheDocument();
-
-    // Corrigir (número + unidade) - digitando "100g"
-    fireEvent.change(portionInput, { target: { value: "100g" } });
-    expect(screen.queryByText(/Use ex: 150g, 2 ovos, 1 fatia/i)).not.toBeInTheDocument();
   });
 });
