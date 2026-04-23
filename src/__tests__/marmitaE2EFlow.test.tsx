@@ -40,13 +40,14 @@ describe('Validação E2E: Visualização Paciente', () => {
 
   it('Paciente deve visualizar macros corretos (sem zerar)', async () => {
     const mockSupabase = supabase as any;
+    
     mockSupabase.from.mockImplementation((table: string) => {
       const chain: any = {
         select: vi.fn().mockReturnThis(),
         eq: vi.fn().mockReturnThis(),
         order: vi.fn().mockReturnThis(),
         limit: vi.fn().mockReturnThis(),
-        maybeSingle: vi.fn((resolve) => {
+        maybeSingle: vi.fn(() => {
           if (table === 'meal_plans') {
             return Promise.resolve({ data: { id: mockPlanId }, error: null });
           }
@@ -62,6 +63,8 @@ describe('Validação E2E: Visualização Paciente', () => {
           return Promise.resolve({ data: [], error: null });
         })
       };
+      // For grouped queries that use .then()
+      chain.then = (resolve: any) => chain.maybeSingle().then(resolve);
       return chain;
     });
 
@@ -77,5 +80,7 @@ describe('Validação E2E: Visualização Paciente', () => {
     const kcalPill = await screen.findByText(/2000 kcal/i);
     expect(kcalPill).toBeInTheDocument();
     expect(screen.getByText(/P 150g/i)).toBeInTheDocument();
+    
+    console.log("✅ Validação de macros concluída: Paciente visualiza 2000 kcal corretamente.");
   });
 });
