@@ -6340,6 +6340,7 @@ export type Database = {
           total_target_carbs: number | null
           total_target_fat: number | null
           total_target_protein: number | null
+          totals_status: string
           transition_origin_id: string | null
           updated_at: string
           validation_engine_version: string | null
@@ -6384,6 +6385,7 @@ export type Database = {
           total_target_carbs?: number | null
           total_target_fat?: number | null
           total_target_protein?: number | null
+          totals_status?: string
           transition_origin_id?: string | null
           updated_at?: string
           validation_engine_version?: string | null
@@ -6428,6 +6430,7 @@ export type Database = {
           total_target_carbs?: number | null
           total_target_fat?: number | null
           total_target_protein?: number | null
+          totals_status?: string
           transition_origin_id?: string | null
           updated_at?: string
           validation_engine_version?: string | null
@@ -18610,6 +18613,7 @@ export type Database = {
             }
             Returns: Json
           }
+      calculate_plan_totals: { Args: { p_plan_id: string }; Returns: Json }
       check_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
