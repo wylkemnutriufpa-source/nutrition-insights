@@ -51,6 +51,8 @@ export default function MealSubstitutionModal({
   const [confirming, setConfirming] = useState(false);
 
   const components: ComponentBlock[] = useMemo(() => {
+    // No novo modelo GLOBAL, as substituições já vêm do banco de dados na tabela meal_plan_items
+    // mas mantemos o suporte para substituições inteligentes por similaridade se necessário.
     const norm = (s: string) => s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     const query = norm(mealTitle);
     const direct = FOOD_DATABASE.find(f => {
@@ -58,6 +60,7 @@ export default function MealSubstitutionModal({
       return n === query || query.includes(n) || n.includes(query);
     });
 
+    // ... lógica mantida para compatibilidade
     const fuzzyFoods = findFoodsInTitle(mealTitle);
     const seen = new Set<string>();
     const foods: FoodItem[] = [];
@@ -75,26 +78,6 @@ export default function MealSubstitutionModal({
         substitutions: subs,
       };
     }).filter(c => c.substitutions.length > 0);
-
-    // Last-resort fallback: if nothing was detected in the title, offer a generic
-    // protein/carb/fruit triplet so the patient always sees options.
-    if (blocks.length === 0) {
-      const fallbackPicks: FoodItem[] = [];
-      const proteinDefault = FOOD_DATABASE.find(f => f.name === "Frango grelhado");
-      const carbDefault = FOOD_DATABASE.find(f => f.name === "Arroz integral");
-      const fruitDefault = FOOD_DATABASE.find(f => f.category === "fruta");
-      [proteinDefault, carbDefault, fruitDefault].forEach(f => { if (f) fallbackPicks.push(f); });
-
-      return fallbackPicks.map(food => {
-        const group = getFoodGroup(food.name);
-        const subs = getValidSubstitutions(food.name, undefined, 4);
-        return {
-          current: food,
-          groupLabel: group ? SUBSTITUTION_GROUP_LABELS[group] : null,
-          substitutions: subs,
-        };
-      }).filter(c => c.substitutions.length > 0);
-    }
 
     return blocks;
   }, [mealTitle]);

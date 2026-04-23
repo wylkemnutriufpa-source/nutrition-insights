@@ -7,6 +7,7 @@ import {
   Copy, ClipboardPaste, MoreHorizontal,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
@@ -184,67 +185,71 @@ export function WeeklyGrid() {
     <>
       <div className="overflow-x-auto">
         {/* Day headers */}
-        <div className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mb-1 sticky top-0 z-20 bg-background pb-1">
-          <div className="glass rounded-lg p-3 flex items-center">
-            <span className="font-display text-xs font-bold text-primary">REFEIÇÃO</span>
+        <div className="grid grid-cols-[160px_1fr] gap-4 mb-6 sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 border-b border-primary/10">
+          <div className="glass rounded-xl p-4 flex items-center bg-primary/5">
+            <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">REFEIÇÃO</span>
           </div>
-          {DAYS.map((day) => {
-            const t = getDayTotals(day.key);
-            return (
-              <div key={day.key} className="glass rounded-lg p-2 text-center">
-                <div className="flex items-center justify-center gap-1">
-                  <span className="font-display text-xs font-bold">{day.short}</span>
-                  <DayBlockActions dayKey={day.key} dayLabel={day.label} />
+          <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
+            <div>
+              <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">PLANO ÚNICO (GLOBAL)</span>
+              <p className="text-[10px] text-muted-foreground mt-0.5">Modelo de Dia Único com Substituições Inteligentes</p>
+            </div>
+            {(() => {
+              const t = getDayTotals(0);
+              return (
+                <div className="flex gap-4">
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Kcal</span>
+                    <span className="text-xs font-bold text-orange-500">{t.calories}</span>
+                  </div>
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Prot</span>
+                    <span className="text-xs font-bold text-red-500">{t.protein.toFixed(0)}g</span>
+                  </div>
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Carb</span>
+                    <span className="text-xs font-bold text-amber-500">{t.carbs.toFixed(0)}g</span>
+                  </div>
+                  <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
+                    <span className="text-[9px] text-muted-foreground uppercase font-bold">Gord</span>
+                    <span className="text-xs font-bold text-blue-500">{t.fat.toFixed(0)}g</span>
+                  </div>
                 </div>
-                {/* HUD nutricional compacto */}
-                <div className="flex flex-wrap justify-center gap-x-2 gap-y-0.5 mt-1 text-[9px] text-muted-foreground">
-                  <span className="flex items-center gap-0.5">
-                    <Flame className="w-2.5 h-2.5 text-orange-400" />
-                    {plan?.totals_status === "incomplete" && t.calories === 0 ? "..." : (isNaN(t.calories) ? "—" : t.calories)}
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Beef className="w-2.5 h-2.5 text-red-400" />
-                    {plan?.totals_status === "incomplete" && t.protein === 0 ? "..." : (isNaN(t.protein) ? "—" : t.protein.toFixed(0))}g
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Wheat className="w-2.5 h-2.5 text-amber-500" />
-                    {plan?.totals_status === "incomplete" && t.carbs === 0 ? "..." : (isNaN(t.carbs) ? "—" : t.carbs.toFixed(0))}g
-                  </span>
-                  <span className="flex items-center gap-0.5">
-                    <Droplets className="w-2.5 h-2.5 text-blue-400" />
-                    {plan?.totals_status === "incomplete" && t.fat === 0 ? "..." : (isNaN(t.fat) ? "—" : t.fat.toFixed(0))}g
-                  </span>
-                </div>
-
-              </div>
-            );
-          })}
+              );
+            })()}
+          </div>
         </div>
 
         {/* Meal rows */}
         {MEAL_TYPES.map((meal) => (
-          <div key={meal.key} className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mb-1">
+          <div key={meal.key} className="grid grid-cols-[160px_1fr] gap-4 mb-4">
             {/* Row label */}
-            <div className="glass rounded-lg p-3 flex flex-col justify-center">
-              <div className="flex items-center gap-2">
-                <span className={meal.color}>{meal.icon}</span>
-                <span className="font-display text-[11px] font-semibold">{meal.label}</span>
+            <div className="glass rounded-xl p-4 flex flex-col justify-center border-l-4 border-primary/30 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className={`p-2.5 rounded-xl bg-primary/10 ${meal.color} shadow-inner`}>
+                  {meal.icon}
+                </div>
+                <div>
+                  <span className="font-display text-[13px] font-bold block text-foreground tracking-tight">{meal.label}</span>
+                  <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + Alternativas</span>
+                </div>
               </div>
             </div>
 
-            {/* Day cells */}
-            {DAYS.map((day) => {
-              const cellItems = getItems(day.key, meal.key);
-              const cellKey = `${day.key}-${meal.key}`;
-              const isDragSrc = dragSource?.day === day.key && dragSource?.mealType === meal.key;
-              const isDragOvr = dragOver?.day === day.key && dragOver?.mealType === meal.key;
+            {/* Day cell (Day 0 only) */}
+            {(() => {
+              const day = 0;
+              const cellItems = getItems(day, meal.key);
+              const cellKey = `${day}-${meal.key}`;
+              const isDragSrc = dragSource?.day === day && dragSource?.mealType === meal.key;
+              const isDragOvr = dragOver?.day === day && dragOver?.mealType === meal.key;
 
               return (
                 <div
-                  key={day.key}
+                  key={day}
                   draggable={cellItems.length > 0}
                   onDragStart={(e) => {
-                    setDragSource({ day: day.key, mealType: meal.key });
+                    setDragSource({ day, mealType: meal.key });
                     e.dataTransfer.effectAllowed = "move";
                     e.dataTransfer.setData("text/plain", cellKey);
                   }}
@@ -253,7 +258,7 @@ export function WeeklyGrid() {
                     e.preventDefault();
                     const hasExternalItem = Array.from(e.dataTransfer.types).includes("application/json");
                     e.dataTransfer.dropEffect = hasExternalItem ? "copy" : "move";
-                    if (!isDragOvr) setDragOver({ day: day.key, mealType: meal.key });
+                    if (!isDragOvr) setDragOver({ day, mealType: meal.key });
                   }}
                   onDragLeave={() => { if (isDragOvr) setDragOver(null); }}
                   onDrop={(e) => {
@@ -263,64 +268,64 @@ export function WeeklyGrid() {
                     if (draggedItem && planId) {
                       addItem(buildVisualLibraryMealInsert({
                         planId,
-                        day: day.key,
+                        day,
                         mealType: meal.key,
                         item: draggedItem,
                       }));
-                    } else if (dragSource && !(dragSource.day === day.key && dragSource.mealType === meal.key)) {
-                      swapCells(dragSource.day, dragSource.mealType, day.key, meal.key);
+                    } else if (dragSource && !(dragSource.day === day && dragSource.mealType === meal.key)) {
+                      swapCells(dragSource.day, dragSource.mealType, day, meal.key);
                     }
                     setDragOver(null);
                     setDragSource(null);
                   }}
-                  className={`glass rounded-lg p-2 min-h-[100px] flex flex-col group relative transition-all duration-200 ${
+                  className={`glass rounded-2xl p-5 min-h-[160px] flex flex-col group relative transition-all duration-300 shadow-sm border border-primary/5 bg-gradient-to-br from-background via-background to-primary/[0.03] ${
                     isDragSrc ? "opacity-50 scale-95 border-primary/50" : ""
-                  } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.02]" : "hover:border-primary/30"
+                  } ${isDragOvr ? "ring-2 ring-primary/60 bg-primary/5 scale-[1.01]" : "hover:border-primary/20 hover:shadow-md"
                   } ${cellItems.length > 0 ? "cursor-grab active:cursor-grabbing" : ""}`}
                 >
                   {/* Drag handle */}
                   {cellItems.length > 0 && (
-                    <div className="absolute top-1 right-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity flex gap-0.5 z-20">
+                    <div className="absolute top-2 right-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all flex gap-1 z-20">
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); copyCell(day.key, meal.key); toast.success("Refeição copiada para a área de transferência"); }}
-                        className="p-1 rounded bg-secondary/80 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors"
+                        onClick={(e) => { e.stopPropagation(); copyCell(day, meal.key); toast.success("Refeição copiada"); }}
+                        className="p-1.5 rounded-lg bg-secondary/90 hover:bg-primary/20 text-muted-foreground hover:text-primary transition-colors shadow-sm"
                         title="Copiar Refeição"
                       >
-                        <Copy className="w-3 h-3" />
+                        <Copy className="w-3.5 h-3.5" />
                       </button>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); openSaveTemplate(day.key, meal.key); }}
-                        className="p-1 rounded bg-secondary/80 hover:bg-accent/50 text-muted-foreground"
+                        onClick={(e) => { e.stopPropagation(); openSaveTemplate(day, meal.key); }}
+                        className="p-1.5 rounded-lg bg-secondary/90 hover:bg-accent/50 text-muted-foreground shadow-sm"
                         title="Salvar como modelo"
                       >
-                        <Bookmark className="w-3 h-3" />
+                        <Bookmark className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   )}
                   {clipboardItems && clipboardItems.length > 0 && (
-                    <div className={`absolute top-1 left-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity z-20`}>
+                    <div className={`absolute top-2 left-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all z-20`}>
                       <button
                         type="button"
-                        onClick={(e) => { e.stopPropagation(); pasteToCell(day.key, meal.key); toast.success("Refeição colada com sucesso"); }}
-                        className="p-1 rounded bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30"
+                        onClick={(e) => { e.stopPropagation(); pasteToCell(day, meal.key); toast.success("Refeição colada"); }}
+                        className="p-1.5 rounded-lg bg-primary/20 hover:bg-primary/40 text-primary border border-primary/30 shadow-sm"
                         title="Colar Refeição aqui"
                       >
-                        <ClipboardPaste className="w-3.5 h-3.5" />
+                        <ClipboardPaste className="w-4 h-4" />
                       </button>
                     </div>
                   )}
                   {isDragOvr && dragSource && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-lg z-10 pointer-events-none">
-                      <span className="text-[10px] font-semibold text-primary flex items-center gap-1">
-                        <ArrowLeftRight className="w-3.5 h-3.5" /> Trocar
+                    <div className="absolute inset-0 flex items-center justify-center bg-primary/10 rounded-2xl z-10 pointer-events-none backdrop-blur-[1px]">
+                      <span className="text-xs font-bold text-primary flex items-center gap-1.5 bg-background/80 px-3 py-1.5 rounded-full shadow-sm">
+                        <ArrowLeftRight className="w-4 h-4" /> Trocar
                       </span>
                     </div>
                   )}
 
                   {/* Items */}
-                  <div className="flex-1 space-y-1.5">
+                  <div className="flex-1 space-y-2">
                     <AnimatePresence initial={false}>
                       {cellItems.map((item) => (
                         <MealItemCard
@@ -333,33 +338,33 @@ export function WeeklyGrid() {
                   </div>
 
                   {/* Quick-add & Library */}
-                  <div onClick={(e) => e.stopPropagation()} className="mt-1">
-                    <div className="space-y-1">
+                  <div onClick={(e) => e.stopPropagation()} className="mt-4 pt-3 border-t border-primary/5">
+                    <div className="space-y-2">
                       {quickAddKey === cellKey && (
-                        <div className="flex gap-1">
+                        <div className="flex gap-1.5 animate-in slide-in-from-top-1 duration-200">
                           <Input
                             autoFocus
                             value={quickAddText}
                             onChange={(e) => setQuickAddText(e.target.value)}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") handleQuickAdd(day.key, meal.key);
+                              if (e.key === "Enter") handleQuickAdd(day, meal.key);
                               if (e.key === "Escape") { setQuickAddKey(null); setQuickAddText(""); }
                             }}
                             placeholder="Ex: 2 ovos cozidos"
-                            className="h-7 text-[11px]"
+                            className="h-8 text-xs rounded-xl"
                           />
                           <Button
                             size="icon"
-                            className="h-7 w-7 shrink-0"
-                            onClick={() => handleQuickAdd(day.key, meal.key)}
+                            className="h-8 w-8 shrink-0 rounded-xl"
+                            onClick={() => handleQuickAdd(day, meal.key)}
                             disabled={!quickAddText.trim()}
                           >
-                            <Check className="w-3 h-3" />
+                            <Check className="w-3.5 h-3.5" />
                           </Button>
                         </div>
                       )}
 
-                      <div className="grid grid-cols-3 gap-1">
+                      <div className="grid grid-cols-3 gap-2">
                         <button
                           type="button"
                           onClick={() => {
@@ -367,13 +372,13 @@ export function WeeklyGrid() {
                             setQuickAddText("");
                             setFoodSearchKey(null);
                           }}
-                          className={`flex items-center justify-center gap-1 text-[10px] py-1 rounded border transition-colors ${
+                          className={`flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border transition-all ${
                             quickAddKey === cellKey
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                              ? "border-primary bg-primary/10 text-primary shadow-inner"
+                              : "border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5"
                           }`}
                         >
-                          <Plus className="w-3 h-3" /> Manual
+                          <Plus className="w-3.5 h-3.5" /> Manual
                         </button>
                         <button
                           type="button"
@@ -382,87 +387,94 @@ export function WeeklyGrid() {
                             setQuickAddKey(null);
                             setQuickAddText("");
                           }}
-                          className={`flex items-center justify-center gap-1 text-[10px] py-1 rounded border transition-colors ${
+                          className={`flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border transition-all ${
                             foodSearchKey === cellKey
-                              ? "border-primary bg-primary/10 text-primary"
-                              : "border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                              ? "border-primary bg-primary/10 text-primary shadow-inner"
+                              : "border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5"
                           }`}
                         >
-                          <Search className="w-3 h-3" /> Alimento
+                          <Search className="w-3.5 h-3.5" /> Alimento
                         </button>
                         <button
                           type="button"
-                          onClick={() => openMealLibraryModal(day.key, meal.key)}
-                          className="flex items-center justify-center gap-1 text-[10px] py-1 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                          onClick={() => openMealLibraryModal(day, meal.key)}
+                          className="flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
                           title="Substituir pela biblioteca"
                         >
-                          <Utensils className="w-3 h-3" /> Subst.
+                          <Utensils className="w-3.5 h-3.5" /> Subst.
                         </button>
                       </div>
 
-                      <div className="grid grid-cols-1 gap-1">
+                      <div className="grid grid-cols-1 gap-2">
                         <button
                           type="button"
-                          onClick={() => openLibrary(day.key, meal.key)}
-                          className="flex items-center justify-center gap-1 text-[10px] py-1 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary"
+                          onClick={() => openLibrary(day, meal.key)}
+                          className="flex items-center justify-center gap-1.5 text-[11px] font-bold py-2 rounded-xl border border-dashed border-border/60 text-muted-foreground hover:text-primary hover:border-primary hover:bg-primary/5 transition-all"
                           title="Meus Modelos"
                         >
-                          <Zap className="w-3 h-3" /> Modelos
+                          <Zap className="w-3.5 h-3.5" /> Meus Modelos
                         </button>
                       </div>
 
                       {foodSearchKey === cellKey && (
-                        <FoodSearchInline day={day.key} mealType={meal.key} onClose={() => setFoodSearchKey(null)} />
+                        <FoodSearchInline day={day} mealType={meal.key} onClose={() => setFoodSearchKey(null)} />
                       )}
                     </div>
                   </div>
                 </div>
               );
-            })}
+            })()}
           </div>
         ))}
 
-        {/* Day totals */}
-        <div className="grid grid-cols-[160px_repeat(7,1fr)] gap-1 mt-2">
-          <div className="glass rounded-lg p-3 flex items-center">
-            <span className="font-display text-xs font-bold text-primary">TOTAL DIÁRIO</span>
+        {/* Global totals footer */}
+        <div className="grid grid-cols-[160px_1fr] gap-4 mt-6">
+          <div className="glass rounded-xl p-4 flex items-center bg-primary/5 shadow-sm border border-primary/10">
+            <span className="font-display text-xs font-bold text-primary tracking-wider uppercase">BALANÇO GLOBAL</span>
           </div>
-          {DAYS.map((day) => {
-            const t = getDayTotals(day.key);
+          {(() => {
+            const t = getDayTotals(0);
             return (
-              <div key={day.key} className="glass rounded-lg p-2 border-primary/20">
-                <div className="grid grid-cols-2 gap-1 text-[10px]">
-                  <div className="flex items-center gap-1">
-                    <Flame className="w-3 h-3 text-orange-400" />
-                    <span className="font-semibold">{t.calories}</span>
-                    <span className="text-muted-foreground">kcal</span>
+              <div className="glass rounded-xl p-4 bg-primary/5 shadow-sm border border-primary/10">
+                <div className="flex justify-around items-center h-full">
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Flame className="w-4 h-4 text-orange-500" />
+                      <span className="text-sm font-bold text-foreground">{t.calories}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Kcal Totais</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Beef className="w-3 h-3 text-red-400" />
-                    <span className="font-semibold">{t.protein.toFixed(0)}g</span>
-                    <span className="text-muted-foreground">prot</span>
+                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Beef className="w-4 h-4 text-red-500" />
+                      <span className="text-sm font-bold text-foreground">{t.protein.toFixed(0)}g</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Proteínas</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Wheat className="w-3 h-3 text-amber-500" />
-                    <span className="font-semibold">{t.carbs.toFixed(0)}g</span>
-                    <span className="text-muted-foreground">carb</span>
+                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Wheat className="w-4 h-4 text-amber-500" />
+                      <span className="text-sm font-bold text-foreground">{t.carbs.toFixed(0)}g</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Carbos</span>
                   </div>
-                  <div className="flex items-center gap-1">
-                    <Droplets className="w-3 h-3 text-blue-400" />
-                    <span className="font-semibold">{t.fat.toFixed(0)}g</span>
-                    <span className="text-muted-foreground">gord</span>
+                  <Separator orientation="vertical" className="h-8 bg-primary/10" />
+                  <div className="flex flex-col items-center">
+                    <div className="flex items-center gap-2 mb-1">
+                      <Droplets className="w-4 h-4 text-blue-500" />
+                      <span className="text-sm font-bold text-foreground">{t.fat.toFixed(0)}g</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Gorduras</span>
                   </div>
-                </div>
-                <div className="mt-1.5">
-                  <MacroBalanceBar protein={t.protein} carbs={t.carbs} fat={t.fat} calories={t.calories} compact />
                 </div>
               </div>
             );
-          })}
+          })()}
         </div>
       </div>
 
-      {/* Library sidebar */}
       <MealLibrarySidebar
         open={libraryOpen}
         onOpenChange={setLibraryOpen}
@@ -470,7 +482,6 @@ export function WeeklyGrid() {
         targetMealType={libraryTarget.mealType}
       />
 
-      {/* Save template dialog */}
       <SaveTemplateDialog
         open={saveTemplateOpen}
         onOpenChange={setSaveTemplateOpen}
@@ -478,7 +489,6 @@ export function WeeklyGrid() {
         mealType={saveTemplateMealType}
       />
 
-      {/* Meal Library Modal (banco de refeições) */}
       <MealLibraryModal
         open={mlModalOpen}
         onOpenChange={setMlModalOpen}

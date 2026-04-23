@@ -1458,7 +1458,8 @@ function generatePlanWithTemplates(
     }
   }
 
-  for (let day = 0; day < 7; day++) {
+  // No novo modelo GLOBAL, geramos apenas 1 dia com substituições (dia 0)
+  for (let day = 0; day < 1; day++) {
     const usedProteinsToday = new Set<string>();
 
     for (const mealType of mealTypes) {
@@ -1483,15 +1484,17 @@ function generatePlanWithTemplates(
       }
 
       if (matched.length > 0) {
-        // Pick from top candidates with seeded variety
-        const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
-        const pickIdx = seed % Math.min(matched.length, 3); // pick from top 3
-        let picked = matched[pickIdx];
+        // Para o modelo global, pegamos a principal e adicionamos 3 substituições
+        // No loop principal, pegamos as 4 melhores candidatas (1 principal + 3 subs)
+        const topCandidates = matched.slice(0, 4);
+        
+        for (let i = 0; i < topCandidates.length; i++) {
+          let picked = topCandidates[i];
+          const isPrimary = i === 0;
 
-        // ── GUARDRAIL 1: Pre-filter disliked foods from template foods_structure ──
-        if (disliked.length > 0) {
-          const normalizedDisliked = disliked.map(d => normalize(d)).filter(d => d.length >= 3);
-          if (normalizedDisliked.length > 0) {
+          // ── GUARDRAIL: Filter disliked ──
+          if (disliked.length > 0) {
+            const normalizedDisliked = disliked.map(d => normalize(d)).filter(d => d.length >= 3);
             picked = {
               ...picked,
               foods_structure: picked.foods_structure.filter(f => {
@@ -1500,53 +1503,41 @@ function generatePlanWithTemplates(
               }),
             };
           }
-        }
 
-        // ── STABLE BACKBONE: reuse the SAME variation + scale across the week ──
-        // Key by (template_id, mealType) so all 7 days of the same template
-        // produce identical grams/macros — eliminates the 150/120/130 jitter.
-        const backboneKey = `${picked.id}__${mealType}`;
-        let scaledFoods: any[];
-        let scaleFactor: number;
+          const backboneKey = `${picked.id}__${mealType}`;
+          let scaledFoods: any[];
+          let scaleFactor: number;
 
-        const cached = stableBackbone.get(backboneKey);
-        if (cached) {
-          picked = cached.picked;
-          scaledFoods = cached.foods;
-          scaleFactor = cached.scaleFactor;
-        } else {
-          // ── STEP 3: Apply template variation ONCE per template (not per day) ──
-          if (dbFoods && dbFoods.length > 0 && picked.foods_structure.length > 0) {
-            const varSeed = seed; // no day-based jitter
-            if (varSeed % 5 < 3) {
-              picked = generateTemplateVariation(picked, dbFoods, { ...variationCtx, seed: varSeed, mealType });
+          const cached = stableBackbone.get(backboneKey);
+          if (cached) {
+            picked = cached.picked;
+            scaledFoods = cached.foods;
+            scaleFactor = cached.scaleFactor;
+          } else {
+            const scaled = scaleTemplateToTarget(picked, currentTargetKcal);
+            scaledFoods = scaled.foods;
+            scaleFactor = scaled.scaleFactor;
+            stableBackbone.set(backboneKey, { foods: scaledFoods, scaleFactor, picked });
+          }
+
+          if (scaledFoods.length > 0) {
+            const item = buildMealItemFromTemplate(picked, scaledFoods, mealType, 0, scaleFactor);
+            item.is_primary = isPrimary;
+            item.day_of_week = 0; // Sempre dia 0 no modelo global
+
+            const mealTime = mealTimes?.[mealType] || null;
+            if (mealTime) item.meal_time = mealTime;
+
+            items.push(item);
+            if (isPrimary) {
+              usedForType.add(picked.id);
+              trackProteinUsage(picked, usedProteinsToday);
+              templateHits++;
             }
           }
-          // Scale template to target kcal ONCE
-          const scaled = scaleTemplateToTarget(picked, targetKcal);
-          scaledFoods = scaled.foods;
-          scaleFactor = scaled.scaleFactor;
-          stableBackbone.set(backboneKey, { foods: scaledFoods, scaleFactor, picked });
         }
-
-        if (scaledFoods.length > 0) {
-          const item = buildMealItemFromTemplate(picked, scaledFoods, mealType, day, scaleFactor);
-
-          // Add meal_time if available
-          const mealTime = mealTimes?.[mealType] || null;
-          if (mealTime) item.meal_time = mealTime;
-
-          items.push(item);
-          usedForType.add(picked.id);
-          trackProteinUsage(picked, usedProteinsToday);
-          // Reset if all used
-          if (usedForType.size >= matched.length) usedForType.clear();
-          templateHits++;
-          continue; // Slot filled by template — skip visual library
-        }
+        continue; // Slot filled by template (principal + subs)
       }
-
-      // ── STEP 4: Fallback to visual library (existing logic) ──
       visualFallbacks++;
     }
   }
@@ -3926,8 +3917,14 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     }
 
     const itemsToInsert = planItems.map((item: any) => {
-      const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item;
-      return { ...rest, meal_plan_id: finalMealPlanId, image_url: _image_url || rest.image_url || null };
+      const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, is_primary, ...rest } = item;
+      return { 
+        ...rest, 
+        meal_plan_id: finalMealPlanId, 
+        image_url: _image_url || rest.image_url || null,
+        is_primary: is_primary ?? true,
+        day_of_week: 0
+      };
     });
 
     // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls

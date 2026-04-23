@@ -324,16 +324,14 @@ const MealItemCard = memo(function MealItemCard({
                 </button>
               ))}
               {/* Substitution button */}
-              {onOpenSubstitution && (
-                <button
-                  type="button"
-                  onClick={(e) => { e.stopPropagation(); onOpenSubstitution(item); }}
-                  className="flex items-center gap-1.5 mt-2 px-2.5 py-1.5 rounded-lg border border-primary/20 bg-primary/5 text-primary text-[11px] font-medium hover:bg-primary/10 transition-all w-fit"
-                >
-                  <ArrowRightLeft className="w-3.5 h-3.5" />
-                  Substituir
-                </button>
-              )}
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}
+                className="flex items-center gap-1.5 mt-2 px-3 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary/10 transition-all w-full justify-center shadow-sm"
+              >
+                <ArrowRightLeft className="w-3.5 h-3.5" />
+                Trocar Opção
+              </button>
             </div>
             <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
           </div>

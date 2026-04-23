@@ -91,7 +91,9 @@ function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemIns
     title: insert.title,
     description: insert.description ?? null,
     meal_type: insert.meal_type,
-    day_of_week: insert.day_of_week ?? 1,
+    day_of_week: 0, // Novo modelo GLOBAL: sempre dia 0
+    is_primary: (insert as any).is_primary ?? true,
+    substitution_group_id: (insert as any).substitution_group_id ?? null,
     calories_target: insert.calories_target ?? null,
     protein_target: insert.protein_target ?? null,
     carbs_target: insert.carbs_target ?? null,
