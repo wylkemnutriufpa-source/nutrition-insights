@@ -799,6 +799,7 @@ const ANIMAL_PROTEIN_KEYWORDS = [
   "peixe", "porco", "lombo", "sobrecoxa", "sardinha", "atum", "salmao",
   "salmão", "camarao", "camarão", "fraldinha", "maminha", "bisteca", "pernil",
   "suino", "suína", "file de peixe", "filé de peixe", "tambaqui", "pintado", "dourado",
+  "ovo", "ovos", "omelete",
 ];
 
 function isAnimalProteinFood(food: DBFood): boolean {
