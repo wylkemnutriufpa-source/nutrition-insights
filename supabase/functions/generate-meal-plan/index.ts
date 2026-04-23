@@ -397,9 +397,10 @@ function seedHash(str: string): number {
   return Math.abs(hash);
 }
 
-/** Generate a unique seed per generation call — combines patient identity with current time */
-function generationSeed(patientId: string, optionOffset: number = 0): number {
+/** Generate a unique seed per generation call. If useFixedSeed is true, use patientId as seed for stability. */
+function generationSeed(patientId: string, optionOffset: number = 0, useFixedSeed: boolean = false): number {
   const base = seedHash(patientId);
+  if (useFixedSeed) return base + optionOffset * 997;
   // Use minutes since epoch so each call (even seconds apart) gets a different seed
   const timePart = Math.floor(Date.now() / 60000);
   return base + timePart * 31 + optionOffset * 997;
@@ -1836,7 +1837,11 @@ export async function generateWeeklyMarmitaPlan(
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
   fastMarmitaMode: boolean = false,
+  seed: number = 0,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
+  const kcalTarget = targetKcal;
+  const macros = targetMacros;
+
   // NEW: Detect and replace "Marmita congelada do dia" in templates
   // NEW: Detect and replace "Marmita" placeholders in templates
   const marmitaPlaceholders = ["Marmita congelada do dia", "Marmita do dia", "Marmita Selecionada", "marmita do dia"];
@@ -1923,14 +1928,14 @@ export async function generateWeeklyMarmitaPlan(
     if (hasTpl) {
       const result = generatePlanWithTemplates(
         templates, visualLibrary, goal, targetKcal, targetMacros,
-        restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
+        restrictions, disliked, allergies, seed, nonMarmitaMealTypes, mealTimes,
         strategyId, patientFoodDatabase, recentMeals,
       );
       shadowItems = result.items;
     } else {
       shadowItems = generatePlanFromVisualLibrary(
         visualLibrary, goal, kcalTarget, macros,
-        restrictions, disliked, allergies, 0, nonMarmitaMealTypes, mealTimes,
+        restrictions, disliked, allergies, seed, nonMarmitaMealTypes, mealTimes,
       );
     }
   }
@@ -1947,6 +1952,8 @@ export async function generateWeeklyMarmitaPlan(
   const marmitaCarbsPool = Math.max(0, macros.carbs - shadowCarbs);
   const marmitaFatPool = Math.max(0, macros.fat - shadowFat);
   const lunchShare = lunchKcal / Math.max(1, lunchKcal + dinnerKcal);
+  // Clinical Correction: Target macros for marmitas are now derived directly from TDEE/Daily Target
+  // We ensure the SUM of (Marmitas + Snacks) matches the daily goal.
   const lunchProteinTarget = Math.round(marmitaProteinPool * lunchShare);
   const dinnerProteinTarget = Math.max(0, marmitaProteinPool - lunchProteinTarget);
   const lunchCarbsTarget = Math.round(marmitaCarbsPool * lunchShare);
@@ -1964,7 +1971,7 @@ export async function generateWeeklyMarmitaPlan(
       const avoidSet = new Set<string>();
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
-      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, day);
+      const picked = pickMarmita(lunchByProtein, lunchRecipes, avoidSet, seed + day);
       const protein = detectRecipeProtein(picked);
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
@@ -1979,7 +1986,7 @@ export async function generateWeeklyMarmitaPlan(
       if (prevLunchProtein) avoidSet.add(prevLunchProtein);
       if (prevDinnerProtein) avoidSet.add(prevDinnerProtein);
       // Use a varying seed so we cycle through proteins instead of repeating the modulo result
-      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, day * 7 + 13);
+      const picked = pickMarmita(dinnerByProtein, dinnerRecipes, avoidSet, seed + day * 7 + 13);
       const protein = detectRecipeProtein(picked);
       proteinsUsedThisWeek.add(protein);
       marmitasUsedSet.add(picked.name);
@@ -3426,16 +3433,20 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       }), { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } });
     }
 
+    const useFixedSeed = !!body.useFixedSeed;
+    const seed = generationSeed(patient_id, planOptionIndex, useFixedSeed);
+
     // ── Multi-plan flow ──
     if (isPipeline && planCount > 1 && !meal_plan_id) {
       const generatedPlans: any[] = [];
       const nutritionistId = requestedNutritionistId;
 
       for (let tplIdx = 0; tplIdx < planCount; tplIdx++) {
+        const tplSeed = generationSeed(patient_id, tplIdx, useFixedSeed);
         // CAMADA 2: Template-first → Visual Library fallback → reconciled with Layer 1 macros
         const { items: rawItems, templateHits, visualFallbacks } = hasTemplates
-          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals)
-          : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplIdx, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
+          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals)
+          : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
         console.log(`[Multi-plan ${tplIdx}] Templates: ${templateHits}, Visual fallbacks: ${visualFallbacks}`);
         // ── GUARDRAILS (MANDATORY) ──
         const guardedItems = applyPostGenerationGuardrails(rawItems, disliked);
@@ -3570,6 +3581,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
 
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
+    // const seed already defined above for single plan flow
+
     
     // ── TEMPLATE-FIRST PIPELINE: Templates → Visual Library fallback ──
     let rawPlanItems: any[];
@@ -3597,7 +3610,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         resolvedStrategy.strategyId,
         patientFoodDatabase,
         recentMeals,
-        fastMarmitaMode
+        fastMarmitaMode,
+        seed
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
