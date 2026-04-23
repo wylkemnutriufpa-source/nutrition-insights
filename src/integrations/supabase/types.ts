@@ -6137,10 +6137,12 @@ export type Database = {
           image_url: string | null
           is_locked: boolean
           is_manually_edited: boolean
+          is_primary: boolean | null
           item_origin: string
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target: number | null
+          substitution_group_id: string | null
           tenant_id: string | null
           title: string
           visual_library_item_id: string | null
@@ -6158,10 +6160,12 @@ export type Database = {
           image_url?: string | null
           is_locked?: boolean
           is_manually_edited?: boolean
+          is_primary?: boolean | null
           item_origin?: string
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
+          substitution_group_id?: string | null
           tenant_id?: string | null
           title: string
           visual_library_item_id?: string | null
@@ -6179,10 +6183,12 @@ export type Database = {
           image_url?: string | null
           is_locked?: boolean
           is_manually_edited?: boolean
+          is_primary?: boolean | null
           item_origin?: string
           meal_plan_id?: string
           meal_type?: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
+          substitution_group_id?: string | null
           tenant_id?: string | null
           title?: string
           visual_library_item_id?: string | null
@@ -6402,6 +6408,7 @@ export type Database = {
           generation_source: string | null
           id: string
           is_active: boolean
+          is_global_model: boolean | null
           last_validated_at: string | null
           nutritionist_id: string
           overall_score: number | null
@@ -6411,6 +6418,7 @@ export type Database = {
           pipeline_completed_at: string | null
           pipeline_version: string | null
           plan_status: string
+          plan_type: string | null
           previous_plan_id: string | null
           requires_regeneration: boolean | null
           simplicity_score: number | null
@@ -6447,6 +6455,7 @@ export type Database = {
           generation_source?: string | null
           id?: string
           is_active?: boolean
+          is_global_model?: boolean | null
           last_validated_at?: string | null
           nutritionist_id: string
           overall_score?: number | null
@@ -6456,6 +6465,7 @@ export type Database = {
           pipeline_completed_at?: string | null
           pipeline_version?: string | null
           plan_status?: string
+          plan_type?: string | null
           previous_plan_id?: string | null
           requires_regeneration?: boolean | null
           simplicity_score?: number | null
@@ -6492,6 +6502,7 @@ export type Database = {
           generation_source?: string | null
           id?: string
           is_active?: boolean
+          is_global_model?: boolean | null
           last_validated_at?: string | null
           nutritionist_id?: string
           overall_score?: number | null
@@ -6501,6 +6512,7 @@ export type Database = {
           pipeline_completed_at?: string | null
           pipeline_version?: string | null
           plan_status?: string
+          plan_type?: string | null
           previous_plan_id?: string | null
           requires_regeneration?: boolean | null
           simplicity_score?: number | null
@@ -15914,6 +15926,30 @@ export type Database = {
         }
         Relationships: []
       }
+      system_config: {
+        Row: {
+          created_at: string | null
+          default_meal_structure: Json | null
+          id: string
+          plan_mode: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          default_meal_structure?: Json | null
+          id?: string
+          plan_mode?: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          default_meal_structure?: Json | null
+          id?: string
+          plan_mode?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       system_diagnostic_entries: {
         Row: {
           context_json: Json | null
@@ -19128,6 +19164,7 @@ export type Database = {
         Args: { _contact_method?: string; _patient_id: string }
         Returns: Json
       }
+      migrate_all_plans_to_new_model: { Args: never; Returns: undefined }
       normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
       preview_orphan_onboarding_pipelines: {
         Args: never
