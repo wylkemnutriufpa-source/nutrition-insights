@@ -95,6 +95,58 @@ export function WeeklyGrid() {
     [items]
   );
 
+  // Auto-sync plan totals when items change
+  const { updatePlan, plan } = useMealPlanEditorV2Store();
+  const [lastSyncedTotals, setLastSyncedTotals] = useState("");
+
+  const weekTotals = useCallback(() => {
+    // We calculate a "daily average" or a specific target. 
+    // Usually total_calories in meal_plans is the average or the target for one day.
+    // Let's use Monday (day 1) as the baseline or average of all days.
+    let totalCals = 0;
+    let totalProt = 0;
+    let totalCarbs = 0;
+    let totalFat = 0;
+    
+    // Average of days that have items
+    const daysWithItems = [0, 1, 2, 3, 4, 5, 6].filter(d => items.some(i => i.day_of_week === d));
+    if (daysWithItems.length > 0) {
+      daysWithItems.forEach(d => {
+        const t = getDayTotals(d);
+        totalCals += t.calories;
+        totalProt += t.protein;
+        totalCarbs += t.carbs;
+        totalFat += t.fat;
+      });
+      totalCals /= daysWithItems.length;
+      totalProt /= daysWithItems.length;
+      totalCarbs /= daysWithItems.length;
+      totalFat /= daysWithItems.length;
+    }
+
+    return {
+      calories: Math.round(totalCals),
+      protein: Math.round(totalProt),
+      carbs: Math.round(totalCarbs),
+      fat: Math.round(totalFat)
+    };
+  }, [items, getDayTotals]);
+
+  useEffect(() => {
+    if (!planId) return;
+    const t = weekTotals();
+    const totalsStr = JSON.stringify(t);
+    if (totalsStr !== lastSyncedTotals) {
+      updatePlan({
+        total_calories: t.calories,
+        total_protein: t.protein,
+        total_carbs: t.carbs,
+        total_fat: t.fat
+      });
+      setLastSyncedTotals(totalsStr);
+    }
+  }, [items, planId, updatePlan, weekTotals, lastSyncedTotals]);
+
   const handleQuickAdd = (day: number, mealType: MealType) => {
     if (!planId || !quickAddText.trim()) return;
     const match = findFoodMatch(quickAddText.trim());
