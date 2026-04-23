@@ -83,4 +83,23 @@ export function getCalorieClampValue(calories: number, sex: "male" | "female" = 
   return null;
 }
 
+/**
+ * Checks if a meal plan item has a suspicious portion alert.
+ */
+export function getPortionWarning(item: any): string | null {
+  if (!item) return null;
+  
+  // 1. Check metadata from edge function
+  const alert = item.metadata?.portion_alert || item.edit_metadata?.portion_alert;
+  if (alert) return alert;
+
+  // 2. Client-side heuristic if metadata is missing
+  const description = item.description || "";
+  if (description.includes("⚠️")) {
+    const match = description.match(/⚠️\s*(.+)$/m);
+    return match ? match[1] : "Aviso de porção";
+  }
+
+  return null;
+}
 
