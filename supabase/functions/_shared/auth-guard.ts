@@ -50,19 +50,36 @@ export async function requireUser(req: Request): Promise<AuthUser> {
   const userId = userData.user.id;
   const email = userData.user.email || "";
 
-  // Fetch roles from user_roles table using service role for reliability
-  const serviceClient = createClient(
-    supabaseUrl,
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? anonKey,
-    { auth: { autoRefreshToken: false, persistSession: false } }
-  );
-
-  const { data: roleRows } = await serviceClient
+  // Fetch roles from user_roles table
+  // Use authClient (authenticated as the user) to fetch roles, as Users can view own roles via RLS
+  const { data: roleRows, error: roleError } = await authClient
     .from("user_roles")
     .select("role")
     .eq("user_id", userId);
 
+  if (roleError) {
+    console.error(`[auth-guard] Error fetching roles for user ${userId}:`, roleError);
+  }
+
   const roles = (roleRows || []).map((r: any) => r.role);
+  
+  // If no roles found via authClient, fallback to serviceClient only if key is available
+  if (roles.length === 0) {
+    const serviceRoleKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+    if (serviceRoleKey) {
+      const serviceClient = createClient(supabaseUrl, serviceRoleKey, {
+        auth: { autoRefreshToken: false, persistSession: false }
+      });
+      const { data: serviceRoleRows } = await serviceClient
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", userId);
+      
+      if (serviceRoleRows && serviceRoleRows.length > 0) {
+        return { id: userId, email, roles: serviceRoleRows.map((r: any) => r.role) };
+      }
+    }
+  }
 
   return { id: userId, email, roles };
 }
