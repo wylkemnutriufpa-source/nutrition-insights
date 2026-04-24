@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { UtensilsCrossed, Clock, CheckCircle2, AlertTriangle, RefreshCw } from "lucide-react";
 import { getPlanStatusMeta } from "@/lib/planStatusLabels";
+import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
 
 interface Props { search: string; }
 
@@ -13,7 +14,7 @@ export default function WorkspaceMealPlans({ search }: Props) {
   const { user } = useAuth();
   const [plans, setPlans] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<ClassifiedPlanLoadError | null>(null);
 
   const fetchPlans = useCallback(async () => {
     if (!user?.id) return;
@@ -28,7 +29,7 @@ export default function WorkspaceMealPlans({ search }: Props) {
 
     if (fetchError) {
       console.error("[WorkspaceMealPlans] Falha ao buscar planos:", fetchError);
-      setError(fetchError.message || "Não foi possível carregar os planos.");
+      setError(classifyPlanLoadError(fetchError));
       setPlans([]);
       setLoading(false);
       return;
