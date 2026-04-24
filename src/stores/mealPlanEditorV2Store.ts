@@ -675,16 +675,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       rollback: () => set({ plan: prevPlan }),
     });
   },
-          .from("meal_plans")
-          .update(patch as any)
-          .eq("id", planId);
-        if (error) throw error;
-      },
-      rollback: () => set({ plan: prevPlan }),
-    });
-  },
-
-  // ── Internal: enqueue operation ───────────────────────────
+  // Internal: enqueue operation ───────────────────────────
   _enqueue: (op) => {
     set((s) => {
       const filtered = s.pendingOps.filter((p) => p.key !== op.key);
