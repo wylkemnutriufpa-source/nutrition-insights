@@ -1,5 +1,7 @@
 import { Toaster } from "@/components/ui/toaster";
 import UpdateBanner from "@/components/common/UpdateBanner";
+import BuildStatusPanel from "@/components/dev/BuildStatusPanel";
+import TextSourceInspector from "@/components/dev/TextSourceInspector";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -701,6 +703,8 @@ const App = () => (
         </BrowserRouter>
       </TooltipProvider>
       <UpdateBanner />
+      <BuildStatusPanel />
+      <TextSourceInspector />
     </QueryClientProvider>
   </HelmetProvider>
 );
