@@ -38,7 +38,20 @@ export const AdminAuditDashboard = () => {
 
   useEffect(() => {
     fetchAlerts(true);
+    fetchExportTasks();
+    
+    const taskSub = supabase
+      .channel('export_tasks_updates')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'export_tasks' }, () => fetchExportTasks())
+      .subscribe();
+
+    return () => { supabase.removeChannel(taskSub); };
   }, [filters]);
+
+  const fetchExportTasks = async () => {
+    const { data } = await supabase.from('export_tasks').select('*').order('created_at', { ascending: false }).limit(20);
+    setExportTasks(data || []);
+  };
 
   const fetchAlerts = async (reset = false) => {
     setLoading(true);
