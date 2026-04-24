@@ -826,9 +826,18 @@ export default function AdminExperienceModeAudit() {
                           <td className="py-2 pr-1">
                             {hasTimeline && (
                               <button
+                                type="button"
                                 onClick={() => toggleCid(r.correlation_id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    toggleCid(r.correlation_id);
+                                  }
+                                }}
                                 aria-label={isExpanded ? "Recolher timeline" : "Expandir timeline"}
-                                className="text-muted-foreground hover:text-foreground"
+                                aria-expanded={isExpanded}
+                                aria-controls={`timeline-${r.correlation_id}`}
+                                className="rounded p-0.5 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
                                 data-testid="emode-timeline-toggle"
                               >
                                 {isExpanded
