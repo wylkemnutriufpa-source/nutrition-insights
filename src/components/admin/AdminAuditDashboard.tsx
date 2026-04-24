@@ -5,27 +5,39 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Download, History, RefreshCcw } from "lucide-react";
+import { Search, Download, History, RefreshCcw, FileText } from "lucide-react";
 import { toast } from "sonner";
+import { exportAuditToPDF } from "@/lib/auditExportUtils";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 export const AdminAuditDashboard = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [timeline, setTimeline] = useState<any[]>([]);
   const [searchCorrelation, setSearchCorrelation] = useState("");
   const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({
+    alert_type: "all",
+    severity: "all",
+    tenant_id: ""
+  });
+  const [metrics, setMetrics] = useState<any>(null);
 
   useEffect(() => {
     fetchAlerts();
-    const channel = supabase
-      .channel('system_alerts_realtime')
-      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'system_alerts' }, 
-        payload => setAlerts(prev => [payload.new, ...prev]))
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
+  }, [filters]);
 
   const fetchAlerts = async () => {
-    const { data } = await supabase.from('system_alerts').select('*').order('created_at', { ascending: false }).limit(20);
+    const { data } = await supabase.rpc('get_advanced_alerts', {
+      p_alert_type: filters.alert_type === 'all' ? null : filters.alert_type,
+      p_severity: filters.severity === 'all' ? null : filters.severity,
+      p_tenant_id: filters.tenant_id || null
+    }) as { data: any[] };
     setAlerts(data || []);
   };
 
@@ -44,6 +56,11 @@ export const AdminAuditDashboard = () => {
     setLoading(false);
   };
 
+  const fetchDropMetrics = async (patientId: string) => {
+    const { data } = await supabase.rpc('get_plan_drop_metrics', { p_patient_id: patientId }) as { data: any };
+    setMetrics(data);
+  };
+
   const exportDiagnostics = () => {
     const csvContent = "data:text/csv;charset=utf-8," + 
       ["ID,Type,Message,PatientID,CorrelationID,CreatedAt"].join(",") + "\n" +
@@ -59,24 +76,74 @@ export const AdminAuditDashboard = () => {
   };
 
   const runReconciliation = async () => {
-    const { data, error } = await supabase.rpc('reconcile_published_plans', { p_limit: 5 }) as { data: any, error: any };
+    const patientId = timeline[0]?.patient_id || alerts[0]?.metadata?.patient_id;
+    if (!patientId) {
+      toast.error("Selecione um alerta para reconciliar por paciente");
+      return;
+    }
+    const { data, error } = await supabase.rpc('reconcile_patient_plans', { 
+      p_patient_id: patientId 
+    }) as { data: any, error: any };
+    
     if (error) toast.error("Falha na reconciliação");
-    else toast.success(`Reconciliação concluída: ${data?.processed || 0} planos processados`);
+    else toast.success(`Reconciliação manual concluída: ${data?.count || 0} corrigidos. Correlation: ${data?.correlation_id}`);
   };
 
   return (
     <div className="p-6 space-y-6 max-w-7xl mx-auto">
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Audit Central</h1>
-        <div className="space-x-2">
-          <Button variant="outline" onClick={runReconciliation}><RefreshCcw className="mr-2 h-4 w-4" /> Reconciliar</Button>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={runReconciliation}><RefreshCcw className="mr-2 h-4 w-4" /> Reconciliar Paciente</Button>
+          <Button variant="outline" onClick={() => exportAuditToPDF(alerts, timeline)}>
+            <FileText className="mr-2 h-4 w-4" /> Exportar PDF
+          </Button>
           <Button onClick={exportDiagnostics}><Download className="mr-2 h-4 w-4" /> Exportar CSV</Button>
         </div>
       </div>
 
+      <Card>
+        <CardContent className="pt-6">
+          <div className="flex flex-wrap gap-4">
+            <div className="w-[200px]">
+              <label className="text-xs font-medium mb-1 block">Tipo de Alerta</label>
+              <Select value={filters.alert_type} onValueChange={(v) => setFilters(f => ({...f, alert_type: v}))}>
+                <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todos os tipos</SelectItem>
+                  <SelectItem value="PLAN_VISIBILITY_DROP">Queda de Visibilidade</SelectItem>
+                  <SelectItem value="E2E_CONSISTENCY_ERROR">Erro de Consistência</SelectItem>
+                  <SelectItem value="PUBLISH_RACE_CONDITION">Race Condition</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="w-[150px]">
+              <label className="text-xs font-medium mb-1 block">Severidade</label>
+              <Select value={filters.severity} onValueChange={(v) => setFilters(f => ({...f, severity: v}))}>
+                <SelectTrigger><SelectValue placeholder="Severidade" /></SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Todas</SelectItem>
+                  <SelectItem value="critical">Crítica</SelectItem>
+                  <SelectItem value="warning">Aviso</SelectItem>
+                  <SelectItem value="info">Info</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex-1">
+              <label className="text-xs font-medium mb-1 block">Tenant ID (UUID)</label>
+              <Input 
+                placeholder="Filtrar por Tenant..." 
+                value={filters.tenant_id} 
+                onChange={(e) => setFilters(f => ({...f, tenant_id: e.target.value}))} 
+              />
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Alertas em Tempo Real</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Alertas de Auditoria</CardTitle></CardHeader>
           <CardContent>
             <Table>
               <TableHeader>
@@ -97,7 +164,10 @@ export const AdminAuditDashboard = () => {
                     <TableCell className="text-xs font-mono">{alert.metadata?.patient_id?.split('-')[0]}...</TableCell>
                     <TableCell className="text-xs font-mono">{alert.correlation_id?.split('-')[0]}...</TableCell>
                     <TableCell>
-                      <Button size="icon" variant="ghost" onClick={() => lookupTimeline(alert.correlation_id)}>
+                      <Button size="icon" variant="ghost" onClick={() => {
+                        lookupTimeline(alert.correlation_id);
+                        if (alert.metadata?.patient_id) fetchDropMetrics(alert.metadata.patient_id);
+                      }}>
                         <History className="h-4 w-4" />
                       </Button>
                     </TableCell>
@@ -109,20 +179,30 @@ export const AdminAuditDashboard = () => {
         </Card>
 
         <Card>
-          <CardHeader><CardTitle>Timeline Inspector</CardTitle></CardHeader>
+          <CardHeader><CardTitle>Linha do Tempo</CardTitle></CardHeader>
           <CardContent className="space-y-4">
             <div className="flex space-x-2">
               <Input placeholder="Correlation ID..." value={searchCorrelation} onChange={e => setSearchCorrelation(e.target.value)} />
               <Button size="icon" onClick={() => lookupTimeline(searchCorrelation)}><Search className="h-4 w-4" /></Button>
             </div>
+
+            {metrics && (
+              <div className="bg-muted/50 p-3 rounded-md text-xs space-y-1 border border-primary/10">
+                <div className="font-bold border-b mb-1 pb-1">Métricas de Queda (24h)</div>
+                <div className="flex justify-between"><span>Antes:</span> <span className="font-mono">{metrics.before_cutoff_count}</span></div>
+                <div className="flex justify-between"><span>Depois:</span> <span className="font-mono">{metrics.after_cutoff_count}</span></div>
+                <div className="flex justify-between font-bold"><span>Diferença:</span> <span className={metrics.diff < 0 ? "text-red-500" : "text-green-500"}>{metrics.diff}</span></div>
+              </div>
+            )}
+
             <div className="relative border-l-2 border-muted ml-3 space-y-6 py-2">
-              {timeline.length === 0 && <div className="text-center py-10 text-muted-foreground text-sm">Insira um ID para ver a rastreabilidade</div>}
+              {timeline.length === 0 && <div className="text-center py-10 text-muted-foreground text-sm">Rastreie um Correlation ID</div>}
               {timeline.map((event, i) => (
                 <div key={i} className="relative pl-6">
                   <div className="absolute -left-[9px] top-1 h-4 w-4 rounded-full bg-background border-2 border-primary" />
                   <div className="text-xs font-bold text-primary">{event.type}</div>
                   <div className="text-xs text-muted-foreground">{new Date(event.timestamp).toLocaleString()}</div>
-                  <div className="text-sm mt-1">{event.message || `Plan ${event.status}`}</div>
+                  <div className="text-sm mt-1">{event.message || `Plano ${event.status}`}</div>
                 </div>
               ))}
             </div>
