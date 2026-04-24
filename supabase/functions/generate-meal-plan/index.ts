@@ -3061,40 +3061,71 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       generationMode = "fixed_marmita";
     }
 
-    // Authorization guard (FULLY RELAXED v2):
-    // Qualquer usuário AUTENTICADO pode gerar planos para qualquer paciente.
-    // Travas de role/vínculo nutricionista↔paciente foram removidas a pedido do produto.
-    // O simples fato de `requireUser` ter validado o JWT já é suficiente.
-    // Pacientes gerando para si mesmos continuam funcionando normalmente.
+    // ─────────────────────────────────────────────────────────────────────
+    // Authorization guard (STRICT — multi-tenant clinical isolation):
+    //   • Pacientes NUNCA podem gerar dieta (nem para si mesmos).
+    //   • Profissionais (nutritionist/personal/coach) só podem gerar planos
+    //     para SEUS PRÓPRIOS pacientes — vínculo ativo em nutritionist_patients
+    //     OU profiles.nutritionist_id = caller.id.
+    //   • Admin tem acesso global.
+    // ─────────────────────────────────────────────────────────────────────
     {
-      const callerIsPatient = userId === patient_id;
+      const isAdmin = caller.roles.includes("admin");
       const isProfessional =
-        caller.roles.includes("admin") ||
+        isAdmin ||
         caller.roles.includes("nutritionist") ||
         caller.roles.includes("personal") ||
-        caller.roles.includes("coach") ||
-        // Fallback: se não há roles mapeadas mas o usuário está autenticado e
-        // não é o próprio paciente, tratamos como profissional (modo permissivo).
-        (!callerIsPatient && caller.roles.length === 0);
+        caller.roles.includes("coach");
 
-      // Best-effort: garantir vínculo nutricionista↔paciente quando aplicável
-      if (isProfessional && !callerIsPatient) {
-        try {
-          const linkPatientId = patientProfile?.id || patient_id;
-          await serviceClient
-            .from("nutritionist_patients")
-            .upsert({
-              nutritionist_id: requestedNutritionistId,
-              patient_id: linkPatientId,
-              status: "active",
-            }, { onConflict: "nutritionist_id,patient_id", ignoreDuplicates: true });
-        } catch (linkErr) {
-          console.warn("[generate-meal-plan] auto-link best-effort failed:", linkErr);
+      if (!isProfessional) {
+        return new Response(JSON.stringify({
+          error: "Apenas profissionais autorizados podem gerar planos alimentares.",
+          code: "PLAN_AUTH_FORBIDDEN_NOT_PROFESSIONAL",
+        }), {
+          status: 403,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+
+      // Admin bypass — pode gerar para qualquer paciente.
+      if (!isAdmin) {
+        const linkPatientId = patientProfile?.id || patient_id;
+
+        // 1) Vínculo direto em nutritionist_patients (status active)
+        const { data: linkRow } = await serviceClient
+          .from("nutritionist_patients")
+          .select("id")
+          .eq("nutritionist_id", userId)
+          .eq("patient_id", linkPatientId)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
+
+        // 2) Fallback: profile do paciente aponta para este nutricionista
+        let isOwner = !!linkRow;
+        if (!isOwner) {
+          const { data: ownerProfile } = await serviceClient
+            .from("profiles")
+            .select("nutritionist_id")
+            .or(`id.eq.${linkPatientId},user_id.eq.${linkPatientId}`)
+            .maybeSingle();
+          isOwner = !!ownerProfile && (ownerProfile as any).nutritionist_id === userId;
+        }
+
+        if (!isOwner) {
+          console.warn(`[generate-meal-plan] auth DENY: nutritionist=${userId} tried patient=${patient_id} (no ownership)`);
+          return new Response(JSON.stringify({
+            error: "Você só pode gerar planos para os seus próprios pacientes.",
+            code: "PLAN_AUTH_FORBIDDEN_NOT_OWNER",
+          }), {
+            status: 403,
+            headers: { ...corsHeaders, "Content-Type": "application/json" },
+          });
         }
       }
 
-      console.log("[generate-meal-plan] auth: userId=", userId, "patient_id=", patient_id,
-        "roles=", caller.roles, "isProfessional=", isProfessional, "callerIsPatient=", callerIsPatient);
+      console.log("[generate-meal-plan] auth OK: userId=", userId, "patient_id=", patient_id,
+        "roles=", caller.roles, "isAdmin=", isAdmin);
     }
 
     // Fallback tenant
