@@ -88,17 +88,17 @@ const CLUSTER_SCORE_MODIFIERS: Record<string, Record<string, number>> = {
   metabolic_adaptive: { weight_trend_status_gaining: -5 },
 };
 
+async function resolveTenantForUser(sb: any, uid: string): Promise<string | null> {
+  const { data } = await sb.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+  return data?.tenant_id || null;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
 
   const startTime = Date.now();
-
-async function resolveTenantForUser(sb: any, uid: string): Promise<string | null> {
-  const { data } = await sb.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
-  return data?.tenant_id || null;
-}
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;

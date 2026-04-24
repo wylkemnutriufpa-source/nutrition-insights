@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
       const { data: mealRecipes } = await supabase
         .from("meal_recipes")
         .select("name, base_recipe")
-        .in("name", mealPlanItemTitles.map(t => t.replace(/^🍱\s*/, '')));
+        .in("name", mealPlanItemTitles.map((t: string) => t.replace(/^🍱\s*/, '')));
       
       if (mealRecipes) {
         mealRecipes.forEach((r: any) => {

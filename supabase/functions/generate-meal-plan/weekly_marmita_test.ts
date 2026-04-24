@@ -79,7 +79,7 @@ Deno.test("weekly_marmita: estimateRecipeMacros respects fixed values", () => {
   assertEquals(macros.f, 10);
 });
 
-Deno.test("weekly_marmita: buildMarmitaItem handles empty ingredients without crashing", () => {
+Deno.test("weekly_marmita: buildMarmitaItem handles empty ingredients without crashing", async () => {
   const recipe: MarmitaRecipe = {
     id: "r-crash",
     name: "Sem Nada",
@@ -87,12 +87,12 @@ Deno.test("weekly_marmita: buildMarmitaItem handles empty ingredients without cr
     foods_json: []
   };
   
-  const item = buildMarmitaItem(recipe, "lunch", 0, 500, "manutencao", []);
+  const item = await buildMarmitaItem(null, recipe, "lunch", 0, 500, "manutencao", []);
   assertEquals(item.title.includes("Sem Nada"), true);
   assertEquals(item.calories_target > 0, true);
 });
 
-Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctly", () => {
+Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctly", async () => {
   const recipes: MarmitaRecipe[] = [
     { id: "l1", name: "Almoço 1", meal_type: "almoço", foods_json: [{ name: "F", grams: 100 }] },
     { id: "d1", name: "Jantar 1", meal_type: "jantar", foods_json: [{ name: "F", grams: 100 }] }
@@ -101,17 +101,27 @@ Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctl
   const kcalTarget = 2000;
   const macros = { protein: 150, carbs: 200, fat: 60 };
   
-  const result = generateWeeklyMarmitaPlan(
-    recipes, [], [], "manutencao", kcalTarget, macros, [], [], [], ["lunch", "dinner"]
+  const result = await generateWeeklyMarmitaPlan(
+    null,
+    recipes,
+    [],
+    [],
+    "manutencao",
+    kcalTarget,
+    macros,
+    [],
+    [],
+    [],
+    ["lunch", "dinner"]
   );
   
   assertEquals(result.items.length, 14); 
   
-  const lunch = result.items.find(i => i.day_of_week === 0 && i.meal_type === "lunch");
-  const dinner = result.items.find(i => i.day_of_week === 0 && i.meal_type === "dinner");
+  const lunch = result.items.find((i: any) => i.day_of_week === 0 && i.meal_type === "lunch");
+  const dinner = result.items.find((i: any) => i.day_of_week === 0 && i.meal_type === "dinner");
   
-  assertEquals(lunch.calories_target, 600); // 2000 * 0.3
-  assertEquals(dinner.calories_target, 440); // 2000 * 0.22
+  assertEquals(lunch.calories_target, 600);
+  assertEquals(dinner.calories_target, 440);
   assertEquals(lunch.protein_target, 87);
   assertEquals(dinner.protein_target, 63);
 });
