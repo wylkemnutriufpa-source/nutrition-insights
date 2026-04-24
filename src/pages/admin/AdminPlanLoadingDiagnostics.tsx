@@ -73,8 +73,10 @@ export default function AdminPlanLoadingDiagnostics() {
     setLoading(true);
     setError(null);
 
+    const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
     // Fetch counts em paralelo
-    const [allPlansRes, alertsRes] = await Promise.all([
+    const [allPlansRes, alertsRes, unknownPlansRes, trendAlertsRes] = await Promise.all([
       supabase
         .from("meal_plans")
         .select("plan_status, is_active")
@@ -85,6 +87,17 @@ export default function AdminPlanLoadingDiagnostics() {
         .in("alert_type", TRACKED_ALERT_TYPES)
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("meal_plans")
+        .select("plan_status, tenant_id, nutritionist_id, updated_at")
+        .limit(50_000),
+      supabase
+        .from("system_alerts" as any)
+        .select("alert_type, created_at")
+        .in("alert_type", TREND_TRACKED_TYPES as unknown as string[])
+        .gte("created_at", since30)
+        .order("created_at", { ascending: false })
+        .limit(10_000),
     ]);
 
     if (allPlansRes.error) {
@@ -109,6 +122,42 @@ export default function AdminPlanLoadingDiagnostics() {
 
     if (!alertsRes.error) {
       setAlerts((alertsRes.data || []) as unknown as AlertRow[]);
+    }
+
+    // Unknown statuses by workspace (tenant_id ?? nutritionist_id)
+    if (!unknownPlansRes.error) {
+      const unknownRows = (unknownPlansRes.data || []) as Array<{
+        plan_status: string | null;
+        tenant_id: string | null;
+        nutritionist_id: string | null;
+        updated_at: string | null;
+      }>;
+      const breakdown = new Map<string, UnknownStatusBreakdown>();
+      for (const r of unknownRows) {
+        const status = r.plan_status || "draft";
+        if (KNOWN_PLAN_STATUS_KEYS.includes(status)) continue;
+        const wsKey = r.tenant_id || r.nutritionist_id || "(sem workspace)";
+        const k = `${status}::${wsKey}`;
+        const cur = breakdown.get(k) || {
+          plan_status: status,
+          workspace_id: wsKey,
+          count: 0,
+          last_seen: r.updated_at || "",
+        };
+        cur.count += 1;
+        if (r.updated_at && r.updated_at > cur.last_seen) cur.last_seen = r.updated_at;
+        breakdown.set(k, cur);
+      }
+      setUnknownByWorkspace(
+        Array.from(breakdown.values()).sort((a, b) => b.count - a.count).slice(0, 50),
+      );
+    }
+
+    // Trend buckets per day
+    if (!trendAlertsRes.error) {
+      const alertRows = (trendAlertsRes.data || []) as Array<{ alert_type: string; created_at: string }>;
+      setTrend7(buildTrend(alertRows, 7));
+      setTrend30(buildTrend(alertRows, 30));
     }
 
     setLoading(false);
