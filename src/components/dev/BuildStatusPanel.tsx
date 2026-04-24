@@ -84,6 +84,25 @@ export default function BuildStatusPanel() {
   const [swState, setSwState] = useState<SwState>("none");
   const [calls, setCalls] = useState<EdgeCallEntry[]>([]);
   const [busy, setBusy] = useState(false);
+  const [chunkValidation, setChunkValidation] = useState<ChunkValidationResult | null>(null);
+  const [scopedFeedback, setScopedFeedback] = useState<string | null>(null);
+
+  // ─── Chunk hash validation (CDN/SW serving stale assets?) ──
+  useEffect(() => {
+    // Roda após primeira pintura para garantir que <link>/<script> estão no DOM.
+    const id = window.setTimeout(() => {
+      const result = validateChunkHashes();
+      setChunkValidation(result);
+      if (result.status === "mismatch") {
+        // eslint-disable-next-line no-console
+        console.warn(
+          `[FJ:build] CHUNK MISMATCH — ${result.message}`,
+          { expected: result.expectedHash, loaded: result.loadedHashes },
+        );
+      }
+    }, 500);
+    return () => window.clearTimeout(id);
+  }, []);
 
   // ─── Service worker state ──────────────────────────────────
   useEffect(() => {
