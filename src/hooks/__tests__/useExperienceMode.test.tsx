@@ -12,13 +12,11 @@ vi.mock("@/integrations/supabase/client", () => ({
     from: vi.fn(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          maybeSingle: vi.fn(),
+          maybeSingle: vi.fn().mockReturnValue(Promise.resolve({ data: null, error: null })),
         })),
       })),
       update: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          then: vi.fn((cb) => cb({ error: null })),
-        })),
+        eq: vi.fn().mockReturnValue(Promise.resolve({ error: null })),
       })),
     })),
   },
