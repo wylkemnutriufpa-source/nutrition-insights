@@ -50,13 +50,21 @@ export function MealSmartEditorModal({
       setDescription(item.description || "");
       
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
-      if (meta.substitutions_json) {
+      
+      // Validação robusta com fallback para substitutions_json
+      const hasValidJson = Array.isArray(meta.substitutions_json) && 
+                          meta.substitutions_json.every((s: any) => typeof s === "string");
+                          
+      if (hasValidJson) {
         setSubstitutions(meta.substitutions_json);
       } else {
+        // Fallback: extração segura da descrição textual
         const desc = item.description || "";
         const parts = desc.split(/\n\n🔄 Substituições:\n/);
         const subsPart = parts[1] || "";
-        const subLines = subsPart.split("\n").filter(l => l.trim().length > 0);
+        const subLines = subsPart.split("\n")
+          .filter(l => l.trim().length > 0)
+          .map(l => l.trim());
         setSubstitutions(subLines.slice(0, 4));
       }
       
