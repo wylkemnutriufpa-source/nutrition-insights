@@ -3002,10 +3002,16 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const caller = maybeSupabaseClient ? { id: "mock-id", email: "test@test.com", roles: ["nutritionist"] } : await requireUser(req);
+    // CRITICAL: Deno.serve passes (req, info) to handlers, where `info` is a non-null object.
+    // We must NOT treat that as a "test mode" signal. Only accept a real Supabase client
+    // (duck-typed: must expose `.from()`), otherwise fall back to real auth.
+    const isTestClient = !!maybeSupabaseClient && typeof maybeSupabaseClient.from === "function";
+    const caller = isTestClient
+      ? { id: "mock-id", email: "test@test.com", roles: ["nutritionist"] }
+      : await requireUser(req);
     const userId = caller.id;
 
-    const rl = maybeSupabaseClient ? { allowed: true } : await checkRateLimit("generate-meal-plan", userId, 10, 10);
+    const rl = isTestClient ? { allowed: true } : await checkRateLimit("generate-meal-plan", userId, 10, 10);
     if (!rl.allowed) return rateLimitResponse();
 
     const body = await req.json();
