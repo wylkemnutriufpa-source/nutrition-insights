@@ -120,4 +120,16 @@ export default defineConfig(({ mode }) => ({
     },
     dedupe: ["react", "react-dom", "react/jsx-runtime"],
   },
+  // Versionamento de assets via content hash — garante que o navegador NUNCA
+  // sirva chunk antigo após publicar (cache busting determinístico).
+  build: {
+    sourcemap: mode !== "production",
+    rollupOptions: {
+      output: {
+        entryFileNames: `assets/[name]-[hash].js`,
+        chunkFileNames: `assets/[name]-[hash].js`,
+        assetFileNames: `assets/[name]-[hash].[ext]`,
+      },
+    },
+  },
 }));
