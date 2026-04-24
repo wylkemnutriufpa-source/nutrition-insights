@@ -1,47 +1,63 @@
+import { supabase } from "@/integrations/supabase/client";
+import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
-export const exportAuditToPDF = (alerts: any[], timeline: any[]) => {
-  const doc = new jsPDF();
-  
-  // Title
-  doc.setFontSize(20);
-  doc.text("Relatório de Auditoria Clínica", 14, 22);
-  doc.setFontSize(11);
-  doc.setTextColor(100);
-  doc.text(`Gerado em: ${new Date().toLocaleString()}`, 14, 30);
+interface ExportOptions {
+  format: 'CSV' | 'PDF' | 'XLSX';
+  data: any[];
+  filters: any;
+  filename?: string;
+}
 
-  // Alerts Table
-  doc.setFontSize(14);
-  doc.setTextColor(0);
-  doc.text("Alertas Recentes", 14, 45);
-  
-  (doc as any).autoTable({
-    startY: 50,
-    head: [['Tipo', 'Mensagem', 'Patient ID', 'Correlation ID']],
-    body: alerts.map(a => [
-      a.alert_type, 
-      a.message, 
-      a.metadata?.patient_id || 'N/A', 
-      a.correlation_id || 'N/A'
-    ]),
+const logExportActivity = async (options: { format: string; filters: any; count: number }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  await supabase.from('audit_exports_log').insert({
+    user_id: user?.id,
+    export_format: options.format,
+    filter_params: options.filters,
+    record_count: options.count
   });
+};
 
-  // Timeline Table (if selected)
-  if (timeline && timeline.length > 0) {
-    const finalY = (doc as any).lastAutoTable.finalY + 15;
-    doc.text("Linha do Tempo de Eventos", 14, finalY);
-    
-    (doc as any).autoTable({
-      startY: finalY + 5,
-      head: [['Timestamp', 'Tipo', 'Detalhes']],
-      body: timeline.map(t => [
-        new Date(t.timestamp).toLocaleString(),
-        t.type,
-        t.message || `Status: ${t.status}`
-      ]),
-    });
+export const exportData = async ({ format, data, filters, filename }: ExportOptions) => {
+  const ts = new Date().getTime();
+  const baseName = filename || `audit_export_${ts}`;
+  
+  await logExportActivity({ format, filters, count: data.length });
+
+  if (format === 'CSV') {
+    const csvContent = "data:text/csv;charset=utf-8," + 
+      ["ID,Type,Message,PatientID,CorrelationID,CreatedAt"].join(",") + "\n" +
+      data.map(a => `${a.id},${a.alert_type},"${a.message}",${a.metadata?.patient_id},${a.correlation_id},${a.created_at}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${baseName}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  } 
+  else if (format === 'XLSX') {
+    const worksheet = XLSX.utils.json_to_sheet(data.map(a => ({
+      ID: a.id,
+      Type: a.alert_type,
+      Message: a.message,
+      PatientID: a.metadata?.patient_id,
+      CorrelationID: a.correlation_id,
+      CreatedAt: a.created_at
+    })));
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "AuditData");
+    XLSX.writeFile(workbook, `${baseName}.xlsx`);
   }
-
-  doc.save(`audit_report_${new Date().getTime()}.pdf`);
+  else if (format === 'PDF') {
+    const doc = new jsPDF();
+    doc.text("Audit Report", 14, 15);
+    (doc as any).autoTable({
+      head: [['Type', 'Message', 'Correlation']],
+      body: data.map(a => [a.alert_type, a.message, a.correlation_id]),
+    });
+    doc.save(`${baseName}.pdf`);
+  }
 };

@@ -558,6 +558,33 @@ export type Database = {
           },
         ]
       }
+      audit_exports_log: {
+        Row: {
+          created_at: string | null
+          export_format: string
+          filter_params: Json | null
+          id: string
+          record_count: number | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          export_format: string
+          filter_params?: Json | null
+          id?: string
+          record_count?: number | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          export_format?: string
+          filter_params?: Json | null
+          id?: string
+          record_count?: number | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       audit_logs: {
         Row: {
           action: string
@@ -19207,6 +19234,26 @@ export type Database = {
           total_count: number
         }[]
       }
+      get_advanced_alerts_paginated: {
+        Args: {
+          p_alert_type?: string
+          p_cursor_id?: string
+          p_cursor_timestamp?: string
+          p_limit?: number
+          p_severity?: string
+          p_tenant_id?: string
+        }
+        Returns: {
+          alert_type: string
+          correlation_id: string
+          created_at: string
+          has_more: boolean
+          id: string
+          message: string
+          metadata: Json
+          severity: string
+        }[]
+      }
       get_affiliate_commission_tier: {
         Args: { _affiliate_id: string }
         Returns: {
@@ -19342,6 +19389,15 @@ export type Database = {
         Returns: {
           email: string
           user_id: string
+        }[]
+      }
+      get_patient_event_timeline: {
+        Args: { p_patient_id: string }
+        Returns: {
+          correlation_id: string
+          events: Json
+          first_event: string
+          last_event: string
         }[]
       }
       get_plan_diagnostics: {
