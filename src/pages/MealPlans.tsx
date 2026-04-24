@@ -50,8 +50,13 @@ import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Tra
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
+import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
+import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS } from "@/lib/planStatusLabels";
 
 type MealPlan = Tables<"meal_plans">;
+
+const STATUS_FILTER_ALL = "__all__";
+const STATUS_FILTER_UNKNOWN = "__unknown__";
 
 export default function MealPlans() {
   const { user } = useAuth();
