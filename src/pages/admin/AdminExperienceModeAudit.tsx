@@ -101,6 +101,46 @@ export default function AdminExperienceModeAudit() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
+  // ─── Metrics: retries per correlationId & avg time-to-success ───
+  const metrics = useMemo(() => {
+    const retriesByCid = new Map<string, number>();
+    const durationsBySuccess: number[] = [];
+    let totalAttempts = 0;
+    let successCount = 0;
+    let failedCount = 0;
+    for (const r of filtered) {
+      const meta = (r.metadata || {}) as any;
+      const retries = Number(meta.retries ?? 0);
+      const attempts = retries + 1;
+      totalAttempts += attempts;
+      if (retries > 0) {
+        retriesByCid.set(r.correlation_id, (retriesByCid.get(r.correlation_id) || 0) + retries);
+      }
+      if (r.outcome === "success") {
+        successCount++;
+        const d = Number(meta.duration_ms);
+        if (Number.isFinite(d) && d > 0) durationsBySuccess.push(d);
+      } else if (r.outcome === "failed") {
+        failedCount++;
+      }
+    }
+    const avgMs = durationsBySuccess.length
+      ? durationsBySuccess.reduce((a, b) => a + b, 0) / durationsBySuccess.length
+      : 0;
+    const topRetries = [...retriesByCid.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 5);
+    return {
+      totalRows: filtered.length,
+      totalAttempts,
+      successCount,
+      failedCount,
+      avgTimeToSuccessMs: Math.round(avgMs),
+      retriesCorrelationCount: retriesByCid.size,
+      topRetries,
+    };
+  }, [filtered]);
+
   const exportCsv = () => {
     if (filtered.length === 0) {
       toast.info("Nada para exportar com os filtros atuais.");
@@ -116,9 +156,15 @@ export default function AdminExperienceModeAudit() {
       "error_code",
       "unlock_date",
       "correlation_id",
+      "attempt_count",
+      "retries",
+      "duration_ms",
     ];
-    const lines = filtered.map((r) =>
-      [
+    const lines = filtered.map((r) => {
+      const meta = (r.metadata || {}) as any;
+      const retries = Number(meta.retries ?? 0);
+      const attempts = retries + 1;
+      return [
         r.created_at,
         r.outcome,
         r.user_id,
@@ -128,10 +174,13 @@ export default function AdminExperienceModeAudit() {
         r.error_code || "",
         r.unlock_date || "",
         r.correlation_id,
+        attempts,
+        retries,
+        meta.duration_ms ?? "",
       ]
         .map((v) => `"${String(v).replace(/\n/g, " ")}"`)
-        .join(",")
-    );
+        .join(",");
+    });
     const csv = [header.join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
