@@ -37,7 +37,7 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
     };
   };
 
-  return { substitutions, handleSubChange, getCleanedSubs, setSubstitutions, simulateSave, setDescription };
+  return { substitutions, handleSubChange, getCleanedSubs, setSubstitutions, simulateSave, setDescription, description };
 };
 
 describe('MealSmartEditorModal Substitution Logic', () => {
