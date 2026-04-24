@@ -162,6 +162,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "MODE_UPDATE" && event.data?.mode) {
         const newMode = event.data.mode;
+        console.log("[ExperienceMode] Syncing mode from broadcast channel:", newMode);
         setModeState(newMode);
         localStorage.setItem(STORAGE_KEY, newMode);
       }
@@ -172,10 +173,23 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     // Fallback for older browsers or specific environments
     const handleStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY && event.newValue) {
+        console.log("[ExperienceMode] Syncing mode from storage event:", event.newValue);
         setModeState(event.newValue as ExperienceMode);
       }
     };
     window.addEventListener("storage", handleStorage);
+
+    // Logout listener to clear session state
+    const handleAuthChange = () => {
+      supabase.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT') {
+          console.log("[ExperienceMode] User signed out, clearing session state");
+          sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
+          setFailedMode(null);
+        }
+      });
+    };
+    handleAuthChange();
 
     return () => {
       channel.removeEventListener("message", handleMessage);
