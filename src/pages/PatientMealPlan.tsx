@@ -112,6 +112,11 @@ export default function PatientMealPlan() {
     );
 
     if (error || !result) {
+      setPlan(null);
+      setItems([]);
+      setAllItems([]);
+      setCompletions([]);
+      setWeekCompletions([]);
       setLoading(false);
       return;
     }
@@ -121,18 +126,54 @@ export default function PatientMealPlan() {
       id: planData.id,
       title: planData.title,
       start_date: planData.start_date,
-      totals_status: planData.totals_status
+      totals_status: planData.totals_status,
+      plan_mode: planData.plan_mode,
     });
 
-    const allItemsData = planData.items || [];
-    setItems(allItemsData);
-    
-    // For PDF export we might still want everything, but let's focus on fixing the daily view first
-    if (allItems.length === 0) {
-      setAllItems(allItemsData);
+    let resolvedItems = Array.isArray(planData.items) ? (planData.items as MealPlanItem[]) : [];
+    let resolvedAllItems = resolvedItems;
+
+    // Resiliência: se a RPC retornar o plano mas o dia atual vier sem itens,
+    // buscamos o plano completo para evitar o falso estado de "nenhum plano".
+    // Isso cobre cenários onde o plano semanal foi salvo apenas com alguns dias
+    // preenchidos ou quando há desalinhamento de day_of_week.
+    const shouldFetchFullPlanItems = !!planData.id && (resolvedItems.length === 0 || allItems.length === 0);
+    if (shouldFetchFullPlanItems) {
+      const { data: fullItemsData, error: fullItemsError } = await supabase
+        .from("meal_plan_items")
+        .select("*")
+        .eq("meal_plan_id", planData.id);
+
+      if (!fullItemsError && fullItemsData) {
+        const fullItems = fullItemsData as unknown as MealPlanItem[];
+        resolvedAllItems = fullItems;
+
+        if (resolvedItems.length === 0 && fullItems.length > 0) {
+          const currentDow = new Date(date + "T12:00:00").getDay();
+          const sameDayItems = fullItems.filter((item) => item.day_of_week === currentDow);
+          if (sameDayItems.length > 0) {
+            resolvedItems = sameDayItems;
+          } else {
+            const firstAvailableDay = fullItems.find(
+              (item) => item.day_of_week !== null && item.day_of_week !== undefined,
+            )?.day_of_week;
+
+            resolvedItems = firstAvailableDay !== undefined
+              ? fullItems.filter((item) => item.day_of_week === firstAvailableDay)
+              : fullItems;
+
+            console.warn(
+              `[PatientMealPlan] Plano ${planData.id} sem itens para day_of_week=${currentDow}. ` +
+              `Usando fallback do primeiro dia disponível (${String(firstAvailableDay)}).`,
+            );
+          }
+        }
+      }
     }
 
-    // Fetch active substitutions for this plan
+    setItems(resolvedItems);
+    setAllItems(resolvedAllItems);
+
     const { data: subsData } = await supabase
       .from("patient_meal_substitutions" as any)
       .select("meal_plan_item_id, original_food, substituted_food")
