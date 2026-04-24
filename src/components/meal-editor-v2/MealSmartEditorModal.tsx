@@ -394,26 +394,7 @@ export function MealSmartEditorModal({
               <Button 
                 variant="outline" 
                 className="flex-1 h-12 rounded-2xl font-bold" 
-                onClick={() => {
-                  // Reset explícito do estado local ao cancelar
-                  setDescription(item?.description || "");
-                  setNotes((item as any)?.notes || "");
-                  const meta = (item as any).edit_metadata || (item as any).metadata || {};
-                  const hasValidJson = Array.isArray(meta.substitutions_json) && 
-                                      meta.substitutions_json.every((s: any) => typeof s === "string");
-                  if (hasValidJson) {
-                    setSubstitutions(meta.substitutions_json);
-                  } else {
-                    const desc = item?.description || "";
-                    const parts = desc.split(/\n\n🔄 Substituições:\n/);
-                    const subsPart = parts[1] || "";
-                    const subLines = subsPart.split("\n")
-                      .filter(l => l.trim().length > 0)
-                      .map(l => l.trim());
-                    setSubstitutions(subLines.slice(0, 4));
-                  }
-                  onOpenChange(false);
-                }}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancelar
               </Button>
