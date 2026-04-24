@@ -1030,17 +1030,17 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                         <Settings2 className="w-4 h-4 text-primary" />
                         <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
                       </div>
-                      {history.length > 0 && (
+                      <div className="flex gap-1">
                         <Button 
                           variant="ghost" 
                           size="sm" 
                           className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
-                          onClick={undoLastChange}
+                          onClick={() => { setShowHistory(true); fetchDbHistory(); }}
                         >
-                          <RefreshCw className="w-3 h-3" />
-                          Desfazer ({history.length})
+                          <ScrollText className="w-3 h-3" />
+                          Histórico ({dbHistory.length})
                         </Button>
-                      )}
+                      </div>
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {suggestions.map((s, idx) => (
@@ -1124,6 +1124,71 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       </div>
                     </div>
 
+                  </DialogContent>
+                </Dialog>
+
+                {/* Modal de Histórico Clínico */}
+                <Dialog open={showHistory} onOpenChange={setShowHistory}>
+                  <DialogContent className="max-w-lg p-6 rounded-2xl border-border/50 shadow-2xl max-h-[80vh] flex flex-col">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                        <ScrollText className="w-5 h-5 text-primary" />
+                        Histórico Clínico de Versões
+                      </DialogTitle>
+                      <DialogDescription className="text-sm">
+                        Rastreabilidade total de todas as alterações feitas nesta refeição.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 mt-4">
+                      {dbHistory.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-10 text-sm italic">Nenhuma versão anterior registrada.</p>
+                      ) : (
+                        dbHistory.map((v, i) => (
+                          <div key={v.id} className="p-4 rounded-xl border border-border bg-secondary/20 space-y-3 group hover:border-primary/30 transition-colors">
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-0.5">
+                                <p className="text-xs font-bold flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(v.created_at).toLocaleString("pt-BR")}
+                                </p>
+                                <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">
+                                  {v.action_type === 'manual_update' ? 'Edição Manual' : 
+                                   v.action_type === 'auto_correction' ? 'Auto-Correção' : 'Restauração'}
+                                </Badge>
+                              </div>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-7 text-[10px] gap-1.5 bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => rollbackToVersion(v)}
+                              >
+                                <RefreshCw className="w-3 h-3" />
+                                Restaurar
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-2">
+                              {[
+                                { l: 'Kcal', v: v.snapshot_data.calories_target },
+                                { l: 'Prot', v: v.snapshot_data.protein_target },
+                                { l: 'Carb', v: v.snapshot_data.carbs_target },
+                                { l: 'Fat', v: v.snapshot_data.fat_target },
+                              ].map(m => (
+                                <div key={m.l} className="text-center bg-white/50 rounded-lg py-1 border border-border/30">
+                                  <p className="text-[8px] uppercase text-muted-foreground font-bold">{m.l}</p>
+                                  <p className="text-xs font-bold">{Math.round(m.v || 0)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <Button variant="outline" className="w-full mt-4" onClick={() => setShowHistory(false)}>
+                      Fechar
+                    </Button>
                   </DialogContent>
                 </Dialog>
               </>
