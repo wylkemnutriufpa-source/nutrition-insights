@@ -69,12 +69,20 @@ export function MealSmartEditorModal({
   const handleSave = () => {
     let finalDescription = description;
     if (substitutions.length > 0) {
+      // Clear old text-based substitutions from description before appending fresh ones
+      finalDescription = description.split(/\n\n🔄 Substituições:\n/)[0];
       finalDescription += "\n\n🔄 Substituições:\n" + substitutions.join("\n");
     }
+
+    const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
 
     updateItem(itemId, {
       description: finalDescription,
       notes,
+      edit_metadata: {
+        ...currentMeta,
+        substitutions_json: substitutions
+      }
     } as any);
     toast.success("Refeição atualizada com sucesso");
     onOpenChange(false);
