@@ -67,12 +67,13 @@ export default function WorkspaceMealPlans({ search }: Props) {
     return (
       <div
         data-testid="workspace-meal-plans-error"
+        data-error-kind={error.kind}
         className="flex flex-col items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/5 p-6 text-center"
       >
         <AlertTriangle className="h-6 w-6 text-destructive" aria-hidden />
         <div className="space-y-1">
-          <p className="text-sm font-medium text-destructive">Não conseguimos carregar seus planos.</p>
-          <p className="text-xs text-muted-foreground">{error}</p>
+          <p className="text-sm font-medium text-destructive">{error.title}</p>
+          <p className="text-xs text-muted-foreground">{error.description}</p>
         </div>
         <Button
           size="sm"
@@ -81,7 +82,7 @@ export default function WorkspaceMealPlans({ search }: Props) {
           data-testid="workspace-meal-plans-retry"
         >
           <RefreshCw className="mr-2 h-3 w-3" aria-hidden />
-          Tentar novamente
+          {error.retryLabel}
         </Button>
       </div>
     );
