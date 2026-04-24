@@ -56,7 +56,7 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 // Tighter timeout/backoff so tests don't take ages
-vi.mock("../../lib/experienceModeTelemetry", async (importOriginal) => {
+vi.mock("@/lib/experienceModeTelemetry", async (importOriginal) => {
   const actual: any = await importOriginal();
   return {
     ...actual,
