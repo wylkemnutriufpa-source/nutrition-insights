@@ -7,7 +7,12 @@ import {
   enqueueAttempt,
   drainQueue,
   buildBlockReason,
+  withTimeout,
+  withRetries,
+  getQueueStats,
+  pruneExpired,
   type QueuedAttempt,
+  type QueueStats,
 } from "@/lib/experienceModeTelemetry";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
