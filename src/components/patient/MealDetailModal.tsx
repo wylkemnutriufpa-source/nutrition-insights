@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtMacro, isMacroInconsistent } from "@/lib/formatMacros";
+import { fmtMacro, isMacroInconsistent, getMacroStatusColor, getMacroStatusLabel, safeNum } from "@/lib/formatMacros";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import {
   validatePortion,

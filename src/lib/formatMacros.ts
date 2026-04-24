@@ -103,3 +103,34 @@ export function getPortionWarning(item: any): string | null {
   return null;
 }
 
+/**
+ * Retorna o status visual (cor) baseado na divergência entre o solicitado e o persistido.
+ * 🟢 OK (< 5%)
+ * 🟡 Atenção (5% a 15%)
+ * 🔴 Erro (> 15%)
+ */
+export function getMacroStatusColor(requested: number, persisted: number): "text-emerald-500" | "text-amber-500" | "text-rose-500" {
+  const r = safeNum(requested);
+  const p = safeNum(persisted);
+  if (r <= 0 || p <= 0) return "text-emerald-500";
+  
+  const diff = Math.abs(r - p) / r;
+  if (diff < 0.05) return "text-emerald-500";
+  if (diff < 0.15) return "text-amber-500";
+  return "text-rose-500";
+}
+
+/**
+ * Retorna o ícone correspondente ao status de integridade.
+ */
+export function getMacroStatusLabel(requested: number, persisted: number): string {
+  const r = safeNum(requested);
+  const p = safeNum(persisted);
+  if (r <= 0 || p <= 0) return "OK";
+  
+  const diff = Math.abs(r - p) / r;
+  if (diff < 0.05) return "OK";
+  if (diff < 0.15) return "Variação";
+  return "Inconsistente";
+}
+
