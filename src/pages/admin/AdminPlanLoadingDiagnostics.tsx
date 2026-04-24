@@ -17,7 +17,14 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertTriangle, Database, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS } from "@/lib/planStatusLabels";
+import { getPlanStatusMeta, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
+
+import {
+  buildTrend,
+  aggregateUnknownByWorkspace,
+  type TrendBucket,
+  type UnknownStatusBreakdown,
+} from "./planDiagnosticsHelpers";
 
 interface StatusBucket {
   plan_status: string;
@@ -34,19 +41,6 @@ interface AlertRow {
   created_at: string;
 }
 
-interface UnknownStatusBreakdown {
-  plan_status: string;
-  workspace_id: string | null;
-  count: number;
-  last_seen: string;
-}
-
-interface TrendBucket {
-  date: string;
-  PLAN_STATUS_UNKNOWN: number;
-  PLAN_VISIBILITY_DROP: number;
-}
-
 const TRACKED_ALERT_TYPES = [
   "PLAN_VISIBILITY_DROP",
   "PLAN_STATUS_UNKNOWN",
@@ -57,31 +51,8 @@ const TRACKED_ALERT_TYPES = [
 
 const TREND_TRACKED_TYPES = ["PLAN_STATUS_UNKNOWN", "PLAN_VISIBILITY_DROP"] as const;
 
-function buildTrend(
-  rows: Array<{ alert_type: string; created_at: string }>,
-  days: number,
-): TrendBucket[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const buckets: TrendBucket[] = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-    buckets.push({
-      date: d.toISOString().slice(0, 10),
-      PLAN_STATUS_UNKNOWN: 0,
-      PLAN_VISIBILITY_DROP: 0,
-    });
-  }
-  const idx = new Map(buckets.map((b, i) => [b.date, i]));
-  for (const r of rows) {
-    const day = (r.created_at || "").slice(0, 10);
-    const i = idx.get(day);
-    if (i === undefined) continue;
-    if (r.alert_type === "PLAN_STATUS_UNKNOWN") buckets[i].PLAN_STATUS_UNKNOWN += 1;
-    else if (r.alert_type === "PLAN_VISIBILITY_DROP") buckets[i].PLAN_VISIBILITY_DROP += 1;
-  }
-  return buckets;
-}
+const UNKNOWN_LIMIT_OPTIONS = [25, 50, 100, 200] as const;
+type UnknownLimit = (typeof UNKNOWN_LIMIT_OPTIONS)[number];
 
 export default function AdminPlanLoadingDiagnostics() {
   const [loading, setLoading] = useState(true);
@@ -94,6 +65,8 @@ export default function AdminPlanLoadingDiagnostics() {
   const [trend7, setTrend7] = useState<TrendBucket[]>([]);
   const [trend30, setTrend30] = useState<TrendBucket[]>([]);
   const [trendWindow, setTrendWindow] = useState<7 | 30>(7);
+  const [unknownLimit, setUnknownLimit] = useState<UnknownLimit>(50);
+  const [unknownPage, setUnknownPage] = useState<number>(1);
 
   const load = useCallback(async () => {
     setLoading(true);
@@ -151,6 +124,8 @@ export default function AdminPlanLoadingDiagnostics() {
     }
 
     // Unknown statuses by workspace (tenant_id ?? nutritionist_id)
+    // Filtragem feita por isTrulyUnknownPlanStatus dentro do helper, evitando
+    // contar null/"" como "desconhecido".
     if (!unknownPlansRes.error) {
       const unknownRows = (unknownPlansRes.data || []) as Array<{
         plan_status: string | null;
@@ -158,25 +133,7 @@ export default function AdminPlanLoadingDiagnostics() {
         nutritionist_id: string | null;
         updated_at: string | null;
       }>;
-      const breakdown = new Map<string, UnknownStatusBreakdown>();
-      for (const r of unknownRows) {
-        const status = r.plan_status || "draft";
-        if (KNOWN_PLAN_STATUS_KEYS.includes(status)) continue;
-        const wsKey = r.tenant_id || r.nutritionist_id || "(sem workspace)";
-        const k = `${status}::${wsKey}`;
-        const cur = breakdown.get(k) || {
-          plan_status: status,
-          workspace_id: wsKey,
-          count: 0,
-          last_seen: r.updated_at || "",
-        };
-        cur.count += 1;
-        if (r.updated_at && r.updated_at > cur.last_seen) cur.last_seen = r.updated_at;
-        breakdown.set(k, cur);
-      }
-      setUnknownByWorkspace(
-        Array.from(breakdown.values()).sort((a, b) => b.count - a.count).slice(0, 50),
-      );
+      setUnknownByWorkspace(aggregateUnknownByWorkspace(unknownRows));
     }
 
     // Trend buckets per day
@@ -193,7 +150,15 @@ export default function AdminPlanLoadingDiagnostics() {
     void load();
   }, [load]);
 
-  const unknownStatuses = buckets.filter((b) => !KNOWN_PLAN_STATUS_KEYS.includes(b.plan_status));
+  const unknownStatuses = buckets.filter((b) => isTrulyUnknownPlanStatus(b.plan_status));
+
+  // Pagination derived state for unknown-by-workspace list
+  const totalUnknownPages = Math.max(1, Math.ceil(unknownByWorkspace.length / unknownLimit));
+  const currentPage = Math.min(unknownPage, totalUnknownPages);
+  const pagedUnknown = unknownByWorkspace.slice(
+    (currentPage - 1) * unknownLimit,
+    currentPage * unknownLimit,
+  );
 
   return (
     <DashboardLayout>
@@ -283,7 +248,7 @@ export default function AdminPlanLoadingDiagnostics() {
                   <tbody>
                     {buckets.map((b) => {
                       const meta = getPlanStatusMeta(b.plan_status);
-                      const isUnknown = !KNOWN_PLAN_STATUS_KEYS.includes(b.plan_status);
+                      const isUnknown = isTrulyUnknownPlanStatus(b.plan_status);
                       return (
                         <tr key={b.plan_status} className="border-t border-border">
                           <td className="py-2">
@@ -312,13 +277,34 @@ export default function AdminPlanLoadingDiagnostics() {
         {/* Unknown plan_status by workspace */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              Status desconhecidos por workspace
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Onde valores de <code>plan_status</code> fora do catálogo aparecem (top 50).
-              Workspace = <code>tenant_id</code> ou, se ausente, <code>nutritionist_id</code>.
-            </p>
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <CardTitle className="text-base">
+                  Status desconhecidos por workspace
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Onde valores de <code>plan_status</code> fora do catálogo aparecem.
+                  Workspace = <code>tenant_id</code> ou, se ausente, <code>nutritionist_id</code>.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <label htmlFor="unknown-limit" className="text-muted-foreground">Por página:</label>
+                <select
+                  id="unknown-limit"
+                  data-testid="plan-diagnostics-unknown-limit"
+                  value={unknownLimit}
+                  onChange={(e) => {
+                    setUnknownLimit(Number(e.target.value) as UnknownLimit);
+                    setUnknownPage(1);
+                  }}
+                  className="rounded-md border border-input bg-background px-2 py-1"
+                >
+                  {UNKNOWN_LIMIT_OPTIONS.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {unknownByWorkspace.length === 0 ? (
@@ -326,37 +312,72 @@ export default function AdminPlanLoadingDiagnostics() {
                 Nenhum status desconhecido detectado nos planos.
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full text-sm"
-                  data-testid="plan-diagnostics-unknown-ws"
-                >
-                  <thead className="text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="text-left py-2">plan_status</th>
-                      <th className="text-left py-2">workspace</th>
-                      <th className="text-right py-2">ocorrências</th>
-                      <th className="text-right py-2">visto por último</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unknownByWorkspace.map((u, idx) => (
-                      <tr key={idx} className="border-t border-border">
-                        <td className="py-2">
-                          <code className="text-xs">{u.plan_status}</code>
-                        </td>
-                        <td className="py-2">
-                          <code className="text-[10px] break-all">{u.workspace_id}</code>
-                        </td>
-                        <td className="py-2 text-right font-mono">{u.count}</td>
-                        <td className="py-2 text-right text-[10px] text-muted-foreground">
-                          {u.last_seen ? new Date(u.last_seen).toLocaleString("pt-BR") : "—"}
-                        </td>
+              <>
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full text-sm"
+                    data-testid="plan-diagnostics-unknown-ws"
+                  >
+                    <thead className="text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="text-left py-2">plan_status</th>
+                        <th className="text-left py-2">workspace</th>
+                        <th className="text-right py-2">ocorrências</th>
+                        <th className="text-right py-2">visto por último</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {pagedUnknown.map((u, idx) => (
+                        <tr key={`${u.plan_status}-${u.workspace_id}-${idx}`} className="border-t border-border">
+                          <td className="py-2">
+                            <code className="text-xs">{u.plan_status}</code>
+                          </td>
+                          <td className="py-2">
+                            <code className="text-[10px] break-all">{u.workspace_id}</code>
+                          </td>
+                          <td className="py-2 text-right font-mono">{u.count}</td>
+                          <td className="py-2 text-right text-[10px] text-muted-foreground">
+                            {u.last_seen ? new Date(u.last_seen).toLocaleString("pt-BR") : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  className="flex items-center justify-between gap-2 mt-3 text-xs"
+                  data-testid="plan-diagnostics-unknown-pagination"
+                >
+                  <span className="text-muted-foreground">
+                    Mostrando <strong data-testid="plan-diagnostics-unknown-shown">{pagedUnknown.length}</strong>{" "}
+                    de <strong data-testid="plan-diagnostics-unknown-total">{unknownByWorkspace.length}</strong>{" "}
+                    combinações status × workspace.
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage <= 1}
+                      onClick={() => setUnknownPage((p) => Math.max(1, p - 1))}
+                      data-testid="plan-diagnostics-unknown-prev"
+                    >
+                      ← Anterior
+                    </Button>
+                    <span className="font-mono text-muted-foreground">
+                      pág. {currentPage} / {totalUnknownPages}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage >= totalUnknownPages}
+                      onClick={() => setUnknownPage((p) => Math.min(totalUnknownPages, p + 1))}
+                      data-testid="plan-diagnostics-unknown-next"
+                    >
+                      Próxima →
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>

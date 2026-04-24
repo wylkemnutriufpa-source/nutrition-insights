@@ -51,23 +51,41 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
-import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS } from "@/lib/planStatusLabels";
+import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
 
 type MealPlan = Tables<"meal_plans">;
 
 const STATUS_FILTER_ALL = "__all__";
 const STATUS_FILTER_UNKNOWN = "__unknown__";
+const STATUS_FILTER_STORAGE_KEY = "fitjourney:meal-plans:status-filter";
+
+/**
+ * Lê o filtro inicial (1) da URL `?status=...` (prioridade) ou (2) do
+ * localStorage. Mantém compat com valores legados (string vazia → ALL).
+ */
+function readInitialStatusFilter(searchParams: URLSearchParams): string {
+  const fromUrl = searchParams.get("status");
+  if (fromUrl && fromUrl.trim() !== "") return fromUrl;
+  if (typeof window === "undefined") return STATUS_FILTER_ALL;
+  try {
+    const stored = window.localStorage.getItem(STATUS_FILTER_STORAGE_KEY);
+    if (stored && stored.trim() !== "") return stored;
+  } catch {
+    // ignore (modo privado / storage indisponível)
+  }
+  return STATUS_FILTER_ALL;
+}
 
 export default function MealPlans() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { showSimplifiedActions, showProtocols } = useExperienceUI();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<ClassifiedPlanLoadError | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>(STATUS_FILTER_ALL);
+  const [statusFilter, setStatusFilter] = useState<string>(() => readInitialStatusFilter(searchParams));
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "",
@@ -77,6 +95,31 @@ export default function MealPlans() {
   const [submitting, setSubmitting] = useState(false);
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
   const onboardingHandled = useRef<string | null>(null);
+
+  // Persiste o filtro de plan_status em URL (?status=) e localStorage para
+  // sobreviver a F5 e compartilhamento de link.
+  useEffect(() => {
+    try {
+      if (statusFilter === STATUS_FILTER_ALL) {
+        window.localStorage.removeItem(STATUS_FILTER_STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, statusFilter);
+      }
+    } catch {
+      // ignore
+    }
+    const next = new URLSearchParams(searchParams);
+    if (statusFilter === STATUS_FILTER_ALL) {
+      if (next.has("status")) {
+        next.delete("status");
+        setSearchParams(next, { replace: true });
+      }
+    } else if (next.get("status") !== statusFilter) {
+      next.set("status", statusFilter);
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
 
   const fetchPlans = async () => {
     if (!user) return;
@@ -360,22 +403,26 @@ export default function MealPlans() {
   const effectivePlansCount = plans.filter(p => resolvePlanState(p).isEffective).length;
 
   // Counts per plan_status (for the filter dropdown badges)
+  // IMPORTANT: para a chave de catálogo usamos `|| "draft"` (rótulo amigável),
+  // mas para classificar "Desconhecido" usamos o valor cru via
+  // `isTrulyUnknownPlanStatus` — assim ausência (null/"") NÃO entra no bucket
+  // "Desconhecido" e não infla a contagem indevidamente.
   const statusCounts = plans.reduce<Record<string, number>>((acc, p) => {
     const k = (p.plan_status as string) || "draft";
     acc[k] = (acc[k] || 0) + 1;
     return acc;
   }, {});
   const statusKeysPresent = Object.keys(statusCounts).sort();
-  const unknownStatusCount = statusKeysPresent
-    .filter((k) => !KNOWN_PLAN_STATUS_KEYS.includes(k))
-    .reduce((sum, k) => sum + (statusCounts[k] || 0), 0);
+  const unknownStatusCount = plans.filter((p) =>
+    isTrulyUnknownPlanStatus(p.plan_status as string | null | undefined),
+  ).length;
 
   const filteredPlans = plans.filter((p) => {
     if (statusFilter === STATUS_FILTER_ALL) return true;
-    const k = (p.plan_status as string) || "draft";
     if (statusFilter === STATUS_FILTER_UNKNOWN) {
-      return !KNOWN_PLAN_STATUS_KEYS.includes(k);
+      return isTrulyUnknownPlanStatus(p.plan_status as string | null | undefined);
     }
+    const k = (p.plan_status as string) || "draft";
     return k === statusFilter;
   });
 
