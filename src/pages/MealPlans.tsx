@@ -80,12 +80,12 @@ export default function MealPlans() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { showSimplifiedActions, showProtocols } = useExperienceUI();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<ClassifiedPlanLoadError | null>(null);
-  const [statusFilter, setStatusFilter] = useState<string>(STATUS_FILTER_ALL);
+  const [statusFilter, setStatusFilter] = useState<string>(() => readInitialStatusFilter(searchParams));
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "",
