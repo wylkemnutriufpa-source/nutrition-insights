@@ -340,15 +340,30 @@ export function MealSmartEditorModal({
                   </div>
                   
                   {substitutions.filter(s => s.trim().length > 0).length > 0 && (
-                    <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
-                      <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">Visualização Final:</p>
-                      <div className="whitespace-pre-wrap">
-                        🔄 Substituições:{"\n"}
-                        {Array.from(new Set(
-                          substitutions
-                            .map(s => String(s).trim().replace(/\s+/g, ' '))
-                            .filter(s => s.length > 0)
-                        )).sort().join("\n")}
+                    <div className="space-y-3">
+                      <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
+                        <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">Visualização da Descrição:</p>
+                        <div className="whitespace-pre-wrap">
+                          🔄 Substituições:{"\n"}
+                          {Array.from(new Set(
+                            substitutions
+                              .map(s => String(s).trim().replace(/\s+/g, ' '))
+                              .filter(s => s.length > 0)
+                          )).sort().join("\n")}
+                        </div>
+                      </div>
+
+                      <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
+                        <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">substitutions_json:</p>
+                        <div className="text-muted-foreground break-all">
+                          {JSON.stringify(
+                            Array.from(new Set(
+                              substitutions
+                                .map(s => String(s).trim().replace(/\s+/g, ' '))
+                                .filter(s => s.length > 0)
+                            )).sort()
+                          )}
+                        </div>
                       </div>
                     </div>
                   )}
