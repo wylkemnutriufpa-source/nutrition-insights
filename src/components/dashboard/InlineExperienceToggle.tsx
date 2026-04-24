@@ -64,7 +64,11 @@ export default function InlineExperienceToggle() {
   };
 
   return (
-    <div className="relative flex rounded-xl border border-border bg-muted/30 p-0.5">
+    <div
+      data-testid="emode-toggle"
+      data-mode={mode}
+      className="relative flex rounded-xl border border-border bg-muted/30 p-0.5"
+    >
       {/* Animated background pill */}
       <motion.div
         className="absolute top-0.5 bottom-0.5 rounded-lg bg-card shadow-sm border border-border/50"
