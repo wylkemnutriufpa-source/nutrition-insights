@@ -319,7 +319,7 @@ export function MealSmartEditorModal({
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2" data-testid="substitutions-header">
                       🔄 Substituições ({substitutions.length}/4)
                     </h3>
                     {substitutions.length < 4 && !isOverLimit && (
@@ -328,6 +328,7 @@ export function MealSmartEditorModal({
                         size="sm" 
                         className="h-7 text-[10px] gap-1 text-primary" 
                         onClick={() => setSubstitutions([...substitutions, "• Nova substituição"])}
+                        data-testid="add-substitution-button"
                       >
                         <Plus className="w-3 h-3" /> Adicionar
                       </Button>
@@ -348,12 +349,14 @@ export function MealSmartEditorModal({
                           }}
                           className="h-9 bg-secondary/10 border-none focus-visible:ring-1 ring-primary/20 rounded-xl text-xs"
                           placeholder="Ex: • Pão integral → Tapioca (40g)"
+                          data-testid={`substitution-input-${idx}`}
                         />
                         <Button 
                           variant="ghost" 
                           size="icon" 
                           className="h-9 w-9 rounded-xl opacity-0 group-hover/sub:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
                           onClick={() => setSubstitutions(substitutions.filter((_, i) => i !== idx))}
+                          data-testid={`remove-substitution-button-${idx}`}
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
@@ -373,6 +376,7 @@ export function MealSmartEditorModal({
                 )}
                   role="status"
                   aria-live="polite"
+                  data-testid="aria-live-preview"
                 >
                   <div className="flex gap-3">
                     {isOverLimit ? (
