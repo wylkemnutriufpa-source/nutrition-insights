@@ -280,16 +280,33 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     const initialDesc = 'Initial';
     const { result } = renderHook(() => useSubstitutionEditor([], initialDesc));
     
-    const setDescSpy = vi.spyOn(result.current, 'setDescription');
+    // Check initial state
+    expect(result.current.description).toBe(initialDesc);
 
     act(() => {
+      // Modify to trigger a potential reset
+      result.current.setDescription('Modified');
+    });
+    expect(result.current.description).toBe('Modified');
+
+    act(() => {
+      // First call should reset
       result.current.handleOpenChange(false);
+    });
+    expect(result.current.description).toBe(initialDesc);
+
+    act(() => {
+      // Modify again to see if second call to handleOpenChange(false) triggers another reset
+      // (which it shouldn't because it's already closed)
+      result.current.setDescription('Modified Again');
       result.current.handleOpenChange(false);
     });
 
-    // It should only run the reset logic once because the second call sees it's already closed (in simulation)
-    // In our simplified hook, openState prevents re-running
-    expect(setDescSpy).toHaveBeenCalledTimes(1);
+    // In our simplified logic, if handleOpenChange(false) is called while it thinks it is ALREADY closed, 
+    // it should not run the reset block.
+    // If it DID run the reset block, description would be 'Initial'
+    // If it DID NOT run the reset block, description would remain 'Modified Again'
+    expect(result.current.description).toBe('Modified Again');
   });
 
   it('should have aria-live property in the preview container for accessibility', () => {
