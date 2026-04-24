@@ -359,6 +359,26 @@ export default function MealPlans() {
   // Count effective plans using normalized state
   const effectivePlansCount = plans.filter(p => resolvePlanState(p).isEffective).length;
 
+  // Counts per plan_status (for the filter dropdown badges)
+  const statusCounts = plans.reduce<Record<string, number>>((acc, p) => {
+    const k = (p.plan_status as string) || "draft";
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+  const statusKeysPresent = Object.keys(statusCounts).sort();
+  const unknownStatusCount = statusKeysPresent
+    .filter((k) => !KNOWN_PLAN_STATUS_KEYS.includes(k))
+    .reduce((sum, k) => sum + (statusCounts[k] || 0), 0);
+
+  const filteredPlans = plans.filter((p) => {
+    if (statusFilter === STATUS_FILTER_ALL) return true;
+    const k = (p.plan_status as string) || "draft";
+    if (statusFilter === STATUS_FILTER_UNKNOWN) {
+      return !KNOWN_PLAN_STATUS_KEYS.includes(k);
+    }
+    return k === statusFilter;
+  });
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
