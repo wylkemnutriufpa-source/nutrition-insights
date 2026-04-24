@@ -96,6 +96,31 @@ export default function MealPlans() {
   const [patients, setPatients] = useState<{ id: string; name: string }[]>([]);
   const onboardingHandled = useRef<string | null>(null);
 
+  // Persiste o filtro de plan_status em URL (?status=) e localStorage para
+  // sobreviver a F5 e compartilhamento de link.
+  useEffect(() => {
+    try {
+      if (statusFilter === STATUS_FILTER_ALL) {
+        window.localStorage.removeItem(STATUS_FILTER_STORAGE_KEY);
+      } else {
+        window.localStorage.setItem(STATUS_FILTER_STORAGE_KEY, statusFilter);
+      }
+    } catch {
+      // ignore
+    }
+    const next = new URLSearchParams(searchParams);
+    if (statusFilter === STATUS_FILTER_ALL) {
+      if (next.has("status")) {
+        next.delete("status");
+        setSearchParams(next, { replace: true });
+      }
+    } else if (next.get("status") !== statusFilter) {
+      next.set("status", statusFilter);
+      setSearchParams(next, { replace: true });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
   const fetchPlans = async () => {
     if (!user) return;
     setLoading(true);
