@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
 import { useAuth } from "@/lib/auth";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { Zap, BarChart3, Rocket } from "lucide-react";
+import { Zap, BarChart3, Rocket, RefreshCw, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import ExperienceModeRecommendation from "./ExperienceModeRecommendation";
 
 type ModeConfig = { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string };
@@ -64,16 +65,35 @@ const PATIENT_MODES: ModeConfig[] = [
 ];
 
 export default function ExperienceModeSwitcher() {
-  const { mode, setMode } = useExperienceMode();
+  const { mode, setMode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const isProRole = (isNutritionist || isPersonal || isAdmin) && isProfessionalContext;
   const MODES = isProRole ? PRO_MODES : PATIENT_MODES;
 
-  const handleSelect = (key: ExperienceMode) => {
-    setMode(key);
-    const label = MODES.find(m => m.key === key)?.label;
-    toast.success(`Modo ${label} ativado`);
+  const handleSelect = async (key: ExperienceMode) => {
+    if (key === mode) return;
+    
+    try {
+      await setMode(key);
+      const label = MODES.find(m => m.key === key)?.label;
+      toast.success(`Modo ${label} ativado`);
+    } catch (error: any) {
+      if (error.code === "MODE_LOCKED") {
+        toast.error("Alteração Negada", {
+          description: error.message || "Sua conta está restrita ao modo Básico por enquanto. Complete as atualizações pendentes para liberar outros modos.",
+          duration: 6000,
+        });
+      } else {
+        toast.error("Erro ao atualizar modo", {
+          description: "Não foi possível salvar sua preferência. Verifique sua conexão.",
+          action: {
+            label: "Tentar novamente",
+            onClick: () => handleSelect(key),
+          },
+        });
+      }
+    }
   };
 
   return (
@@ -91,6 +111,25 @@ export default function ExperienceModeSwitcher() {
       </CardHeader>
       <CardContent className="space-y-3">
         {isProRole && <ExperienceModeRecommendation />}
+        
+        {failedMode && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-center justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-xs font-medium">Erro ao atualizar para modo {MODES.find(m => m.key === failedMode)?.label}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => retryLastMode()}
+              disabled={isLoading}
+              className="h-7 text-[10px] gap-1 px-2 border-destructive/30 hover:bg-destructive/10"
+            >
+              <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+              Tentar
+            </Button>
+          </div>
+        )}
         {MODES.map((m) => {
           const Icon = m.icon;
           const selected = mode === m.key;
@@ -98,6 +137,7 @@ export default function ExperienceModeSwitcher() {
             <motion.button
               key={m.key}
               onClick={() => handleSelect(m.key)}
+              disabled={isLoading}
               whileTap={{ scale: 0.98 }}
               className={`w-full text-left rounded-xl border p-3 transition-all ${
                 selected
