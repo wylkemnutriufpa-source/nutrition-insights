@@ -521,17 +521,16 @@ export default function DietTemplates() {
         (Array.isArray(m?.foods) && m.foods.length > 0)
       );
 
-      if (isV2) {
-        targetPlanId = await applyOfficialV2Template(template);
-        // Count items inserted
+      const tryPathA = async () => {
+        const id = await applyOfficialV2Template(template);
         const { count } = await supabase
           .from("meal_plan_items")
           .select("*", { count: "exact", head: true })
-          .eq("meal_plan_id", targetPlanId);
-        itemsCount = count || 0;
-        console.log("[DietTemplates] V2 template applied directly:", { planId: targetPlanId, itemsCount });
-      } else {
-        // ── PATH B: Legacy templates → delegate to IFJ engine via edge function ──
+          .eq("meal_plan_id", id);
+        return { id, count: count || 0 };
+      };
+
+      const tryPathB = async () => {
         const pipelineInput: PipelineInput = {
           patientId,
           nutritionistId: user.id,
@@ -543,22 +542,45 @@ export default function DietTemplates() {
           templateSlug: template.slug,
           generationMode: "quick",
         };
-
         const result = await runPlanPipeline(pipelineInput);
-
         if (!result.success || !result.planId) {
           throw new Error(result.warnings?.[0] || "Falha ao gerar plano alimentar");
         }
+        return { id: result.planId, count: result.auditLog.items_total };
+      };
 
-        targetPlanId = result.planId;
-        itemsCount = result.auditLog.items_total;
-
-        console.log("[DietTemplates] Pipeline completed via edge function:", {
-          planId: targetPlanId,
-          itemsCount,
-          pipelineVersion: result.pipelineVersion,
-        });
+      // ── PATH A preferido quando há `meals`. PATH B (legacy) caso contrário. ──
+      // Em qualquer falha (incl. erros de autorização/edge function), tentamos
+      // o caminho alternativo automaticamente para nunca travar o profissional.
+      let outcome: { id: string; count: number } | null = null;
+      if (isV2) {
+        try {
+          outcome = await tryPathA();
+          console.log("[DietTemplates] PATH A applied:", outcome);
+        } catch (errA: any) {
+          console.warn("[DietTemplates] PATH A failed, falling back to PATH B:", errA?.message);
+          outcome = await tryPathB();
+          console.log("[DietTemplates] PATH B fallback applied:", outcome);
+        }
+      } else {
+        try {
+          outcome = await tryPathB();
+          console.log("[DietTemplates] PATH B applied:", outcome);
+        } catch (errB: any) {
+          // PATH B falhou — se houver `meals` no template, tentamos PATH A mesmo
+          // sem flag oficial v2 (qualquer estrutura `blocks`/`foods` é suficiente).
+          if (meals.length > 0) {
+            console.warn("[DietTemplates] PATH B failed, trying PATH A fallback:", errB?.message);
+            outcome = await tryPathA();
+            console.log("[DietTemplates] PATH A fallback applied:", outcome);
+          } else {
+            throw errB;
+          }
+        }
       }
+
+      targetPlanId = outcome.id;
+      itemsCount = outcome.count;
 
       // Activate plan atomically
       const activateResult = await activateMealPlan(targetPlanId);
