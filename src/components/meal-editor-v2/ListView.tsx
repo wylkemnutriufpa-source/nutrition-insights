@@ -40,7 +40,7 @@ export function ListView() {
           </span>
         </div>
         {effectiveDay !== 0 && (
-          <span className="text-[10px] text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/30 px-2 py-0.5 rounded-full">
+          <span className="text-[10px] text-warning-foreground bg-warning/15 border border-warning/30 px-2 py-0.5 rounded-full">
             Mostrando dia legado #{effectiveDay}
           </span>
         )}
