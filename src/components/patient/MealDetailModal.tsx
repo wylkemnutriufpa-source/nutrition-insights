@@ -221,6 +221,12 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   });
 
   const [isApplyingSuggestion, setIsApplyingSuggestion] = useState(false);
+  const [pendingSuggestion, setPendingSuggestion] = useState<{
+    name: string;
+    portion: string;
+    before: { protein: number; carbs: number; fat: number; calories: number };
+    after: { protein: number; carbs: number; fat: number; calories: number };
+  } | null>(null);
 
   const findFoodInDatabase = (text: string) => {
     const q = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -235,18 +241,33 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
    */
   const getSmartSuggestions = (delta: { protein: number; carbs: number; fat: number }) => {
     const suggestions: { label: string; action: () => void; icon: React.ReactNode }[] = [];
+    const currentVisual = calculateVisualMacrosFromDescription(meal.description || "");
     
+    // Helper para preparar sugestão com preview
+    const prepareSuggestion = (name: string, portion: string, label: string) => {
+      const newLine = `• ${name} — ${portion}`;
+      const newDescription = rebuildDescription([...foodLines, newLine], substitutionLines);
+      const afterMacros = calculateVisualMacrosFromDescription(newDescription);
+      
+      setPendingSuggestion({
+        name,
+        portion,
+        before: currentVisual,
+        after: afterMacros
+      });
+    };
+
     // Proteína Baixa
     if (delta.protein < -5) {
       suggestions.push({
         label: `+${Math.abs(Math.round(delta.protein * 4))}g de Frango`,
         icon: <Beef className="w-3 h-3 text-red-500" />,
-        action: () => handleAddManualFoodAction("Frango Grelhado", `${Math.abs(Math.round(delta.protein * 4))}g`)
+        action: () => prepareSuggestion("Frango Grelhado", `${Math.abs(Math.round(delta.protein * 4))}g`, "Frango")
       });
       suggestions.push({
         label: "+1 Ovo Cozido",
         icon: <Beef className="w-3 h-3 text-red-500" />,
-        action: () => handleAddManualFoodAction("Ovo Cozido", "1 unidade")
+        action: () => prepareSuggestion("Ovo Cozido", "1 unidade", "Ovo")
       });
     }
     
@@ -255,22 +276,23 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       suggestions.push({
         label: `+${Math.abs(Math.round(delta.carbs * 5))}g de Arroz`,
         icon: <Wheat className="w-3 h-3 text-amber-500" />,
-        action: () => handleAddManualFoodAction("Arroz Branco", `${Math.abs(Math.round(delta.carbs * 5))}g`)
+        action: () => prepareSuggestion("Arroz Branco", `${Math.abs(Math.round(delta.carbs * 5))}g`, "Arroz")
       });
     }
 
     return suggestions.slice(0, 3);
   };
 
-  const handleAddManualFoodAction = (name: string, portion: string) => {
-    if (!canEdit || !meal.itemId) return;
-    const newLine = `• ${name} — ${portion}`;
+  const confirmSuggestion = () => {
+    if (!pendingSuggestion || !canEdit || !meal.itemId) return;
+    const newLine = `• ${pendingSuggestion.name} — ${pendingSuggestion.portion}`;
     const newFoodLines = [...foodLines, newLine];
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     if (onUpdateItem) {
       onUpdateItem(meal.itemId, { description: newDescription });
-      toast.success(`Adicionado: ${name} (${portion})`);
+      toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
     }
+    setPendingSuggestion(null);
   };
 
   /**
@@ -870,28 +892,83 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             };
             const suggestions = getSmartSuggestions(delta);
             
-            return suggestions.length > 0 && (
-              <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 animate-in fade-in slide-in-from-bottom-2">
-                <div className="flex items-center gap-2 mb-2">
-                  <Settings2 className="w-4 h-4 text-primary" />
-                  <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {suggestions.map((s, idx) => (
-                    <Button 
-                      key={idx} 
-                      variant="outline" 
-                      size="sm" 
-                      className="h-7 text-[10px] gap-1.5 bg-white hover:bg-primary/5 hover:text-primary transition-all border-primary/20"
-                      onClick={s.action}
-                    >
-                      {s.icon}
-                      {s.label}
-                      <Plus className="w-3 h-3 ml-0.5" />
-                    </Button>
-                  ))}
-                </div>
-              </div>
+            return (
+              <>
+                {suggestions.length > 0 && (
+                  <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 animate-in fade-in slide-in-from-bottom-2">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Settings2 className="w-4 h-4 text-primary" />
+                      <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
+                    </div>
+                    <div className="flex flex-wrap gap-2">
+                      {suggestions.map((s, idx) => (
+                        <Button 
+                          key={idx} 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-7 text-[10px] gap-1.5 bg-white hover:bg-primary/5 hover:text-primary transition-all border-primary/20"
+                          onClick={s.action}
+                        >
+                          {s.icon}
+                          {s.label}
+                          <Plus className="w-3 h-3 ml-0.5" />
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                <Dialog open={!!pendingSuggestion} onOpenChange={() => setPendingSuggestion(null)}>
+                  <DialogContent className="max-w-md p-6 rounded-2xl border-border/50 shadow-2xl">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                        <AlertTriangle className="w-5 h-5 text-amber-500" />
+                        Confirmar Ajuste Sugerido
+                      </DialogTitle>
+                      <DialogDescription className="text-sm">
+                        Você deseja adicionar <strong>{pendingSuggestion?.name} ({pendingSuggestion?.portion})</strong> a esta refeição?
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    {pendingSuggestion && (
+                      <div className="py-4 space-y-4">
+                        <div className="grid grid-cols-3 gap-3 p-3 bg-secondary/30 rounded-xl border border-border/50">
+                          {[
+                            { label: "Proteína", before: pendingSuggestion.before.protein, after: pendingSuggestion.after.protein, unit: "g" },
+                            { label: "Carbs", before: pendingSuggestion.before.carbs, after: pendingSuggestion.after.carbs, unit: "g" },
+                            { label: "Fat", before: pendingSuggestion.before.fat, after: pendingSuggestion.after.fat, unit: "g" },
+                          ].map(m => {
+                            const diff = m.after - m.before;
+                            return (
+                              <div key={m.label} className="text-center space-y-1">
+                                <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-wider">{m.label}</p>
+                                <div className="flex flex-col">
+                                  <span className="text-xs line-through text-muted-foreground/60">{m.before}{m.unit}</span>
+                                  <span className="text-sm font-bold">{m.after}{m.unit}</span>
+                                  {diff !== 0 && (
+                                    <span className={`text-[10px] font-bold ${diff > 0 ? 'text-emerald-500' : 'text-rose-500'}`}>
+                                      {diff > 0 ? '+' : ''}{diff}{m.unit}
+                                    </span>
+                                  )}
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="flex gap-2">
+                      <Button variant="outline" className="flex-1" onClick={() => setPendingSuggestion(null)}>
+                        Cancelar
+                      </Button>
+                      <Button className="flex-1" onClick={confirmSuggestion}>
+                        Confirmar Alteração
+                      </Button>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              </>
             );
           })()}
 
