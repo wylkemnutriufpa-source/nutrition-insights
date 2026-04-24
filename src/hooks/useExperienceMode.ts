@@ -435,7 +435,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
         reason: error?.message,
         errorCode: errCode,
         unlockDate: error?.unlock_date,
-        metadata: { duration_ms: durationMs, retries: error?.retries ?? 0 },
+        metadata: {
+          duration_ms: durationMs,
+          retries: error?.retries ?? 0,
+          is_admin: !!(performDbUpdate as any)._lastIsAdmin,
+          was_locked: !!(performDbUpdate as any)._lastWasLocked,
+        },
       });
       throw error;
     } finally {
