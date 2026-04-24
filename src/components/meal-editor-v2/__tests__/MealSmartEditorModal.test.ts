@@ -18,12 +18,12 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
     setSubstitutions(next);
   };
 
-  const getCleanedSubs = () => {
+  const getNormalizedSubs = () => {
     return Array.from(new Set(
       substitutions
         .map(s => String(s).trim().replace(/\s+/g, ' '))
         .filter(s => s.length > 0)
-    )).sort();
+    )).sort().slice(0, 4);
   };
 
   const simulateSave = () => {
@@ -224,6 +224,23 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     expect(saved.substitutions_json).toEqual(expected);
     expect(JSON.stringify(saved.substitutions_json)).toBe(jsonPreview);
     expect(saved.description).toContain(descriptionPreview);
+    expect(saved.description).toMatch(/\n\n🔄 Substituições:\n/);
+  });
+
+  it('should enforce limit of 4 substitutions in both preview and save', () => {
+    const { result } = renderHook(() => useSubstitutionEditor(['1', '2', '3', '4', '5']));
+    
+    let normalized;
+    act(() => {
+      normalized = result.current.getNormalizedSubs();
+    });
+
+    expect(normalized).toHaveLength(4);
+    expect(normalized).toEqual(['1', '2', '3', '4']);
+
+    const saved = result.current.simulateSave();
+    expect(saved.substitutions_json).toHaveLength(4);
+    expect(saved.description).not.toContain('5');
   });
 });
 
