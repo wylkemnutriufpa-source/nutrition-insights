@@ -41,10 +41,12 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
     };
   };
 
-  const handleCancel = () => {
-    setDescription(initialDescription);
-    setSubstitutions(initialSubs);
-    onOpenChange(false);
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      setDescription(initialDescription);
+      setSubstitutions(initialSubs);
+    }
+    onOpenChange(newOpen);
   };
 
   const handleSave = () => {
@@ -56,13 +58,13 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
   return { 
     substitutions, 
     handleSubChange, 
-    getCleanedSubs, 
+    getNormalizedSubs: getCleanedSubs, 
     setSubstitutions, 
     simulateSave, 
     setDescription, 
     description, 
     onOpenChange, 
-    handleCancel,
+    handleOpenChange,
     handleSave,
     updateItem
   };
@@ -151,7 +153,7 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     expect(result.current.description).toBe('Modified Description');
 
     act(() => {
-      result.current.handleCancel();
+      result.current.handleOpenChange(false);
     });
 
     // Verification: updateItem was NOT called
@@ -176,6 +178,52 @@ describe('MealSmartEditorModal Substitution Logic', () => {
 
     expect(saved.substitutions_json).toEqual(expectedArray);
     expect(JSON.stringify(saved.substitutions_json)).toBe(expectedJson);
+  });
+
+  it('should reset to item state when modal is closed and re-opened in test', () => {
+    const initialDesc = 'Initial';
+    const initialSubs = ['Initial Sub'];
+    const { result } = renderHook(() => useSubstitutionEditor(initialSubs, initialDesc));
+
+    // Simulate change
+    act(() => {
+      result.current.setDescription('Modified');
+      result.current.handleSubChange(0, 'Modified Sub');
+    });
+
+    // Close modal (simulate cancel/overlay click)
+    act(() => {
+      result.current.handleOpenChange(false);
+    });
+
+    // Verify reset
+    expect(result.current.description).toBe(initialDesc);
+    expect(result.current.substitutions).toEqual(initialSubs);
+
+    // Re-verify that updateItem was NOT called
+    expect(result.current.updateItem).not.toHaveBeenCalled();
+  });
+
+  it('should return exactly same values for description preview and saved json', () => {
+    const { result } = renderHook(() => useSubstitutionEditor(['  Banana  ', 'Abacaxi ', 'Abacaxi']));
+    
+    let normalized;
+    act(() => {
+      normalized = result.current.getNormalizedSubs();
+    });
+
+    const expected = ['Abacaxi', 'Banana'];
+    expect(normalized).toEqual(expected);
+
+    // Simulation of preview logic in component
+    const descriptionPreview = `🔄 Substituições:\n${normalized.join("\n")}`;
+    const jsonPreview = JSON.stringify(normalized);
+
+    const saved = result.current.simulateSave();
+    
+    expect(saved.substitutions_json).toEqual(expected);
+    expect(JSON.stringify(saved.substitutions_json)).toBe(jsonPreview);
+    expect(saved.description).toContain(descriptionPreview);
   });
 });
 
