@@ -13,7 +13,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { supabase } from "@/integrations/supabase/client";
-import { fmtMacro, isMacroInconsistent } from "@/lib/formatMacros";
+import { fmtMacro, isMacroInconsistent, getMacroStatusColor, getMacroStatusLabel, safeNum } from "@/lib/formatMacros";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import {
   validatePortion,
@@ -228,7 +228,11 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     });
   };
 
-  const recalculateMacrosFromDescription = (description: string) => {
+  /**
+   * REGRA: O frontend NÃO recalcula macros para persistência.
+   * Esta função é usada APENAS para VALIDAÇÃO VISUAL (Frontend Guard).
+   */
+  const calculateVisualMacrosFromDescription = (description: string) => {
     const { foodLines } = parseDescriptionLines(description);
     let totalCal = 0, totalProt = 0, totalCarb = 0, totalFat = 0;
     
@@ -237,7 +241,6 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       const name = content.split("—")[0]?.trim() || content;
       const match = findFoodInDatabase(name);
       if (match) {
-        // Simple scaling based on grams if possible
         const portionMatch = content.match(/—\s*(\d+)\s*g/i);
         const dbPortionMatch = match.portion.match(/(\d+)\s*g/i);
         
@@ -256,10 +259,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     });
 
     return {
-      calories_target: Math.round(totalCal),
-      protein_target: Math.round(totalProt),
-      carbs_target: Math.round(totalCarb),
-      fat_target: Math.round(totalFat),
+      calories: Math.round(totalCal),
+      protein: Math.round(totalProt),
+      carbs: Math.round(totalCarb),
+      fat: Math.round(totalFat),
     };
   };
   // Fetch visual library images when picker opens
@@ -778,15 +781,20 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
               ) : (
                 <div className="grid grid-cols-4 gap-2">
                   {[
-                    { label: "Calorias", value: calories, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" /> },
-                    { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" /> },
-                    { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" /> },
-                    { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" /> },
+                    { label: "Calorias", value: calories, unit: "", icon: <Flame className="w-5 h-5 text-orange-500" />, requested: calculateVisualMacrosFromDescription(meal.description || "").calories },
+                    { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" />, requested: calculateVisualMacrosFromDescription(meal.description || "").protein },
+                    { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" />, requested: calculateVisualMacrosFromDescription(meal.description || "").carbs },
+                    { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" />, requested: calculateVisualMacrosFromDescription(meal.description || "").fat },
                   ].map(m => (
-                    <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center">
+                    <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center border border-transparent hover:border-border transition-colors">
                       <div className="flex justify-center mb-1.5">{m.icon}</div>
                       <p className="text-[10px] text-muted-foreground">{m.label}</p>
                       <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
+                      <div className="flex items-center justify-center gap-1 mt-1">
+                        <span className={`text-[9px] font-medium ${getMacroStatusColor(m.requested, Number(m.value))}`}>
+                          {getMacroStatusLabel(m.requested, Number(m.value))}
+                        </span>
+                      </div>
                     </div>
                   ))}
                 </div>
