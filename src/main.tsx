@@ -2,6 +2,11 @@ import { createRoot } from "react-dom/client";
 import "./i18n";
 import App from "./App.tsx";
 import "./index.css";
+import { stampBuildIdentity } from "./lib/buildInfo";
+
+// Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
+// Crítico para confirmar que a versão publicada é a que está rodando.
+stampBuildIdentity();
 
 /**
  * Preview / iframe detection — used to prevent SW registration in dev.
