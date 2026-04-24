@@ -230,8 +230,17 @@ export default function MealPlanEditorV2() {
       // Consolida automaticamente itens legados (day != 0) para o slot
       // canônico (day=0) antes de salvar, garantindo consistência futura.
       const { planLegacyConsolidation } = await import("@/lib/legacyDayConsolidation");
+      const { logConsolidationPlan } = await import("@/lib/legacyMigrationLogger");
+      const { resolveEffectiveDay } = await import("@/lib/resolveEffectiveDay");
       const plan0 = planLegacyConsolidation(store.items);
       if (plan0.toMove.length > 0) {
+        const itemsById = new Map(
+          store.items.map((i) => [i.id, { meal_type: i.meal_type, day_of_week: i.day_of_week }] as const)
+        );
+        logConsolidationPlan(plan0, {
+          effectiveDay: resolveEffectiveDay(store.items),
+          itemsById,
+        });
         plan0.toMove.forEach((id) => store.updateItem(id, { day_of_week: 0 } as any));
         toast.info(`${plan0.toMove.length} refeição(ões) legada(s) consolidada(s) em day 0.`);
       }
