@@ -16,7 +16,7 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
   // 1. Fetch with specific column filters to test null modes and inconsistent states
   const { data: plan, error: dbError } = await diagnosticClient
     .from('meal_plans')
-    .select('id, status, is_active, plan_mode, patient_id, tenant_id')
+    .select('id, plan_status, is_active, plan_mode, patient_id, tenant_id')
     .eq('id', planId)
     .single();
 
@@ -27,7 +27,7 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
   const issues: string[] = [];
   
   // Validation for production rules
-  if (plan.status !== 'published') issues.push(`Status is ${plan.status}, expected 'published'`);
+  if (plan.plan_status !== 'published_to_patient' && plan.plan_status !== 'published') issues.push(`Status is ${plan.plan_status}, expected 'published'`);
   if (!plan.is_active) issues.push(`Plan is not marked as active`);
   
   // Security/Consistency check: patient_id mismatch is a CRITICAL leak
@@ -36,9 +36,9 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
   // 2. Simulate multi-tenant/status visibility (The "Ghost Plan" test)
   const { data: visiblePlans, error: visibilityError } = await diagnosticClient
     .from('meal_plans')
-    .select('id, status, is_active, plan_mode')
+    .select('id, plan_status, is_active, plan_mode')
     .eq('patient_id', patientId)
-    .in('status', ['published'])
+    .in('plan_status', ['published', 'published_to_patient'])
     .eq('is_active', true);
 
   if (visibilityError) {
