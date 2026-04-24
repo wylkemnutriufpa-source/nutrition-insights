@@ -802,6 +802,7 @@ export default function AdminExperienceModeAudit() {
                     <th className="py-2 pr-3 font-medium">Quando</th>
                     <th className="py-2 pr-3 font-medium">Resultado</th>
                     <th className="py-2 pr-3 font-medium">Usuário</th>
+                    <th className="py-2 pr-3 font-medium">Contexto</th>
                     <th className="py-2 pr-3 font-medium">Tentou</th>
                     <th className="py-2 pr-3 font-medium">Motivo</th>
                     <th className="py-2 pr-3 font-medium">Correlation</th>
