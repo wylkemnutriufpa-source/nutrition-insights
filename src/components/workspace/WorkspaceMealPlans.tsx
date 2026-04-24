@@ -14,23 +14,42 @@ export default function WorkspaceMealPlans({ search }: Props) {
 
   useEffect(() => {
     if (!user?.id) return;
-    const fetch = async () => {
-      const { data } = await supabase
+    const fetchPlans = async () => {
+      const { data, error } = await supabase
         .from("meal_plans")
-        .select("id, plan_name, lifecycle_state, is_active, created_at, patient_id, profiles!meal_plans_patient_id_fkey(full_name)")
+        .select("id, title, plan_status, is_active, created_at, patient_id")
         .eq("nutritionist_id", user.id)
         .order("created_at", { ascending: false })
         .limit(50);
-      setPlans(data || []);
+
+      if (error) {
+        console.error("[WorkspaceMealPlans] Falha ao buscar planos:", error);
+        setPlans([]);
+        setLoading(false);
+        return;
+      }
+
+      const rows = data || [];
+      const patientIds = Array.from(new Set(rows.map((r: any) => r.patient_id).filter(Boolean)));
+      let nameMap = new Map<string, string>();
+      if (patientIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", patientIds);
+        (profiles || []).forEach((p: any) => nameMap.set(p.user_id, p.full_name));
+      }
+
+      setPlans(rows.map((r: any) => ({ ...r, patient_name: nameMap.get(r.patient_id) || "Sem paciente" })));
       setLoading(false);
     };
-    fetch();
+    fetchPlans();
   }, [user?.id]);
 
   const filtered = plans.filter((p: any) => {
     if (!search) return true;
-    const name = p.plan_name || "";
-    const patient = (p.profiles as any)?.full_name || "";
+    const name = p.title || "";
+    const patient = p.patient_name || "";
     return name.toLowerCase().includes(search.toLowerCase()) || patient.toLowerCase().includes(search.toLowerCase());
   });
 
