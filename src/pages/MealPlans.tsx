@@ -61,6 +61,7 @@ export default function MealPlans() {
   const { showSimplifiedActions, showProtocols } = useExperienceUI();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "",
@@ -74,12 +75,14 @@ export default function MealPlans() {
   const fetchPlans = async () => {
     if (!user) return;
     setLoading(true);
+    setLoadError(null);
     let query = supabase.from("meal_plans").select("*")
       .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
     
     const { data, error } = await withTenantFilter(query, tenantId);
     if (error) {
       console.error("[MealPlans] Falha ao buscar planos:", error);
+      setLoadError(error.message || "Não foi possível carregar os planos.");
       setPlans([]);
       setLoading(false);
       return;
@@ -406,6 +409,22 @@ export default function MealPlans() {
         {loading ? (
           <div className="flex items-center justify-center h-40">
             <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+          </div>
+        ) : loadError ? (
+          <div
+            data-testid="meal-plans-error"
+            className="glass rounded-xl p-10 text-center border border-destructive/30"
+          >
+            <ClipboardList className="w-12 h-12 mx-auto text-destructive mb-3" />
+            <h3 className="font-display font-semibold text-lg mb-1">Não conseguimos carregar seus planos</h3>
+            <p className="text-sm text-muted-foreground mb-4">{loadError}</p>
+            <Button
+              variant="outline"
+              onClick={() => void fetchPlans()}
+              data-testid="meal-plans-retry"
+            >
+              Tentar novamente
+            </Button>
           </div>
         ) : plans.length === 0 ? (
           <div className="glass rounded-xl p-12 text-center">
