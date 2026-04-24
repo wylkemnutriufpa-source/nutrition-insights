@@ -75,6 +75,74 @@ export function buildTrend(
  *
  * Retorna ordenado por count desc (sem cap — pagine no consumidor).
  */
+/**
+ * Resumo agregado de uma janela de tendência: total no período atual,
+ * total no período anterior (mesmo tamanho, imediatamente antes) e
+ * variação percentual.
+ *
+ * Para "período anterior" usamos as mesmas linhas brutas, deslocando
+ * a janela: ex. trend de 7d hoje → compara com os 7d antes desses 7d.
+ *
+ * Retorna `deltaPct = null` quando previous=0 e current>0 (variação
+ * indefinida / "novo"), ou 0 quando ambos são zero.
+ */
+export interface TrendSummary {
+  currentUnknown: number;
+  currentDrop: number;
+  previousUnknown: number;
+  previousDrop: number;
+  deltaUnknownPct: number | null;
+  deltaDropPct: number | null;
+}
+
+function pctDelta(current: number, previous: number): number | null {
+  if (previous === 0 && current === 0) return 0;
+  if (previous === 0) return null;
+  return Math.round(((current - previous) / previous) * 100);
+}
+
+export function summarizeTrend(
+  rows: AlertTrendRow[],
+  days: number,
+  now: Date = new Date(),
+): TrendSummary {
+  const today = new Date(now);
+  today.setHours(0, 0, 0, 0);
+  const dayMs = 24 * 60 * 60 * 1000;
+  // current window: [today - (days-1), today]
+  const currentStart = today.getTime() - (days - 1) * dayMs;
+  const currentEnd = today.getTime() + dayMs - 1; // inclui dia inteiro de hoje
+  // previous window: [today - (2*days-1), today - days]
+  const previousStart = today.getTime() - (2 * days - 1) * dayMs;
+  const previousEnd = today.getTime() - days * dayMs + dayMs - 1;
+
+  let currentUnknown = 0;
+  let currentDrop = 0;
+  let previousUnknown = 0;
+  let previousDrop = 0;
+
+  for (const r of rows) {
+    const ts = Date.parse(r.created_at || "");
+    if (Number.isNaN(ts)) continue;
+    if (ts >= currentStart && ts <= currentEnd) {
+      if (r.alert_type === "PLAN_STATUS_UNKNOWN") currentUnknown += 1;
+      else if (r.alert_type === "PLAN_VISIBILITY_DROP") currentDrop += 1;
+    } else if (ts >= previousStart && ts <= previousEnd) {
+      if (r.alert_type === "PLAN_STATUS_UNKNOWN") previousUnknown += 1;
+      else if (r.alert_type === "PLAN_VISIBILITY_DROP") previousDrop += 1;
+    }
+  }
+
+  return {
+    currentUnknown,
+    currentDrop,
+    previousUnknown,
+    previousDrop,
+    deltaUnknownPct: pctDelta(currentUnknown, previousUnknown),
+    deltaDropPct: pctDelta(currentDrop, previousDrop),
+  };
+}
+
 export function aggregateUnknownByWorkspace(
   rows: PlanRowForBreakdown[],
 ): UnknownStatusBreakdown[] {
