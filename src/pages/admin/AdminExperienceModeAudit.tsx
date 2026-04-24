@@ -498,7 +498,7 @@ export default function AdminExperienceModeAudit() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <Label className="text-xs">Limite de retries</Label>
               <Input
                 type="number"
@@ -511,43 +511,74 @@ export default function AdminExperienceModeAudit() {
                 className="h-8 w-20"
                 data-testid="emode-retry-threshold-input"
               />
+              <div className="relative flex-1 min-w-[180px]">
+                <Search className="absolute left-2 top-2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  value={highRetrySearch}
+                  onChange={(e) => setHighRetrySearch(e.target.value)}
+                  placeholder="Filtrar por correlationId…"
+                  className="h-8 pl-7 text-xs"
+                  data-testid="emode-high-retry-search"
+                  aria-label="Filtrar correlationIds com retries acima do limite"
+                />
+              </div>
             </div>
-            <ul className="space-y-1.5 max-h-48 overflow-auto">
-              {highRetryCids.slice(0, 20).map((item) => {
-                const badge = OUTCOME_BADGES[item.lastOutcome] || {
-                  label: item.lastOutcome,
-                  className: "bg-muted",
-                };
+            {(() => {
+              const q = highRetrySearch.trim().toLowerCase();
+              const visible = q
+                ? highRetryCids.filter((it) => it.cid.toLowerCase().includes(q))
+                : highRetryCids;
+              if (visible.length === 0) {
                 return (
-                  <li
-                    key={item.cid}
-                    data-testid="emode-high-retry-row"
-                    className="flex items-center justify-between gap-2 text-xs border border-destructive/20 rounded px-2 py-1.5 bg-background"
+                  <p
+                    className="text-xs text-muted-foreground py-2"
+                    data-testid="emode-high-retry-empty"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-mono truncate">{item.cid}</span>
-                      <Badge variant="outline" className={badge.className}>
-                        {badge.label}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-destructive font-semibold">
-                        {item.retries} retries
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => jumpToRow(item.cid, item.firstId)}
-                        className="h-7 text-[11px]"
-                        data-testid="emode-jump-to-audit"
-                      >
-                        Ver na auditoria →
-                      </Button>
-                    </div>
-                  </li>
+                    Nenhum correlationId corresponde à busca.
+                  </p>
                 );
-              })}
-            </ul>
+              }
+              return (
+                <ul className="space-y-1.5 max-h-48 overflow-auto">
+                  {visible.slice(0, 20).map((item) => {
+                    const badge = OUTCOME_BADGES[item.lastOutcome] || {
+                      label: item.lastOutcome,
+                      className: "bg-muted",
+                    };
+                    return (
+                      <li
+                        key={item.cid}
+                        data-testid="emode-high-retry-row"
+                        className="flex items-center justify-between gap-2 text-xs border border-destructive/20 rounded px-2 py-1.5 bg-background"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono truncate">{item.cid}</span>
+                          <Badge variant="outline" className={badge.className}>
+                            {badge.label}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-destructive font-semibold">
+                            {item.retries} retries
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => jumpToRow(item.cid, item.firstId)}
+                            className="h-7 text-[11px] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+                            data-testid="emode-jump-to-audit"
+                            aria-label={`Ver na auditoria o correlationId ${item.cid}`}
+                          >
+                            Ver na auditoria →
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
