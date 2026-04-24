@@ -328,5 +328,28 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     
     expect(isOverLimit).toBe(true);
   });
+
+  it('should handle race condition between onEscapeKeyDown and onInteractOutside', () => {
+    const initialDesc = 'Initial';
+    const { result } = renderHook(() => useSubstitutionEditor([], initialDesc));
+    
+    act(() => {
+      result.current.setDescription('Modified');
+    });
+
+    const setDescSpy = vi.spyOn(result.current, 'setDescription');
+
+    act(() => {
+      // Simulate rapid fire calls from both handlers
+      result.current.handleOpenChange(false);
+      result.current.handleOpenChange(false);
+    });
+
+    // Reset should only trigger once due to the openState guard
+    // First call triggers reset(initialDesc), second call is ignored.
+    expect(setDescSpy).toHaveBeenCalledWith(initialDesc);
+    expect(setDescSpy).toHaveBeenCalledTimes(2); // 1 for 'Modified', 1 for reset
+    expect(result.current.updateItem).not.toHaveBeenCalled();
+  });
 });
 
