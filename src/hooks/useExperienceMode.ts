@@ -263,54 +263,71 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     });
   }, []);
 
-  /** Internal: perform the actual DB write for a given mode (no state writes). */
+  /** Internal: perform the actual DB write for a given mode (no state writes).
+   * Wrapped with timeout + automatic retries on transient errors so slow
+   * connections don't hang the UI and the same correlationId is preserved. */
   const performDbUpdate = useCallback(async (m: ExperienceMode, correlationId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      const err: ModeChangeError = Object.assign(new Error("Não autenticado"), {
-        code: "NOT_AUTH" as const,
-        correlationId,
-      });
-      throw err;
-    }
+    return withRetries(
+      async () => {
+        const { data: { user } } = await withTimeout(supabase.auth.getUser());
+        if (!user) {
+          const err: ModeChangeError = Object.assign(new Error("Não autenticado"), {
+            code: "NOT_AUTH" as const,
+            correlationId,
+          });
+          throw err;
+        }
 
-    const { data: profile, error: fetchError } = await supabase
-      .from("profiles")
-      .select("experience_mode_locked, unlock_date")
-      .eq("user_id", user.id)
-      .maybeSingle();
+        const { data: profile, error: fetchError } = await withTimeout(
+          supabase
+            .from("profiles")
+            .select("experience_mode_locked, unlock_date")
+            .eq("user_id", user.id)
+            .maybeSingle()
+        );
 
-    if (fetchError) throw fetchError;
+        if (fetchError) {
+          const err: ModeChangeError = Object.assign(
+            new Error(fetchError.message || "Falha ao consultar perfil"),
+            { code: "DB_ERROR" as const, correlationId }
+          );
+          throw err;
+        }
 
-    if (profile?.experience_mode_locked && m !== 'basic') {
-      const unlockDate = (profile as any).unlock_date as string | null;
-      const block = buildBlockReason({
-        attemptedMode: m,
-        unlockDate,
-        baseReason: "Sua conta está restrita ao modo Básico temporariamente.",
-      });
-      const error: ModeChangeError = Object.assign(new Error(block.description), {
-        code: "MODE_LOCKED" as const,
-        correlationId,
-        unlock_date: unlockDate,
-        blockTitle: block.title,
-        blockDescription: block.description,
-      });
-      throw error;
-    }
+        if (profile?.experience_mode_locked && m !== 'basic') {
+          const unlockDate = (profile as any).unlock_date as string | null;
+          const block = buildBlockReason({
+            attemptedMode: m,
+            unlockDate,
+            baseReason: "Sua conta está restrita ao modo Básico temporariamente.",
+          });
+          const error: ModeChangeError = Object.assign(new Error(block.description), {
+            code: "MODE_LOCKED" as const,
+            correlationId,
+            unlock_date: unlockDate,
+            blockTitle: block.title,
+            blockDescription: block.description,
+          });
+          throw error;
+        }
 
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ experience_mode: m } as any)
-      .eq("user_id", user.id);
+        const { error: updateError } = await withTimeout(
+          supabase
+            .from("profiles")
+            .update({ experience_mode: m } as any)
+            .eq("user_id", user.id)
+        );
 
-    if (updateError) {
-      const err: ModeChangeError = Object.assign(new Error(updateError.message || "Falha ao atualizar"), {
-        code: "DB_ERROR" as const,
-        correlationId,
-      });
-      throw err;
-    }
+        if (updateError) {
+          const err: ModeChangeError = Object.assign(
+            new Error(updateError.message || "Falha ao atualizar"),
+            { code: "DB_ERROR" as const, correlationId }
+          );
+          throw err;
+        }
+      },
+      { correlationId }
+    );
   }, []);
 
   const updateModeInDb = useCallback(async (m: ExperienceMode, previous: ExperienceMode) => {
