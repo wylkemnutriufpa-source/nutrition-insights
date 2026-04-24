@@ -9,7 +9,7 @@ import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw } from "
 import { Button } from "@/components/ui/button";
 
 export default function ExperienceModeStatusSection() {
-  const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, retryLastMode } =
+  const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode } =
     useExperienceMode();
 
   // Saving in-flight
