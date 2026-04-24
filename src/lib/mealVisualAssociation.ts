@@ -108,20 +108,20 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
     return null;
   }
 
-  // === PRIORITY 1: Exact full-title alias match ===
+  // === PRIORITY 1: Strict match via Alias Map (Verified Sources) ===
   if (aliasMap.has(norm)) return aliasMap.get(norm)!;
 
-  // === PRIORITY 2: Try longest sub-phrase match from alias map ===
-  // This catches "tapioca com ovo" inside "tapioca com ovo e café"
+  // === PRIORITY 2: Longest sub-phrase match (Verified Sources) ===
   const phraseMatch = findBestAliasMatch(norm, aliasMap);
   if (phraseMatch) return phraseMatch;
 
-  // === PRIORITY 3: Single keyword extraction (protein/fruit/misc) ===
+  // === PRIORITY 3: Strict keyword matching (No generic fallbacks) ===
   const words = norm.split(/\s+/);
   for (const word of words) {
     if (CARB_KEYWORDS.has(word) || ACCESSORY_WORDS.has(word)) continue;
     if (word.length < 3) continue;
-    // Try exact single-word alias match
+    
+    // EXCLUSIVELY via alias map, no generic string fallbacks
     if (aliasMap.has(word)) return aliasMap.get(word)!;
   }
 

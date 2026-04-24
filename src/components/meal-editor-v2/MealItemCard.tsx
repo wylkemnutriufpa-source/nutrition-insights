@@ -76,6 +76,11 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   });
 
   const resolvedImage = imageUrl || signedFallback || null;
+  
+  // LOG: Audit resolved image for P0 investigation
+  if (resolvedImage && (item as any).visual_library_item_id) {
+    // console.log("[IMAGE_RESOLVED]", { itemId: item.id, title: item.title, hasDirectUrl: !!imageUrl, hasFallback: !!signedFallback });
+  }
 
   return (
     <motion.div

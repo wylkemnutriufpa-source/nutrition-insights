@@ -8,6 +8,7 @@ import type { MealVisualItem } from "@/types/mealVisualLibrary";
 const cache = new Map<string, MealVisualItem>();
 
 export function useMealVisualItem(visualLibraryItemId: string | null | undefined) {
+  // STRICT: Do not allow generic fallbacks if the ID is missing
   const [item, setItem] = useState<MealVisualItem | null>(
     visualLibraryItemId ? cache.get(visualLibraryItemId) || null : null
   );
