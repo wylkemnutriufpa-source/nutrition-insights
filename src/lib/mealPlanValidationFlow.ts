@@ -94,6 +94,22 @@ export async function runValidateAndFixMealPlan({
     };
   }
 
+  // 🚧 Bloqueios críticos que o autofix NÃO pode resolver — falhar cedo com mensagem clara
+  const errors = (validationResult as any).errors || [];
+  const buckets = (validationResult as any).buckets || {};
+  const blockedRules = [
+    ...errors.map((e: any) => `${e.rule || ""} ${e.message || ""}`),
+    ...(buckets.bloquear_publicacao || []).map((b: any) => b.message || ""),
+  ].join(" | ").toLowerCase();
+
+  if (blockedRules.includes("sem_meta_calorica") || blockedRules.includes("meta calórica") || blockedRules.includes("anamnese ou a avaliação")) {
+    throw new Error("Paciente não tem meta calórica definida. Complete a Anamnese ou a Avaliação Física antes de validar o plano.");
+  }
+
+  if (blockedRules.includes("plano_vazio") || blockedRules.includes("não tem refeições") || blockedRules.includes("nao tem refeicoes")) {
+    throw new Error("Plano vazio — adicione refeições ou use 'Gerar plano' antes de validar.");
+  }
+
   if (!tenantId) {
     throw new Error("Contexto da clínica não carregado para corrigir o plano.");
   }
