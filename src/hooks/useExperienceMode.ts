@@ -21,11 +21,12 @@ export type ExperienceRole = "professional" | "patient";
 const STORAGE_KEY = "fj_experience_mode";
 
 export interface ModeChangeError extends Error {
-  code?: "MODE_LOCKED" | "OFFLINE" | "DB_ERROR" | "NOT_AUTH";
+  code?: "MODE_LOCKED" | "OFFLINE" | "DB_ERROR" | "NOT_AUTH" | "TIMEOUT" | "NETWORK";
   correlationId?: string;
   unlock_date?: string | null;
   blockTitle?: string;
   blockDescription?: string;
+  retries?: number;
 }
 
 /**
