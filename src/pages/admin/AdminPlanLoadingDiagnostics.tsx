@@ -57,6 +57,32 @@ const TRACKED_ALERT_TYPES = [
 
 const TREND_TRACKED_TYPES = ["PLAN_STATUS_UNKNOWN", "PLAN_VISIBILITY_DROP"] as const;
 
+function buildTrend(
+  rows: Array<{ alert_type: string; created_at: string }>,
+  days: number,
+): TrendBucket[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const buckets: TrendBucket[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+    buckets.push({
+      date: d.toISOString().slice(0, 10),
+      PLAN_STATUS_UNKNOWN: 0,
+      PLAN_VISIBILITY_DROP: 0,
+    });
+  }
+  const idx = new Map(buckets.map((b, i) => [b.date, i]));
+  for (const r of rows) {
+    const day = (r.created_at || "").slice(0, 10);
+    const i = idx.get(day);
+    if (i === undefined) continue;
+    if (r.alert_type === "PLAN_STATUS_UNKNOWN") buckets[i].PLAN_STATUS_UNKNOWN += 1;
+    else if (r.alert_type === "PLAN_VISIBILITY_DROP") buckets[i].PLAN_VISIBILITY_DROP += 1;
+  }
+  return buckets;
+}
+
 export default function AdminPlanLoadingDiagnostics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
