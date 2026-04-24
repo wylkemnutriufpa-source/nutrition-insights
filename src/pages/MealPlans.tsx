@@ -544,7 +544,8 @@ export default function MealPlans() {
                 </motion.div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </DashboardLayout>
