@@ -27,7 +27,7 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
   };
 
   const simulateSave = () => {
-    const cleanedSubs = getCleanedSubs();
+    const cleanedSubs = getNormalizedSubs();
     let finalDescription = description;
     
     if (cleanedSubs.length > 0) {
@@ -58,8 +58,8 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
   return { 
     substitutions, 
     handleSubChange, 
-    getNormalizedSubs: getCleanedSubs, 
-    setSubstitutions, 
+    getNormalizedSubs, 
+    setSubstitutions,
     simulateSave, 
     setDescription, 
     description, 

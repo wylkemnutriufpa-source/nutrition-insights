@@ -75,9 +75,7 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = () => {
-    // 1. Limpeza, normalização e desduplicação das substituições
-    const cleanedSubs = getNormalizedSubs();
-
+    // 1. Limpeza, normalização e desduplicação das substituições (limite de 4)
     const cleanedSubs = getNormalizedSubs().slice(0, 4);
 
     let finalDescription = description;
