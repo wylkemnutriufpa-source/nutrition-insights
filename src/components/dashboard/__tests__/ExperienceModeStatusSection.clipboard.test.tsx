@@ -66,8 +66,7 @@ describe("CorrelationIdBadge — clipboard behaviour", () => {
   afterEach(() => {
     // restore clipboard on navigator
     try {
-      // @ts-expect-error: cleanup
-      delete (navigator as any).clipboard;
+      delete (navigator as unknown as { clipboard?: unknown }).clipboard;
     } catch {
       /* ignore */
     }
