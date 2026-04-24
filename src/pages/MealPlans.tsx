@@ -51,7 +51,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
-import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS } from "@/lib/planStatusLabels";
+import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
 
 type MealPlan = Tables<"meal_plans">;
 
