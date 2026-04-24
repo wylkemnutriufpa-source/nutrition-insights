@@ -38,6 +38,19 @@ const UNKNOWN_FALLBACK: PlanStatusMeta = {
 
 export const KNOWN_PLAN_STATUS_KEYS = Object.keys(KNOWN_PLAN_STATUSES);
 
+/**
+ * Retorna `true` somente quando `rawStatus` é uma string não vazia que não
+ * existe no catálogo. Ausência (null/undefined/"") NÃO é considerada
+ * desconhecida — é tratada como "sem status" (ou "draft" implícito) e fica
+ * fora do bucket "Desconhecido" do filtro/diagnóstico.
+ */
+export function isTrulyUnknownPlanStatus(rawStatus: string | null | undefined): boolean {
+  if (rawStatus === null || rawStatus === undefined) return false;
+  const trimmed = String(rawStatus).trim();
+  if (trimmed === "") return false;
+  return !KNOWN_PLAN_STATUS_KEYS.includes(trimmed);
+}
+
 const reportedUnknown = new Set<string>();
 
 /** Remote alert deduplicated per session. */
