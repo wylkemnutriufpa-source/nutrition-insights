@@ -221,12 +221,47 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   });
 
   const [isApplyingSuggestion, setIsApplyingSuggestion] = useState(false);
+  const [history, setHistory] = useState<{
+    description: string;
+    protein: number;
+    carbs: number;
+    fat: number;
+    calories: number;
+    timestamp: number;
+  }[]>([]);
+  
   const [pendingSuggestion, setPendingSuggestion] = useState<{
     name: string;
     portion: string;
     before: { protein: number; carbs: number; fat: number; calories: number };
     after: { protein: number; carbs: number; fat: number; calories: number };
   } | null>(null);
+
+  const saveToHistory = () => {
+    const current = {
+      description: meal.description || "",
+      protein: Number(meal.protein_target || 0),
+      carbs: Number(meal.carbs_target || 0),
+      fat: Number(meal.fat_target || 0),
+      calories: Number(meal.calories_target || 0),
+      timestamp: Date.now()
+    };
+    setHistory(prev => [current, ...prev].slice(0, 5));
+  };
+
+  const undoLastChange = () => {
+    if (history.length === 0 || !meal.itemId || !onUpdateItem) return;
+    const last = history[0];
+    onUpdateItem(meal.itemId, {
+      description: last.description,
+      protein_target: last.protein,
+      carbs_target: last.carbs,
+      fat_target: last.fat,
+      calories_target: last.calories
+    });
+    setHistory(prev => prev.slice(1));
+    toast.success("↩ Alteração desfeita com sucesso");
+  };
 
   const findFoodInDatabase = (text: string) => {
     const q = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
@@ -289,6 +324,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newFoodLines = [...foodLines, newLine];
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     if (onUpdateItem) {
+      saveToHistory();
       onUpdateItem(meal.itemId, { description: newDescription });
       toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
     }
@@ -414,6 +450,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       return;
     }
     if (onUpdateItem) {
+      saveToHistory();
       onUpdateItem(meal.itemId, { title: titleValue.trim() });
     }
     setEditingTitle(false);
@@ -559,6 +596,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       carbs_target: macroValues.carbs ? Number(macroValues.carbs) : null,
       fat_target: macroValues.fat ? Number(macroValues.fat) : null,
     };
+    saveToHistory();
     onUpdateItem(meal.itemId, patch);
     setEditingMacros(false);
     toast.success("Macros atualizados manualmente");
@@ -913,9 +951,22 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
               <>
                 {suggestions.length > 0 && (
                   <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Settings2 className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Settings2 className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
+                      </div>
+                      {history.length > 0 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                          onClick={undoLastChange}
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Desfazer ({history.length})
+                        </Button>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {suggestions.map((s, idx) => (
@@ -1075,7 +1126,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 h-8" onClick={handleAddManualFood} disabled={!manualFoodName.trim()}>
+                    <Button size="sm" className="flex-1 h-8" onClick={() => { saveToHistory(); handleAddManualFood(); }} disabled={!manualFoodName.trim()}>
                       <Check className="w-3.5 h-3.5 mr-1" /> Adicionar
                     </Button>
                     <Button size="sm" variant="ghost" className="h-8" onClick={() => setShowManualFoodInput(false)}>
@@ -1130,7 +1181,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" className="flex-1 h-8" onClick={() => handleUpdateLine(idx)}>
+                          <Button size="sm" className="flex-1 h-8" onClick={() => { saveToHistory(); handleUpdateLine(idx); }}>
                             <Check className="w-3.5 h-3.5 mr-1" /> Salvar Alterações
                           </Button>
                           <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditingLineIdx(null)}>
@@ -1162,7 +1213,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingLineIdx(idx);
+                                  saveToHistory();
+                                  setEditingLineIdx(idx);
                               setLineNameValue(foodName);
                               setLinePortionValue(portion || "");
                               setLinePortionError(null);
@@ -1177,6 +1229,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
+                              saveToHistory();
                               handleRemoveLine(idx);
                             }}
                             className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
@@ -1291,7 +1344,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       variant="ghost"
                       size="sm"
                       className="ml-auto gap-1.5 text-[10px] h-6 px-2"
-                      onClick={(e) => { e.stopPropagation(); handleRegenerateSubstitutions(); }}
+                      onClick={(e) => { e.stopPropagation(); saveToHistory(); handleRegenerateSubstitutions(); }}
                     >
                       <RefreshCw className="w-3 h-3" />
                       Regenerar
@@ -1316,7 +1369,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             }}
                             className="h-9 text-xs flex-1"
                           />
-                          <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => handleUpdateSubLine(idx)}>
+                          <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => { saveToHistory(); handleUpdateSubLine(idx); }}>
                             <Check className="w-4 h-4" />
                           </Button>
                           <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setEditingSubLineIdx(null)}>
@@ -1377,6 +1430,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  saveToHistory();
                                   handleRemoveSubLine(idx);
                                 }}
                                 className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
@@ -1408,7 +1462,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                           placeholder="Ex: Frango → Peixe (150g), Carne (150g)"
                           className="h-8 text-[11px]"
                         />
-                        <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleAddManualSub} disabled={!manualSubInput.trim()}>
+                        <Button size="icon" className="h-8 w-8 shrink-0" onClick={() => { saveToHistory(); handleAddManualSub(); }} disabled={!manualSubInput.trim()}>
                           <Check className="w-3.5 h-3.5" />
                         </Button>
                       </div>
