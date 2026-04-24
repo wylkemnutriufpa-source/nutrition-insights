@@ -95,10 +95,10 @@ Deno.serve(async (req) => {
 
   const startTime = Date.now();
 
-  async function resolveTenantForUser(sb: any, uid: string): Promise<string | null> {
-    const { data } = await sb.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
-    return data?.tenant_id || null;
-  }
+async function resolveTenantForUser(sb: any, uid: string): Promise<string | null> {
+  const { data } = await sb.from("user_tenants").select("tenant_id").eq("user_id", uid).limit(1).maybeSingle();
+  return data?.tenant_id || null;
+}
 
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
@@ -430,7 +430,7 @@ async function processBatch(
       (m: any) => new Date(m.logged_at) >= new Date(threeDaysAgo)
     );
     if (recentMeals.length === 0 && meals.length > 0) {
-      const lastMealDate = meals[0]?.logged_at;
+      const lastMealDate = (meals[0] as { logged_at?: string | null } | undefined)?.logged_at;
       const daysSince = lastMealDate
         ? Math.floor(
             (now.getTime() - new Date(lastMealDate).getTime()) / 86400000
@@ -624,18 +624,18 @@ async function updateRiskScores(supabase: any, patientIds: string[]) {
 
   // Add longitudinal scores
   for (const pid of patientIds) {
-    const p = profileMap[pid];
+    const p = profileMap[pid] as Record<string, string | number | null | undefined> | undefined;
     if (!p) continue;
 
     for (const [field, values] of Object.entries(LONGITUDINAL_SCORE)) {
-      const val = p[field as keyof typeof p] as string;
+      const val = p[field] as string;
       if (val && values[val]) {
         scoreMap[pid] = (scoreMap[pid] || 0) + values[val];
       }
     }
 
     // Apply cluster-based score modulation (Phase 4)
-    const cluster = clusterMap[pid]?.metabolic_cluster;
+    const cluster = (clusterMap[pid] as { metabolic_cluster?: string | null } | undefined)?.metabolic_cluster;
     if (cluster && CLUSTER_SCORE_MODIFIERS[cluster]) {
       const mods = CLUSTER_SCORE_MODIFIERS[cluster];
       for (const [field, values] of Object.entries(LONGITUDINAL_SCORE)) {
@@ -748,7 +748,12 @@ async function saveDailySnapshots(supabase: any, patientIds: string[]) {
         : null;
 
     const score = alertScoreMap[pid] || 0;
-    const profile = profileMap[pid];
+    const profile = profileMap[pid] as {
+      weight_velocity_kg_week?: number | null;
+      weight_trend_status?: string | null;
+      engagement_index?: number | null;
+      adherence_momentum?: string | null;
+    } | undefined;
 
     return {
       patient_id: pid,
