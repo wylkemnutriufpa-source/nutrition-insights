@@ -6569,6 +6569,7 @@ export type Database = {
           adherence_score: number | null
           clinical_score: number | null
           clinical_status: string | null
+          correlation_id: string | null
           created_at: string
           description: string | null
           editor_version: string | null
@@ -6623,6 +6624,7 @@ export type Database = {
           adherence_score?: number | null
           clinical_score?: number | null
           clinical_status?: string | null
+          correlation_id?: string | null
           created_at?: string
           description?: string | null
           editor_version?: string | null
@@ -6677,6 +6679,7 @@ export type Database = {
           adherence_score?: number | null
           clinical_score?: number | null
           clinical_status?: string | null
+          correlation_id?: string | null
           created_at?: string
           description?: string | null
           editor_version?: string | null
@@ -16119,6 +16122,7 @@ export type Database = {
       system_alerts: {
         Row: {
           alert_type: string
+          correlation_id: string | null
           created_at: string | null
           function_name: string | null
           id: string
@@ -16131,6 +16135,7 @@ export type Database = {
         }
         Insert: {
           alert_type: string
+          correlation_id?: string | null
           created_at?: string | null
           function_name?: string | null
           id?: string
@@ -16143,6 +16148,7 @@ export type Database = {
         }
         Update: {
           alert_type?: string
+          correlation_id?: string | null
           created_at?: string | null
           function_name?: string | null
           id?: string
@@ -19235,6 +19241,18 @@ export type Database = {
           view_name: string
         }[]
       }
+      get_detailed_plan_diagnostics: {
+        Args: { p_patient_id: string }
+        Returns: {
+          correlation_id: string
+          created_at: string
+          is_active: boolean
+          plan_id: string
+          plan_mode: string
+          status: string
+          tenant_id: string
+        }[]
+      }
       get_nutritionist_dashboard_stats: {
         Args: { _nutritionist_id: string }
         Returns: Json
@@ -19451,6 +19469,10 @@ export type Database = {
       promote_to_admin: { Args: { _user_email: string }; Returns: string }
       publish_meal_plan: {
         Args: { _nutritionist_id: string; _plan_id: string }
+        Returns: Json
+      }
+      publish_meal_plan_v2: {
+        Args: { p_correlation_id?: string; p_plan_id: string }
         Returns: Json
       }
       recalculate_meal_plan_totals: {

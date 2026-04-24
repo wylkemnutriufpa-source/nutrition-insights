@@ -10,12 +10,13 @@ const diagnosticClient = createClient(
  * E2E-style verification for plan publication
  */
 export const verifyPlanPublicationFlow = async (planId: string, patientId: string) => {
-  console.log(`[E2E Test] Verifying publication flow for plan ${planId}`);
+  const correlationId = uuidv4();
+  console.log(`[E2E Test] Verifying publication flow for plan ${planId} (Correlation: ${correlationId})`);
 
-  // Fetch using generic client to avoid complex type instantiation depth issues
+  // 1. Fetch with specific column filters to test null modes and inconsistent states
   const { data: plan, error: dbError } = await diagnosticClient
     .from('meal_plans')
-    .select('*')
+    .select('id, status, is_active, plan_mode, patient_id, tenant_id')
     .eq('id', planId)
     .single();
 
@@ -24,41 +25,45 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
   }
 
   const issues: string[] = [];
+  
+  // Validation for production rules
   if (plan.status !== 'published') issues.push(`Status is ${plan.status}, expected 'published'`);
-  if (plan.is_active !== true) issues.push(`is_active is ${plan.is_active}, expected true`);
-  if (plan.patient_id !== patientId) issues.push(`patient_id mismatch: ${plan.patient_id} vs ${patientId}`);
+  if (!plan.is_active) issues.push(`Plan is not marked as active`);
+  
+  // Security/Consistency check: patient_id mismatch is a CRITICAL leak
+  if (plan.patient_id !== patientId) issues.push(`CRITICAL: patient_id leak detected (${plan.patient_id} vs ${patientId})`);
 
-  // 2. Simulate visibility check (Patient view)
+  // 2. Simulate multi-tenant/status visibility (The "Ghost Plan" test)
   const { data: visiblePlans, error: visibilityError } = await diagnosticClient
     .from('meal_plans')
-    .select('id')
+    .select('id, status, is_active, plan_mode')
     .eq('patient_id', patientId)
-    .eq('status', 'published')
+    .in('status', ['published'])
     .eq('is_active', true);
 
   if (visibilityError) {
     issues.push(`Visibility query failed: ${visibilityError.message}`);
   } else {
-    const isVisible = (visiblePlans || []).some((p: any) => p.id === planId);
-    if (!isVisible) {
-      issues.push(`Plan exists but is HIDDEN from patient queries. Check RLS or tenant_id.`);
+    const found = (visiblePlans || []).find((p: any) => p.id === planId);
+    if (!found) {
+      issues.push(`Plan exists in DB but is invisible to the standard patient query (Possible RLS/Tenant issue)`);
+    } else if (found.plan_mode === undefined) {
+       // Check for plan_mode null handling
+       console.log("[E2E Info] Plan validated with null plan_mode (Weekly default)");
     }
   }
 
   if (issues.length > 0) {
-    const errorMsg = `[E2E Failure] Publication validation failed:\n- ${issues.join('\n- ')}`;
-    console.error(errorMsg);
-    
+    const errorMsg = `[E2E Failure] Validation issues:\n- ${issues.join('\n- ')}`;
     await diagnosticClient.from('system_alerts').insert({
-      alert_type: 'E2E_PUBLISH_FAILURE',
+      alert_type: 'E2E_CONSISTENCY_ERROR',
       severity: 'critical',
       message: errorMsg,
+      correlation_id: correlationId,
       metadata: { plan_id: planId, patient_id: patientId, issues }
     });
-
     return { success: false, issues };
   }
 
-  console.log("[E2E Success] Plan is correctly published and visible.");
-  return { success: true };
+  return { success: true, correlationId };
 };
