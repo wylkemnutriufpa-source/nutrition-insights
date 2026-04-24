@@ -1185,7 +1185,7 @@ function selectFoodsForMeal(
   // ── Dinner rule: exclude beans/legumes for lighter meal ──
   const isDinner = mealType === "dinner";
   const isBreakfast = mealType === "breakfast";
-  const dinnerExcludeKeywords = ["feijao", "feijão", "lentilha", "feijoada", "feijao verde"];
+  const dinnerExcludeKeywords = ["feijao", "feijão", "lentilha", "feijoada", "feijao verde", "sopa", "caldo"];
 
   const selected: DBFood[] = [];
   const usedCategories = new Set<string>();
@@ -1236,7 +1236,7 @@ function selectFoodsForMeal(
     if (isMainMeal && MAIN_MEAL_EXCLUDED_FOODS.has(normName)) return false;
     if (isMainMeal && (normName.includes("enlatad") || normName.includes("em lata") || normName.includes("em conserva"))) return false;
 
-    // Dinner: exclude beans/legumes
+    // Dinner: exclude beans/legumes and soup-like bases from the main plate
     if (isDinner) {
       if (dinnerExcludeKeywords.some(kw => normName.includes(normalize(kw)))) return false;
     }
