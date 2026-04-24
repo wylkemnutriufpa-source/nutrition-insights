@@ -14,8 +14,9 @@ import { useLegacyBannerVisibility } from "@/hooks/useForceCanonicalDay";
 const STORAGE_KEY = "fj_editor_legacy_banner_dismissed";
 
 function setUrl(search: string) {
-  // jsdom suporta replaceState com URLs absolutas
-  window.history.replaceState({}, "", `http://localhost/${search}`);
+  // jsdom exige mesma origin/path no replaceState; usamos caminho relativo.
+  const path = "/" + (search.startsWith("?") || search === "" ? search : `?${search}`);
+  window.history.replaceState({}, "", path);
 }
 
 beforeEach(() => {
