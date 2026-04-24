@@ -221,12 +221,47 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   });
 
   const [isApplyingSuggestion, setIsApplyingSuggestion] = useState(false);
+  const [history, setHistory] = useState<{
+    description: string;
+    protein: number;
+    carbs: number;
+    fat: number;
+    calories: number;
+    timestamp: number;
+  }[]>([]);
+  
   const [pendingSuggestion, setPendingSuggestion] = useState<{
     name: string;
     portion: string;
     before: { protein: number; carbs: number; fat: number; calories: number };
     after: { protein: number; carbs: number; fat: number; calories: number };
   } | null>(null);
+
+  const saveToHistory = () => {
+    const current = {
+      description: meal.description || "",
+      protein: Number(meal.protein_target || 0),
+      carbs: Number(meal.carbs_target || 0),
+      fat: Number(meal.fat_target || 0),
+      calories: Number(meal.calories_target || 0),
+      timestamp: Date.now()
+    };
+    setHistory(prev => [current, ...prev].slice(0, 5));
+  };
+
+  const undoLastChange = () => {
+    if (history.length === 0 || !meal.itemId || !onUpdateItem) return;
+    const last = history[0];
+    onUpdateItem(meal.itemId, {
+      description: last.description,
+      protein_target: last.protein,
+      carbs_target: last.carbs,
+      fat_target: last.fat,
+      calories_target: last.calories
+    });
+    setHistory(prev => prev.slice(1));
+    toast.success("↩ Alteração desfeita com sucesso");
+  };
 
   const findFoodInDatabase = (text: string) => {
     const q = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
