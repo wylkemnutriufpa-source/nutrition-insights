@@ -272,6 +272,26 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const state = get();
     const isSamePlan = state.planId === planId;
 
+    if (!isSamePlan) {
+      if (flushTimer) clearTimeout(flushTimer);
+      if (syncBadgeTimer) clearTimeout(syncBadgeTimer);
+      activeFlushPromise = null;
+      isFlushing = false;
+
+      set({
+        planId,
+        plan: null,
+        patientName: "",
+        items: [],
+        pendingOps: [],
+        syncingMap: {},
+        syncStatus: "idle",
+        hydrated: false,
+        hydrating: true,
+        lastSavedAt: null,
+      });
+    }
+
     // Avoid duplicate in-flight fetches for the same plan
     if (state.hydrating && isSamePlan) return;
 
@@ -519,6 +539,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   clearAllItems: () => {
 
     const prev = get().items;
+    const planId = get().planId;
     if (prev.length === 0) return;
     const allIds = prev.map((i) => i.id);
     set({ items: [], pendingOps: [] });
@@ -528,7 +549,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: allIds,
       queuedAt: Date.now(),
       persist: async () => {
-        const planId = get().planId;
         if (!planId) return;
         const { error } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", planId);
         if (error) throw error;
