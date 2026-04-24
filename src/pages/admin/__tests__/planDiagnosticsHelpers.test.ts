@@ -133,7 +133,52 @@ describe("planDiagnosticsHelpers — aggregateUnknownByWorkspace", () => {
   });
 });
 
-describe("auditExportUtils — buildAuditCsv classifica plan_status no CSV", () => {
+describe("planDiagnosticsHelpers — summarizeTrend", () => {
+  it("calcula totais e variação vs período anterior (7d)", () => {
+    // Janela atual: 2026-04-18..2026-04-24 (inclui hoje)
+    // Janela anterior: 2026-04-11..2026-04-17
+    const rows = [
+      // Atual
+      { alert_type: "PLAN_STATUS_UNKNOWN", created_at: "2026-04-24T10:00:00Z" },
+      { alert_type: "PLAN_STATUS_UNKNOWN", created_at: "2026-04-22T10:00:00Z" },
+      { alert_type: "PLAN_STATUS_UNKNOWN", created_at: "2026-04-19T10:00:00Z" },
+      { alert_type: "PLAN_VISIBILITY_DROP", created_at: "2026-04-23T10:00:00Z" },
+      // Anterior
+      { alert_type: "PLAN_STATUS_UNKNOWN", created_at: "2026-04-15T10:00:00Z" },
+      { alert_type: "PLAN_VISIBILITY_DROP", created_at: "2026-04-12T10:00:00Z" },
+      { alert_type: "PLAN_VISIBILITY_DROP", created_at: "2026-04-13T10:00:00Z" },
+      // Fora de ambos
+      { alert_type: "PLAN_STATUS_UNKNOWN", created_at: "2026-04-01T10:00:00Z" },
+    ];
+    const s = summarizeTrend(rows, 7, FIXED_NOW);
+    expect(s.currentUnknown).toBe(3);
+    expect(s.currentDrop).toBe(1);
+    expect(s.previousUnknown).toBe(1);
+    expect(s.previousDrop).toBe(2);
+    // (3-1)/1 = 200%
+    expect(s.deltaUnknownPct).toBe(200);
+    // (1-2)/2 = -50%
+    expect(s.deltaDropPct).toBe(-50);
+  });
+
+  it("retorna deltaPct=null quando previous=0 e current>0", () => {
+    const rows = [
+      { alert_type: "PLAN_STATUS_UNKNOWN", created_at: "2026-04-24T10:00:00Z" },
+    ];
+    const s = summarizeTrend(rows, 7, FIXED_NOW);
+    expect(s.currentUnknown).toBe(1);
+    expect(s.previousUnknown).toBe(0);
+    expect(s.deltaUnknownPct).toBeNull();
+  });
+
+  it("retorna deltaPct=0 quando ambos previous e current são 0", () => {
+    const s = summarizeTrend([], 30, FIXED_NOW);
+    expect(s.currentUnknown).toBe(0);
+    expect(s.previousUnknown).toBe(0);
+    expect(s.deltaUnknownPct).toBe(0);
+    expect(s.deltaDropPct).toBe(0);
+  });
+});
   it("inclui as colunas PlanStatus e PlanStatusKnown e classifica corretamente", () => {
     const data = [
       {
