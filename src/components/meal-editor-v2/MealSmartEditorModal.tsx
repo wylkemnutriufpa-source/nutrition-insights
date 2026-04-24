@@ -76,11 +76,7 @@ export function MealSmartEditorModal({
 
   const handleSave = () => {
     // 1. Limpeza, normalização e desduplicação das substituições
-    const cleanedSubs = Array.from(new Set(
-      substitutions
-        .map(s => String(s).trim().replace(/\s+/g, ' '))
-        .filter(s => s.length > 0)
-    )).sort();
+    const cleanedSubs = getNormalizedSubs();
 
     let finalDescription = description;
     if (cleanedSubs.length > 0) {
@@ -126,8 +122,41 @@ export function MealSmartEditorModal({
     fat: Number(item.fat_target) || 0,
   };
 
+  const handleOpenChange = (newOpen: boolean) => {
+    if (!newOpen) {
+      // Reset explícito ao fechar via overlay, X ou cancelar
+      setDescription(item?.description || "");
+      setNotes((item as any)?.notes || "");
+      
+      const meta = (item as any).edit_metadata || (item as any).metadata || {};
+      const hasValidJson = Array.isArray(meta.substitutions_json) && 
+                          meta.substitutions_json.every((s: any) => typeof s === "string");
+      
+      if (hasValidJson) {
+        setSubstitutions(meta.substitutions_json);
+      } else {
+        const desc = item?.description || "";
+        const parts = desc.split(/\n\n🔄 Substituições:\n/);
+        const subsPart = parts[1] || "";
+        const subLines = subsPart.split("\n")
+          .filter(l => l.trim().length > 0)
+          .map(l => l.trim());
+        setSubstitutions(subLines.slice(0, 4));
+      }
+    }
+    onOpenChange(newOpen);
+  };
+
+  const getNormalizedSubs = () => {
+    return Array.from(new Set(
+      substitutions
+        .map(s => String(s).trim().replace(/\s+/g, ' '))
+        .filter(s => s.length > 0)
+    )).sort();
+  };
+
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl">
         <DialogHeader className="px-6 py-4 bg-gradient-to-r from-primary/10 via-background to-background border-b">
           <div className="flex items-center justify-between">
@@ -345,24 +374,14 @@ export function MealSmartEditorModal({
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">Visualização da Descrição:</p>
                         <div className="whitespace-pre-wrap">
                           🔄 Substituições:{"\n"}
-                          {Array.from(new Set(
-                            substitutions
-                              .map(s => String(s).trim().replace(/\s+/g, ' '))
-                              .filter(s => s.length > 0)
-                          )).sort().join("\n")}
+                          {getNormalizedSubs().join("\n")}
                         </div>
                       </div>
 
                       <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">substitutions_json:</p>
                         <div className="text-muted-foreground break-all">
-                          {JSON.stringify(
-                            Array.from(new Set(
-                              substitutions
-                                .map(s => String(s).trim().replace(/\s+/g, ' '))
-                                .filter(s => s.length > 0)
-                            )).sort()
-                          )}
+                          {JSON.stringify(getNormalizedSubs())}
                         </div>
                       </div>
                     </div>
@@ -375,26 +394,7 @@ export function MealSmartEditorModal({
               <Button 
                 variant="outline" 
                 className="flex-1 h-12 rounded-2xl font-bold" 
-                onClick={() => {
-                  // Reset explícito do estado local ao cancelar
-                  setDescription(item?.description || "");
-                  setNotes((item as any)?.notes || "");
-                  const meta = (item as any).edit_metadata || (item as any).metadata || {};
-                  const hasValidJson = Array.isArray(meta.substitutions_json) && 
-                                      meta.substitutions_json.every((s: any) => typeof s === "string");
-                  if (hasValidJson) {
-                    setSubstitutions(meta.substitutions_json);
-                  } else {
-                    const desc = item?.description || "";
-                    const parts = desc.split(/\n\n🔄 Substituições:\n/);
-                    const subsPart = parts[1] || "";
-                    const subLines = subsPart.split("\n")
-                      .filter(l => l.trim().length > 0)
-                      .map(l => l.trim());
-                    setSubstitutions(subLines.slice(0, 4));
-                  }
-                  onOpenChange(false);
-                }}
+                onClick={() => handleOpenChange(false)}
               >
                 Cancelar
               </Button>
