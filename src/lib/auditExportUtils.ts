@@ -2,6 +2,7 @@ import { supabase } from "@/integrations/supabase/client";
 import * as XLSX from "xlsx";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
+import { isTrulyUnknownPlanStatus, KNOWN_PLAN_STATUS_KEYS } from "@/lib/planStatusLabels";
 
 interface ExportOptions {
   format: 'CSV' | 'PDF' | 'XLSX';
@@ -9,6 +10,30 @@ interface ExportOptions {
   filters: any;
   filename?: string;
   isAsync?: boolean;
+}
+
+/**
+ * Extrai o `plan_status` do alerta e classifica como:
+ *  - "conhecido" (existe no catálogo central)
+ *  - "desconhecido" (string não vazia fora do catálogo) → ajuda a auditar a origem
+ *  - "ausente" (alerta sem plan_status no metadata) → não infla "desconhecido"
+ */
+function classifyAlertPlanStatus(alert: any): { value: string; classification: "conhecido" | "desconhecido" | "ausente" } {
+  const raw = alert?.metadata?.plan_status ?? alert?.plan_status ?? null;
+  if (raw === null || raw === undefined || String(raw).trim() === "") {
+    return { value: "", classification: "ausente" };
+  }
+  const value = String(raw);
+  if (isTrulyUnknownPlanStatus(value)) return { value, classification: "desconhecido" };
+  if (KNOWN_PLAN_STATUS_KEYS.includes(value)) return { value, classification: "conhecido" };
+  return { value, classification: "desconhecido" };
+}
+
+function csvEscape(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  const s = String(value);
+  if (/[",\n\r]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+  return s;
 }
 
 const logExportActivity = async (options: { format: string; filters: any; count: number }) => {
