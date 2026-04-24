@@ -19262,6 +19262,16 @@ export type Database = {
           user_id: string
         }[]
       }
+      get_plan_diagnostics: {
+        Args: { p_patient_id: string }
+        Returns: {
+          is_active: boolean
+          plan_count: number
+          plan_mode: string
+          status: string
+          tenant_id: string
+        }[]
+      }
       get_ranking_by_period: {
         Args: { _limit?: number; _nutritionist_id?: string; _period: string }
         Returns: {
