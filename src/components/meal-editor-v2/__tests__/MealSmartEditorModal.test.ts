@@ -6,6 +6,10 @@ import React, { useState } from 'react';
 const useSubstitutionEditor = (initialSubs: string[], initialDescription: string = "") => {
   const [substitutions, setSubstitutions] = useState<string[]>(initialSubs);
   const [description, setDescription] = useState(initialDescription);
+  
+  // Usar refs para mocks persistentes que não mudam entre renders do hook
+  const [onOpenChange] = useState(() => vi.fn());
+  const [updateItem] = useState(() => vi.fn());
 
   const handleSubChange = (idx: number, value: any) => {
     const val = String(value).replace(/\s+/g, ' ');
@@ -36,9 +40,6 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
       substitutions_json: cleanedSubs
     };
   };
-
-  const onOpenChange = vi.fn();
-  const updateItem = vi.fn();
 
   const handleCancel = () => {
     setDescription(initialDescription);
