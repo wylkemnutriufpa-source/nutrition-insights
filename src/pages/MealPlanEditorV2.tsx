@@ -247,11 +247,29 @@ export default function MealPlanEditorV2() {
 
       await store._flushQueue();
 
+      // draft_auto_corrected já é um rascunho persistido; salvar não deve forçar aprovação
+      // nem quebrar o fluxo por estado intermediário.
+      const totals = await calculatePlanTotals(plan.id);
+      if (planStatus === "draft_auto_corrected") {
+        store.updatePlan({
+          total_calories: totals.total_calories,
+          total_protein: totals.total_protein,
+          total_carbs: totals.total_carbs,
+          total_fat: totals.total_fat,
+          updated_at: new Date().toISOString(),
+        } as any);
+
+        if (totals.totals_status === "incomplete") {
+          toast.success("Rascunho auto-corrigido salvo. Os totais serão recalculados em segundo plano.");
+        } else {
+          toast.success("Rascunho auto-corrigido salvo com sucesso!");
+        }
+        return;
+      }
+
       const approveResult = await savePlanAsApproved(plan.id, user!.id);
       if (!approveResult.success) throw new Error(approveResult.error || "Erro ao aprovar");
 
-      // Garante consistência dos totais (não bloqueia em caso de falha)
-      const totals = await calculatePlanTotals(plan.id);
       store.updatePlan({
         plan_status: "approved",
         total_calories: totals.total_calories,
@@ -291,9 +309,9 @@ export default function MealPlanEditorV2() {
     try {
       await store._flushQueue();
 
-      const result = await supabase.rpc('activate_meal_plan', { _plan_id: plan.id });
-      if (result.error) {
-        throw new Error(result.error.message || "Erro ao publicar");
+      const publishResult = await publishMealPlan(plan.id, user.id);
+      if (!publishResult.success) {
+        throw new Error(publishResult.error || "Erro ao publicar");
       }
       // Recalcula totais após publicar (não bloqueia)
       const totals = await calculatePlanTotals(plan.id);
@@ -363,17 +381,11 @@ export default function MealPlanEditorV2() {
       // 1) Flush pending edits
       await store._flushQueue();
 
-      // 2) Approve (Save)
-      const approveResult = await savePlanAsApproved(plan.id, user.id);
-      if (!approveResult.success) {
-        throw new Error(approveResult.error || "Erro ao aprovar o plano");
-      }
-      store.updatePlan({ plan_status: "approved", updated_at: new Date().toISOString() } as any);
-
-      // 3) Publish to patient
-      const publishResult = await supabase.rpc('activate_meal_plan', { _plan_id: plan.id });
-      if (publishResult.error) {
-        throw new Error(publishResult.error.message || "Plano salvo, mas houve erro ao publicar");
+      // 2) Publica via transição autoritativa do backend, sem depender de
+      // aprovação prévia local para rascunhos auto-corrigidos.
+      const publishResult = await publishMealPlan(plan.id, user.id);
+      if (!publishResult.success) {
+        throw new Error(publishResult.error || "Plano salvo, mas houve erro ao publicar");
       }
 
       // Recalcula totais consolidados — não bloqueia em caso de falha
