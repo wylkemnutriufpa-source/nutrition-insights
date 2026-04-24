@@ -892,7 +892,10 @@ export default function AdminExperienceModeAudit() {
                             <td></td>
                             <td colSpan={6} className="py-3 px-3">
                               <div
+                                id={`timeline-${r.correlation_id}`}
                                 data-testid="emode-timeline"
+                                role="region"
+                                aria-label={`Timeline do correlationId ${r.correlation_id}`}
                                 className="space-y-2"
                               >
                                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
@@ -912,18 +915,32 @@ export default function AdminExperienceModeAudit() {
                                     </div>
                                   )}
                                 </div>
-                                <ol className="relative border-l-2 border-border ml-2 space-y-2">
+                                <ol
+                                  className="relative border-l-2 border-border ml-2 space-y-2"
+                                  aria-label="Eventos do correlationId em ordem cronológica"
+                                >
                                   {group.map((g, idx) => {
                                     const gBadge = OUTCOME_BADGES[g.outcome] || {
                                       label: g.outcome,
                                       className: "bg-muted",
                                     };
                                     const gMeta = (g.metadata || {}) as any;
+                                    const focusStep = () => jumpToRow(g.correlation_id, g.id);
                                     return (
                                       <li
                                         key={g.id}
                                         data-testid="emode-timeline-step"
-                                        className="ml-3 pl-3"
+                                        tabIndex={0}
+                                        role="button"
+                                        aria-label={`Evento ${idx + 1} de ${group.length}: ${gBadge.label} em ${new Date(g.created_at).toLocaleString("pt-BR")}`}
+                                        onClick={focusStep}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            focusStep();
+                                          }
+                                        }}
+                                        className="ml-3 pl-3 rounded cursor-pointer hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
                                       >
                                         <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                                         <div className="flex items-center gap-2 text-[11px]">
