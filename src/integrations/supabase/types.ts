@@ -16183,11 +16183,15 @@ export type Database = {
           error_detail: string | null
           error_message: string | null
           id: string
+          items_converted_to_substitution: number | null
+          items_moved: number | null
+          items_removed: number | null
           master_item_id: string | null
           meal_plan_id: string | null
           operation: string
           payload: Json | null
           status: string
+          triggered_by: string | null
         }
         Insert: {
           affected_rows?: number
@@ -16195,11 +16199,15 @@ export type Database = {
           error_detail?: string | null
           error_message?: string | null
           id?: string
+          items_converted_to_substitution?: number | null
+          items_moved?: number | null
+          items_removed?: number | null
           master_item_id?: string | null
           meal_plan_id?: string | null
           operation: string
           payload?: Json | null
           status: string
+          triggered_by?: string | null
         }
         Update: {
           affected_rows?: number
@@ -16207,11 +16215,15 @@ export type Database = {
           error_detail?: string | null
           error_message?: string | null
           id?: string
+          items_converted_to_substitution?: number | null
+          items_moved?: number | null
+          items_removed?: number | null
           master_item_id?: string | null
           meal_plan_id?: string | null
           operation?: string
           payload?: Json | null
           status?: string
+          triggered_by?: string | null
         }
         Relationships: []
       }
@@ -19489,6 +19501,10 @@ export type Database = {
         Args: { _patient_id: string; _program_id: string; _reason?: string }
         Returns: Json
       }
+      enforce_single_day_normalization: {
+        Args: { p_plan_id: string }
+        Returns: Json
+      }
       ensure_patient_ready: { Args: { _patient_id: string }; Returns: Json }
       extract_topic_uuid: { Args: { _topic: string }; Returns: string }
       finalize_pipeline_execution: {
@@ -20092,6 +20108,15 @@ export type Database = {
       transition_plan_to_review: {
         Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json
+      }
+      validate_all_single_day_plans: {
+        Args: never
+        Returns: {
+          details: Json
+          issue: string
+          plan_id: string
+          plan_title: string
+        }[]
       }
       validate_clinical_quality: { Args: { p_plan_id: string }; Returns: Json }
       validate_onboarding_token: { Args: { _token: string }; Returns: Json }

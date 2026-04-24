@@ -26,6 +26,7 @@ interface MealPlan {
   title: string;
   start_date: string;
   totals_status?: string;
+  plan_mode?: "weekly" | "single_day" | null;
 }
 
 export default function DailyMealPlanInline() {
@@ -49,7 +50,7 @@ export default function DailyMealPlanInline() {
     try {
       const { data: planData } = await supabase
         .from("meal_plans")
-        .select("id, title, start_date, totals_status")
+        .select("id, title, start_date, totals_status, plan_mode")
         .eq("patient_id", user.id)
         .eq("is_active", true)
         .eq("plan_status", "published_to_patient")
@@ -64,7 +65,7 @@ export default function DailyMealPlanInline() {
         setIsRefreshing(false);
         return; 
       }
-      setPlan(planData);
+      setPlan(planData as MealPlan);
 
       const { data: itemsData } = await supabase
         .from("meal_plan_items")
@@ -223,6 +224,11 @@ export default function DailyMealPlanInline() {
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate max-w-[200px]">{plan.title}</p>
+          {plan.plan_mode === "single_day" && (
+            <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
+              🗓️ 1 dia + substituições
+            </span>
+          )}
         </div>
       </div>
 
