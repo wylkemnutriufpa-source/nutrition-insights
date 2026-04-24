@@ -102,11 +102,13 @@ export function isRouteVisible(route: string, mode: ExperienceMode, role: Experi
 
 export interface ExperienceModeContextValue {
   mode: ExperienceMode;
-  setMode: (m: ExperienceMode) => void;
+  setMode: (m: ExperienceMode) => Promise<void>;
   isRouteAllowed: (route: string) => boolean;
   isBasic: boolean;
   isPro: boolean;
   isAdvanced: boolean;
+  isLoading: boolean;
+  retryLastMode: () => void;
   /** Show content only at given mode or above */
   minMode: (min: ExperienceMode) => boolean;
   /** Effective role used for route gating */
@@ -115,11 +117,13 @@ export interface ExperienceModeContextValue {
 
 export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
   mode: "pro",
-  setMode: () => {},
+  setMode: async () => {},
   isRouteAllowed: () => true,
   isBasic: false,
   isPro: true,
   isAdvanced: false,
+  isLoading: false,
+  retryLastMode: () => {},
   minMode: () => true,
   role: "professional",
 });
@@ -141,10 +145,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     const saved = localStorage.getItem(STORAGE_KEY) as ExperienceMode;
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
   });
+  const [isLoading, setIsLoading] = useState(false);
+  const [failedMode, setFailedMode] = useState<ExperienceMode | null>(null);
 
   const hydratedFromDb = useRef(false);
 
-  // Hydrate from DB on mount (overrides localStorage if DB has a value)
+  // Hydrate from DB on mount
   useEffect(() => {
     if (hydratedFromDb.current) return;
     supabase.auth.getUser().then(({ data: { user } }) => {
@@ -165,19 +171,60 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     });
   }, []);
 
-  const setMode = useCallback((m: ExperienceMode) => {
-    setModeState(m);
-    localStorage.setItem(STORAGE_KEY, m);
-    // Persist to DB (fire-and-forget)
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
+  const updateModeInDb = async (m: ExperienceMode, previous: ExperienceMode) => {
+    setIsLoading(true);
+    setFailedMode(null);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error("Não autenticado");
+
+      const { data: profile, error: fetchError } = await supabase
+        .from("profiles")
+        .select("experience_mode_locked")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      
+      if (profile?.experience_mode_locked && m !== 'basic') {
+        const error = new Error("Sua conta está restrita ao modo Básico temporariamente.");
+        (error as any).code = "MODE_LOCKED";
+        throw error;
+      }
+
+      const { error: updateError } = await supabase
         .from("profiles")
         .update({ experience_mode: m } as any)
-        .eq("user_id", user.id)
-        .then(() => {});
-    });
-  }, []);
+        .eq("user_id", user.id);
+
+      if (updateError) throw updateError;
+
+      localStorage.setItem(STORAGE_KEY, m);
+      setModeState(m);
+    } catch (error: any) {
+      console.error("Failed to update experience mode:", error);
+      setFailedMode(m);
+      // Fallback to previous mode
+      setModeState(previous);
+      throw error;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const setMode = useCallback(async (m: ExperienceMode) => {
+    const previous = mode;
+    // Optimistic update (optional, but requested fallback logic suggests we might want to handle it carefully)
+    // Actually, the user asked for "fallback for when the update fails", implying we might change it then revert.
+    // Let's do it properly.
+    await updateModeInDb(m, previous);
+  }, [mode]);
+
+  const retryLastMode = useCallback(() => {
+    if (failedMode) {
+      setMode(failedMode);
+    }
+  }, [failedMode, setMode]);
 
   const isRouteAllowed = useCallback((route: string) => {
     return isRouteVisible(route, mode, role);
@@ -189,8 +236,19 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
   const minMode = useCallback((min: ExperienceMode) => checkMinMode(mode, min), [mode]);
 
   const value = useMemo<ExperienceModeContextValue>(
-    () => ({ mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode, role }),
-    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, minMode, role]
+    () => ({ 
+      mode, 
+      setMode, 
+      isRouteAllowed, 
+      isBasic, 
+      isPro, 
+      isAdvanced, 
+      isLoading, 
+      retryLastMode,
+      minMode, 
+      role 
+    }),
+    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, isLoading, retryLastMode, minMode, role]
   );
 
   return value;
