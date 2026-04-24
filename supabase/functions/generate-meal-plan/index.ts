@@ -4,6 +4,12 @@ import { GenerateMealPlanSchema } from "../_shared/schemas.ts";
 import { requireUser } from "../_shared/auth-guard.ts";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import {
+  assertContract,
+  planGenerationContract,
+  persistenceContract,
+  ContractViolationError,
+} from "../_shared/critical-contracts.ts";
+import {
   BLOCKED_FOODS as CANONICAL_BLOCKED_FOODS,
   MEAL_KCAL_SPLIT as CANONICAL_MEAL_KCAL_SPLIT,
   REPLACEMENTS,
