@@ -6,12 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const verifyPlanPublicationFlow = async (planId: string, patientId: string) => {
   console.log(`[E2E Test] Verifying publication flow for plan ${planId}`);
 
-  // 1. Verify DB state directly (Backend/API check)
+  // Using any to bypass strict type check on dynamic columns if they aren't in types yet
   const { data: plan, error: dbError } = await supabase
     .from('meal_plans')
-    .select('status, is_active, plan_mode, patient_id')
+    .select('*')
     .eq('id', planId)
-    .single();
+    .single() as any;
 
   if (dbError || !plan) {
     throw new Error(`[E2E Failure] Plan ${planId} not found in database.`);
@@ -29,12 +29,12 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
     .select('id')
     .eq('patient_id', patientId)
     .eq('status', 'published')
-    .eq('is_active', true);
+    .eq('is_active', true) as any;
 
   if (visibilityError) {
     issues.push(`Visibility query failed: ${visibilityError.message}`);
   } else {
-    const isVisible = visiblePlans.some(p => p.id === planId);
+    const isVisible = (visiblePlans || []).some((p: any) => p.id === planId);
     if (!isVisible) {
       issues.push(`Plan exists but is HIDDEN from patient queries. Check RLS or tenant_id.`);
     }

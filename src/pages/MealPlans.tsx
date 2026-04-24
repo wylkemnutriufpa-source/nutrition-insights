@@ -73,8 +73,10 @@ export default function MealPlans() {
 
   const fetchPlans = async () => {
     if (!user) return;
+    setLoading(true);
     let query = supabase.from("meal_plans").select("*")
       .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
+    
     const { data } = await withTenantFilter(query, tenantId);
     if (data) {
       const enriched = await Promise.all(data.map(async (p) => {
@@ -82,6 +84,14 @@ export default function MealPlans() {
         return { ...p, patient_name: profile?.full_name || "Paciente" };
       }));
       setPlans(enriched);
+
+      // Anomalous drop detection (Implementation of user request)
+      const patientIdFilter = searchParams.get("patient_id") || searchParams.get("patientId");
+      if (patientIdFilter) {
+        import("@/lib/planDiagnostics").then(({ checkPlanAnomalies }) => {
+          checkPlanAnomalies(patientIdFilter, enriched.length);
+        });
+      }
     }
     setLoading(false);
   };
