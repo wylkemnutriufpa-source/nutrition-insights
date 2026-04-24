@@ -118,6 +118,9 @@ export function MealSmartEditorModal({
   };
 
   const handleOpenChange = (newOpen: boolean) => {
+    // Se o modal já está no estado desejado, não faz nada (evita resets duplicados)
+    if (newOpen === open) return;
+
     if (!newOpen) {
       // Reset explícito ao fechar via overlay, X ou cancelar
       setDescription(item?.description || "");
@@ -367,7 +370,10 @@ export function MealSmartEditorModal({
                 <div className={cn(
                   "p-4 rounded-2xl border space-y-3 transition-colors",
                   isOverLimit ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/10"
-                )}>
+                )}
+                  role="status"
+                  aria-live="polite"
+                >
                   <div className="flex gap-3">
                     {isOverLimit ? (
                       <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
