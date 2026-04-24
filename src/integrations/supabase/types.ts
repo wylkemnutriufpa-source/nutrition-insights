@@ -12629,6 +12629,51 @@ export type Database = {
           },
         ]
       }
+      plan_reconciliation_queue: {
+        Row: {
+          correlation_id: string | null
+          created_at: string | null
+          error_log: string | null
+          fixed_at: string | null
+          id: string
+          issue_detected: string | null
+          plan_id: string | null
+        }
+        Insert: {
+          correlation_id?: string | null
+          created_at?: string | null
+          error_log?: string | null
+          fixed_at?: string | null
+          id?: string
+          issue_detected?: string | null
+          plan_id?: string | null
+        }
+        Update: {
+          correlation_id?: string | null
+          created_at?: string | null
+          error_log?: string | null
+          fixed_at?: string | null
+          id?: string
+          issue_detected?: string | null
+          plan_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_reconciliation_queue_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_reconciliation_queue_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       plan_requests: {
         Row: {
           created_at: string
@@ -19479,6 +19524,7 @@ export type Database = {
         Args: { plan_id: string }
         Returns: undefined
       }
+      reconcile_published_plans: { Args: { p_limit?: number }; Returns: Json }
       record_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
