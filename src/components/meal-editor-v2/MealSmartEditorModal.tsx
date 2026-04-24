@@ -294,8 +294,9 @@ export function MealSmartEditorModal({
                         <Input
                           value={sub}
                           onChange={(e) => {
+                            const val = String(e.target.value);
                             const next = [...substitutions];
-                            next[idx] = e.target.value;
+                            next[idx] = val;
                             setSubstitutions(next);
                           }}
                           className="h-9 bg-secondary/10 border-none focus-visible:ring-1 ring-primary/20 rounded-xl text-xs"
