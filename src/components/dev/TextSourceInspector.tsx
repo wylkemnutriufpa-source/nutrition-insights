@@ -19,6 +19,16 @@ import { X } from "lucide-react";
 
 const LS_KEY = "fj:debug:text-inspector";
 
+interface CacheMatch {
+  queryKey: string;
+  dataUpdatedAt: number | null;
+  dataUpdatedAtIso: string | null;
+  ageSeconds: number | null;
+  status: string | null;
+  isStale: boolean | null;
+  observers: number | null;
+}
+
 interface InspectionResult {
   tag: string;
   text: string;
@@ -26,7 +36,7 @@ interface InspectionResult {
   componentName: string | null;
   classes: string;
   source: "static" | "react-state" | "query-cache" | "unknown";
-  cacheMatches: string[];
+  cacheMatches: CacheMatch[];
 }
 
 function shouldEnable(): boolean {
@@ -69,21 +79,34 @@ function findTestId(el: Element): string | null {
   return null;
 }
 
-function searchQueryCache(text: string): string[] {
+function searchQueryCache(text: string): CacheMatch[] {
   try {
     const qc: any = (window as any).__REACT_QUERY_CLIENT__;
     if (!qc?.getQueryCache) return [];
     const cache = qc.getQueryCache();
     const queries = cache.getAll?.() || [];
-    const matches: string[] = [];
+    const matches: CacheMatch[] = [];
     const needle = text.trim().toLowerCase();
     if (needle.length < 3) return [];
+    const now = Date.now();
     for (const q of queries) {
       try {
         const data = q.state?.data;
         const json = JSON.stringify(data ?? "");
         if (json.toLowerCase().includes(needle)) {
-          matches.push(JSON.stringify(q.queryKey));
+          const dataUpdatedAt: number | null = q.state?.dataUpdatedAt ?? null;
+          matches.push({
+            queryKey: JSON.stringify(q.queryKey),
+            dataUpdatedAt,
+            dataUpdatedAtIso: dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : null,
+            ageSeconds: dataUpdatedAt ? Math.round((now - dataUpdatedAt) / 1000) : null,
+            status: q.state?.status ?? null,
+            isStale: typeof q.isStale === "function" ? q.isStale() : null,
+            observers:
+              typeof q.getObserversCount === "function"
+                ? q.getObserversCount()
+                : null,
+          });
           if (matches.length >= 3) break;
         }
       } catch {}
@@ -206,13 +229,36 @@ export default function TextSourceInspector() {
               }
             />
             {result.cacheMatches.length > 0 && (
-              <div className="mt-1 rounded border border-amber-500/30 bg-amber-500/10 p-1.5">
+              <div className="mt-1 space-y-1 rounded border border-amber-500/30 bg-amber-500/10 p-1.5">
                 <div className="text-[10px] uppercase text-amber-200">
                   Encontrado no cache:
                 </div>
                 {result.cacheMatches.map((m, i) => (
-                  <div key={i} className="truncate text-[10px] text-amber-100">
-                    {m}
+                  <div
+                    key={i}
+                    className="rounded bg-background/40 p-1 text-[10px] text-amber-100"
+                  >
+                    <div className="truncate font-mono" title={m.queryKey}>
+                      {m.queryKey}
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] text-amber-200/90">
+                      {m.dataUpdatedAtIso && (
+                        <span title={m.dataUpdatedAtIso}>
+                          atualizado:{" "}
+                          {new Date(m.dataUpdatedAt!).toLocaleTimeString()}
+                        </span>
+                      )}
+                      {m.ageSeconds !== null && (
+                        <span>idade: {m.ageSeconds}s</span>
+                      )}
+                      {m.status && <span>status: {m.status}</span>}
+                      {m.isStale !== null && (
+                        <span>{m.isStale ? "stale" : "fresh"}</span>
+                      )}
+                      {m.observers !== null && (
+                        <span>obs: {m.observers}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
