@@ -75,10 +75,12 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = () => {
-    // 1. Limpeza e normalização das substituições (Impede strings vazias ou apenas espaços)
-    const cleanedSubs = substitutions
-      .map(s => String(s).trim())
-      .filter(s => s.length > 0);
+    // 1. Limpeza, normalização e desduplicação das substituições
+    const cleanedSubs = Array.from(new Set(
+      substitutions
+        .map(s => String(s).trim().replace(/\s+/g, ' '))
+        .filter(s => s.length > 0)
+    )).sort();
 
     let finalDescription = description;
     if (cleanedSubs.length > 0) {
