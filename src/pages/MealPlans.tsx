@@ -464,8 +464,42 @@ export default function MealPlans() {
             <p className="text-muted-foreground">Crie um plano alimentar para seus pacientes.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {plans.map((p) => {
+          <>
+            {/* Plan status filter */}
+            <div className="flex flex-wrap items-center gap-2 mb-2" data-testid="meal-plans-status-filter">
+              <Label className="text-xs text-muted-foreground">Filtrar por status:</Label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                data-testid="meal-plans-status-select"
+                className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value={STATUS_FILTER_ALL}>Todos ({plans.length})</option>
+                {statusKeysPresent
+                  .filter((k) => KNOWN_PLAN_STATUS_KEYS.includes(k))
+                  .map((k) => {
+                    const meta = getPlanStatusMeta(k);
+                    return (
+                      <option key={k} value={k}>
+                        {meta.label} ({statusCounts[k]})
+                      </option>
+                    );
+                  })}
+                {unknownStatusCount > 0 && (
+                  <option value={STATUS_FILTER_UNKNOWN}>
+                    Desconhecido ({unknownStatusCount})
+                  </option>
+                )}
+              </select>
+              <span
+                className="text-xs text-muted-foreground"
+                data-testid="meal-plans-filtered-count"
+              >
+                {filteredPlans.length} exibido{filteredPlans.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredPlans.map((p) => {
               const state = resolvePlanState(p);
               return (
                 <motion.div key={p.id} whileHover={{ y: -2 }}
