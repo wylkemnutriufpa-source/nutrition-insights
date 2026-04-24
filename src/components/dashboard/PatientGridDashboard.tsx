@@ -250,6 +250,8 @@ export default function PatientGridDashboard() {
 
       {!blockDashboard && (<>
 
+      <ExperienceModeStatusSection />
+
       {/* Experience Mode Toggle + Plan Request */}
       <div className="flex items-center justify-between gap-2 flex-wrap">
         <InlineExperienceToggle />
