@@ -19,20 +19,16 @@ import {
   Beef,
   Wheat,
   Droplets,
-  ChevronLeft,
-  ChevronRight,
   Sparkles,
-  Check,
-  X,
   PlusCircle,
   History,
   Info,
 } from "lucide-react";
-import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { MEAL_TEMPLATES } from "./MealTemplatePanel";
-import { fmtMacro } from "@/lib/formatMacros";
+import { cn } from "@/lib/utils";
 
 interface MealSmartEditorModalProps {
   open: boolean;
@@ -45,7 +41,7 @@ export function MealSmartEditorModal({
   onOpenChange,
   itemId,
 }: MealSmartEditorModalProps) {
-  const { items, updateItem, planId, addItem } = useMealPlanEditorV2Store();
+  const { items, updateItem } = useMealPlanEditorV2Store();
   const item = items.find((i) => i.id === itemId);
 
   const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
@@ -53,7 +49,6 @@ export function MealSmartEditorModal({
   const [description, setDescription] = useState(item?.description || "");
   const [notes, setNotes] = useState((item as any)?.notes || "");
 
-  // Sync state when item changes or modal opens
   useEffect(() => {
     if (item && open) {
       setDescription(item.description || "");
@@ -128,7 +123,6 @@ export function MealSmartEditorModal({
         </DialogHeader>
 
         <div className="flex-1 flex overflow-hidden">
-          {/* Left Panel: Content Selection */}
           <div className="w-1/2 border-r flex flex-col bg-muted/5">
             <div className="p-4 border-b bg-background">
               <div className="flex p-1 bg-secondary rounded-xl gap-1">
@@ -216,7 +210,6 @@ export function MealSmartEditorModal({
             </ScrollArea>
           </div>
 
-          {/* Right Panel: Composition & Notes */}
           <div className="w-1/2 flex flex-col bg-background">
             <ScrollArea className="flex-1 p-6">
               <div className="space-y-6">
@@ -234,9 +227,6 @@ export function MealSmartEditorModal({
                       placeholder="Os alimentos selecionados aparecerão aqui..."
                       className="min-h-[150px] bg-transparent border-none focus-visible:ring-0 text-sm font-medium leading-relaxed p-0 resize-none"
                     />
-                    <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <span className="text-[9px] text-muted-foreground bg-background/80 px-2 py-1 rounded-md border">Edição Livre Ativa</span>
-                    </div>
                   </div>
                 </div>
 
@@ -298,5 +288,3 @@ const Badge = ({ children, variant = "default", className }: { children: React.R
     {children}
   </span>
 );
-
-import { cn } from "@/lib/utils";
