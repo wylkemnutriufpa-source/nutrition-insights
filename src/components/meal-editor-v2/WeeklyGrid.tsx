@@ -193,6 +193,13 @@ export function WeeklyGrid() {
 
   return (
     <>
+      <div className="mb-3">
+        <LegacyDayBanner
+          effectiveDay={effectiveDay}
+          forceCanonical={forceCanonical}
+          onToggleForceCanonical={setForceCanonical}
+        />
+      </div>
       <div className="overflow-x-auto">
         {/* Day headers */}
         <div className="grid grid-cols-[160px_1fr] gap-4 mb-6 sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 border-b border-primary/10">
@@ -201,12 +208,16 @@ export function WeeklyGrid() {
           </div>
           <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
             <div>
-              <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">PLANO ÚNICO (GLOBAL)</span>
+              <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">
+                {effectiveDay === 0 ? "PLANO ÚNICO (DIA 0)" : `DIA LEGADO — ${effectiveDayLabel.toUpperCase()}`}
+              </span>
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                Modelo de Dia Único com Substituições Inteligentes
+                {effectiveDay === 0
+                  ? "Modelo de Dia Único com Substituições Inteligentes"
+                  : `Mostrando refeições do dia legado #${effectiveDay}. Migre para dia 0 para padronizar.`}
                 {effectiveDay !== 0 && (
                   <span className="ml-2 text-warning-foreground bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
-                    legado: dia #{effectiveDay}
+                    legado #{effectiveDay}
                   </span>
                 )}
               </p>
