@@ -142,6 +142,7 @@ describe("useExperienceModeState", () => {
     });
 
     expect(result.current.mode).toBe("basic");
+  });
 
   it("should sync mode across instances via BroadcastChannel", async () => {
     const { result } = renderHook(() => useExperienceModeState("patient"));
