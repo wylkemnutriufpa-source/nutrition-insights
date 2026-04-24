@@ -93,7 +93,7 @@ function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemIns
     title: insert.title,
     description: insert.description ?? null,
     meal_type: insert.meal_type,
-    day_of_week: 0, // Novo modelo GLOBAL: sempre dia 0
+    day_of_week: insert.day_of_week ?? 0, 
     is_primary: (insert as any).is_primary ?? true,
     substitution_group_id: (insert as any).substitution_group_id ?? null,
     calories_target: insert.calories_target ?? null,
@@ -354,7 +354,8 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
     const state = get();
     // Guard Single Day: bloqueia variações multi-dia, normaliza com aviso
-    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: true }) as typeof inserts;
+    const isSingleDay = get().plan?.plan_mode === 'single_day';
+    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: isSingleDay, isSingleDay }) as typeof inserts;
     const sanitizedInserts = safeInserts.map(sanitizeMealPlanItemInsert);
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
@@ -635,7 +636,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   updatePlan: (patch) => {
     const prevPlan = get().plan;
     const planId = get().planId;
-    if (!planId) return;
+    if (!planId || !prevPlan) return;
 
     set((s) => ({
       plan: s.plan ? { ...s.plan, ...patch } as MealPlan : s.plan,
@@ -651,12 +652,31 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           .update(patch as any)
           .eq("id", planId);
         if (error) throw error;
+
+        // Se mudou para single_day, garantimos que os itens atuais no dia 0
+        // sejam replicados pela trigger do banco
+        if (patch.plan_mode === "single_day") {
+          const items = get().items;
+          const masterItems = items.filter(i => i.day_of_week === 0);
+          
+          if (masterItems.length === 0 && items.length > 0) {
+            // Promover dia 1 para 0 se o 0 estiver vazio
+            const day1Items = items.filter(i => i.day_of_week === 1);
+            for (const it of day1Items) {
+              get().updateItem(it.id, { day_of_week: 0 });
+            }
+          } else {
+            // Tocar nos itens do dia 0 para disparar a trigger de replicação
+            for (const it of masterItems) {
+              get().updateItem(it.id, { updated_at: new Date().toISOString() } as any);
+            }
+          }
+        }
       },
       rollback: () => set({ plan: prevPlan }),
     });
   },
-
-  // ── Internal: enqueue operation ───────────────────────────
+  // Internal: enqueue operation ───────────────────────────
   _enqueue: (op) => {
     set((s) => {
       const filtered = s.pendingOps.filter((p) => p.key !== op.key);

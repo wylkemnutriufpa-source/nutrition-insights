@@ -49,7 +49,7 @@ export class SingleDayViolationError extends Error {
  */
 export function assertSingleDayItems<T extends MealItemLike>(
   items: T[],
-  options: { autoFix?: boolean } = {}
+  options: { autoFix?: boolean; isSingleDay?: boolean } = {}
 ): T[] {
   if (!Array.isArray(items)) {
     throw new SingleDayViolationError(
@@ -60,7 +60,7 @@ export function assertSingleDayItems<T extends MealItemLike>(
 
   const offenders = items.filter((i) => i.day_of_week != null && i.day_of_week !== 0);
 
-  if (offenders.length === 0) return items;
+  if (offenders.length === 0 || options.isSingleDay === false) return items;
 
   if (options.autoFix) {
     console.warn(
