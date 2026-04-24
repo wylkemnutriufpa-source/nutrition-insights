@@ -45,4 +45,37 @@ describe('mealEditorHelpers', () => {
       expect(formatFinalDescription(desc, subs)).toBe('Base content');
     });
   });
+
+  describe('Deduplication and Sorting edges', () => {
+    it('should handle different whitespace and line breaks', () => {
+      const input = [
+        '  banana \n  ', 
+        'apple\n', 
+        ' banana', 
+        'APPLE ',
+        '  pão \r\n  integral  '
+      ];
+      // Note: normalizeSubstitutions collapses \s+ to ' '
+      // apple\n becomes apple
+      // APPLE becomes APPLE
+      // pão \r\n integral becomes pão integral
+      // Set deduplication is case-sensitive, so apple and APPLE are different unless we lowercase
+      // The current implementation uses String(s).trim().replace(/\s+/g, ' ')
+      
+      const result = normalizeSubstitutions(input);
+      
+      // Expected: 
+      // 'banana' (from '  banana \n  ' and ' banana')
+      // 'apple' (from 'apple\n')
+      // 'APPLE' (from 'APPLE ')
+      // 'pão integral' (from '  pão \r\n  integral  ')
+      
+      expect(result).toContain('apple');
+      expect(result).toContain('APPLE');
+      expect(result).toContain('banana');
+      expect(result).toContain('pão integral');
+      expect(result).toHaveLength(4);
+      expect(result).toEqual(['APPLE', 'apple', 'banana', 'pão integral'].sort());
+    });
+  });
 });

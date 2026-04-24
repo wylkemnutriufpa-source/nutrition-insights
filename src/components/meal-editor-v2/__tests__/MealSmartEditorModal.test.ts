@@ -233,5 +233,42 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     expect(saved.description).not.toContain('5');
     expect(saved.description).toMatch(/\n\n🔄 Substituições:\n1\n2\n3\n4/);
   });
+
+  it('should not allow adding more than 4 items via handleSubChange if they are unique', () => {
+    // This tests the logic that drives the "isOverLimit" and "substitutions.length < 4" check in UI
+    const { result } = renderHook(() => useSubstitutionEditor(['1', '2', '3', '4']));
+    
+    // Simulate what happens in the component: substitutions.length check
+    const canAdd = result.current.substitutions.length < 4;
+    expect(canAdd).toBe(false);
+
+    // Simulate adding a 5th item anyway (e.g. via code or edge case)
+    act(() => {
+      result.current.setSubstitutions(['1', '2', '3', '4', '5']);
+    });
+
+    // Check normalization on save
+    const saved = result.current.simulateSave();
+    expect(saved.substitutions_json).toHaveLength(4);
+    expect(saved.substitutions_json).toEqual(['1', '2', '3', '4']);
+  });
+
+  it('should maintain state integrity when closing via Escape (simulated)', () => {
+    const initialDesc = 'Initial';
+    const initialSubs = ['Initial Sub'];
+    const { result } = renderHook(() => useSubstitutionEditor(initialSubs, initialDesc));
+
+    act(() => {
+      result.current.setDescription('Modified');
+    });
+
+    // simulate handleOpenChange(false) which is what onEscapeKeyDown calls
+    act(() => {
+      result.current.handleOpenChange(false);
+    });
+
+    expect(result.current.description).toBe(initialDesc);
+    expect(result.current.updateItem).not.toHaveBeenCalled();
+  });
 });
 

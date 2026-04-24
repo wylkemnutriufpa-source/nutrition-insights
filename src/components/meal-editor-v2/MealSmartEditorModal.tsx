@@ -154,7 +154,17 @@ export function MealSmartEditorModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl">
+      <DialogContent 
+        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl"
+        onEscapeKeyDown={(e) => {
+          // Garante que o estado local seja resetado ao fechar via ESC
+          handleOpenChange(false);
+        }}
+        onInteractOutside={(e) => {
+          // Garante que o estado local seja resetado ao clicar fora
+          handleOpenChange(false);
+        }}
+      >
         <DialogHeader className="px-6 py-4 bg-gradient-to-r from-primary/10 via-background to-background border-b">
           <div className="flex items-center justify-between">
             <div>
