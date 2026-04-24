@@ -34,6 +34,19 @@ interface AlertRow {
   created_at: string;
 }
 
+interface UnknownStatusBreakdown {
+  plan_status: string;
+  workspace_id: string | null;
+  count: number;
+  last_seen: string;
+}
+
+interface TrendBucket {
+  date: string;
+  PLAN_STATUS_UNKNOWN: number;
+  PLAN_VISIBILITY_DROP: number;
+}
+
 const TRACKED_ALERT_TYPES = [
   "PLAN_VISIBILITY_DROP",
   "PLAN_STATUS_UNKNOWN",
@@ -42,6 +55,8 @@ const TRACKED_ALERT_TYPES = [
   "E2E_CONSISTENCY_ERROR",
 ];
 
+const TREND_TRACKED_TYPES = ["PLAN_STATUS_UNKNOWN", "PLAN_VISIBILITY_DROP"] as const;
+
 export default function AdminPlanLoadingDiagnostics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,6 +64,10 @@ export default function AdminPlanLoadingDiagnostics() {
   const [activeTotal, setActiveTotal] = useState<number>(0);
   const [buckets, setBuckets] = useState<StatusBucket[]>([]);
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
+  const [unknownByWorkspace, setUnknownByWorkspace] = useState<UnknownStatusBreakdown[]>([]);
+  const [trend7, setTrend7] = useState<TrendBucket[]>([]);
+  const [trend30, setTrend30] = useState<TrendBucket[]>([]);
+  const [trendWindow, setTrendWindow] = useState<7 | 30>(7);
 
   const load = useCallback(async () => {
     setLoading(true);
