@@ -84,7 +84,6 @@ export default function PatientMealPlan() {
   const [weekCompletions, setWeekCompletions] = useState<MealCompletion[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
