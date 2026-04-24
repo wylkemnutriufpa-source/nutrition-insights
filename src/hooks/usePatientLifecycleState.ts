@@ -253,6 +253,7 @@ export function usePatientLifecycleStateFor(patientId: string | null): PatientLi
     queryKey: ["lifecycle", patientId],
     enabled: !!patientId,
     staleTime: 5 * 1000,
+    refetchOnWindowFocus: true,
     queryFn: () => fetchLifecycleState(patientId!),
   });
 
