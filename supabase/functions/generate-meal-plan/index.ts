@@ -1587,7 +1587,20 @@ function generatePlanFromVisualLibrary(
   }
 
   // ──── STRICT FILTERING ────
-  const filtered = filterVisualLibraryForPatient(visualLibrary, restrictions, disliked, allergies);
+  let filtered = filterVisualLibraryForPatient(visualLibrary, restrictions, disliked, allergies);
+
+  // ──── CLINICAL TAG-BASED FILTER (diabetes / insulin resistance) ────
+  // Quando paciente tem contexto de diabetes (via restrictions), remove itens marcados
+  // como não-amigáveis para diabetes (ex.: Sopa de Legumes com 25g carb no jantar).
+  const isDiabetesContext = (restrictions || []).some((r: string) =>
+    typeof r === "string" && /diabet|insulin|glic/i.test(r)
+  );
+  if (isDiabetesContext) {
+    const before = filtered.length;
+    filtered = filtered.filter(it => !(it.clinical_tags || []).includes("not_diabetes_friendly"));
+    console.log(`[clinical-filter] diabetes context — removidos ${before - filtered.length} itens not_diabetes_friendly`);
+  }
+
   console.log(`[DB-Exclusive-v7] Filtered library: ${filtered.length}/${visualLibrary.length} items passed restriction/intolerance filter`);
 
   // ──── MEAL STRUCTURE FROM ONBOARDING ────
@@ -3566,6 +3579,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       if (flagKeys.includes("diabetes_risk") || flagKeys.includes("insulin_resistance")) {
         finalMacros.carbs = Math.round(finalMacros.carbs * 0.85);
         finalMacros.fat = Math.round(finalMacros.fat * 1.1);
+        // Marca contexto diabetes para o filtro de biblioteca visual remover not_diabetes_friendly
+        if (!restrictions.some(r => /diabet/i.test(r))) restrictions.push("diabetes");
       }
       if (flagKeys.includes("hypertension") || flagKeys.includes("cardiovascular_risk")) {
         restrictions.push("low_sodium");
