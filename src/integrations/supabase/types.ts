@@ -4050,6 +4050,48 @@ export type Database = {
         }
         Relationships: []
       }
+      experience_mode_audit_log: {
+        Row: {
+          attempted_mode: string
+          correlation_id: string
+          created_at: string
+          error_code: string | null
+          id: string
+          metadata: Json | null
+          outcome: string
+          previous_mode: string | null
+          reason: string | null
+          unlock_date: string | null
+          user_id: string
+        }
+        Insert: {
+          attempted_mode: string
+          correlation_id: string
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          metadata?: Json | null
+          outcome: string
+          previous_mode?: string | null
+          reason?: string | null
+          unlock_date?: string | null
+          user_id: string
+        }
+        Update: {
+          attempted_mode?: string
+          correlation_id?: string
+          created_at?: string
+          error_code?: string | null
+          id?: string
+          metadata?: Json | null
+          outcome?: string
+          previous_mode?: string | null
+          reason?: string | null
+          unlock_date?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       export_tasks: {
         Row: {
           created_at: string | null

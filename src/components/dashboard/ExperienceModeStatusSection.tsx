@@ -1,0 +1,143 @@
+/**
+ * Fixed status section displayed at the top of the dashboard.
+ * Surfaces the current state of the experience mode (saving, success,
+ * blocked, failed, offline-queued) so the user does not need to rely
+ * on toasts only.
+ */
+import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw } from "lucide-react";
+import { Button } from "@/components/ui/button";
+
+export default function ExperienceModeStatusSection() {
+  const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, retryLastMode } =
+    useExperienceMode();
+
+  // Saving in-flight
+  if (isLoading) {
+    return (
+      <div
+        data-testid="emode-status"
+        data-state="saving"
+        className="rounded-xl border border-border bg-muted/40 px-4 py-3 flex items-center gap-3"
+      >
+        <Loader2 className="w-4 h-4 text-primary animate-spin" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium">Salvando seu modo de experiência…</p>
+          <p className="text-xs text-muted-foreground">
+            Aguarde alguns instantes. Não feche a página.
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Locked / blocked attempt
+  if (failedMode && lastError?.code === "MODE_LOCKED") {
+    const unlockText = lastError.unlock_date
+      ? ` Liberação prevista para ${new Date(lastError.unlock_date).toLocaleDateString("pt-BR")}.`
+      : "";
+    return (
+      <div
+        data-testid="emode-status"
+        data-state="blocked"
+        className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex items-start gap-3"
+      >
+        <Lock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-amber-700 dark:text-amber-400">
+            {lastError.blockTitle || "Modo bloqueado"}
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {lastError.blockDescription || lastError.message}
+            {!lastError.blockDescription && unlockText}
+          </p>
+          {lastError.correlationId && (
+            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
+              ID: {lastError.correlationId}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Offline / queued
+  if (failedMode && (lastError?.code === "OFFLINE" || isOffline || pendingQueueSize > 0)) {
+    return (
+      <div
+        data-testid="emode-status"
+        data-state="offline"
+        className="rounded-xl border border-blue-500/30 bg-blue-500/10 px-4 py-3 flex items-start gap-3"
+      >
+        <WifiOff className="w-4 h-4 text-blue-600 mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
+            Sem conexão — alteração enfileirada
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {pendingQueueSize > 0
+              ? `${pendingQueueSize} tentativa(s) pendente(s). `
+              : ""}
+            Reenviaremos automaticamente quando você voltar a ficar online.
+          </p>
+          {lastError?.correlationId && (
+            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
+              ID: {lastError.correlationId}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Generic failure
+  if (failedMode) {
+    return (
+      <div
+        data-testid="emode-status"
+        data-state="failed"
+        className="rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3 flex items-start gap-3"
+      >
+        <AlertTriangle className="w-4 h-4 text-destructive mt-0.5 shrink-0" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-medium text-destructive">
+            Falha ao atualizar o modo
+          </p>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {lastError?.message || "Não foi possível salvar a alteração."}
+          </p>
+          {lastError?.correlationId && (
+            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
+              ID: {lastError.correlationId}
+            </p>
+          )}
+        </div>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={retryLastMode}
+          className="shrink-0 gap-1.5"
+        >
+          <RefreshCw className="w-3 h-3" />
+          Tentar novamente
+        </Button>
+      </div>
+    );
+  }
+
+  // Success / steady state
+  const modeLabel = mode === "basic" ? "Básico" : mode === "pro" ? "Profissional" : "Avançado";
+  return (
+    <div
+      data-testid="emode-status"
+      data-state="success"
+      className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 flex items-center gap-2.5"
+    >
+      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+      <p className="text-xs text-muted-foreground">
+        Modo ativo:{" "}
+        <span className="font-semibold text-foreground">{modeLabel}</span>
+      </p>
+    </div>
+  );
+}
