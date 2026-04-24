@@ -232,11 +232,13 @@ describe("useExperienceMode — slow network, timeouts & UI retry", () => {
     render(<HostedStatus stateRef={stateRef} />);
     await waitFor(() => expect(stateRef.current).not.toBeNull());
 
-    // Kick off the change — don't await yet, we want to observe 'saving'
+    // Kick off the change WITHOUT awaiting (the second attempt is pending
+    // on `resolveSecond`, so awaiting here would block forever and React's
+    // `act` would never settle).
     let setModePromise!: Promise<void>;
-    await act(async () => {
-      setModePromise = stateRef.current.setMode("pro");
-    });
+    setModePromise = stateRef.current.setMode("pro");
+    // Swallow rejection just in case — we don't expect one in this test
+    setModePromise.catch(() => {});
 
     // While the second attempt is pending, status must be 'saving'
     await waitFor(() => {
