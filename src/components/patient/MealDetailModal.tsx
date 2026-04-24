@@ -220,12 +220,57 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     fat: "",
   });
 
+  const [isApplyingSuggestion, setIsApplyingSuggestion] = useState(false);
+
   const findFoodInDatabase = (text: string) => {
     const q = text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
     return FOOD_DATABASE.find(f => {
       const n = f.name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
       return n === q || q.includes(n) || n.includes(q);
     });
+  };
+
+  /**
+   * Sugestões inteligentes baseadas no delta de macros
+   */
+  const getSmartSuggestions = (delta: { protein: number; carbs: number; fat: number }) => {
+    const suggestions: { label: string; action: () => void; icon: React.ReactNode }[] = [];
+    
+    // Proteína Baixa
+    if (delta.protein < -5) {
+      suggestions.push({
+        label: `+${Math.abs(Math.round(delta.protein * 4))}g de Frango`,
+        icon: <Beef className="w-3 h-3 text-red-500" />,
+        action: () => handleAddManualFoodAction("Frango Grelhado", `${Math.abs(Math.round(delta.protein * 4))}g`)
+      });
+      suggestions.push({
+        label: "+1 Ovo Cozido",
+        icon: <Beef className="w-3 h-3 text-red-500" />,
+        action: () => handleAddManualFoodAction("Ovo Cozido", "1 unidade")
+      });
+    }
+    
+    // Carboidrato Baixo
+    if (delta.carbs < -10) {
+      suggestions.push({
+        label: `+${Math.abs(Math.round(delta.carbs * 5))}g de Arroz`,
+        icon: <Wheat className="w-3 h-3 text-amber-500" />,
+        action: () => handleAddManualFoodAction("Arroz Branco", `${Math.abs(Math.round(delta.carbs * 5))}g`)
+      });
+    }
+
+    return suggestions.slice(0, 3);
+  };
+
+  const handleAddManualFoodAction = (name: string, portion: string) => {
+    if (!canEdit || !meal.itemId) return;
+    const newLine = `• ${name} — ${portion}`;
+    const newFoodLines = [...foodLines, newLine];
+    const newDescription = rebuildDescription(newFoodLines, substitutionLines);
+    if (onUpdateItem) {
+      onUpdateItem(meal.itemId, { description: newDescription });
+      toast.success(`Adicionado: ${name} (${portion})`);
+    }
   };
 
   /**
@@ -812,9 +857,44 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             <span className="text-[8px] text-muted-foreground/70 leading-none">
                               Sugestão: {m.requested}{m.unit}
                             </span>
-                          </div>
-                        )}
-                        
+            </div>
+          )}
+
+          {/* Assistente de Sugestões Rápidas */}
+          {(() => {
+            const visual = calculateVisualMacrosFromDescription(meal.description || "");
+            const delta = {
+              protein: protein - visual.protein,
+              carbs: carbs - visual.carbs,
+              fat: fat - visual.fat
+            };
+            const suggestions = getSmartSuggestions(delta);
+            
+            return suggestions.length > 0 && (
+              <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 animate-in fade-in slide-in-from-bottom-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Settings2 className="w-4 h-4 text-primary" />
+                  <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {suggestions.map((s, idx) => (
+                    <Button 
+                      key={idx} 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[10px] gap-1.5 bg-white hover:bg-primary/5 hover:text-primary transition-all border-primary/20"
+                      onClick={s.action}
+                    >
+                      {s.icon}
+                      {s.label}
+                      <Plus className="w-3 h-3 ml-0.5" />
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            );
+          })()}
+
                         {/* Tooltip de assistência */}
                         <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] p-2 rounded-lg shadow-xl border border-border opacity-0 group-hover/macro:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
                           {status === "OK" ? "✓ Macros em conformidade" : `Assistente: Diferença de ${Math.abs(diff)}${m.unit}`}
