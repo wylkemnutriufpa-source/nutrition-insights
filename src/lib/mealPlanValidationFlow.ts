@@ -35,7 +35,32 @@ interface RunValidateAndFixParams {
   flush: () => Promise<void>;
 }
 
+/**
+ * Reconcile macros: para cada item do plano com macros NULL/0 e visual_library_item_id,
+ * copia macros padrão da biblioteca. Atualiza totais do plano. Idempotente.
+ * Falha silenciosa (best-effort) — não interrompe o fluxo se der erro.
+ */
+export async function reconcileMealPlanMacros(planId: string): Promise<{ items_reconciled: number; daily_calories?: number } | null> {
+  try {
+    const { data, error } = await (supabase as any).rpc("reconcile_meal_plan_macros", { p_plan_id: planId });
+    if (error) {
+      console.warn("[reconcileMealPlanMacros] non-fatal:", error.message);
+      return null;
+    }
+    const items = data?.items_reconciled ?? 0;
+    const dailyCal = data?.totals?.daily_calories;
+    if (items > 0) console.info(`[reconcileMealPlanMacros] reconciled ${items} items, daily=${dailyCal}kcal`);
+    return { items_reconciled: items, daily_calories: dailyCal };
+  } catch (e: any) {
+    console.warn("[reconcileMealPlanMacros] threw:", e?.message);
+    return null;
+  }
+}
+
 export async function validateMealPlan(planId: string): Promise<ClinicalValidationResult> {
+  // 🔧 Reconciliar macros faltantes ANTES de validar (best-effort, não bloqueia)
+  await reconcileMealPlanMacros(planId);
+
   const { data, error } = await supabase.functions.invoke("validate-meal-plan", {
     body: { meal_plan_id: planId },
   });
