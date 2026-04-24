@@ -205,7 +205,7 @@ export function WeeklyGrid() {
               <p className="text-[10px] text-muted-foreground mt-0.5">Modelo de Dia Único com Substituições Inteligentes</p>
             </div>
             {(() => {
-              const t = getDayTotals(0);
+              const t = getDayTotals(effectiveDay);
               return (
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
