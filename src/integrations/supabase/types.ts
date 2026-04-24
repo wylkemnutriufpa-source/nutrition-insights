@@ -602,6 +602,33 @@ export type Database = {
           },
         ]
       }
+      audit_plan_fetch_logs: {
+        Row: {
+          created_at: string | null
+          id: string
+          nutritionist_id: string | null
+          patient_id: string | null
+          plans_found: number | null
+          status_filter: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          plans_found?: number | null
+          status_filter?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          nutritionist_id?: string | null
+          patient_id?: string | null
+          plans_found?: number | null
+          status_filter?: string | null
+        }
+        Relationships: []
+      }
       autofix_backups: {
         Row: {
           created_at: string
