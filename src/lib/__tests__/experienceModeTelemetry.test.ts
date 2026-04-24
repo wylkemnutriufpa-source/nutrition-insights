@@ -52,22 +52,45 @@ describe("experienceModeTelemetry", () => {
     expect(r.description).not.toMatch(/Liberação prevista/);
   });
 
-  it("enqueueAttempt persists into localStorage and dedups by mode", () => {
-    enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
-    enqueueAttempt({ correlationId: "c2", attemptedMode: "pro", previousMode: "basic" });
-    enqueueAttempt({ correlationId: "c3", attemptedMode: "advanced", previousMode: "pro" });
+  it("enqueueAttempt persists into localStorage and dedups by mode", async () => {
+    await enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
+    await enqueueAttempt({ correlationId: "c2", attemptedMode: "pro", previousMode: "basic" });
+    await enqueueAttempt({ correlationId: "c3", attemptedMode: "advanced", previousMode: "pro" });
     const q = readQueue();
     expect(q).toHaveLength(2);
     expect(q.find((i) => i.attemptedMode === "pro")?.correlationId).toBe("c2");
   });
 
-  it("removeFromQueue and clearQueue work", () => {
-    enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
+  it("removeFromQueue and clearQueue work", async () => {
+    await enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
     removeFromQueue("c1");
     expect(readQueue()).toHaveLength(0);
-    enqueueAttempt({ correlationId: "c2", attemptedMode: "advanced", previousMode: "basic" });
+    await enqueueAttempt({ correlationId: "c2", attemptedMode: "advanced", previousMode: "basic" });
     clearQueue();
     expect(readQueue()).toHaveLength(0);
+  });
+
+  it("drainQueue replays each attempt and removes successful ones", async () => {
+    await enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
+    await enqueueAttempt({ correlationId: "c2", attemptedMode: "advanced", previousMode: "pro" });
+    const replay = vi.fn(async (_item) => {});
+    const res = await drainQueue(replay);
+    expect(res.replayed).toBe(2);
+    expect(res.failed).toBe(0);
+    expect(replay).toHaveBeenCalledTimes(2);
+    expect(readQueue()).toHaveLength(0);
+  });
+
+  it("drainQueue keeps failed attempts in the queue and increments retries", async () => {
+    await enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
+    const replay = vi.fn(async () => {
+      throw new Error("network");
+    });
+    const res = await drainQueue(replay);
+    expect(res.failed).toBe(1);
+    const q = readQueue();
+    expect(q).toHaveLength(1);
+    expect(q[0].retries).toBe(1);
   });
 
   it("drainQueue replays each attempt and removes successful ones", async () => {
