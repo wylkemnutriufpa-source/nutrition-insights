@@ -197,8 +197,9 @@ describe("useExperienceMode — slow network, timeouts & UI retry", () => {
 
     // Now allow success and click retry
     phase = "succeed";
-    const user = userEvent.setup();
-    await user.click(screen.getByRole("button", { name: /Tentar novamente/i }));
+    await act(async () => {
+      fireEvent.click(screen.getByRole("button", { name: /Tentar novamente/i }));
+    });
 
     await waitFor(() => expect(stateRef.current.mode).toBe("pro"));
 
