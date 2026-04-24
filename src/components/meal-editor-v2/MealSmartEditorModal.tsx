@@ -83,6 +83,8 @@ export function MealSmartEditorModal({
     const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
 
     try {
+      // Usar toast.promise ou gerenciar ID para evitar duplicatas
+      const toastId = "meal-save-toast";
       await updateItem(itemId, {
         description: finalDescription,
         notes,
@@ -91,10 +93,10 @@ export function MealSmartEditorModal({
           substitutions_json: cleanedSubs
         }
       } as any);
-      toast.success("Refeição atualizada com sucesso");
+      toast.success("Refeição atualizada com sucesso", { id: toastId });
       onOpenChange(false);
     } catch (error) {
-      toast.error("Erro ao salvar alterações. Tente novamente.");
+      toast.error("Erro ao salvar alterações. Tente novamente.", { id: "meal-save-toast" });
       // Keep modal open on error
     }
   };
@@ -415,7 +417,7 @@ export function MealSmartEditorModal({
 
                       <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">substitutions_json:</p>
-                        <div className="text-muted-foreground break-all">
+                        <div className="text-muted-foreground break-all" data-testid="preview-substitutions-json">
                           {JSON.stringify(getNormalizedSubs())}
                         </div>
                       </div>
