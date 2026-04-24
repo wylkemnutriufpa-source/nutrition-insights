@@ -439,17 +439,22 @@ export default function MealPlans() {
         ) : loadError ? (
           <div
             data-testid="meal-plans-error"
+            data-error-kind={loadError.kind}
             className="glass rounded-xl p-10 text-center border border-destructive/30"
           >
             <ClipboardList className="w-12 h-12 mx-auto text-destructive mb-3" />
-            <h3 className="font-display font-semibold text-lg mb-1">Não conseguimos carregar seus planos</h3>
-            <p className="text-sm text-muted-foreground mb-4">{loadError}</p>
+            <h3 className="font-display font-semibold text-lg mb-1">{loadError.title}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{loadError.description}</p>
+            <details className="text-[11px] text-muted-foreground/80 mb-4">
+              <summary className="cursor-pointer">Detalhes técnicos</summary>
+              <code className="block mt-1 break-all">{loadError.technicalMessage}</code>
+            </details>
             <Button
               variant="outline"
               onClick={() => void fetchPlans()}
               data-testid="meal-plans-retry"
             >
-              Tentar novamente
+              {loadError.retryLabel}
             </Button>
           </div>
         ) : plans.length === 0 ? (
