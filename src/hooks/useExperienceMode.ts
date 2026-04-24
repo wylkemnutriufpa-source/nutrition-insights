@@ -348,8 +348,8 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
 
     // Offline path — queue the attempt and bail
     if (typeof navigator !== "undefined" && !navigator.onLine) {
-      enqueueAttempt({ correlationId, attemptedMode: m, previousMode: previous });
-      setPendingQueueSize((s) => s + 1);
+      await enqueueAttempt({ correlationId, attemptedMode: m, previousMode: previous });
+      refreshQueueStats();
       const err: ModeChangeError = Object.assign(
         new Error("Sem conexão. Tentaremos novamente quando você voltar a ficar online."),
         { code: "OFFLINE" as const, correlationId }
@@ -445,12 +445,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
           channel.close();
         } catch {}
       });
-      try {
-        const raw = localStorage.getItem("fj_experience_mode_queue");
-        setPendingQueueSize(raw ? (JSON.parse(raw) as any[]).length : 0);
-      } catch {
-        setPendingQueueSize(0);
-      }
+      refreshQueueStats();
       if (result.replayed > 0) {
         setFailedMode(null);
         setLastError(null);
@@ -495,11 +490,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       lastError,
       isOffline,
       pendingQueueSize,
+      queueStats,
       retryLastMode,
       minMode,
       role,
     }),
-    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, isLoading, failedMode, lastError, isOffline, pendingQueueSize, retryLastMode, minMode, role]
+    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode, minMode, role]
   );
 
   return value;
