@@ -1181,7 +1181,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
                         </div>
                         <div className="flex gap-2">
-                          <Button size="sm" className="flex-1 h-8" onClick={() => handleUpdateLine(idx)}>
+                          <Button size="sm" className="flex-1 h-8" onClick={() => { saveToHistory(); handleUpdateLine(idx); }}>
                             <Check className="w-3.5 h-3.5 mr-1" /> Salvar Alterações
                           </Button>
                           <Button size="sm" variant="ghost" className="h-8" onClick={() => setEditingLineIdx(null)}>
