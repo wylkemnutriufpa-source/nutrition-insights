@@ -378,22 +378,26 @@ export default function MealPlans() {
   const effectivePlansCount = plans.filter(p => resolvePlanState(p).isEffective).length;
 
   // Counts per plan_status (for the filter dropdown badges)
+  // IMPORTANT: para a chave de catálogo usamos `|| "draft"` (rótulo amigável),
+  // mas para classificar "Desconhecido" usamos o valor cru via
+  // `isTrulyUnknownPlanStatus` — assim ausência (null/"") NÃO entra no bucket
+  // "Desconhecido" e não infla a contagem indevidamente.
   const statusCounts = plans.reduce<Record<string, number>>((acc, p) => {
     const k = (p.plan_status as string) || "draft";
     acc[k] = (acc[k] || 0) + 1;
     return acc;
   }, {});
   const statusKeysPresent = Object.keys(statusCounts).sort();
-  const unknownStatusCount = statusKeysPresent
-    .filter((k) => !KNOWN_PLAN_STATUS_KEYS.includes(k))
-    .reduce((sum, k) => sum + (statusCounts[k] || 0), 0);
+  const unknownStatusCount = plans.filter((p) =>
+    isTrulyUnknownPlanStatus(p.plan_status as string | null | undefined),
+  ).length;
 
   const filteredPlans = plans.filter((p) => {
     if (statusFilter === STATUS_FILTER_ALL) return true;
-    const k = (p.plan_status as string) || "draft";
     if (statusFilter === STATUS_FILTER_UNKNOWN) {
-      return !KNOWN_PLAN_STATUS_KEYS.includes(k);
+      return isTrulyUnknownPlanStatus(p.plan_status as string | null | undefined);
     }
+    const k = (p.plan_status as string) || "draft";
     return k === statusFilter;
   });
 
