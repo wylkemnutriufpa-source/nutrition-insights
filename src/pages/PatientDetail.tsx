@@ -38,6 +38,7 @@ import PatientFeedbackSummary from "@/components/patient/PatientFeedbackSummary"
 import DocumentUpload from "@/components/common/DocumentUpload";
 import ClinicalDecisionSupport from "@/components/patient/ClinicalDecisionSupport";
 import OnboardingApprovalQueue from "@/components/patient/OnboardingApprovalQueue";
+import UnblockPatientDialog from "@/components/patient/UnblockPatientDialog";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
@@ -594,6 +595,12 @@ export default function PatientDetail() {
             >
               🏥 Modo Consultório
             </Button>
+            {patientId && (
+              <UnblockPatientDialog
+                patientId={resolvedPatientId}
+                patientName={profile?.full_name ?? undefined}
+              />
+            )}
             {patientId && <PatientEvolutionPDF patientId={resolvedPatientId} patientName={profile?.full_name || "Paciente"} />}
             <Button
               variant={patientStatus === "active" ? "outline" : "default"}
