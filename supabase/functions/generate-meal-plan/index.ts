@@ -1587,7 +1587,22 @@ function generatePlanFromVisualLibrary(
   }
 
   // ──── STRICT FILTERING ────
-  const filtered = filterVisualLibraryForPatient(visualLibrary, restrictions, disliked, allergies);
+  let filtered = filterVisualLibraryForPatient(visualLibrary, restrictions, disliked, allergies);
+
+  // ──── CLINICAL TAG-BASED FILTER (diabetes / insulin resistance) ────
+  // Quando o paciente tem flag clínica de diabetes, removemos itens marcados
+  // como não-amigáveis para diabetes (ex.: Sopa de Legumes com 25g carb no jantar).
+  const clinicalFlagsArr: string[] = (Array.isArray(strategyId) ? [] : []); // placeholder, see below
+  // Deriva flags do strategyId — quando "clinical_standard" indica perfil clínico
+  const isDiabetesContext = (restrictions || []).some((r: string) =>
+    typeof r === "string" && /diabet|insulin|glic/i.test(r)
+  ) || (strategyId === "clinical_standard");
+  if (isDiabetesContext) {
+    const before = filtered.length;
+    filtered = filtered.filter(it => !(it.clinical_tags || []).includes("not_diabetes_friendly"));
+    console.log(`[clinical-filter] diabetes context — removidos ${before - filtered.length} itens not_diabetes_friendly`);
+  }
+
   console.log(`[DB-Exclusive-v7] Filtered library: ${filtered.length}/${visualLibrary.length} items passed restriction/intolerance filter`);
 
   // ──── MEAL STRUCTURE FROM ONBOARDING ────
