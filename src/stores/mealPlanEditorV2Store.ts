@@ -4,6 +4,8 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 import { assertSingleDayItems } from "@/lib/singleDayGuards";
+import { ensurePlanMode, classifyPlanMode } from "@/lib/singleDayPlanMigration";
+import { checkSingleDayConsistency } from "@/lib/singleDayConsistency";
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
@@ -316,15 +318,18 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const patientName = profile?.full_name || "Paciente";
     const items = (itemsData || []) as MealPlanItem[];
 
+    // Migration defensiva: planos antigos sem plan_mode → 'weekly'
+    const normalizedPlan = ensurePlanMode(planData) as typeof planData;
+
     set({
-      plan: planData,
+      plan: normalizedPlan,
       patientName,
       items,
       hydrated: true,
       hydrating: false,
     });
 
-    writeCache(planId, planData, patientName, items);
+    writeCache(planId, normalizedPlan, patientName, items);
 
     // Silently resolve missing visuals for items without images
     resolveVisualsForItems(items);
@@ -745,6 +750,19 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       get()._setSyncStatus(hasError ? "error" : "saved");
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
+
+      // Validação pós-flush: bloqueia inconsistência entre master e dias 1-6 em single_day
+      const planAfter = get().plan;
+      const planMode = classifyPlanMode(planAfter);
+      if (!hasError && planMode === "single_day") {
+        const report = checkSingleDayConsistency(get().items as any);
+        if (!report.valid) {
+          console.error("[mealPlanEditorV2Store] Single Day inconsistente após flush:", report);
+          get()._setSyncStatus("error");
+          // Não throw para não derrubar o autosave; o badge de sync exibe o estado
+          // e o SingleDaySyncStatusBadge mostrará o erro vindo dos logs do trigger.
+        }
+      }
 
       if (hasError) {
         throw failed?.err instanceof Error ? failed.err : new Error("Falha ao persistir alterações do plano.");

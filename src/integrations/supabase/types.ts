@@ -15757,6 +15757,45 @@ export type Database = {
         }
         Relationships: []
       }
+      single_day_sync_logs: {
+        Row: {
+          affected_rows: number
+          created_at: string
+          error_detail: string | null
+          error_message: string | null
+          id: string
+          master_item_id: string | null
+          meal_plan_id: string | null
+          operation: string
+          payload: Json | null
+          status: string
+        }
+        Insert: {
+          affected_rows?: number
+          created_at?: string
+          error_detail?: string | null
+          error_message?: string | null
+          id?: string
+          master_item_id?: string | null
+          meal_plan_id?: string | null
+          operation: string
+          payload?: Json | null
+          status: string
+        }
+        Update: {
+          affected_rows?: number
+          created_at?: string
+          error_detail?: string | null
+          error_message?: string | null
+          id?: string
+          master_item_id?: string | null
+          meal_plan_id?: string | null
+          operation?: string
+          payload?: Json | null
+          status?: string
+        }
+        Relationships: []
+      }
       site_settings: {
         Row: {
           category: string
@@ -19501,6 +19540,10 @@ export type Database = {
       validate_onboarding_token: { Args: { _token: string }; Returns: Json }
       validate_plan_integrity: { Args: { p_plan_id: string }; Returns: Json }
       validate_practical_template: { Args: { _meals: Json }; Returns: Json }
+      validate_single_day_consistency: {
+        Args: { p_plan_id: string }
+        Returns: Json
+      }
     }
     Enums: {
       achievement_type:
