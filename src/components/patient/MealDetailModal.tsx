@@ -266,9 +266,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!meal?.itemId || !onUpdateItem) return;
     const snap = version.snapshot_data;
     
-    // Antes de fazer o rollback, salvamos o estado ATUAL como snapshot
+    // Antes de fazer o rollback, salvamos o estado ATUAL como snapshot para auditoria
     await saveToHistory("manual_update");
     
+    // Validação Clínica de Segurança antes de aplicar Restore
+    if (snap.protein < 0 || snap.carbs < 0 || snap.fat < 0) {
+      toast.error("Impossível restaurar: Snapshot contém dados inconsistentes.");
+      return;
+    }
+
     onUpdateItem(meal.itemId, {
       description: snap.description,
       protein_target: snap.protein_target,
@@ -278,7 +284,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       title: snap.title
     });
     
-    // Criamos a versão de rollback após a atualização para registrar a origem
+    // Log de Auditoria Global de Restore
+    await supabase.from("clinical_audit_logs").insert({
+      action_type: "RESTORE",
+      entity_id: meal.itemId,
+      status: "success",
+      payload_summary: { from_version: version.id }
+    });
+    
+    // Criamos a versão de rollback após a atualização para registrar a origem no histórico
     setTimeout(() => saveToHistory("restore_version", version.id), 500);
     
     setShowHistory(false);
