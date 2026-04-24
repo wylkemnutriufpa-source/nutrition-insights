@@ -142,5 +142,63 @@ describe("useExperienceModeState", () => {
     });
 
     expect(result.current.mode).toBe("basic");
+
+  it("should sync mode across instances via BroadcastChannel", async () => {
+    const { result } = renderHook(() => useExperienceModeState("patient"));
+    
+    // Simulate a message from another tab
+    await act(async () => {
+      const channel = new BroadcastChannel("experience_mode_sync");
+      channel.postMessage({ type: "MODE_UPDATE", mode: "pro" });
+      
+      // We need to wait a bit for the message to be processed
+      // BroadcastChannel is async even on the same thread
+      await new Promise(resolve => setTimeout(resolve, 10));
+    });
+
+    expect(result.current.mode).toBe("pro");
+  });
+
+  it("should persist failedMode in sessionStorage", async () => {
+    // Mock update failure
+    (supabase.from as any).mockImplementation(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { experience_mode_locked: false } }),
+        })),
+      })),
+      update: vi.fn(() => ({
+        eq: vi.fn().mockResolvedValue({ error: new Error("Fail") }),
+      })),
+    }));
+
+    const { result } = renderHook(() => useExperienceModeState("patient"));
+    
+    await act(async () => {
+      try { await result.current.setMode("advanced"); } catch(e) {}
+    });
+
+    expect(sessionStorage.getItem("fj_experience_mode_failed")).toBe("advanced");
+  });
+
+  it("should block and show unlock_date when locked", async () => {
+    const unlockDate = new Date(Date.now() + 86400000).toISOString();
+    (supabase.from as any).mockImplementation(() => ({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          maybeSingle: vi.fn().mockResolvedValue({ data: { experience_mode_locked: true, unlock_date: unlockDate } }),
+        })),
+      })),
+    }));
+
+    const { result } = renderHook(() => useExperienceModeState("patient"));
+    
+    let caughtError: any;
+    await act(async () => {
+      try { await result.current.setMode("pro"); } catch(e) { caughtError = e; }
+    });
+
+    expect(caughtError.code).toBe("MODE_LOCKED");
+    expect(caughtError.unlock_date).toBe(unlockDate);
   });
 });

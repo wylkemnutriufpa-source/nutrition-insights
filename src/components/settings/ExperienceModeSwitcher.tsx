@@ -80,9 +80,12 @@ export default function ExperienceModeSwitcher() {
       toast.success(`Modo ${label} ativado`);
     } catch (error: any) {
       if (error.code === "MODE_LOCKED") {
+        const unlockDateMsg = error.unlock_date 
+          ? ` A liberação está prevista para ${new Date(error.unlock_date).toLocaleDateString()}.` 
+          : "";
         toast.error("Alteração Negada", {
-          description: error.message || "Sua conta está restrita ao modo Básico por enquanto. Complete as atualizações pendentes para liberar outros modos.",
-          duration: 6000,
+          description: (error.message || "Sua conta está restrita ao modo Básico por enquanto. Complete as atualizações pendentes para liberar outros modos.") + unlockDateMsg,
+          duration: 8000,
         });
       } else {
         toast.error("Erro ao atualizar modo", {
@@ -130,43 +133,52 @@ export default function ExperienceModeSwitcher() {
             </Button>
           </div>
         )}
-        {MODES.map((m) => {
-          const Icon = m.icon;
-          const selected = mode === m.key;
-          return (
-            <motion.button
-              key={m.key}
-              onClick={() => handleSelect(m.key)}
-              disabled={isLoading}
-              whileTap={{ scale: 0.98 }}
-              className={`w-full text-left rounded-xl border p-3 transition-all ${
-                selected
-                  ? `${m.bgColor} ring-1 ring-offset-1 ring-offset-background`
-                  : "border-border hover:bg-muted/50"
-              }`}
-              
-            >
-              <div className="flex items-center gap-3">
-                <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${selected ? m.bgColor : "bg-muted"}`}>
-                  <Icon className={`w-4.5 h-4.5 ${selected ? m.color : "text-muted-foreground"}`} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-semibold ${selected ? m.color : "text-foreground"}`}>
-                      {m.label}
-                    </span>
-                    {selected && (
-                      <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary px-1.5 py-0.5 rounded">
-                        Ativo
-                      </span>
-                    )}
+        <div className="relative">
+          {isLoading && (
+            <div className="absolute inset-0 z-10 bg-background/50 backdrop-blur-[1px] rounded-xl flex items-center justify-center">
+              <RefreshCw className="w-8 h-8 text-primary animate-spin" />
+            </div>
+          )}
+          
+          <div className="space-y-3">
+            {MODES.map((m) => {
+              const Icon = m.icon;
+              const selected = mode === m.key;
+              return (
+                <motion.button
+                  key={m.key}
+                  onClick={() => handleSelect(m.key)}
+                  disabled={isLoading}
+                  whileTap={{ scale: 0.98 }}
+                  className={`w-full text-left rounded-xl border p-3 transition-all relative ${
+                    selected
+                      ? `${m.bgColor} ring-1 ring-offset-1 ring-offset-background`
+                      : "border-border hover:bg-muted/50"
+                  }`}
+                >
+                  <div className="flex items-center gap-3">
+                    <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${selected ? m.bgColor : "bg-muted"}`}>
+                      <Icon className={`w-4.5 h-4.5 ${selected ? m.color : "text-muted-foreground"}`} />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className={`text-sm font-semibold ${selected ? m.color : "text-foreground"}`}>
+                          {m.label}
+                        </span>
+                        {selected && (
+                          <span className="text-[10px] font-bold uppercase tracking-wider bg-primary/20 text-primary px-1.5 py-0.5 rounded">
+                            Ativo
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{m.desc}</p>
+                    </div>
                   </div>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{m.desc}</p>
-                </div>
-              </div>
-            </motion.button>
-          );
-        })}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
       </CardContent>
     </Card>
   );

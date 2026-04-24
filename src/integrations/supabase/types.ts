@@ -13715,6 +13715,7 @@ export type Database = {
           search_vector: unknown
           show_in_ranking: boolean
           tenant_id: string
+          unlock_date: string | null
           updated_at: string
           user_id: string
           weight_history_analyzed_at: string | null
@@ -13761,6 +13762,7 @@ export type Database = {
           search_vector?: unknown
           show_in_ranking?: boolean
           tenant_id: string
+          unlock_date?: string | null
           updated_at?: string
           user_id: string
           weight_history_analyzed_at?: string | null
@@ -13807,6 +13809,7 @@ export type Database = {
           search_vector?: unknown
           show_in_ranking?: boolean
           tenant_id?: string
+          unlock_date?: string | null
           updated_at?: string
           user_id?: string
           weight_history_analyzed_at?: string | null
