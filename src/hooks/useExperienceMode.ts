@@ -191,14 +191,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
   const [isOffline, setIsOffline] = useState<boolean>(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   );
-  const [pendingQueueSize, setPendingQueueSize] = useState<number>(() => {
-    try {
-      const raw = localStorage.getItem("fj_experience_mode_queue");
-      return raw ? (JSON.parse(raw) as any[]).length : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [queueStats, setQueueStats] = useState<QueueStats>(() => getQueueStats());
+  const pendingQueueSize = queueStats.size;
+
+  const refreshQueueStats = useCallback(() => {
+    setQueueStats(getQueueStats());
+  }, []);
 
   const hydratedFromDb = useRef(false);
 
