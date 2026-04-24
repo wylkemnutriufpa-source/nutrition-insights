@@ -6,6 +6,10 @@ import React, { useState } from 'react';
 const useSubstitutionEditor = (initialSubs: string[], initialDescription: string = "") => {
   const [substitutions, setSubstitutions] = useState<string[]>(initialSubs);
   const [description, setDescription] = useState(initialDescription);
+  
+  // Usar refs para mocks persistentes que não mudam entre renders do hook
+  const [onOpenChange] = useState(() => vi.fn());
+  const [updateItem] = useState(() => vi.fn());
 
   const handleSubChange = (idx: number, value: any) => {
     const val = String(value).replace(/\s+/g, ' ');
@@ -37,7 +41,31 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
     };
   };
 
-  return { substitutions, handleSubChange, getCleanedSubs, setSubstitutions, simulateSave, setDescription, description };
+  const handleCancel = () => {
+    setDescription(initialDescription);
+    setSubstitutions(initialSubs);
+    onOpenChange(false);
+  };
+
+  const handleSave = () => {
+    const result = simulateSave();
+    updateItem('item-id', result);
+    onOpenChange(false);
+  };
+
+  return { 
+    substitutions, 
+    handleSubChange, 
+    getCleanedSubs, 
+    setSubstitutions, 
+    simulateSave, 
+    setDescription, 
+    description, 
+    onOpenChange, 
+    handleCancel,
+    handleSave,
+    updateItem
+  };
 };
 
 describe('MealSmartEditorModal Substitution Logic', () => {
@@ -110,7 +138,7 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     expect(saved.description.match(/🔄 Substituições:/g)).toHaveLength(1);
   });
 
-  it('should not persist changes when cancelled', () => {
+  it('should not persist changes when cancelled and reset local state', () => {
     const initialDesc = 'Initial Description';
     const initialSubs = ['Initial Sub'];
     const { result } = renderHook(() => useSubstitutionEditor(initialSubs, initialDesc));
@@ -120,14 +148,34 @@ describe('MealSmartEditorModal Substitution Logic', () => {
       result.current.handleSubChange(0, 'Modified Sub');
     });
 
-    // Verify local state was modified
     expect(result.current.description).toBe('Modified Description');
-    expect(result.current.substitutions[0]).toBe('Modified Sub');
 
-    // Simulate "Cancel" by not calling simulateSave() and instead just returning initial values if we needed to,
-    // but here we just confirm that we can reset or that the store wouldn't be updated.
-    // In the real component, handleSave is what calls updateItem.
-    // If handleSave is not called, updateItem is not called.
+    act(() => {
+      result.current.handleCancel();
+    });
+
+    // Verification: updateItem was NOT called
+    expect(result.current.updateItem).not.toHaveBeenCalled();
+    // Verification: local state was reset to initial
+    expect(result.current.description).toBe(initialDesc);
+    expect(result.current.substitutions).toEqual(initialSubs);
+    // Verification: modal was closed
+    expect(result.current.onOpenChange).toHaveBeenCalledWith(false);
+  });
+
+  it('should save substitutions_json exactly as shown in preview', () => {
+    const { result } = renderHook(() => useSubstitutionEditor(['  Banana  ', 'Abacaxi', 'Abacaxi ']));
+    
+    let saved;
+    act(() => {
+      saved = result.current.simulateSave();
+    });
+
+    const expectedArray = ['Abacaxi', 'Banana'];
+    const expectedJson = JSON.stringify(expectedArray);
+
+    expect(saved.substitutions_json).toEqual(expectedArray);
+    expect(JSON.stringify(saved.substitutions_json)).toBe(expectedJson);
   });
 });
 
