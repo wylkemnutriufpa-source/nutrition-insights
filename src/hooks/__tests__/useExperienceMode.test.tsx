@@ -245,4 +245,3 @@ describe("useExperienceModeState", () => {
     expect(result.current.mode).toBe("advanced");
   });
 });
-});
