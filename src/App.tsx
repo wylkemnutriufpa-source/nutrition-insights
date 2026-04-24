@@ -174,6 +174,7 @@ const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit"));
 const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit"));
 const AdminExperienceModeAudit = lazy(() => import("./pages/admin/AdminExperienceModeAudit"));
 const AdminExperienceModeReconcile = lazy(() => import("./pages/admin/AdminExperienceModeReconcile"));
+const AdminPlanLoadingDiagnostics = lazy(() => import("./pages/admin/AdminPlanLoadingDiagnostics"));
 const CoachBodybuilder = lazy(() => import("./pages/CoachBodybuilder"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
@@ -629,6 +630,7 @@ const App = () => (
               <Route path="/admin/audit-logs" element={<AdminRoute><LP section="Admin"><AuditLogs /></LP></AdminRoute>} />
               <Route path="/admin/experience-mode-audit" element={<AdminRoute><LP section="Admin"><AdminExperienceModeAudit /></LP></AdminRoute>} />
               <Route path="/admin/experience-mode-reconcile" element={<AdminRoute><LP section="Admin"><AdminExperienceModeReconcile /></LP></AdminRoute>} />
+              <Route path="/admin/plan-loading-diagnostics" element={<AdminRoute><LP section="Admin"><AdminPlanLoadingDiagnostics /></LP></AdminRoute>} />
               <Route path="/admin/affiliates" element={<AdminRoute><LP section="Admin"><AdminAffiliates /></LP></AdminRoute>} />
               <Route path="/admin/landing-pages" element={<AdminRoute><LP section="Admin"><AdminLandingPages /></LP></AdminRoute>} />
               <Route path="/admin/menu-config" element={<AdminRoute><LP section="Admin"><AdminMenuConfig /></LP></AdminRoute>} />

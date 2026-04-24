@@ -63,7 +63,7 @@ export default function MealSlotMatcher({ open, onOpenChange, ingredients, servi
 
       const { data: items } = await supabase
         .from("meal_plan_items")
-        .select("id, meal_type, day_of_week, calories, protein, description")
+        .select("id, meal_type, day_of_week, calories_target, protein_target, description")
         .eq("meal_plan_id", plans[0].id);
 
       if (items) {

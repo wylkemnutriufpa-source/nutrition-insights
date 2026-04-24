@@ -269,10 +269,13 @@ function defineScenarios(): ScenarioDef[] {
         const { data: session } = await supabase.auth.getSession();
         if (!session?.session) return { ok: false, error: "Sem sessão" };
         const { data: profile } = await supabase
-          .from("profiles").select("user_id, role")
+          .from("profiles").select("user_id")
           .eq("user_id", session.session.user.id).maybeSingle();
         if (!profile) return { ok: false, error: "Perfil não encontrado" };
-        return { ok: true, detail: `Role: ${(profile as any).role ?? "undefined"}` };
+        const { data: roleRow } = await (supabase as any)
+          .from("user_roles").select("role")
+          .eq("user_id", session.session.user.id).maybeSingle();
+        return { ok: true, detail: `Role: ${roleRow?.role ?? "undefined"}` };
       },
     },
 
