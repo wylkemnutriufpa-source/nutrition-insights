@@ -3708,6 +3708,33 @@ export type Database = {
           },
         ]
       }
+      contract_violations_log: {
+        Row: {
+          contract_id: string
+          created_at: string
+          id: string
+          metadata: Json
+          source: string
+          violations: Json
+        }
+        Insert: {
+          contract_id: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          source: string
+          violations?: Json
+        }
+        Update: {
+          contract_id?: string
+          created_at?: string
+          id?: string
+          metadata?: Json
+          source?: string
+          violations?: Json
+        }
+        Relationships: []
+      }
       cross_professional_alerts: {
         Row: {
           alert_type: string
