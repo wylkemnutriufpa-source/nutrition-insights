@@ -16,7 +16,7 @@ import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget"
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
   UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock, Users,
-  AlertTriangle, RefreshCw
+  AlertTriangle, RefreshCw, Zap
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
@@ -273,6 +273,21 @@ export default function ClientDashboard() {
       </div>
       <OnboardingProgressModal />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
+        {/* Experience Mode Lock Alert */}
+        {profile?.experience_mode_locked && profile?.experience_mode === 'basic' && (
+          <motion.div variants={item}>
+            <div className="bg-primary/10 border border-primary/30 rounded-xl p-4 flex items-start gap-3">
+              <Zap className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-semibold text-primary">Modo Básico Ativado</p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Você está visualizando a versão simplificada do app. Para habilitar recursos avançados, use o seletor abaixo.
+                </p>
+              </div>
+            </div>
+          </motion.div>
+        )}
+
         {/* Schema Inconsistency Alert */}
         {hasInconsistentPlan && (
           <motion.div variants={item}>
