@@ -38,6 +38,7 @@ import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizar
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
 import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
+import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";

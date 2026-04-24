@@ -31,6 +31,7 @@ interface MealPlan {
   title: string;
   start_date: string;
   totals_status?: string;
+  plan_mode?: string;
 }
 
 function getWeekDates(dateStr: string) {
