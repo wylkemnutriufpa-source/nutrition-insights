@@ -46,7 +46,7 @@ export function useSingleDaySyncLogs(planId: string | null | undefined, options?
       console.warn("[useSingleDaySyncLogs] erro:", error.message);
       return;
     }
-    setLogs((data || []) as SingleDaySyncLog[]);
+    setLogs((data || []) as unknown as SingleDaySyncLog[]);
   }, [planId]);
 
   useEffect(() => {
