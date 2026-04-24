@@ -6,6 +6,7 @@ import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 import { assertSingleDayItems } from "@/lib/singleDayGuards";
 import { ensurePlanMode, classifyPlanMode } from "@/lib/singleDayPlanMigration";
 import { checkSingleDayConsistency } from "@/lib/singleDayConsistency";
+import { validateSingleDayConsistencyRpc } from "@/lib/singleDayRepair";
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
@@ -751,17 +752,39 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
 
-      // Validação pós-flush: bloqueia inconsistência entre master e dias 1-6 em single_day
+      // ── Guard final pós-flush (Single Day) ─────────────────
+      // 1) Validação local rápida sobre o snapshot UI
+      // 2) Validação SERVER-SIDE via RPC (fonte da verdade)
+      // Se qualquer divergência for detectada, marca erro e dispara
+      // refetch defensivo para reconciliar com o banco.
       const planAfter = get().plan;
+      const planAfterId = get().planId;
       const planMode = classifyPlanMode(planAfter);
-      if (!hasError && planMode === "single_day") {
-        const report = checkSingleDayConsistency(get().items as any);
-        if (!report.valid) {
-          console.error("[mealPlanEditorV2Store] Single Day inconsistente após flush:", report);
+      if (!hasError && planMode === "single_day" && planAfterId) {
+        const localReport = checkSingleDayConsistency(get().items as any);
+        if (!localReport.valid) {
+          console.error("[SINGLE_DAY_GUARD][LOCAL] divergência:", localReport);
           get()._setSyncStatus("error");
-          // Não throw para não derrubar o autosave; o badge de sync exibe o estado
-          // e o SingleDaySyncStatusBadge mostrará o erro vindo dos logs do trigger.
         }
+
+        // Validação server-side (autoritativa) — assíncrona, não bloqueia o flush
+        void validateSingleDayConsistencyRpc(planAfterId).then(async (serverReport) => {
+          if (!serverReport) return;
+          if (serverReport.valid) return;
+          console.error("[SINGLE_DAY_GUARD][SERVER] divergência:", serverReport);
+          get()._setSyncStatus("error");
+          // Refetch defensivo para sincronizar UI com banco
+          try {
+            const { data: itemsData } = await supabase
+              .from("meal_plan_items")
+              .select("*")
+              .eq("meal_plan_id", planAfterId)
+              .order("created_at");
+            if (itemsData) set({ items: itemsData as MealPlanItem[] });
+          } catch (e) {
+            console.warn("[SINGLE_DAY_GUARD] refetch falhou:", e);
+          }
+        });
       }
 
       if (hasError) {
