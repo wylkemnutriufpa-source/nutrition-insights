@@ -5,7 +5,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Download, History, RefreshCcw, FileSpreadsheet, Loader2 } from "lucide-react";
+import { Search, Download, History, RefreshCcw, FileSpreadsheet, Loader2, XCircle, CheckCircle } from "lucide-react";
 import { toast } from "sonner";
 import { exportData } from "@/lib/auditExportUtils";
 import { 
@@ -15,16 +15,18 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 
 export const AdminAuditDashboard = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
   const [timelineGroups, setTimelineGroups] = useState<any[]>([]);
+  const [exportTasks, setExportTasks] = useState<any[]>([]);
   const [searchCorrelation, setSearchCorrelation] = useState("");
   const [loading, setLoading] = useState(false);
   const [cursor, setCursor] = useState<{ ts: string | null; id: string | null }>({ ts: null, id: null });
   const [hasMore, setHasMore] = useState(false);
   const [exporting, setExporting] = useState(false);
-  
+
   const [filters, setFilters] = useState({
     alert_type: "all",
     severity: "all",
