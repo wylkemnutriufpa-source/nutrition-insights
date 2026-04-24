@@ -500,10 +500,15 @@ export default function DietTemplates() {
       let targetPlanId = mealPlanId;
       let itemsCount = 0;
 
-      // ── PATH A: Official v2 templates with blocks → direct import (no IFJ engine) ──
-      const isV2 = template.template_generation === "official_v2"
-        && Array.isArray((template as any).meals)
-        && (template as any).meals.some((m: any) => Array.isArray(m.blocks) && m.blocks.length > 0);
+      // ── PATH A: Direct import (preferido — sem edge function, sem trava) ──
+      // Aplicamos direto sempre que o template tiver `meals` com `blocks` OU `foods`,
+      // independentemente de `template_generation`. Isso evita o caminho legado da
+      // edge function que aplicava 7 dias e exigia vínculo nutricionista↔paciente.
+      const meals = Array.isArray((template as any).meals) ? (template as any).meals : [];
+      const isV2 = meals.some((m: any) =>
+        (Array.isArray(m?.blocks) && m.blocks.length > 0) ||
+        (Array.isArray(m?.foods) && m.foods.length > 0)
+      );
 
       if (isV2) {
         targetPlanId = await applyOfficialV2Template(template);
