@@ -975,14 +975,30 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1" onClick={() => setPendingSuggestion(null)}>
-                        Cancelar
-                      </Button>
-                      <Button className="flex-1" onClick={confirmSuggestion}>
-                        Confirmar Alteração
-                      </Button>
+                    <div className="flex flex-col gap-2">
+                      {pendingSuggestion && isInvalidSuggestion(pendingSuggestion).isInvalid && (
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 mb-2">
+                          <AlertTriangle className="w-4 h-4 text-rose-500" />
+                          <span className="text-[11px] font-bold text-rose-500 uppercase tracking-tight">
+                            BLOQUEIO: {isInvalidSuggestion(pendingSuggestion).reason}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2 w-full">
+                        <Button variant="outline" className="flex-1" onClick={() => setPendingSuggestion(null)}>
+                          Cancelar
+                        </Button>
+                        <Button 
+                          className="flex-1" 
+                          onClick={confirmSuggestion}
+                          disabled={pendingSuggestion ? isInvalidSuggestion(pendingSuggestion).isInvalid : false}
+                        >
+                          Confirmar Alteração
+                        </Button>
+                      </div>
                     </div>
+
                   </DialogContent>
                 </Dialog>
               </>
