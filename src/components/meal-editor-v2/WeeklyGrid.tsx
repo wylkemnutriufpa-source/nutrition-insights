@@ -227,7 +227,9 @@ export function WeeklyGrid() {
               </p>
             </div>
             {(() => {
-              const t = getDayTotals(effectiveDay);
+              // Usa o snapshot do cabeçalho para garantir que os totais
+              // exibidos correspondem EXATAMENTE ao effectiveDay rotulado.
+              const t = headerSnapshot.totals;
               return (
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
