@@ -2,49 +2,72 @@ import { useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { DayContent } from "./DayContent";
+import LegacyDayBanner from "./LegacyDayBanner";
+import { resolveEffectiveDay } from "@/lib/resolveEffectiveDay";
+import { useForceCanonicalDay } from "@/hooks/useForceCanonicalDay";
+
+const DAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
 
 /**
  * ListView (Modo Diário Único)
  * ----------------------------------------------------------------
- * O editor profissional opera em modo "Plano Diário com 4 Substituições".
- * Sempre mostramos o day=0 (slot canônico do dia padrão). Se o plano
- * legado ainda tiver itens em outros dias (ex.: day=1 herdado de planos
- * weekly antigos), exibimos o primeiro dia com itens como fallback —
- * evitando a tela vazia que o profissional reportou.
+ * Sempre opera em modo "Plano Diário com 4 Substituições".
+ * O slot canônico é day=0; a preferência do profissional sobre forçar
+ * day 0 ou permitir fallback legado é persistida em URL/localStorage.
  */
 export function ListView() {
   const { items } = useMealPlanEditorV2Store();
+  const [forceCanonical, setForceCanonical] = useForceCanonicalDay();
 
-  const effectiveDay = useMemo(() => {
-    // Preferência: modo diário canônico (day=0).
-    if (items.some((i) => i.day_of_week === 0)) return 0;
+  const effectiveDay = useMemo(
+    () => resolveEffectiveDay(items, { forceCanonical }),
+    [items, forceCanonical]
+  );
 
-    // Fallback: primeiro dia (1..6, depois 0) que tenha itens.
-    for (const d of [1, 2, 3, 4, 5, 6]) {
-      if (items.some((i) => i.day_of_week === d)) return d;
-    }
-
-    // Sem itens — mantém o slot canônico para receber novas refeições.
-    return 0;
-  }, [items]);
+  const showingLegacy = effectiveDay !== 0;
+  const dayLabel = DAY_LABELS[effectiveDay] ?? `Dia ${effectiveDay}`;
+  const dayItems = items.filter((i) => i.day_of_week === effectiveDay);
+  const totals = dayItems.reduce(
+    (acc, i) => ({
+      calories: acc.calories + (i.calories_target || 0),
+      protein: acc.protein + (Number(i.protein_target) || 0),
+      carbs: acc.carbs + (Number(i.carbs_target) || 0),
+      fat: acc.fat + (Number(i.fat_target) || 0),
+    }),
+    { calories: 0, protein: 0, carbs: 0, fat: 0 }
+  );
 
   return (
     <div className="space-y-3 max-w-3xl mx-auto">
-      <div className="flex items-center justify-between rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
-        <div className="flex items-center gap-2">
+      {/* Cabeçalho com rótulo + totais do dia efetivo */}
+      <div className="flex flex-wrap items-center justify-between gap-2 rounded-xl border border-primary/20 bg-primary/5 px-3 py-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
             🗓️ Plano Diário
           </span>
           <span className="text-[11px] text-muted-foreground">
-            Dia padrão + até 4 substituições por refeição
+            {showingLegacy ? `Exibindo dia legado: ${dayLabel}` : "Dia padrão (day 0) + até 4 substituições"}
           </span>
+          {showingLegacy && (
+            <span className="text-[10px] text-warning-foreground bg-warning/15 border border-warning/30 px-2 py-0.5 rounded-full">
+              legado #{effectiveDay}
+            </span>
+          )}
         </div>
-        {effectiveDay !== 0 && (
-          <span className="text-[10px] text-warning-foreground bg-warning/15 border border-warning/30 px-2 py-0.5 rounded-full">
-            Mostrando dia legado #{effectiveDay}
-          </span>
-        )}
+        <div className="flex items-center gap-3 text-[10px] font-medium text-muted-foreground">
+          <span><span className="text-foreground font-bold">{totals.calories}</span> kcal</span>
+          <span><span className="text-foreground font-bold">{totals.protein.toFixed(0)}</span>g P</span>
+          <span><span className="text-foreground font-bold">{totals.carbs.toFixed(0)}</span>g C</span>
+          <span><span className="text-foreground font-bold">{totals.fat.toFixed(0)}</span>g G</span>
+        </div>
       </div>
+
+      <LegacyDayBanner
+        effectiveDay={effectiveDay}
+        forceCanonical={forceCanonical}
+        onToggleForceCanonical={setForceCanonical}
+      />
+
       <AnimatePresence mode="wait">
         <DayContent key={effectiveDay} day={effectiveDay} />
       </AnimatePresence>

@@ -21,6 +21,9 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
 import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
+import { resolveEffectiveDay } from "@/lib/resolveEffectiveDay";
+import { useForceCanonicalDay } from "@/hooks/useForceCanonicalDay";
+import LegacyDayBanner from "./LegacyDayBanner";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
@@ -54,13 +57,10 @@ export function WeeklyGrid() {
 
   // Modo Diário Único: usamos day=0 como slot canônico, mas se o plano
   // legado tiver itens apenas em outros dias, exibimos o primeiro encontrado.
-  const effectiveDay = (() => {
-    if (items.some((i) => i.day_of_week === 0)) return 0;
-    for (const d of [1, 2, 3, 4, 5, 6]) {
-      if (items.some((i) => i.day_of_week === d)) return d;
-    }
-    return 0;
-  })();
+  // A preferência do profissional fica persistida em URL/localStorage.
+  const [forceCanonical, setForceCanonical] = useForceCanonicalDay();
+  const effectiveDay = resolveEffectiveDay(items, { forceCanonical });
+  const effectiveDayLabel = DAYS.find((d) => d.key === effectiveDay)?.label ?? `Dia ${effectiveDay}`;
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
@@ -193,6 +193,13 @@ export function WeeklyGrid() {
 
   return (
     <>
+      <div className="mb-3">
+        <LegacyDayBanner
+          effectiveDay={effectiveDay}
+          forceCanonical={forceCanonical}
+          onToggleForceCanonical={setForceCanonical}
+        />
+      </div>
       <div className="overflow-x-auto">
         {/* Day headers */}
         <div className="grid grid-cols-[160px_1fr] gap-4 mb-6 sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 border-b border-primary/10">
@@ -201,12 +208,16 @@ export function WeeklyGrid() {
           </div>
           <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
             <div>
-              <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">PLANO ÚNICO (GLOBAL)</span>
+              <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">
+                {effectiveDay === 0 ? "PLANO ÚNICO (DIA 0)" : `DIA LEGADO — ${effectiveDayLabel.toUpperCase()}`}
+              </span>
               <p className="text-[10px] text-muted-foreground mt-0.5">
-                Modelo de Dia Único com Substituições Inteligentes
+                {effectiveDay === 0
+                  ? "Modelo de Dia Único com Substituições Inteligentes"
+                  : `Mostrando refeições do dia legado #${effectiveDay}. Migre para dia 0 para padronizar.`}
                 {effectiveDay !== 0 && (
                   <span className="ml-2 text-warning-foreground bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
-                    legado: dia #{effectiveDay}
+                    legado #{effectiveDay}
                   </span>
                 )}
               </p>
