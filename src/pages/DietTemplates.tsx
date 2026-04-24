@@ -397,8 +397,8 @@ export default function DietTemplates() {
 
   /**
    * V2 ADAPTER: For official_v2 templates with `blocks` structure, build meal_plan_items
-   * directly (7 days) instead of delegating to the IFJ engine — which only understands
-   * legacy `foods_structure` from nutritionist_meal_templates.
+   * directly (1 day) and persist all substitution options as sibling items grouped by
+   * substitution_group_id, with full macros — instead of stuffing them into description text.
    */
   const applyOfficialV2Template = async (template: DietTemplate): Promise<string> => {
     const meals: any[] = Array.isArray((template as any).meals) ? (template as any).meals : [];
@@ -424,50 +424,59 @@ export default function DietTemplates() {
       .single();
     if (planErr || !plan) throw new Error(planErr?.message || "Falha ao criar plano");
 
-    // 2. Build items from blocks (7 days × N meals × M blocks)
+    // 2. Build items for 1 day. Each block becomes a substitution_group_id with the
+    //    primary option flagged is_primary=true; all other options are siblings with
+    //    full macros so the patient and the engine can swap with proper calculation.
     const items: any[] = [];
-    for (let day = 0; day <= 6; day++) {
-      for (const meal of meals) {
-        const mealType = meal.meal_type || meal.type;
-        if (!mealType) continue;
+    const day = 0; // single day
+    for (const meal of meals) {
+      const mealType = meal.meal_type || meal.type;
+      if (!mealType) continue;
 
-        const blocks: any[] = Array.isArray(meal.blocks) ? meal.blocks : [];
-        const legacyFoods: any[] = Array.isArray(meal.foods) ? meal.foods : [];
+      const blocks: any[] = Array.isArray(meal.blocks) ? meal.blocks : [];
+      const legacyFoods: any[] = Array.isArray(meal.foods) ? meal.foods : [];
 
-        if (blocks.length > 0) {
-          for (const b of blocks) {
-            const opts: any[] = Array.isArray(b.options) ? b.options : [];
-            if (opts.length === 0) continue;
-            const primary = opts[0];
-            const subs = opts.slice(1).map((o: any) => o?.name).filter(Boolean);
-            const desc = primary.portion || b.base_quantity || "";
-            const subsLine = subs.length > 0 ? `\nSubstituições: ${subs.join(" • ")}` : "";
+      if (blocks.length > 0) {
+        for (const b of blocks) {
+          const opts: any[] = Array.isArray(b.options) ? b.options : [];
+          if (opts.length === 0) continue;
+
+          // Group id shared by primary + all substitution options
+          const groupId =
+            (typeof crypto !== "undefined" && (crypto as any).randomUUID)
+              ? (crypto as any).randomUUID()
+              : `grp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+
+          opts.forEach((opt: any, idx: number) => {
             items.push({
               meal_plan_id: plan.id,
               day_of_week: day,
               meal_type: mealType,
-              title: primary.name || b.label || "Item",
-              description: `${desc}${subsLine}`.trim() || null,
-              calories_target: primary.calories || null,
-              protein_target: primary.protein || null,
-              carbs_target: primary.carbs || null,
-              fat_target: primary.fat || null,
+              title: opt?.name || b.label || "Item",
+              description: opt?.portion || b.base_quantity || null,
+              calories_target: opt?.calories ?? null,
+              protein_target: opt?.protein ?? null,
+              carbs_target: opt?.carbs ?? null,
+              fat_target: opt?.fat ?? null,
+              substitution_group_id: groupId,
+              is_primary: idx === 0,
             });
-          }
-        } else if (legacyFoods.length > 0) {
-          for (const f of legacyFoods) {
-            items.push({
-              meal_plan_id: plan.id,
-              day_of_week: day,
-              meal_type: mealType,
-              title: f.name || "Item",
-              description: f.portion || null,
-              calories_target: f.calories || null,
-              protein_target: f.protein || null,
-              carbs_target: f.carbs || null,
-              fat_target: f.fat || null,
-            });
-          }
+          });
+        }
+      } else if (legacyFoods.length > 0) {
+        for (const f of legacyFoods) {
+          items.push({
+            meal_plan_id: plan.id,
+            day_of_week: day,
+            meal_type: mealType,
+            title: f.name || "Item",
+            description: f.portion || null,
+            calories_target: f.calories || null,
+            protein_target: f.protein || null,
+            carbs_target: f.carbs || null,
+            fat_target: f.fat || null,
+            is_primary: true,
+          });
         }
       }
     }
