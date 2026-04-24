@@ -5873,6 +5873,39 @@ export type Database = {
         }
         Relationships: []
       }
+      macro_audit_log: {
+        Row: {
+          created_at: string
+          field_name: string
+          id: string
+          item_id: string
+          operation: string
+          status: string
+          value_persisted: number | null
+          value_requested: number | null
+        }
+        Insert: {
+          created_at?: string
+          field_name: string
+          id?: string
+          item_id: string
+          operation: string
+          status: string
+          value_persisted?: number | null
+          value_requested?: number | null
+        }
+        Update: {
+          created_at?: string
+          field_name?: string
+          id?: string
+          item_id?: string
+          operation?: string
+          status?: string
+          value_persisted?: number | null
+          value_requested?: number | null
+        }
+        Relationships: []
+      }
       marmita_generation_settings: {
         Row: {
           created_at: string
