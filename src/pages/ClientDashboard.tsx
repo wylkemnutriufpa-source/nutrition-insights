@@ -17,7 +17,7 @@ import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget"
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
   UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock, Users,
-  AlertTriangle, RefreshCw, Zap
+  AlertTriangle, RefreshCw, Zap, AlertCircle
 } from "lucide-react";
 import RankingWidget from "@/components/prestige/RankingWidget";
 import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
