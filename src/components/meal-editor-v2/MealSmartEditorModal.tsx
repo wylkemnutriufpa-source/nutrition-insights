@@ -76,22 +76,27 @@ export function MealSmartEditorModal({
 
   if (!item) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     const cleanedSubs = normalizeSubstitutions(substitutions);
     const finalDescription = formatFinalDescription(description, cleanedSubs);
 
     const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
 
-    updateItem(itemId, {
-      description: finalDescription,
-      notes,
-      edit_metadata: {
-        ...currentMeta,
-        substitutions_json: cleanedSubs
-      }
-    } as any);
-    toast.success("Refeição atualizada com sucesso");
-    onOpenChange(false);
+    try {
+      await updateItem(itemId, {
+        description: finalDescription,
+        notes,
+        edit_metadata: {
+          ...currentMeta,
+          substitutions_json: cleanedSubs
+        }
+      } as any);
+      toast.success("Refeição atualizada com sucesso");
+      onOpenChange(false);
+    } catch (error) {
+      toast.error("Erro ao salvar alterações. Tente novamente.");
+      // Keep modal open on error
+    }
   };
 
   const handleAddIsolated = (food: any) => {

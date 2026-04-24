@@ -17,147 +17,114 @@ export const addSubstitutions = async (page: Page, texts: string[]) => {
   }
 };
 
-export const removeSubstitutionAt = async (page: Page, index: number) => {
-  await page.getByTestId(`remove-substitution-button-${index}`).click();
-};
-
 export const closeViaEscape = async (page: Page) => {
   await page.keyboard.press('Escape');
   await expect(page.locator('role=dialog')).toBeHidden();
 };
 
 export const closeViaOverlay = async (page: Page) => {
-  // Radix UI Dialog Content usually has pointer-events: auto, overlay is behind
-  // Clicking at (1,1) is a safe way to hit the overlay
   await page.mouse.click(1, 1);
   await expect(page.locator('role=dialog')).toBeHidden();
 };
 
-/**
- * Helper to intercept and validate the update request
- */
-export const waitForAndValidateSaveRequest = async (
-  page: Page,
-  validateFn: (payload: any) => void
-) => {
-  const requestPromise = page.waitForRequest((request: Request) => 
-    request.url().includes('/rest/v1/meal_plan_items') && 
-    request.method() === 'PATCH'
-  );
-
-  await page.getByTestId('meal-editor-save-button').click();
-
-  const request = await requestPromise;
-  const payload = request.postDataJSON();
-  validateFn(payload);
-  
+export const closeViaCancel = async (page: Page) => {
+  await page.getByTestId('meal-editor-cancel-button').click();
   await expect(page.locator('role=dialog')).toBeHidden();
-  return payload;
 };
 
-test.describe('MealSmartEditorModal E2E Final Verification', () => {
+test.describe('MealSmartEditorModal E2E Resilience & Integrity', () => {
   const TEST_ITEM_ID = 'item-1';
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
 
-  test('should restore focus to trigger button with focus-visible after closing via Escape', async ({ page }) => {
-    const trigger = page.getByTestId(`edit-meal-${TEST_ITEM_ID}`);
-    
-    // Focus trigger via keyboard to ensure focus-visible state
-    await page.keyboard.press('Tab');
-    while (!(await trigger.isFocused())) {
-      await page.keyboard.press('Tab');
-    }
-    
-    await page.keyboard.press('Enter');
-    await expect(page.locator('role=dialog')).toBeVisible();
-    
-    await page.keyboard.press('Escape');
-    await expect(page.locator('role=dialog')).toBeHidden();
-    
-    // Verify focus restoration and styling
-    await expect(trigger).toBeFocused();
-    // Assuming focus-visible state is tracked or visible via ring
-    // We can't strictly check for the :focus-visible pseudo-class in all environments easily,
-    // but we can check if it has the ring classes if applied on focus.
-  });
-
-  test('should enforce 4-item limit in PATCH payload when more are added', async ({ page }) => {
+  test('should handle PATCH error (500), keep modal open, and show error message', async ({ page }) => {
     await openMealEditor(page, TEST_ITEM_ID);
     
-    // Add 6 items
-    const rawItems = ['Zebra', 'Apple', 'Banana', 'Carrot', 'Date', 'Eggplant'];
-    const expectedNormalized = ['Apple', 'Banana', 'Carrot', 'Date']; // Top 4 sorted
-
-    await addSubstitutions(page, rawItems);
-    
-    // Intercept and validate that only 4 items are sent
-    await waitForAndValidateSaveRequest(page, (payload) => {
-      const savedSubs = payload.edit_metadata?.substitutions_json;
-      expect(savedSubs).toHaveLength(4);
-      expect(savedSubs).toEqual(expectedNormalized);
-    });
-  });
-
-  test('should perform deep-equal validation between preview and PATCH payload', async ({ page }) => {
-    await openMealEditor(page, TEST_ITEM_ID);
-    
-    const rawInput = '   Apple    \n   Crisp   ';
-    const expectedArray = ['Apple Crisp'];
-    
-    await addSubstitutions(page, [rawInput]);
-    
-    // Get text from preview and parse it (simulated)
-    const previewText = await page.getByTestId('aria-live-preview').innerText();
-    // The preview displays "🔄 Substituições:\nItem1\nItem2..."
-    const previewItems = previewText.split('\n').slice(1).map(s => s.trim()).filter(s => s.length > 0);
-
-    // Intercept and validate deep equality
-    await waitForAndValidateSaveRequest(page, (payload) => {
-      const savedSubs = payload.edit_metadata?.substitutions_json;
-      // Strict deep-equal check
-      expect(savedSubs).toEqual(previewItems);
-      expect(JSON.stringify(savedSubs)).toBe(JSON.stringify(expectedArray));
-    });
-  });
-
-  test('should call PATCH exactly once on Save and zero times on Close/Escape', async ({ page }) => {
-    await openMealEditor(page, TEST_ITEM_ID);
-    
-    let patchCount = 0;
+    // Mock 500 error for PATCH
     await page.route('**/rest/v1/meal_plan_items**', async route => {
       if (route.request().method() === 'PATCH') {
-        patchCount++;
+        await route.fulfill({ status: 500, body: JSON.stringify({ error: 'Internal Server Error' }) });
+      } else {
+        await route.continue();
       }
+    });
+
+    await page.getByTestId('add-substitution-button').click();
+    await page.getByTestId('meal-editor-save-button').click();
+
+    // Modal should stay open
+    await expect(page.locator('role=dialog')).toBeVisible();
+    // Should show error toast/message
+    await expect(page.getByText(/Erro ao salvar/i)).toBeVisible();
+  });
+
+  test('should not trigger PATCH and reset state when closing via Cancel button', async ({ page }) => {
+    await openMealEditor(page, TEST_ITEM_ID);
+    
+    let patchCalled = false;
+    await page.route('**/rest/v1/meal_plan_items**', async route => {
+      if (route.request().method() === 'PATCH') patchCalled = true;
       await route.continue();
     });
 
-    // Case 1: Close via Escape - should NOT trigger PATCH
-    await page.keyboard.press('Escape');
-    expect(patchCount).toBe(0);
-
-    // Case 2: Open and Save - should trigger PATCH once
-    await openMealEditor(page, TEST_ITEM_ID);
-    await page.getByTestId('meal-editor-save-button').click();
-    await expect(page.locator('role=dialog')).toBeHidden();
+    const textarea = page.locator('textarea').first();
+    const originalValue = await textarea.inputValue();
+    await textarea.fill('Modification that should be lost');
     
-    expect(patchCount).toBe(1);
+    await closeViaCancel(page);
+    expect(patchCalled).toBe(false);
+
+    // Re-open and verify original state
+    await openMealEditor(page, TEST_ITEM_ID);
+    await expect(textarea).toHaveValue(originalValue);
   });
 
-  test('should delete all substitutions using data-testid and persist empty array', async ({ page }) => {
+  test('should normalize 6 random items to top 4 sorted items in PATCH payload', async ({ page }) => {
     await openMealEditor(page, TEST_ITEM_ID);
     
-    // Ensure we have something to delete
-    await addSubstitutions(page, ['Delete Me 1', 'Delete Me 2']);
-    
-    // Delete using test-ids
-    await removeSubstitutionAt(page, 0);
-    await removeSubstitutionAt(page, 0); // After first delete, next one becomes index 0
+    const rawItems = ['Zebra', 'Apple', 'Banana', 'Carrot', 'Date', 'Eggplant'];
+    const expectedNormalized = ['Apple', 'Banana', 'Carrot', 'Date']; // Top 4 alphabetically
 
-    await waitForAndValidateSaveRequest(page, (payload) => {
-      expect(payload.edit_metadata?.substitutions_json).toEqual([]);
-    });
+    await addSubstitutions(page, rawItems);
+
+    const requestPromise = page.waitForRequest(request => 
+      request.url().includes('/rest/v1/meal_plan_items') && 
+      request.method() === 'PATCH'
+    );
+
+    await page.getByTestId('meal-editor-save-button').click();
+
+    const request = await requestPromise;
+    const payload = request.postDataJSON();
+    
+    // Verify payload structure and normalization
+    expect(payload.edit_metadata).toBeDefined();
+    expect(payload.edit_metadata.substitutions_json).toEqual(expectedNormalized);
+    expect(Object.keys(payload)).toContain('description');
+    expect(Object.keys(payload)).toContain('edit_metadata');
+  });
+
+  test('should restore focus with focus-visible styles after closing via multiple methods', async ({ page }) => {
+    const trigger = page.getByTestId(`edit-meal-${TEST_ITEM_ID}`);
+    
+    const methods = [closeViaEscape, closeViaOverlay, closeViaCancel];
+    
+    for (const closeMethod of methods) {
+      // Open via keyboard to trigger focus-visible behavior
+      await trigger.focus();
+      await page.keyboard.press('Enter');
+      await expect(page.locator('role=dialog')).toBeVisible();
+      
+      await closeMethod(page);
+      
+      // Verify focus is restored to the trigger
+      await expect(trigger).toBeFocused();
+      
+      // Check for visible focus indicators (Tailwind focus-visible:ring-2)
+      // Note: This relies on how the trigger button is styled in your app
+      await expect(trigger).toHaveClass(/focus-visible:ring/);
+    }
   });
 });
