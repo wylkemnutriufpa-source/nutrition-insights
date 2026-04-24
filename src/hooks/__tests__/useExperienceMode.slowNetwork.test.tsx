@@ -207,53 +207,57 @@ describe("useExperienceMode — slow network, timeouts & UI retry", () => {
   });
 
   it("status section transitions saving → success on slow first attempt with stable correlationId", async () => {
-    // Simulate slow network on the FIRST attempt (timeout), then "connection
-    // returns" and the second attempt succeeds. The status section must:
+    // Simulate slow network on the FIRST attempt (timeout error), then
+    // "connection comes back" and the second attempt resolves successfully.
+    // The status section must:
     //  - show 'saving' while the call is in-flight
     //  - end on 'success'
     //  - never expose more than one correlationId for the whole sequence
-    //    (withRetries must reuse the same id end-to-end)
+    //    (withRetries reuses the same id end-to-end)
     let attempt = 0;
-    let resolveSecond: ((v: any) => void) | null = null;
+    // Pre-build a deferred promise for the SECOND attempt so resolution is
+    // fully under the test's control — no hanging promises across tests.
+    let resolveSecond!: (v: any) => void;
+    const secondPromise = new Promise<any>((r) => {
+      resolveSecond = r;
+    });
+
     updateSpy.mockImplementation(() => {
       attempt++;
-      if (attempt === 1) {
-        // First attempt "hangs" → timeout error (slow network)
-        return Promise.reject(timeoutError());
-      }
-      // Second attempt waits until we manually let it resolve, so we can
-      // observe the 'saving' state on the status section.
-      return new Promise((resolve) => {
-        resolveSecond = resolve;
-      });
+      if (attempt === 1) return Promise.reject(timeoutError());
+      return secondPromise;
     });
 
     const stateRef = { current: null as any };
     render(<HostedStatus stateRef={stateRef} />);
     await waitFor(() => expect(stateRef.current).not.toBeNull());
 
-    // Kick off the change WITHOUT awaiting (the second attempt is pending
-    // on `resolveSecond`, so awaiting here would block forever and React's
-    // `act` would never settle).
+    // Kick off the change without awaiting; we want to observe 'saving'.
     let setModePromise!: Promise<void>;
-    setModePromise = stateRef.current.setMode("pro");
-    // Swallow rejection just in case — we don't expect one in this test
+    await act(async () => {
+      setModePromise = stateRef.current.setMode("pro");
+      // Yield once so React commits the isLoading=true state
+    });
     setModePromise.catch(() => {});
 
-    // While the second attempt is pending, status must be 'saving'
-    await waitFor(() => {
-      const s = screen.getByTestId("emode-status");
-      expect(s.getAttribute("data-state")).toBe("saving");
-    });
+    // While the second attempt is pending, status must be 'saving'.
+    await waitFor(
+      () => {
+        expect(stateRef.current.isLoading).toBe(true);
+        const s = screen.getByTestId("emode-status");
+        expect(s.getAttribute("data-state")).toBe("saving");
+      },
+      { timeout: 2000 }
+    );
     expect(screen.getByText(/Salvando seu modo/i)).toBeInTheDocument();
 
-    // "Connection comes back" → let the retried attempt resolve successfully
+    // "Connection comes back" → release the retried attempt successfully.
     await act(async () => {
-      resolveSecond?.({ error: null });
+      resolveSecond({ error: null });
       await setModePromise;
     });
 
-    // Status section now shows success
+    // Status section now shows success.
     await waitFor(() => {
       const s = screen.getByTestId("emode-status");
       expect(s.getAttribute("data-state")).toBe("success");
@@ -264,7 +268,7 @@ describe("useExperienceMode — slow network, timeouts & UI retry", () => {
     // Stable correlationId end-to-end:
     //  - exactly ONE success row
     //  - NO failed row (transient timeout was absorbed by withRetries)
-    //  - the success correlation_id is the only one observed
+    //  - all observed correlation_ids point to the same attempt
     const successRows = auditInsertSpy.mock.calls
       .map((c: any) => c[0])
       .filter((c: any) => c.outcome === "success");
@@ -278,7 +282,8 @@ describe("useExperienceMode — slow network, timeouts & UI retry", () => {
     expect(allIds.size).toBe(1);
     expect(allIds.has(successRows[0].correlation_id)).toBe(true);
 
-    // No transient error leaked into the UI
+    // Hook's lastError must be cleared and no transient text leaked into UI.
+    expect(stateRef.current.lastError).toBeNull();
     expect(screen.queryByText(/Tempo excedido/)).not.toBeInTheDocument();
     expect(screen.queryByText(/Tentar novamente/)).not.toBeInTheDocument();
     expect(attempt).toBeGreaterThanOrEqual(2);
