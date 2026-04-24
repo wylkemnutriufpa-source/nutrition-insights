@@ -266,9 +266,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!meal?.itemId || !onUpdateItem) return;
     const snap = version.snapshot_data;
     
-    // Antes de fazer o rollback, salvamos o estado ATUAL como snapshot
+    // Antes de fazer o rollback, salvamos o estado ATUAL como snapshot para auditoria
     await saveToHistory("manual_update");
     
+    // Validação Clínica de Segurança antes de aplicar Restore
+    if (snap.protein < 0 || snap.carbs < 0 || snap.fat < 0) {
+      toast.error("Impossível restaurar: Snapshot contém dados inconsistentes.");
+      return;
+    }
+
     onUpdateItem(meal.itemId, {
       description: snap.description,
       protein_target: snap.protein_target,
@@ -278,7 +284,15 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       title: snap.title
     });
     
-    // Criamos a versão de rollback após a atualização para registrar a origem
+    // Log de Auditoria Global de Restore
+    await supabase.from("clinical_audit_logs").insert({
+      action_type: "RESTORE",
+      entity_id: meal.itemId,
+      status: "success",
+      payload_summary: { from_version: version.id }
+    });
+    
+    // Criamos a versão de rollback após a atualização para registrar a origem no histórico
     setTimeout(() => saveToHistory("restore_version", version.id), 500);
     
     setShowHistory(false);
@@ -340,15 +354,40 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     return suggestions.slice(0, 3);
   };
 
-  const confirmSuggestion = () => {
-    if (!pendingSuggestion || !canEdit || !meal.itemId || isInvalidSuggestion(pendingSuggestion).isInvalid) return;
+  const confirmSuggestion = async () => {
+    if (!pendingSuggestion || !canEdit || !meal.itemId) return;
+    
+    const validation = isInvalidSuggestion(pendingSuggestion);
+    if (validation.isInvalid) {
+      toast.error(`Bloqueio Clínico: ${validation.reason}`);
+      
+      // Auditoria de Falha de Validação
+      await supabase.from("clinical_audit_logs").insert({
+        action_type: "VALIDATION",
+        entity_id: meal.itemId,
+        status: "error",
+        error_message: validation.reason,
+        payload_summary: pendingSuggestion
+      });
+      return;
+    }
+
     const newLine = `• ${pendingSuggestion.name} — ${pendingSuggestion.portion}`;
     const newFoodLines = [...foodLines, newLine];
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
+    
     if (onUpdateItem) {
-      saveToHistory();
+      await saveToHistory();
       onUpdateItem(meal.itemId, { description: newDescription });
       toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
+      
+      // Auditoria de Sucesso
+      await supabase.from("clinical_audit_logs").insert({
+        action_type: "GENERATE",
+        entity_id: meal.itemId,
+        status: "success",
+        payload_summary: { applied: pendingSuggestion.name }
+      });
     }
     setPendingSuggestion(null);
   };
@@ -357,15 +396,31 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const p = s.after.protein;
     const c = s.after.carbs;
     const f = s.after.fat;
+    const kcal = s.after.calories;
     
+    // 1. Macros nunca negativos
     if (p < 0 || c < 0 || f < 0) return { isInvalid: true, reason: "Macros não podem ser negativos" };
     
-    // Proteína não pode ultrapassar +50% da meta da refeição
-    if (p > protein * 1.5 && protein > 0) return { isInvalid: true, reason: "Excesso crítico de proteína (+50%)" };
+    // 2. Proteína não pode ultrapassar +50% da meta da refeição (Segurança Renal/Hormonal)
+    const pTarget = meal.protein_target || 0;
+    if (pTarget > 0 && p > pTarget * 1.5) {
+      return { isInvalid: true, reason: `Excesso de proteína (+${Math.round((p/pTarget - 1)*100)}%). Limite de segurança: 50%.` };
+    }
     
-    // Validação básica de calorias (4-4-9)
+    // 3. Calorias dentro de ±20% da meta (Segurança Energética)
+    const kTarget = meal.calories_target || 0;
+    if (kTarget > 0) {
+      const diff = Math.abs(kcal - kTarget) / kTarget;
+      if (diff > 0.2) {
+        return { isInvalid: true, reason: `Variação calórica excessiva (${Math.round(diff * 100)}%). Limite: 20%.` };
+      }
+    }
+    
+    // 4. Inconsistência Calórica (Atwater check)
     const calculatedKcal = (p * 4) + (c * 4) + (f * 9);
-    if (Math.abs(calculatedKcal - s.after.calories) > 100) return { isInvalid: true, reason: "Inconsistência calórica detectada" };
+    if (Math.abs(calculatedKcal - kcal) > 100) {
+      return { isInvalid: true, reason: "Inconsistência entre macros e calorias detectada." };
+    }
 
     return { isInvalid: false, reason: "" };
   };
