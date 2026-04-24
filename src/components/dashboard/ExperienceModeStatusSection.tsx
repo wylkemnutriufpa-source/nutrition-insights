@@ -91,6 +91,8 @@ export default function ExperienceModeStatusSection() {
       <div
         data-testid="emode-status"
         data-state="blocked"
+        data-correlation-id={lastError.correlationId || ""}
+        data-unlock-date={lastError.unlock_date || ""}
         className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex items-start gap-3"
       >
         <Lock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
