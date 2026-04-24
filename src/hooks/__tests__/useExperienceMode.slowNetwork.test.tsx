@@ -17,8 +17,7 @@
  *     sees the final outcome, not each transient timeout.
  */
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
-import { render, screen, act, waitFor } from "@testing-library/react";
-import userEvent from "@testing-library/user-event";
+import { render, screen, act, waitFor, fireEvent } from "@testing-library/react";
 import { useExperienceModeState, ExperienceModeContext } from "../useExperienceMode";
 import ExperienceModeStatusSection from "@/components/dashboard/ExperienceModeStatusSection";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +35,8 @@ vi.mock("@/integrations/supabase/client", () => ({
         data: { subscription: { unsubscribe: vi.fn() } },
       })),
     },
-    from: vi.fn((table: string) => {
+    from: vi.fn((...args: any[]) => {
+      const table = args[0];
       if (table === "experience_mode_audit_log") {
         return { insert: (payload: any) => auditInsertSpy(payload) };
       }
