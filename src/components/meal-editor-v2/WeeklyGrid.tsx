@@ -52,6 +52,16 @@ const findFoodMatch = (text: string): FoodItem | null => {
 export function WeeklyGrid() {
   const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell } = useMealPlanEditorV2Store();
 
+  // Modo Diário Único: usamos day=0 como slot canônico, mas se o plano
+  // legado tiver itens apenas em outros dias, exibimos o primeiro encontrado.
+  const effectiveDay = (() => {
+    if (items.some((i) => i.day_of_week === 0)) return 0;
+    for (const d of [1, 2, 3, 4, 5, 6]) {
+      if (items.some((i) => i.day_of_week === d)) return d;
+    }
+    return 0;
+  })();
+
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
@@ -192,10 +202,17 @@ export function WeeklyGrid() {
           <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
             <div>
               <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">PLANO ÚNICO (GLOBAL)</span>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Modelo de Dia Único com Substituições Inteligentes</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Modelo de Dia Único com Substituições Inteligentes
+                {effectiveDay !== 0 && (
+                  <span className="ml-2 text-warning-foreground bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                    legado: dia #{effectiveDay}
+                  </span>
+                )}
+              </p>
             </div>
             {(() => {
-              const t = getDayTotals(0);
+              const t = getDayTotals(effectiveDay);
               return (
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
@@ -238,7 +255,7 @@ export function WeeklyGrid() {
 
             {/* Day cell (Day 0 only) */}
             {(() => {
-              const day = 0;
+              const day = effectiveDay;
               const cellItems = getItems(day, meal.key);
               const cellKey = `${day}-${meal.key}`;
               const isDragSrc = dragSource?.day === day && dragSource?.mealType === meal.key;
