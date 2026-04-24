@@ -37,11 +37,30 @@ export default function InlineExperienceToggle() {
 
   const currentIdx = MODES.findIndex(m => m.key === mode);
 
-  const handleSelect = (key: ExperienceMode) => {
+  const handleSelect = async (key: ExperienceMode) => {
     if (key === mode) return;
-    setMode(key);
-    const label = MODES.find(m => m.key === key)?.label;
-    toast.success(`Modo ${label} ativado`);
+    try {
+      await setMode(key);
+      const label = MODES.find(m => m.key === key)?.label;
+      toast.success(`Modo ${label} ativado`);
+    } catch (error: any) {
+      const corrId = error?.correlationId;
+      const corrSuffix = corrId ? ` · ID: ${corrId}` : "";
+      if (error.code === "MODE_LOCKED") {
+        toast.error(error.blockTitle || "Alteração negada", {
+          description: (error.blockDescription || error.message || "") + corrSuffix,
+          duration: 9000,
+        });
+      } else if (error.code === "OFFLINE") {
+        toast.warning("Sem conexão — tentativa enfileirada", {
+          description: `Reenviaremos quando voltar a ficar online.${corrSuffix}`,
+        });
+      } else {
+        toast.error("Erro ao atualizar modo", {
+          description: `Tente novamente em instantes.${corrSuffix}`,
+        });
+      }
+    }
   };
 
   return (
