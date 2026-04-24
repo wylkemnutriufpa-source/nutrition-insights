@@ -426,9 +426,20 @@ async function processBatch(
   let processed = 0;
 
   for (const pid of patientIds) {
-    const profile = profileMap[pid];
-    const plan = planMap[pid];
-    const clusterState = clusterMap[pid];
+    const profile = profileMap[pid] as {
+      adherence_score_7d?: number | null;
+      engagement_index?: number | null;
+      weight_trend_status?: string | null;
+      weight_velocity_kg_week?: number | null;
+      clinical_risk_level?: string | null;
+    } | undefined;
+    const plan = planMap[pid] as {
+      id: string;
+      start_date?: string | null;
+      generation_metadata?: { calorie_target?: number | null } | null;
+      therapeutic_effectiveness_status?: string | null;
+    } | undefined;
+    const clusterState = clusterMap[pid] as { metabolic_cluster?: string | null } | undefined;
     const alerts = alertsByP[pid] || [];
     const existingPending = existingByP[pid] || [];
     const assessments = assessByP[pid] || [];
@@ -441,7 +452,7 @@ async function processBatch(
 
     const meta = plan.generation_metadata || {};
     const currentCalories = meta.calorie_target || 0;
-    const planDays = Math.floor((now.getTime() - new Date(plan.start_date).getTime()) / 86400000);
+    const planDays = Math.floor((now.getTime() - new Date(plan.start_date || now.toISOString()).getTime()) / 86400000);
     const cluster = clusterState?.metabolic_cluster || "unknown";
     const adherence7d = profile.adherence_score_7d || 0;
     const engagementIndex = profile.engagement_index || 50;
@@ -450,9 +461,9 @@ async function processBatch(
     // Calculate 14d weight velocity from assessments
     let weightVelocity14d = profile.weight_velocity_kg_week || 0;
     if (assessments.length >= 2) {
-      const first = assessments[0];
-      const last = assessments[assessments.length - 1];
-      const daysBetween = (new Date(last.assessment_date).getTime() - new Date(first.assessment_date).getTime()) / 86400000;
+      const first = assessments[0] as { assessment_date?: string; weight?: number | null };
+      const last = assessments[assessments.length - 1] as { assessment_date?: string; weight?: number | null };
+      const daysBetween = (new Date(last.assessment_date || now.toISOString()).getTime() - new Date(first.assessment_date || now.toISOString()).getTime()) / 86400000;
       if (daysBetween >= 7 && first.weight && last.weight) {
         weightVelocity14d = (last.weight - first.weight) / (daysBetween / 7);
       }

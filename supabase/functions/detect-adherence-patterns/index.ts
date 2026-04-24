@@ -175,6 +175,8 @@ Deno.serve(async (req) => {
 
         if (!isWeekendRule && !isConsecutiveRule) continue;
 
+        const patientTenant = await resolveTenantForUser(nutri.nutritionist_id);
+
         // Check cooldown
         const { data: recentRuns } = await supabase
           .from("automation_runs")
@@ -207,8 +209,6 @@ Deno.serve(async (req) => {
                   icon: "💪",
                   category: "motivation",
                 };
-
-            const patientTenant = await resolveTenantForUser(nutri.nutritionist_id);
 
             // Create notification
             await supabase.from("notifications").insert({

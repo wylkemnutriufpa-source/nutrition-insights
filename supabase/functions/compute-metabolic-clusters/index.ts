@@ -619,7 +619,7 @@ async function processBatch(
     const { cluster, confidence, reasons } = classifyCluster(features, dataPoints, dataDays);
 
     // STABILITY CHECK: Don't change cluster too frequently
-    const previousCluster = existingState?.metabolic_cluster;
+    const previousCluster = existingState?.metabolic_cluster as MetabolicCluster | undefined;
     const lastChanged = existingState?.cluster_changed_at
       ? new Date(existingState.cluster_changed_at)
       : null;
