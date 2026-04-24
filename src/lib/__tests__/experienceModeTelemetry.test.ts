@@ -94,8 +94,8 @@ describe("experienceModeTelemetry", () => {
   });
 
   it("drainQueue replays each attempt and removes successful ones", async () => {
-    enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
-    enqueueAttempt({ correlationId: "c2", attemptedMode: "advanced", previousMode: "pro" });
+    await enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
+    await enqueueAttempt({ correlationId: "c2", attemptedMode: "advanced", previousMode: "pro" });
     const replay = vi.fn(async (_item) => {});
     const res = await drainQueue(replay);
     expect(res.replayed).toBe(2);
@@ -105,7 +105,7 @@ describe("experienceModeTelemetry", () => {
   });
 
   it("drainQueue keeps failed attempts in the queue and increments retries", async () => {
-    enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
+    await enqueueAttempt({ correlationId: "c1", attemptedMode: "pro", previousMode: "basic" });
     const replay = vi.fn(async () => {
       throw new Error("network");
     });
