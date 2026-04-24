@@ -232,6 +232,12 @@ export function DayContent({ day }: Props) {
                   <button
                     type="button"
                     onClick={() => {
+                      // Open smart editor directly on the first item if exists or show substitution panel
+                      const firstItem = mealItems[0];
+                      if (firstItem) {
+                        // The MealItemCard handles its own click, but we can trigger from here too if needed
+                        // For now, let's keep the existing logic but make it clearer it's for substitution/alternatives
+                      }
                       setLibraryMealType(meal.key);
                       setLibraryOpen(true);
                       setQuickAddKey(null);
@@ -240,7 +246,7 @@ export function DayContent({ day }: Props) {
                     }}
                     className="flex items-center gap-1 text-[10px] py-1 px-2 rounded border border-dashed border-border text-muted-foreground hover:text-primary hover:border-primary transition-colors"
                   >
-                    <ArrowLeftRight className="w-3 h-3" /> Substituir
+                    <Plus className="w-3 h-3" /> Alternativa
                   </button>
                 </div>
 

@@ -7,6 +7,7 @@ import {
 import { toast } from "sonner";
 import { MacroEditDialog } from "./MacroEditDialog";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { MealSmartEditorModal } from "./MealSmartEditorModal";
 import { getCategoryDot } from "@/components/meals/FoodSubstitutions";
 import { useMealDetail } from "@/components/patient/MealDetailContext";
 import { MealPhotoUpload } from "./MealPhotoUpload";
@@ -31,6 +32,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   const [inlineEdit, setInlineEdit] = useState(false);
   const [editValue, setEditValue] = useState(item.title);
   const [macroEditOpen, setMacroEditOpen] = useState(false);
+  const [smartEditorOpen, setSmartEditorOpen] = useState(false);
 
   useEffect(() => {
     setOnRemoveFoodLine((itemId: string, newDescription: string) => {
@@ -85,21 +87,15 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
       className="bg-secondary/60 rounded-md hover:bg-secondary transition-colors group/item relative cursor-pointer overflow-hidden"
       onClick={() => {
         if (!inlineEdit) {
-          openMealDetail({
-            title: item.title,
-            description: item.description,
-            meal_type: item.meal_type,
-            calories_target: item.calories_target,
-            protein_target: item.protein_target,
-            carbs_target: item.carbs_target,
-            fat_target: item.fat_target,
-            metadata: (item as any).edit_metadata ?? (item as any).metadata,
-            image_url: resolvedImage,
-            itemId: item.id,
-          });
+          setSmartEditorOpen(true);
         }
       }}
     >
+      <MealSmartEditorModal 
+        open={smartEditorOpen}
+        onOpenChange={setSmartEditorOpen}
+        itemId={item.id}
+      />
       {resolvedImage ? (
         <div className="relative w-full aspect-[16/9] overflow-hidden shrink-0 bg-muted/30">
           <img
