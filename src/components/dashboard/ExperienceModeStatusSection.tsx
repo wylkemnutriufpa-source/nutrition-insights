@@ -87,15 +87,6 @@ export default function ExperienceModeStatusSection() {
     const unlockText = lastError.unlock_date
       ? ` Liberação prevista para ${new Date(lastError.unlock_date).toLocaleDateString("pt-BR")}.`
       : "";
-    const subject = encodeURIComponent("Solicitação de destravamento do modo de experiência");
-    const body = encodeURIComponent(
-      `Olá,\n\nGostaria de solicitar o destravamento do meu modo de experiência.\n\n` +
-        `Modo solicitado: ${failedMode}\n` +
-        `Motivo informado: ${lastError.blockDescription || lastError.message || "—"}\n` +
-        (lastError.unlock_date ? `Data prevista de liberação: ${new Date(lastError.unlock_date).toLocaleDateString("pt-BR")}\n` : "") +
-        (lastError.correlationId ? `ID de correlação: ${lastError.correlationId}\n` : "") +
-        `\nObrigado!`
-    );
     return (
       <div
         data-testid="emode-status"
@@ -111,13 +102,12 @@ export default function ExperienceModeStatusSection() {
             {lastError.blockDescription || lastError.message}
             {!lastError.blockDescription && unlockText}
           </p>
-          <a
-            href={`mailto:suporte@fitjourney.com.br?subject=${subject}&body=${body}`}
-            data-testid="emode-request-unlock"
-            className="inline-flex items-center gap-1 mt-2 text-xs font-medium text-amber-700 dark:text-amber-400 underline hover:no-underline"
-          >
-            Solicitar destravamento ao administrador →
-          </a>
+          <RequestUnlockDialog
+            attemptedMode={failedMode}
+            blockDescription={lastError.blockDescription || lastError.message}
+            unlockDate={lastError.unlock_date ?? null}
+            correlationId={lastError.correlationId}
+          />
           {lastError.correlationId && <CorrelationIdBadge id={lastError.correlationId} />}
         </div>
       </div>
