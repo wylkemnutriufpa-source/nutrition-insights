@@ -43,6 +43,7 @@ const Achievements = lazy(() => import("./pages/Achievements"));
 const Challenges = lazy(() => import("./pages/Challenges"));
 const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
+const PreviewPatient = lazy(() => import("./pages/PreviewPatient"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
 // MealPlanEditor (legacy V1) removed — all plans now use V2
 const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
@@ -519,6 +520,7 @@ const App = () => (
               {/* Nutritionist-only routes */}
               <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
               <Route path="/patients/:patientId" element={<NutritionistRoute><LP section="Pacientes"><PatientDetail /></LP></NutritionistRoute>} />
+              <Route path="/preview-patient/:patientId" element={<NutritionistRoute><LP section="Preview do Paciente"><PreviewPatient /></LP></NutritionistRoute>} />
               <Route path="/protocols" element={<NutritionistRoute><LP section="Protocolos"><Protocols /></LP></NutritionistRoute>} />
               <Route path="/protocolos-fitoterapicos" element={<NutritionistRoute><LP section="Protocolos Fitoterápicos"><PhytotherapyProtocols /></LP></NutritionistRoute>} />
               <Route path="/programs" element={<NutritionistRoute><LP section="Projetos"><Programs /></LP></NutritionistRoute>} />
