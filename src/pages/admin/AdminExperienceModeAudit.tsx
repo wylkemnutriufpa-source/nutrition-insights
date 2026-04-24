@@ -70,6 +70,26 @@ const OUTCOME_BADGES: Record<string, { label: string; className: string }> = {
 const PAGE_SIZE = 50;
 const PRESETS_KEY = "fj_emode_audit_presets";
 const RETRY_THRESHOLD_KEY = "fj_emode_audit_retry_threshold";
+const EXPANDED_CIDS_KEY = "fj_emode_audit_expanded_cids";
+
+function loadExpandedCids(): Set<string> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_CIDS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveExpandedCids(set: Set<string>) {
+  try {
+    localStorage.setItem(EXPANDED_CIDS_KEY, JSON.stringify([...set]));
+  } catch {
+    /* ignore */
+  }
+}
 
 function loadPresets(): FilterPreset[] {
   try {
