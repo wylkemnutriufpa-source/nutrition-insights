@@ -116,12 +116,13 @@ function findMatch(title: string, aliasMap: Map<string, string>, description?: s
   const phraseMatch = findBestAliasMatch(norm, aliasMap);
   if (phraseMatch) return phraseMatch;
 
-  // === PRIORITY 3: Single keyword extraction (protein/fruit/misc) ===
+  // === PRIORITY 3: Strict keyword matching (No generic fallbacks) ===
   const words = norm.split(/\s+/);
   for (const word of words) {
     if (CARB_KEYWORDS.has(word) || ACCESSORY_WORDS.has(word)) continue;
     if (word.length < 3) continue;
-    // Try exact single-word alias match
+    
+    // EXCLUSIVELY via alias map, no generic string fallbacks
     if (aliasMap.has(word)) return aliasMap.get(word)!;
   }
 

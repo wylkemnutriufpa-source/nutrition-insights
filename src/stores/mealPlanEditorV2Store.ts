@@ -300,15 +300,31 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     }
 
     // Fetch server truth
-    const [{ data: planData }, { data: itemsData }] = await Promise.all([
+    const [{ data: planData, error: planError }, { data: itemsData, error: itemsError }] = await Promise.all([
       supabase.from("meal_plans").select("*").eq("id", planId).maybeSingle(),
       supabase.from("meal_plan_items").select("*").eq("meal_plan_id", planId).order("created_at"),
     ]);
 
+    if (planError || itemsError) {
+      console.error("[PLAN_FETCH_ERROR]", { planError, itemsError, planId });
+      set({ syncStatus: "error", hydrating: false });
+      return;
+    }
+
     if (!planData) {
+      console.warn("[PLAN_NOT_FOUND]", { planId });
       set({ plan: null, hydrating: false, hydrated: true });
       return;
     }
+
+    // AUDIT LOG
+    console.log("[PLAN_FETCH_AUDIT]", {
+      patient_id: planData.patient_id,
+      plan_id: planId,
+      status: planData.plan_status,
+      is_active: planData.is_active,
+      items_count: itemsData?.length || 0
+    });
 
     const { data: profile } = await supabase
       .from("profiles")
