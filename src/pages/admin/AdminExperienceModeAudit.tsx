@@ -296,6 +296,65 @@ export default function AdminExperienceModeAudit() {
         </CardContent>
       </Card>
 
+      {/* Metrics panel: retries per correlationId & avg time-to-success */}
+      <Card data-testid="emode-metrics-panel">
+        <CardHeader>
+          <CardTitle className="text-base">Métricas (filtros aplicados)</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Sucessos</div>
+            <div className="text-xl font-bold text-emerald-600" data-testid="metrics-success">
+              {metrics.successCount}
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">Falhas</div>
+            <div className="text-xl font-bold text-destructive" data-testid="metrics-failed">
+              {metrics.failedCount}
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              Tempo médio até sucesso
+            </div>
+            <div className="text-xl font-bold" data-testid="metrics-avg-success">
+              {metrics.avgTimeToSuccessMs > 0
+                ? `${metrics.avgTimeToSuccessMs} ms`
+                : "—"}
+            </div>
+          </div>
+          <div className="rounded-lg border border-border bg-muted/30 p-3">
+            <div className="text-[10px] uppercase tracking-wide text-muted-foreground">
+              Correlations c/ retries
+            </div>
+            <div className="text-xl font-bold" data-testid="metrics-retry-cids">
+              {metrics.retriesCorrelationCount}
+            </div>
+          </div>
+          {metrics.topRetries.length > 0 && (
+            <div className="col-span-2 sm:col-span-4 mt-1">
+              <div className="text-[10px] uppercase tracking-wide text-muted-foreground mb-1">
+                Top correlationIds por retries
+              </div>
+              <ul className="space-y-1" data-testid="metrics-top-retries">
+                {metrics.topRetries.map(([cid, count]) => (
+                  <li
+                    key={cid}
+                    className="flex justify-between items-center text-xs font-mono border border-border/50 rounded px-2 py-1"
+                  >
+                    <span className="truncate">{cid}</span>
+                    <span className="text-muted-foreground ml-2 shrink-0">
+                      {count} retries
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
           <CardTitle className="text-base">
