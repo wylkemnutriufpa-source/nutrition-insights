@@ -55,10 +55,10 @@ export function ListView() {
           )}
         </div>
         <div className="flex items-center gap-3 text-[10px] font-medium text-muted-foreground">
-          <span><span className="text-orange-500 font-bold">{totals.calories}</span> kcal</span>
-          <span><span className="text-red-500 font-bold">{totals.protein.toFixed(0)}</span>g P</span>
-          <span><span className="text-amber-500 font-bold">{totals.carbs.toFixed(0)}</span>g C</span>
-          <span><span className="text-blue-500 font-bold">{totals.fat.toFixed(0)}</span>g G</span>
+          <span><span className="text-foreground font-bold">{totals.calories}</span> kcal</span>
+          <span><span className="text-foreground font-bold">{totals.protein.toFixed(0)}</span>g P</span>
+          <span><span className="text-foreground font-bold">{totals.carbs.toFixed(0)}</span>g C</span>
+          <span><span className="text-foreground font-bold">{totals.fat.toFixed(0)}</span>g G</span>
         </div>
       </div>
 
