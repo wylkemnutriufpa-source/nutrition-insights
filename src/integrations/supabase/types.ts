@@ -6554,6 +6554,7 @@ export type Database = {
           personalization_applied: boolean
           pipeline_completed_at: string | null
           pipeline_version: string | null
+          plan_mode: Database["public"]["Enums"]["plan_mode_type"]
           plan_status: string
           plan_type: string | null
           previous_plan_id: string | null
@@ -6607,6 +6608,7 @@ export type Database = {
           personalization_applied?: boolean
           pipeline_completed_at?: string | null
           pipeline_version?: string | null
+          plan_mode?: Database["public"]["Enums"]["plan_mode_type"]
           plan_status?: string
           plan_type?: string | null
           previous_plan_id?: string | null
@@ -6660,6 +6662,7 @@ export type Database = {
           personalization_applied?: boolean
           pipeline_completed_at?: string | null
           pipeline_version?: string | null
+          plan_mode?: Database["public"]["Enums"]["plan_mode_type"]
           plan_status?: string
           plan_type?: string | null
           previous_plan_id?: string | null
@@ -19589,6 +19592,7 @@ export type Database = {
         | "anamnesis"
         | "physical_assessment"
         | "mixed"
+      plan_mode_type: "weekly" | "single_day"
       protocol_status:
         | "pending"
         | "active"
@@ -19826,6 +19830,7 @@ export const Constants = {
         "physical_assessment",
         "mixed",
       ],
+      plan_mode_type: ["weekly", "single_day"],
       protocol_status: [
         "pending",
         "active",
