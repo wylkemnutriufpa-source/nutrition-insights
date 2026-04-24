@@ -67,36 +67,42 @@ const CHAIN_RE =
 
 /**
  * Parse a select string into top-level column tokens.
- * Strips:
- *   - relation joins:  `profiles!fk(...)` or `profiles(...)`
- *   - aliases:         `name:column`
- *   - whitespace
- * Keeps simple identifiers and the literal "*".
+ * Strategy:
+ *   1. Tokenize by top-level commas (respecting parens depth).
+ *   2. Drop tokens that are relation joins:
+ *        - foo(...)              → embedded relation
+ *        - foo!fkey(...)         → embedded relation with fk hint
+ *        - foo!fkey              → relation reference w/o subselect
+ *      Detect by presence of "(" or "!" anywhere in the token.
+ *   3. For remaining tokens, strip "alias:" prefix and validate as identifier.
  */
 function extractColumns(selectStr) {
-  // Remove parenthesized join sub-selects (non-greedy, non-nested deep)
-  let cleaned = selectStr;
-  // Repeatedly strip innermost parens until stable
-  for (let i = 0; i < 5; i++) {
-    const next = cleaned.replace(/\([^()]*\)/g, "");
-    if (next === cleaned) break;
-    cleaned = next;
+  // 1. Tokenize at depth 0
+  const tokens = [];
+  let depth = 0;
+  let buf = "";
+  for (const ch of selectStr) {
+    if (ch === "(") { depth++; buf += ch; continue; }
+    if (ch === ")") { depth = Math.max(0, depth - 1); buf += ch; continue; }
+    if (ch === "," && depth === 0) {
+      tokens.push(buf);
+      buf = "";
+      continue;
+    }
+    buf += ch;
   }
+  if (buf.trim()) tokens.push(buf);
 
-  return cleaned
-    .split(",")
-    .map((tok) => tok.trim())
+  return tokens
+    .map((t) => t.trim())
     .filter(Boolean)
-    .map((tok) => {
-      // alias:column → keep "column"
-      const aliasIdx = tok.indexOf(":");
-      if (aliasIdx >= 0) tok = tok.slice(aliasIdx + 1).trim();
-      // strip leftover relation hint like "profiles!fk_name" (no parens)
-      const bangIdx = tok.indexOf("!");
-      if (bangIdx >= 0) tok = tok.slice(0, bangIdx).trim();
-      return tok;
+    .filter((t) => !t.includes("(") && !t.includes("!")) // drop relation joins
+    .map((t) => {
+      const aliasIdx = t.indexOf(":");
+      if (aliasIdx >= 0) t = t.slice(aliasIdx + 1).trim();
+      return t;
     })
-    .filter((tok) => /^[a-zA-Z_][a-zA-Z0-9_]*$|^\*$/.test(tok));
+    .filter((t) => /^[a-zA-Z_][a-zA-Z0-9_]*$|^\*$/.test(t));
 }
 
 const violations = [];
