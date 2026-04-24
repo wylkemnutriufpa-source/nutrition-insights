@@ -450,6 +450,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       return;
     }
     if (onUpdateItem) {
+      saveToHistory();
       onUpdateItem(meal.itemId, { title: titleValue.trim() });
     }
     setEditingTitle(false);
@@ -595,6 +596,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       carbs_target: macroValues.carbs ? Number(macroValues.carbs) : null,
       fat_target: macroValues.fat ? Number(macroValues.fat) : null,
     };
+    saveToHistory();
     onUpdateItem(meal.itemId, patch);
     setEditingMacros(false);
     toast.success("Macros atualizados manualmente");
