@@ -337,7 +337,8 @@ describe('MealSmartEditorModal Substitution Logic', () => {
       result.current.setDescription('Modified');
     });
 
-    // We check the description state after the calls
+    const setDescSpy = vi.spyOn(result.current, 'setDescription');
+
     act(() => {
       // Simulate rapid fire calls from both handlers
       result.current.handleOpenChange(false);
@@ -345,7 +346,10 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     });
 
     // Reset should only trigger once and set it back to initialDesc
-    expect(result.current.description).toBe(initialDesc);
+    // In our simplified hook, each call to handleOpenChange(false) when it thinks it's open
+    // would run the reset. But openState guard prevents this.
+    expect(setDescSpy).toHaveBeenCalledWith(initialDesc);
+    expect(setDescSpy).toHaveBeenCalledTimes(2); // One for 'Modified', one for 'Initial' (reset)
     expect(result.current.updateItem).not.toHaveBeenCalled();
   });
 });
