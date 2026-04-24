@@ -267,6 +267,9 @@ export default function ClientDashboard() {
 
     return (
     <DashboardLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <ExperienceModeSwitcher />
+      </div>
       <OnboardingProgressModal />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Schema Inconsistency Alert */}
