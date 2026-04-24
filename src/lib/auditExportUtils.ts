@@ -8,6 +8,7 @@ interface ExportOptions {
   data: any[];
   filters: any;
   filename?: string;
+  isAsync?: boolean;
 }
 
 const logExportActivity = async (options: { format: string; filters: any; count: number }) => {
@@ -20,7 +21,27 @@ const logExportActivity = async (options: { format: string; filters: any; count:
   });
 };
 
-export const exportData = async ({ format, data, filters, filename }: ExportOptions) => {
+/**
+ * Creates an async export task
+ */
+export const requestAsyncExport = async (options: { format: string; filters: any }) => {
+  const { data: { user } } = await supabase.auth.getUser();
+  const { data, error } = await supabase.from('export_tasks').insert({
+    user_id: user?.id,
+    format: options.format,
+    filter_params: options.filters,
+    status: 'pending'
+  }).select().single();
+  
+  if (error) throw error;
+  return data;
+};
+
+export const exportData = async ({ format, data, filters, filename, isAsync }: ExportOptions) => {
+  if (isAsync) {
+    return requestAsyncExport({ format, filters });
+  }
+
   const ts = new Date().getTime();
   const baseName = filename || `audit_export_${ts}`;
   
