@@ -64,7 +64,11 @@ export default function InlineExperienceToggle() {
   };
 
   return (
-    <div className="relative flex rounded-xl border border-border bg-muted/30 p-0.5">
+    <div
+      data-testid="emode-toggle"
+      data-mode={mode}
+      className="relative flex rounded-xl border border-border bg-muted/30 p-0.5"
+    >
       {/* Animated background pill */}
       <motion.div
         className="absolute top-0.5 bottom-0.5 rounded-lg bg-card shadow-sm border border-border/50"
@@ -83,6 +87,10 @@ export default function InlineExperienceToggle() {
           <button
             key={m.key}
             onClick={() => handleSelect(m.key)}
+            data-testid={`emode-option-${m.key}`}
+            data-selected={selected ? "true" : "false"}
+            aria-pressed={selected}
+            aria-label={`Ativar modo ${m.label}`}
             className={`relative z-10 flex items-center justify-center gap-1.5 flex-1 py-1.5 px-2 rounded-lg text-[11px] font-medium transition-colors ${
               selected ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
