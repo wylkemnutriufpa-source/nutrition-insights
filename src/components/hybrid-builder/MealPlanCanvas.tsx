@@ -4,6 +4,7 @@ import DayActions from "./DayActions";
 import { Coffee, Apple, Utensils, Cookie, Moon, Sun, Zap, Pencil, Sparkles } from "lucide-react";
 import { useState } from "react";
 import type { PatientContext, ComposerMode, MacroTarget } from "@/lib/mealComposer";
+import SingleDaySyncStatusBadge from "@/components/meal-editor-v2/SingleDaySyncStatusBadge";
 
 const MEAL_SLOTS: { key: MealType; label: string; icon: React.ReactNode; calShare: number }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4 text-amber-500" />, calShare: 0.20 },
