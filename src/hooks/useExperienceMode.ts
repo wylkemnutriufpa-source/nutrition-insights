@@ -109,6 +109,7 @@ export interface ExperienceModeContextValue {
   isAdvanced: boolean;
   isLoading: boolean;
   retryLastMode: () => void;
+  failedMode: ExperienceMode | null;
   /** Show content only at given mode or above */
   minMode: (min: ExperienceMode) => boolean;
   /** Effective role used for route gating */
@@ -124,6 +125,7 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
   isAdvanced: false,
   isLoading: false,
   retryLastMode: () => {},
+  failedMode: null,
   minMode: () => true,
   role: "professional",
 });
@@ -244,6 +246,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       isPro, 
       isAdvanced, 
       isLoading, 
+      failedMode,
       retryLastMode,
       minMode, 
       role 
