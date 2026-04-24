@@ -223,7 +223,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const [isApplyingSuggestion, setIsApplyingSuggestion] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [dbHistory, setDbHistory] = useState<any[]>([]);
-  
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
+
   const [pendingSuggestion, setPendingSuggestion] = useState<{
     name: string;
     portion: string;
