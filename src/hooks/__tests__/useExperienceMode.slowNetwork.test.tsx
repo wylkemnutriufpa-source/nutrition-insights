@@ -206,6 +206,89 @@ describe("useExperienceMode — slow network, timeouts & UI retry", () => {
     expect(screen.queryByText(new RegExp(`ID: ${firstId}`))).not.toBeInTheDocument();
   });
 
+  it("status section transitions saving → success on slow first attempt with stable correlationId", async () => {
+    // Simulate slow network on the FIRST attempt (timeout error), then
+    // "connection comes back" and the second attempt resolves successfully.
+    // The status section must:
+    //  - show 'saving' while the call is in-flight
+    //  - end on 'success'
+    //  - never expose more than one correlationId for the whole sequence
+    //    (withRetries reuses the same id end-to-end)
+    let attempt = 0;
+    // Pre-build a deferred promise for the SECOND attempt so resolution is
+    // fully under the test's control — no hanging promises across tests.
+    let resolveSecond!: (v: any) => void;
+    const secondPromise = new Promise<any>((r) => {
+      resolveSecond = r;
+    });
+
+    updateSpy.mockImplementation(() => {
+      attempt++;
+      if (attempt === 1) return Promise.reject(timeoutError());
+      return secondPromise;
+    });
+
+    const stateRef = { current: null as any };
+    render(<HostedStatus stateRef={stateRef} />);
+    await waitFor(() => expect(stateRef.current).not.toBeNull());
+
+    // Kick off the change without awaiting; we want to observe 'saving'.
+    let setModePromise!: Promise<void>;
+    await act(async () => {
+      setModePromise = stateRef.current.setMode("pro");
+      // Yield once so React commits the isLoading=true state
+    });
+    setModePromise.catch(() => {});
+
+    // While the second attempt is pending, status must be 'saving'.
+    await waitFor(
+      () => {
+        expect(stateRef.current.isLoading).toBe(true);
+        const s = screen.getByTestId("emode-status");
+        expect(s.getAttribute("data-state")).toBe("saving");
+      },
+      { timeout: 2000 }
+    );
+    expect(screen.getByText(/Salvando seu modo/i)).toBeInTheDocument();
+
+    // "Connection comes back" → release the retried attempt successfully.
+    await act(async () => {
+      resolveSecond({ error: null });
+      await setModePromise;
+    });
+
+    // Status section now shows success.
+    await waitFor(() => {
+      const s = screen.getByTestId("emode-status");
+      expect(s.getAttribute("data-state")).toBe("success");
+    });
+    expect(screen.getByText(/Modo ativo/i)).toBeInTheDocument();
+    expect(screen.getByText(/Profissional/)).toBeInTheDocument();
+
+    // Stable correlationId end-to-end:
+    //  - exactly ONE success row
+    //  - NO failed row (transient timeout was absorbed by withRetries)
+    //  - all observed correlation_ids point to the same attempt
+    const successRows = auditInsertSpy.mock.calls
+      .map((c: any) => c[0])
+      .filter((c: any) => c.outcome === "success");
+    expect(successRows).toHaveLength(1);
+    expect(successRows[0].correlation_id).toMatch(/^emc-/);
+    expect(lastInsertWithOutcome("failed")).toBeUndefined();
+
+    const allIds = new Set(
+      auditInsertSpy.mock.calls.map((c: any) => c[0].correlation_id)
+    );
+    expect(allIds.size).toBe(1);
+    expect(allIds.has(successRows[0].correlation_id)).toBe(true);
+
+    // Hook's lastError must be cleared and no transient text leaked into UI.
+    expect(stateRef.current.lastError).toBeNull();
+    expect(screen.queryByText(/Tempo excedido/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/Tentar novamente/)).not.toBeInTheDocument();
+    expect(attempt).toBeGreaterThanOrEqual(2);
+  });
+
   it("user-facing text is the FINAL error, not the transient 'Tempo excedido'", async () => {
     // 1 transient timeout, then a permanent DB error → user must see the DB
     // error, not the intermediate timeout message.
