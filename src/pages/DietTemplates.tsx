@@ -428,7 +428,7 @@ export default function DietTemplates() {
     //    primary option flagged is_primary=true; all other options are siblings with
     //    full macros (already adjusted by the patient multiplier) so the patient
     //    and the engine can swap with proper calculation.
-    const multiplier = getMultiplier(template);
+    const multiplier = getCalorieMultiplier(template);
     const scaleNum = (n: any) => {
       const v = Number(n);
       if (!Number.isFinite(v)) return null;
