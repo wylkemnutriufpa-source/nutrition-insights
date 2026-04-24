@@ -24,11 +24,6 @@ import { toast } from "sonner";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { MEAL_TEMPLATES } from "./MealTemplatePanel";
 import { cn } from "@/lib/utils";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
-import { toast } from "sonner";
-import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
-import { MEAL_TEMPLATES } from "./MealTemplatePanel";
-import { cn } from "@/lib/utils";
 
 interface MealSmartEditorModalProps {
   open: boolean;
