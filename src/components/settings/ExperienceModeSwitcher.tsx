@@ -2,9 +2,10 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useExperienceMode, type ExperienceMode } from "@/hooks/useExperienceMode";
 import { useAuth } from "@/lib/auth";
 import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
-import { Zap, BarChart3, Rocket } from "lucide-react";
+import { Zap, BarChart3, Rocket, RefreshCw, AlertCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
 import ExperienceModeRecommendation from "./ExperienceModeRecommendation";
 
 type ModeConfig = { key: ExperienceMode; label: string; desc: string; icon: typeof Zap; color: string; bgColor: string };
@@ -64,16 +65,35 @@ const PATIENT_MODES: ModeConfig[] = [
 ];
 
 export default function ExperienceModeSwitcher() {
-  const { mode, setMode } = useExperienceMode();
+  const { mode, setMode, isLoading, retryLastMode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const isProRole = (isNutritionist || isPersonal || isAdmin) && isProfessionalContext;
   const MODES = isProRole ? PRO_MODES : PATIENT_MODES;
 
-  const handleSelect = (key: ExperienceMode) => {
-    setMode(key);
-    const label = MODES.find(m => m.key === key)?.label;
-    toast.success(`Modo ${label} ativado`);
+  const handleSelect = async (key: ExperienceMode) => {
+    if (key === mode) return;
+    
+    try {
+      await setMode(key);
+      const label = MODES.find(m => m.key === key)?.label;
+      toast.success(`Modo ${label} ativado`);
+    } catch (error: any) {
+      if (error.code === "MODE_LOCKED") {
+        toast.error("Alteração Negada", {
+          description: error.message || "Sua conta está restrita ao modo Básico por enquanto. Complete as atualizações pendentes para liberar outros modos.",
+          duration: 6000,
+        });
+      } else {
+        toast.error("Erro ao atualizar modo", {
+          description: "Não foi possível salvar sua preferência. Verifique sua conexão.",
+          action: {
+            label: "Tentar novamente",
+            onClick: () => handleSelect(key),
+          },
+        });
+      }
+    }
   };
 
   return (
