@@ -162,6 +162,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     const handleMessage = (event: MessageEvent) => {
       if (event.data?.type === "MODE_UPDATE" && event.data?.mode) {
         const newMode = event.data.mode;
+        console.log("[ExperienceMode] Syncing mode from broadcast channel:", newMode);
         setModeState(newMode);
         localStorage.setItem(STORAGE_KEY, newMode);
       }
@@ -172,10 +173,23 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     // Fallback for older browsers or specific environments
     const handleStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY && event.newValue) {
+        console.log("[ExperienceMode] Syncing mode from storage event:", event.newValue);
         setModeState(event.newValue as ExperienceMode);
       }
     };
     window.addEventListener("storage", handleStorage);
+
+    // Logout listener to clear session state
+    const handleAuthChange = () => {
+      supabase.auth.onAuthStateChange((event) => {
+        if (event === 'SIGNED_OUT') {
+          console.log("[ExperienceMode] User signed out, clearing session state");
+          sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
+          setFailedMode(null);
+        }
+      });
+    };
+    handleAuthChange();
 
     return () => {
       channel.removeEventListener("message", handleMessage);
@@ -210,6 +224,8 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     setFailedMode(null);
     sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
     
+    console.log(`[ExperienceMode] Attempting to update mode to ${m}...`);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
@@ -223,6 +239,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       if (fetchError) throw fetchError;
       
       if (profile?.experience_mode_locked && m !== 'basic') {
+        console.warn(`[ExperienceMode] Mode change blocked for user ${user.id}. Mode is locked.`);
         const error = new Error("Sua conta está restrita ao modo Básico temporariamente.");
         (error as any).code = "MODE_LOCKED";
         (error as any).unlock_date = (profile as any).unlock_date;
@@ -234,8 +251,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
         .update({ experience_mode: m } as any)
         .eq("user_id", user.id);
 
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error(`[ExperienceMode] DB update failed:`, updateError);
+        throw updateError;
+      }
 
+      console.log(`[ExperienceMode] Successfully updated mode to ${m}`);
       localStorage.setItem(STORAGE_KEY, m);
       setModeState(m);
       
@@ -244,7 +265,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       channel.postMessage({ type: "MODE_UPDATE", mode: m });
       channel.close();
     } catch (error: any) {
-      console.error("Failed to update experience mode:", error);
+      console.error(`[ExperienceMode] Error in update cycle:`, error);
       setFailedMode(m);
       sessionStorage.setItem(`${STORAGE_KEY}_failed`, m);
       // Fallback to previous mode

@@ -8,6 +8,7 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: {
       getUser: vi.fn(),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } })),
     },
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -201,5 +202,46 @@ describe("useExperienceModeState", () => {
 
     expect(caughtError.code).toBe("MODE_LOCKED");
     expect(caughtError.unlock_date).toBe(unlockDate);
+  });
+
+  it("should clear session state on logout", async () => {
+    sessionStorage.setItem("fj_experience_mode_failed", "pro");
+    const { result } = renderHook(() => useExperienceModeState("patient"));
+    
+    // Simulate auth state change to SIGNED_OUT
+    let authCallback: any;
+    (supabase.auth.onAuthStateChange as any).mockImplementation((cb: any) => {
+      authCallback = cb;
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+
+    // Re-render to trigger useEffect
+    renderHook(() => useExperienceModeState("patient"));
+    
+    await act(async () => {
+      authCallback("SIGNED_OUT");
+    });
+
+    expect(sessionStorage.getItem("fj_experience_mode_failed")).toBeNull();
+  });
+
+  it("should handle concurrent updates by checking latest state", async () => {
+    const { result } = renderHook(() => useExperienceModeState("patient"));
+    
+    // Mock successful updates
+    (supabase.from as any).mockImplementation(() => ({
+      select: vi.fn(() => ({ eq: vi.fn(() => ({ maybeSingle: vi.fn().mockResolvedValue({ data: { experience_mode_locked: false } }) })) })),
+      update: vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ error: null }) })),
+    }));
+
+    await act(async () => {
+      // Trigger two updates quickly
+      const p1 = result.current.setMode("pro");
+      const p2 = result.current.setMode("advanced");
+      await Promise.all([p1, p2]);
+    });
+
+    // Final mode should be the last one called
+    expect(result.current.mode).toBe("advanced");
   });
 });
