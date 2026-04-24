@@ -4026,6 +4026,45 @@ export type Database = {
         }
         Relationships: []
       }
+      export_tasks: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          file_url: string | null
+          filter_params: Json | null
+          format: string
+          id: string
+          progress: number | null
+          status: string | null
+          updated_at: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          filter_params?: Json | null
+          format: string
+          id?: string
+          progress?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          file_url?: string | null
+          filter_params?: Json | null
+          format?: string
+          id?: string
+          progress?: number | null
+          status?: string | null
+          updated_at?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       feature_flags: {
         Row: {
           created_at: string
@@ -19411,6 +19450,10 @@ export type Database = {
         }[]
       }
       get_plan_drop_metrics: {
+        Args: { p_cutoff?: string; p_patient_id: string }
+        Returns: Json
+      }
+      get_plan_status_distribution: {
         Args: { p_cutoff?: string; p_patient_id: string }
         Returns: Json
       }
