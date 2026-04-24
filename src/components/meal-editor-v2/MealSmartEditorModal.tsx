@@ -26,8 +26,6 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { MEAL_TEMPLATES } from "./MealTemplatePanel";
 import { cn } from "@/lib/utils";
 import { normalizeSubstitutions, formatFinalDescription } from "./mealEditorHelpers";
-import { Separator } from "@/components/ui/separator";
-import { Badge } from "@/components/ui/badge";
 
 interface MealSmartEditorModalProps {
   open: boolean;

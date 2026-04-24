@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { normalizeSubstitutions, formatFinalDescription } from './mealEditorHelpers';
+import { normalizeSubstitutions, formatFinalDescription } from '../mealEditorHelpers';
 
 describe('mealEditorHelpers', () => {
   describe('normalizeSubstitutions', () => {

@@ -29,11 +29,6 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
       description: formatFinalDescription(description, cleanedSubs),
       substitutions_json: cleanedSubs
     };
-
-    return {
-      description: finalDescription,
-      substitutions_json: cleanedSubs
-    };
   };
 
   const handleOpenChange = (newOpen: boolean) => {
