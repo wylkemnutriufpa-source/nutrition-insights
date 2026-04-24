@@ -70,6 +70,26 @@ const OUTCOME_BADGES: Record<string, { label: string; className: string }> = {
 const PAGE_SIZE = 50;
 const PRESETS_KEY = "fj_emode_audit_presets";
 const RETRY_THRESHOLD_KEY = "fj_emode_audit_retry_threshold";
+const EXPANDED_CIDS_KEY = "fj_emode_audit_expanded_cids";
+
+function loadExpandedCids(): Set<string> {
+  try {
+    const raw = localStorage.getItem(EXPANDED_CIDS_KEY);
+    if (!raw) return new Set();
+    const parsed = JSON.parse(raw);
+    return new Set(Array.isArray(parsed) ? parsed.filter((x) => typeof x === "string") : []);
+  } catch {
+    return new Set();
+  }
+}
+
+function saveExpandedCids(set: Set<string>) {
+  try {
+    localStorage.setItem(EXPANDED_CIDS_KEY, JSON.stringify([...set]));
+  } catch {
+    /* ignore */
+  }
+}
 
 function loadPresets(): FilterPreset[] {
   try {
@@ -121,8 +141,11 @@ export default function AdminExperienceModeAudit() {
     localStorage.setItem(RETRY_THRESHOLD_KEY, String(retryThreshold));
   }, [retryThreshold]);
 
-  // Timeline: which correlationIds are expanded
-  const [expandedCids, setExpandedCids] = useState<Set<string>>(new Set());
+  // Timeline: which correlationIds are expanded (persisted across reloads)
+  const [expandedCids, setExpandedCids] = useState<Set<string>>(() => loadExpandedCids());
+  useEffect(() => {
+    saveExpandedCids(expandedCids);
+  }, [expandedCids]);
   const toggleCid = useCallback((cid: string) => {
     setExpandedCids((prev) => {
       const next = new Set(prev);
@@ -131,6 +154,9 @@ export default function AdminExperienceModeAudit() {
       return next;
     });
   }, []);
+
+  // High-retry alert local search
+  const [highRetrySearch, setHighRetrySearch] = useState("");
 
   const load = async () => {
     setLoading(true);
@@ -391,7 +417,21 @@ export default function AdminExperienceModeAudit() {
         .map((v) => `"${String(v).replace(/\n/g, " ")}"`)
         .join(",");
     });
-    const csv = [header.join(","), ...lines].join("\n");
+    // Header section: applied filters context (commented rows recognised by Excel/CSV viewers)
+    const exportedAt = new Date().toISOString();
+    const escapeCsv = (v: string) => `"${v.replace(/"/g, '""').replace(/\n/g, " ")}"`;
+    const filterHeader = [
+      `# FitJourney — Auditoria Modo de Experiência`,
+      `# Exportado em: ${exportedAt}`,
+      `# Filtros aplicados:`,
+      `#   outcome=${outcome}`,
+      `#   de=${from || "—"}`,
+      `#   até=${to || "—"}`,
+      `#   busca=${search || "—"}`,
+      `#   total_registros=${filtered.length}`,
+      ``,
+    ].map((l) => escapeCsv(l)).join("\n");
+    const csv = [filterHeader, header.join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -458,7 +498,7 @@ export default function AdminExperienceModeAudit() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 mb-3">
+            <div className="flex items-center gap-2 mb-3 flex-wrap">
               <Label className="text-xs">Limite de retries</Label>
               <Input
                 type="number"
@@ -471,43 +511,74 @@ export default function AdminExperienceModeAudit() {
                 className="h-8 w-20"
                 data-testid="emode-retry-threshold-input"
               />
+              <div className="relative flex-1 min-w-[180px]">
+                <Search className="absolute left-2 top-2 w-3.5 h-3.5 text-muted-foreground" />
+                <Input
+                  type="search"
+                  value={highRetrySearch}
+                  onChange={(e) => setHighRetrySearch(e.target.value)}
+                  placeholder="Filtrar por correlationId…"
+                  className="h-8 pl-7 text-xs"
+                  data-testid="emode-high-retry-search"
+                  aria-label="Filtrar correlationIds com retries acima do limite"
+                />
+              </div>
             </div>
-            <ul className="space-y-1.5 max-h-48 overflow-auto">
-              {highRetryCids.slice(0, 20).map((item) => {
-                const badge = OUTCOME_BADGES[item.lastOutcome] || {
-                  label: item.lastOutcome,
-                  className: "bg-muted",
-                };
+            {(() => {
+              const q = highRetrySearch.trim().toLowerCase();
+              const visible = q
+                ? highRetryCids.filter((it) => it.cid.toLowerCase().includes(q))
+                : highRetryCids;
+              if (visible.length === 0) {
                 return (
-                  <li
-                    key={item.cid}
-                    data-testid="emode-high-retry-row"
-                    className="flex items-center justify-between gap-2 text-xs border border-destructive/20 rounded px-2 py-1.5 bg-background"
+                  <p
+                    className="text-xs text-muted-foreground py-2"
+                    data-testid="emode-high-retry-empty"
                   >
-                    <div className="flex items-center gap-2 min-w-0">
-                      <span className="font-mono truncate">{item.cid}</span>
-                      <Badge variant="outline" className={badge.className}>
-                        {badge.label}
-                      </Badge>
-                    </div>
-                    <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-destructive font-semibold">
-                        {item.retries} retries
-                      </span>
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        onClick={() => jumpToRow(item.cid, item.firstId)}
-                        className="h-7 text-[11px]"
-                        data-testid="emode-jump-to-audit"
-                      >
-                        Ver na auditoria →
-                      </Button>
-                    </div>
-                  </li>
+                    Nenhum correlationId corresponde à busca.
+                  </p>
                 );
-              })}
-            </ul>
+              }
+              return (
+                <ul className="space-y-1.5 max-h-48 overflow-auto">
+                  {visible.slice(0, 20).map((item) => {
+                    const badge = OUTCOME_BADGES[item.lastOutcome] || {
+                      label: item.lastOutcome,
+                      className: "bg-muted",
+                    };
+                    return (
+                      <li
+                        key={item.cid}
+                        data-testid="emode-high-retry-row"
+                        className="flex items-center justify-between gap-2 text-xs border border-destructive/20 rounded px-2 py-1.5 bg-background"
+                      >
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span className="font-mono truncate">{item.cid}</span>
+                          <Badge variant="outline" className={badge.className}>
+                            {badge.label}
+                          </Badge>
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
+                          <span className="text-destructive font-semibold">
+                            {item.retries} retries
+                          </span>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => jumpToRow(item.cid, item.firstId)}
+                            className="h-7 text-[11px] focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
+                            data-testid="emode-jump-to-audit"
+                            aria-label={`Ver na auditoria o correlationId ${item.cid}`}
+                          >
+                            Ver na auditoria →
+                          </Button>
+                        </div>
+                      </li>
+                    );
+                  })}
+                </ul>
+              );
+            })()}
           </CardContent>
         </Card>
       )}
@@ -755,9 +826,18 @@ export default function AdminExperienceModeAudit() {
                           <td className="py-2 pr-1">
                             {hasTimeline && (
                               <button
+                                type="button"
                                 onClick={() => toggleCid(r.correlation_id)}
+                                onKeyDown={(e) => {
+                                  if (e.key === "Enter" || e.key === " ") {
+                                    e.preventDefault();
+                                    toggleCid(r.correlation_id);
+                                  }
+                                }}
                                 aria-label={isExpanded ? "Recolher timeline" : "Expandir timeline"}
-                                className="text-muted-foreground hover:text-foreground"
+                                aria-expanded={isExpanded}
+                                aria-controls={`timeline-${r.correlation_id}`}
+                                className="rounded p-0.5 text-muted-foreground hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
                                 data-testid="emode-timeline-toggle"
                               >
                                 {isExpanded
@@ -812,7 +892,10 @@ export default function AdminExperienceModeAudit() {
                             <td></td>
                             <td colSpan={6} className="py-3 px-3">
                               <div
+                                id={`timeline-${r.correlation_id}`}
                                 data-testid="emode-timeline"
+                                role="region"
+                                aria-label={`Timeline do correlationId ${r.correlation_id}`}
                                 className="space-y-2"
                               >
                                 <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
@@ -832,18 +915,32 @@ export default function AdminExperienceModeAudit() {
                                     </div>
                                   )}
                                 </div>
-                                <ol className="relative border-l-2 border-border ml-2 space-y-2">
+                                <ol
+                                  className="relative border-l-2 border-border ml-2 space-y-2"
+                                  aria-label="Eventos do correlationId em ordem cronológica"
+                                >
                                   {group.map((g, idx) => {
                                     const gBadge = OUTCOME_BADGES[g.outcome] || {
                                       label: g.outcome,
                                       className: "bg-muted",
                                     };
                                     const gMeta = (g.metadata || {}) as any;
+                                    const focusStep = () => jumpToRow(g.correlation_id, g.id);
                                     return (
                                       <li
                                         key={g.id}
                                         data-testid="emode-timeline-step"
-                                        className="ml-3 pl-3"
+                                        tabIndex={0}
+                                        role="button"
+                                        aria-label={`Evento ${idx + 1} de ${group.length}: ${gBadge.label} em ${new Date(g.created_at).toLocaleString("pt-BR")}`}
+                                        onClick={focusStep}
+                                        onKeyDown={(e) => {
+                                          if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            focusStep();
+                                          }
+                                        }}
+                                        className="ml-3 pl-3 rounded cursor-pointer hover:bg-muted/40 focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:outline-none"
                                       >
                                         <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
                                         <div className="flex items-center gap-2 text-[11px]">
