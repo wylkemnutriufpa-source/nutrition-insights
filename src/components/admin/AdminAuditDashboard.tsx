@@ -59,9 +59,9 @@ export const AdminAuditDashboard = () => {
   };
 
   const runReconciliation = async () => {
-    const { data, error } = await supabase.rpc('reconcile_published_plans', { p_limit: 5 });
+    const { data, error } = await supabase.rpc('reconcile_published_plans', { p_limit: 5 }) as { data: any, error: any };
     if (error) toast.error("Falha na reconciliação");
-    else toast.success(`Reconciliação concluída: ${data.processed} planos processados`);
+    else toast.success(`Reconciliação concluída: ${data?.processed || 0} planos processados`);
   };
 
   return (
