@@ -558,6 +558,30 @@ export type Database = {
           },
         ]
       }
+      audit_cache: {
+        Row: {
+          cache_key: string
+          created_at: string | null
+          data: Json
+          expires_at: string
+          id: string
+        }
+        Insert: {
+          cache_key: string
+          created_at?: string | null
+          data: Json
+          expires_at: string
+          id?: string
+        }
+        Update: {
+          cache_key?: string
+          created_at?: string | null
+          data?: Json
+          expires_at?: string
+          id?: string
+        }
+        Relationships: []
+      }
       audit_exports_log: {
         Row: {
           created_at: string | null
@@ -19401,6 +19425,20 @@ export type Database = {
           plan_mode: string
           status: string
           tenant_id: string
+        }[]
+      }
+      get_filtered_event_timeline: {
+        Args: {
+          p_cursor?: string
+          p_limit?: number
+          p_master_item_id?: string
+          p_patient_id?: string
+          p_plan_mode?: string
+        }
+        Returns: {
+          correlation_id: string
+          events: Json
+          last_event_at: string
         }[]
       }
       get_nutritionist_dashboard_stats: {
