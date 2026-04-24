@@ -1,4 +1,10 @@
-import { supabase } from "@/integrations/supabase/client";
+import { createClient } from "@supabase/supabase-js";
+
+// Use a separate client with no generated types to bypass TS recursion limits in this file
+const diagnosticClient = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_ANON_KEY
+);
 
 /**
  * E2E-style verification for plan publication
@@ -6,9 +12,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const verifyPlanPublicationFlow = async (planId: string, patientId: string) => {
   console.log(`[E2E Test] Verifying publication flow for plan ${planId}`);
 
-  // Fetch using the simplest possible syntax to avoid TS deep type recursion
-  const query1 = supabase.from('meal_plans').select('*').eq('id', planId).single();
-  const { data: plan, error: dbError } = await (query1 as any);
+  // Fetch using generic client to avoid complex type instantiation depth issues
+  const { data: plan, error: dbError } = await diagnosticClient
+    .from('meal_plans')
+    .select('*')
+    .eq('id', planId)
+    .single();
 
   if (dbError || !plan) {
     throw new Error(`[E2E Failure] Plan ${planId} not found in database.`);
@@ -20,8 +29,12 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
   if (plan.patient_id !== patientId) issues.push(`patient_id mismatch: ${plan.patient_id} vs ${patientId}`);
 
   // 2. Simulate visibility check (Patient view)
-  const query2 = supabase.from('meal_plans').select('id').eq('patient_id', patientId).eq('status', 'published').eq('is_active', true);
-  const { data: visiblePlans, error: visibilityError } = await (query2 as any);
+  const { data: visiblePlans, error: visibilityError } = await diagnosticClient
+    .from('meal_plans')
+    .select('id')
+    .eq('patient_id', patientId)
+    .eq('status', 'published')
+    .eq('is_active', true);
 
   if (visibilityError) {
     issues.push(`Visibility query failed: ${visibilityError.message}`);
@@ -36,7 +49,7 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
     const errorMsg = `[E2E Failure] Publication validation failed:\n- ${issues.join('\n- ')}`;
     console.error(errorMsg);
     
-    await supabase.from('system_alerts').insert({
+    await diagnosticClient.from('system_alerts').insert({
       alert_type: 'E2E_PUBLISH_FAILURE',
       severity: 'critical',
       message: errorMsg,
