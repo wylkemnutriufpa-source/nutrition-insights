@@ -296,19 +296,19 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
           throw err;
         }
 
-        // Admins never get blocked by experience_mode_locked
-        let isAdmin = false;
-        if (profile?.experience_mode_locked && m !== 'basic') {
-          const rolesRes = await withTimeout(
-            (async () =>
-              supabase
-                .from("user_roles")
-                .select("role")
-                .eq("user_id", user.id))()
-          );
-          const { data: rolesData } = rolesRes as any;
-          isAdmin = Array.isArray(rolesData) && rolesData.some((r: any) => r.role === "admin");
-        }
+        // Always check admin to enrich audit metadata + bypass lock
+        const rolesRes = await withTimeout(
+          (async () =>
+            supabase
+              .from("user_roles")
+              .select("role")
+              .eq("user_id", user.id))()
+        );
+        const { data: rolesData } = rolesRes as any;
+        const isAdmin = Array.isArray(rolesData) && rolesData.some((r: any) => r.role === "admin");
+        // Stash admin flag on the function for audit enrichment
+        (performDbUpdate as any)._lastIsAdmin = isAdmin;
+        (performDbUpdate as any)._lastWasLocked = !!profile?.experience_mode_locked;
 
         if (profile?.experience_mode_locked && m !== 'basic' && !isAdmin) {
           const unlockDate = (profile as any).unlock_date as string | null;
@@ -404,7 +404,11 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
         attemptedMode: m,
         previousMode: previous,
         outcome: "success",
-        metadata: { duration_ms: durationMs },
+        metadata: {
+          duration_ms: durationMs,
+          is_admin: !!(performDbUpdate as any)._lastIsAdmin,
+          was_locked: !!(performDbUpdate as any)._lastWasLocked,
+        },
       });
     } catch (error: any) {
       const errCode = error?.code || "DB_ERROR";
@@ -431,7 +435,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
         reason: error?.message,
         errorCode: errCode,
         unlockDate: error?.unlock_date,
-        metadata: { duration_ms: durationMs, retries: error?.retries ?? 0 },
+        metadata: {
+          duration_ms: durationMs,
+          retries: error?.retries ?? 0,
+          is_admin: !!(performDbUpdate as any)._lastIsAdmin,
+          was_locked: !!(performDbUpdate as any)._lastWasLocked,
+        },
       });
       throw error;
     } finally {
