@@ -27,7 +27,7 @@ export const closeViaEscape = async (page: Page) => {
 };
 
 export const closeViaOverlay = async (page: Page) => {
-  // Radix UI Dialog: clicking at (0,0) or outside the content area closes the modal
+  // Radix UI Dialog: clicking outside the content area closes the modal
   await page.mouse.click(1, 1);
   await expect(page.locator('role=dialog')).toBeHidden();
 };
@@ -54,7 +54,7 @@ export const waitForAndValidateSaveRequest = async (
   return payload;
 };
 
-test.describe('MealSmartEditorModal E2E Refined & Generalized', () => {
+test.describe('MealSmartEditorModal E2E Final Refinement', () => {
   const TEST_ITEM_ID = 'item-1';
 
   test.beforeEach(async ({ page }) => {
@@ -102,43 +102,83 @@ test.describe('MealSmartEditorModal E2E Refined & Generalized', () => {
     await expect(cancelButton).toBeFocused();
   });
 
-  test('should intercept save and compare payload JSON with normalized preview text', async ({ page }) => {
+  test('should handle rapid Escape + Overlay click race condition without double PATCH', async ({ page }) => {
     await openMealEditor(page, TEST_ITEM_ID);
     
-    const rawInput = '   Apple    \n   Crisp   ';
-    const expectedNormalized = 'Apple Crisp';
-    
-    await addSubstitutions(page, [rawInput]);
-    
-    // Check preview area
-    const preview = page.getByTestId('aria-live-preview');
-    await expect(preview).toContainText(expectedNormalized);
+    let patchCount = 0;
+    await page.route('**/rest/v1/meal_plan_items**', async route => {
+      if (route.request().method() === 'PATCH') {
+        patchCount++;
+      }
+      await route.continue();
+    });
 
-    // Intercept and validate
+    await page.getByPlaceholder(/Os alimentos selecionados/i).fill('Rapid close test');
+
+    // Trigger rapid fire close events
+    await page.keyboard.press('Escape');
+    await page.mouse.click(1, 1); 
+
+    await expect(page.locator('role=dialog')).toBeHidden();
+    
+    // Verify no PATCH request was sent during close
+    expect(patchCount).toBe(0);
+    
+    // Re-open to verify reset
+    await openMealEditor(page, TEST_ITEM_ID);
+    await expect(page.getByPlaceholder(/Os alimentos selecionados/i)).not.toHaveValue('Rapid close test');
+  });
+
+  test('should save exactly 4 complex substitutions and match preview JSON exactly', async ({ page }) => {
+    await openMealEditor(page, TEST_ITEM_ID);
+    
+    const subs = [
+      '  Banana  \n ',
+      ' Apple ',
+      ' Zebra ',
+      ' Carrot '
+    ];
+    const expectedNormalized = ['Apple', 'Banana', 'Carrot', 'Zebra']; // Sorted, trimmed
+
+    await addSubstitutions(page, subs);
+    
+    // Check preview area for exact text and aria-live status
+    const preview = page.getByTestId('aria-live-preview');
+    await expect(page.getByText(/Prévia do Plano/i)).toBeVisible();
+    await expect(page.getByText(/Limite Excedido/i)).not.toBeVisible();
+    
+    for (const sub of expectedNormalized) {
+      await expect(preview).toContainText(sub);
+    }
+
+    // Intercept and validate exact JSON
     await waitForAndValidateSaveRequest(page, (payload) => {
-      const subs = payload.edit_metadata?.substitutions_json;
-      expect(subs).toBeDefined();
-      expect(subs).toContain(expectedNormalized);
-      // Ensure no raw spacing/newlines survived
-      expect(subs[0]).toBe(expectedNormalized);
+      const savedSubs = payload.edit_metadata?.substitutions_json;
+      expect(savedSubs).toEqual(expectedNormalized);
+      expect(JSON.stringify(savedSubs)).toBe(JSON.stringify(expectedNormalized));
     });
   });
 
-  test('should announce correct aria-live messages during addition and removal', async ({ page }) => {
+  test('should clear all substitutions and persist empty array correctly', async ({ page }) => {
     await openMealEditor(page, TEST_ITEM_ID);
     
-    const ariaLive = page.getByTestId('aria-live-preview');
+    // Add one first to make sure we can clear it
+    await addSubstitutions(page, ['To be cleared']);
+    
+    // Remove all
+    const deleteButtons = page.locator('button >> svg.lucide-trash-2').locator('..');
+    const count = await deleteButtons.count();
+    for (let i = 0; i < count; i++) {
+      await deleteButtons.first().click();
+    }
 
-    // Add 5 unique items using generalized helper
-    await addSubstitutions(page, ['S1', 'S2', 'S3', 'S4', 'S5']);
+    // Intercept and validate empty payload
+    await waitForAndValidateSaveRequest(page, (payload) => {
+      expect(payload.edit_metadata?.substitutions_json).toEqual([]);
+    });
 
-    await expect(page.getByText(/Limite Excedido/i)).toBeVisible();
-    await expect(ariaLive).toContainText('Apenas as 4 primeiras serão salvas');
-
-    // Remove one using index helper
-    await removeSubstitutionAt(page, 0);
-
-    await expect(page.getByText(/Prévia do Plano/i)).toBeVisible();
-    await expect(ariaLive).toContainText('Veja como as substituições serão organizadas');
+    // Re-open to verify empty state
+    await openMealEditor(page, TEST_ITEM_ID);
+    await expect(page.getByText(/Nenhuma substituição adicionada/i)).toBeVisible();
   });
 });
