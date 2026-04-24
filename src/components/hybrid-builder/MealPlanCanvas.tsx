@@ -147,39 +147,40 @@ export default function MealPlanCanvas({ patientContext, composerMode = "quick",
       {/* Day tabs */}
       {!isSingleDay && (
         <div className="flex gap-1 overflow-x-auto pb-1">
-        {DAYS.map((d) => {
-          const dayCount = items.filter((i) => i.day_of_week === d.key).length;
-          const isActive = activeDay === d.key;
-          return (
-            <button
-              key={d.key}
-              onClick={() => setActiveDay(d.key)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
-                isActive
-                  ? "bg-primary text-primary-foreground shadow-sm"
-                  : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-              }`}
-            >
-              {d.short}
-              {dayCount > 0 && (
-                <span className={`ml-1 text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                  ({dayCount})
-                </span>
-              )}
-            </button>
-          );
-        })}
-      </div>
+          {DAYS.map((d) => {
+            const dayCount = items.filter((i) => i.day_of_week === d.key).length;
+            const isActive = activeDay === d.key;
+            return (
+              <button
+                key={d.key}
+                onClick={() => setActiveDay(d.key)}
+                className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
+                  isActive
+                    ? "bg-primary text-primary-foreground shadow-sm"
+                    : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
+                }`}
+              >
+                {d.short}
+                {dayCount > 0 && (
+                  <span className={`ml-1 text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                    ({dayCount})
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
+      )}
 
       {/* Day-level actions */}
-      <DayActions activeDay={activeDay} />
+      {!isSingleDay && <DayActions activeDay={activeDay} />}
 
       {/* Meal slots grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-3">
         {MEAL_SLOTS.map((slot) => (
           <MealSlotCard
             key={slot.key}
-            day={activeDay}
+            day={effectiveDay}
             mealType={slot.key}
             label={slot.label}
             icon={slot.icon}
