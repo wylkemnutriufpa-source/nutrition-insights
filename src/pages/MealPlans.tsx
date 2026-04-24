@@ -66,7 +66,8 @@ export default function MealPlans() {
   const { showSimplifiedActions, showProtocols } = useExperienceUI();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<ClassifiedPlanLoadError | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>(STATUS_FILTER_ALL);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "",
@@ -87,7 +88,7 @@ export default function MealPlans() {
     const { data, error } = await withTenantFilter(query, tenantId);
     if (error) {
       console.error("[MealPlans] Falha ao buscar planos:", error);
-      setLoadError(error.message || "Não foi possível carregar os planos.");
+      setLoadError(classifyPlanLoadError(error));
       setPlans([]);
       setLoading(false);
       return;
