@@ -13,13 +13,10 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  TrendingUp,
-  Clock,
-  Database
+  TrendingUp
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
 import { 
   BarChart, 
   Bar, 
@@ -33,17 +30,18 @@ import {
 export default function ClinicalHealthDashboard() {
   const [systemStatus, setSystemStatus] = useState<"stable" | "attention" | "critical">("stable");
 
-  // 1. Métricas de Validações Clínicas
+  // Usamos asany para contornar problemas de tipagem profunda do Supabase nesta versão
   const { data: clinicalStats } = useQuery({
     queryKey: ["clinical-health-stats"],
     queryFn: async () => {
-      const { data: logs } = await supabase
+      const { data: logs } = await (supabase as any)
         .from("clinical_audit_logs")
         .select("action_type, status, created_at")
         .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
 
-      const blocks = logs?.filter(l => l.action_type === "VALIDATION_ERROR") || [];
-      const totalActions = logs?.length || 0;
+      const typedLogs = (logs || []) as any[];
+      const blocks = typedLogs.filter(l => l.action_type === "VALIDATION_ERROR");
+      const totalActions = typedLogs.length;
       
       const chartData = Array.from({ length: 7 }).map((_, i) => {
         const date = new Date();
@@ -52,29 +50,28 @@ export default function ClinicalHealthDashboard() {
         return {
           name: dateStr,
           bloqueios: blocks.filter(b => b.created_at.startsWith(dateStr)).length,
-          acoes: (logs?.filter(l => l.created_at.startsWith(dateStr)).length || 0)
+          acoes: typedLogs.filter(l => l.created_at.startsWith(dateStr)).length
         };
       }).reverse();
 
       return {
         blocksCount: blocks.length,
         totalActions,
-        chartData,
-        recentBlocks: blocks.slice(0, 5)
+        chartData
       };
     }
   });
 
-  // 2. Métricas de Versionamento & Restore
   const { data: versioningStats } = useQuery({
     queryKey: ["versioning-health-stats"],
     queryFn: async () => {
-      const { data: versions } = await supabase
+      const { data: versions } = await (supabase as any)
         .from("meal_plan_item_versions")
         .select("id, action_type, patient_id, created_at")
         .order("created_at", { ascending: false });
 
-      const restores = versions?.filter(v => v.action_type === "restore_version" || v.action_type === "restore") || [];
+      const typedVersions = (versions || []) as any[];
+      const restores = typedVersions.filter(v => v.action_type === "restore_version" || v.action_type === "restore");
       const recentRestores = restores.filter(r => new Date(r.created_at).getTime() > Date.now() - 24 * 60 * 60 * 1000);
       
       const patientCounts: Record<string, number> = recentRestores.reduce((acc, curr) => {
@@ -89,26 +86,25 @@ export default function ClinicalHealthDashboard() {
         .map(([id, count]) => ({ patientId: id, count }));
 
       return {
-        totalVersions: versions?.length || 0,
+        totalVersions: typedVersions.length,
         totalRestores: restores.length,
         anomalies,
-        recentVersions: versions?.slice(0, 10) || []
+        recentVersions: typedVersions.slice(0, 10)
       };
     }
   });
 
-  // 3. Erros & Falhas
   const { data: errorStats } = useQuery({
     queryKey: ["error-health-stats"],
     queryFn: async () => {
-      const { data: errors } = await supabase
+      const { data: errors } = await (supabase as any)
         .from("clinical_audit_logs")
         .select("*")
         .eq("status", "error")
         .order("created_at", { ascending: false })
         .limit(20);
 
-      return errors || [];
+      return (errors || []) as any[];
     }
   });
 
