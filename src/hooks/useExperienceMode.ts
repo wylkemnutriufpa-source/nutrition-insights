@@ -1,10 +1,27 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import {
+  generateCorrelationId,
+  logTelemetry,
+  recordAudit,
+  enqueueAttempt,
+  drainQueue,
+  buildBlockReason,
+  type QueuedAttempt,
+} from "@/lib/experienceModeTelemetry";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
 export type ExperienceRole = "professional" | "patient";
 
 const STORAGE_KEY = "fj_experience_mode";
+
+export interface ModeChangeError extends Error {
+  code?: "MODE_LOCKED" | "OFFLINE" | "DB_ERROR" | "NOT_AUTH";
+  correlationId?: string;
+  unlock_date?: string | null;
+  blockTitle?: string;
+  blockDescription?: string;
+}
 
 /**
  * Routes accessible per experience mode — split by role (professional vs patient).
