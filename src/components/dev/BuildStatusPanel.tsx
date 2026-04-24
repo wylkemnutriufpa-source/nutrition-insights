@@ -1,23 +1,21 @@
 /**
- * FitJourney — Build Status Panel (dev only)
+ * FitJourney — Build Status Panel (dev + opt-in prod)
  *
- * Floating panel that shows:
- *  - current build hash + timestamp
- *  - service worker registration state (none / installing / waiting / active)
- *  - last edge function calls (status code, ms, name)
- *  - quick "Clear caches & reload" button
- *
- * Visible only when:
- *  - import.meta.env.DEV is true, OR
- *  - localStorage["fj:debug:build-status"] === "1", OR
- *  - URL has ?debug=build
- *
- * Designed for the user to confirm at a glance that "the latest build is live".
+ * Mostra:
+ *  - build hash + timestamp
+ *  - estado do Service Worker
+ *  - últimas chamadas a edge functions
+ *  - resultado da validação de chunk hash (toggle on/off, inclusive em dev)
+ *  - botão de "Limpar cache & recarregar"
+ *  - botão de "Limpar só /diet-templates"
+ *  - botão "Exportar JSON" (bug report) com BUILD_INFO + swState +
+ *    chunkValidation + últimas inspeções do TextSourceInspector
  */
 import { useEffect, useMemo, useState } from "react";
 import { BUILD_INFO } from "@/lib/buildInfo";
 import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
 import {
+  installDynamicChunkObservers,
   validateChunkHashes,
   type ChunkValidationResult,
 } from "@/lib/chunkHashValidator";
@@ -32,10 +30,13 @@ import {
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  Download,
   FolderSync,
   Hash,
   RefreshCw,
   Server,
+  ShieldAlert,
+  ShieldCheck,
   X,
 } from "lucide-react";
 
@@ -56,6 +57,7 @@ type SwState =
 
 const LS_VISIBLE = "fj:debug:build-status";
 const LS_COLLAPSED = "fj:debug:build-status:collapsed";
+const LS_CHUNK_CHECK = "fj:debug:chunk-check-enabled";
 const MAX_CALLS = 8;
 
 function shouldShowPanel(): boolean {
@@ -72,6 +74,16 @@ function shouldShowPanel(): boolean {
   return false;
 }
 
+function readChunkCheckPref(): boolean {
+  try {
+    const v = localStorage.getItem(LS_CHUNK_CHECK);
+    if (v === "0") return false;
+    return true; // default ON
+  } catch {
+    return true;
+  }
+}
+
 export default function BuildStatusPanel() {
   const [visible, setVisible] = useState(() => shouldShowPanel());
   const [collapsed, setCollapsed] = useState(() => {
@@ -86,23 +98,44 @@ export default function BuildStatusPanel() {
   const [busy, setBusy] = useState(false);
   const [chunkValidation, setChunkValidation] = useState<ChunkValidationResult | null>(null);
   const [scopedFeedback, setScopedFeedback] = useState<string | null>(null);
+  const [chunkCheckEnabled, setChunkCheckEnabled] = useState<boolean>(() =>
+    readChunkCheckPref(),
+  );
+  const [exportFeedback, setExportFeedback] = useState<string | null>(null);
 
-  // ─── Chunk hash validation (CDN/SW serving stale assets?) ──
+  // ─── Observa chunks dinâmicos (lazy/dynamic import) desde já. ──
   useEffect(() => {
-    // Roda após primeira pintura para garantir que <link>/<script> estão no DOM.
-    const id = window.setTimeout(() => {
-      const result = validateChunkHashes();
-      setChunkValidation(result);
-      if (result.status === "mismatch") {
-        // eslint-disable-next-line no-console
-        console.warn(
-          `[FJ:build] CHUNK MISMATCH — ${result.message}`,
-          { expected: result.expectedHash, loaded: result.loadedHashes },
-        );
-      }
-    }, 500);
-    return () => window.clearTimeout(id);
+    installDynamicChunkObservers();
   }, []);
+
+  // ─── Chunk hash validation (toggle on/off em runtime) ──────────
+  useEffect(() => {
+    if (!chunkCheckEnabled) {
+      setChunkValidation(null);
+      return;
+    }
+
+    const run = (delay: number) =>
+      window.setTimeout(() => {
+        const result = validateChunkHashes({ includeDynamic: true });
+        setChunkValidation(result);
+        if (result.status === "mismatch") {
+          // eslint-disable-next-line no-console
+          console.warn(
+            `[FJ:build] CHUNK MISMATCH — ${result.message}`,
+            { expected: result.expectedHash, loaded: result.loadedHashes },
+          );
+        }
+      }, delay);
+
+    // Primeira pintura + reavaliação após render dinâmico
+    const t1 = run(500);
+    const t2 = run(2500);
+    return () => {
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
+    };
+  }, [chunkCheckEnabled]);
 
   // ─── Service worker state ──────────────────────────────────
   useEffect(() => {
@@ -225,6 +258,58 @@ export default function BuildStatusPanel() {
     } catch {}
   };
 
+  const toggleChunkCheck = () => {
+    const next = !chunkCheckEnabled;
+    setChunkCheckEnabled(next);
+    try {
+      localStorage.setItem(LS_CHUNK_CHECK, next ? "1" : "0");
+    } catch {}
+  };
+
+  const handleExportReport = async () => {
+    setBusy(true);
+    try {
+      const validation = chunkCheckEnabled
+        ? validateChunkHashes({ includeDynamic: true })
+        : { status: "disabled", note: "chunk check desativado pelo usuário" };
+
+      const inspectorHistory =
+        (window as any).__FJ_TEXT_INSPECTOR_HISTORY__ ?? [];
+
+      const report = {
+        generatedAt: new Date().toISOString(),
+        url: window.location.href,
+        userAgent: navigator.userAgent,
+        viewport: {
+          width: window.innerWidth,
+          height: window.innerHeight,
+          dpr: window.devicePixelRatio,
+        },
+        build: BUILD_INFO,
+        serviceWorker: { state: swState },
+        chunkValidation: validation,
+        edgeCallsRecent: calls,
+        textInspectorHistory: inspectorHistory,
+      };
+
+      const blob = new Blob([JSON.stringify(report, null, 2)], {
+        type: "application/json",
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `fj-bugreport-${BUILD_INFO.shortHash}-${Date.now()}.json`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      setExportFeedback("Relatório baixado");
+      window.setTimeout(() => setExportFeedback(null), 3000);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   return (
     <div
       data-testid="build-status-panel"
@@ -268,6 +353,29 @@ export default function BuildStatusPanel() {
                 {new Date(BUILD_INFO.timestamp).toLocaleTimeString()}
               </span>
             </div>
+          </div>
+
+          {/* Toggle de validação de chunk */}
+          <div className="mt-2 flex items-center justify-between rounded border border-border/50 bg-muted/30 px-2 py-1">
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
+              {chunkCheckEnabled ? (
+                <ShieldCheck className="h-3 w-3 text-emerald-400" />
+              ) : (
+                <ShieldAlert className="h-3 w-3 text-muted-foreground" />
+              )}
+              <span>Validação de chunk hash</span>
+            </div>
+            <button
+              data-testid="build-status-toggle-chunk-check"
+              onClick={toggleChunkCheck}
+              className={`rounded px-1.5 py-0.5 text-[10px] font-medium transition-colors ${
+                chunkCheckEnabled
+                  ? "bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80"
+              }`}
+            >
+              {chunkCheckEnabled ? "ON" : "OFF"}
+            </button>
           </div>
 
           <div className="mt-2 max-h-32 overflow-y-auto rounded border border-border/50 bg-muted/40">
@@ -325,6 +433,14 @@ export default function BuildStatusPanel() {
               ✓ chunks ({chunkValidation.hashedAssetCount}) batem com o build
             </div>
           )}
+          {chunkValidation && chunkValidation.status === "dev" && (
+            <div
+              data-testid="build-status-chunks-dev"
+              className="mt-2 text-[10px] text-muted-foreground"
+            >
+              ℹ︎ modo dev — assets sem hash, validação informativa
+            </div>
+          )}
 
           <Button
             size="sm"
@@ -367,6 +483,23 @@ export default function BuildStatusPanel() {
           {scopedFeedback && (
             <div className="mt-1 text-center text-[10px] text-muted-foreground">
               {scopedFeedback}
+            </div>
+          )}
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={handleExportReport}
+            disabled={busy}
+            data-testid="build-status-export-report"
+            className="mt-1 h-7 w-full text-[11px]"
+          >
+            <Download className="mr-1 h-3 w-3" />
+            Exportar relatório (JSON)
+          </Button>
+          {exportFeedback && (
+            <div className="mt-1 text-center text-[10px] text-emerald-400">
+              {exportFeedback}
             </div>
           )}
         </>
