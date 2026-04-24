@@ -231,6 +231,7 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     const saved = result.current.simulateSave();
     expect(saved.substitutions_json).toHaveLength(4);
     expect(saved.description).not.toContain('5');
+    expect(saved.description).toMatch(/\n\n🔄 Substituições:\n1\n2\n3\n4/);
   });
 });
 

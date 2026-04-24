@@ -309,7 +309,7 @@ export function MealSmartEditorModal({
                     <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                       🔄 Substituições ({substitutions.length}/4)
                     </h3>
-                    {substitutions.length < 4 && (
+                    {substitutions.length < 4 && !isOverLimit && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -384,7 +384,7 @@ export function MealSmartEditorModal({
                       <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">Visualização da Descrição:</p>
                         <div className="whitespace-pre-wrap">
-                          {formatFinalDescription("", getNormalizedSubs()).trim()}
+                          {"🔄 Substituições:\n" + getNormalizedSubs().join("\n")}
                         </div>
                       </div>
 
