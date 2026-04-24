@@ -278,13 +278,15 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
           throw err;
         }
 
-        const { data: profile, error: fetchError } = await withTimeout(
-          supabase
-            .from("profiles")
-            .select("experience_mode_locked, unlock_date")
-            .eq("user_id", user.id)
-            .maybeSingle()
+        const fetchRes = await withTimeout(
+          (async () =>
+            supabase
+              .from("profiles")
+              .select("experience_mode_locked, unlock_date")
+              .eq("user_id", user.id)
+              .maybeSingle())()
         );
+        const { data: profile, error: fetchError } = fetchRes as any;
 
         if (fetchError) {
           const err: ModeChangeError = Object.assign(
