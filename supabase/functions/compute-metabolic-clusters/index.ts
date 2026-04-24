@@ -594,11 +594,11 @@ async function processBatch(
     const checklist7d = check7dByP[pid] || [];
     const checklist30d = check30dByP[pid] || [];
     const meals = mealsByP[pid] || [];
-    const session = sessionMap[pid];
+    const session = sessionMap[pid] as { last_seen_at?: string | null } | undefined;
     const completions = completionsByP[pid] || [];
     const chats = chatByP[pid] || [];
     const snapshots = snapshotsByP[pid] || [];
-    const existingState = existingStateMap[pid];
+    const existingState = existingStateMap[pid] as { metabolic_cluster?: string | null; cluster_changed_at?: string | null } | undefined;
 
     // Calculate data coverage
     const uniqueDataDays = new Set([
@@ -619,7 +619,7 @@ async function processBatch(
     const { cluster, confidence, reasons } = classifyCluster(features, dataPoints, dataDays);
 
     // STABILITY CHECK: Don't change cluster too frequently
-    const previousCluster = existingState?.metabolic_cluster;
+    const previousCluster = existingState?.metabolic_cluster as MetabolicCluster | undefined;
     const lastChanged = existingState?.cluster_changed_at
       ? new Date(existingState.cluster_changed_at)
       : null;

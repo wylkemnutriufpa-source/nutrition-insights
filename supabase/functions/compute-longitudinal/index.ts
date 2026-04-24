@@ -190,7 +190,7 @@ async function processBatch(supabase: any, patientIds: string[]) {
     const checklist7d = checklistByPatient[pid] || [];
     const checklistPrev7d = checklistPrevByPatient[pid] || [];
     const meals14d = mealsByPatient[pid] || [];
-    const session = sessionMap[pid];
+    const session = sessionMap[pid] as { last_seen_at?: string | null; session_count?: number | null } | undefined;
 
     // ══════════ 1. WEIGHT TREND VELOCITY ══════════
     let weightVelocity = 0;

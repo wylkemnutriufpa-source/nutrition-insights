@@ -177,13 +177,14 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  let execLogId: string | null = null;
+
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
     const sb = createClient(supabaseUrl, serviceKey);
 
     // Log pipeline start
-    let execLogId: string | null = null;
     try {
       const { data } = await sb.rpc("log_pipeline_execution", {
         _pipeline_name: "compute-adaptive-safe-automation-engine",

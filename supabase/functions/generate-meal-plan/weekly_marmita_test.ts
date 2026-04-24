@@ -2,7 +2,7 @@
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
 import { generateWeeklyMarmitaPlan, buildMarmitaItem, estimateRecipeMacros, type MarmitaRecipe } from "./index.ts";
 
-Deno.test("weekly_marmita: buildMarmitaItem correctly scales macros and grams", () => {
+Deno.test("weekly_marmita: buildMarmitaItem correctly scales macros and grams", async () => {
   const recipe: MarmitaRecipe = {
     id: "r1",
     name: "Frango com Arroz",
@@ -15,23 +15,17 @@ Deno.test("weekly_marmita: buildMarmitaItem correctly scales macros and grams", 
   };
 
   const targetKcal = 600;
-  // baseMacros for 200g total (1.3 kcal/g) = 260 kcal, floor 350
   const baseMacros = estimateRecipeMacros(recipe);
   assertEquals(baseMacros.cal, 350); 
 
-  const item = buildMarmitaItem(recipe, "lunch", 0, targetKcal, "manutencao", []);
-  
-  // scaleFactor = 600 / 350 = 1.714
-  // 100g * 1.714 = 171g
+  const item = await buildMarmitaItem(null, recipe, "lunch", 0, targetKcal, "manutencao", []);
   const scale = targetKcal / 350;
   assertEquals(item.calories_target, 600);
-  
-  // Check if description has scaled grams
   assertEquals(item.description.includes("171g Frango"), true);
   assertEquals(item.description.includes("171g Arroz"), true);
 });
 
-Deno.test("weekly_marmita: buildMarmitaItem preserves grammages when is_scalable is false", () => {
+Deno.test("weekly_marmita: buildMarmitaItem preserves grammages when is_scalable is false", async () => {
   const recipe: MarmitaRecipe = {
     id: "r2",
     name: "Frango Fixo",
@@ -43,12 +37,9 @@ Deno.test("weekly_marmita: buildMarmitaItem preserves grammages when is_scalable
   };
 
   const targetKcal = 800; 
-  const item = buildMarmitaItem(recipe, "lunch", 0, targetKcal, "manutencao", [], {}, { protein: 100, carbs: 100, fat: 30 });
-  
-  // Scale factor should be 1.0 even if target is different
+  const item = await buildMarmitaItem(null, recipe, "lunch", 0, targetKcal, "manutencao", [], {}, { protein: 100, carbs: 100, fat: 30 });
   assertEquals(item.description.includes("150g Frango"), true);
-  
-  // Macros should be from the recipe (estimate), NOT from macroTarget, because is_scalable is false
+
   const base = estimateRecipeMacros(recipe);
   assertEquals(item.calories_target, base.cal);
   assertEquals(item.protein_target, base.p);
@@ -88,7 +79,7 @@ Deno.test("weekly_marmita: estimateRecipeMacros respects fixed values", () => {
   assertEquals(macros.f, 10);
 });
 
-Deno.test("weekly_marmita: buildMarmitaItem handles empty ingredients without crashing", () => {
+Deno.test("weekly_marmita: buildMarmitaItem handles empty ingredients without crashing", async () => {
   const recipe: MarmitaRecipe = {
     id: "r-crash",
     name: "Sem Nada",
@@ -96,12 +87,12 @@ Deno.test("weekly_marmita: buildMarmitaItem handles empty ingredients without cr
     foods_json: []
   };
   
-  const item = buildMarmitaItem(recipe, "lunch", 0, 500, "manutencao", []);
+  const item = await buildMarmitaItem(null, recipe, "lunch", 0, 500, "manutencao", []);
   assertEquals(item.title.includes("Sem Nada"), true);
   assertEquals(item.calories_target > 0, true);
 });
 
-Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctly", () => {
+Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctly", async () => {
   const recipes: MarmitaRecipe[] = [
     { id: "l1", name: "Almoço 1", meal_type: "almoço", foods_json: [{ name: "F", grams: 100 }] },
     { id: "d1", name: "Jantar 1", meal_type: "jantar", foods_json: [{ name: "F", grams: 100 }] }
@@ -110,17 +101,27 @@ Deno.test("weekly_marmita: generateWeeklyMarmitaPlan distributes macros correctl
   const kcalTarget = 2000;
   const macros = { protein: 150, carbs: 200, fat: 60 };
   
-  const result = generateWeeklyMarmitaPlan(
-    recipes, [], [], "manutencao", kcalTarget, macros, [], [], [], ["lunch", "dinner"]
+  const result = await generateWeeklyMarmitaPlan(
+    null,
+    recipes,
+    [],
+    [],
+    "manutencao",
+    kcalTarget,
+    macros,
+    [],
+    [],
+    [],
+    ["lunch", "dinner"]
   );
   
   assertEquals(result.items.length, 14); 
   
-  const lunch = result.items.find(i => i.day_of_week === 0 && i.meal_type === "lunch");
-  const dinner = result.items.find(i => i.day_of_week === 0 && i.meal_type === "dinner");
+  const lunch = result.items.find((i: any) => i.day_of_week === 0 && i.meal_type === "lunch");
+  const dinner = result.items.find((i: any) => i.day_of_week === 0 && i.meal_type === "dinner");
   
-  assertEquals(lunch.calories_target, 600); // 2000 * 0.3
-  assertEquals(dinner.calories_target, 440); // 2000 * 0.22
+  assertEquals(lunch.calories_target, 600);
+  assertEquals(dinner.calories_target, 440);
   assertEquals(lunch.protein_target, 87);
   assertEquals(dinner.protein_target, 63);
 });

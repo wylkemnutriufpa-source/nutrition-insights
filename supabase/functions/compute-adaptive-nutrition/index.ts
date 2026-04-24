@@ -514,10 +514,10 @@ async function processBatch(
         : 0;
 
     // Weight velocity %
+    const latestAssessment = assessments[0] as { weight?: number | null } | undefined;
     const weightVelocityPct =
       profile.weight_velocity_kg_week && assessments.length > 0
-        ? (profile.weight_velocity_kg_week / (assessments[0]?.weight || 70)) *
-          100
+        ? (profile.weight_velocity_kg_week / (latestAssessment?.weight || 70)) * 100
         : 0;
 
     const weightTrend = profile.weight_trend_status || "unknown";

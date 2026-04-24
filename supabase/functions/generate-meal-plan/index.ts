@@ -1430,8 +1430,8 @@ function generatePlanWithTemplates(
   if (templates && dbFoods && dbFoods.length > 0) {
     console.log(`[template-marmita-fix] Checking for marmita placeholders in ${templates.length} templates using ${dbFoods.length} recipes`);
     for (const tpl of templates) {
-      if (tpl.meals) {
-        for (const meal of tpl.meals) {
+      if ((tpl as any).meals) {
+        for (const meal of (tpl as any).meals) {
           if (meal.foods) {
             for (const food of meal.foods) {
               const needsReplacement = food.name && marmitaPlaceholders.some(p => food.name.includes(p));
@@ -1614,7 +1614,7 @@ function generatePlanFromVisualLibrary(
 
   for (let day = 0; day < 7; day++) {
     for (const mealType of mealTypes) {
-      const currentKcalTarget = Math.round(targetKcal * (MEAL_KCAL_SPLIT[mealType] || 0.15));
+      const currentKcalTarget = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
 
       // Collect candidates from matching categories — NO FALLBACK
@@ -1659,7 +1659,7 @@ function generatePlanFromVisualLibrary(
       const baseF = picked.default_fat || catDefaults.f;
 
       // ──── MACRO_SCALING_ONLY: Scale 0.5x–2.5x, no composition changes ────
-      const scaleFactor = baseCal > 0 ? targetKcal / baseCal : 1;
+      const scaleFactor = baseCal > 0 ? currentKcalTarget / baseCal : 1;
       const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
 
       // Build description from library item — ALWAYS with gram quantities
@@ -1918,8 +1918,8 @@ export async function generateWeeklyMarmitaPlan(
   if (templates) {
     let globalMarmitaCounter = seed;
     for (const tpl of templates) {
-      if (tpl.meals) {
-        for (const meal of tpl.meals) {
+      if ((tpl as any).meals) {
+        for (const meal of (tpl as any).meals) {
           if (meal.foods) {
             for (const food of meal.foods) {
               const needsReplacement = food.name && marmitaPlaceholders.some(p => food.name.includes(p));
@@ -2310,6 +2310,7 @@ function generateFixedMarmitaPlan(
 
   const items: any[] = [];
   const marmitasUsedSet = new Set<string>();
+  const proteinsUsedThisWeek = new Set<string>();
   const weeklyUsageCount = new Map<string, number>(); // Name -> Count
   
   let prevLunchName: string | null = null;
@@ -3543,7 +3544,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     }
 
     const useFixedSeed = !!body.useFixedSeed;
-    const seed = generationSeed(patient_id, planOptionIndex, useFixedSeed, goal);
+
 
     // ── Multi-plan flow ──
     if (isPipeline && planCount > 1 && !meal_plan_id) {
@@ -3690,9 +3691,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
 
     // ── Single plan flow ──
     const planOptionIndex = modeEnhancements.varietyOffset || 0;
-    // const seed already defined above for single plan flow
+    const seed = generationSeed(patient_id, planOptionIndex, useFixedSeed, goal);
 
-    
     // ── TEMPLATE-FIRST PIPELINE: Templates → Visual Library fallback ──
     let rawPlanItems: any[];
     let templateHitsCount = 0;
@@ -3714,7 +3714,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         restrictions,
         disliked,
         allergies,
-        enabledMeals,
+        enabledMeals || [],
         mealTimes,
         resolvedStrategy.strategyId,
         patientFoodDatabase,
