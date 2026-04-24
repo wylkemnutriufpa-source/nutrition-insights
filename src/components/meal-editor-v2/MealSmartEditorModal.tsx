@@ -75,12 +75,11 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = () => {
-    // 1. Limpeza, normalização e desduplicação das substituições
-    const cleanedSubs = getNormalizedSubs();
+    // 1. Limpeza, normalização e desduplicação das substituições (limite de 4)
+    const cleanedSubs = getNormalizedSubs().slice(0, 4);
 
     let finalDescription = description;
     if (cleanedSubs.length > 0) {
-      // Clear old text-based substitutions from description before appending fresh ones
       finalDescription = description.split(/\n\n🔄 Substituições:\n/)[0];
       finalDescription += "\n\n🔄 Substituições:\n" + cleanedSubs.join("\n");
     }
@@ -368,20 +367,20 @@ export function MealSmartEditorModal({
                     </div>
                   </div>
                   
-                  {substitutions.filter(s => s.trim().length > 0).length > 0 && (
+                  {getNormalizedSubs().slice(0, 4).length > 0 && (
                     <div className="space-y-3">
                       <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">Visualização da Descrição:</p>
                         <div className="whitespace-pre-wrap">
                           🔄 Substituições:{"\n"}
-                          {getNormalizedSubs().join("\n")}
+                          {getNormalizedSubs().slice(0, 4).join("\n")}
                         </div>
                       </div>
 
                       <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">substitutions_json:</p>
                         <div className="text-muted-foreground break-all">
-                          {JSON.stringify(getNormalizedSubs())}
+                          {JSON.stringify(getNormalizedSubs().slice(0, 4))}
                         </div>
                       </div>
                     </div>
