@@ -9,7 +9,7 @@
  *  - Mini timeline grouped by correlationId showing each attempt in order
  *  - Extended CSV columns (error_code breakdown, duration_ms, retries, attempts)
  */
-import { useEffect, useMemo, useState, useCallback } from "react";
+import { useEffect, useMemo, useState, useCallback, Fragment } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
