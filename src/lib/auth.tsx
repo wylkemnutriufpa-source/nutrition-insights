@@ -16,6 +16,7 @@ interface Profile {
   marmita_mode?: boolean;
   experience_mode?: string;
   experience_mode_locked?: boolean;
+  unlock_date?: string | null;
 }
 
 interface SubscriptionState {
