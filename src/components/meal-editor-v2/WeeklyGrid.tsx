@@ -22,6 +22,7 @@ import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
 import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
 import { resolveEffectiveDay } from "@/lib/resolveEffectiveDay";
+import { resolveHeaderSnapshot } from "@/lib/editorHeaderSnapshot";
 import { useForceCanonicalDay } from "@/hooks/useForceCanonicalDay";
 import LegacyDayBanner from "./LegacyDayBanner";
 
@@ -59,8 +60,11 @@ export function WeeklyGrid() {
   // legado tiver itens apenas em outros dias, exibimos o primeiro encontrado.
   // A preferência do profissional fica persistida em URL/localStorage.
   const [forceCanonical, setForceCanonical] = useForceCanonicalDay();
-  const effectiveDay = resolveEffectiveDay(items, { forceCanonical });
-  const effectiveDayLabel = DAYS.find((d) => d.key === effectiveDay)?.label ?? `Dia ${effectiveDay}`;
+  // Snapshot único garantindo que rótulo e totais do cabeçalho usam
+  // EXATAMENTE o mesmo effectiveDay.
+  const headerSnapshot = resolveHeaderSnapshot(items, { forceCanonical });
+  const effectiveDay = headerSnapshot.effectiveDay;
+  const effectiveDayLabel = headerSnapshot.effectiveDayLabel;
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
