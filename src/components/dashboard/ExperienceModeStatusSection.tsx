@@ -5,8 +5,38 @@
  * on toasts only.
  */
 import { useExperienceMode } from "@/hooks/useExperienceMode";
-import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useState } from "react";
+
+function CorrelationIdBadge({ id }: { id: string }) {
+  const [copied, setCopied] = useState(false);
+  const onCopy = async () => {
+    try {
+      await navigator.clipboard?.writeText(id);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      /* ignore */
+    }
+  };
+  return (
+    <button
+      type="button"
+      onClick={onCopy}
+      data-testid="emode-correlation-id"
+      title="Clique para copiar o ID de correlação"
+      className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded-md border border-border bg-muted/40 hover:bg-muted text-[10px] font-mono text-muted-foreground transition-colors"
+    >
+      <span>ID: {id}</span>
+      {copied ? (
+        <Check className="w-3 h-3 text-emerald-600" aria-label="Copiado" />
+      ) : (
+        <Copy className="w-3 h-3" aria-label="Copiar" />
+      )}
+    </button>
+  );
+}
 
 export default function ExperienceModeStatusSection() {
   const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode } =
@@ -51,11 +81,7 @@ export default function ExperienceModeStatusSection() {
             {lastError.blockDescription || lastError.message}
             {!lastError.blockDescription && unlockText}
           </p>
-          {lastError.correlationId && (
-            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
-              ID: {lastError.correlationId}
-            </p>
-          )}
+          {lastError.correlationId && <CorrelationIdBadge id={lastError.correlationId} />}
         </div>
       </div>
     );
@@ -96,11 +122,7 @@ export default function ExperienceModeStatusSection() {
               Algumas tentativas expiraram (mais de 24h offline).
             </p>
           )}
-          {lastError?.correlationId && (
-            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
-              ID: {lastError.correlationId}
-            </p>
-          )}
+          {lastError?.correlationId && <CorrelationIdBadge id={lastError.correlationId} />}
         </div>
       </div>
     );
@@ -122,11 +144,7 @@ export default function ExperienceModeStatusSection() {
           <p className="text-xs text-muted-foreground mt-0.5">
             {lastError?.message || "Não foi possível salvar a alteração."}
           </p>
-          {lastError?.correlationId && (
-            <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
-              ID: {lastError.correlationId}
-            </p>
-          )}
+          {lastError?.correlationId && <CorrelationIdBadge id={lastError.correlationId} />}
         </div>
         <Button
           size="sm"
