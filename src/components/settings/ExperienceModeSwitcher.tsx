@@ -73,23 +73,29 @@ export default function ExperienceModeSwitcher() {
 
   const handleSelect = async (key: ExperienceMode) => {
     if (key === mode) return;
-    
+
     try {
       await setMode(key);
       const label = MODES.find(m => m.key === key)?.label;
       toast.success(`Modo ${label} ativado`);
     } catch (error: any) {
+      const correlationId = error?.correlationId;
+      const corrSuffix = correlationId ? ` · ID: ${correlationId}` : "";
       if (error.code === "MODE_LOCKED") {
-        const unlockDateMsg = error.unlock_date 
-          ? ` A liberação está prevista para ${new Date(error.unlock_date).toLocaleDateString()}.` 
-          : "";
-        toast.error("Alteração Negada", {
-          description: (error.message || "Sua conta está restrita ao modo Básico por enquanto. Complete as atualizações pendentes para liberar outros modos.") + unlockDateMsg,
-          duration: 8000,
+        const title = error.blockTitle || "Alteração negada";
+        const description = (error.blockDescription || error.message || "") + corrSuffix;
+        toast.error(title, {
+          description,
+          duration: 9000,
+        });
+      } else if (error.code === "OFFLINE") {
+        toast.warning("Sem conexão — tentativa enfileirada", {
+          description: `Reenviaremos automaticamente quando você voltar a ficar online.${corrSuffix}`,
+          duration: 7000,
         });
       } else {
         toast.error("Erro ao atualizar modo", {
-          description: "Não foi possível salvar sua preferência. Verifique sua conexão.",
+          description: `Não foi possível salvar sua preferência. Verifique sua conexão.${corrSuffix}`,
           action: {
             label: "Tentar novamente",
             onClick: () => handleSelect(key),
