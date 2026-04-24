@@ -76,4 +76,58 @@ describe('MealSmartEditorModal DOM & Accessibility', () => {
     const ariaLiveRegion = screen.getByRole('status');
     expect(ariaLiveRegion.textContent).toContain('Apenas as 4 primeiras serão salvas');
   });
+
+  it('should update aria-live message when reducing from 5 to 4 substitutions', async () => {
+    const { rerender } = render(
+      <MealSmartEditorModal 
+        open={true} 
+        onOpenChange={() => {}} 
+        itemId="item-1" 
+      />
+    );
+
+    // Initial state (4 subs from mockItem)
+    expect(screen.getByText(/Prévia do Plano/i)).toBeDefined();
+
+    // Rerender with 5 subs (Over limit)
+    const itemWithManySubs = {
+      ...mockItem,
+      edit_metadata: {
+        substitutions_json: ['1', '2', '3', '4', '5']
+      }
+    };
+    (useMealPlanEditorV2Store as any).mockReturnValue({
+      items: [itemWithManySubs],
+      updateItem: mockUpdateItem,
+    });
+
+    rerender(
+      <MealSmartEditorModal 
+        open={true} 
+        onOpenChange={() => {}} 
+        itemId="item-1" 
+      />
+    );
+
+    expect(screen.getByText(/Limite Excedido/i)).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('Apenas as 4 primeiras serão salvas');
+
+    // Rerender back to 4 subs
+    (useMealPlanEditorV2Store as any).mockReturnValue({
+      items: [mockItem],
+      updateItem: mockUpdateItem,
+    });
+
+    rerender(
+      <MealSmartEditorModal 
+        open={true} 
+        onOpenChange={() => {}} 
+        itemId="item-1" 
+      />
+    );
+
+    expect(screen.queryByText(/Limite Excedido/i)).toBeNull();
+    expect(screen.getByText(/Prévia do Plano/i)).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('Veja como as substituições serão organizadas');
+  });
 });

@@ -328,5 +328,25 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     
     expect(isOverLimit).toBe(true);
   });
+
+  it('should handle race condition between onEscapeKeyDown and onInteractOutside', () => {
+    const initialDesc = 'Initial';
+    const { result } = renderHook(() => useSubstitutionEditor([], initialDesc));
+    
+    act(() => {
+      result.current.setDescription('Modified');
+    });
+
+    // We check the description state after the calls
+    act(() => {
+      // Simulate rapid fire calls from both handlers
+      result.current.handleOpenChange(false);
+      result.current.handleOpenChange(false);
+    });
+
+    // Reset should only trigger once and set it back to initialDesc
+    expect(result.current.description).toBe(initialDesc);
+    expect(result.current.updateItem).not.toHaveBeenCalled();
+  });
 });
 
