@@ -138,10 +138,11 @@ export default function MealPlanCanvas({ patientContext, composerMode = "quick",
             ⚡ Dia Padrão
           </button>
         </div>
-        <div className="hidden sm:block px-3 py-1 bg-primary/10 rounded-full">
+        <div className="hidden sm:flex items-center gap-2 px-3 py-1 bg-primary/10 rounded-full">
           <span className="text-[10px] font-bold text-primary uppercase tracking-wider">
             {isSingleDay ? "Modo Simples (1 Dia + Substituições)" : "Modo Avançado (Variação Diária)"}
           </span>
+          <SingleDaySyncStatusBadge planId={plan?.id ?? null} enabled={!!isSingleDay} />
         </div>
       </div>
 
