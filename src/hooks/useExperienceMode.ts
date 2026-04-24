@@ -139,6 +139,8 @@ export interface ExperienceModeContextValue {
   isOffline: boolean;
   /** Pending offline replay queue size */
   pendingQueueSize: number;
+  /** Detailed stats about the offline queue (size, full, expired) */
+  queueStats: QueueStats;
   /** Show content only at given mode or above */
   minMode: (min: ExperienceMode) => boolean;
   /** Effective role used for route gating */
@@ -158,6 +160,7 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
   lastError: null,
   isOffline: false,
   pendingQueueSize: 0,
+  queueStats: { size: 0, isFull: false, hasExpired: false, oldestQueuedAt: null },
   minMode: () => true,
   role: "professional",
 });
