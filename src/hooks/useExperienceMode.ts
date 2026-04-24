@@ -148,9 +148,41 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
   });
   const [isLoading, setIsLoading] = useState(false);
-  const [failedMode, setFailedMode] = useState<ExperienceMode | null>(null);
+  const [failedMode, setFailedMode] = useState<ExperienceMode | null>(() => {
+    const saved = sessionStorage.getItem(`${STORAGE_KEY}_failed`);
+    return saved && ["basic", "pro", "advanced"].includes(saved) ? saved as ExperienceMode : null;
+  });
 
   const hydratedFromDb = useRef(false);
+
+  // Broadcast channel for cross-tab sync
+  useEffect(() => {
+    const channel = new BroadcastChannel("experience_mode_sync");
+    
+    const handleMessage = (event: MessageEvent) => {
+      if (event.data?.type === "MODE_UPDATE" && event.data?.mode) {
+        const newMode = event.data.mode;
+        setModeState(newMode);
+        localStorage.setItem(STORAGE_KEY, newMode);
+      }
+    };
+
+    channel.addEventListener("message", handleMessage);
+    
+    // Fallback for older browsers or specific environments
+    const handleStorage = (event: StorageEvent) => {
+      if (event.key === STORAGE_KEY && event.newValue) {
+        setModeState(event.newValue as ExperienceMode);
+      }
+    };
+    window.addEventListener("storage", handleStorage);
+
+    return () => {
+      channel.removeEventListener("message", handleMessage);
+      channel.close();
+      window.removeEventListener("storage", handleStorage);
+    };
+  }, []);
 
   // Hydrate from DB on mount
   useEffect(() => {
@@ -176,13 +208,15 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
   const updateModeInDb = async (m: ExperienceMode, previous: ExperienceMode) => {
     setIsLoading(true);
     setFailedMode(null);
+    sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
+    
     try {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) throw new Error("Não autenticado");
 
       const { data: profile, error: fetchError } = await supabase
         .from("profiles")
-        .select("experience_mode_locked")
+        .select("experience_mode_locked, unlock_date")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -191,6 +225,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       if (profile?.experience_mode_locked && m !== 'basic') {
         const error = new Error("Sua conta está restrita ao modo Básico temporariamente.");
         (error as any).code = "MODE_LOCKED";
+        (error as any).unlock_date = (profile as any).unlock_date;
         throw error;
       }
 
@@ -203,9 +238,15 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
 
       localStorage.setItem(STORAGE_KEY, m);
       setModeState(m);
+      
+      // Notify other tabs
+      const channel = new BroadcastChannel("experience_mode_sync");
+      channel.postMessage({ type: "MODE_UPDATE", mode: m });
+      channel.close();
     } catch (error: any) {
       console.error("Failed to update experience mode:", error);
       setFailedMode(m);
+      sessionStorage.setItem(`${STORAGE_KEY}_failed`, m);
       // Fallback to previous mode
       setModeState(previous);
       throw error;
@@ -216,9 +257,6 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
 
   const setMode = useCallback(async (m: ExperienceMode) => {
     const previous = mode;
-    // Optimistic update (optional, but requested fallback logic suggests we might want to handle it carefully)
-    // Actually, the user asked for "fallback for when the update fails", implying we might change it then revert.
-    // Let's do it properly.
     await updateModeInDb(m, previous);
   }, [mode]);
 
