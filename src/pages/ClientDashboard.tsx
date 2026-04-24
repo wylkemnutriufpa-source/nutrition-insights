@@ -38,6 +38,7 @@ import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizar
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
 import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
+import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
@@ -267,6 +268,9 @@ export default function ClientDashboard() {
 
     return (
     <DashboardLayout>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+        <ExperienceModeSwitcher />
+      </div>
       <OnboardingProgressModal />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Schema Inconsistency Alert */}

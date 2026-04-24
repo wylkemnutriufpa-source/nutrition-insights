@@ -31,6 +31,7 @@ interface MealPlan {
   title: string;
   start_date: string;
   totals_status?: string;
+  plan_mode?: string;
 }
 
 function getWeekDates(dateStr: string) {
@@ -105,27 +106,31 @@ export default function PatientMealPlan() {
     if (!user) return;
     setLoading(true);
 
-    const { data: planData } = await supabase
-      .from("meal_plans")
-      .select("id, title, start_date, totals_status")
-      .eq("patient_id", user.id)
-      .eq("is_active", true)
-      .eq("plan_status", "published_to_patient")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+    const { data: result, error } = await supabase.rpc(
+      "resolve_patient_meal_plan",
+      { p_patient_id: user.id, p_date: date }
+    );
 
-    if (!planData) { setLoading(false); return; }
-    setPlan(planData);
+    if (error || !result) {
+      setLoading(false);
+      return;
+    }
 
-    const { data: allItemsData } = await supabase
-      .from("meal_plan_items")
-      .select("*")
-      .eq("meal_plan_id", planData.id)
-      .order("created_at");
+    const planData = result as any;
+    setPlan({
+      id: planData.id,
+      title: planData.title,
+      start_date: planData.start_date,
+      totals_status: planData.totals_status
+    });
 
-    setAllItems(allItemsData || []);
-    setItems((allItemsData || []).filter(i => i.day_of_week === dayOfWeek));
+    const allItemsData = planData.items || [];
+    setItems(allItemsData);
+    
+    // For PDF export we might still want everything, but let's focus on fixing the daily view first
+    if (allItems.length === 0) {
+      setAllItems(allItemsData);
+    }
 
     // Fetch active substitutions for this plan
     const { data: subsData } = await supabase
@@ -138,7 +143,6 @@ export default function PatientMealPlan() {
     if (subsData && subsData.length > 0) {
       const subsMap: Record<string, { foodName: string; originalTitle: string }> = {};
       for (const s of subsData as any[]) {
-        // Keep only the latest substitution per item
         if (!subsMap[s.meal_plan_item_id]) {
           subsMap[s.meal_plan_item_id] = { foodName: s.substituted_food, originalTitle: s.original_food };
         }
@@ -169,7 +173,7 @@ export default function PatientMealPlan() {
 
     setWeekCompletions((weekData || []) as unknown as MealCompletion[]);
     setLoading(false);
-  }, [user, date, dayOfWeek, weekDates]);
+  }, [user, date, weekDates, allItems.length]);
 
   useEffect(() => { fetchData(); }, [fetchData]);
 
@@ -400,12 +404,20 @@ export default function PatientMealPlan() {
             </Button>
           </div>
 
-          {/* Weekly plan explanation */}
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50 mt-2">
-            <CalendarRange className="w-4 h-4 text-muted-foreground shrink-0" />
-            <p className="text-xs text-muted-foreground">
-              Seu plano é <strong>semanal</strong> — cada dia tem refeições específicas. Use as setas para navegar entre os dias.
-            </p>
+          {/* Plan navigation and info */}
+          <div className="flex flex-col gap-2 mt-4">
+            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+              {plan.plan_mode === "single_day" ? (
+                <CalendarDays className="w-4 h-4 text-primary shrink-0" />
+              ) : (
+                <CalendarRange className="w-4 h-4 text-muted-foreground shrink-0" />
+              )}
+              <p className="text-xs text-muted-foreground">
+                {plan.plan_mode === "single_day" 
+                  ? "Este é um plano de dia único que se repete."
+                  : "Seu plano é semanal — cada dia tem refeições específicas."}
+              </p>
+            </div>
           </div>
 
           {/* Journey Timeline */}
