@@ -421,10 +421,15 @@ export function MealSmartEditorModal({
                 variant="outline" 
                 className="flex-1 h-12 rounded-2xl font-bold focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
                 onClick={() => handleOpenChange(false)}
+                data-testid="meal-editor-cancel-button"
               >
                 Cancelar
               </Button>
-              <Button className="flex-[2] h-12 rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" onClick={handleSave}>
+              <Button 
+                className="flex-[2] h-12 rounded-2xl font-bold bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20" 
+                onClick={handleSave}
+                data-testid="meal-editor-save-button"
+              >
                 Salvar Alterações
               </Button>
             </div>

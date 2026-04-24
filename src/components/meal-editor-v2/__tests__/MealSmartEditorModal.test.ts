@@ -337,7 +337,6 @@ describe('MealSmartEditorModal Substitution Logic', () => {
       result.current.setDescription('Modified');
     });
 
-    // We check the description state after the calls
     act(() => {
       // Simulate rapid fire calls from both handlers
       result.current.handleOpenChange(false);
