@@ -223,7 +223,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const [isApplyingSuggestion, setIsApplyingSuggestion] = useState(false);
   const [showHistory, setShowHistory] = useState(false);
   const [dbHistory, setDbHistory] = useState<any[]>([]);
-  
+  const [loadingHistory, setLoadingHistory] = useState(false);
+  const [hasMoreHistory, setHasMoreHistory] = useState(false);
+
   const [pendingSuggestion, setPendingSuggestion] = useState<{
     name: string;
     portion: string;
@@ -231,25 +233,33 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     after: { protein: number; carbs: number; fat: number; calories: number };
   } | null>(null);
 
-  const fetchDbHistory = async () => {
+  const fetchDbHistory = async (offset = 0) => {
     if (!meal?.itemId) return;
-    const { data } = await supabase
+    setLoadingHistory(true);
+    const { data, error } = await supabase
       .from("meal_plan_item_versions")
       .select("*")
       .eq("meal_plan_item_id", meal.itemId)
       .order("created_at", { ascending: false })
-      .limit(20);
-    if (data) setDbHistory(data);
+      .range(offset, offset + 9);
+    
+    if (data) {
+      if (offset === 0) setDbHistory(data);
+      else setDbHistory(prev => [...prev, ...data]);
+      setHasMoreHistory(data.length === 10);
+    }
+    setLoadingHistory(false);
   };
 
-  const saveToHistory = async (actionType: string = "manual_update", restoredFromId: string | null = null) => {
+  const saveToHistory = async (actionType: string = "manual_update", restoredFromId: string | null = null, note: string | null = null) => {
     if (!meal?.itemId) return;
     await supabase.rpc("fn_capture_meal_plan_item_version", {
       p_item_id: meal.itemId,
       p_action_type: actionType,
-      p_restored_from: restoredFromId
+      p_restored_from: restoredFromId,
+      p_note: note
     });
-    fetchDbHistory();
+    fetchDbHistory(0);
   };
 
   const rollbackToVersion = async (version: any) => {
@@ -1132,72 +1142,95 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
                 {/* Modal de Histórico Clínico */}
                 <Dialog open={showHistory} onOpenChange={setShowHistory}>
-                  <DialogContent className="max-w-lg p-6 rounded-2xl border-border/50 shadow-2xl max-h-[80vh] flex flex-col">
+                  <DialogContent className="max-w-lg p-6 rounded-2xl border-border/50 shadow-2xl max-h-[85vh] flex flex-col">
                     <DialogHeader>
                       <DialogTitle className="flex items-center gap-2 text-base font-bold">
                         <ScrollText className="w-5 h-5 text-primary" />
                         Histórico Clínico de Versões
                       </DialogTitle>
                       <DialogDescription className="text-sm">
-                        Rastreabilidade total de todas as alterações feitas nesta refeição.
+                        Rastreabilidade total e auditoria de alterações.
                       </DialogDescription>
                     </DialogHeader>
 
-                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 mt-4">
-                      {dbHistory.length === 0 ? (
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-4 mt-4 custom-scrollbar">
+                      {dbHistory.length === 0 && !loadingHistory ? (
                         <p className="text-center text-muted-foreground py-10 text-sm italic">Nenhuma versão anterior registrada.</p>
                       ) : (
-                        dbHistory.map((v, i) => (
-                          <div key={v.id} className="p-4 rounded-xl border border-border bg-secondary/20 space-y-3 group hover:border-primary/30 transition-colors">
-                            <div className="flex items-start justify-between">
-                              <div className="space-y-0.5">
-                                <p className="text-xs font-bold flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
-                                  <Clock className="w-3 h-3" />
-                                  {new Date(v.created_at).toLocaleString("pt-BR")}
-                                </p>
-                                <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">
-                                  {v.action_type === 'manual_update' ? 'Edição Manual' : 
-                                   v.action_type === 'auto_correction' ? 'Auto-Correção' : 'Restauração'}
-                                </Badge>
-                              </div>
-                              <Button 
-                                size="sm" 
-                                variant="outline" 
-                                className="h-7 text-[10px] gap-1.5 bg-white opacity-0 group-hover:opacity-100 transition-opacity"
-                                onClick={() => rollbackToVersion(v)}
-                              >
-                                <RefreshCw className="w-3 h-3" />
-                                Restaurar
-                              </Button>
-                            </div>
-                            
-                            <div className="grid grid-cols-4 gap-2">
-                              {[
-                                { l: 'Kcal', v: v.snapshot_data.calories_target },
-                                { l: 'Prot', v: v.snapshot_data.protein_target },
-                                { l: 'Carb', v: v.snapshot_data.carbs_target },
-                                { l: 'Fat', v: v.snapshot_data.fat_target },
-                              ].map(m => {
-                                const currentVal = m.l === 'Kcal' ? calories : 
-                                                 m.l === 'Prot' ? protein : 
-                                                 m.l === 'Carb' ? carbs : fat;
-                                const diffValue = currentVal - (m.v || 0);
-                                
-                                return (
-                                  <div key={m.l} className="text-center bg-white/50 rounded-lg py-1 border border-border/30 relative">
-                                    <p className="text-[8px] uppercase text-muted-foreground font-bold">{m.l}</p>
-                                    <p className="text-xs font-bold">{Math.round(m.v || 0)}</p>
-                                    {Math.abs(diffValue) > 0.5 && (
-                                      <div className={`text-[8px] font-bold ${diffValue > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
-                                        {diffValue > 0 ? '↓' : '↑'} {Math.abs(Math.round(diffValue))}
-                                      </div>
+                        <>
+                          {dbHistory.map((v, i) => (
+                            <div key={v.id} className="p-4 rounded-xl border border-border bg-secondary/10 space-y-3 group hover:border-primary/30 transition-all">
+                              <div className="flex items-start justify-between">
+                                <div className="space-y-1">
+                                  <div className="flex items-center gap-2">
+                                    <Clock className="w-3 h-3 text-muted-foreground" />
+                                    <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                                      {new Date(v.created_at).toLocaleString("pt-BR")}
+                                    </span>
+                                  </div>
+                                  <div className="flex flex-wrap gap-1">
+                                    <Badge variant="outline" className={`text-[9px] border-primary/20 ${
+                                      v.action_type === 'restore_version' ? 'bg-amber-500/10 text-amber-600' : 'bg-primary/5 text-primary'
+                                    }`}>
+                                      {v.action_type === 'manual_update' ? 'Edição Manual' : 
+                                       v.action_type === 'auto_correction' ? 'Auto-Correção' : 'Restauração'}
+                                    </Badge>
+                                    {v.restored_from_version_id && (
+                                      <Badge variant="outline" className="text-[9px] bg-secondary text-muted-foreground">
+                                        ID Origem: {v.restored_from_version_id.slice(0, 8)}
+                                      </Badge>
                                     )}
                                   </div>
-                                );
-                              })}
+                                </div>
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="h-7 text-[10px] gap-1.5 bg-white shadow-sm hover:bg-primary hover:text-white transition-all"
+                                  onClick={() => rollbackToVersion(v)}
+                                >
+                                  <RefreshCw className="w-3 h-3" />
+                                  Restaurar
+                                </Button>
+                              </div>
+
+                              <div className="grid grid-cols-4 gap-2">
+                                {[
+                                  { l: 'Kcal', v: v.snapshot_data.calories_target },
+                                  { l: 'Prot', v: v.snapshot_data.protein_target },
+                                  { l: 'Carb', v: v.snapshot_data.carbs_target },
+                                  { l: 'Fat', v: v.snapshot_data.fat_target },
+                                ].map(m => {
+                                  const currentVal = m.l === 'Kcal' ? calories : 
+                                                   m.l === 'Prot' ? protein : 
+                                                   m.l === 'Carb' ? carbs : fat;
+                                  const diffValue = currentVal - (m.v || 0);
+                                  
+                                  return (
+                                    <div key={m.l} className="text-center bg-white/50 rounded-lg py-1 border border-border/30 relative">
+                                      <p className="text-[8px] uppercase text-muted-foreground font-bold">{m.l}</p>
+                                      <p className="text-xs font-bold">{Math.round(m.v || 0)}</p>
+                                      {Math.abs(diffValue) > 0.5 && (
+                                        <div className={`text-[8px] font-bold ${diffValue > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                          {diffValue > 0 ? '↓' : '↑'} {Math.abs(Math.round(diffValue))}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })}
+                              </div>
                             </div>
-                          </div>
-                        ))
+                          ))}
+                          {hasMoreHistory && (
+                            <Button 
+                              variant="ghost" 
+                              className="w-full text-xs text-muted-foreground hover:text-primary"
+                              onClick={() => fetchDbHistory(dbHistory.length)}
+                              disabled={loadingHistory}
+                            >
+                              {loadingHistory ? "Carregando..." : "Carregar mais versões"}
+                            </Button>
+                          )}
+                        </>
                       )}
                     </div>
 

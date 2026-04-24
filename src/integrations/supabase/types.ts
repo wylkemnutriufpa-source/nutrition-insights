@@ -6205,6 +6205,7 @@ export type Database = {
       meal_plan_item_versions: {
         Row: {
           action_type: string
+          clinical_note: string | null
           created_at: string
           created_by: string | null
           id: string
@@ -6215,6 +6216,7 @@ export type Database = {
         }
         Insert: {
           action_type: string
+          clinical_note?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -6225,6 +6227,7 @@ export type Database = {
         }
         Update: {
           action_type?: string
+          clinical_note?: string | null
           created_at?: string
           created_by?: string | null
           id?: string
@@ -19042,6 +19045,15 @@ export type Database = {
             Args: {
               p_action_type: string
               p_item_id: string
+              p_restored_from?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_action_type: string
+              p_item_id: string
+              p_note?: string
               p_restored_from?: string
             }
             Returns: string
