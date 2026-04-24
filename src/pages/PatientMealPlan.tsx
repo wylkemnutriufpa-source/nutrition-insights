@@ -445,18 +445,12 @@ export default function PatientMealPlan() {
             </Button>
           </div>
 
-          {/* Plan navigation and info */}
+          {/* Plan info — sempre diário com substituições */}
           <div className="flex flex-col gap-2 mt-4">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
-              {plan.plan_mode === "single_day" ? (
-                <CalendarDays className="w-4 h-4 text-primary shrink-0" />
-              ) : (
-                <CalendarRange className="w-4 h-4 text-muted-foreground shrink-0" />
-              )}
+              <CalendarDays className="w-4 h-4 text-primary shrink-0" />
               <p className="text-xs text-muted-foreground">
-                {plan.plan_mode === "single_day" 
-                  ? "Este é um plano de dia único que se repete."
-                  : "Seu plano é semanal — cada dia tem refeições específicas."}
+                Plano diário com substituições inteligentes — toque em qualquer refeição para ver alternativas equivalentes.
               </p>
             </div>
           </div>
