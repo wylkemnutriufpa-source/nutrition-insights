@@ -908,7 +908,7 @@ export default function AdminExperienceModeAudit() {
                         {hasTimeline && isExpanded && (
                           <tr key={`${r.id}-timeline`} className="border-b border-border/50 bg-muted/20">
                             <td></td>
-                            <td colSpan={6} className="py-3 px-3">
+                            <td colSpan={7} className="py-3 px-3">
                               <div
                                 id={`timeline-${r.correlation_id}`}
                                 data-testid="emode-timeline"
