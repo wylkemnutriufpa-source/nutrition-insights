@@ -40,21 +40,20 @@ interface GridCard {
 }
 
 const PATIENT_CARDS: GridCard[] = [
-  // Row 1 — Essenciais (basic) — APENAS plano + check-in
-  // ⚠️ NÃO adicionar cards basic. Veja o regression guard abaixo.
+  // Row 1 — Essenciais (basic) — Plano + Feedback + Receitas (renderizados manualmente no bloco basic)
+  // ⚠️ Os 3 essenciais do basic estão hard-coded no bloco isBasic. Veja o regression guard abaixo.
 
-  // Row 2 — Acompanhamento (pro+)
-  { key: "workouts", label: "Meus Treinos", description: "Veja seu plano de treino e registre", icon: Dumbbell, route: "/my-workouts", gradient: "from-blue-600/10 to-blue-700/5", row: 2 },
+  // Row 2 — Acompanhamento (pro+) — TODAS desbloqueadas a partir de "pro"
+  { key: "workouts", label: "Meus Treinos", description: "Veja seu plano de treino e registre", icon: Dumbbell, route: "/my-workouts", gradient: "from-blue-600/10 to-blue-700/5", row: 2, minMode: "pro" },
   { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: TrendingUp, route: "/checkin", gradient: "from-violet-500/10 to-violet-600/5", row: 2, minMode: "pro" },
-  { key: "recipes", label: "Receitas", description: "Receitas saudáveis e práticas", icon: ChefHat, route: "/recipes", gradient: "from-orange-500/10 to-orange-600/5", row: 2, minMode: "pro" },
   { key: "checklist", label: "Checklist Diário", description: "Tarefas e hábitos do dia", icon: CheckCircle2, route: "/checklist", gradient: "from-sky-500/10 to-sky-600/5", row: 2, minMode: "pro" },
   { key: "agenda", label: "Agenda / Reavaliação", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5", row: 2, minMode: "pro" },
   { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/journey", gradient: "from-teal-500/10 to-teal-600/5", row: 2, minMode: "pro" },
 
-  // Row 3 — Estratégia futura (advanced)
-  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 3, minMode: "advanced", badge: { text: "IA", variant: "secondary" } },
-  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, minMode: "advanced", badge: { text: "Novo", variant: "default" } },
-  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3, minMode: "advanced" },
+  // Row 3 — Inteligência (também liberado a partir de "pro" — sem travas artificiais)
+  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 3, minMode: "pro", badge: { text: "IA", variant: "secondary" } },
+  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, minMode: "pro", badge: { text: "Novo", variant: "default" } },
+  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3, minMode: "pro" },
 ];
 
 const ROW_LABELS: Record<number, string> = {
@@ -155,9 +154,9 @@ export default function PatientGridDashboard() {
   if (expUI.isBasic && !blockDashboard && !showOnboardingCard) {
     return (
       <div className="space-y-4">
-        {/* Fixed status section for the experience mode */}
+        {/* Status do modo de experiência (compacto) */}
         <ExperienceModeStatusSection />
-        {/* Mode switcher at top — sempre visível para o paciente trocar */}
+        {/* Mode switcher — sempre visível para o paciente trocar */}
         <div className="flex justify-center">
           <InlineExperienceToggle />
         </div>
@@ -168,15 +167,15 @@ export default function PatientGridDashboard() {
           <p className="text-xs text-muted-foreground">Seu plano alimentar do dia</p>
         </div>
 
-        {/* Daily Meal Plan — the ONLY main content */}
+        {/* 1. Plano alimentar — conteúdo principal */}
         <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
           <DailyMealPlanInline />
         </Suspense>
 
-        {/* Plan Request — single CTA (only when sem plano) */}
+        {/* CTA único: pedir plano (só aparece quando sem plano) */}
         <PlanRequestButton />
 
-        {/* Feedback / Check-in card: peso + fotos a cada 15 dias */}
+        {/* 2. Feedback / Check-in — peso + fotos com histórico de datas */}
         <Card
           className="cursor-pointer border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/40 hover:shadow-md transition-all group"
           onClick={() => navigate("/checkin")}
@@ -191,10 +190,29 @@ export default function PatientGridDashboard() {
                 <Badge variant="secondary" className="text-[9px] h-4">A cada 15 dias</Badge>
               </div>
               <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                Mande seu peso e fotos para o seu profissional acompanhar a evolução
+                Mande seu peso e fotos com a data — seu profissional acompanha sua evolução por aqui.
               </p>
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+          </div>
+        </Card>
+
+        {/* 3. Receitas — incluído no básico */}
+        <Card
+          className="cursor-pointer border border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-orange-600/10 hover:border-orange-500/40 hover:shadow-md transition-all group"
+          onClick={() => navigate("/recipes")}
+        >
+          <div className="flex items-center gap-3 px-4 py-4">
+            <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
+              <ChefHat className="w-5 h-5 text-orange-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-sm font-semibold text-foreground">Receitas</h3>
+              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+                Receitas práticas e saudáveis alinhadas ao seu plano.
+              </p>
+            </div>
+            <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
           </div>
         </Card>
       </div>
