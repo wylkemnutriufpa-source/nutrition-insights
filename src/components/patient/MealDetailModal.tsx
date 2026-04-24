@@ -1126,7 +1126,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" className="flex-1 h-8" onClick={handleAddManualFood} disabled={!manualFoodName.trim()}>
+                    <Button size="sm" className="flex-1 h-8" onClick={() => { saveToHistory(); handleAddManualFood(); }} disabled={!manualFoodName.trim()}>
                       <Check className="w-3.5 h-3.5 mr-1" /> Adicionar
                     </Button>
                     <Button size="sm" variant="ghost" className="h-8" onClick={() => setShowManualFoodInput(false)}>
