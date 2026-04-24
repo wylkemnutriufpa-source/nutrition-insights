@@ -419,7 +419,7 @@ export function MealSmartEditorModal({
             <div className="p-6 border-t bg-muted/5 flex gap-3">
               <Button 
                 variant="outline" 
-                className="flex-1 h-12 rounded-2xl font-bold" 
+                className="flex-1 h-12 rounded-2xl font-bold focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2" 
                 onClick={() => handleOpenChange(false)}
               >
                 Cancelar
