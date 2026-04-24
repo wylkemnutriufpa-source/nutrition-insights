@@ -880,7 +880,7 @@ export default function AdminExperienceModeAudit() {
                             </td>
                           </tr>
                         )}
-                      </>
+                      </Fragment>
                     );
                   })}
                 </tbody>
