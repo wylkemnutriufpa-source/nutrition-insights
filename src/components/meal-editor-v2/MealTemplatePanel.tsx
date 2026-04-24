@@ -36,7 +36,7 @@ interface MealTemplate {
 }
 
 // ── Pre-built templates (Brazilian staples) ────────────────
-const MEAL_TEMPLATES: MealTemplate[] = [
+export const MEAL_TEMPLATES: MealTemplate[] = [
   // Breakfast
   {
     id: "t_pao_ovo_cafe",
