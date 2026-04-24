@@ -47,13 +47,18 @@ export function MealSmartEditorModal({
 
   useEffect(() => {
     if (item && open) {
-      const desc = item.description || "";
-      const parts = desc.split(/\n\n🔄 Substituições:\n/);
-      setDescription(parts[0] || "");
+      setDescription(item.description || "");
       
-      const subsPart = parts[1] || "";
-      const subLines = subsPart.split("\n").filter(l => l.trim().length > 0);
-      setSubstitutions(subLines.slice(0, 4));
+      const meta = (item as any).edit_metadata || (item as any).metadata || {};
+      if (meta.substitutions_json) {
+        setSubstitutions(meta.substitutions_json);
+      } else {
+        const desc = item.description || "";
+        const parts = desc.split(/\n\n🔄 Substituições:\n/);
+        const subsPart = parts[1] || "";
+        const subLines = subsPart.split("\n").filter(l => l.trim().length > 0);
+        setSubstitutions(subLines.slice(0, 4));
+      }
       
       setNotes((item as any).notes || "");
     }
@@ -64,12 +69,20 @@ export function MealSmartEditorModal({
   const handleSave = () => {
     let finalDescription = description;
     if (substitutions.length > 0) {
+      // Clear old text-based substitutions from description before appending fresh ones
+      finalDescription = description.split(/\n\n🔄 Substituições:\n/)[0];
       finalDescription += "\n\n🔄 Substituições:\n" + substitutions.join("\n");
     }
+
+    const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
 
     updateItem(itemId, {
       description: finalDescription,
       notes,
+      edit_metadata: {
+        ...currentMeta,
+        substitutions_json: substitutions
+      }
     } as any);
     toast.success("Refeição atualizada com sucesso");
     onOpenChange(false);
