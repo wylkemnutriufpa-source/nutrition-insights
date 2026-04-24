@@ -3061,29 +3061,23 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       generationMode = "fixed_marmita";
     }
 
-    // Authorization guard (RELAXED): qualquer profissional autenticado pode gerar
-    // planos para qualquer paciente. Pacientes só podem gerar para si mesmos.
-    // Travas de vínculo nutricionista↔paciente foram removidas a pedido do produto.
+    // Authorization guard (FULLY RELAXED v2):
+    // Qualquer usuário AUTENTICADO pode gerar planos para qualquer paciente.
+    // Travas de role/vínculo nutricionista↔paciente foram removidas a pedido do produto.
+    // O simples fato de `requireUser` ter validado o JWT já é suficiente.
+    // Pacientes gerando para si mesmos continuam funcionando normalmente.
     {
+      const callerIsPatient = userId === patient_id;
       const isProfessional =
         caller.roles.includes("admin") ||
         caller.roles.includes("nutritionist") ||
         caller.roles.includes("personal") ||
-        caller.roles.includes("coach");
-      const callerIsPatient = userId === patient_id;
+        caller.roles.includes("coach") ||
+        // Fallback: se não há roles mapeadas mas o usuário está autenticado e
+        // não é o próprio paciente, tratamos como profissional (modo permissivo).
+        (!callerIsPatient && caller.roles.length === 0);
 
-      if (!isProfessional && !callerIsPatient) {
-        return new Response(JSON.stringify({
-          error: "Usuário não autorizado para gerar plano deste paciente",
-          code: "PLAN_AUTH_FORBIDDEN",
-        }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
-      }
-
-      // Best-effort: garantir vínculo nutricionista↔paciente quando possível
-      // (não bloqueia mais a geração — apenas cria o link silenciosamente)
+      // Best-effort: garantir vínculo nutricionista↔paciente quando aplicável
       if (isProfessional && !callerIsPatient) {
         try {
           const linkPatientId = patientProfile?.id || patient_id;
@@ -3098,6 +3092,9 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           console.warn("[generate-meal-plan] auto-link best-effort failed:", linkErr);
         }
       }
+
+      console.log("[generate-meal-plan] auth: userId=", userId, "patient_id=", patient_id,
+        "roles=", caller.roles, "isProfessional=", isProfessional, "callerIsPatient=", callerIsPatient);
     }
 
     // Fallback tenant
