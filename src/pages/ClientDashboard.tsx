@@ -1,4 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { usePremiumPresence } from "@/hooks/usePremiumPresence";
