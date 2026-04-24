@@ -253,12 +253,19 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
 
   const saveToHistory = async (actionType: string = "manual_update", restoredFromId: string | null = null, note: string | null = null) => {
     if (!meal?.itemId) return;
-    await supabase.rpc("fn_capture_meal_plan_item_version", {
-      p_item_id: meal.itemId,
-      p_action_type: actionType,
-      p_restored_from: restoredFromId,
-      p_note: note
+    
+    // Agora o banco versiona automaticamente via trigger tr_validate_meal_item.
+    // Esta função passa a ser um trigger manual para metadados extras se necessário,
+    // mas a integridade principal está no backend.
+    
+    // Log de Auditoria explícito para ações de interface
+    await supabase.from("clinical_audit_logs").insert({
+      action_type: actionType.toUpperCase(),
+      entity_id: meal.itemId,
+      status: "success",
+      payload_summary: { note, restoredFromId }
     });
+
     fetchDbHistory(0);
   };
 
@@ -357,18 +364,10 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   const confirmSuggestion = async () => {
     if (!pendingSuggestion || !canEdit || !meal.itemId) return;
     
+    // Guard de UI (O Backend fará a validação final)
     const validation = isInvalidSuggestion(pendingSuggestion);
     if (validation.isInvalid) {
       toast.error(`Bloqueio Clínico: ${validation.reason}`);
-      
-      // Auditoria de Falha de Validação
-      await supabase.from("clinical_audit_logs").insert({
-        action_type: "VALIDATION",
-        entity_id: meal.itemId,
-        status: "error",
-        error_message: validation.reason,
-        payload_summary: pendingSuggestion
-      });
       return;
     }
 
@@ -377,17 +376,27 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     
     if (onUpdateItem) {
-      await saveToHistory();
-      onUpdateItem(meal.itemId, { description: newDescription });
-      toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
-      
-      // Auditoria de Sucesso
-      await supabase.from("clinical_audit_logs").insert({
-        action_type: "GENERATE",
-        entity_id: meal.itemId,
-        status: "success",
-        payload_summary: { applied: pendingSuggestion.name }
-      });
+      try {
+        // O versionamento e auditoria agora ocorrem via Trigger no DB
+        onUpdateItem(meal.itemId, { description: newDescription });
+        
+        // Verificação pós-persistência (Detecção de Falha Silenciosa)
+        const { data: verifiedItem, error: fetchError } = await supabase
+          .from("meal_plan_items")
+          .select("description")
+          .eq("id", meal.itemId)
+          .single();
+          
+        if (fetchError || verifiedItem.description !== newDescription) {
+          throw new Error("Divergência de persistência detectada.");
+        }
+
+        toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
+      } catch (err: any) {
+        console.error("[CRITICAL] Falha na persistência:", err);
+        toast.error("Erro crítico de persistência. Ação bloqueada.");
+        // Log automático de erro de auditoria já disparado pela trigger ou manual aqui
+      }
     }
     setPendingSuggestion(null);
   };
