@@ -40,21 +40,20 @@ interface GridCard {
 }
 
 const PATIENT_CARDS: GridCard[] = [
-  // Row 1 — Essenciais (basic) — APENAS plano + check-in
-  // ⚠️ NÃO adicionar cards basic. Veja o regression guard abaixo.
+  // Row 1 — Essenciais (basic) — Plano + Feedback + Receitas (renderizados manualmente no bloco basic)
+  // ⚠️ Os 3 essenciais do basic estão hard-coded no bloco isBasic. Veja o regression guard abaixo.
 
-  // Row 2 — Acompanhamento (pro+)
-  { key: "workouts", label: "Meus Treinos", description: "Veja seu plano de treino e registre", icon: Dumbbell, route: "/my-workouts", gradient: "from-blue-600/10 to-blue-700/5", row: 2 },
+  // Row 2 — Acompanhamento (pro+) — TODAS desbloqueadas a partir de "pro"
+  { key: "workouts", label: "Meus Treinos", description: "Veja seu plano de treino e registre", icon: Dumbbell, route: "/my-workouts", gradient: "from-blue-600/10 to-blue-700/5", row: 2, minMode: "pro" },
   { key: "physical", label: "Avaliação Física", description: "Evolução corporal e medidas", icon: TrendingUp, route: "/checkin", gradient: "from-violet-500/10 to-violet-600/5", row: 2, minMode: "pro" },
-  { key: "recipes", label: "Receitas", description: "Receitas saudáveis e práticas", icon: ChefHat, route: "/recipes", gradient: "from-orange-500/10 to-orange-600/5", row: 2, minMode: "pro" },
   { key: "checklist", label: "Checklist Diário", description: "Tarefas e hábitos do dia", icon: CheckCircle2, route: "/checklist", gradient: "from-sky-500/10 to-sky-600/5", row: 2, minMode: "pro" },
   { key: "agenda", label: "Agenda / Reavaliação", description: "Consultas e compromissos", icon: Calendar, route: "/appointments", gradient: "from-rose-500/10 to-rose-600/5", row: 2, minMode: "pro" },
   { key: "evolution", label: "Evolução e Gráficos", description: "Visualize seu progresso completo", icon: TrendingUp, route: "/journey", gradient: "from-teal-500/10 to-teal-600/5", row: 2, minMode: "pro" },
 
-  // Row 3 — Estratégia futura (advanced)
-  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 3, minMode: "advanced", badge: { text: "IA", variant: "secondary" } },
-  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, minMode: "advanced", badge: { text: "Novo", variant: "default" } },
-  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3, minMode: "advanced" },
+  // Row 3 — Inteligência (também liberado a partir de "pro" — sem travas artificiais)
+  { key: "ai-insights", label: "IA Insights", description: "Análises inteligentes do seu progresso", icon: Brain, route: "/analyze", gradient: "from-amber-500/10 to-amber-600/5", row: 3, minMode: "pro", badge: { text: "IA", variant: "secondary" } },
+  { key: "body-ai", label: "Projeção Corporal", description: "Projeção visual de transformação com IA", icon: Camera, route: "/body-projection", gradient: "from-purple-500/10 to-purple-600/5", row: 3, minMode: "pro", badge: { text: "Novo", variant: "default" } },
+  { key: "goals", label: "Metas e Projeção", description: "Metas, objetivos e projeção de peso", icon: Target, route: "/weekly-goals", gradient: "from-orange-500/10 to-orange-600/5", row: 3, minMode: "pro" },
 ];
 
 const ROW_LABELS: Record<number, string> = {
