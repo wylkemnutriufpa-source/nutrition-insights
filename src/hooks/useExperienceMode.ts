@@ -7,7 +7,12 @@ import {
   enqueueAttempt,
   drainQueue,
   buildBlockReason,
+  withTimeout,
+  withRetries,
+  getQueueStats,
+  pruneExpired,
   type QueuedAttempt,
+  type QueueStats,
 } from "@/lib/experienceModeTelemetry";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
@@ -16,11 +21,12 @@ export type ExperienceRole = "professional" | "patient";
 const STORAGE_KEY = "fj_experience_mode";
 
 export interface ModeChangeError extends Error {
-  code?: "MODE_LOCKED" | "OFFLINE" | "DB_ERROR" | "NOT_AUTH";
+  code?: "MODE_LOCKED" | "OFFLINE" | "DB_ERROR" | "NOT_AUTH" | "TIMEOUT" | "NETWORK";
   correlationId?: string;
   unlock_date?: string | null;
   blockTitle?: string;
   blockDescription?: string;
+  retries?: number;
 }
 
 /**
@@ -133,6 +139,8 @@ export interface ExperienceModeContextValue {
   isOffline: boolean;
   /** Pending offline replay queue size */
   pendingQueueSize: number;
+  /** Detailed stats about the offline queue (size, full, expired) */
+  queueStats: QueueStats;
   /** Show content only at given mode or above */
   minMode: (min: ExperienceMode) => boolean;
   /** Effective role used for route gating */
@@ -152,6 +160,7 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
   lastError: null,
   isOffline: false,
   pendingQueueSize: 0,
+  queueStats: { size: 0, isFull: false, hasExpired: false, oldestQueuedAt: null },
   minMode: () => true,
   role: "professional",
 });
@@ -182,14 +191,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
   const [isOffline, setIsOffline] = useState<boolean>(
     typeof navigator !== "undefined" ? !navigator.onLine : false
   );
-  const [pendingQueueSize, setPendingQueueSize] = useState<number>(() => {
-    try {
-      const raw = localStorage.getItem("fj_experience_mode_queue");
-      return raw ? (JSON.parse(raw) as any[]).length : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [queueStats, setQueueStats] = useState<QueueStats>(() => getQueueStats());
+  const pendingQueueSize = queueStats.size;
+
+  const refreshQueueStats = useCallback(() => {
+    setQueueStats(getQueueStats());
+  }, []);
 
   const hydratedFromDb = useRef(false);
 
@@ -256,54 +263,75 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     });
   }, []);
 
-  /** Internal: perform the actual DB write for a given mode (no state writes). */
+  /** Internal: perform the actual DB write for a given mode (no state writes).
+   * Wrapped with timeout + automatic retries on transient errors so slow
+   * connections don't hang the UI and the same correlationId is preserved. */
   const performDbUpdate = useCallback(async (m: ExperienceMode, correlationId: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      const err: ModeChangeError = Object.assign(new Error("Não autenticado"), {
-        code: "NOT_AUTH" as const,
-        correlationId,
-      });
-      throw err;
-    }
+    return withRetries(
+      async () => {
+        const { data: { user } } = await withTimeout(supabase.auth.getUser());
+        if (!user) {
+          const err: ModeChangeError = Object.assign(new Error("Não autenticado"), {
+            code: "NOT_AUTH" as const,
+            correlationId,
+          });
+          throw err;
+        }
 
-    const { data: profile, error: fetchError } = await supabase
-      .from("profiles")
-      .select("experience_mode_locked, unlock_date")
-      .eq("user_id", user.id)
-      .maybeSingle();
+        const fetchRes = await withTimeout(
+          (async () =>
+            supabase
+              .from("profiles")
+              .select("experience_mode_locked, unlock_date")
+              .eq("user_id", user.id)
+              .maybeSingle())()
+        );
+        const { data: profile, error: fetchError } = fetchRes as any;
 
-    if (fetchError) throw fetchError;
+        if (fetchError) {
+          const err: ModeChangeError = Object.assign(
+            new Error(fetchError.message || "Falha ao consultar perfil"),
+            { code: "DB_ERROR" as const, correlationId }
+          );
+          throw err;
+        }
 
-    if (profile?.experience_mode_locked && m !== 'basic') {
-      const unlockDate = (profile as any).unlock_date as string | null;
-      const block = buildBlockReason({
-        attemptedMode: m,
-        unlockDate,
-        baseReason: "Sua conta está restrita ao modo Básico temporariamente.",
-      });
-      const error: ModeChangeError = Object.assign(new Error(block.description), {
-        code: "MODE_LOCKED" as const,
-        correlationId,
-        unlock_date: unlockDate,
-        blockTitle: block.title,
-        blockDescription: block.description,
-      });
-      throw error;
-    }
+        if (profile?.experience_mode_locked && m !== 'basic') {
+          const unlockDate = (profile as any).unlock_date as string | null;
+          const block = buildBlockReason({
+            attemptedMode: m,
+            unlockDate,
+            baseReason: "Sua conta está restrita ao modo Básico temporariamente.",
+          });
+          const error: ModeChangeError = Object.assign(new Error(block.description), {
+            code: "MODE_LOCKED" as const,
+            correlationId,
+            unlock_date: unlockDate,
+            blockTitle: block.title,
+            blockDescription: block.description,
+          });
+          throw error;
+        }
 
-    const { error: updateError } = await supabase
-      .from("profiles")
-      .update({ experience_mode: m } as any)
-      .eq("user_id", user.id);
+        const updateRes = await withTimeout(
+          (async () =>
+            supabase
+              .from("profiles")
+              .update({ experience_mode: m } as any)
+              .eq("user_id", user.id))()
+        );
+        const { error: updateError } = updateRes as any;
 
-    if (updateError) {
-      const err: ModeChangeError = Object.assign(new Error(updateError.message || "Falha ao atualizar"), {
-        code: "DB_ERROR" as const,
-        correlationId,
-      });
-      throw err;
-    }
+        if (updateError) {
+          const err: ModeChangeError = Object.assign(
+            new Error(updateError.message || "Falha ao atualizar"),
+            { code: "DB_ERROR" as const, correlationId }
+          );
+          throw err;
+        }
+      },
+      { correlationId }
+    );
   }, []);
 
   const updateModeInDb = useCallback(async (m: ExperienceMode, previous: ExperienceMode) => {
@@ -320,8 +348,8 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
 
     // Offline path — queue the attempt and bail
     if (typeof navigator !== "undefined" && !navigator.onLine) {
-      enqueueAttempt({ correlationId, attemptedMode: m, previousMode: previous });
-      setPendingQueueSize((s) => s + 1);
+      await enqueueAttempt({ correlationId, attemptedMode: m, previousMode: previous });
+      refreshQueueStats();
       const err: ModeChangeError = Object.assign(
         new Error("Sem conexão. Tentaremos novamente quando você voltar a ficar online."),
         { code: "OFFLINE" as const, correlationId }
@@ -417,12 +445,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
           channel.close();
         } catch {}
       });
-      try {
-        const raw = localStorage.getItem("fj_experience_mode_queue");
-        setPendingQueueSize(raw ? (JSON.parse(raw) as any[]).length : 0);
-      } catch {
-        setPendingQueueSize(0);
-      }
+      refreshQueueStats();
       if (result.replayed > 0) {
         setFailedMode(null);
         setLastError(null);
@@ -467,11 +490,12 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       lastError,
       isOffline,
       pendingQueueSize,
+      queueStats,
       retryLastMode,
       minMode,
       role,
     }),
-    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, isLoading, failedMode, lastError, isOffline, pendingQueueSize, retryLastMode, minMode, role]
+    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode, minMode, role]
   );
 
   return value;

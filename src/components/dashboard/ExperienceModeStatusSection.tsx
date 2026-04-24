@@ -9,7 +9,7 @@ import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw } from "
 import { Button } from "@/components/ui/button";
 
 export default function ExperienceModeStatusSection() {
-  const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, retryLastMode } =
+  const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode } =
     useExperienceMode();
 
   // Saving in-flight
@@ -80,6 +80,22 @@ export default function ExperienceModeStatusSection() {
               : ""}
             Reenviaremos automaticamente quando você voltar a ficar online.
           </p>
+          {queueStats?.isFull && (
+            <p
+              data-testid="emode-queue-full"
+              className="text-[11px] text-amber-700 dark:text-amber-400 mt-1 font-medium"
+            >
+              Fila cheia: tentativas mais antigas serão descartadas.
+            </p>
+          )}
+          {queueStats?.hasExpired && (
+            <p
+              data-testid="emode-queue-expired"
+              className="text-[11px] text-amber-700 dark:text-amber-400 mt-1 font-medium"
+            >
+              Algumas tentativas expiraram (mais de 24h offline).
+            </p>
+          )}
           {lastError?.correlationId && (
             <p className="text-[10px] text-muted-foreground/70 mt-1 font-mono">
               ID: {lastError.correlationId}

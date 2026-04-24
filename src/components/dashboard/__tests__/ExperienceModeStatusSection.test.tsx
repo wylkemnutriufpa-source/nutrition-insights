@@ -24,6 +24,7 @@ function makeCtx(over: Partial<ExperienceModeContextValue>): ExperienceModeConte
     lastError: null,
     isOffline: false,
     pendingQueueSize: 0,
+    queueStats: { size: 0, isFull: false, hasExpired: false, oldestQueuedAt: null },
     retryLastMode: vi.fn(),
     minMode: () => true,
     role: "patient",
