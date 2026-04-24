@@ -751,6 +751,19 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
 
+      // Validação pós-flush: bloqueia inconsistência entre master e dias 1-6 em single_day
+      const planAfter = get().plan;
+      const planMode = classifyPlanMode(planAfter);
+      if (!hasError && planMode === "single_day") {
+        const report = checkSingleDayConsistency(get().items as any);
+        if (!report.valid) {
+          console.error("[mealPlanEditorV2Store] Single Day inconsistente após flush:", report);
+          get()._setSyncStatus("error");
+          // Não throw para não derrubar o autosave; o badge de sync exibe o estado
+          // e o SingleDaySyncStatusBadge mostrará o erro vindo dos logs do trigger.
+        }
+      }
+
       if (hasError) {
         throw failed?.err instanceof Error ? failed.err : new Error("Falha ao persistir alterações do plano.");
       }
