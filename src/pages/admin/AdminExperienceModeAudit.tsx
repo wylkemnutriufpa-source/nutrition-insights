@@ -802,6 +802,7 @@ export default function AdminExperienceModeAudit() {
                     <th className="py-2 pr-3 font-medium">Quando</th>
                     <th className="py-2 pr-3 font-medium">Resultado</th>
                     <th className="py-2 pr-3 font-medium">Usuário</th>
+                    <th className="py-2 pr-3 font-medium">Contexto</th>
                     <th className="py-2 pr-3 font-medium">Tentou</th>
                     <th className="py-2 pr-3 font-medium">Motivo</th>
                     <th className="py-2 pr-3 font-medium">Correlation</th>
@@ -855,6 +856,23 @@ export default function AdminExperienceModeAudit() {
                             </Badge>
                           </td>
                           <td className="py-2 pr-3 font-mono text-[10px]">{r.user_id}</td>
+                          <td className="py-2 pr-3">
+                            <div className="flex flex-col gap-0.5" data-testid="emode-context-cell">
+                              {(r.metadata as any)?.is_admin ? (
+                                <Badge variant="outline" className="bg-primary/10 text-primary text-[9px] py-0 h-4 w-fit" data-testid="emode-badge-admin">
+                                  admin
+                                </Badge>
+                              ) : null}
+                              {(r.metadata as any)?.was_locked ? (
+                                <Badge variant="outline" className="bg-amber-500/15 text-amber-700 dark:text-amber-400 text-[9px] py-0 h-4 w-fit" data-testid="emode-badge-locked">
+                                  bloqueado
+                                </Badge>
+                              ) : null}
+                              {!(r.metadata as any)?.is_admin && !(r.metadata as any)?.was_locked ? (
+                                <span className="text-muted-foreground text-[10px]">—</span>
+                              ) : null}
+                            </div>
+                          </td>
                           <td className="py-2 pr-3 capitalize">
                             {r.attempted_mode}
                             {r.previous_mode && (
@@ -890,7 +908,7 @@ export default function AdminExperienceModeAudit() {
                         {hasTimeline && isExpanded && (
                           <tr key={`${r.id}-timeline`} className="border-b border-border/50 bg-muted/20">
                             <td></td>
-                            <td colSpan={6} className="py-3 px-3">
+                            <td colSpan={7} className="py-3 px-3">
                               <div
                                 id={`timeline-${r.correlation_id}`}
                                 data-testid="emode-timeline"
