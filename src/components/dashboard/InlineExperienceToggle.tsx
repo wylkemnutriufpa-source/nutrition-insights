@@ -87,6 +87,10 @@ export default function InlineExperienceToggle() {
           <button
             key={m.key}
             onClick={() => handleSelect(m.key)}
+            data-testid={`emode-option-${m.key}`}
+            data-selected={selected ? "true" : "false"}
+            aria-pressed={selected}
+            aria-label={`Ativar modo ${m.label}`}
             className={`relative z-10 flex items-center justify-center gap-1.5 flex-1 py-1.5 px-2 rounded-lg text-[11px] font-medium transition-colors ${
               selected ? "text-foreground" : "text-muted-foreground hover:text-foreground"
             }`}
