@@ -6209,6 +6209,8 @@ export type Database = {
           created_by: string | null
           id: string
           meal_plan_item_id: string
+          patient_id: string | null
+          restored_from_version_id: string | null
           snapshot_data: Json
         }
         Insert: {
@@ -6217,6 +6219,8 @@ export type Database = {
           created_by?: string | null
           id?: string
           meal_plan_item_id: string
+          patient_id?: string | null
+          restored_from_version_id?: string | null
           snapshot_data: Json
         }
         Update: {
@@ -6225,6 +6229,8 @@ export type Database = {
           created_by?: string | null
           id?: string
           meal_plan_item_id?: string
+          patient_id?: string | null
+          restored_from_version_id?: string | null
           snapshot_data?: Json
         }
         Relationships: [
@@ -6233,6 +6239,13 @@ export type Database = {
             columns: ["meal_plan_item_id"]
             isOneToOne: false
             referencedRelation: "meal_plan_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_item_versions_restored_from_version_id_fkey"
+            columns: ["restored_from_version_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_item_versions"
             referencedColumns: ["id"]
           },
         ]
@@ -19020,10 +19033,19 @@ export type Database = {
         Args: { _patient_id: string; _reason?: string }
         Returns: Json
       }
-      fn_capture_meal_plan_item_version: {
-        Args: { p_action_type: string; p_item_id: string }
-        Returns: string
-      }
+      fn_capture_meal_plan_item_version:
+        | {
+            Args: { p_action_type: string; p_item_id: string }
+            Returns: string
+          }
+        | {
+            Args: {
+              p_action_type: string
+              p_item_id: string
+              p_restored_from?: string
+            }
+            Returns: string
+          }
       get_affiliate_commission_tier: {
         Args: { _affiliate_id: string }
         Returns: {

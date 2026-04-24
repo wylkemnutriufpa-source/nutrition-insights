@@ -237,17 +237,17 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       .from("meal_plan_item_versions")
       .select("*")
       .eq("meal_plan_item_id", meal.itemId)
-      .order("created_at", { ascending: false });
+      .order("created_at", { ascending: false })
+      .limit(20);
     if (data) setDbHistory(data);
   };
 
-  const saveToHistory = async (actionType: string = "manual_update") => {
+  const saveToHistory = async (actionType: string = "manual_update", restoredFromId: string | null = null) => {
     if (!meal?.itemId) return;
-    // Acionar a captura de versão no banco via RPC ou inserção direta
-    // Para simplificar e garantir atomicidade, usaremos a função capturar via Supabase
     await supabase.rpc("fn_capture_meal_plan_item_version", {
       p_item_id: meal.itemId,
-      p_action_type: actionType
+      p_action_type: actionType,
+      p_restored_from: restoredFromId
     });
     fetchDbHistory();
   };
@@ -256,8 +256,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     if (!meal?.itemId || !onUpdateItem) return;
     const snap = version.snapshot_data;
     
-    // Antes de fazer o rollback, salvamos a versão atual como 'rollback_source'
-    await saveToHistory("rollback_trigger");
+    // Antes de fazer o rollback, salvamos o estado ATUAL como snapshot
+    await saveToHistory("manual_update");
     
     onUpdateItem(meal.itemId, {
       description: snap.description,
@@ -267,6 +267,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       calories_target: snap.calories_target,
       title: snap.title
     });
+    
+    // Criamos a versão de rollback após a atualização para registrar a origem
+    setTimeout(() => saveToHistory("restore_version", version.id), 500);
     
     setShowHistory(false);
     toast.success("📚 Versão clínica restaurada com sucesso");
