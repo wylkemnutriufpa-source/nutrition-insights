@@ -93,7 +93,7 @@ function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemIns
     title: insert.title,
     description: insert.description ?? null,
     meal_type: insert.meal_type,
-    day_of_week: 0, // Novo modelo GLOBAL: sempre dia 0
+    day_of_week: insert.day_of_week ?? 0, 
     is_primary: (insert as any).is_primary ?? true,
     substitution_group_id: (insert as any).substitution_group_id ?? null,
     calories_target: insert.calories_target ?? null,
@@ -108,6 +108,7 @@ function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemIns
     is_locked: (insert as any).is_locked ?? false,
     was_auto_corrected: (insert as any).was_auto_corrected ?? false,
     edit_metadata: (insert as any).edit_metadata ?? null,
+    is_template_day: (insert as any).is_template_day ?? false,
   };
 }
 
@@ -354,7 +355,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
     const state = get();
     // Guard Single Day: bloqueia variações multi-dia, normaliza com aviso
-    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: true }) as typeof inserts;
+    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: get().plan?.plan_mode === 'single_day' }) as typeof inserts;
     const sanitizedInserts = safeInserts.map(sanitizeMealPlanItemInsert);
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
