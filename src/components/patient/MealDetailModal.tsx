@@ -1213,7 +1213,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setEditingLineIdx(idx);
+                                  saveToHistory();
+                                  setEditingLineIdx(idx);
                               setLineNameValue(foodName);
                               setLinePortionValue(portion || "");
                               setLinePortionError(null);
