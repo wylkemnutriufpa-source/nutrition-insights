@@ -75,11 +75,16 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = () => {
+    // 1. Limpeza e normalização das substituições (Impede strings vazias ou apenas espaços)
+    const cleanedSubs = substitutions
+      .map(s => String(s).trim())
+      .filter(s => s.length > 0);
+
     let finalDescription = description;
-    if (substitutions.length > 0) {
+    if (cleanedSubs.length > 0) {
       // Clear old text-based substitutions from description before appending fresh ones
       finalDescription = description.split(/\n\n🔄 Substituições:\n/)[0];
-      finalDescription += "\n\n🔄 Substituições:\n" + substitutions.join("\n");
+      finalDescription += "\n\n🔄 Substituições:\n" + cleanedSubs.join("\n");
     }
 
     const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
@@ -89,7 +94,7 @@ export function MealSmartEditorModal({
       notes,
       edit_metadata: {
         ...currentMeta,
-        substitutions_json: substitutions
+        substitutions_json: cleanedSubs
       }
     } as any);
     toast.success("Refeição atualizada com sucesso");
@@ -294,7 +299,8 @@ export function MealSmartEditorModal({
                         <Input
                           value={sub}
                           onChange={(e) => {
-                            const val = String(e.target.value);
+                            // Normalização em tempo real: colapso de espaços repetidos
+                            const val = String(e.target.value).replace(/\s+/g, ' ');
                             const next = [...substitutions];
                             next[idx] = val;
                             setSubstitutions(next);
