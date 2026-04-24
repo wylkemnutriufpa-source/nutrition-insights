@@ -76,4 +76,52 @@ describe('MealSmartEditorModal DOM & Accessibility', () => {
     const ariaLiveRegion = screen.getByRole('status');
     expect(ariaLiveRegion.textContent).toContain('Apenas as 4 primeiras serão salvas');
   });
+
+  it('should update aria-live message when reducing from 5 to 4 substitutions', async () => {
+    const itemWithManySubs = {
+      ...mockItem,
+      edit_metadata: {
+        substitutions_json: ['1', '2', '3', '4', '5']
+      }
+    };
+    
+    const { rerender } = render(
+      <MealSmartEditorModal 
+        open={true} 
+        onOpenChange={() => {}} 
+        itemId="item-1" 
+      />
+    );
+
+    (useMealPlanEditorV2Store as any).mockReturnValue({
+      items: [itemWithManySubs],
+      updateItem: mockUpdateItem,
+    });
+
+    expect(screen.getByText(/Limite Excedido/i)).toBeDefined();
+
+    // Rerender with 4 subs
+    const itemWith4Subs = {
+      ...mockItem,
+      edit_metadata: {
+        substitutions_json: ['1', '2', '3', '4']
+      }
+    };
+    (useMealPlanEditorV2Store as any).mockReturnValue({
+      items: [itemWith4Subs],
+      updateItem: mockUpdateItem,
+    });
+
+    rerender(
+      <MealSmartEditorModal 
+        open={true} 
+        onOpenChange={() => {}} 
+        itemId="item-1" 
+      />
+    );
+
+    expect(screen.queryByText(/Limite Excedido/i)).toBeNull();
+    expect(screen.getByText(/Prévia do Plano/i)).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('Veja como as substituições serão organizadas');
+  });
 });
