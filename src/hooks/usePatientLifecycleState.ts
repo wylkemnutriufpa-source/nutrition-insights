@@ -21,6 +21,7 @@ import { useEffect, useCallback } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { validateLifecycleEnvelope } from "@/lib/lifecycleStateValidator";
 
 export type LifecycleState =
   | "onboarding_started"
@@ -164,7 +165,18 @@ async function fetchLifecycleState(patientId: string): Promise<Record<string, un
     console.error("Error resolving lifecycle state:", error);
     return { lifecycle_state: "onboarding_started" };
   }
-  return (result as Record<string, unknown>) || { lifecycle_state: "onboarding_started" };
+  const envelope = (result as Record<string, unknown>) || { lifecycle_state: "onboarding_started" };
+  // Runtime coherence check — surfaces structured errors when has_active_plan
+  // is true but plan_id/plan_title/plan are null.
+  const validation = validateLifecycleEnvelope(envelope);
+  if (!validation.ok) {
+    console.error("[lifecycle] envelope incoherent", {
+      patientId,
+      issues: validation.issues,
+      message: validation.message,
+    });
+  }
+  return envelope;
 }
 
 /**
