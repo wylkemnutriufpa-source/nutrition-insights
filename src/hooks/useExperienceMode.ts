@@ -178,25 +178,39 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     const saved = sessionStorage.getItem(`${STORAGE_KEY}_failed`);
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved as ExperienceMode : null;
   });
+  const [lastError, setLastError] = useState<ModeChangeError | null>(null);
+  const [isOffline, setIsOffline] = useState<boolean>(
+    typeof navigator !== "undefined" ? !navigator.onLine : false
+  );
+  const [pendingQueueSize, setPendingQueueSize] = useState<number>(() => {
+    try {
+      const raw = localStorage.getItem("fj_experience_mode_queue");
+      return raw ? (JSON.parse(raw) as any[]).length : 0;
+    } catch {
+      return 0;
+    }
+  });
 
   const hydratedFromDb = useRef(false);
 
   // Broadcast channel for cross-tab sync
   useEffect(() => {
-    const channel = new BroadcastChannel("experience_mode_sync");
-    
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === "MODE_UPDATE" && event.data?.mode) {
-        const newMode = event.data.mode;
-        console.log("[ExperienceMode] Syncing mode from broadcast channel:", newMode);
-        setModeState(newMode);
-        localStorage.setItem(STORAGE_KEY, newMode);
-      }
-    };
+    let channel: BroadcastChannel | null = null;
+    try {
+      channel = new BroadcastChannel("experience_mode_sync");
+      channel.addEventListener("message", (event: MessageEvent) => {
+        if (event.data?.type === "MODE_UPDATE" && event.data?.mode) {
+          const newMode = event.data.mode;
+          console.log("[ExperienceMode] Syncing mode from broadcast channel:", newMode);
+          setModeState(newMode);
+          localStorage.setItem(STORAGE_KEY, newMode);
+        }
+      });
+    } catch {
+      // BroadcastChannel may not exist in all envs — storage event is the fallback
+    }
 
-    channel.addEventListener("message", handleMessage);
-    
-    // Fallback for older browsers or specific environments
+    // Fallback: storage event (cross-tab when BroadcastChannel unavailable)
     const handleStorage = (event: StorageEvent) => {
       if (event.key === STORAGE_KEY && event.newValue) {
         console.log("[ExperienceMode] Syncing mode from storage event:", event.newValue);
@@ -206,20 +220,17 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     window.addEventListener("storage", handleStorage);
 
     // Logout listener to clear session state
-    const handleAuthChange = () => {
-      supabase.auth.onAuthStateChange((event) => {
-        if (event === 'SIGNED_OUT') {
-          console.log("[ExperienceMode] User signed out, clearing session state");
-          sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
-          setFailedMode(null);
-        }
-      });
-    };
-    handleAuthChange();
+    supabase.auth.onAuthStateChange((event) => {
+      if (event === 'SIGNED_OUT') {
+        console.log("[ExperienceMode] User signed out, clearing session state");
+        sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
+        setFailedMode(null);
+        setLastError(null);
+      }
+    });
 
     return () => {
-      channel.removeEventListener("message", handleMessage);
-      channel.close();
+      try { channel?.close(); } catch {}
       window.removeEventListener("storage", handleStorage);
     };
   }, []);
@@ -245,73 +256,194 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     });
   }, []);
 
-  const updateModeInDb = async (m: ExperienceMode, previous: ExperienceMode) => {
+  /** Internal: perform the actual DB write for a given mode (no state writes). */
+  const performDbUpdate = useCallback(async (m: ExperienceMode, correlationId: string) => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      const err: ModeChangeError = Object.assign(new Error("Não autenticado"), {
+        code: "NOT_AUTH" as const,
+        correlationId,
+      });
+      throw err;
+    }
+
+    const { data: profile, error: fetchError } = await supabase
+      .from("profiles")
+      .select("experience_mode_locked, unlock_date")
+      .eq("user_id", user.id)
+      .maybeSingle();
+
+    if (fetchError) throw fetchError;
+
+    if (profile?.experience_mode_locked && m !== 'basic') {
+      const unlockDate = (profile as any).unlock_date as string | null;
+      const block = buildBlockReason({
+        attemptedMode: m,
+        unlockDate,
+        baseReason: "Sua conta está restrita ao modo Básico temporariamente.",
+      });
+      const error: ModeChangeError = Object.assign(new Error(block.description), {
+        code: "MODE_LOCKED" as const,
+        correlationId,
+        unlock_date: unlockDate,
+        blockTitle: block.title,
+        blockDescription: block.description,
+      });
+      throw error;
+    }
+
+    const { error: updateError } = await supabase
+      .from("profiles")
+      .update({ experience_mode: m } as any)
+      .eq("user_id", user.id);
+
+    if (updateError) {
+      const err: ModeChangeError = Object.assign(new Error(updateError.message || "Falha ao atualizar"), {
+        code: "DB_ERROR" as const,
+        correlationId,
+      });
+      throw err;
+    }
+  }, []);
+
+  const updateModeInDb = useCallback(async (m: ExperienceMode, previous: ExperienceMode) => {
+    const correlationId = generateCorrelationId();
     setIsLoading(true);
     setFailedMode(null);
+    setLastError(null);
     sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
-    
-    console.log(`[ExperienceMode] Attempting to update mode to ${m}...`);
-    
+
+    logTelemetry("info", correlationId, "Mode change attempt started", {
+      attemptedMode: m,
+      previousMode: previous,
+    });
+
+    // Offline path — queue the attempt and bail
+    if (typeof navigator !== "undefined" && !navigator.onLine) {
+      enqueueAttempt({ correlationId, attemptedMode: m, previousMode: previous });
+      setPendingQueueSize((s) => s + 1);
+      const err: ModeChangeError = Object.assign(
+        new Error("Sem conexão. Tentaremos novamente quando você voltar a ficar online."),
+        { code: "OFFLINE" as const, correlationId }
+      );
+      setFailedMode(m);
+      setLastError(err);
+      sessionStorage.setItem(`${STORAGE_KEY}_failed`, m);
+      setModeState(previous);
+      setIsLoading(false);
+      logTelemetry("warn", correlationId, "Offline — attempt queued", { attemptedMode: m });
+      await recordAudit({
+        correlationId,
+        attemptedMode: m,
+        previousMode: previous,
+        outcome: "offline_queued",
+        reason: "Network unavailable",
+      });
+      throw err;
+    }
+
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) throw new Error("Não autenticado");
-
-      const { data: profile, error: fetchError } = await supabase
-        .from("profiles")
-        .select("experience_mode_locked, unlock_date")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      if (fetchError) throw fetchError;
-      
-      if (profile?.experience_mode_locked && m !== 'basic') {
-        console.warn(`[ExperienceMode] Mode change blocked for user ${user.id}. Mode is locked.`);
-        const error = new Error("Sua conta está restrita ao modo Básico temporariamente.");
-        (error as any).code = "MODE_LOCKED";
-        (error as any).unlock_date = (profile as any).unlock_date;
-        throw error;
-      }
-
-      const { error: updateError } = await supabase
-        .from("profiles")
-        .update({ experience_mode: m } as any)
-        .eq("user_id", user.id);
-
-      if (updateError) {
-        console.error(`[ExperienceMode] DB update failed:`, updateError);
-        throw updateError;
-      }
-
-      console.log(`[ExperienceMode] Successfully updated mode to ${m}`);
+      await performDbUpdate(m, correlationId);
+      logTelemetry("info", correlationId, "Mode change succeeded", { mode: m });
       localStorage.setItem(STORAGE_KEY, m);
       setModeState(m);
-      
+
       // Notify other tabs
-      const channel = new BroadcastChannel("experience_mode_sync");
-      channel.postMessage({ type: "MODE_UPDATE", mode: m });
-      channel.close();
+      try {
+        const channel = new BroadcastChannel("experience_mode_sync");
+        channel.postMessage({ type: "MODE_UPDATE", mode: m });
+        channel.close();
+      } catch {}
+
+      await recordAudit({
+        correlationId,
+        attemptedMode: m,
+        previousMode: previous,
+        outcome: "success",
+      });
     } catch (error: any) {
-      console.error(`[ExperienceMode] Error in update cycle:`, error);
+      const errCode = error?.code || "DB_ERROR";
+      logTelemetry("error", correlationId, "Mode change failed", {
+        code: errCode,
+        message: error?.message,
+      });
       setFailedMode(m);
       sessionStorage.setItem(`${STORAGE_KEY}_failed`, m);
+      // Ensure correlationId is attached
+      if (!error.correlationId) error.correlationId = correlationId;
+      setLastError(error);
       // Fallback to previous mode
       setModeState(previous);
+
+      await recordAudit({
+        correlationId,
+        attemptedMode: m,
+        previousMode: previous,
+        outcome: errCode === "MODE_LOCKED" ? "blocked" : "failed",
+        reason: error?.message,
+        errorCode: errCode,
+        unlockDate: error?.unlock_date,
+      });
       throw error;
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [performDbUpdate]);
 
   const setMode = useCallback(async (m: ExperienceMode) => {
     const previous = mode;
     await updateModeInDb(m, previous);
-  }, [mode]);
+  }, [mode, updateModeInDb]);
 
   const retryLastMode = useCallback(() => {
     if (failedMode) {
-      setMode(failedMode);
+      setMode(failedMode).catch(() => { /* error already surfaced */ });
     }
   }, [failedMode, setMode]);
+
+  // Online/offline + queue drain
+  useEffect(() => {
+    const onOnline = async () => {
+      setIsOffline(false);
+      logTelemetry("info", "system", "Network back online — draining queue");
+      const result = await drainQueue(async (item: QueuedAttempt) => {
+        await performDbUpdate(item.attemptedMode, item.correlationId);
+        // Apply the most recent successfully-replayed mode
+        localStorage.setItem(STORAGE_KEY, item.attemptedMode);
+        setModeState(item.attemptedMode);
+        try {
+          const channel = new BroadcastChannel("experience_mode_sync");
+          channel.postMessage({ type: "MODE_UPDATE", mode: item.attemptedMode });
+          channel.close();
+        } catch {}
+      });
+      try {
+        const raw = localStorage.getItem("fj_experience_mode_queue");
+        setPendingQueueSize(raw ? (JSON.parse(raw) as any[]).length : 0);
+      } catch {
+        setPendingQueueSize(0);
+      }
+      if (result.replayed > 0) {
+        setFailedMode(null);
+        setLastError(null);
+        sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
+      }
+    };
+    const onOffline = () => {
+      setIsOffline(true);
+      logTelemetry("warn", "system", "Network went offline");
+    };
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    // Try draining at mount in case we already have items
+    if (typeof navigator !== "undefined" && navigator.onLine) {
+      onOnline();
+    }
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, [performDbUpdate]);
 
   const isRouteAllowed = useCallback((route: string) => {
     return isRouteVisible(route, mode, role);
@@ -323,20 +455,23 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
   const minMode = useCallback((min: ExperienceMode) => checkMinMode(mode, min), [mode]);
 
   const value = useMemo<ExperienceModeContextValue>(
-    () => ({ 
-      mode, 
-      setMode, 
-      isRouteAllowed, 
-      isBasic, 
-      isPro, 
-      isAdvanced, 
-      isLoading, 
+    () => ({
+      mode,
+      setMode,
+      isRouteAllowed,
+      isBasic,
+      isPro,
+      isAdvanced,
+      isLoading,
       failedMode,
+      lastError,
+      isOffline,
+      pendingQueueSize,
       retryLastMode,
-      minMode, 
-      role 
+      minMode,
+      role,
     }),
-    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, isLoading, retryLastMode, minMode, role]
+    [mode, setMode, isRouteAllowed, isBasic, isPro, isAdvanced, isLoading, failedMode, lastError, isOffline, pendingQueueSize, retryLastMode, minMode, role]
   );
 
   return value;
