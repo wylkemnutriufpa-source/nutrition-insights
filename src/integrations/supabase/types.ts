@@ -6221,6 +6221,7 @@ export type Database = {
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target: number | null
           substitution_group_id: string | null
+          target_percentage: number | null
           tenant_id: string | null
           title: string
           visual_library_item_id: string | null
@@ -6244,6 +6245,7 @@ export type Database = {
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
           substitution_group_id?: string | null
+          target_percentage?: number | null
           tenant_id?: string | null
           title: string
           visual_library_item_id?: string | null
@@ -6267,6 +6269,7 @@ export type Database = {
           meal_type?: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
           substitution_group_id?: string | null
+          target_percentage?: number | null
           tenant_id?: string | null
           title?: string
           visual_library_item_id?: string | null
@@ -6485,6 +6488,10 @@ export type Database = {
           generated_by: string | null
           generation_metadata: Json | null
           generation_source: string | null
+          global_calories_target: number | null
+          global_carbs_target: number | null
+          global_fat_target: number | null
+          global_protein_target: number | null
           id: string
           is_active: boolean
           is_global_model: boolean | null
@@ -6534,6 +6541,10 @@ export type Database = {
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
+          global_calories_target?: number | null
+          global_carbs_target?: number | null
+          global_fat_target?: number | null
+          global_protein_target?: number | null
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
@@ -6583,6 +6594,10 @@ export type Database = {
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
+          global_calories_target?: number | null
+          global_carbs_target?: number | null
+          global_fat_target?: number | null
+          global_protein_target?: number | null
           id?: string
           is_active?: boolean
           is_global_model?: boolean | null
