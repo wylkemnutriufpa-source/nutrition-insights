@@ -19188,6 +19188,25 @@ export type Database = {
             }
             Returns: string
           }
+      get_advanced_alerts: {
+        Args: {
+          p_alert_type?: string
+          p_limit?: number
+          p_offset?: number
+          p_severity?: string
+          p_tenant_id?: string
+        }
+        Returns: {
+          alert_type: string
+          correlation_id: string
+          created_at: string
+          id: string
+          message: string
+          metadata: Json
+          severity: string
+          total_count: number
+        }[]
+      }
       get_affiliate_commission_tier: {
         Args: { _affiliate_id: string }
         Returns: {
@@ -19334,6 +19353,10 @@ export type Database = {
           status: string
           tenant_id: string
         }[]
+      }
+      get_plan_drop_metrics: {
+        Args: { p_cutoff?: string; p_patient_id: string }
+        Returns: Json
       }
       get_ranking_by_period: {
         Args: { _limit?: number; _nutritionist_id?: string; _period: string }
@@ -19523,6 +19546,14 @@ export type Database = {
       recalculate_meal_plan_totals: {
         Args: { plan_id: string }
         Returns: undefined
+      }
+      reconcile_patient_plans: {
+        Args: {
+          p_end_date?: string
+          p_patient_id: string
+          p_start_date?: string
+        }
+        Returns: Json
       }
       reconcile_published_plans: { Args: { p_limit?: number }; Returns: Json }
       record_ai_usage: {
