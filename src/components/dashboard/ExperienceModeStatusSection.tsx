@@ -8,6 +8,13 @@ import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { Loader2, CheckCircle2, AlertTriangle, Lock, WifiOff, RefreshCw, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
+import { toast } from "sonner";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 function CorrelationIdBadge({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
@@ -15,9 +22,13 @@ function CorrelationIdBadge({ id }: { id: string }) {
     try {
       await navigator.clipboard?.writeText(id);
       setCopied(true);
+      toast.success("ID copiado", {
+        description: id,
+        duration: 2000,
+      });
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      /* ignore */
+      toast.error("Não foi possível copiar o ID");
     }
   };
   return (
