@@ -370,9 +370,11 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       throw err;
     }
 
+    const startedAt = Date.now();
     try {
       await performDbUpdate(m, correlationId);
-      logTelemetry("info", correlationId, "Mode change succeeded", { mode: m });
+      const durationMs = Date.now() - startedAt;
+      logTelemetry("info", correlationId, "Mode change succeeded", { mode: m, durationMs });
       localStorage.setItem(STORAGE_KEY, m);
       setModeState(m);
 
@@ -388,12 +390,16 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
         attemptedMode: m,
         previousMode: previous,
         outcome: "success",
+        metadata: { duration_ms: durationMs },
       });
     } catch (error: any) {
       const errCode = error?.code || "DB_ERROR";
+      const durationMs = Date.now() - startedAt;
       logTelemetry("error", correlationId, "Mode change failed", {
         code: errCode,
         message: error?.message,
+        durationMs,
+        retries: error?.retries ?? 0,
       });
       setFailedMode(m);
       sessionStorage.setItem(`${STORAGE_KEY}_failed`, m);
@@ -411,6 +417,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
         reason: error?.message,
         errorCode: errCode,
         unlockDate: error?.unlock_date,
+        metadata: { duration_ms: durationMs, retries: error?.retries ?? 0 },
       });
       throw error;
     } finally {
