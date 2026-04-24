@@ -6,12 +6,12 @@ import { supabase } from "@/integrations/supabase/client";
 export const verifyPlanPublicationFlow = async (planId: string, patientId: string) => {
   console.log(`[E2E Test] Verifying publication flow for plan ${planId}`);
 
-  // Using any to bypass strict type check on dynamic columns if they aren't in types yet
-  const { data: plan, error: dbError } = await supabase
+  // Using raw supabase query to avoid complex type instantiation depth issues
+  const { data: plan, error: dbError } = await (supabase
     .from('meal_plans')
     .select('*')
     .eq('id', planId)
-    .single() as any;
+    .single() as any);
 
   if (dbError || !plan) {
     throw new Error(`[E2E Failure] Plan ${planId} not found in database.`);
@@ -24,12 +24,12 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
   if (plan.patient_id !== patientId) issues.push(`patient_id mismatch: ${plan.patient_id} vs ${patientId}`);
 
   // 2. Simulate visibility check (Patient view)
-  const { data: visiblePlans, error: visibilityError } = await supabase
+  const { data: visiblePlans, error: visibilityError } = await (supabase
     .from('meal_plans')
     .select('id')
     .eq('patient_id', patientId)
     .eq('status', 'published')
-    .eq('is_active', true) as any;
+    .eq('is_active', true) as any);
 
   if (visibilityError) {
     issues.push(`Visibility query failed: ${visibilityError.message}`);
@@ -44,7 +44,7 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
     const errorMsg = `[E2E Failure] Publication validation failed:\n- ${issues.join('\n- ')}`;
     console.error(errorMsg);
     
-    // Log critical alert
+    // Log critical alert via direct insert
     await supabase.from('system_alerts').insert({
       alert_type: 'E2E_PUBLISH_FAILURE',
       severity: 'critical',
