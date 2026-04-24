@@ -192,12 +192,16 @@ export function usePatientLifecycleState(): PatientLifecycle {
     enabled: !!user && isPatient,
     staleTime: 5 * 1000, // 5s — fast refresh for instant lifecycle sync
     refetchInterval: 2 * 60 * 1000, // auto-refresh every 2min
+    refetchOnWindowFocus: true, // re-evaluate on tab focus (override may have expired)
+    refetchOnReconnect: true,
     queryFn: () => fetchLifecycleState(user!.id),
   });
 
   const refetchFn = useCallback(() => { refetch(); }, [refetch]);
 
-  // Listen for realtime lifecycle changes → invalidate cache
+  // Listen for realtime lifecycle changes → invalidate cache.
+  // Also listen for visibilitychange so an expired unblock override is
+  // re-evaluated when the patient brings the tab back into focus.
   useEffect(() => {
     if (!user) return;
     const channel = supabase
@@ -212,9 +216,29 @@ export function usePatientLifecycleState(): PatientLifecycle {
         },
         () => queryClient.invalidateQueries({ queryKey: ["lifecycle", user.id] })
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "professional_unblock_overrides",
+          filter: `patient_id=eq.${user.id}`,
+        },
+        () => queryClient.invalidateQueries({ queryKey: ["lifecycle", user.id] })
+      )
       .subscribe();
 
-    return () => { supabase.removeChannel(channel); };
+    const onVisible = () => {
+      if (document.visibilityState === "visible") {
+        queryClient.invalidateQueries({ queryKey: ["lifecycle", user.id] });
+      }
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
+    return () => {
+      supabase.removeChannel(channel);
+      document.removeEventListener("visibilitychange", onVisible);
+    };
   }, [user, queryClient]);
 
   if (!data) return { ...EMPTY, refetch: refetchFn };
