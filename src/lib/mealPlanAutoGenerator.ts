@@ -306,11 +306,13 @@ function generateFromPresets(
 ): AutoGenerationResult {
   const slots: GeneratedMealSlot[] = [];
 
-  for (let day = 1; day <= 7; day++) {
+  // Single Day Model: gera apenas o Master Day (day = 0)
+  const day = 0;
+  {
     for (const mealType of MEAL_TYPES) {
       const targetKcal = Math.round(profile.targetCalories * distribution[mealType]);
       const presets = getRealisticOptions(mealType, profile.goal);
-      const pickIdx = (day + mealType.length) % presets.length;
+      const pickIdx = mealType.length % presets.length;
       const preset = presets[pickIdx];
 
       const fakeLibItem: MealLibraryItem = {

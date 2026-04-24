@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
+import { assertSingleDayItems } from "@/lib/singleDayGuards";
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
@@ -352,7 +353,9 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   addItems: (inserts) => {
 
     const state = get();
-    const sanitizedInserts = inserts.map(sanitizeMealPlanItemInsert);
+    // Guard Single Day: bloqueia variações multi-dia, normaliza com aviso
+    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: true }) as typeof inserts;
+    const sanitizedInserts = safeInserts.map(sanitizeMealPlanItemInsert);
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
     const tIds = optimistic.map((o) => o.id);
