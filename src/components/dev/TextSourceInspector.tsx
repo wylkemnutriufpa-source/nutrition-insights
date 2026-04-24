@@ -152,7 +152,17 @@ export default function TextSourceInspector() {
       if (!target) return;
       e.preventDefault();
       e.stopPropagation();
-      setResult(inspectElement(target));
+      const r = inspectElement(target);
+      setResult(r);
+      // Persist em window para que BuildStatusPanel possa anexar no bug report
+      try {
+        const w = window as any;
+        const list: any[] = Array.isArray(w.__FJ_TEXT_INSPECTOR_HISTORY__)
+          ? w.__FJ_TEXT_INSPECTOR_HISTORY__
+          : [];
+        list.unshift({ at: new Date().toISOString(), ...r });
+        w.__FJ_TEXT_INSPECTOR_HISTORY__ = list.slice(0, 20);
+      } catch {}
     };
 
     document.addEventListener("click", handler, true);
