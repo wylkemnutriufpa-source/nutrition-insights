@@ -21,6 +21,9 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
 import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
+import { resolveEffectiveDay } from "@/lib/resolveEffectiveDay";
+import { useForceCanonicalDay } from "@/hooks/useForceCanonicalDay";
+import LegacyDayBanner from "./LegacyDayBanner";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
