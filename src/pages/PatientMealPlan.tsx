@@ -5,13 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer,
-  CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Star,
+  CalendarDays, Star,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
