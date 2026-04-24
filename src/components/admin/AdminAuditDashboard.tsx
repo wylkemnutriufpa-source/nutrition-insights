@@ -26,7 +26,7 @@ export const AdminAuditDashboard = () => {
   const [cursor, setCursor] = useState<{ ts: string | null; id: string | null }>({ ts: null, id: null });
   const [hasMore, setHasMore] = useState(false);
   const [exporting, setExporting] = useState(false);
-
+  
   const [filters, setFilters] = useState({
     alert_type: "all",
     severity: "all",
@@ -99,98 +99,144 @@ export const AdminAuditDashboard = () => {
       <div className="flex justify-between items-center">
         <h1 className="text-3xl font-bold tracking-tight">Audit Central</h1>
         <div className="flex gap-2">
-          <Button variant="outline" disabled={exporting} onClick={() => handleExport('XLSX')}>
-            {exporting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <FileSpreadsheet className="mr-2 h-4 w-4" />} Excel
-          </Button>
-          <Button variant="outline" disabled={exporting} onClick={() => handleExport('PDF')}>
-            PDF
-          </Button>
-          <Button disabled={exporting} onClick={() => handleExport('CSV')}>
-            <Download className="mr-2 h-4 w-4" /> CSV
-          </Button>
+          <Button variant="outline" onClick={() => handleExport('XLSX')}><FileSpreadsheet className="mr-2 h-4 w-4" /> Excel</Button>
+          <Button onClick={() => handleExport('CSV')}><Download className="mr-2 h-4 w-4" /> CSV</Button>
         </div>
       </div>
 
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <Select value={filters.alert_type} onValueChange={(v) => setFilters(f => ({...f, alert_type: v}))}>
-              <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos os tipos</SelectItem>
-                <SelectItem value="PLAN_VISIBILITY_DROP">Queda de Visibilidade</SelectItem>
-              </SelectContent>
-            </Select>
-            <Input placeholder="Tenant ID..." value={filters.tenant_id} onChange={(e) => setFilters(f => ({...f, tenant_id: e.target.value}))} />
-            <Input placeholder="Patient ID..." value={filters.patient_id} onChange={(e) => setFilters(f => ({...f, patient_id: e.target.value}))} />
-            <Input placeholder="Correlation ID..." value={filters.correlation_id} onChange={(e) => setFilters(f => ({...f, correlation_id: e.target.value}))} />
-          </div>
-        </CardContent>
-      </Card>
+      <Tabs defaultValue="overview" className="space-y-6">
+        <TabsList>
+          <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="exports">Exportações ({exportTasks.filter(t => t.status === 'processing' || t.status === 'pending').length})</TabsTrigger>
+        </TabsList>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <Card className="lg:col-span-2">
-          <CardHeader><CardTitle>Alertas de Auditoria</CardTitle></CardHeader>
-          <CardContent>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Evento</TableHead>
-                  <TableHead>Correlação</TableHead>
-                  <TableHead>Ação</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {alerts.map(alert => (
-                  <TableRow key={alert.id}>
-                    <TableCell>
-                      <div className="text-sm font-bold">{alert.alert_type}</div>
-                      <div className="text-xs text-muted-foreground">{new Date(alert.created_at).toLocaleString()}</div>
-                    </TableCell>
-                    <TableCell className="text-xs font-mono">{alert.correlation_id}</TableCell>
-                    <TableCell>
-                      <Button size="sm" variant="ghost" onClick={() => alert.metadata?.patient_id && fetchStats(alert.metadata.patient_id)}>
-                        <History className="h-4 w-4" />
-                      </Button>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-            {hasMore && <Button variant="ghost" className="w-full mt-2" onClick={() => fetchAlerts()}>Ver mais</Button>}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader><CardTitle>Deltas e Percentuais</CardTitle></CardHeader>
-          <CardContent>
-            {metrics && (
-              <div className="space-y-4">
-                <div className="text-xs font-bold border-b pb-2">Distribuição Antes/Depois</div>
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-[10px] text-muted-foreground uppercase">Antes</div>
-                    {Object.entries(metrics.before).map(([k, v]) => (
-                      <div key={k} className="flex justify-between text-xs">
-                        <span>{k}</span> <span>{v as number}</span>
-                      </div>
-                    ))}
-                  </div>
-                  <div>
-                    <div className="text-[10px] text-muted-foreground uppercase">Depois</div>
-                    {Object.entries(metrics.after).map(([k, v]) => (
-                      <div key={k} className="flex justify-between text-xs">
-                        <span>{k}</span> <span>{v as number}</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+        <TabsContent value="overview" className="space-y-6">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <Select value={filters.alert_type} onValueChange={(v) => setFilters(f => ({...f, alert_type: v}))}>
+                  <SelectTrigger><SelectValue placeholder="Tipo" /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos os tipos</SelectItem>
+                    <SelectItem value="PLAN_VISIBILITY_DROP">Queda de Visibilidade</SelectItem>
+                  </SelectContent>
+                </Select>
+                <Input placeholder="Tenant ID..." value={filters.tenant_id} onChange={(e) => setFilters(f => ({...f, tenant_id: e.target.value}))} />
+                <Input placeholder="Patient ID..." value={filters.patient_id} onChange={(e) => setFilters(f => ({...f, patient_id: e.target.value}))} />
+                <Input placeholder="Correlation ID..." value={filters.correlation_id} onChange={(e) => setFilters(f => ({...f, correlation_id: e.target.value}))} />
               </div>
-            )}
-            {!metrics && <div className="text-center py-10 text-xs text-muted-foreground">Selecione um alerta para ver métricas</div>}
-          </CardContent>
-        </Card>
-      </div>
+            </CardContent>
+          </Card>
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <Card className="lg:col-span-2">
+              <CardHeader><CardTitle>Alertas</CardTitle></CardHeader>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Evento</TableHead>
+                      <TableHead>Correlação</TableHead>
+                      <TableHead>Ação</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {alerts.map(alert => (
+                      <TableRow key={alert.id}>
+                        <TableCell>
+                          <div className="text-sm font-bold">{alert.alert_type}</div>
+                          <div className="text-xs text-muted-foreground">{new Date(alert.created_at).toLocaleString()}</div>
+                        </TableCell>
+                        <TableCell className="text-xs font-mono">{alert.correlation_id}</TableCell>
+                        <TableCell>
+                          <Button size="sm" variant="ghost" onClick={() => alert.metadata?.patient_id && fetchStats(alert.metadata.patient_id)}>
+                            <History className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+                {hasMore && <Button variant="ghost" className="w-full mt-2" onClick={() => fetchAlerts()}>Ver mais</Button>}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader><CardTitle>Métricas e Deltas</CardTitle></CardHeader>
+              <CardContent>
+                {metrics && (
+                  <div className="space-y-4">
+                    <div className="text-xs font-bold border-b pb-2">Distribuição Antes/Depois</div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-[10px] text-muted-foreground uppercase">Antes</div>
+                        {metrics.before && Object.entries(metrics.before).map(([k, v]) => (
+                          <div key={k} className="flex justify-between text-xs"><span>{k}</span> <span>{v as number}</span></div>
+                        ))}
+                      </div>
+                      <div>
+                        <div className="text-[10px] text-muted-foreground uppercase">Depois</div>
+                        {metrics.after && Object.entries(metrics.after).map(([k, v]) => (
+                          <div key={k} className="flex justify-between text-xs"><span>{k}</span> <span>{v as number}</span></div>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                )}
+                {!metrics && <div className="text-center py-10 text-xs text-muted-foreground">Selecione um alerta</div>}
+              </CardContent>
+            </Card>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="exports">
+          <Card>
+            <CardHeader><CardTitle>Fila de Exportação</CardTitle></CardHeader>
+            <CardContent>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Formato</TableHead>
+                    <TableHead>Status</TableHead>
+                    <TableHead>Progresso</TableHead>
+                    <TableHead>Ação</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {exportTasks.map(task => (
+                    <TableRow key={task.id}>
+                      <TableCell><Badge>{task.format}</Badge></TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {(task.status === 'processing' || task.status === 'pending') && <Loader2 className="h-3 w-3 animate-spin" />}
+                          {task.status === 'completed' && <CheckCircle className="h-3 w-3 text-green-500" />}
+                          {task.status === 'failed' && <XCircle className="h-3 w-3 text-red-500" />}
+                          <span className="capitalize text-xs">{task.status}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        <div className="w-full bg-muted rounded-full h-1.5 max-w-[100px]">
+                          <div className="bg-primary h-1.5 rounded-full" style={{ width: `${task.progress || 0}%` }} />
+                        </div>
+                      </TableCell>
+                      <TableCell>
+                        {task.status === 'completed' && task.file_url && (
+                          <Button size="sm" variant="outline" asChild>
+                            <a href={task.file_url} download>Baixar</a>
+                          </Button>
+                        )}
+                        {task.status === 'failed' && (
+                          <Button size="sm" variant="ghost">Retry</Button>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
