@@ -14,6 +14,7 @@ import { describe, it, expect } from "vitest";
 import {
   buildTrend,
   aggregateUnknownByWorkspace,
+  summarizeTrend,
 } from "../planDiagnosticsHelpers";
 import { buildAuditCsv } from "@/lib/auditExportUtils";
 
