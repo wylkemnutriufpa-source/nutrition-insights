@@ -57,13 +57,10 @@ export function WeeklyGrid() {
 
   // Modo Diário Único: usamos day=0 como slot canônico, mas se o plano
   // legado tiver itens apenas em outros dias, exibimos o primeiro encontrado.
-  const effectiveDay = (() => {
-    if (items.some((i) => i.day_of_week === 0)) return 0;
-    for (const d of [1, 2, 3, 4, 5, 6]) {
-      if (items.some((i) => i.day_of_week === d)) return d;
-    }
-    return 0;
-  })();
+  // A preferência do profissional fica persistida em URL/localStorage.
+  const [forceCanonical, setForceCanonical] = useForceCanonicalDay();
+  const effectiveDay = resolveEffectiveDay(items, { forceCanonical });
+  const effectiveDayLabel = DAYS.find((d) => d.key === effectiveDay)?.label ?? `Dia ${effectiveDay}`;
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
