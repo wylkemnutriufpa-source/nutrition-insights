@@ -404,7 +404,11 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
         attemptedMode: m,
         previousMode: previous,
         outcome: "success",
-        metadata: { duration_ms: durationMs },
+        metadata: {
+          duration_ms: durationMs,
+          is_admin: !!(performDbUpdate as any)._lastIsAdmin,
+          was_locked: !!(performDbUpdate as any)._lastWasLocked,
+        },
       });
     } catch (error: any) {
       const errCode = error?.code || "DB_ERROR";
