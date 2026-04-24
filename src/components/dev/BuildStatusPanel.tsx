@@ -302,6 +302,30 @@ export default function BuildStatusPanel() {
             ))}
           </div>
 
+          {chunkValidation && chunkValidation.status === "mismatch" && (
+            <div
+              data-testid="build-status-mismatch-alert"
+              className="mt-2 flex items-start gap-1.5 rounded border border-destructive/40 bg-destructive/10 p-2 text-[10px] text-destructive"
+            >
+              <AlertTriangle className="mt-0.5 h-3 w-3 shrink-0" />
+              <div>
+                <div className="font-semibold">CDN/SW servindo build antigo</div>
+                <div className="opacity-80">
+                  Esperado: {chunkValidation.expectedHash} · Carregados:{" "}
+                  {chunkValidation.loadedHashes.slice(0, 2).join(", ") || "—"}
+                </div>
+              </div>
+            </div>
+          )}
+          {chunkValidation && chunkValidation.status === "ok" && (
+            <div
+              data-testid="build-status-chunks-ok"
+              className="mt-2 text-[10px] text-emerald-400"
+            >
+              ✓ chunks ({chunkValidation.hashedAssetCount}) batem com o build
+            </div>
+          )}
+
           <Button
             size="sm"
             variant="outline"
@@ -317,6 +341,34 @@ export default function BuildStatusPanel() {
             )}
             Limpar cache e recarregar
           </Button>
+
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={async () => {
+              setBusy(true);
+              try {
+                const result = await clearScopedCaches("diet-templates");
+                setScopedFeedback(
+                  `${result.cacheEntriesRemoved} cache · ${result.queriesInvalidated} queries`,
+                );
+                window.setTimeout(() => reloadScopedRoute("/diet-templates"), 350);
+              } finally {
+                setBusy(false);
+              }
+            }}
+            disabled={busy}
+            data-testid="build-status-scoped-clear-templates"
+            className="mt-1 h-7 w-full text-[11px]"
+          >
+            <FolderSync className="mr-1 h-3 w-3" />
+            Limpar só /diet-templates
+          </Button>
+          {scopedFeedback && (
+            <div className="mt-1 text-center text-[10px] text-muted-foreground">
+              {scopedFeedback}
+            </div>
+          )}
         </>
       )}
     </div>
