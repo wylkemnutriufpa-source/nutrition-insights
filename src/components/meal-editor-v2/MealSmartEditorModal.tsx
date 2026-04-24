@@ -47,13 +47,18 @@ export function MealSmartEditorModal({
 
   useEffect(() => {
     if (item && open) {
-      const desc = item.description || "";
-      const parts = desc.split(/\n\n🔄 Substituições:\n/);
-      setDescription(parts[0] || "");
+      setDescription(item.description || "");
       
-      const subsPart = parts[1] || "";
-      const subLines = subsPart.split("\n").filter(l => l.trim().length > 0);
-      setSubstitutions(subLines.slice(0, 4));
+      const meta = (item as any).edit_metadata || (item as any).metadata || {};
+      if (meta.substitutions_json) {
+        setSubstitutions(meta.substitutions_json);
+      } else {
+        const desc = item.description || "";
+        const parts = desc.split(/\n\n🔄 Substituições:\n/);
+        const subsPart = parts[1] || "";
+        const subLines = subsPart.split("\n").filter(l => l.trim().length > 0);
+        setSubstitutions(subLines.slice(0, 4));
+      }
       
       setNotes((item as any).notes || "");
     }
