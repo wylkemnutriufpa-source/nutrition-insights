@@ -354,7 +354,8 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
     const state = get();
     // Guard Single Day: bloqueia variações multi-dia, normaliza com aviso
-    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: get().plan?.plan_mode === 'single_day' }) as typeof inserts;
+    const isSingleDay = get().plan?.plan_mode === 'single_day';
+    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: isSingleDay, isSingleDay }) as typeof inserts;
     const sanitizedInserts = safeInserts.map(sanitizeMealPlanItemInsert);
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
