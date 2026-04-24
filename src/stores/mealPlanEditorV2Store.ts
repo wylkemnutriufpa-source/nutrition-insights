@@ -4,6 +4,8 @@ import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
 import { assertSingleDayItems } from "@/lib/singleDayGuards";
+import { ensurePlanMode, classifyPlanMode } from "@/lib/singleDayPlanMigration";
+import { checkSingleDayConsistency } from "@/lib/singleDayConsistency";
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
