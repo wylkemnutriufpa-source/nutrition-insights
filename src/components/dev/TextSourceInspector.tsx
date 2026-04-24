@@ -229,13 +229,36 @@ export default function TextSourceInspector() {
               }
             />
             {result.cacheMatches.length > 0 && (
-              <div className="mt-1 rounded border border-amber-500/30 bg-amber-500/10 p-1.5">
+              <div className="mt-1 space-y-1 rounded border border-amber-500/30 bg-amber-500/10 p-1.5">
                 <div className="text-[10px] uppercase text-amber-200">
                   Encontrado no cache:
                 </div>
                 {result.cacheMatches.map((m, i) => (
-                  <div key={i} className="truncate text-[10px] text-amber-100">
-                    {m}
+                  <div
+                    key={i}
+                    className="rounded bg-background/40 p-1 text-[10px] text-amber-100"
+                  >
+                    <div className="truncate font-mono" title={m.queryKey}>
+                      {m.queryKey}
+                    </div>
+                    <div className="mt-0.5 flex flex-wrap gap-x-2 gap-y-0.5 text-[9px] text-amber-200/90">
+                      {m.dataUpdatedAtIso && (
+                        <span title={m.dataUpdatedAtIso}>
+                          atualizado:{" "}
+                          {new Date(m.dataUpdatedAt!).toLocaleTimeString()}
+                        </span>
+                      )}
+                      {m.ageSeconds !== null && (
+                        <span>idade: {m.ageSeconds}s</span>
+                      )}
+                      {m.status && <span>status: {m.status}</span>}
+                      {m.isStale !== null && (
+                        <span>{m.isStale ? "stale" : "fresh"}</span>
+                      )}
+                      {m.observers !== null && (
+                        <span>obs: {m.observers}</span>
+                      )}
+                    </div>
                   </div>
                 ))}
               </div>
