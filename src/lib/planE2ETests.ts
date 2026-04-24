@@ -10,7 +10,7 @@ const diagnosticClient = createClient(
  * E2E-style verification for plan publication
  */
 export const verifyPlanPublicationFlow = async (planId: string, patientId: string) => {
-  const correlationId = uuidv4();
+  const correlationId = crypto.randomUUID();
   console.log(`[E2E Test] Verifying publication flow for plan ${planId} (Correlation: ${correlationId})`);
 
   // 1. Fetch with specific column filters to test null modes and inconsistent states
@@ -47,9 +47,6 @@ export const verifyPlanPublicationFlow = async (planId: string, patientId: strin
     const found = (visiblePlans || []).find((p: any) => p.id === planId);
     if (!found) {
       issues.push(`Plan exists in DB but is invisible to the standard patient query (Possible RLS/Tenant issue)`);
-    } else if (found.plan_mode === undefined) {
-       // Check for plan_mode null handling
-       console.log("[E2E Info] Plan validated with null plan_mode (Weekly default)");
     }
   }
 

@@ -1,11 +1,10 @@
 import { supabase } from "@/integrations/supabase/client";
-import { v4 as uuidv4 } from 'uuid';
 
 /**
  * Detailed plan inspection
  */
 export const inspectPatientPlans = async (patientId: string) => {
-  const correlationId = uuidv4();
+  const correlationId = crypto.randomUUID();
   console.log(`[Diagnostic] Inspecting plans for ${patientId} (Correlation: ${correlationId})`);
   
   const { data, error } = await supabase.rpc('get_detailed_plan_diagnostics', {
@@ -24,17 +23,18 @@ export const inspectPatientPlans = async (patientId: string) => {
  * Idempotent publication wrapper
  */
 export const publishPlanSafely = async (planId: string) => {
-  const correlationId = uuidv4();
+  const correlationId = crypto.randomUUID();
   console.log(`[Pub] Safe publish for ${planId} (Correlation: ${correlationId})`);
 
   const { data, error } = await supabase.rpc('publish_meal_plan_v2', {
     p_plan_id: planId,
     p_correlation_id: correlationId
-  });
+  }) as { data: any, error: any };
 
   if (error || !data?.success) {
-    await logAlert('PUBLISH_RACE_CONDITION', `Publication failed/locked for ${planId}`, { error, correlationId });
-    throw error || new Error(data?.error || 'Unknown publication error');
+    const errorMsg = data?.error || error?.message || 'Unknown publication error';
+    await logAlert('PUBLISH_RACE_CONDITION', `Publication failed/locked for ${planId}`, { error: errorMsg, correlationId });
+    throw new Error(errorMsg);
   }
 
   return data;
