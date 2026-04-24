@@ -324,6 +324,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newFoodLines = [...foodLines, newLine];
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     if (onUpdateItem) {
+      saveToHistory();
       onUpdateItem(meal.itemId, { description: newDescription });
       toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
     }
@@ -948,9 +949,22 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
               <>
                 {suggestions.length > 0 && (
                   <div className="bg-primary/5 border border-primary/10 rounded-xl p-3 animate-in fade-in slide-in-from-bottom-2">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Settings2 className="w-4 h-4 text-primary" />
-                      <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center gap-2">
+                        <Settings2 className="w-4 h-4 text-primary" />
+                        <span className="text-xs font-semibold text-primary">Ações Corretivas Sugeridas</span>
+                      </div>
+                      {history.length > 0 && (
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 px-2 text-[10px] text-muted-foreground hover:text-primary gap-1"
+                          onClick={undoLastChange}
+                        >
+                          <RefreshCw className="w-3 h-3" />
+                          Desfazer ({history.length})
+                        </Button>
+                      )}
                     </div>
                     <div className="flex flex-wrap gap-2">
                       {suggestions.map((s, idx) => (
