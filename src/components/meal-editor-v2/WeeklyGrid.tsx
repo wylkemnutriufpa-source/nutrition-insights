@@ -52,6 +52,16 @@ const findFoodMatch = (text: string): FoodItem | null => {
 export function WeeklyGrid() {
   const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell } = useMealPlanEditorV2Store();
 
+  // Modo Diário Único: usamos day=0 como slot canônico, mas se o plano
+  // legado tiver itens apenas em outros dias, exibimos o primeiro encontrado.
+  const effectiveDay = (() => {
+    if (items.some((i) => i.day_of_week === 0)) return 0;
+    for (const d of [1, 2, 3, 4, 5, 6]) {
+      if (items.some((i) => i.day_of_week === d)) return d;
+    }
+    return 0;
+  })();
+
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
   const [quickAddText, setQuickAddText] = useState("");
