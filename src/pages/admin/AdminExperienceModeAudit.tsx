@@ -747,9 +747,8 @@ export default function AdminExperienceModeAudit() {
                     const isExpanded = expandedCids.has(r.correlation_id);
                     const breakdown = hasTimeline ? buildOutcomeBreakdown(group) : null;
                     return (
-                      <>
+                      <Fragment key={r.id}>
                         <tr
-                          key={r.id}
                           id={`audit-row-${r.id}`}
                           className="border-b border-border/50 align-top transition-shadow"
                         >
