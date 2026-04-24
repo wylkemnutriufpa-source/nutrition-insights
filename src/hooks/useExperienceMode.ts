@@ -296,7 +296,21 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
           throw err;
         }
 
+        // Admins never get blocked by experience_mode_locked
+        let isAdmin = false;
         if (profile?.experience_mode_locked && m !== 'basic') {
+          const rolesRes = await withTimeout(
+            (async () =>
+              supabase
+                .from("user_roles")
+                .select("role")
+                .eq("user_id", user.id))()
+          );
+          const { data: rolesData } = rolesRes as any;
+          isAdmin = Array.isArray(rolesData) && rolesData.some((r: any) => r.role === "admin");
+        }
+
+        if (profile?.experience_mode_locked && m !== 'basic' && !isAdmin) {
           const unlockDate = (profile as any).unlock_date as string | null;
           const block = buildBlockReason({
             attemptedMode: m,
