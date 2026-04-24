@@ -481,7 +481,21 @@ export default function MealPlanEditorV2() {
       toast.success("Plano corrigido salvo como draft! Abrindo no editor clínico...");
       setTimeout(() => navigate(`/meal-plans/${outcome.newPlanId}`, { replace: true }), 2000);
     } catch (e: any) {
-      toast.error(e.message || "Erro de conexão com o Motor Clínico");
+      const msg = String(e?.message || "");
+      console.error("[handleValidate] error:", e);
+
+      // Mensagens específicas para bloqueios clínicos comuns
+      if (/sem.?meta.?cal|meta.?cal[oó]rica|n[aã]o.?tem.?meta/i.test(msg) || /Anamnese.*Avalia[cç][aã]o/i.test(msg)) {
+        toast.error("⚠️ Paciente sem peso/altura cadastrados. Vá em Avaliação Física do paciente e preencha os dados antes de validar o plano.", { duration: 8000 });
+      } else if (/plano.?vazio|plano_vazio|n[aã]o tem refei[cç][oõ]es/i.test(msg)) {
+        toast.error("⚠️ O plano não tem refeições. Use 'Gerar plano' ou adicione itens manualmente antes de validar.", { duration: 8000 });
+      } else if (/Contexto.?da.?cl[ií]nica/i.test(msg)) {
+        toast.error("Recarregue a página — contexto da clínica não foi carregado.", { duration: 6000 });
+      } else if (/n[aã]o conseguiu persistir/i.test(msg)) {
+        toast.error("Auto-correção não pôde aplicar mudanças. Edite o plano manualmente ou regenere.", { duration: 6000 });
+      } else {
+        toast.error(msg || "Erro ao validar/corrigir o plano. Tente novamente.", { duration: 6000 });
+      }
     } finally {
       setValidating(false);
     }

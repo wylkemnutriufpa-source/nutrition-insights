@@ -20021,6 +20021,7 @@ export type Database = {
         Args: { plan_id: string }
         Returns: undefined
       }
+      reconcile_meal_plan_macros: { Args: { p_plan_id: string }; Returns: Json }
       reconcile_patient_plans: {
         Args: {
           p_end_date?: string
