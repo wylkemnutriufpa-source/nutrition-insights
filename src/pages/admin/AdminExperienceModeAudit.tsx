@@ -836,6 +836,9 @@ export default function AdminExperienceModeAudit() {
                       <Fragment key={r.id}>
                         <tr
                           id={`audit-row-${r.id}`}
+                          data-testid="emode-audit-row"
+                          data-correlation-id={r.correlation_id}
+                          data-outcome={r.outcome}
                           className="border-b border-border/50 align-top transition-shadow"
                         >
                           <td className="py-2 pr-1">
