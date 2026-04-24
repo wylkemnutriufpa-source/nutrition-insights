@@ -863,7 +863,7 @@ export default function DietTemplates() {
                       ) : (
                         <Check className="w-4 h-4" />
                       )}
-                      {applying ? "Aplicando..." : "Aplicar Modelo (7 dias)"}
+                      {applying ? "Aplicando..." : "Aplicar Modelo"}
                     </Button>
                   )}
                 </div>
