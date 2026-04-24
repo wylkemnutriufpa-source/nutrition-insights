@@ -86,6 +86,7 @@
     "vaul": "^0.9.9",
     "vite-plugin-pwa": "0.19.8",
     "workbox-window": "^7.4.0",
+    "xlsx": "^0.18.5",
     "zod": "^3.25.76",
     "zustand": "^5.0.12"
   },
