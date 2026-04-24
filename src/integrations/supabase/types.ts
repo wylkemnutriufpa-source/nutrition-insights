@@ -6202,6 +6202,41 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_plan_item_versions: {
+        Row: {
+          action_type: string
+          created_at: string
+          created_by: string | null
+          id: string
+          meal_plan_item_id: string
+          snapshot_data: Json
+        }
+        Insert: {
+          action_type: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meal_plan_item_id: string
+          snapshot_data: Json
+        }
+        Update: {
+          action_type?: string
+          created_at?: string
+          created_by?: string | null
+          id?: string
+          meal_plan_item_id?: string
+          snapshot_data?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_item_versions_meal_plan_item_id_fkey"
+            columns: ["meal_plan_item_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_items: {
         Row: {
           calories_target: number | null
@@ -18984,6 +19019,10 @@ export type Database = {
       flag_plan_review_needed: {
         Args: { _patient_id: string; _reason?: string }
         Returns: Json
+      }
+      fn_capture_meal_plan_item_version: {
+        Args: { p_action_type: string; p_item_id: string }
+        Returns: string
       }
       get_affiliate_commission_tier: {
         Args: { _affiliate_id: string }
