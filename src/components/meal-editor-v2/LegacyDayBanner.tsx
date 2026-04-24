@@ -10,6 +10,10 @@ import {
   type MigrationUndoEntry,
 } from "@/lib/legacyDayConsolidation";
 import { useLegacyBannerVisibility } from "@/hooks/useForceCanonicalDay";
+import {
+  logConsolidationPlan,
+  logUndoMigration,
+} from "@/lib/legacyMigrationLogger";
 import { toast } from "sonner";
 
 interface Props {
@@ -52,6 +56,17 @@ export default function LegacyDayBanner({ effectiveDay, forceCanonical, onToggle
     }
 
     const undoSnapshot = buildMigrationUndoSnapshot(items, plan.toMove);
+
+    // Log estruturado ANTES da mutação para preservar `from_day` original.
+    const itemsById = new Map(
+      items.map((i) => [i.id, { meal_type: i.meal_type, day_of_week: i.day_of_week }] as const)
+    );
+    logConsolidationPlan(plan, {
+      effectiveDay,
+      forceCanonical,
+      itemsById,
+    });
+
     plan.toMove.forEach((id) => updateItem(id, { day_of_week: 0 } as any));
 
     const movedSummary = formatMealTypeCounts(plan.movedByMealType);
@@ -88,9 +103,26 @@ export default function LegacyDayBanner({ effectiveDay, forceCanonical, onToggle
       toast.info("Nada para desfazer.");
       return;
     }
+
+    // Log antes da mutação (effectiveDay reflete o estado atual do header).
+    const itemsById = new Map(items.map((i) => [i.id, { meal_type: i.meal_type }] as const));
+    logUndoMigration(snapshot, {
+      effectiveDay,
+      forceCanonical,
+      itemsById,
+    });
+
     snapshot.forEach((entry) => {
       updateItem(entry.itemId, { day_of_week: entry.previousDay } as any);
     });
+
+    // CRÍTICO: ao desfazer, devolvemos o controle ao fallback automático.
+    // Sem isso o header continuaria preso em day 0 (forceCanonical=true)
+    // e mostraria totais=0, divergindo do conteúdo real (que voltou ao
+    // dia legado). Com fallback ON o header recalcula imediatamente o
+    // dia efetivo correto e o rótulo/totais voltam a coincidir.
+    onToggleForceCanonical(false);
+
     toast.success(`Migração desfeita: ${snapshot.length} item(ns) restaurado(s) ao dia original.`);
     setSummary(null);
   };
