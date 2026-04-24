@@ -32,20 +32,29 @@ function CorrelationIdBadge({ id }: { id: string }) {
     }
   };
   return (
-    <button
-      type="button"
-      onClick={onCopy}
-      data-testid="emode-correlation-id"
-      title="Clique para copiar o ID de correlação"
-      className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded-md border border-border bg-muted/40 hover:bg-muted text-[10px] font-mono text-muted-foreground transition-colors"
-    >
-      <span>ID: {id}</span>
-      {copied ? (
-        <Check className="w-3 h-3 text-emerald-600" aria-label="Copiado" />
-      ) : (
-        <Copy className="w-3 h-3" aria-label="Copiar" />
-      )}
-    </button>
+    <TooltipProvider delayDuration={150}>
+      <Tooltip open={copied ? true : undefined}>
+        <TooltipTrigger asChild>
+          <button
+            type="button"
+            onClick={onCopy}
+            data-testid="emode-correlation-id"
+            aria-label="Copiar ID de correlação"
+            className="inline-flex items-center gap-1 px-2 py-0.5 mt-1 rounded-md border border-border bg-muted/40 hover:bg-muted text-[10px] font-mono text-muted-foreground transition-colors"
+          >
+            <span>ID: {id}</span>
+            {copied ? (
+              <Check className="w-3 h-3 text-emerald-600" aria-label="Copiado" />
+            ) : (
+              <Copy className="w-3 h-3" aria-label="Copiar" />
+            )}
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="top" data-testid="emode-correlation-tooltip">
+          {copied ? "Copiado!" : "Clique para copiar"}
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 
