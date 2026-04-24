@@ -221,14 +221,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   });
 
   const [isApplyingSuggestion, setIsApplyingSuggestion] = useState(false);
-  const [history, setHistory] = useState<{
-    description: string;
-    protein: number;
-    carbs: number;
-    fat: number;
-    calories: number;
-    timestamp: number;
-  }[]>([]);
+  const [showHistory, setShowHistory] = useState(false);
+  const [dbHistory, setDbHistory] = useState<any[]>([]);
   
   const [pendingSuggestion, setPendingSuggestion] = useState<{
     name: string;
@@ -237,30 +231,45 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     after: { protein: number; carbs: number; fat: number; calories: number };
   } | null>(null);
 
-  const saveToHistory = () => {
-    const current = {
-      description: meal.description || "",
-      protein: Number(meal.protein_target || 0),
-      carbs: Number(meal.carbs_target || 0),
-      fat: Number(meal.fat_target || 0),
-      calories: Number(meal.calories_target || 0),
-      timestamp: Date.now()
-    };
-    setHistory(prev => [current, ...prev].slice(0, 5));
+  const fetchDbHistory = async () => {
+    if (!meal?.itemId) return;
+    const { data } = await supabase
+      .from("meal_plan_item_versions")
+      .select("*")
+      .eq("meal_plan_item_id", meal.itemId)
+      .order("created_at", { ascending: false });
+    if (data) setDbHistory(data);
   };
 
-  const undoLastChange = () => {
-    if (history.length === 0 || !meal.itemId || !onUpdateItem) return;
-    const last = history[0];
-    onUpdateItem(meal.itemId, {
-      description: last.description,
-      protein_target: last.protein,
-      carbs_target: last.carbs,
-      fat_target: last.fat,
-      calories_target: last.calories
+  const saveToHistory = async (actionType: string = "manual_update") => {
+    if (!meal?.itemId) return;
+    // Acionar a captura de versão no banco via RPC ou inserção direta
+    // Para simplificar e garantir atomicidade, usaremos a função capturar via Supabase
+    await supabase.rpc("fn_capture_meal_plan_item_version", {
+      p_item_id: meal.itemId,
+      p_action_type: actionType
     });
-    setHistory(prev => prev.slice(1));
-    toast.success("↩ Alteração desfeita com sucesso");
+    fetchDbHistory();
+  };
+
+  const rollbackToVersion = async (version: any) => {
+    if (!meal?.itemId || !onUpdateItem) return;
+    const snap = version.snapshot_data;
+    
+    // Antes de fazer o rollback, salvamos a versão atual como 'rollback_source'
+    await saveToHistory("rollback_trigger");
+    
+    onUpdateItem(meal.itemId, {
+      description: snap.description,
+      protein_target: snap.protein_target,
+      carbs_target: snap.carbs_target,
+      fat_target: snap.fat_target,
+      calories_target: snap.calories_target,
+      title: snap.title
+    });
+    
+    setShowHistory(false);
+    toast.success("📚 Versão clínica restaurada com sucesso");
   };
 
   const findFoodInDatabase = (text: string) => {
@@ -696,8 +705,73 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 Voltar
               </Button>
             </div>
-          </DialogContent>
-        </Dialog>
+                  </DialogContent>
+                </Dialog>
+
+                {/* Modal de Histórico Clínico */}
+                <Dialog open={showHistory} onOpenChange={setShowHistory}>
+                  <DialogContent className="max-w-lg p-6 rounded-2xl border-border/50 shadow-2xl max-h-[80vh] flex flex-col">
+                    <DialogHeader>
+                      <DialogTitle className="flex items-center gap-2 text-base font-bold">
+                        <ScrollText className="w-5 h-5 text-primary" />
+                        Histórico Clínico de Versões
+                      </DialogTitle>
+                      <DialogDescription className="text-sm">
+                        Rastreabilidade total de todas as alterações feitas nesta refeição.
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <div className="flex-1 overflow-y-auto pr-2 space-y-3 mt-4">
+                      {dbHistory.length === 0 ? (
+                        <p className="text-center text-muted-foreground py-10 text-sm italic">Nenhuma versão anterior registrada.</p>
+                      ) : (
+                        dbHistory.map((v, i) => (
+                          <div key={v.id} className="p-4 rounded-xl border border-border bg-secondary/20 space-y-3 group hover:border-primary/30 transition-colors">
+                            <div className="flex items-start justify-between">
+                              <div className="space-y-0.5">
+                                <p className="text-xs font-bold flex items-center gap-1.5 uppercase tracking-wider text-muted-foreground">
+                                  <Clock className="w-3 h-3" />
+                                  {new Date(v.created_at).toLocaleString("pt-BR")}
+                                </p>
+                                <Badge variant="outline" className="text-[9px] bg-primary/10 text-primary border-primary/20">
+                                  {v.action_type === 'manual_update' ? 'Edição Manual' : 
+                                   v.action_type === 'auto_correction' ? 'Auto-Correção' : 'Restauração'}
+                                </Badge>
+                              </div>
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-7 text-[10px] gap-1.5 bg-white opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => rollbackToVersion(v)}
+                              >
+                                <RefreshCw className="w-3 h-3" />
+                                Restaurar
+                              </Button>
+                            </div>
+                            
+                            <div className="grid grid-cols-4 gap-2">
+                              {[
+                                { l: 'Kcal', v: v.snapshot_data.calories_target },
+                                { l: 'Prot', v: v.snapshot_data.protein_target },
+                                { l: 'Carb', v: v.snapshot_data.carbs_target },
+                                { l: 'Fat', v: v.snapshot_data.fat_target },
+                              ].map(m => (
+                                <div key={m.l} className="text-center bg-white/50 rounded-lg py-1 border border-border/30">
+                                  <p className="text-[8px] uppercase text-muted-foreground font-bold">{m.l}</p>
+                                  <p className="text-xs font-bold">{Math.round(m.v || 0)}</p>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        ))
+                      )}
+                    </div>
+
+                    <Button variant="outline" className="w-full mt-4" onClick={() => setShowHistory(false)}>
+                      Fechar
+                    </Button>
+                  </DialogContent>
+                </Dialog>
 
         <datalist id={PORTION_DATALIST_ID}>
           {getPortionAutocompleteOptions(
