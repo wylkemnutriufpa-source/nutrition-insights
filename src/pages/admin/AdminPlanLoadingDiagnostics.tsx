@@ -155,7 +155,7 @@ export default function AdminPlanLoadingDiagnostics() {
 
     // Trend buckets per day
     if (!trendAlertsRes.error) {
-      const alertRows = (trendAlertsRes.data || []) as Array<{ alert_type: string; created_at: string }>;
+      const alertRows = ((trendAlertsRes.data || []) as unknown) as Array<{ alert_type: string; created_at: string }>;
       setTrend7(buildTrend(alertRows, 7));
       setTrend30(buildTrend(alertRows, 30));
     }
