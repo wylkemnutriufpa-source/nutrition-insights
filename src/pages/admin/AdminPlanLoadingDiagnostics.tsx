@@ -83,6 +83,9 @@ function buildTrend(
   return buckets;
 }
 
+const UNKNOWN_LIMIT_OPTIONS = [25, 50, 100, 200] as const;
+type UnknownLimit = (typeof UNKNOWN_LIMIT_OPTIONS)[number];
+
 export default function AdminPlanLoadingDiagnostics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -94,6 +97,8 @@ export default function AdminPlanLoadingDiagnostics() {
   const [trend7, setTrend7] = useState<TrendBucket[]>([]);
   const [trend30, setTrend30] = useState<TrendBucket[]>([]);
   const [trendWindow, setTrendWindow] = useState<7 | 30>(7);
+  const [unknownLimit, setUnknownLimit] = useState<UnknownLimit>(50);
+  const [unknownPage, setUnknownPage] = useState<number>(1);
 
   const load = useCallback(async () => {
     setLoading(true);
