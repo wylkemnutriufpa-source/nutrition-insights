@@ -202,7 +202,14 @@ export function WeeklyGrid() {
           <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
             <div>
               <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">PLANO ÚNICO (GLOBAL)</span>
-              <p className="text-[10px] text-muted-foreground mt-0.5">Modelo de Dia Único com Substituições Inteligentes</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                Modelo de Dia Único com Substituições Inteligentes
+                {effectiveDay !== 0 && (
+                  <span className="ml-2 text-warning-foreground bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
+                    legado: dia #{effectiveDay}
+                  </span>
+                )}
+              </p>
             </div>
             {(() => {
               const t = getDayTotals(effectiveDay);
