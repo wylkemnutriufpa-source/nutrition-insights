@@ -26,6 +26,7 @@ interface MealPlan {
   title: string;
   start_date: string;
   totals_status?: string;
+  plan_mode?: "weekly" | "single_day" | null;
 }
 
 export default function DailyMealPlanInline() {
