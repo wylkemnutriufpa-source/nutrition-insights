@@ -202,6 +202,7 @@ describe("useExperienceModeState", () => {
 
     expect(caughtError.code).toBe("MODE_LOCKED");
     expect(caughtError.unlock_date).toBe(unlockDate);
+  });
 
   it("should clear session state on logout", async () => {
     sessionStorage.setItem("fj_experience_mode_failed", "pro");
