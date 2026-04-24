@@ -309,6 +309,140 @@ export default function AdminPlanLoadingDiagnostics() {
           </CardContent>
         </Card>
 
+        {/* Unknown plan_status by workspace */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Status desconhecidos por workspace
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Onde valores de <code>plan_status</code> fora do catálogo aparecem (top 50).
+              Workspace = <code>tenant_id</code> ou, se ausente, <code>nutritionist_id</code>.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {unknownByWorkspace.length === 0 ? (
+              <p className="text-sm text-muted-foreground" data-testid="plan-diagnostics-no-unknown-ws">
+                Nenhum status desconhecido detectado nos planos.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table
+                  className="w-full text-sm"
+                  data-testid="plan-diagnostics-unknown-ws"
+                >
+                  <thead className="text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="text-left py-2">plan_status</th>
+                      <th className="text-left py-2">workspace</th>
+                      <th className="text-right py-2">ocorrências</th>
+                      <th className="text-right py-2">visto por último</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unknownByWorkspace.map((u, idx) => (
+                      <tr key={idx} className="border-t border-border">
+                        <td className="py-2">
+                          <code className="text-xs">{u.plan_status}</code>
+                        </td>
+                        <td className="py-2">
+                          <code className="text-[10px] break-all">{u.workspace_id}</code>
+                        </td>
+                        <td className="py-2 text-right font-mono">{u.count}</td>
+                        <td className="py-2 text-right text-[10px] text-muted-foreground">
+                          {u.last_seen ? new Date(u.last_seen).toLocaleString("pt-BR") : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Trend table */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">
+                Tendência de PLAN_STATUS_UNKNOWN e PLAN_VISIBILITY_DROP
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Volume diário; útil para detectar crescimento súbito.
+              </p>
+            </div>
+            <div className="flex gap-1" data-testid="plan-diagnostics-trend-window">
+              <Button
+                size="sm"
+                variant={trendWindow === 7 ? "default" : "outline"}
+                onClick={() => setTrendWindow(7)}
+              >
+                7d
+              </Button>
+              <Button
+                size="sm"
+                variant={trendWindow === 30 ? "default" : "outline"}
+                onClick={() => setTrendWindow(30)}
+              >
+                30d
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {(trendWindow === 7 ? trend7 : trend30).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem dados.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="plan-diagnostics-trend">
+                  <thead className="text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="text-left py-2">data</th>
+                      <th className="text-right py-2">PLAN_STATUS_UNKNOWN</th>
+                      <th className="text-right py-2">PLAN_VISIBILITY_DROP</th>
+                      <th className="text-left py-2 pl-4">distribuição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(trendWindow === 7 ? trend7 : trend30).map((b) => {
+                      const max = Math.max(
+                        1,
+                        ...((trendWindow === 7 ? trend7 : trend30).flatMap((x) => [
+                          x.PLAN_STATUS_UNKNOWN,
+                          x.PLAN_VISIBILITY_DROP,
+                        ])),
+                      );
+                      const wU = Math.round((b.PLAN_STATUS_UNKNOWN / max) * 100);
+                      const wV = Math.round((b.PLAN_VISIBILITY_DROP / max) * 100);
+                      return (
+                        <tr key={b.date} className="border-t border-border">
+                          <td className="py-2 text-xs font-mono">{b.date}</td>
+                          <td className="py-2 text-right font-mono">{b.PLAN_STATUS_UNKNOWN}</td>
+                          <td className="py-2 text-right font-mono">{b.PLAN_VISIBILITY_DROP}</td>
+                          <td className="py-2 pl-4 w-[40%]">
+                            <div className="flex flex-col gap-1">
+                              <div
+                                className="h-1.5 rounded bg-amber-500/60"
+                                style={{ width: `${wU}%` }}
+                                title={`PLAN_STATUS_UNKNOWN: ${b.PLAN_STATUS_UNKNOWN}`}
+                              />
+                              <div
+                                className="h-1.5 rounded bg-rose-500/60"
+                                style={{ width: `${wV}%` }}
+                                title={`PLAN_VISIBILITY_DROP: ${b.PLAN_VISIBILITY_DROP}`}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-base">Últimos alertas relacionados a planos</CardTitle>
