@@ -15,6 +15,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import RequestUnlockDialog from "./RequestUnlockDialog";
 
 function CorrelationIdBadge({ id }: { id: string }) {
   const [copied, setCopied] = useState(false);
