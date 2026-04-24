@@ -417,7 +417,21 @@ export default function AdminExperienceModeAudit() {
         .map((v) => `"${String(v).replace(/\n/g, " ")}"`)
         .join(",");
     });
-    const csv = [header.join(","), ...lines].join("\n");
+    // Header section: applied filters context (commented rows recognised by Excel/CSV viewers)
+    const exportedAt = new Date().toISOString();
+    const escapeCsv = (v: string) => `"${v.replace(/"/g, '""').replace(/\n/g, " ")}"`;
+    const filterHeader = [
+      `# FitJourney — Auditoria Modo de Experiência`,
+      `# Exportado em: ${exportedAt}`,
+      `# Filtros aplicados:`,
+      `#   outcome=${outcome}`,
+      `#   de=${from || "—"}`,
+      `#   até=${to || "—"}`,
+      `#   busca=${search || "—"}`,
+      `#   total_registros=${filtered.length}`,
+      ``,
+    ].map((l) => escapeCsv(l)).join("\n");
+    const csv = [filterHeader, header.join(","), ...lines].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
