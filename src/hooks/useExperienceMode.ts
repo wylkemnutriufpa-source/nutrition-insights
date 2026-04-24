@@ -127,6 +127,12 @@ export interface ExperienceModeContextValue {
   isLoading: boolean;
   retryLastMode: () => void;
   failedMode: ExperienceMode | null;
+  /** Last error from a failed attempt — exposes correlationId & block metadata */
+  lastError: ModeChangeError | null;
+  /** True when last failure was network/offline (vs locked) */
+  isOffline: boolean;
+  /** Pending offline replay queue size */
+  pendingQueueSize: number;
   /** Show content only at given mode or above */
   minMode: (min: ExperienceMode) => boolean;
   /** Effective role used for route gating */
@@ -143,6 +149,9 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
   isLoading: false,
   retryLastMode: () => {},
   failedMode: null,
+  lastError: null,
+  isOffline: false,
+  pendingQueueSize: 0,
   minMode: () => true,
   role: "professional",
 });
