@@ -165,8 +165,9 @@ export default function AdminPlanLoadingDiagnostics() {
       }>;
       const breakdown = new Map<string, UnknownStatusBreakdown>();
       for (const r of unknownRows) {
-        const status = r.plan_status || "draft";
-        if (KNOWN_PLAN_STATUS_KEYS.includes(status)) continue;
+        // Use isTrulyUnknownPlanStatus para excluir null/"" do bucket Desconhecido
+        if (!isTrulyUnknownPlanStatus(r.plan_status)) continue;
+        const status = String(r.plan_status);
         const wsKey = r.tenant_id || r.nutritionist_id || "(sem workspace)";
         const k = `${status}::${wsKey}`;
         const cur = breakdown.get(k) || {
@@ -179,8 +180,10 @@ export default function AdminPlanLoadingDiagnostics() {
         if (r.updated_at && r.updated_at > cur.last_seen) cur.last_seen = r.updated_at;
         breakdown.set(k, cur);
       }
+      // Mantém TODAS as ocorrências; o slicing/paginação acontece no render
+      // para permitir navegação sem refetch.
       setUnknownByWorkspace(
-        Array.from(breakdown.values()).sort((a, b) => b.count - a.count).slice(0, 50),
+        Array.from(breakdown.values()).sort((a, b) => b.count - a.count),
       );
     }
 
