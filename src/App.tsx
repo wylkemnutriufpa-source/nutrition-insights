@@ -114,6 +114,7 @@ const AdminPatientFeatures = lazy(() => import("./pages/AdminPatientFeatures"));
 const UserGuide = lazy(() => import("./pages/UserGuide"));
 const ProfessionalGuide = lazy(() => import("./pages/ProfessionalGuide"));
 const AuditLogs = lazy(() => import("./pages/AuditLogs"));
+const ClinicalHealthDashboard = lazy(() => import("./pages/ClinicalHealthDashboard"));
 const Curiosidades = lazy(() => import("./pages/Curiosidades"));
 const Planner = lazy(() => import("./pages/Planner"));
 const OnboardingPipeline = lazy(() => import("./pages/OnboardingPipeline"));
@@ -642,7 +643,8 @@ const App = () => (
               <Route path="/admin/template-nutrition-audit" element={<AdminRoute><LP section="Auditoria Nutricional"><TemplateNutritionAudit /></LP></AdminRoute>} />
               <Route path="/admin/mission-control" element={<AdminRoute><LP section="Mission Control"><MissionControl /></LP></AdminRoute>} />
               <Route path="/admin/campaigns" element={<AdminRoute><LP section="Campanhas"><CampaignCenter /></LP></AdminRoute>} />
-              <Route path="/system-diagnostics" element={<AdminRoute><LP section="System Diagnostics"><SystemDiagnostics /></LP></AdminRoute>} />
+               <Route path="/system-diagnostics" element={<AdminRoute><LP section="System Diagnostics"><SystemDiagnostics /></LP></AdminRoute>} />
+               <Route path="/admin/health" element={<AdminRoute><LP section="System Health"><ClinicalHealthDashboard /></LP></AdminRoute>} />
               <Route path="/system-diagnostics/realtime" element={<AdminRoute><LP section="Realtime Debug"><RealtimeDebugCenter /></LP></AdminRoute>} />
               <Route path="/admin/personal-workouts" element={<AdminRoute><LP section="Personal Trainer"><PersonalWorkouts /></LP></AdminRoute>} />
               <Route path="/coach-bodybuilder" element={<NutritionistRoute><LP section="Coach Bodybuilder"><CoachBodybuilder /></LP></NutritionistRoute>} />
