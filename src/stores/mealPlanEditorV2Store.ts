@@ -318,15 +318,18 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const patientName = profile?.full_name || "Paciente";
     const items = (itemsData || []) as MealPlanItem[];
 
+    // Migration defensiva: planos antigos sem plan_mode → 'weekly'
+    const normalizedPlan = ensurePlanMode(planData) as typeof planData;
+
     set({
-      plan: planData,
+      plan: normalizedPlan,
       patientName,
       items,
       hydrated: true,
       hydrating: false,
     });
 
-    writeCache(planId, planData, patientName, items);
+    writeCache(planId, normalizedPlan, patientName, items);
 
     // Silently resolve missing visuals for items without images
     resolveVisualsForItems(items);
