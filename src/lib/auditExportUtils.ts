@@ -62,6 +62,42 @@ export const requestAsyncExport = async (options: { format: string; filters: any
   return data;
 };
 
+/**
+ * Constrói o conteúdo CSV (string crua, sem prefixo data:URI) das linhas
+ * de auditoria. Exposto para teste.
+ *
+ * Inclui colunas de classificação do plan_status para auditoria rápida
+ * da origem dos alertas:
+ *   • PlanStatus           → valor cru (vazio quando ausente)
+ *   • PlanStatusKnown      → "conhecido" | "desconhecido" | "ausente"
+ */
+export function buildAuditCsv(data: any[]): string {
+  const header = [
+    "ID",
+    "Type",
+    "Message",
+    "PatientID",
+    "CorrelationID",
+    "PlanStatus",
+    "PlanStatusKnown",
+    "CreatedAt",
+  ].join(",");
+  const lines = data.map((a) => {
+    const cls = classifyAlertPlanStatus(a);
+    return [
+      csvEscape(a.id),
+      csvEscape(a.alert_type),
+      csvEscape(a.message),
+      csvEscape(a.metadata?.patient_id ?? ""),
+      csvEscape(a.correlation_id ?? ""),
+      csvEscape(cls.value),
+      csvEscape(cls.classification),
+      csvEscape(a.created_at),
+    ].join(",");
+  });
+  return [header, ...lines].join("\n");
+}
+
 export const exportData = async ({ format, data, filters, filename, isAsync }: ExportOptions) => {
   if (isAsync) {
     return requestAsyncExport({ format, filters });
@@ -69,30 +105,32 @@ export const exportData = async ({ format, data, filters, filename, isAsync }: E
 
   const ts = new Date().getTime();
   const baseName = filename || `audit_export_${ts}`;
-  
+
   await logExportActivity({ format, filters, count: data.length });
 
   if (format === 'CSV') {
-    const csvContent = "data:text/csv;charset=utf-8," + 
-      ["ID,Type,Message,PatientID,CorrelationID,CreatedAt"].join(",") + "\n" +
-      data.map(a => `${a.id},${a.alert_type},"${a.message}",${a.metadata?.patient_id},${a.correlation_id},${a.created_at}`).join("\n");
-    const encodedUri = encodeURI(csvContent);
+    const csvContent = "data:text/csv;charset=utf-8," + encodeURIComponent(buildAuditCsv(data));
     const link = document.createElement("a");
-    link.setAttribute("href", encodedUri);
+    link.setAttribute("href", csvContent);
     link.setAttribute("download", `${baseName}.csv`);
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
-  } 
+  }
   else if (format === 'XLSX') {
-    const worksheet = XLSX.utils.json_to_sheet(data.map(a => ({
-      ID: a.id,
-      Type: a.alert_type,
-      Message: a.message,
-      PatientID: a.metadata?.patient_id,
-      CorrelationID: a.correlation_id,
-      CreatedAt: a.created_at
-    })));
+    const worksheet = XLSX.utils.json_to_sheet(data.map(a => {
+      const cls = classifyAlertPlanStatus(a);
+      return {
+        ID: a.id,
+        Type: a.alert_type,
+        Message: a.message,
+        PatientID: a.metadata?.patient_id,
+        CorrelationID: a.correlation_id,
+        PlanStatus: cls.value,
+        PlanStatusKnown: cls.classification,
+        CreatedAt: a.created_at,
+      };
+    }));
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "AuditData");
     XLSX.writeFile(workbook, `${baseName}.xlsx`);
@@ -101,8 +139,11 @@ export const exportData = async ({ format, data, filters, filename, isAsync }: E
     const doc = new jsPDF();
     doc.text("Audit Report", 14, 15);
     (doc as any).autoTable({
-      head: [['Type', 'Message', 'Correlation']],
-      body: data.map(a => [a.alert_type, a.message, a.correlation_id]),
+      head: [['Type', 'Message', 'Correlation', 'PlanStatus', 'Status?']],
+      body: data.map(a => {
+        const cls = classifyAlertPlanStatus(a);
+        return [a.alert_type, a.message, a.correlation_id, cls.value, cls.classification];
+      }),
     });
     doc.save(`${baseName}.pdf`);
   }
