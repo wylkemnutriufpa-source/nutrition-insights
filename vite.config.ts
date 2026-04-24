@@ -4,9 +4,24 @@ import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
+// Build identity (hash + timestamp) injected into the client bundle so the
+// BuildStatus panel and E2E suite can verify which build is actually running.
+const BUILD_TIMESTAMP = new Date().toISOString();
+const BUILD_HASH =
+  process.env.LOVABLE_COMMIT_SHA ||
+  process.env.VERCEL_GIT_COMMIT_SHA ||
+  process.env.GITHUB_SHA ||
+  // Fallback: timestamp-derived short hash, unique per build.
+  Math.random().toString(36).slice(2, 10);
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: "/",
+  define: {
+    __BUILD_HASH__: JSON.stringify(BUILD_HASH),
+    __BUILD_TIMESTAMP__: JSON.stringify(BUILD_TIMESTAMP),
+    __BUILD_MODE__: JSON.stringify(mode),
+  },
   server: {
     host: "::",
     port: 8080,
