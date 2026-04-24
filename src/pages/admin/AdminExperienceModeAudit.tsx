@@ -141,8 +141,11 @@ export default function AdminExperienceModeAudit() {
     localStorage.setItem(RETRY_THRESHOLD_KEY, String(retryThreshold));
   }, [retryThreshold]);
 
-  // Timeline: which correlationIds are expanded
-  const [expandedCids, setExpandedCids] = useState<Set<string>>(new Set());
+  // Timeline: which correlationIds are expanded (persisted across reloads)
+  const [expandedCids, setExpandedCids] = useState<Set<string>>(() => loadExpandedCids());
+  useEffect(() => {
+    saveExpandedCids(expandedCids);
+  }, [expandedCids]);
   const toggleCid = useCallback((cid: string) => {
     setExpandedCids((prev) => {
       const next = new Set(prev);
@@ -151,6 +154,9 @@ export default function AdminExperienceModeAudit() {
       return next;
     });
   }, []);
+
+  // High-retry alert local search
+  const [highRetrySearch, setHighRetrySearch] = useState("");
 
   const load = async () => {
     setLoading(true);
