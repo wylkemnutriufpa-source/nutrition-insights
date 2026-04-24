@@ -2,22 +2,11 @@
  * FitJourney — Chunk Hash Validator
  *
  * Detecta se o navegador está executando assets de um build ANTERIOR ao
- * declarado em __BUILD_INFO__. Cenários típicos:
+ * declarado em __BUILD_INFO__.
  *
- *  - CDN serviu /index.html novo, mas chunks antigos ainda em cache
- *  - Service Worker servindo bundle pré-deploy
- *  - Aba ficou aberta entre dois deploys
- *
- * Estratégia (sem rede extra):
- *  1. Lê todos os <script src=".../assets/*-[hash].js"> e <link href=...>
- *     já presentes no documento.
- *  2. Extrai os hashes (8+ chars hex/base36 entre o último "-" e a extensão).
- *  3. Compara com BUILD_INFO.shortHash. Se NENHUM chunk contiver o hash atual,
- *     há forte indício de cache antigo (mismatch).
- *
- * Notas:
- *  - Em DEV (vite serve), os assets não têm hash → retorna `ok` e marca dev.
- *  - Não dispara reload automático: apenas relata. UI decide o que fazer.
+ * v2: agora também monitora chunks injetados em runtime (dynamic import)
+ *     via MutationObserver + PerformanceObserver, e pode reavaliar a
+ *     validação após o primeiro render.
  */
 import { BUILD_INFO } from "@/lib/buildInfo";
 
@@ -29,11 +18,19 @@ export interface ChunkValidationResult {
   loadedHashes: string[];
   hashedAssetCount: number;
   message: string;
+  /** URLs completas dos assets analisados (útil em bug reports). */
+  loadedUrls?: string[];
+  /** Inclui assets carregados dinamicamente após primeiro render. */
+  includesDynamic?: boolean;
 }
 
 const HASHED_RE = /\/assets\/[^/?#]+-([a-z0-9]{6,})\.(?:js|css|mjs)/i;
 
-function collectAssetUrls(): string[] {
+/** Conjunto global de URLs já capturadas (estático + dinâmico). */
+const dynamicUrls = new Set<string>();
+let dynamicObserverInstalled = false;
+
+function collectStaticAssetUrls(): string[] {
   const urls: string[] = [];
   document.querySelectorAll<HTMLScriptElement>("script[src]").forEach((s) => {
     if (s.src) urls.push(s.src);
@@ -46,7 +43,52 @@ function collectAssetUrls(): string[] {
   return urls;
 }
 
-export function validateChunkHashes(): ChunkValidationResult {
+/**
+ * Instala observadores que capturam chunks adicionados em runtime
+ * (dynamic import emite <script> + <link rel=modulepreload>, e o navegador
+ * registra entradas em PerformanceObserver "resource").
+ *
+ * Idempotente: pode ser chamada várias vezes.
+ */
+export function installDynamicChunkObservers(): void {
+  if (typeof window === "undefined" || dynamicObserverInstalled) return;
+  dynamicObserverInstalled = true;
+
+  // 1) MutationObserver — captura <script>/<link> injetados pelo loader do Vite.
+  try {
+    const mo = new MutationObserver((mutations) => {
+      for (const m of mutations) {
+        m.addedNodes.forEach((n) => {
+          if (!(n instanceof HTMLElement)) return;
+          if (n.tagName === "SCRIPT" && (n as HTMLScriptElement).src) {
+            dynamicUrls.add((n as HTMLScriptElement).src);
+          }
+          if (n.tagName === "LINK") {
+            const link = n as HTMLLinkElement;
+            if (link.href && (link.rel === "stylesheet" || link.rel === "modulepreload")) {
+              dynamicUrls.add(link.href);
+            }
+          }
+        });
+      }
+    });
+    mo.observe(document.documentElement, { childList: true, subtree: true });
+  } catch {}
+
+  // 2) PerformanceObserver — captura QUALQUER recurso carregado, mesmo que
+  //    o elemento DOM já tenha sido removido (ex.: prefetch concluído).
+  try {
+    const po = new PerformanceObserver((list) => {
+      for (const entry of list.getEntries()) {
+        const url = (entry as PerformanceResourceTiming).name;
+        if (HASHED_RE.test(url)) dynamicUrls.add(url);
+      }
+    });
+    po.observe({ type: "resource", buffered: true });
+  } catch {}
+}
+
+export function validateChunkHashes(opts?: { includeDynamic?: boolean }): ChunkValidationResult {
   if (typeof document === "undefined") {
     return {
       status: "unknown",
@@ -67,11 +109,20 @@ export function validateChunkHashes(): ChunkValidationResult {
     };
   }
 
-  const urls = collectAssetUrls();
+  const includeDynamic = opts?.includeDynamic ?? true;
+  const urls = [
+    ...collectStaticAssetUrls(),
+    ...(includeDynamic ? Array.from(dynamicUrls) : []),
+  ];
+
+  const seen = new Set<string>();
   const loadedHashes: string[] = [];
   for (const url of urls) {
     const m = HASHED_RE.exec(url);
-    if (m && m[1]) loadedHashes.push(m[1]);
+    if (m && m[1] && !seen.has(m[1])) {
+      seen.add(m[1]);
+      loadedHashes.push(m[1]);
+    }
   }
 
   if (loadedHashes.length === 0) {
@@ -81,6 +132,8 @@ export function validateChunkHashes(): ChunkValidationResult {
       loadedHashes: [],
       hashedAssetCount: 0,
       message: "Nenhum asset hash detectado",
+      loadedUrls: urls,
+      includesDynamic: includeDynamic,
     };
   }
 
@@ -95,18 +148,19 @@ export function validateChunkHashes(): ChunkValidationResult {
       expectedHash: BUILD_INFO.shortHash,
       loadedHashes,
       hashedAssetCount: loadedHashes.length,
-      message: `OK (${loadedHashes.length} assets)`,
+      message: `OK (${loadedHashes.length} assets${includeDynamic ? ", inclui dinâmicos" : ""})`,
+      loadedUrls: urls,
+      includesDynamic: includeDynamic,
     };
   }
 
-  // Heurística secundária: se /index.html declara __BUILD_HASH__ mas
-  // nenhum chunk carregado contém esse fragmento, é mismatch real
-  // (CDN ou SW servindo assets de build anterior).
   return {
     status: "mismatch",
     expectedHash: BUILD_INFO.shortHash,
     loadedHashes,
     hashedAssetCount: loadedHashes.length,
     message: `Hash do build (${BUILD_INFO.shortHash}) não encontrado em nenhum chunk carregado`,
+    loadedUrls: urls,
+    includesDynamic: includeDynamic,
   };
 }
