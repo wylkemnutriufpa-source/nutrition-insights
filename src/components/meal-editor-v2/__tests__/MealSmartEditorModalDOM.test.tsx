@@ -78,13 +78,6 @@ describe('MealSmartEditorModal DOM & Accessibility', () => {
   });
 
   it('should update aria-live message when reducing from 5 to 4 substitutions', async () => {
-    const itemWithManySubs = {
-      ...mockItem,
-      edit_metadata: {
-        substitutions_json: ['1', '2', '3', '4', '5']
-      }
-    };
-    
     const { rerender } = render(
       <MealSmartEditorModal 
         open={true} 
@@ -93,22 +86,35 @@ describe('MealSmartEditorModal DOM & Accessibility', () => {
       />
     );
 
+    // Initial state (4 subs from mockItem)
+    expect(screen.getByText(/Prévia do Plano/i)).toBeDefined();
+
+    // Rerender with 5 subs (Over limit)
+    const itemWithManySubs = {
+      ...mockItem,
+      edit_metadata: {
+        substitutions_json: ['1', '2', '3', '4', '5']
+      }
+    };
     (useMealPlanEditorV2Store as any).mockReturnValue({
       items: [itemWithManySubs],
       updateItem: mockUpdateItem,
     });
 
-    expect(screen.getByText(/Limite Excedido/i)).toBeDefined();
+    rerender(
+      <MealSmartEditorModal 
+        open={true} 
+        onOpenChange={() => {}} 
+        itemId="item-1" 
+      />
+    );
 
-    // Rerender with 4 subs
-    const itemWith4Subs = {
-      ...mockItem,
-      edit_metadata: {
-        substitutions_json: ['1', '2', '3', '4']
-      }
-    };
+    expect(screen.getByText(/Limite Excedido/i)).toBeDefined();
+    expect(screen.getByRole('status').textContent).toContain('Apenas as 4 primeiras serão salvas');
+
+    // Rerender back to 4 subs
     (useMealPlanEditorV2Store as any).mockReturnValue({
-      items: [itemWith4Subs],
+      items: [mockItem],
       updateItem: mockUpdateItem,
     });
 
