@@ -741,9 +741,6 @@ export default function HybridPlanBuilder() {
             )}
           </div>
         </div>
-      </div>
-    </div>
-  </div>
         <DragOverlay dropAnimation={null}>
           {activeDragData && (
             <div className="px-3 py-2 rounded-lg bg-card border border-primary shadow-lg text-xs font-medium flex items-center gap-2 pointer-events-none">
