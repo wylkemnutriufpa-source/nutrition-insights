@@ -18,12 +18,16 @@ import {
   PlusCircle,
   History,
   Info,
+  AlertCircle,
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import { MEAL_TEMPLATES } from "./MealTemplatePanel";
 import { cn } from "@/lib/utils";
+import { normalizeSubstitutions, formatFinalDescription } from "./mealEditorHelpers";
+import { Separator } from "@/components/ui/separator";
+import { Badge } from "@/components/ui/badge";
 
 interface MealSmartEditorModalProps {
   open: boolean;
@@ -75,14 +79,8 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = () => {
-    // 1. Limpeza, normalização e desduplicação das substituições (limite de 4)
-    const cleanedSubs = getNormalizedSubs().slice(0, 4);
-
-    let finalDescription = description;
-    if (cleanedSubs.length > 0) {
-      finalDescription = description.split(/\n\n🔄 Substituições:\n/)[0];
-      finalDescription += "\n\n🔄 Substituições:\n" + cleanedSubs.join("\n");
-    }
+    const cleanedSubs = normalizeSubstitutions(substitutions);
+    const finalDescription = formatFinalDescription(description, cleanedSubs);
 
     const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
 
@@ -147,12 +145,14 @@ export function MealSmartEditorModal({
   };
 
   const getNormalizedSubs = () => {
-    return Array.from(new Set(
-      substitutions
-        .map(s => String(s).trim().replace(/\s+/g, ' '))
-        .filter(s => s.length > 0)
-    )).sort();
+    return normalizeSubstitutions(substitutions);
   };
+
+  const isOverLimit = Array.from(new Set(
+    substitutions
+      .map(s => String(s).trim().replace(/\s+/g, ' '))
+      .filter(s => s.length > 0)
+  )).length > 4;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -356,31 +356,44 @@ export function MealSmartEditorModal({
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-3">
+                <div className={cn(
+                  "p-4 rounded-2xl border space-y-3 transition-colors",
+                  isOverLimit ? "bg-destructive/5 border-destructive/20" : "bg-primary/5 border-primary/10"
+                )}>
                   <div className="flex gap-3">
-                    <Info className="w-5 h-5 text-primary shrink-0" />
+                    {isOverLimit ? (
+                      <AlertCircle className="w-5 h-5 text-destructive shrink-0" />
+                    ) : (
+                      <Info className="w-5 h-5 text-primary shrink-0" />
+                    )}
                     <div className="space-y-1">
-                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider">Prévia do Plano</p>
+                      <p className={cn(
+                        "text-[11px] font-bold uppercase tracking-wider",
+                        isOverLimit ? "text-destructive" : "text-primary"
+                      )}>
+                        {isOverLimit ? "Limite Excedido" : "Prévia do Plano"}
+                      </p>
                       <p className="text-[10px] text-muted-foreground leading-relaxed">
-                        Veja como as substituições serão organizadas e formatadas após salvar:
+                        {isOverLimit 
+                          ? "Você atingiu o limite de 4 substituições únicas. Apenas as 4 primeiras serão salvas."
+                          : "Veja como as substituições serão organizadas e formatadas após salvar:"}
                       </p>
                     </div>
                   </div>
                   
-                  {getNormalizedSubs().slice(0, 4).length > 0 && (
+                  {getNormalizedSubs().length > 0 && (
                     <div className="space-y-3">
                       <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">Visualização da Descrição:</p>
                         <div className="whitespace-pre-wrap">
-                          🔄 Substituições:{"\n"}
-                          {getNormalizedSubs().slice(0, 4).join("\n")}
+                          {formatFinalDescription("", getNormalizedSubs()).trim()}
                         </div>
                       </div>
 
                       <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
                         <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">substitutions_json:</p>
                         <div className="text-muted-foreground break-all">
-                          {JSON.stringify(getNormalizedSubs().slice(0, 4))}
+                          {JSON.stringify(getNormalizedSubs())}
                         </div>
                       </div>
                     </div>

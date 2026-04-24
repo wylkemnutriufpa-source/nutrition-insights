@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
 import React, { useState } from 'react';
+import { normalizeSubstitutions, formatFinalDescription } from '../mealEditorHelpers';
 
 // Simulating the logic used in MealSmartEditorModal for substitution handling
 const useSubstitutionEditor = (initialSubs: string[], initialDescription: string = "") => {
@@ -19,21 +20,15 @@ const useSubstitutionEditor = (initialSubs: string[], initialDescription: string
   };
 
   const getNormalizedSubs = () => {
-    return Array.from(new Set(
-      substitutions
-        .map(s => String(s).trim().replace(/\s+/g, ' '))
-        .filter(s => s.length > 0)
-    )).sort().slice(0, 4);
+    return normalizeSubstitutions(substitutions);
   };
 
   const simulateSave = () => {
     const cleanedSubs = getNormalizedSubs();
-    let finalDescription = description;
-    
-    if (cleanedSubs.length > 0) {
-      finalDescription = description.split(/\n\n🔄 Substituições:\n/)[0];
-      finalDescription += "\n\n🔄 Substituições:\n" + cleanedSubs.join("\n");
-    }
+    return {
+      description: formatFinalDescription(description, cleanedSubs),
+      substitutions_json: cleanedSubs
+    };
 
     return {
       description: finalDescription,
