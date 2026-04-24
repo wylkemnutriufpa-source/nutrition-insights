@@ -120,7 +120,8 @@ describe("WorkspaceMealPlans (schema atual: title/plan_status)", () => {
     expect(screen.getByText("Plano A")).toBeInTheDocument();
     expect(screen.getByText("Plano B")).toBeInTheDocument();
     expect(screen.getByText("Plano C")).toBeInTheDocument();
-    expect(screen.getByText("Maria")).toBeInTheDocument();
+    expect(screen.getAllByText("Maria").length).toBeGreaterThan(0);
+    expect(screen.getByText("João")).toBeInTheDocument();
   });
 
   it("mostra erro com botão de retry quando a query falha e recupera no retry", async () => {
