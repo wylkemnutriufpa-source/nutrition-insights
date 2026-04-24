@@ -16698,6 +16698,27 @@ export type Database = {
         }
         Relationships: []
       }
+      system_feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean
+          flag_key: string
+          updated_at: string
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean
+          flag_key: string
+          updated_at?: string
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean
+          flag_key?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       system_performance_logs: {
         Row: {
           api_calls_count: number | null
@@ -19826,6 +19847,7 @@ export type Database = {
         Returns: string
       }
       is_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_feature_enabled: { Args: { _flag: string }; Returns: boolean }
       is_linked_professional: {
         Args: { _patient_id: string; _user_id: string }
         Returns: boolean
