@@ -26,7 +26,18 @@ export default function StorageImage({ src: pathOrUrl, bucket, fallback, ...imgP
   }
 
   if (error && !url) {
-    return fallback ? <>{fallback}</> : null;
+    // Placeholder neutro: imagem nunca define alimento. Sem match exato => sem foto.
+    return fallback ? (
+      <>{fallback}</>
+    ) : (
+      <div
+        className={imgProps.className}
+        aria-label="Sem imagem disponível"
+        style={{ display: "flex", alignItems: "center", justifyContent: "center", background: "hsl(var(--muted))", color: "hsl(var(--muted-foreground))", fontSize: 12 }}
+      >
+        🍽️
+      </div>
+    );
   }
 
   return <img {...imgProps} src={url!} />;
