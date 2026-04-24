@@ -65,7 +65,7 @@ const PATIENT_MODES: ModeConfig[] = [
 ];
 
 export default function ExperienceModeSwitcher() {
-  const { mode, setMode, isLoading, retryLastMode } = useExperienceMode();
+  const { mode, setMode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const isProRole = (isNutritionist || isPersonal || isAdmin) && isProfessionalContext;
@@ -111,6 +111,25 @@ export default function ExperienceModeSwitcher() {
       </CardHeader>
       <CardContent className="space-y-3">
         {isProRole && <ExperienceModeRecommendation />}
+        
+        {failedMode && (
+          <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-3 flex items-center justify-between gap-3 mb-2">
+            <div className="flex items-center gap-2 text-destructive">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-xs font-medium">Erro ao atualizar para modo {MODES.find(m => m.key === failedMode)?.label}</span>
+            </div>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => retryLastMode()}
+              disabled={isLoading}
+              className="h-7 text-[10px] gap-1 px-2 border-destructive/30 hover:bg-destructive/10"
+            >
+              <RefreshCw className={`w-3 h-3 ${isLoading ? 'animate-spin' : ''}`} />
+              Tentar
+            </Button>
+          </div>
+        )}
         {MODES.map((m) => {
           const Icon = m.icon;
           const selected = mode === m.key;
@@ -118,6 +137,7 @@ export default function ExperienceModeSwitcher() {
             <motion.button
               key={m.key}
               onClick={() => handleSelect(m.key)}
+              disabled={isLoading}
               whileTap={{ scale: 0.98 }}
               className={`w-full text-left rounded-xl border p-3 transition-all ${
                 selected
