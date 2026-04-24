@@ -10,6 +10,10 @@ import {
   type MigrationUndoEntry,
 } from "@/lib/legacyDayConsolidation";
 import { useLegacyBannerVisibility } from "@/hooks/useForceCanonicalDay";
+import {
+  logConsolidationPlan,
+  logUndoMigration,
+} from "@/lib/legacyMigrationLogger";
 import { toast } from "sonner";
 
 interface Props {
