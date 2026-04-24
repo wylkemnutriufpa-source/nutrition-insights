@@ -3976,6 +3976,42 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       };
     });
 
+    // ──── CONTRACT GUARD: plan_generation ────
+    // Bloqueia retorno de plano vazio, sem título, com plan_type misturado ou macros zeradas.
+    const expectedPlanType: "marmita" | "normal" =
+      generationMode === "weekly_marmita" || generationMode === "fixed_marmita" ? "marmita" : "normal";
+    try {
+      await assertContract(
+        planGenerationContract({
+          planType: expectedPlanType,
+          generatedItems: itemsToInsert,
+          totalKcal: finalKcal,
+          totalProtein: finalMacros.protein,
+        }),
+        {
+          client: serviceClient,
+          source: "generate-meal-plan/pre-insert",
+          metadata: { plan_id: finalMealPlanId, generation_mode: generationMode, items_count: itemsToInsert.length },
+        },
+      );
+    } catch (e) {
+      if (e instanceof ContractViolationError) {
+        if (isPipeline && !meal_plan_id) {
+          await safeDeletePlan(serviceClient, finalMealPlanId);
+        }
+        return new Response(
+          JSON.stringify({
+            error: "Plano gerado violou contrato crítico e foi rejeitado",
+            code: "CONTRACT_VIOLATION_PLAN_GENERATION",
+            contract: e.contractId,
+            violations: e.violations,
+          }),
+          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+        );
+      }
+      throw e;
+    }
+
     // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
     const { error: deleteErr } = await serviceClient
       .from("meal_plan_items")
@@ -3994,6 +4030,35 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         await safeDeletePlan(serviceClient, finalMealPlanId);
       }
       throw new Error(`Falha ao inserir itens do plano ${finalMealPlanId}: ${insertErr.message}`);
+    }
+
+    // ──── CONTRACT GUARD: persistence ────
+    // Confirma que o que foi gravado bate com o que foi gerado (contagem + título).
+    const { data: persistedItems } = await serviceClient
+      .from("meal_plan_items")
+      .select("title, calories_target, protein_target")
+      .eq("meal_plan_id", finalMealPlanId);
+
+    if (persistedItems) {
+      const expected = itemsToInsert.map((i: any) => ({ title: i.title })).sort((a: any, b: any) => String(a.title).localeCompare(String(b.title)));
+      const persisted = persistedItems.map((i: any) => ({ title: i.title })).sort((a: any, b: any) => String(a.title).localeCompare(String(b.title)));
+      try {
+        await assertContract(
+          persistenceContract({ expected, persisted, keysToCompare: ["title"] }),
+          {
+            client: serviceClient,
+            source: "generate-meal-plan/post-insert",
+            metadata: { plan_id: finalMealPlanId },
+          },
+        );
+      } catch (e) {
+        if (e instanceof ContractViolationError) {
+          console.error(`[generate-meal-plan] Persistence contract violated:`, e.violations);
+          // Não cancela — apenas registra (insert já aconteceu); contrato detectou drift silencioso.
+        } else {
+          throw e;
+        }
+      }
     }
 
     const visualResolved = await resolveVisualForItems(serviceClient, finalMealPlanId, planItems);
