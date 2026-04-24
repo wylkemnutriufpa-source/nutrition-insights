@@ -1,0 +1,1 @@
+ALTER VIEW public.v_visual_quality_metrics SET (security_invoker = on);
