@@ -89,7 +89,7 @@ export default function AdminPlanLoadingDiagnostics() {
     setBuckets(Array.from(map.values()).sort((a, b) => b.total - a.total));
 
     if (!alertsRes.error) {
-      setAlerts((alertsRes.data || []) as AlertRow[]);
+      setAlerts((alertsRes.data || []) as unknown as AlertRow[]);
     }
 
     setLoading(false);
