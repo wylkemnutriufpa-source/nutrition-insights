@@ -179,6 +179,8 @@ describe("planDiagnosticsHelpers — summarizeTrend", () => {
     expect(s.deltaDropPct).toBe(0);
   });
 });
+
+describe("auditExportUtils — buildAuditCsv classifica plan_status no CSV", () => {
   it("inclui as colunas PlanStatus e PlanStatusKnown e classifica corretamente", () => {
     const data = [
       {
