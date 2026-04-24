@@ -328,13 +328,34 @@ export default function AdminPlanLoadingDiagnostics() {
         {/* Unknown plan_status by workspace */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-base">
-              Status desconhecidos por workspace
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">
-              Onde valores de <code>plan_status</code> fora do catálogo aparecem (top 50).
-              Workspace = <code>tenant_id</code> ou, se ausente, <code>nutritionist_id</code>.
-            </p>
+            <div className="flex items-start justify-between gap-3 flex-wrap">
+              <div>
+                <CardTitle className="text-base">
+                  Status desconhecidos por workspace
+                </CardTitle>
+                <p className="text-xs text-muted-foreground">
+                  Onde valores de <code>plan_status</code> fora do catálogo aparecem.
+                  Workspace = <code>tenant_id</code> ou, se ausente, <code>nutritionist_id</code>.
+                </p>
+              </div>
+              <div className="flex items-center gap-2 text-xs">
+                <label htmlFor="unknown-limit" className="text-muted-foreground">Por página:</label>
+                <select
+                  id="unknown-limit"
+                  data-testid="plan-diagnostics-unknown-limit"
+                  value={unknownLimit}
+                  onChange={(e) => {
+                    setUnknownLimit(Number(e.target.value) as UnknownLimit);
+                    setUnknownPage(1);
+                  }}
+                  className="rounded-md border border-input bg-background px-2 py-1"
+                >
+                  {UNKNOWN_LIMIT_OPTIONS.map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             {unknownByWorkspace.length === 0 ? (
@@ -342,37 +363,72 @@ export default function AdminPlanLoadingDiagnostics() {
                 Nenhum status desconhecido detectado nos planos.
               </p>
             ) : (
-              <div className="overflow-x-auto">
-                <table
-                  className="w-full text-sm"
-                  data-testid="plan-diagnostics-unknown-ws"
-                >
-                  <thead className="text-xs uppercase text-muted-foreground">
-                    <tr>
-                      <th className="text-left py-2">plan_status</th>
-                      <th className="text-left py-2">workspace</th>
-                      <th className="text-right py-2">ocorrências</th>
-                      <th className="text-right py-2">visto por último</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {unknownByWorkspace.map((u, idx) => (
-                      <tr key={idx} className="border-t border-border">
-                        <td className="py-2">
-                          <code className="text-xs">{u.plan_status}</code>
-                        </td>
-                        <td className="py-2">
-                          <code className="text-[10px] break-all">{u.workspace_id}</code>
-                        </td>
-                        <td className="py-2 text-right font-mono">{u.count}</td>
-                        <td className="py-2 text-right text-[10px] text-muted-foreground">
-                          {u.last_seen ? new Date(u.last_seen).toLocaleString("pt-BR") : "—"}
-                        </td>
+              <>
+                <div className="overflow-x-auto">
+                  <table
+                    className="w-full text-sm"
+                    data-testid="plan-diagnostics-unknown-ws"
+                  >
+                    <thead className="text-xs uppercase text-muted-foreground">
+                      <tr>
+                        <th className="text-left py-2">plan_status</th>
+                        <th className="text-left py-2">workspace</th>
+                        <th className="text-right py-2">ocorrências</th>
+                        <th className="text-right py-2">visto por último</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                    </thead>
+                    <tbody>
+                      {pagedUnknown.map((u, idx) => (
+                        <tr key={`${u.plan_status}-${u.workspace_id}-${idx}`} className="border-t border-border">
+                          <td className="py-2">
+                            <code className="text-xs">{u.plan_status}</code>
+                          </td>
+                          <td className="py-2">
+                            <code className="text-[10px] break-all">{u.workspace_id}</code>
+                          </td>
+                          <td className="py-2 text-right font-mono">{u.count}</td>
+                          <td className="py-2 text-right text-[10px] text-muted-foreground">
+                            {u.last_seen ? new Date(u.last_seen).toLocaleString("pt-BR") : "—"}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+                <div
+                  className="flex items-center justify-between gap-2 mt-3 text-xs"
+                  data-testid="plan-diagnostics-unknown-pagination"
+                >
+                  <span className="text-muted-foreground">
+                    Mostrando <strong data-testid="plan-diagnostics-unknown-shown">{pagedUnknown.length}</strong>{" "}
+                    de <strong data-testid="plan-diagnostics-unknown-total">{unknownByWorkspace.length}</strong>{" "}
+                    combinações status × workspace.
+                  </span>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage <= 1}
+                      onClick={() => setUnknownPage((p) => Math.max(1, p - 1))}
+                      data-testid="plan-diagnostics-unknown-prev"
+                    >
+                      ← Anterior
+                    </Button>
+                    <span className="font-mono text-muted-foreground">
+                      pág. {currentPage} / {totalUnknownPages}
+                    </span>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      disabled={currentPage >= totalUnknownPages}
+                      onClick={() => setUnknownPage((p) => Math.min(totalUnknownPages, p + 1))}
+                      data-testid="plan-diagnostics-unknown-next"
+                    >
+                      Próxima →
+                    </Button>
+                  </div>
+                </div>
+              </>
             )}
           </CardContent>
         </Card>
