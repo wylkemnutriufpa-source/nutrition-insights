@@ -34,6 +34,19 @@ interface AlertRow {
   created_at: string;
 }
 
+interface UnknownStatusBreakdown {
+  plan_status: string;
+  workspace_id: string | null;
+  count: number;
+  last_seen: string;
+}
+
+interface TrendBucket {
+  date: string;
+  PLAN_STATUS_UNKNOWN: number;
+  PLAN_VISIBILITY_DROP: number;
+}
+
 const TRACKED_ALERT_TYPES = [
   "PLAN_VISIBILITY_DROP",
   "PLAN_STATUS_UNKNOWN",
@@ -42,6 +55,34 @@ const TRACKED_ALERT_TYPES = [
   "E2E_CONSISTENCY_ERROR",
 ];
 
+const TREND_TRACKED_TYPES = ["PLAN_STATUS_UNKNOWN", "PLAN_VISIBILITY_DROP"] as const;
+
+function buildTrend(
+  rows: Array<{ alert_type: string; created_at: string }>,
+  days: number,
+): TrendBucket[] {
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const buckets: TrendBucket[] = [];
+  for (let i = days - 1; i >= 0; i--) {
+    const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
+    buckets.push({
+      date: d.toISOString().slice(0, 10),
+      PLAN_STATUS_UNKNOWN: 0,
+      PLAN_VISIBILITY_DROP: 0,
+    });
+  }
+  const idx = new Map(buckets.map((b, i) => [b.date, i]));
+  for (const r of rows) {
+    const day = (r.created_at || "").slice(0, 10);
+    const i = idx.get(day);
+    if (i === undefined) continue;
+    if (r.alert_type === "PLAN_STATUS_UNKNOWN") buckets[i].PLAN_STATUS_UNKNOWN += 1;
+    else if (r.alert_type === "PLAN_VISIBILITY_DROP") buckets[i].PLAN_VISIBILITY_DROP += 1;
+  }
+  return buckets;
+}
+
 export default function AdminPlanLoadingDiagnostics() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -49,13 +90,19 @@ export default function AdminPlanLoadingDiagnostics() {
   const [activeTotal, setActiveTotal] = useState<number>(0);
   const [buckets, setBuckets] = useState<StatusBucket[]>([]);
   const [alerts, setAlerts] = useState<AlertRow[]>([]);
+  const [unknownByWorkspace, setUnknownByWorkspace] = useState<UnknownStatusBreakdown[]>([]);
+  const [trend7, setTrend7] = useState<TrendBucket[]>([]);
+  const [trend30, setTrend30] = useState<TrendBucket[]>([]);
+  const [trendWindow, setTrendWindow] = useState<7 | 30>(7);
 
   const load = useCallback(async () => {
     setLoading(true);
     setError(null);
 
+    const since30 = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+
     // Fetch counts em paralelo
-    const [allPlansRes, alertsRes] = await Promise.all([
+    const [allPlansRes, alertsRes, unknownPlansRes, trendAlertsRes] = await Promise.all([
       supabase
         .from("meal_plans")
         .select("plan_status, is_active")
@@ -66,6 +113,17 @@ export default function AdminPlanLoadingDiagnostics() {
         .in("alert_type", TRACKED_ALERT_TYPES)
         .order("created_at", { ascending: false })
         .limit(50),
+      supabase
+        .from("meal_plans")
+        .select("plan_status, tenant_id, nutritionist_id, updated_at")
+        .limit(50_000),
+      supabase
+        .from("system_alerts" as any)
+        .select("alert_type, created_at")
+        .in("alert_type", TREND_TRACKED_TYPES as unknown as string[])
+        .gte("created_at", since30)
+        .order("created_at", { ascending: false })
+        .limit(10_000),
     ]);
 
     if (allPlansRes.error) {
@@ -90,6 +148,42 @@ export default function AdminPlanLoadingDiagnostics() {
 
     if (!alertsRes.error) {
       setAlerts((alertsRes.data || []) as unknown as AlertRow[]);
+    }
+
+    // Unknown statuses by workspace (tenant_id ?? nutritionist_id)
+    if (!unknownPlansRes.error) {
+      const unknownRows = (unknownPlansRes.data || []) as Array<{
+        plan_status: string | null;
+        tenant_id: string | null;
+        nutritionist_id: string | null;
+        updated_at: string | null;
+      }>;
+      const breakdown = new Map<string, UnknownStatusBreakdown>();
+      for (const r of unknownRows) {
+        const status = r.plan_status || "draft";
+        if (KNOWN_PLAN_STATUS_KEYS.includes(status)) continue;
+        const wsKey = r.tenant_id || r.nutritionist_id || "(sem workspace)";
+        const k = `${status}::${wsKey}`;
+        const cur = breakdown.get(k) || {
+          plan_status: status,
+          workspace_id: wsKey,
+          count: 0,
+          last_seen: r.updated_at || "",
+        };
+        cur.count += 1;
+        if (r.updated_at && r.updated_at > cur.last_seen) cur.last_seen = r.updated_at;
+        breakdown.set(k, cur);
+      }
+      setUnknownByWorkspace(
+        Array.from(breakdown.values()).sort((a, b) => b.count - a.count).slice(0, 50),
+      );
+    }
+
+    // Trend buckets per day
+    if (!trendAlertsRes.error) {
+      const alertRows = ((trendAlertsRes.data || []) as unknown) as Array<{ alert_type: string; created_at: string }>;
+      setTrend7(buildTrend(alertRows, 7));
+      setTrend30(buildTrend(alertRows, 30));
     }
 
     setLoading(false);
@@ -205,6 +299,140 @@ export default function AdminPlanLoadingDiagnostics() {
                           </td>
                           <td className="py-2 text-right font-mono">{b.total}</td>
                           <td className="py-2 text-right font-mono">{b.active}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Unknown plan_status by workspace */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">
+              Status desconhecidos por workspace
+            </CardTitle>
+            <p className="text-xs text-muted-foreground">
+              Onde valores de <code>plan_status</code> fora do catálogo aparecem (top 50).
+              Workspace = <code>tenant_id</code> ou, se ausente, <code>nutritionist_id</code>.
+            </p>
+          </CardHeader>
+          <CardContent>
+            {unknownByWorkspace.length === 0 ? (
+              <p className="text-sm text-muted-foreground" data-testid="plan-diagnostics-no-unknown-ws">
+                Nenhum status desconhecido detectado nos planos.
+              </p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table
+                  className="w-full text-sm"
+                  data-testid="plan-diagnostics-unknown-ws"
+                >
+                  <thead className="text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="text-left py-2">plan_status</th>
+                      <th className="text-left py-2">workspace</th>
+                      <th className="text-right py-2">ocorrências</th>
+                      <th className="text-right py-2">visto por último</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {unknownByWorkspace.map((u, idx) => (
+                      <tr key={idx} className="border-t border-border">
+                        <td className="py-2">
+                          <code className="text-xs">{u.plan_status}</code>
+                        </td>
+                        <td className="py-2">
+                          <code className="text-[10px] break-all">{u.workspace_id}</code>
+                        </td>
+                        <td className="py-2 text-right font-mono">{u.count}</td>
+                        <td className="py-2 text-right text-[10px] text-muted-foreground">
+                          {u.last_seen ? new Date(u.last_seen).toLocaleString("pt-BR") : "—"}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Trend table */}
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between">
+            <div>
+              <CardTitle className="text-base">
+                Tendência de PLAN_STATUS_UNKNOWN e PLAN_VISIBILITY_DROP
+              </CardTitle>
+              <p className="text-xs text-muted-foreground">
+                Volume diário; útil para detectar crescimento súbito.
+              </p>
+            </div>
+            <div className="flex gap-1" data-testid="plan-diagnostics-trend-window">
+              <Button
+                size="sm"
+                variant={trendWindow === 7 ? "default" : "outline"}
+                onClick={() => setTrendWindow(7)}
+              >
+                7d
+              </Button>
+              <Button
+                size="sm"
+                variant={trendWindow === 30 ? "default" : "outline"}
+                onClick={() => setTrendWindow(30)}
+              >
+                30d
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            {(trendWindow === 7 ? trend7 : trend30).length === 0 ? (
+              <p className="text-sm text-muted-foreground">Sem dados.</p>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm" data-testid="plan-diagnostics-trend">
+                  <thead className="text-xs uppercase text-muted-foreground">
+                    <tr>
+                      <th className="text-left py-2">data</th>
+                      <th className="text-right py-2">PLAN_STATUS_UNKNOWN</th>
+                      <th className="text-right py-2">PLAN_VISIBILITY_DROP</th>
+                      <th className="text-left py-2 pl-4">distribuição</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(trendWindow === 7 ? trend7 : trend30).map((b) => {
+                      const max = Math.max(
+                        1,
+                        ...((trendWindow === 7 ? trend7 : trend30).flatMap((x) => [
+                          x.PLAN_STATUS_UNKNOWN,
+                          x.PLAN_VISIBILITY_DROP,
+                        ])),
+                      );
+                      const wU = Math.round((b.PLAN_STATUS_UNKNOWN / max) * 100);
+                      const wV = Math.round((b.PLAN_VISIBILITY_DROP / max) * 100);
+                      return (
+                        <tr key={b.date} className="border-t border-border">
+                          <td className="py-2 text-xs font-mono">{b.date}</td>
+                          <td className="py-2 text-right font-mono">{b.PLAN_STATUS_UNKNOWN}</td>
+                          <td className="py-2 text-right font-mono">{b.PLAN_VISIBILITY_DROP}</td>
+                          <td className="py-2 pl-4 w-[40%]">
+                            <div className="flex flex-col gap-1">
+                              <div
+                                className="h-1.5 rounded bg-warning/70"
+                                style={{ width: `${wU}%` }}
+                                title={`PLAN_STATUS_UNKNOWN: ${b.PLAN_STATUS_UNKNOWN}`}
+                              />
+                              <div
+                                className="h-1.5 rounded bg-destructive/70"
+                                style={{ width: `${wV}%` }}
+                                title={`PLAN_VISIBILITY_DROP: ${b.PLAN_VISIBILITY_DROP}`}
+                              />
+                            </div>
+                          </td>
                         </tr>
                       );
                     })}

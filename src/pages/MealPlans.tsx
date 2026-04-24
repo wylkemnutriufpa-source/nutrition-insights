@@ -50,8 +50,13 @@ import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Tra
 import { useNavigate, useSearchParams } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
+import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
+import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS } from "@/lib/planStatusLabels";
 
 type MealPlan = Tables<"meal_plans">;
+
+const STATUS_FILTER_ALL = "__all__";
+const STATUS_FILTER_UNKNOWN = "__unknown__";
 
 export default function MealPlans() {
   const { user } = useAuth();
@@ -61,7 +66,8 @@ export default function MealPlans() {
   const { showSimplifiedActions, showProtocols } = useExperienceUI();
   const [plans, setPlans] = useState<(MealPlan & { patient_name?: string })[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState<ClassifiedPlanLoadError | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>(STATUS_FILTER_ALL);
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState({
     title: "", description: "", patient_id: "",
@@ -82,7 +88,7 @@ export default function MealPlans() {
     const { data, error } = await withTenantFilter(query, tenantId);
     if (error) {
       console.error("[MealPlans] Falha ao buscar planos:", error);
-      setLoadError(error.message || "Não foi possível carregar os planos.");
+      setLoadError(classifyPlanLoadError(error));
       setPlans([]);
       setLoading(false);
       return;
@@ -353,6 +359,26 @@ export default function MealPlans() {
   // Count effective plans using normalized state
   const effectivePlansCount = plans.filter(p => resolvePlanState(p).isEffective).length;
 
+  // Counts per plan_status (for the filter dropdown badges)
+  const statusCounts = plans.reduce<Record<string, number>>((acc, p) => {
+    const k = (p.plan_status as string) || "draft";
+    acc[k] = (acc[k] || 0) + 1;
+    return acc;
+  }, {});
+  const statusKeysPresent = Object.keys(statusCounts).sort();
+  const unknownStatusCount = statusKeysPresent
+    .filter((k) => !KNOWN_PLAN_STATUS_KEYS.includes(k))
+    .reduce((sum, k) => sum + (statusCounts[k] || 0), 0);
+
+  const filteredPlans = plans.filter((p) => {
+    if (statusFilter === STATUS_FILTER_ALL) return true;
+    const k = (p.plan_status as string) || "draft";
+    if (statusFilter === STATUS_FILTER_UNKNOWN) {
+      return !KNOWN_PLAN_STATUS_KEYS.includes(k);
+    }
+    return k === statusFilter;
+  });
+
   return (
     <DashboardLayout>
       <div className="space-y-6">
@@ -413,17 +439,22 @@ export default function MealPlans() {
         ) : loadError ? (
           <div
             data-testid="meal-plans-error"
+            data-error-kind={loadError.kind}
             className="glass rounded-xl p-10 text-center border border-destructive/30"
           >
             <ClipboardList className="w-12 h-12 mx-auto text-destructive mb-3" />
-            <h3 className="font-display font-semibold text-lg mb-1">Não conseguimos carregar seus planos</h3>
-            <p className="text-sm text-muted-foreground mb-4">{loadError}</p>
+            <h3 className="font-display font-semibold text-lg mb-1">{loadError.title}</h3>
+            <p className="text-sm text-muted-foreground mb-4">{loadError.description}</p>
+            <details className="text-[11px] text-muted-foreground/80 mb-4">
+              <summary className="cursor-pointer">Detalhes técnicos</summary>
+              <code className="block mt-1 break-all">{loadError.technicalMessage}</code>
+            </details>
             <Button
               variant="outline"
               onClick={() => void fetchPlans()}
               data-testid="meal-plans-retry"
             >
-              Tentar novamente
+              {loadError.retryLabel}
             </Button>
           </div>
         ) : plans.length === 0 ? (
@@ -433,8 +464,42 @@ export default function MealPlans() {
             <p className="text-muted-foreground">Crie um plano alimentar para seus pacientes.</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {plans.map((p) => {
+          <>
+            {/* Plan status filter */}
+            <div className="flex flex-wrap items-center gap-2 mb-2" data-testid="meal-plans-status-filter">
+              <Label className="text-xs text-muted-foreground">Filtrar por status:</Label>
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                data-testid="meal-plans-status-select"
+                className="rounded-md border border-input bg-background px-2 py-1 text-xs"
+              >
+                <option value={STATUS_FILTER_ALL}>Todos ({plans.length})</option>
+                {statusKeysPresent
+                  .filter((k) => KNOWN_PLAN_STATUS_KEYS.includes(k))
+                  .map((k) => {
+                    const meta = getPlanStatusMeta(k);
+                    return (
+                      <option key={k} value={k}>
+                        {meta.label} ({statusCounts[k]})
+                      </option>
+                    );
+                  })}
+                {unknownStatusCount > 0 && (
+                  <option value={STATUS_FILTER_UNKNOWN}>
+                    Desconhecido ({unknownStatusCount})
+                  </option>
+                )}
+              </select>
+              <span
+                className="text-xs text-muted-foreground"
+                data-testid="meal-plans-filtered-count"
+              >
+                {filteredPlans.length} exibido{filteredPlans.length === 1 ? "" : "s"}
+              </span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {filteredPlans.map((p) => {
               const state = resolvePlanState(p);
               return (
                 <motion.div key={p.id} whileHover={{ y: -2 }}
@@ -479,7 +544,8 @@ export default function MealPlans() {
                 </motion.div>
               );
             })}
-          </div>
+            </div>
+          </>
         )}
       </div>
     </DashboardLayout>
