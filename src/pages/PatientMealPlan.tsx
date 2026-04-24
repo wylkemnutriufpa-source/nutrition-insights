@@ -5,13 +5,12 @@ import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer,
-  CalendarDays, CalendarRange, ChevronLeft, ChevronRight, Star,
+  CalendarDays, Star,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
@@ -85,7 +84,6 @@ export default function PatientMealPlan() {
   const [weekCompletions, setWeekCompletions] = useState<MealCompletion[]>([]);
   const [loading, setLoading] = useState(true);
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
-  const [viewMode, setViewMode] = useState<"daily" | "weekly">("daily");
   const [selectedMeal, setSelectedMeal] = useState<MealDetailData | null>(null);
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
@@ -445,18 +443,12 @@ export default function PatientMealPlan() {
             </Button>
           </div>
 
-          {/* Plan navigation and info */}
+          {/* Plan info — sempre diário com substituições */}
           <div className="flex flex-col gap-2 mt-4">
             <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
-              {plan.plan_mode === "single_day" ? (
-                <CalendarDays className="w-4 h-4 text-primary shrink-0" />
-              ) : (
-                <CalendarRange className="w-4 h-4 text-muted-foreground shrink-0" />
-              )}
+              <CalendarDays className="w-4 h-4 text-primary shrink-0" />
               <p className="text-xs text-muted-foreground">
-                {plan.plan_mode === "single_day" 
-                  ? "Este é um plano de dia único que se repete."
-                  : "Seu plano é semanal — cada dia tem refeições específicas."}
+                Plano diário com substituições inteligentes — toque em qualquer refeição para ver alternativas equivalentes.
               </p>
             </div>
           </div>
@@ -494,209 +486,47 @@ export default function PatientMealPlan() {
             </motion.div>
           )}
 
-          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as "daily" | "weekly")} className="w-full">
-            <TabsList className="w-full grid grid-cols-2">
-              <TabsTrigger value="daily" className="gap-1.5"><CalendarDays className="w-4 h-4" /> Visão Diária</TabsTrigger>
-              <TabsTrigger value="weekly" className="gap-1.5"><CalendarRange className="w-4 h-4" /> Visão Semanal</TabsTrigger>
-            </TabsList>
+          {/* MODO DIÁRIO ÚNICO — substituições inteligentes substituem a "visão semanal" */}
+          <div className="space-y-5 mt-4">
+            <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
 
-            {/* DAILY VIEW */}
-            <TabsContent value="daily" className="space-y-5 mt-4">
-              <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+            <AdherenceCard
+              dailyAdherence={dailyAdherence}
+              followedCount={followedCount}
+              partialCount={partialCount}
+              notFollowedCount={notFollowedCount}
+              completionsCount={completions.length}
+              totalItems={items.length}
+              allMarked={allMarked}
+            />
 
-              <AdherenceCard
-                dailyAdherence={dailyAdherence}
-                followedCount={followedCount}
-                partialCount={partialCount}
-                notFollowedCount={notFollowedCount}
-                completionsCount={completions.length}
-                totalItems={items.length}
-                allMarked={allMarked}
-              />
+            <MacroSummary items={items} totalsStatus={plan?.totals_status} />
 
-              <MacroSummary items={items} totalsStatus={plan?.totals_status} />
+            <div className="space-y-6">
+              {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
+                <MealGroup
+                  key={key}
+                  mealType={{ key, label, icon, time }}
+                  items={mealItems}
+                  completions={completions}
+                  justCompleted={justCompleted}
+                  focusMode={focusMode}
+                  onSetAdherence={setAdherence}
+                  onOpenDetail={setSelectedMeal}
+                  onOpenSubstitution={setSubstitutionItem}
+                />
+              ))}
+            </div>
 
-              <div className="space-y-6">
-                {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
-                  <MealGroup
-                    key={key}
-                    mealType={{ key, label, icon, time }}
-                    items={mealItems}
-                    completions={completions}
-                    justCompleted={justCompleted}
-                    focusMode={focusMode}
-                    onSetAdherence={setAdherence}
-                    onOpenDetail={setSelectedMeal}
-                    onOpenSubstitution={setSubstitutionItem}
-                  />
-                ))}
-              </div>
-
-              <div className="glass rounded-xl p-4 text-center">
-                <p className="text-xs text-muted-foreground">
-                  💡 Marque cada refeição como <span className="text-emerald-500 font-medium">seguida</span>, <span className="text-amber-500 font-medium">parcial</span> ou <span className="text-red-500 font-medium">não seguida</span>
-                </p>
-              </div>
-            </TabsContent>
-
-            {/* WEEKLY VIEW */}
-            <TabsContent value="weekly" className="space-y-5 mt-4">
-              <div className="flex items-center justify-center gap-4">
-                <Button variant="ghost" size="icon" onClick={() => { const d = new Date(date); d.setDate(d.getDate() - 7); setDate(d.toISOString().split("T")[0]); }}>
-                  <ChevronLeft className="w-5 h-5" />
-                </Button>
-                <div className="flex items-center gap-2">
-                  <CalendarRange className="w-4 h-4 text-primary" />
-                  <span className="font-medium text-sm">
-                    {new Date(weekDates[0] + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "short" })} — {new Date(weekDates[6] + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}
-                  </span>
-                </div>
-                <Button variant="ghost" size="icon" onClick={() => { const d = new Date(date); d.setDate(d.getDate() + 7); setDate(d.toISOString().split("T")[0]); }}>
-                  <ChevronRight className="w-5 h-5" />
-                </Button>
-              </div>
-
-              {/* Weekly Grid */}
-              <div className="grid grid-cols-7 gap-1.5">
-                {weekDates.map((wd, idx) => {
-                  const { pct, total, done } = getWeekDayAdherence(wd, idx);
-                  const today = wd === new Date().toISOString().split("T")[0];
-                  return (
-                    <motion.button key={wd} onClick={() => { setDate(wd); setViewMode("daily"); }}
-                      className={`glass rounded-xl p-2.5 text-center transition-all hover:border-primary/30 ${today ? "ring-2 ring-primary/40" : ""}`}
-                      whileHover={{ scale: 1.03 }} whileTap={{ scale: 0.97 }}
-                    >
-                      <p className="text-[10px] font-semibold text-muted-foreground">{DAYS_SHORT[idx]}</p>
-                      <p className="text-xs font-bold mt-0.5">{new Date(wd + "T12:00:00").getDate()}</p>
-                      <div className="w-full h-1.5 bg-muted rounded-full overflow-hidden mt-2">
-                        <div className={`h-full rounded-full transition-all ${pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : pct > 0 ? "bg-red-500" : "bg-muted-foreground/20"}`}
-                          style={{ width: `${pct}%` }} />
-                      </div>
-                      <p className="text-[9px] font-bold mt-1 text-muted-foreground">{Math.round(pct)}%</p>
-                      <p className="text-[8px] text-muted-foreground">{done}/{total}</p>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* Weekly Summary */}
-              {(() => {
-                const weekTotal = weekDates.reduce((acc, _wd, idx) => {
-                  return acc + allItems.filter(i => i.day_of_week === idx).length;
-                }, 0);
-                const weekFollowed = weekCompletions.filter(c => c.adherence_status === "followed").length;
-                const weekPartial = weekCompletions.filter(c => c.adherence_status === "partial").length;
-                const weekPct = weekTotal > 0 ? ((weekFollowed * 100 + weekPartial * 50) / (weekTotal * 100)) * 100 : 0;
-
-                return (
-                  <motion.div className="glass rounded-2xl p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="flex items-center gap-2">
-                        <Star className="w-5 h-5 text-primary" />
-                        <span className="font-display font-semibold">Aderência Semanal</span>
-                      </div>
-                      <Badge variant={weekPct >= 70 ? "default" : "destructive"} className="text-sm">{Math.round(weekPct)}%</Badge>
-                    </div>
-                    <Progress value={weekPct} className="h-3" />
-                    <div className="flex items-center justify-between mt-3 text-xs text-muted-foreground">
-                      <div className="flex gap-3">
-                        <span className="flex items-center gap-1"><CheckCircle2 className="w-3 h-3 text-emerald-500" /> {weekFollowed}</span>
-                        <span className="flex items-center gap-1"><MinusCircle className="w-3 h-3 text-amber-500" /> {weekPartial}</span>
-                        <span className="flex items-center gap-1"><AlertCircle className="w-3 h-3 text-red-500" /> {weekCompletions.filter(c => c.adherence_status === "not_followed").length}</span>
-                      </div>
-                      <span>{weekCompletions.length}/{weekTotal} marcadas</span>
-                    </div>
-                  </motion.div>
-                );
-              })()}
-
-              {/* Weekly Detailed */}
-              <div className="space-y-4">
-                {weekDates.map((wd, dayIdx) => {
-                  const dayItems = allItems.filter(i => i.day_of_week === dayIdx);
-                  if (dayItems.length === 0) return null;
-                  const { pct } = getWeekDayAdherence(wd, dayIdx);
-                  const today = wd === new Date().toISOString().split("T")[0];
-
-                  const grouped = MEAL_TYPES.map(mt => ({
-                    ...mt,
-                    items: dayItems.filter(i => i.meal_type === mt.key),
-                  })).filter(g => g.items.length > 0);
-
-                  return (
-                    <motion.div key={wd}
-                      className={`glass rounded-2xl overflow-hidden ${today ? "ring-1 ring-primary/30" : ""}`}
-                      initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: dayIdx * 0.05 }}
-                    >
-                      <div className="flex items-center justify-between p-4 bg-secondary/30">
-                        <div className="flex items-center gap-2">
-                          <span className="font-display font-bold text-sm">{DAYS[dayIdx]}</span>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(wd + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "short" })}
-                          </span>
-                          {today && <Badge variant="default" className="text-[9px] h-5">Hoje</Badge>}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <div className="w-16 h-2 bg-muted rounded-full overflow-hidden">
-                            <div className={`h-full rounded-full ${pct >= 70 ? "bg-emerald-500" : pct >= 40 ? "bg-amber-500" : "bg-red-500"}`}
-                              style={{ width: `${pct}%` }} />
-                          </div>
-                          <span className="text-xs font-bold">{Math.round(pct)}%</span>
-                        </div>
-                      </div>
-                      <div className="p-4 space-y-3">
-                        {grouped.map(({ key, label, icon, items: mealItems }) => (
-                          <div key={key}>
-                            <div className="flex items-center gap-1.5 mb-1.5">
-                              <span className="text-primary">{icon}</span>
-                              <span className="text-xs font-semibold">{label}</span>
-                            </div>
-                            <div className="space-y-1 pl-7">
-                              {mealItems.map(item => {
-                                const dayComps = weekCompletions.filter(c => (c as any).date === wd);
-                                const comp = dayComps.find(c => c.meal_plan_item_id === item.id);
-                                const status = comp?.adherence_status || null;
-                                return (
-                                  <div key={item.id} className="flex items-center gap-2">
-                                    <button onClick={() => setAdherence(item, "followed", wd)} className="shrink-0">
-                                      {status === "followed" ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                                        : status === "partial" ? <MinusCircle className="w-4 h-4 text-amber-500" />
-                                        : status === "not_followed" ? <AlertCircle className="w-4 h-4 text-red-500" />
-                                        : <Circle className="w-4 h-4 text-muted-foreground hover:text-primary transition-colors" />}
-                                    </button>
-                                    <span className={`text-xs flex-1 cursor-pointer hover:text-primary transition-colors ${status === "followed" ? "line-through text-muted-foreground" : ""}`}
-                                      onClick={() => setSelectedMeal({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
-                                    >
-                                      {item.title}
-                                    </span>
-                                    <div className="flex gap-0.5">
-                                      {[
-                                        { s: "followed" as const, icon: <CheckCircle2 className="w-3 h-3" />, color: "text-emerald-500" },
-                                        { s: "partial" as const, icon: <MinusCircle className="w-3 h-3" />, color: "text-amber-500" },
-                                        { s: "not_followed" as const, icon: <AlertCircle className="w-3 h-3" />, color: "text-red-500" },
-                                      ].map(opt => (
-                                        <button key={opt.s} onClick={() => setAdherence(item, opt.s, wd)}
-                                          className={`p-0.5 rounded transition-all ${status === opt.s ? `${opt.color} opacity-100` : "opacity-20 hover:opacity-60"}`}
-                                          title={opt.s}
-                                        >
-                                          {opt.icon}
-                                        </button>
-                                      ))}
-                                    </div>
-                                  </div>
-                                );
-                              })}
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  );
-                })}
-              </div>
-            </TabsContent>
-          </Tabs>
+            <div className="glass rounded-xl p-4 text-center space-y-1">
+              <p className="text-xs text-muted-foreground">
+                💡 Marque cada refeição como <span className="text-emerald-500 font-medium">seguida</span>, <span className="text-amber-500 font-medium">parcial</span> ou <span className="text-red-500 font-medium">não seguida</span>.
+              </p>
+              <p className="text-[10px] text-muted-foreground/80">
+                Não gostou de algum item? Toque para ver substituições com macros equivalentes.
+              </p>
+            </div>
+          </div>
 
           <MealDetailModal
             open={!!selectedMeal}
