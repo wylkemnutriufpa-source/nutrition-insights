@@ -2988,6 +2988,13 @@ export type Database = {
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "clinical_plan_audit_logs_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
         ]
       }
       clinical_population_patterns: {
@@ -6186,6 +6193,13 @@ export type Database = {
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "meal_feedback_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
         ]
       }
       meal_item_completions: {
@@ -6239,6 +6253,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_item_completions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
           {
             foreignKeyName: "meal_item_completions_meal_plan_item_id_fkey"
@@ -6511,6 +6532,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "meal_plan_items_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
+          {
             foreignKeyName: "meal_plan_items_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -6575,6 +6603,13 @@ export type Database = {
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "meal_plan_meal_targets_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
         ]
       }
       meal_plan_simplification_audit: {
@@ -6631,6 +6666,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_simplification_audit_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
           {
             foreignKeyName: "meal_plan_simplification_audit_meal_plan_item_id_fkey"
@@ -6693,6 +6735,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_versions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
         ]
       }
@@ -6876,6 +6925,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plans_previous_plan_id_fkey"
+            columns: ["previous_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
           {
             foreignKeyName: "meal_plans_tenant_id_fkey"
@@ -7699,6 +7755,13 @@ export type Database = {
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "nutritional_intervention_suggestions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
         ]
       }
       nutritionist_meal_templates: {
@@ -7946,6 +8009,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "onboarding_pipelines_generated_plan_id_fkey"
+            columns: ["generated_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
         ]
       }
@@ -10063,6 +10133,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "patient_documents_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
+          {
             foreignKeyName: "patient_documents_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
@@ -10450,6 +10527,13 @@ export type Database = {
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "patient_meal_feedback_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
         ]
       }
       patient_meal_substitutions: {
@@ -10512,6 +10596,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_substitutions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
           {
             foreignKeyName: "patient_meal_substitutions_meal_plan_item_id_fkey"
@@ -10693,6 +10784,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_password_resets: {
+        Row: {
+          created_at: string
+          id: string
+          ip_address: string | null
+          patient_id: string
+          professional_id: string
+          reason: string | null
+          reset_method: string
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          patient_id: string
+          professional_id: string
+          reason?: string | null
+          reset_method?: string
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          patient_id?: string
+          professional_id?: string
+          reason?: string | null
+          reset_method?: string
+          user_agent?: string | null
+        }
+        Relationships: []
       }
       patient_performance_snapshots: {
         Row: {
@@ -12759,6 +12883,13 @@ export type Database = {
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "plan_audit_results_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
         ]
       }
       plan_reconciliation_queue: {
@@ -12803,6 +12934,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_reconciliation_queue_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
         ]
       }
@@ -12875,6 +13013,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "plan_schedules_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
         ]
       }
@@ -13600,6 +13745,36 @@ export type Database = {
           steps_completed?: Json
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      professional_unblock_overrides: {
+        Row: {
+          created_at: string
+          expires_at: string
+          id: string
+          patient_id: string
+          professional_id: string
+          reason: string | null
+          revoked_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_id: string
+          professional_id: string
+          reason?: string | null
+          revoked_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          id?: string
+          patient_id?: string
+          professional_id?: string
+          reason?: string | null
+          revoked_at?: string | null
         }
         Relationships: []
       }
@@ -14877,6 +15052,13 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "protocol_transition_suggestions_current_plan_id_fkey"
+            columns: ["current_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
+          {
             foreignKeyName: "protocol_transition_suggestions_current_protocol_id_fkey"
             columns: ["current_protocol_id"]
             isOneToOne: false
@@ -15712,6 +15894,13 @@ export type Database = {
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "saved_plan_templates_source_plan_id_fkey"
+            columns: ["source_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
         ]
       }
       security_events: {
@@ -15789,6 +15978,13 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "meal_plans"
             referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "shopping_list_items_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
           },
         ]
       }
@@ -19092,6 +19288,23 @@ export type Database = {
         }
         Relationships: []
       }
+      v_plan_visibility_diagnostics: {
+        Row: {
+          divergence_reason: string | null
+          email: string | null
+          full_name: string | null
+          has_divergence: boolean | null
+          is_active: boolean | null
+          nutritionist_id: string | null
+          onboarding_status: string | null
+          patient_id: string | null
+          plan_created_at: string | null
+          plan_id: string | null
+          plan_status: string | null
+          plan_title: string | null
+        }
+        Relationships: []
+      }
       whatsapp_integrations_safe: {
         Row: {
           created_at: string | null
@@ -19751,6 +19964,14 @@ export type Database = {
       refresh_ranking_snapshots: {
         Args: { _period_type?: string }
         Returns: undefined
+      }
+      register_unblock_override: {
+        Args: {
+          _duration_minutes?: number
+          _patient_id: string
+          _reason?: string
+        }
+        Returns: string
       }
       reject_meal_plan: {
         Args: { _nutritionist_id: string; _plan_id: string; _reason?: string }
