@@ -293,7 +293,7 @@ Deno.serve(async (req) => {
     const { data: body, response: errorResponse } = await validateBody(req, MetabolicPhaseSchema);
     if (errorResponse) return errorResponse;
 
-    const patient_id = body.patient_id;
+    const patient_id = body?.patient_id;
     const trigger_source = "automatic";
     const targetPatient = patient_id || user.id;
 
