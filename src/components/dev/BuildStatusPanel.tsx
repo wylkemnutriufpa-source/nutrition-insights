@@ -17,12 +17,22 @@
 import { useEffect, useMemo, useState } from "react";
 import { BUILD_INFO } from "@/lib/buildInfo";
 import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
+import {
+  validateChunkHashes,
+  type ChunkValidationResult,
+} from "@/lib/chunkHashValidator";
+import {
+  clearScopedCaches,
+  reloadScopedRoute,
+} from "@/lib/scopedCacheCleaner";
 import { Button } from "@/components/ui/button";
 import {
   Activity,
+  AlertTriangle,
   CheckCircle2,
   ChevronDown,
   ChevronUp,
+  FolderSync,
   Hash,
   RefreshCw,
   Server,
