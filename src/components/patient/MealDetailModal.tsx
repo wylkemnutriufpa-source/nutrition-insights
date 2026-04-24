@@ -732,12 +732,20 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <Flame className="w-5 h-5 text-primary" />
-                  <h4 className="font-semibold text-base">Macros Sugeridos</h4>
-                  {isMacroInconsistent(calories, protein, carbs, fat) && (
-                    <Badge variant="outline" className="text-[9px] bg-destructive/10 text-destructive border-destructive/20 animate-pulse">
-                      <AlertTriangle className="w-2.5 h-2.5 mr-1" /> Fora do padrão
-                    </Badge>
-                  )}
+                  <h4 className="font-semibold text-base">Metas da Refeição</h4>
+                  {(() => {
+                    const visual = calculateVisualMacrosFromDescription(meal.description || "");
+                    const isAnyInconsistent = 
+                      getMacroStatusLabel(visual.protein, protein) !== "OK" ||
+                      getMacroStatusLabel(visual.carbs, carbs) !== "OK" ||
+                      getMacroStatusLabel(visual.fat, fat) !== "OK";
+                    
+                    return isAnyInconsistent && (
+                      <Badge variant="outline" className="text-[9px] bg-amber-500/10 text-amber-600 border-amber-500/20">
+                        <AlertTriangle className="w-2.5 h-2.5 mr-1" /> Divergência detectada
+                      </Badge>
+                    );
+                  })()}
                 </div>
                 {canEdit && (
                   <Button
@@ -785,18 +793,35 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                     { label: "Proteína", value: protein, unit: "g", icon: <Beef className="w-5 h-5 text-red-500" />, requested: calculateVisualMacrosFromDescription(meal.description || "").protein },
                     { label: "Carbs", value: carbs, unit: "g", icon: <Wheat className="w-5 h-5 text-amber-500" />, requested: calculateVisualMacrosFromDescription(meal.description || "").carbs },
                     { label: "Gordura", value: fat, unit: "g", icon: <Droplets className="w-5 h-5 text-yellow-500" />, requested: calculateVisualMacrosFromDescription(meal.description || "").fat },
-                  ].map(m => (
-                    <div key={m.label} className="rounded-xl bg-secondary/60 p-3 text-center border border-transparent hover:border-border transition-colors">
-                      <div className="flex justify-center mb-1.5">{m.icon}</div>
-                      <p className="text-[10px] text-muted-foreground">{m.label}</p>
-                      <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
-                      <div className="flex items-center justify-center gap-1 mt-1">
-                        <span className={`text-[9px] font-medium ${getMacroStatusColor(m.requested, Number(m.value))}`}>
-                          {getMacroStatusLabel(m.requested, Number(m.value))}
-                        </span>
+                  ].map(m => {
+                    const status = getMacroStatusLabel(m.requested, Number(m.value));
+                    const color = getMacroStatusColor(m.requested, Number(m.value));
+                    const diff = Math.round(Number(m.value) - m.requested);
+                    
+                    return (
+                      <div key={m.label} className="relative rounded-xl bg-secondary/60 p-3 text-center border border-transparent hover:border-border transition-all group/macro">
+                        <div className="flex justify-center mb-1.5">{m.icon}</div>
+                        <p className="text-[10px] text-muted-foreground">{m.label}</p>
+                        <p className="font-bold text-base">{m.value != null ? `${fmtMacro(m.value)}${m.unit}` : "—"}</p>
+                        
+                        {status !== "OK" && (
+                          <div className="mt-1 flex flex-col items-center gap-0.5 animate-in fade-in slide-in-from-top-1">
+                            <span className={`text-[9px] font-bold ${color}`}>
+                              {diff > 0 ? `+${diff}` : diff}{m.unit}
+                            </span>
+                            <span className="text-[8px] text-muted-foreground/70 leading-none">
+                              Sugestão: {m.requested}{m.unit}
+                            </span>
+                          </div>
+                        )}
+                        
+                        {/* Tooltip de assistência */}
+                        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2 bg-popover text-popover-foreground text-[10px] p-2 rounded-lg shadow-xl border border-border opacity-0 group-hover/macro:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-50">
+                          {status === "OK" ? "✓ Macros em conformidade" : `Assistente: Diferença de ${Math.abs(diff)}${m.unit}`}
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>
