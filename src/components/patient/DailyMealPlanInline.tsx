@@ -50,7 +50,7 @@ export default function DailyMealPlanInline() {
     try {
       const { data: planData } = await supabase
         .from("meal_plans")
-        .select("id, title, start_date, totals_status")
+        .select("id, title, start_date, totals_status, plan_mode")
         .eq("patient_id", user.id)
         .eq("is_active", true)
         .eq("plan_status", "published_to_patient")
@@ -65,7 +65,7 @@ export default function DailyMealPlanInline() {
         setIsRefreshing(false);
         return; 
       }
-      setPlan(planData);
+      setPlan(planData as MealPlan);
 
       const { data: itemsData } = await supabase
         .from("meal_plan_items")
