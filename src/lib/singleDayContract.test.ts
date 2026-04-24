@@ -17,7 +17,7 @@
 import { describe, it, expect } from "vitest";
 import { enforceSingleDayContract } from "./singleDayContract";
 
-const baseItem = (over: Partial<any> = {}) => ({
+const baseItem = (over: Record<string, any> = {}): any => ({
   meal_plan_id: "plan-x",
   meal_type: "lunch",
   day_of_week: 0,
