@@ -16,11 +16,11 @@ import {
   QUEUE_MAX_SIZE,
 } from "../experienceModeTelemetry";
 
-const insertSpy = vi.fn(async () => ({ error: null }));
+const insertSpy: any = vi.fn(async () => ({ error: null }));
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     auth: { getUser: vi.fn(async () => ({ data: { user: { id: "u1" } } })) },
-    from: vi.fn(() => ({ insert: (...a: any[]) => insertSpy(...a) })),
+    from: vi.fn(() => ({ insert: (arg: any) => insertSpy(arg) })),
   },
 }));
 
