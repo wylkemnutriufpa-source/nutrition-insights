@@ -3256,12 +3256,49 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     const answers = (anamnesis.answers || {}) as Record<string, any>;
 
     // ── 2. Validate weight + height ──
-    // Professional override takes precedence so the nutritionist can ALWAYS proceed.
+    // Resolve com fallback amplo: override > body > pipeline > anamnesis answers >
+    // patient_body_assessments (mais recente) > physical_assessments (mais recente).
+    // Isso garante que dados inseridos via "Avaliação Física" sejam reconhecidos
+    // mesmo quando a anamnese não tem peso/altura nas respostas.
+    let assessmentWeight: number | null = null;
+    let assessmentHeight: number | null = null;
+    try {
+      const { data: pba } = await serviceClient
+        .from("patient_body_assessments")
+        .select("weight_kg, height_m, assessment_date")
+        .eq("patient_id", patient_id)
+        .not("weight_kg", "is", null)
+        .order("assessment_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (pba) {
+        assessmentWeight = pba.weight_kg ?? null;
+        // height_m está em metros — converte para cm
+        assessmentHeight = pba.height_m != null ? Number(pba.height_m) * 100 : null;
+      }
+      if (!assessmentWeight || !assessmentHeight) {
+        const { data: pa } = await serviceClient
+          .from("physical_assessments")
+          .select("weight, height, assessment_date")
+          .eq("patient_id", patient_id)
+          .not("weight", "is", null)
+          .order("assessment_date", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (pa) {
+          assessmentWeight = assessmentWeight ?? pa.weight ?? null;
+          assessmentHeight = assessmentHeight ?? pa.height ?? null;
+        }
+      }
+    } catch (assessmentErr) {
+      console.warn(`[generate-meal-plan] Falha ao buscar assessments para fallback de peso/altura:`, assessmentErr);
+    }
+
     const weight = normalizeWeightKg(
-      profOverride?.weight ?? body.weight ?? latestPipeline?.weight ?? answers.weight
+      profOverride?.weight ?? body.weight ?? latestPipeline?.weight ?? answers.weight ?? assessmentWeight
     );
     const height = normalizeHeightCm(
-      profOverride?.height ?? body.height ?? latestPipeline?.height ?? answers.height
+      profOverride?.height ?? body.height ?? latestPipeline?.height ?? answers.height ?? assessmentHeight
     );
     if (!weight || weight < 20 || !height || height < 80) {
       console.warn(`[generate-meal-plan] Invalid body data for patient ${patient_id}`, {
@@ -3269,6 +3306,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         pipelineWeight: latestPipeline?.weight ?? null, pipelineHeight: latestPipeline?.height ?? null,
         anamnesisWeight: answers.weight ?? null, anamnesisHeight: answers.height ?? null,
         overrideWeight: profOverride?.weight ?? null, overrideHeight: profOverride?.height ?? null,
+        assessmentWeight, assessmentHeight,
         normalizedWeight: weight, normalizedHeight: height,
       });
       return new Response(JSON.stringify({
