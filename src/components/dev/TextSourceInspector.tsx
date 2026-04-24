@@ -19,6 +19,16 @@ import { X } from "lucide-react";
 
 const LS_KEY = "fj:debug:text-inspector";
 
+interface CacheMatch {
+  queryKey: string;
+  dataUpdatedAt: number | null;
+  dataUpdatedAtIso: string | null;
+  ageSeconds: number | null;
+  status: string | null;
+  isStale: boolean | null;
+  observers: number | null;
+}
+
 interface InspectionResult {
   tag: string;
   text: string;
@@ -26,7 +36,7 @@ interface InspectionResult {
   componentName: string | null;
   classes: string;
   source: "static" | "react-state" | "query-cache" | "unknown";
-  cacheMatches: string[];
+  cacheMatches: CacheMatch[];
 }
 
 function shouldEnable(): boolean {
@@ -69,21 +79,34 @@ function findTestId(el: Element): string | null {
   return null;
 }
 
-function searchQueryCache(text: string): string[] {
+function searchQueryCache(text: string): CacheMatch[] {
   try {
     const qc: any = (window as any).__REACT_QUERY_CLIENT__;
     if (!qc?.getQueryCache) return [];
     const cache = qc.getQueryCache();
     const queries = cache.getAll?.() || [];
-    const matches: string[] = [];
+    const matches: CacheMatch[] = [];
     const needle = text.trim().toLowerCase();
     if (needle.length < 3) return [];
+    const now = Date.now();
     for (const q of queries) {
       try {
         const data = q.state?.data;
         const json = JSON.stringify(data ?? "");
         if (json.toLowerCase().includes(needle)) {
-          matches.push(JSON.stringify(q.queryKey));
+          const dataUpdatedAt: number | null = q.state?.dataUpdatedAt ?? null;
+          matches.push({
+            queryKey: JSON.stringify(q.queryKey),
+            dataUpdatedAt,
+            dataUpdatedAtIso: dataUpdatedAt ? new Date(dataUpdatedAt).toISOString() : null,
+            ageSeconds: dataUpdatedAt ? Math.round((now - dataUpdatedAt) / 1000) : null,
+            status: q.state?.status ?? null,
+            isStale: typeof q.isStale === "function" ? q.isStale() : null,
+            observers:
+              typeof q.getObserversCount === "function"
+                ? q.getObserversCount()
+                : null,
+          });
           if (matches.length >= 3) break;
         }
       } catch {}
