@@ -77,12 +77,24 @@ export default function MealPlans() {
     let query = supabase.from("meal_plans").select("*")
       .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
     
-    const { data } = await withTenantFilter(query, tenantId);
+    const { data, error } = await withTenantFilter(query, tenantId);
+    if (error) {
+      console.error("[MealPlans] Falha ao buscar planos:", error);
+      setPlans([]);
+      setLoading(false);
+      return;
+    }
     if (data) {
-      const enriched = await Promise.all(data.map(async (p) => {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", p.patient_id).single();
-        return { ...p, patient_name: profile?.full_name || "Paciente" };
-      }));
+      const patientIds = Array.from(new Set(data.map((p: any) => p.patient_id).filter(Boolean)));
+      const nameMap = new Map<string, string>();
+      if (patientIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from("profiles")
+          .select("user_id, full_name")
+          .in("user_id", patientIds);
+        (profiles || []).forEach((p: any) => nameMap.set(p.user_id, p.full_name || "Paciente"));
+      }
+      const enriched = data.map((p: any) => ({ ...p, patient_name: nameMap.get(p.patient_id) || "Paciente" }));
       setPlans(enriched);
 
       // Anomalous drop detection (Implementation of user request)
