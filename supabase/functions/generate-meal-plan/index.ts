@@ -3061,12 +3061,18 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       generationMode = "fixed_marmita";
     }
 
-    // Authorization guard
-    if (!caller.roles.includes("admin")) {
+    // Authorization guard (RELAXED): qualquer profissional autenticado pode gerar
+    // planos para qualquer paciente. Pacientes só podem gerar para si mesmos.
+    // Travas de vínculo nutricionista↔paciente foram removidas a pedido do produto.
+    {
+      const isProfessional =
+        caller.roles.includes("admin") ||
+        caller.roles.includes("nutritionist") ||
+        caller.roles.includes("personal") ||
+        caller.roles.includes("coach");
       const callerIsPatient = userId === patient_id;
-      const callerIsResponsibleProfessional = userId === requestedNutritionistId;
 
-      if (!callerIsPatient && !callerIsResponsibleProfessional) {
+      if (!isProfessional && !callerIsPatient) {
         return new Response(JSON.stringify({
           error: "Usuário não autorizado para gerar plano deste paciente",
           code: "PLAN_AUTH_FORBIDDEN",
@@ -3076,30 +3082,21 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         });
       }
 
-      const patientIdentityIds = Array.from(new Set([
-        patient_id,
-        patientProfile?.id,
-        patientProfile?.user_id,
-      ].filter(Boolean)));
-
-      // Use authClient for the link check to ensure RLS doesn't block it
-      const { data: activeLink } = await authClient
-        .from("nutritionist_patients")
-        .select("id")
-        .in("patient_id", patientIdentityIds)
-        .eq("nutritionist_id", requestedNutritionistId)
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
-
-      if (!activeLink) {
-        return new Response(JSON.stringify({
-          error: "Paciente não está vinculado ao profissional responsável",
-          code: "PATIENT_LINK_MISSING",
-        }), {
-          status: 403,
-          headers: { ...corsHeaders, "Content-Type": "application/json" },
-        });
+      // Best-effort: garantir vínculo nutricionista↔paciente quando possível
+      // (não bloqueia mais a geração — apenas cria o link silenciosamente)
+      if (isProfessional && !callerIsPatient) {
+        try {
+          const linkPatientId = patientProfile?.id || patient_id;
+          await serviceClient
+            .from("nutritionist_patients")
+            .upsert({
+              nutritionist_id: requestedNutritionistId,
+              patient_id: linkPatientId,
+              status: "active",
+            }, { onConflict: "nutritionist_id,patient_id", ignoreDuplicates: true });
+        } catch (linkErr) {
+          console.warn("[generate-meal-plan] auto-link best-effort failed:", linkErr);
+        }
       }
     }
 
