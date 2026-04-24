@@ -248,7 +248,7 @@ export function WeeklyGrid() {
 
             {/* Day cell (Day 0 only) */}
             {(() => {
-              const day = 0;
+              const day = effectiveDay;
               const cellItems = getItems(day, meal.key);
               const cellKey = `${day}-${meal.key}`;
               const isDragSrc = dragSource?.day === day && dragSource?.mealType === meal.key;
