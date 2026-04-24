@@ -23,7 +23,7 @@ import ExperienceModeStatusSection from "@/components/dashboard/ExperienceModeSt
 import { supabase } from "@/integrations/supabase/client";
 
 // ─── Spies ─────────────────────────────────────────────────────────
-const auditInsertSpy = vi.fn(async () => ({ error: null }));
+const auditInsertSpy = vi.fn(async (_payload: any) => ({ error: null }));
 const updateSpy = vi.fn();
 const selectMaybeSingleSpy = vi.fn();
 
