@@ -422,12 +422,12 @@ export default function AdminPlanLoadingDiagnostics() {
                           <td className="py-2 pl-4 w-[40%]">
                             <div className="flex flex-col gap-1">
                               <div
-                                className="h-1.5 rounded bg-amber-500/60"
+                                className="h-1.5 rounded bg-warning/70"
                                 style={{ width: `${wU}%` }}
                                 title={`PLAN_STATUS_UNKNOWN: ${b.PLAN_STATUS_UNKNOWN}`}
                               />
                               <div
-                                className="h-1.5 rounded bg-rose-500/60"
+                                className="h-1.5 rounded bg-destructive/70"
                                 style={{ width: `${wV}%` }}
                                 title={`PLAN_VISIBILITY_DROP: ${b.PLAN_VISIBILITY_DROP}`}
                               />
