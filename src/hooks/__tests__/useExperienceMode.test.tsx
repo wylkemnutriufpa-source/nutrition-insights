@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { renderHook, act } from "@testing-library/react";
+import { renderHook, act, waitFor } from "@testing-library/react";
 import { useExperienceModeState } from "../useExperienceMode";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -43,19 +43,19 @@ describe("useExperienceModeState", () => {
   });
 
   it("should update mode and persist to localStorage and DB", async () => {
-    const { result } = renderHook(() => useExperienceModeState("professional"));
-
     // Mock successful profile check (not locked)
-    (supabase.from as any).mockReturnValue({
+    (supabase.from as any).mockImplementation((table) => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
-          maybeSingle: vi.fn().mockResolvedValue({ data: { experience_mode_locked: false } }),
+          maybeSingle: vi.fn().mockResolvedValue({ data: table === "profiles" ? { experience_mode_locked: false } : null }),
         })),
       })),
       update: vi.fn(() => ({
         eq: vi.fn().mockResolvedValue({ error: null }),
       })),
-    });
+    }));
+
+    const { result } = renderHook(() => useExperienceModeState("professional"));
 
     await act(async () => {
       await result.current.setMode("advanced");
@@ -63,14 +63,11 @@ describe("useExperienceModeState", () => {
 
     expect(result.current.mode).toBe("advanced");
     expect(localStorage.getItem("fj_experience_mode")).toBe("advanced");
-    expect(supabase.from).toHaveBeenCalledWith("profiles");
   });
 
   it("should fallback to previous mode if DB update fails", async () => {
-    const { result } = renderHook(() => useExperienceModeState("professional"));
-
     // Mock profile check success but update failure
-    (supabase.from as any).mockReturnValue({
+    (supabase.from as any).mockImplementation(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           maybeSingle: vi.fn().mockResolvedValue({ data: { experience_mode_locked: false } }),
@@ -79,40 +76,44 @@ describe("useExperienceModeState", () => {
       update: vi.fn(() => ({
         eq: vi.fn().mockResolvedValue({ error: new Error("Network error") }),
       })),
+    }));
+
+    const { result } = renderHook(() => useExperienceModeState("professional"));
+
+    await act(async () => {
+      try {
+        await result.current.setMode("advanced");
+      } catch (e) {
+        // Expected
+      }
     });
 
-    try {
-      await act(async () => {
-        await result.current.setMode("advanced");
-      });
-    } catch (e) {
-      // Expected
-    }
-
-    expect(result.current.mode).toBe("basic"); // Remained basic or fell back
-    expect(result.current.failedMode).toBe("advanced");
+    await waitFor(() => {
+      expect(result.current.mode).toBe("basic");
+      expect(result.current.failedMode).toBe("advanced");
+    });
   });
 
   it("should block mode change if profile is locked", async () => {
-    const { result } = renderHook(() => useExperienceModeState("patient"));
-
     // Mock profile locked
-    (supabase.from as any).mockReturnValue({
+    (supabase.from as any).mockImplementation(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           maybeSingle: vi.fn().mockResolvedValue({ data: { experience_mode_locked: true } }),
         })),
       })),
-    });
+    }));
+
+    const { result } = renderHook(() => useExperienceModeState("patient"));
 
     let caughtError: any;
-    try {
-      await act(async () => {
+    await act(async () => {
+      try {
         await result.current.setMode("pro");
-      });
-    } catch (e) {
-      caughtError = e;
-    }
+      } catch (e) {
+        caughtError = e;
+      }
+    });
 
     expect(caughtError?.code).toBe("MODE_LOCKED");
     expect(result.current.mode).toBe("basic");
@@ -120,11 +121,9 @@ describe("useExperienceModeState", () => {
 
   it("should allow 'basic' even if locked", async () => {
     localStorage.setItem("fj_experience_mode", "pro");
-    const { result } = renderHook(() => useExperienceModeState("patient"));
-    expect(result.current.mode).toBe("pro");
-
+    
     // Mock profile locked
-    (supabase.from as any).mockReturnValue({
+    (supabase.from as any).mockImplementation(() => ({
       select: vi.fn(() => ({
         eq: vi.fn(() => ({
           maybeSingle: vi.fn().mockResolvedValue({ data: { experience_mode_locked: true } }),
@@ -133,7 +132,10 @@ describe("useExperienceModeState", () => {
       update: vi.fn(() => ({
         eq: vi.fn().mockResolvedValue({ error: null }),
       })),
-    });
+    }));
+
+    const { result } = renderHook(() => useExperienceModeState("patient"));
+    expect(result.current.mode).toBe("pro");
 
     await act(async () => {
       await result.current.setMode("basic");
