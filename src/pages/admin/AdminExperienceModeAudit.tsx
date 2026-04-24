@@ -2,8 +2,14 @@
  * Admin report: Experience Mode Audit Log.
  * Lists every blocked attempt and update failure with user, reason and timestamp.
  * Filterable by outcome and date range, with CSV/PDF export of the filtered set.
+ *
+ * Adds:
+ *  - Saved filter presets (localStorage)
+ *  - Retry-threshold alert highlighting suspicious correlationIds with deep links
+ *  - Mini timeline grouped by correlationId showing each attempt in order
+ *  - Extended CSV columns (error_code breakdown, duration_ms, retries, attempts)
  */
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,7 +24,11 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Shield, RefreshCw, Search, Download, FileText, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Shield, RefreshCw, Search, Download, FileText,
+  ChevronLeft, ChevronRight, AlertTriangle, Save, Trash2, Star,
+  ChevronDown, ChevronUp, Clock,
+} from "lucide-react";
 import { jsPDF } from "jspdf";
 import autoTable from "jspdf-autotable";
 
@@ -38,6 +48,15 @@ interface AuditRow {
   created_at: string;
 }
 
+interface FilterPreset {
+  id: string;
+  name: string;
+  outcome: Outcome;
+  from: string;
+  to: string;
+  search: string;
+}
+
 const OUTCOME_BADGES: Record<string, { label: string; className: string }> = {
   success: { label: "Sucesso", className: "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400" },
   blocked: { label: "Bloqueado", className: "bg-amber-500/15 text-amber-700 dark:text-amber-400" },
@@ -49,6 +68,35 @@ const OUTCOME_BADGES: Record<string, { label: string; className: string }> = {
 };
 
 const PAGE_SIZE = 50;
+const PRESETS_KEY = "fj_emode_audit_presets";
+const RETRY_THRESHOLD_KEY = "fj_emode_audit_retry_threshold";
+
+function loadPresets(): FilterPreset[] {
+  try {
+    const raw = localStorage.getItem(PRESETS_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function savePresets(presets: FilterPreset[]) {
+  try {
+    localStorage.setItem(PRESETS_KEY, JSON.stringify(presets));
+  } catch {
+    /* ignore */
+  }
+}
+
+function buildOutcomeBreakdown(rowsForCid: AuditRow[]) {
+  const breakdown: Record<string, number> = {};
+  for (const r of rowsForCid) {
+    breakdown[r.outcome] = (breakdown[r.outcome] || 0) + 1;
+  }
+  return breakdown;
+}
 
 export default function AdminExperienceModeAudit() {
   const [rows, setRows] = useState<AuditRow[]>([]);
@@ -58,6 +106,31 @@ export default function AdminExperienceModeAudit() {
   const [from, setFrom] = useState<string>("");
   const [to, setTo] = useState<string>("");
   const [page, setPage] = useState(0);
+
+  // Presets
+  const [presets, setPresets] = useState<FilterPreset[]>(() => loadPresets());
+  const [presetName, setPresetName] = useState("");
+
+  // Retry threshold
+  const [retryThreshold, setRetryThreshold] = useState<number>(() => {
+    const saved = localStorage.getItem(RETRY_THRESHOLD_KEY);
+    const n = saved ? parseInt(saved, 10) : 3;
+    return Number.isFinite(n) && n > 0 ? n : 3;
+  });
+  useEffect(() => {
+    localStorage.setItem(RETRY_THRESHOLD_KEY, String(retryThreshold));
+  }, [retryThreshold]);
+
+  // Timeline: which correlationIds are expanded
+  const [expandedCids, setExpandedCids] = useState<Set<string>>(new Set());
+  const toggleCid = useCallback((cid: string) => {
+    setExpandedCids((prev) => {
+      const next = new Set(prev);
+      if (next.has(cid)) next.delete(cid);
+      else next.add(cid);
+      return next;
+    });
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -101,7 +174,79 @@ export default function AdminExperienceModeAudit() {
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows = filtered.slice(page * PAGE_SIZE, page * PAGE_SIZE + PAGE_SIZE);
 
-  // ─── Metrics: retries per correlationId & avg time-to-success ───
+  // Group ALL filtered rows by correlation_id for timeline + retry detection
+  const groupedByCid = useMemo(() => {
+    const map = new Map<string, AuditRow[]>();
+    for (const r of filtered) {
+      if (!r.correlation_id) continue;
+      const arr = map.get(r.correlation_id) || [];
+      arr.push(r);
+      map.set(r.correlation_id, arr);
+    }
+    // sort each group by created_at ascending (timeline order)
+    for (const [, arr] of map) {
+      arr.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime());
+    }
+    return map;
+  }, [filtered]);
+
+  // Build retry counts per correlationId (max retries field across rows)
+  const retryByCid = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const [cid, arr] of groupedByCid) {
+      let maxRetries = 0;
+      for (const r of arr) {
+        const meta = (r.metadata || {}) as any;
+        const retries = Number(meta.retries ?? 0);
+        if (Number.isFinite(retries) && retries > maxRetries) maxRetries = retries;
+      }
+      m.set(cid, maxRetries);
+    }
+    return m;
+  }, [groupedByCid]);
+
+  // High-retry alert: correlationIds with retries >= threshold
+  const highRetryCids = useMemo(() => {
+    const list: { cid: string; retries: number; lastOutcome: string; firstId: string }[] = [];
+    for (const [cid, retries] of retryByCid) {
+      if (retries >= retryThreshold) {
+        const arr = groupedByCid.get(cid) || [];
+        const last = arr[arr.length - 1];
+        list.push({
+          cid,
+          retries,
+          lastOutcome: last?.outcome || "—",
+          firstId: arr[0]?.id || "",
+        });
+      }
+    }
+    list.sort((a, b) => b.retries - a.retries);
+    return list;
+  }, [retryByCid, groupedByCid, retryThreshold]);
+
+  // Jump to a specific audit row by id (scroll into view + highlight via expandedCids)
+  const jumpToRow = useCallback((cid: string, rowId: string) => {
+    // ensure the page contains the row
+    const idx = filtered.findIndex((r) => r.id === rowId);
+    if (idx < 0) {
+      toast.info("Linha não está na página atual com os filtros aplicados.");
+      return;
+    }
+    const targetPage = Math.floor(idx / PAGE_SIZE);
+    setPage(targetPage);
+    setExpandedCids((prev) => new Set(prev).add(cid));
+    // wait for render then scroll
+    setTimeout(() => {
+      const el = document.getElementById(`audit-row-${rowId}`);
+      if (el) {
+        el.scrollIntoView({ behavior: "smooth", block: "center" });
+        el.classList.add("ring-2", "ring-primary", "ring-offset-2");
+        setTimeout(() => el.classList.remove("ring-2", "ring-primary", "ring-offset-2"), 2500);
+      }
+    }, 80);
+  }, [filtered]);
+
+  // ─── Metrics ───
   const metrics = useMemo(() => {
     const retriesByCid = new Map<string, number>();
     const durationsBySuccess: number[] = [];
@@ -141,6 +286,44 @@ export default function AdminExperienceModeAudit() {
     };
   }, [filtered]);
 
+  // ─── Presets ───
+  const handleSavePreset = () => {
+    const name = presetName.trim();
+    if (!name) {
+      toast.info("Dê um nome ao preset.");
+      return;
+    }
+    const preset: FilterPreset = {
+      id: `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name,
+      outcome,
+      from,
+      to,
+      search,
+    };
+    const next = [...presets, preset];
+    setPresets(next);
+    savePresets(next);
+    setPresetName("");
+    toast.success(`Preset "${name}" salvo.`);
+  };
+
+  const applyPreset = (p: FilterPreset) => {
+    setOutcome(p.outcome);
+    setFrom(p.from);
+    setTo(p.to);
+    setSearch(p.search);
+    setPage(0);
+    toast.success(`Preset "${p.name}" aplicado.`);
+  };
+
+  const deletePreset = (id: string) => {
+    const next = presets.filter((p) => p.id !== id);
+    setPresets(next);
+    savePresets(next);
+  };
+
+  // ─── Exports ───
   const exportCsv = () => {
     if (filtered.length === 0) {
       toast.info("Nada para exportar com os filtros atuais.");
@@ -159,11 +342,33 @@ export default function AdminExperienceModeAudit() {
       "attempt_count",
       "retries",
       "duration_ms",
+      "meta_error_code",
+      "meta_duration_breakdown",
+      "meta_offline_queued",
+      "meta_replayed_at",
+      "meta_raw",
     ];
     const lines = filtered.map((r) => {
       const meta = (r.metadata || {}) as any;
       const retries = Number(meta.retries ?? 0);
       const attempts = retries + 1;
+      const metaErrorCode = meta.error_code ?? meta.code ?? "";
+      const durationBreakdown =
+        meta.duration_breakdown
+          ? JSON.stringify(meta.duration_breakdown)
+          : meta.duration_ms !== undefined && retries > 0
+          ? `total:${meta.duration_ms}|avg_per_attempt:${Math.round(Number(meta.duration_ms) / Math.max(1, attempts))}`
+          : meta.duration_ms !== undefined
+          ? `total:${meta.duration_ms}`
+          : "";
+      const offlineQueued = meta.offline_queued ?? "";
+      const replayedAt = meta.replayed_at ?? "";
+      let rawMeta = "";
+      try {
+        rawMeta = JSON.stringify(meta);
+      } catch {
+        rawMeta = "";
+      }
       return [
         r.created_at,
         r.outcome,
@@ -177,6 +382,11 @@ export default function AdminExperienceModeAudit() {
         attempts,
         retries,
         meta.duration_ms ?? "",
+        metaErrorCode,
+        durationBreakdown,
+        offlineQueued,
+        replayedAt,
+        rawMeta.replace(/"/g, '""'),
       ]
         .map((v) => `"${String(v).replace(/\n/g, " ")}"`)
         .join(",");
@@ -234,6 +444,73 @@ export default function AdminExperienceModeAudit() {
           </p>
         </div>
       </header>
+
+      {/* High-retry alert */}
+      {highRetryCids.length > 0 && (
+        <Card
+          data-testid="emode-high-retry-alert"
+          className="border-destructive/40 bg-destructive/5"
+        >
+          <CardHeader className="pb-2">
+            <CardTitle className="text-base flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-4 h-4" />
+              {highRetryCids.length} correlationId(s) com retries ≥ {retryThreshold}
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 mb-3">
+              <Label className="text-xs">Limite de retries</Label>
+              <Input
+                type="number"
+                min={1}
+                value={retryThreshold}
+                onChange={(e) => {
+                  const n = parseInt(e.target.value, 10);
+                  if (Number.isFinite(n) && n > 0) setRetryThreshold(n);
+                }}
+                className="h-8 w-20"
+                data-testid="emode-retry-threshold-input"
+              />
+            </div>
+            <ul className="space-y-1.5 max-h-48 overflow-auto">
+              {highRetryCids.slice(0, 20).map((item) => {
+                const badge = OUTCOME_BADGES[item.lastOutcome] || {
+                  label: item.lastOutcome,
+                  className: "bg-muted",
+                };
+                return (
+                  <li
+                    key={item.cid}
+                    data-testid="emode-high-retry-row"
+                    className="flex items-center justify-between gap-2 text-xs border border-destructive/20 rounded px-2 py-1.5 bg-background"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="font-mono truncate">{item.cid}</span>
+                      <Badge variant="outline" className={badge.className}>
+                        {badge.label}
+                      </Badge>
+                    </div>
+                    <div className="flex items-center gap-2 shrink-0">
+                      <span className="text-destructive font-semibold">
+                        {item.retries} retries
+                      </span>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => jumpToRow(item.cid, item.firstId)}
+                        className="h-7 text-[11px]"
+                        data-testid="emode-jump-to-audit"
+                      >
+                        Ver na auditoria →
+                      </Button>
+                    </div>
+                  </li>
+                );
+              })}
+            </ul>
+          </CardContent>
+        </Card>
+      )}
 
       <Card>
         <CardHeader>
@@ -296,7 +573,66 @@ export default function AdminExperienceModeAudit() {
         </CardContent>
       </Card>
 
-      {/* Metrics panel: retries per correlationId & avg time-to-success */}
+      {/* Saved filter presets */}
+      <Card data-testid="emode-presets-card">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base flex items-center gap-2">
+            <Star className="w-4 h-4 text-amber-500" /> Presets de filtros
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <div className="flex gap-2 items-center">
+            <Input
+              placeholder="Nome do preset (ex: Falhas hoje)"
+              value={presetName}
+              onChange={(e) => setPresetName(e.target.value)}
+              className="h-8 text-xs"
+              data-testid="emode-preset-name-input"
+            />
+            <Button size="sm" variant="outline" onClick={handleSavePreset} data-testid="emode-preset-save">
+              <Save className="w-4 h-4 mr-1" /> Salvar
+            </Button>
+          </div>
+          {presets.length === 0 ? (
+            <p className="text-xs text-muted-foreground">
+              Nenhum preset salvo. Configure os filtros acima e dê um nome para salvar.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2" data-testid="emode-presets-list">
+              {presets.map((p) => (
+                <div
+                  key={p.id}
+                  className="inline-flex items-center gap-1 border border-border rounded-md bg-muted/30 pl-2"
+                >
+                  <button
+                    type="button"
+                    onClick={() => applyPreset(p)}
+                    className="text-xs font-medium py-1.5 px-1 hover:underline"
+                    data-testid="emode-preset-apply"
+                  >
+                    {p.name}
+                  </button>
+                  <span className="text-[10px] text-muted-foreground">
+                    {p.outcome}
+                    {p.from || p.to ? ` · ${p.from || "…"}→${p.to || "…"}` : ""}
+                  </span>
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => deletePreset(p.id)}
+                    className="h-7 w-7"
+                    aria-label={`Excluir preset ${p.name}`}
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
+
+      {/* Metrics panel */}
       <Card data-testid="emode-metrics-panel">
         <CardHeader>
           <CardTitle className="text-base">Métricas (filtros aplicados)</CardTitle>
@@ -391,6 +727,7 @@ export default function AdminExperienceModeAudit() {
               <table className="w-full text-xs">
                 <thead className="border-b border-border">
                   <tr className="text-left text-muted-foreground">
+                    <th className="py-2 pr-3 font-medium w-6"></th>
                     <th className="py-2 pr-3 font-medium">Quando</th>
                     <th className="py-2 pr-3 font-medium">Resultado</th>
                     <th className="py-2 pr-3 font-medium">Usuário</th>
@@ -405,38 +742,146 @@ export default function AdminExperienceModeAudit() {
                       label: r.outcome,
                       className: "bg-muted",
                     };
+                    const group = groupedByCid.get(r.correlation_id) || [];
+                    const hasTimeline = group.length > 1;
+                    const isExpanded = expandedCids.has(r.correlation_id);
+                    const breakdown = hasTimeline ? buildOutcomeBreakdown(group) : null;
                     return (
-                      <tr key={r.id} className="border-b border-border/50 align-top">
-                        <td className="py-2 pr-3 whitespace-nowrap">
-                          {new Date(r.created_at).toLocaleString("pt-BR")}
-                        </td>
-                        <td className="py-2 pr-3">
-                          <Badge variant="outline" className={badge.className}>
-                            {badge.label}
-                          </Badge>
-                        </td>
-                        <td className="py-2 pr-3 font-mono text-[10px]">{r.user_id}</td>
-                        <td className="py-2 pr-3 capitalize">
-                          {r.attempted_mode}
-                          {r.previous_mode && (
-                            <span className="text-muted-foreground"> ← {r.previous_mode}</span>
-                          )}
-                        </td>
-                        <td className="py-2 pr-3 max-w-xs">
-                          <div>{r.reason || "—"}</div>
-                          {r.error_code && (
-                            <div className="text-[10px] text-muted-foreground">
-                              code: {r.error_code}
+                      <>
+                        <tr
+                          key={r.id}
+                          id={`audit-row-${r.id}`}
+                          className="border-b border-border/50 align-top transition-shadow"
+                        >
+                          <td className="py-2 pr-1">
+                            {hasTimeline && (
+                              <button
+                                onClick={() => toggleCid(r.correlation_id)}
+                                aria-label={isExpanded ? "Recolher timeline" : "Expandir timeline"}
+                                className="text-muted-foreground hover:text-foreground"
+                                data-testid="emode-timeline-toggle"
+                              >
+                                {isExpanded
+                                  ? <ChevronUp className="w-3.5 h-3.5" />
+                                  : <ChevronDown className="w-3.5 h-3.5" />}
+                              </button>
+                            )}
+                          </td>
+                          <td className="py-2 pr-3 whitespace-nowrap">
+                            {new Date(r.created_at).toLocaleString("pt-BR")}
+                          </td>
+                          <td className="py-2 pr-3">
+                            <Badge variant="outline" className={badge.className}>
+                              {badge.label}
+                            </Badge>
+                          </td>
+                          <td className="py-2 pr-3 font-mono text-[10px]">{r.user_id}</td>
+                          <td className="py-2 pr-3 capitalize">
+                            {r.attempted_mode}
+                            {r.previous_mode && (
+                              <span className="text-muted-foreground"> ← {r.previous_mode}</span>
+                            )}
+                          </td>
+                          <td className="py-2 pr-3 max-w-xs">
+                            <div>{r.reason || "—"}</div>
+                            {r.error_code && (
+                              <div className="text-[10px] text-muted-foreground">
+                                code: {r.error_code}
+                              </div>
+                            )}
+                            {r.unlock_date && (
+                              <div className="text-[10px] text-muted-foreground">
+                                desbloqueio: {new Date(r.unlock_date).toLocaleDateString("pt-BR")}
+                              </div>
+                            )}
+                          </td>
+                          <td className="py-2 pr-3 font-mono text-[10px]">
+                            <div className="flex items-center gap-1">
+                              <span>{r.correlation_id}</span>
+                              {hasTimeline && (
+                                <Badge variant="outline" className="text-[9px] py-0 h-4">
+                                  {group.length}×
+                                </Badge>
+                              )}
                             </div>
-                          )}
-                          {r.unlock_date && (
-                            <div className="text-[10px] text-muted-foreground">
-                              desbloqueio: {new Date(r.unlock_date).toLocaleDateString("pt-BR")}
-                            </div>
-                          )}
-                        </td>
-                        <td className="py-2 pr-3 font-mono text-[10px]">{r.correlation_id}</td>
-                      </tr>
+                          </td>
+                        </tr>
+
+                        {/* Timeline row */}
+                        {hasTimeline && isExpanded && (
+                          <tr key={`${r.id}-timeline`} className="border-b border-border/50 bg-muted/20">
+                            <td></td>
+                            <td colSpan={6} className="py-3 px-3">
+                              <div
+                                data-testid="emode-timeline"
+                                className="space-y-2"
+                              >
+                                <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
+                                  <Clock className="w-3 h-3" />
+                                  <span>Timeline ({group.length} eventos)</span>
+                                  {breakdown && (
+                                    <div className="flex gap-1 flex-wrap">
+                                      {Object.entries(breakdown).map(([k, v]) => (
+                                        <Badge
+                                          key={k}
+                                          variant="outline"
+                                          className={`${OUTCOME_BADGES[k]?.className || "bg-muted"} text-[9px] py-0 h-4`}
+                                        >
+                                          {OUTCOME_BADGES[k]?.label || k}: {v}
+                                        </Badge>
+                                      ))}
+                                    </div>
+                                  )}
+                                </div>
+                                <ol className="relative border-l-2 border-border ml-2 space-y-2">
+                                  {group.map((g, idx) => {
+                                    const gBadge = OUTCOME_BADGES[g.outcome] || {
+                                      label: g.outcome,
+                                      className: "bg-muted",
+                                    };
+                                    const gMeta = (g.metadata || {}) as any;
+                                    return (
+                                      <li
+                                        key={g.id}
+                                        data-testid="emode-timeline-step"
+                                        className="ml-3 pl-3"
+                                      >
+                                        <span className="absolute -left-[7px] mt-1 w-3 h-3 rounded-full bg-primary border-2 border-background" />
+                                        <div className="flex items-center gap-2 text-[11px]">
+                                          <span className="font-mono text-muted-foreground">
+                                            #{idx + 1}
+                                          </span>
+                                          <span className="whitespace-nowrap">
+                                            {new Date(g.created_at).toLocaleString("pt-BR")}
+                                          </span>
+                                          <Badge variant="outline" className={gBadge.className}>
+                                            {gBadge.label}
+                                          </Badge>
+                                          {gMeta.duration_ms !== undefined && (
+                                            <span className="text-muted-foreground">
+                                              {gMeta.duration_ms}ms
+                                            </span>
+                                          )}
+                                          {gMeta.retries !== undefined && Number(gMeta.retries) > 0 && (
+                                            <span className="text-amber-600">
+                                              {gMeta.retries} retries
+                                            </span>
+                                          )}
+                                        </div>
+                                        {g.reason && (
+                                          <div className="text-[10px] text-muted-foreground mt-0.5">
+                                            {g.reason}
+                                          </div>
+                                        )}
+                                      </li>
+                                    );
+                                  })}
+                                </ol>
+                              </div>
+                            </td>
+                          </tr>
+                        )}
+                      </>
                     );
                   })}
                 </tbody>
