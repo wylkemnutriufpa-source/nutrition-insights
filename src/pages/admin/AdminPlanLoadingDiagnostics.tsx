@@ -195,7 +195,7 @@ export default function AdminPlanLoadingDiagnostics() {
                           <td className="py-2">
                             <code className="text-xs">{b.plan_status}</code>
                             {isUnknown && (
-                              <Badge variant="outline" className="ml-2 text-[10px] border-rose-500/40 text-rose-500">
+                              <Badge variant="outline" className="ml-2 text-[10px] border-destructive/40 text-destructive">
                                 novo
                               </Badge>
                             )}
