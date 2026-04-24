@@ -201,7 +201,15 @@ export default function AdminPlanLoadingDiagnostics() {
     void load();
   }, [load]);
 
-  const unknownStatuses = buckets.filter((b) => !KNOWN_PLAN_STATUS_KEYS.includes(b.plan_status));
+  const unknownStatuses = buckets.filter((b) => isTrulyUnknownPlanStatus(b.plan_status));
+
+  // Pagination derived state for unknown-by-workspace list
+  const totalUnknownPages = Math.max(1, Math.ceil(unknownByWorkspace.length / unknownLimit));
+  const currentPage = Math.min(unknownPage, totalUnknownPages);
+  const pagedUnknown = unknownByWorkspace.slice(
+    (currentPage - 1) * unknownLimit,
+    currentPage * unknownLimit,
+  );
 
   return (
     <DashboardLayout>
