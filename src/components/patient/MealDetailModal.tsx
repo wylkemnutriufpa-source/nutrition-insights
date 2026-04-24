@@ -342,8 +342,9 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const remainingFoodLines = foodLines.filter((_, i) => !newRemoved.has(i));
     const newDescription = rebuildDescription(remainingFoodLines, substitutionLines);
     if (onUpdateItem) {
-      const macroPatch = recalculateMacrosFromDescription(newDescription);
-      onUpdateItem(meal.itemId, { description: newDescription, ...macroPatch });
+      // REGRA: O banco gerencia os macros via target_percentage. 
+      // Não enviamos macroPatch no cliente para evitar inconsistências.
+      onUpdateItem(meal.itemId, { description: newDescription });
     } else if (onRemoveFoodLine) {
       onRemoveFoodLine(meal.itemId, newDescription);
     }
@@ -368,8 +369,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newFoodLines = foodLines.map((l, i) => i === lineIdx ? newLine : l);
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     if (onUpdateItem) {
-      const macroPatch = recalculateMacrosFromDescription(newDescription);
-      onUpdateItem(meal.itemId, { description: newDescription, ...macroPatch });
+      // REGRA: O banco gerencia os macros via target_percentage.
+      onUpdateItem(meal.itemId, { description: newDescription });
     } else if (onRemoveFoodLine) {
       onRemoveFoodLine(meal.itemId, newDescription);
     }
@@ -393,8 +394,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
     const newFoodLines = [...foodLines, newLine];
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
     if (onUpdateItem) {
-      const macroPatch = recalculateMacrosFromDescription(newDescription);
-      onUpdateItem(meal.itemId, { description: newDescription, ...macroPatch });
+      // REGRA: O banco gerencia os macros via target_percentage.
+      onUpdateItem(meal.itemId, { description: newDescription });
     } else if (onRemoveFoodLine) {
       onRemoveFoodLine(meal.itemId, newDescription);
     }
