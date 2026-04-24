@@ -3,10 +3,8 @@ import { AnimatePresence } from "framer-motion";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { DayContent } from "./DayContent";
 import LegacyDayBanner from "./LegacyDayBanner";
-import { resolveEffectiveDay } from "@/lib/resolveEffectiveDay";
 import { useForceCanonicalDay } from "@/hooks/useForceCanonicalDay";
-
-const DAY_LABELS = ["Domingo", "Segunda", "Terça", "Quarta", "Quinta", "Sexta", "Sábado"];
+import { resolveHeaderSnapshot } from "@/lib/editorHeaderSnapshot";
 
 /**
  * ListView (Modo Diário Único)
@@ -19,22 +17,11 @@ export function ListView() {
   const { items } = useMealPlanEditorV2Store();
   const [forceCanonical, setForceCanonical] = useForceCanonicalDay();
 
-  const effectiveDay = useMemo(
-    () => resolveEffectiveDay(items, { forceCanonical }),
+  // SINGLE SOURCE OF TRUTH para o cabeçalho: rótulo e totais derivam
+  // do MESMO effectiveDay (evita dessincronização com o conteúdo abaixo).
+  const { effectiveDay, effectiveDayLabel: dayLabel, showingLegacy, totals } = useMemo(
+    () => resolveHeaderSnapshot(items, { forceCanonical }),
     [items, forceCanonical]
-  );
-
-  const showingLegacy = effectiveDay !== 0;
-  const dayLabel = DAY_LABELS[effectiveDay] ?? `Dia ${effectiveDay}`;
-  const dayItems = items.filter((i) => i.day_of_week === effectiveDay);
-  const totals = dayItems.reduce(
-    (acc, i) => ({
-      calories: acc.calories + (i.calories_target || 0),
-      protein: acc.protein + (Number(i.protein_target) || 0),
-      carbs: acc.carbs + (Number(i.carbs_target) || 0),
-      fat: acc.fat + (Number(i.fat_target) || 0),
-    }),
-    { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
 
   return (
