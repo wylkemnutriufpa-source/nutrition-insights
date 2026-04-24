@@ -313,12 +313,14 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
           throw error;
         }
 
-        const { error: updateError } = await withTimeout(
-          supabase
-            .from("profiles")
-            .update({ experience_mode: m } as any)
-            .eq("user_id", user.id)
+        const updateRes = await withTimeout(
+          (async () =>
+            supabase
+              .from("profiles")
+              .update({ experience_mode: m } as any)
+              .eq("user_id", user.id))()
         );
+        const { error: updateError } = updateRes as any;
 
         if (updateError) {
           const err: ModeChangeError = Object.assign(
