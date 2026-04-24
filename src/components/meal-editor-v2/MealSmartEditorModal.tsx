@@ -328,14 +328,30 @@ export function MealSmartEditorModal({
                   </div>
                 </div>
 
-                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 flex gap-3">
-                  <Info className="w-5 h-5 text-primary shrink-0" />
-                  <div className="space-y-1">
-                    <p className="text-[11px] font-bold text-primary uppercase tracking-wider">Dica Clínica</p>
-                    <p className="text-[10px] text-muted-foreground leading-relaxed">
-                      As substituições aparecem logo abaixo da composição principal no plano do paciente.
-                    </p>
+                <div className="p-4 rounded-2xl bg-primary/5 border border-primary/10 space-y-3">
+                  <div className="flex gap-3">
+                    <Info className="w-5 h-5 text-primary shrink-0" />
+                    <div className="space-y-1">
+                      <p className="text-[11px] font-bold text-primary uppercase tracking-wider">Prévia do Plano</p>
+                      <p className="text-[10px] text-muted-foreground leading-relaxed">
+                        Veja como as substituições serão organizadas e formatadas após salvar:
+                      </p>
+                    </div>
                   </div>
+                  
+                  {substitutions.filter(s => s.trim().length > 0).length > 0 && (
+                    <div className="bg-background/50 rounded-xl p-3 border border-primary/5 font-mono text-[9px] text-primary/80 overflow-hidden">
+                      <p className="font-bold mb-1 opacity-50 uppercase tracking-tighter">Visualização Final:</p>
+                      <div className="whitespace-pre-wrap">
+                        🔄 Substituições:{"\n"}
+                        {Array.from(new Set(
+                          substitutions
+                            .map(s => String(s).trim().replace(/\s+/g, ' '))
+                            .filter(s => s.length > 0)
+                        )).sort().join("\n")}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
             </ScrollArea>

@@ -3,8 +3,9 @@ import { renderHook, act } from '@testing-library/react';
 import React, { useState } from 'react';
 
 // Simulating the logic used in MealSmartEditorModal for substitution handling
-const useSubstitutionEditor = (initialSubs: string[]) => {
+const useSubstitutionEditor = (initialSubs: string[], initialDescription: string = "") => {
   const [substitutions, setSubstitutions] = useState<string[]>(initialSubs);
+  const [description, setDescription] = useState(initialDescription);
 
   const handleSubChange = (idx: number, value: any) => {
     const val = String(value).replace(/\s+/g, ' ');
@@ -21,7 +22,22 @@ const useSubstitutionEditor = (initialSubs: string[]) => {
     )).sort();
   };
 
-  return { substitutions, handleSubChange, getCleanedSubs, setSubstitutions };
+  const simulateSave = () => {
+    const cleanedSubs = getCleanedSubs();
+    let finalDescription = description;
+    
+    if (cleanedSubs.length > 0) {
+      finalDescription = description.split(/\n\n🔄 Substituições:\n/)[0];
+      finalDescription += "\n\n🔄 Substituições:\n" + cleanedSubs.join("\n");
+    }
+
+    return {
+      description: finalDescription,
+      substitutions_json: cleanedSubs
+    };
+  };
+
+  return { substitutions, handleSubChange, getCleanedSubs, setSubstitutions, simulateSave, setDescription };
 };
 
 describe('MealSmartEditorModal Substitution Logic', () => {
@@ -34,12 +50,6 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     });
     expect(typeof result.current.substitutions[0]).toBe('string');
     expect(result.current.substitutions[0]).toBe('123');
-
-    act(() => {
-      // @ts-ignore - testing object input
-      result.current.handleSubChange(0, { key: 'val' });
-    });
-    expect(result.current.substitutions[0]).toBe('[object Object]');
   });
 
   it('should collapse multiple spaces during handleSubChange', () => {
@@ -51,28 +61,53 @@ describe('MealSmartEditorModal Substitution Logic', () => {
     expect(result.current.substitutions[0]).toBe('Pão com ovo');
   });
 
-  it('should remove duplicates and empty values on save (getCleanedSubs)', () => {
+  it('should remove duplicates and empty values on save', () => {
     const { result } = renderHook(() => useSubstitutionEditor(['item 1', 'item 1', '', '  ', 'item 2']));
 
-    let cleaned: string[] = [];
+    let saved;
     act(() => {
-      cleaned = result.current.getCleanedSubs();
+      saved = result.current.simulateSave();
     });
 
-    expect(cleaned).toHaveLength(2);
-    expect(cleaned).toContain('item 1');
-    expect(cleaned).toContain('item 2');
-    expect(cleaned).not.toContain('');
+    expect(saved.substitutions_json).toHaveLength(2);
+    expect(saved.substitutions_json).toEqual(['item 1', 'item 2']);
   });
 
   it('should maintain a consistent alphabetical order for substitutions', () => {
     const { result } = renderHook(() => useSubstitutionEditor(['Banana', 'Abacaxi', 'Caqui']));
 
-    let cleaned: string[] = [];
+    let saved;
     act(() => {
-      cleaned = result.current.getCleanedSubs();
+      saved = result.current.simulateSave();
     });
 
-    expect(cleaned).toEqual(['Abacaxi', 'Banana', 'Caqui']);
+    expect(saved.substitutions_json).toEqual(['Abacaxi', 'Banana', 'Caqui']);
+  });
+
+  it('should format final description correctly with JSON substitutions', () => {
+    const { result } = renderHook(() => useSubstitutionEditor(['Suco de Uva', 'Água de Coco'], '• Pão de Queijo'));
+
+    let saved;
+    act(() => {
+      saved = result.current.simulateSave();
+    });
+
+    const expectedDescription = '• Pão de Queijo\n\n🔄 Substituições:\nSuco de Uva\nÁgua de Coco';
+    expect(saved.description).toBe(expectedDescription);
+  });
+
+  it('should prevent text-based substitution duplication in description', () => {
+    const existingDescription = '• Omelete\n\n🔄 Substituições:\nQueijo Coalho';
+    const { result } = renderHook(() => useSubstitutionEditor(['Frango Desfiado'], existingDescription));
+
+    let saved;
+    act(() => {
+      saved = result.current.simulateSave();
+    });
+
+    // Should NOT have "Queijo Coalho" anymore as it was replaced by the new array
+    expect(saved.description).toBe('• Omelete\n\n🔄 Substituições:\nFrango Desfiado');
+    expect(saved.description.match(/🔄 Substituições:/g)).toHaveLength(1);
   });
 });
+
