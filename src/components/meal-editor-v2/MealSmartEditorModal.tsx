@@ -5,7 +5,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -13,17 +12,18 @@ import { Textarea } from "@/components/ui/textarea";
 import {
   Plus,
   Trash2,
-  Utensils,
   Search,
   Flame,
-  Beef,
-  Wheat,
-  Droplets,
   Sparkles,
   PlusCircle,
   History,
   Info,
 } from "lucide-react";
+import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
+import { toast } from "sonner";
+import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
+import { MEAL_TEMPLATES } from "./MealTemplatePanel";
+import { cn } from "@/lib/utils";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
 import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
