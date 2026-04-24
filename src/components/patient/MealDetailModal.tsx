@@ -284,7 +284,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   };
 
   const confirmSuggestion = () => {
-    if (!pendingSuggestion || !canEdit || !meal.itemId) return;
+    if (!pendingSuggestion || !canEdit || !meal.itemId || isInvalidSuggestion(pendingSuggestion).isInvalid) return;
     const newLine = `• ${pendingSuggestion.name} — ${pendingSuggestion.portion}`;
     const newFoodLines = [...foodLines, newLine];
     const newDescription = rebuildDescription(newFoodLines, substitutionLines);
@@ -293,6 +293,23 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
       toast.success(`Aplicado: ${pendingSuggestion.name} (${pendingSuggestion.portion})`);
     }
     setPendingSuggestion(null);
+  };
+
+  const isInvalidSuggestion = (s: NonNullable<typeof pendingSuggestion>) => {
+    const p = s.after.protein;
+    const c = s.after.carbs;
+    const f = s.after.fat;
+    
+    if (p < 0 || c < 0 || f < 0) return { isInvalid: true, reason: "Macros não podem ser negativos" };
+    
+    // Proteína não pode ultrapassar +50% da meta da refeição
+    if (p > protein * 1.5 && protein > 0) return { isInvalid: true, reason: "Excesso crítico de proteína (+50%)" };
+    
+    // Validação básica de calorias (4-4-9)
+    const calculatedKcal = (p * 4) + (c * 4) + (f * 9);
+    if (Math.abs(calculatedKcal - s.after.calories) > 100) return { isInvalid: true, reason: "Inconsistência calórica detectada" };
+
+    return { isInvalid: false, reason: "" };
   };
 
   /**
@@ -958,14 +975,30 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       </div>
                     )}
 
-                    <div className="flex gap-2">
-                      <Button variant="outline" className="flex-1" onClick={() => setPendingSuggestion(null)}>
-                        Cancelar
-                      </Button>
-                      <Button className="flex-1" onClick={confirmSuggestion}>
-                        Confirmar Alteração
-                      </Button>
+                    <div className="flex flex-col gap-2">
+                      {pendingSuggestion && isInvalidSuggestion(pendingSuggestion).isInvalid && (
+                        <div className="flex items-center gap-2 p-2 rounded-lg bg-rose-500/10 border border-rose-500/20 mb-2">
+                          <AlertTriangle className="w-4 h-4 text-rose-500" />
+                          <span className="text-[11px] font-bold text-rose-500 uppercase tracking-tight">
+                            BLOQUEIO: {isInvalidSuggestion(pendingSuggestion).reason}
+                          </span>
+                        </div>
+                      )}
+                      
+                      <div className="flex gap-2 w-full">
+                        <Button variant="outline" className="flex-1" onClick={() => setPendingSuggestion(null)}>
+                          Cancelar
+                        </Button>
+                        <Button 
+                          className="flex-1" 
+                          onClick={confirmSuggestion}
+                          disabled={pendingSuggestion ? isInvalidSuggestion(pendingSuggestion).isInvalid : false}
+                        >
+                          Confirmar Alteração
+                        </Button>
+                      </div>
                     </div>
+
                   </DialogContent>
                 </Dialog>
               </>
