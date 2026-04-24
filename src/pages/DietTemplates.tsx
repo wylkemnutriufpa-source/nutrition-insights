@@ -426,7 +426,15 @@ export default function DietTemplates() {
 
     // 2. Build items for 1 day. Each block becomes a substitution_group_id with the
     //    primary option flagged is_primary=true; all other options are siblings with
-    //    full macros so the patient and the engine can swap with proper calculation.
+    //    full macros (already adjusted by the patient multiplier) so the patient
+    //    and the engine can swap with proper calculation.
+    const multiplier = getMultiplier(template);
+    const scaleNum = (n: any) => {
+      const v = Number(n);
+      if (!Number.isFinite(v)) return null;
+      return Math.round(v * multiplier);
+    };
+
     const items: any[] = [];
     const day = 0; // single day
     for (const meal of meals) {
@@ -448,16 +456,19 @@ export default function DietTemplates() {
               : `grp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
           opts.forEach((opt: any, idx: number) => {
+            // Apply patient-specific macro adjustment to EVERY option (substitution).
+            // This guarantees that all swap candidates honor the calorie/macro target,
+            // not just the primary item.
             items.push({
               meal_plan_id: plan.id,
               day_of_week: day,
               meal_type: mealType,
               title: opt?.name || b.label || "Item",
               description: opt?.portion || b.base_quantity || null,
-              calories_target: opt?.calories ?? null,
-              protein_target: opt?.protein ?? null,
-              carbs_target: opt?.carbs ?? null,
-              fat_target: opt?.fat ?? null,
+              calories_target: scaleNum(opt?.calories),
+              protein_target: scaleNum(opt?.protein),
+              carbs_target: scaleNum(opt?.carbs),
+              fat_target: scaleNum(opt?.fat),
               substitution_group_id: groupId,
               is_primary: idx === 0,
             });
@@ -471,10 +482,10 @@ export default function DietTemplates() {
             meal_type: mealType,
             title: f.name || "Item",
             description: f.portion || null,
-            calories_target: f.calories || null,
-            protein_target: f.protein || null,
-            carbs_target: f.carbs || null,
-            fat_target: f.fat || null,
+            calories_target: scaleNum(f.calories),
+            protein_target: scaleNum(f.protein),
+            carbs_target: scaleNum(f.carbs),
+            fat_target: scaleNum(f.fat),
             is_primary: true,
           });
         }
