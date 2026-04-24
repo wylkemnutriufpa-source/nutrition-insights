@@ -57,6 +57,24 @@ type MealPlan = Tables<"meal_plans">;
 
 const STATUS_FILTER_ALL = "__all__";
 const STATUS_FILTER_UNKNOWN = "__unknown__";
+const STATUS_FILTER_STORAGE_KEY = "fitjourney:meal-plans:status-filter";
+
+/**
+ * Lê o filtro inicial (1) da URL `?status=...` (prioridade) ou (2) do
+ * localStorage. Mantém compat com valores legados (string vazia → ALL).
+ */
+function readInitialStatusFilter(searchParams: URLSearchParams): string {
+  const fromUrl = searchParams.get("status");
+  if (fromUrl && fromUrl.trim() !== "") return fromUrl;
+  if (typeof window === "undefined") return STATUS_FILTER_ALL;
+  try {
+    const stored = window.localStorage.getItem(STATUS_FILTER_STORAGE_KEY);
+    if (stored && stored.trim() !== "") return stored;
+  } catch {
+    // ignore (modo privado / storage indisponível)
+  }
+  return STATUS_FILTER_ALL;
+}
 
 export default function MealPlans() {
   const { user } = useAuth();
