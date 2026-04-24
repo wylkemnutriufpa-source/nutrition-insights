@@ -17,7 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { RefreshCw, AlertTriangle, Database, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
+import { getPlanStatusMeta, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
 
 import {
   buildTrend,
