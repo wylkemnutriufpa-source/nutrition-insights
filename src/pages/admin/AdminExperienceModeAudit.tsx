@@ -589,34 +589,48 @@ export default function AdminExperienceModeAudit() {
         </CardHeader>
         <CardContent className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
           <div className="space-y-1">
-            <Label className="text-xs">Resultado</Label>
+            <Label className="text-xs" htmlFor="emode-filter-outcome">Resultado</Label>
             <Select value={outcome} onValueChange={(v) => setOutcome(v as Outcome)}>
-              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectTrigger id="emode-filter-outcome" data-testid="emode-filter-outcome"><SelectValue /></SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">Todos</SelectItem>
-                <SelectItem value="blocked">Bloqueado</SelectItem>
-                <SelectItem value="failed">Falhou</SelectItem>
-                <SelectItem value="success">Sucesso</SelectItem>
-                <SelectItem value="offline_queued">Offline (enfileirado)</SelectItem>
-                <SelectItem value="offline_replayed">Reenviado</SelectItem>
-                <SelectItem value="queue_overflow">Fila cheia</SelectItem>
-                <SelectItem value="queue_expired">Expirou</SelectItem>
+                <SelectItem value="all" data-testid="emode-filter-outcome-all">Todos</SelectItem>
+                <SelectItem value="blocked" data-testid="emode-filter-outcome-blocked">Bloqueado</SelectItem>
+                <SelectItem value="failed" data-testid="emode-filter-outcome-failed">Falhou</SelectItem>
+                <SelectItem value="success" data-testid="emode-filter-outcome-success">Sucesso</SelectItem>
+                <SelectItem value="offline_queued" data-testid="emode-filter-outcome-offline_queued">Offline (enfileirado)</SelectItem>
+                <SelectItem value="offline_replayed" data-testid="emode-filter-outcome-offline_replayed">Reenviado</SelectItem>
+                <SelectItem value="queue_overflow" data-testid="emode-filter-outcome-queue_overflow">Fila cheia</SelectItem>
+                <SelectItem value="queue_expired" data-testid="emode-filter-outcome-queue_expired">Expirou</SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">De</Label>
-            <Input type="date" value={from} onChange={(e) => setFrom(e.target.value)} />
+            <Label className="text-xs" htmlFor="emode-filter-from">De</Label>
+            <Input
+              id="emode-filter-from"
+              data-testid="emode-filter-from"
+              type="date"
+              value={from}
+              onChange={(e) => setFrom(e.target.value)}
+            />
           </div>
           <div className="space-y-1">
-            <Label className="text-xs">Até</Label>
-            <Input type="date" value={to} onChange={(e) => setTo(e.target.value)} />
+            <Label className="text-xs" htmlFor="emode-filter-to">Até</Label>
+            <Input
+              id="emode-filter-to"
+              data-testid="emode-filter-to"
+              type="date"
+              value={to}
+              onChange={(e) => setTo(e.target.value)}
+            />
           </div>
           <div className="space-y-1 lg:col-span-2">
-            <Label className="text-xs">Busca (correlation_id, user_id, motivo)</Label>
+            <Label className="text-xs" htmlFor="emode-filter-search">Busca (correlation_id, user_id, motivo)</Label>
             <div className="relative">
               <Search className="absolute left-2 top-2.5 w-4 h-4 text-muted-foreground" />
               <Input
+                id="emode-filter-search"
+                data-testid="emode-filter-search"
                 value={search}
                 onChange={(e) => {
                   setSearch(e.target.value);
@@ -629,14 +643,14 @@ export default function AdminExperienceModeAudit() {
           </div>
           <div className="lg:col-span-5 flex justify-between items-center gap-2 flex-wrap">
             <div className="flex gap-2">
-              <Button size="sm" variant="outline" onClick={exportCsv} disabled={loading || filtered.length === 0}>
+              <Button size="sm" variant="outline" onClick={exportCsv} disabled={loading || filtered.length === 0} data-testid="emode-export-csv">
                 <Download className="w-4 h-4 mr-2" /> Exportar CSV
               </Button>
-              <Button size="sm" variant="outline" onClick={exportPdf} disabled={loading || filtered.length === 0}>
+              <Button size="sm" variant="outline" onClick={exportPdf} disabled={loading || filtered.length === 0} data-testid="emode-export-pdf">
                 <FileText className="w-4 h-4 mr-2" /> Exportar PDF
               </Button>
             </div>
-            <Button size="sm" variant="outline" onClick={load} disabled={loading}>
+            <Button size="sm" variant="outline" onClick={load} disabled={loading} data-testid="emode-refresh">
               <RefreshCw className={`w-4 h-4 mr-2 ${loading ? "animate-spin" : ""}`} />
               Atualizar
             </Button>
@@ -822,6 +836,9 @@ export default function AdminExperienceModeAudit() {
                       <Fragment key={r.id}>
                         <tr
                           id={`audit-row-${r.id}`}
+                          data-testid="emode-audit-row"
+                          data-correlation-id={r.correlation_id}
+                          data-outcome={r.outcome}
                           className="border-b border-border/50 align-top transition-shadow"
                         >
                           <td className="py-2 pr-1">

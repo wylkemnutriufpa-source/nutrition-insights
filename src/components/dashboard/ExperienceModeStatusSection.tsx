@@ -91,6 +91,8 @@ export default function ExperienceModeStatusSection() {
       <div
         data-testid="emode-status"
         data-state="blocked"
+        data-correlation-id={lastError.correlationId || ""}
+        data-unlock-date={lastError.unlock_date || ""}
         className="rounded-xl border border-amber-500/30 bg-amber-500/10 px-4 py-3 flex items-start gap-3"
       >
         <Lock className="w-4 h-4 text-amber-600 mt-0.5 shrink-0" />
@@ -192,12 +194,13 @@ export default function ExperienceModeStatusSection() {
     <div
       data-testid="emode-status"
       data-state="success"
+      data-mode={mode}
       className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 flex items-center gap-2.5"
     >
       <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
       <p className="text-xs text-muted-foreground">
         Modo ativo:{" "}
-        <span className="font-semibold text-foreground">{modeLabel}</span>
+        <span className="font-semibold text-foreground" data-testid="emode-active-label">{modeLabel}</span>
       </p>
     </div>
   );
