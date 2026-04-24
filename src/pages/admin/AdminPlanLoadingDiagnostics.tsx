@@ -299,7 +299,7 @@ export default function AdminPlanLoadingDiagnostics() {
                   <tbody>
                     {buckets.map((b) => {
                       const meta = getPlanStatusMeta(b.plan_status);
-                      const isUnknown = !KNOWN_PLAN_STATUS_KEYS.includes(b.plan_status);
+                      const isUnknown = isTrulyUnknownPlanStatus(b.plan_status);
                       return (
                         <tr key={b.plan_status} className="border-t border-border">
                           <td className="py-2">
