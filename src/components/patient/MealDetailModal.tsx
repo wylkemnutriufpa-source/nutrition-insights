@@ -1177,12 +1177,24 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                                 { l: 'Prot', v: v.snapshot_data.protein_target },
                                 { l: 'Carb', v: v.snapshot_data.carbs_target },
                                 { l: 'Fat', v: v.snapshot_data.fat_target },
-                              ].map(m => (
-                                <div key={m.l} className="text-center bg-white/50 rounded-lg py-1 border border-border/30">
-                                  <p className="text-[8px] uppercase text-muted-foreground font-bold">{m.l}</p>
-                                  <p className="text-xs font-bold">{Math.round(m.v || 0)}</p>
-                                </div>
-                              ))}
+                              ].map(m => {
+                                const currentVal = m.l === 'Kcal' ? calories : 
+                                                 m.l === 'Prot' ? protein : 
+                                                 m.l === 'Carb' ? carbs : fat;
+                                const diffValue = currentVal - (m.v || 0);
+                                
+                                return (
+                                  <div key={m.l} className="text-center bg-white/50 rounded-lg py-1 border border-border/30 relative">
+                                    <p className="text-[8px] uppercase text-muted-foreground font-bold">{m.l}</p>
+                                    <p className="text-xs font-bold">{Math.round(m.v || 0)}</p>
+                                    {Math.abs(diffValue) > 0.5 && (
+                                      <div className={`text-[8px] font-bold ${diffValue > 0 ? 'text-rose-500' : 'text-emerald-500'}`}>
+                                        {diffValue > 0 ? '↓' : '↑'} {Math.abs(Math.round(diffValue))}
+                                      </div>
+                                    )}
+                                  </div>
+                                );
+                              })}
                             </div>
                           </div>
                         ))
