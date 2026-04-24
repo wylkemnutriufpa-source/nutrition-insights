@@ -19338,6 +19338,16 @@ export type Database = {
         }
         Relationships: []
       }
+      v_visual_quality_metrics: {
+        Row: {
+          items_placeholder: number | null
+          items_with_image: number | null
+          pct_coverage: number | null
+          top_missing_titles: Json | null
+          total_items: number | null
+        }
+        Relationships: []
+      }
       whatsapp_integrations_safe: {
         Row: {
           created_at: string | null
@@ -19554,6 +19564,7 @@ export type Database = {
         Args: { _patient_id: string; _reason?: string }
         Returns: Json
       }
+      fn_audit_missing_images: { Args: never; Returns: Json }
       fn_capture_meal_plan_item_version:
         | {
             Args: { p_action_type: string; p_item_id: string }
