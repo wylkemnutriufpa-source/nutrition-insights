@@ -1228,6 +1228,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
+                              saveToHistory();
                               handleRemoveLine(idx);
                             }}
                             className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
@@ -1342,7 +1343,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                       variant="ghost"
                       size="sm"
                       className="ml-auto gap-1.5 text-[10px] h-6 px-2"
-                      onClick={(e) => { e.stopPropagation(); handleRegenerateSubstitutions(); }}
+                      onClick={(e) => { e.stopPropagation(); saveToHistory(); handleRegenerateSubstitutions(); }}
                     >
                       <RefreshCw className="w-3 h-3" />
                       Regenerar
@@ -1367,7 +1368,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                             }}
                             className="h-9 text-xs flex-1"
                           />
-                          <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => handleUpdateSubLine(idx)}>
+                          <Button size="icon" className="h-9 w-9 shrink-0" onClick={() => { saveToHistory(); handleUpdateSubLine(idx); }}>
                             <Check className="w-4 h-4" />
                           </Button>
                           <Button size="icon" variant="ghost" className="h-9 w-9 shrink-0" onClick={() => setEditingSubLineIdx(null)}>
@@ -1428,6 +1429,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                                 type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
+                                  saveToHistory();
                                   handleRemoveSubLine(idx);
                                 }}
                                 className="p-1.5 rounded-full hover:bg-destructive/10 transition-colors"
@@ -1459,7 +1461,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                           placeholder="Ex: Frango → Peixe (150g), Carne (150g)"
                           className="h-8 text-[11px]"
                         />
-                        <Button size="icon" className="h-8 w-8 shrink-0" onClick={handleAddManualSub} disabled={!manualSubInput.trim()}>
+                        <Button size="icon" className="h-8 w-8 shrink-0" onClick={() => { saveToHistory(); handleAddManualSub(); }} disabled={!manualSubInput.trim()}>
                           <Check className="w-3.5 h-3.5" />
                         </Button>
                       </div>
