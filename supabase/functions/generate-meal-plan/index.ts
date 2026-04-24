@@ -3579,6 +3579,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       if (flagKeys.includes("diabetes_risk") || flagKeys.includes("insulin_resistance")) {
         finalMacros.carbs = Math.round(finalMacros.carbs * 0.85);
         finalMacros.fat = Math.round(finalMacros.fat * 1.1);
+        // Marca contexto diabetes para o filtro de biblioteca visual remover not_diabetes_friendly
+        if (!restrictions.some(r => /diabet/i.test(r))) restrictions.push("diabetes");
       }
       if (flagKeys.includes("hypertension") || flagKeys.includes("cardiovascular_risk")) {
         restrictions.push("low_sodium");
