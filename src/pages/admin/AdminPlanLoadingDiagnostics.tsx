@@ -19,6 +19,13 @@ import { RefreshCw, AlertTriangle, Database, Activity } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { getPlanStatusMeta, KNOWN_PLAN_STATUS_KEYS, isTrulyUnknownPlanStatus } from "@/lib/planStatusLabels";
 
+import {
+  buildTrend,
+  aggregateUnknownByWorkspace,
+  type TrendBucket,
+  type UnknownStatusBreakdown,
+} from "./planDiagnosticsHelpers";
+
 interface StatusBucket {
   plan_status: string;
   total: number;
@@ -34,19 +41,6 @@ interface AlertRow {
   created_at: string;
 }
 
-interface UnknownStatusBreakdown {
-  plan_status: string;
-  workspace_id: string | null;
-  count: number;
-  last_seen: string;
-}
-
-interface TrendBucket {
-  date: string;
-  PLAN_STATUS_UNKNOWN: number;
-  PLAN_VISIBILITY_DROP: number;
-}
-
 const TRACKED_ALERT_TYPES = [
   "PLAN_VISIBILITY_DROP",
   "PLAN_STATUS_UNKNOWN",
@@ -56,32 +50,6 @@ const TRACKED_ALERT_TYPES = [
 ];
 
 const TREND_TRACKED_TYPES = ["PLAN_STATUS_UNKNOWN", "PLAN_VISIBILITY_DROP"] as const;
-
-function buildTrend(
-  rows: Array<{ alert_type: string; created_at: string }>,
-  days: number,
-): TrendBucket[] {
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const buckets: TrendBucket[] = [];
-  for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-    buckets.push({
-      date: d.toISOString().slice(0, 10),
-      PLAN_STATUS_UNKNOWN: 0,
-      PLAN_VISIBILITY_DROP: 0,
-    });
-  }
-  const idx = new Map(buckets.map((b, i) => [b.date, i]));
-  for (const r of rows) {
-    const day = (r.created_at || "").slice(0, 10);
-    const i = idx.get(day);
-    if (i === undefined) continue;
-    if (r.alert_type === "PLAN_STATUS_UNKNOWN") buckets[i].PLAN_STATUS_UNKNOWN += 1;
-    else if (r.alert_type === "PLAN_VISIBILITY_DROP") buckets[i].PLAN_VISIBILITY_DROP += 1;
-  }
-  return buckets;
-}
 
 const UNKNOWN_LIMIT_OPTIONS = [25, 50, 100, 200] as const;
 type UnknownLimit = (typeof UNKNOWN_LIMIT_OPTIONS)[number];
