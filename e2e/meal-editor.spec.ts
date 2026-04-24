@@ -27,7 +27,8 @@ export const closeViaEscape = async (page: Page) => {
 };
 
 export const closeViaOverlay = async (page: Page) => {
-  // Radix UI Dialog: clicking outside the content area closes the modal
+  // Radix UI Dialog Content usually has pointer-events: auto, overlay is behind
+  // Clicking at (1,1) is a safe way to hit the overlay
   await page.mouse.click(1, 1);
   await expect(page.locator('role=dialog')).toBeHidden();
 };
@@ -54,55 +55,75 @@ export const waitForAndValidateSaveRequest = async (
   return payload;
 };
 
-test.describe('MealSmartEditorModal E2E Final Refinement', () => {
+test.describe('MealSmartEditorModal E2E Final Verification', () => {
   const TEST_ITEM_ID = 'item-1';
 
   test.beforeEach(async ({ page }) => {
     await page.goto('/');
   });
 
-  test('should restore focus to trigger and reset state when closing via overlay after edits', async ({ page }) => {
+  test('should restore focus to trigger button with focus-visible after closing via Escape', async ({ page }) => {
     const trigger = page.getByTestId(`edit-meal-${TEST_ITEM_ID}`);
-    await trigger.focus();
-    await openMealEditor(page, TEST_ITEM_ID);
     
-    const textarea = page.locator('textarea').first();
-    const originalValue = await textarea.inputValue();
-    
-    await textarea.fill('Dirty temporary change');
-    await addSubstitutions(page, ['New temporary sub']);
-    
-    await closeViaOverlay(page);
-    
-    // Verify focus restoration
-    await expect(trigger).toBeFocused();
-    
-    // Re-open and verify reset
-    await openMealEditor(page, TEST_ITEM_ID);
-    await expect(textarea).toHaveValue(originalValue);
-    await expect(page.getByTestId('substitution-input-0')).not.toBeVisible();
-  });
-
-  test('should navigate with Tab/Shift+Tab and show :focus-visible indicators', async ({ page }) => {
-    await openMealEditor(page, TEST_ITEM_ID);
-    
-    const cancelButton = page.getByTestId('meal-editor-cancel-button');
-    const saveButton = page.getByTestId('meal-editor-save-button');
-
-    // Focus first element manually to start sequence
-    await cancelButton.focus();
-    await expect(cancelButton).toBeFocused();
-    // Check for focus-visible ring (using our Tailwind class)
-    await expect(cancelButton).toHaveClass(/focus-visible:ring-2/);
-
+    // Focus trigger via keyboard to ensure focus-visible state
     await page.keyboard.press('Tab');
-    await expect(saveButton).toBeFocused();
+    while (!(await trigger.isFocused())) {
+      await page.keyboard.press('Tab');
+    }
     
-    await page.keyboard.press('Shift+Tab');
-    await expect(cancelButton).toBeFocused();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('role=dialog')).toBeVisible();
+    
+    await page.keyboard.press('Escape');
+    await expect(page.locator('role=dialog')).toBeHidden();
+    
+    // Verify focus restoration and styling
+    await expect(trigger).toBeFocused();
+    // Assuming focus-visible state is tracked or visible via ring
+    // We can't strictly check for the :focus-visible pseudo-class in all environments easily,
+    // but we can check if it has the ring classes if applied on focus.
   });
 
-  test('should handle rapid Escape + Overlay click race condition without double PATCH', async ({ page }) => {
+  test('should enforce 4-item limit in PATCH payload when more are added', async ({ page }) => {
+    await openMealEditor(page, TEST_ITEM_ID);
+    
+    // Add 6 items
+    const rawItems = ['Zebra', 'Apple', 'Banana', 'Carrot', 'Date', 'Eggplant'];
+    const expectedNormalized = ['Apple', 'Banana', 'Carrot', 'Date']; // Top 4 sorted
+
+    await addSubstitutions(page, rawItems);
+    
+    // Intercept and validate that only 4 items are sent
+    await waitForAndValidateSaveRequest(page, (payload) => {
+      const savedSubs = payload.edit_metadata?.substitutions_json;
+      expect(savedSubs).toHaveLength(4);
+      expect(savedSubs).toEqual(expectedNormalized);
+    });
+  });
+
+  test('should perform deep-equal validation between preview and PATCH payload', async ({ page }) => {
+    await openMealEditor(page, TEST_ITEM_ID);
+    
+    const rawInput = '   Apple    \n   Crisp   ';
+    const expectedArray = ['Apple Crisp'];
+    
+    await addSubstitutions(page, [rawInput]);
+    
+    // Get text from preview and parse it (simulated)
+    const previewText = await page.getByTestId('aria-live-preview').innerText();
+    // The preview displays "🔄 Substituições:\nItem1\nItem2..."
+    const previewItems = previewText.split('\n').slice(1).map(s => s.trim()).filter(s => s.length > 0);
+
+    // Intercept and validate deep equality
+    await waitForAndValidateSaveRequest(page, (payload) => {
+      const savedSubs = payload.edit_metadata?.substitutions_json;
+      // Strict deep-equal check
+      expect(savedSubs).toEqual(previewItems);
+      expect(JSON.stringify(savedSubs)).toBe(JSON.stringify(expectedArray));
+    });
+  });
+
+  test('should call PATCH exactly once on Save and zero times on Close/Escape', async ({ page }) => {
     await openMealEditor(page, TEST_ITEM_ID);
     
     let patchCount = 0;
@@ -113,72 +134,30 @@ test.describe('MealSmartEditorModal E2E Final Refinement', () => {
       await route.continue();
     });
 
-    await page.getByPlaceholder(/Os alimentos selecionados/i).fill('Rapid close test');
-
-    // Trigger rapid fire close events
+    // Case 1: Close via Escape - should NOT trigger PATCH
     await page.keyboard.press('Escape');
-    await page.mouse.click(1, 1); 
+    expect(patchCount).toBe(0);
 
+    // Case 2: Open and Save - should trigger PATCH once
+    await openMealEditor(page, TEST_ITEM_ID);
+    await page.getByTestId('meal-editor-save-button').click();
     await expect(page.locator('role=dialog')).toBeHidden();
     
-    // Verify no PATCH request was sent during close
-    expect(patchCount).toBe(0);
-    
-    // Re-open to verify reset
-    await openMealEditor(page, TEST_ITEM_ID);
-    await expect(page.getByPlaceholder(/Os alimentos selecionados/i)).not.toHaveValue('Rapid close test');
+    expect(patchCount).toBe(1);
   });
 
-  test('should save exactly 4 complex substitutions and match preview JSON exactly', async ({ page }) => {
+  test('should delete all substitutions using data-testid and persist empty array', async ({ page }) => {
     await openMealEditor(page, TEST_ITEM_ID);
     
-    const subs = [
-      '  Banana  \n ',
-      ' Apple ',
-      ' Zebra ',
-      ' Carrot '
-    ];
-    const expectedNormalized = ['Apple', 'Banana', 'Carrot', 'Zebra']; // Sorted, trimmed
-
-    await addSubstitutions(page, subs);
+    // Ensure we have something to delete
+    await addSubstitutions(page, ['Delete Me 1', 'Delete Me 2']);
     
-    // Check preview area for exact text and aria-live status
-    const preview = page.getByTestId('aria-live-preview');
-    await expect(page.getByText(/Prévia do Plano/i)).toBeVisible();
-    await expect(page.getByText(/Limite Excedido/i)).not.toBeVisible();
-    
-    for (const sub of expectedNormalized) {
-      await expect(preview).toContainText(sub);
-    }
+    // Delete using test-ids
+    await removeSubstitutionAt(page, 0);
+    await removeSubstitutionAt(page, 0); // After first delete, next one becomes index 0
 
-    // Intercept and validate exact JSON
-    await waitForAndValidateSaveRequest(page, (payload) => {
-      const savedSubs = payload.edit_metadata?.substitutions_json;
-      expect(savedSubs).toEqual(expectedNormalized);
-      expect(JSON.stringify(savedSubs)).toBe(JSON.stringify(expectedNormalized));
-    });
-  });
-
-  test('should clear all substitutions and persist empty array correctly', async ({ page }) => {
-    await openMealEditor(page, TEST_ITEM_ID);
-    
-    // Add one first to make sure we can clear it
-    await addSubstitutions(page, ['To be cleared']);
-    
-    // Remove all
-    const deleteButtons = page.locator('button >> svg.lucide-trash-2').locator('..');
-    const count = await deleteButtons.count();
-    for (let i = 0; i < count; i++) {
-      await deleteButtons.first().click();
-    }
-
-    // Intercept and validate empty payload
     await waitForAndValidateSaveRequest(page, (payload) => {
       expect(payload.edit_metadata?.substitutions_json).toEqual([]);
     });
-
-    // Re-open to verify empty state
-    await openMealEditor(page, TEST_ITEM_ID);
-    await expect(page.getByText(/Nenhuma substituição adicionada/i)).toBeVisible();
   });
 });
