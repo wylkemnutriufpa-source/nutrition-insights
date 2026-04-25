@@ -28,6 +28,7 @@ import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
 import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
 import { WorkspaceContext, useWorkspaceContextState, useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import SystemHealthBadge from "./SystemHealthBadge";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "fj_sidebar_collapsed";
 
