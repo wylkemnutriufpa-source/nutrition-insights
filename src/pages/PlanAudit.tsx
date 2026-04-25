@@ -1387,7 +1387,7 @@ const PlanAudit = () => {
                   ))}
                 </div>
                 <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
-                  {emergencyLogs.map((log, i) => (
+                  {filteredEmergencyLogs.map((log, i) => (
                     <div key={i} className="space-y-2 border-b last:border-0 pb-2 last:pb-0">
                       <div className="flex items-start gap-3 text-sm">
                         {log.status === 'loading' ? (
@@ -1399,17 +1399,33 @@ const PlanAudit = () => {
                         )}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold">{log.step}:</span> 
+                            <span className="font-semibold text-xs">{log.step}:</span> 
                             <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1 rounded">{log.executionId.slice(-8)}</span>
+                            {log.timestamp && (
+                              <span className="text-[9px] text-muted-foreground">{format(new Date(log.timestamp), "HH:mm:ss.SSS")}</span>
+                            )}
                             {log.errorType && (
                               <Badge variant="outline" className="text-[9px] uppercase border-rose-500 text-rose-600">
                                 Erro: {log.errorType}
                               </Badge>
                             )}
+                            {log.step === "Snapshot" && log.payload?.snapshotKey && (
+                              <Badge 
+                                variant="secondary" 
+                                className="text-[9px] cursor-pointer hover:bg-secondary/80"
+                                onClick={() => {
+                                  const data = snapshots[log.payload.snapshotKey];
+                                  if (data) {
+                                    alert(JSON.stringify(data, null, 2));
+                                  }
+                                }}
+                              >
+                                Ver Snapshot
+                              </Badge>
+                            )}
                           </div>
-                          <div className="text-sm">{log.message}</div>
+                          <div className="text-sm font-medium">{log.message}</div>
                         </div>
-
                       </div>
                       
                       {(log.payload || log.response) && (
