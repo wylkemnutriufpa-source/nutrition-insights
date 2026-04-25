@@ -934,8 +934,7 @@ const PlanAudit = () => {
     return steps.map(stepName => {
       const stepLogs = filteredEmergencyLogs.filter(l => {
         if (stepName === "Salvar/Aprovar") {
-          // Mais determinístico: baseia-se no step fixo ou tipo de erro de persistência
-          return l.step === "Criar Paciente" || l.step === "Criar Plano" || l.step === "Criar Item" || l.errorType === "Persistência";
+          return l.step === "Criar Paciente" || l.step === "Criar Plano" || l.step === "Criar Item" || l.errorType === "Persistência" || l.step === "Salvar/Aprovar";
         }
         return l.step.includes(stepName);
       });
@@ -943,20 +942,67 @@ const PlanAudit = () => {
       const total = stepLogs.length;
       const failures = stepLogs.filter(l => l.status === "error").length;
       const successes = total - failures;
-      const failureRate = total > 0 ? (failures / total) * 100 : 0;
-      const successRate = total > 0 ? (successes / total) * 100 : 0;
+      
+      let successRate = 0;
+      let failureRate = 0;
+      
+      if (total > 0) {
+        successRate = (successes / total) * 100;
+        failureRate = 100 - successRate;
+      }
       
       return { name: stepName, total, failures, successes, failureRate, successRate };
     });
   }, [filteredEmergencyLogs]);
 
-  const isIncompleteData = useMemo(() => {
-    if (!executionIdFilter) return false;
-    // Considera incompleto se não houver pelo menos 4 logs ou nenhum snapshot para esse ID
+  const incompleteDataStatus = useMemo(() => {
+    if (!executionIdFilter) return { isIncomplete: false, missing: [] as string[] };
+    
+    const missing = [];
     const hasSnapshots = filteredEmergencyLogs.some(l => l.step === "Snapshot");
+    const hasPublish = filteredEmergencyLogs.some(l => l.step === "Publicar");
+    const hasSave = filteredEmergencyLogs.some(l => l.step === "Salvar/Aprovar");
     const logCount = filteredEmergencyLogs.length;
-    return logCount > 0 && (logCount < 4 || !hasSnapshots);
+
+    if (!hasSnapshots) missing.push("não há snapshots");
+    if (!hasPublish) missing.push("falta Publicar");
+    if (!hasSave) missing.push("falta Salvar/Aprovar");
+    if (logCount > 0 && logCount < 4) missing.push("logs insuficientes");
+    
+    return { 
+      isIncomplete: missing.length > 0 && logCount > 0, 
+      missing 
+    };
   }, [filteredEmergencyLogs, executionIdFilter]);
+
+  const exportSummaryPDF = () => {
+    const doc = new jsPDF();
+    const now = format(new Date(), "dd/MM/yyyy HH:mm");
+    
+    doc.setFontSize(18);
+    doc.text("Resumo por Etapa de Execução", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${now}`, 14, 28);
+    doc.text(`Filtro Execution ID: ${executionIdFilter || "Nenhum"}`, 14, 34);
+
+    const tableHeaders = [["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso"]];
+    const tableData = stepMetrics.map(m => [
+      m.name,
+      m.total,
+      m.successes,
+      m.failures,
+      `${m.successRate.toFixed(1)}%`
+    ]);
+
+    (doc as any).autoTable({
+      startY: 40,
+      head: tableHeaders,
+      body: tableData,
+    });
+
+    doc.save(`resumo-etapas-${executionIdFilter || "geral"}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast.success("PDF do resumo gerado com sucesso!");
+  };
 
   const exportSummaryCSV = () => {
     const headers = ["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso (%)", "Taxa de Falha (%)"];
