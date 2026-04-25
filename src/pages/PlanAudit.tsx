@@ -852,6 +852,18 @@ const PlanAudit = () => {
   };
 
   const handleExportCSV = () => {
+    const sanitizeCsvValue = (val: any) => {
+      if (val === null || val === undefined) return "";
+      let str = typeof val === "string" ? val : JSON.stringify(val);
+      // Escape quotes and wrap in quotes
+      str = str.replace(/"/g, '""');
+      // Limit size to prevent breaking Excel/CSV readers
+      if (str.length > 30000) {
+        str = str.substring(0, 30000) + "... [TRUNCATED]";
+      }
+      return `"${str}"`;
+    };
+
     const logsToExport = emergencyLogs.filter(l => 
       !executionIdFilter || l.executionId.includes(executionIdFilter)
     );
@@ -862,13 +874,16 @@ const PlanAudit = () => {
     }
 
     // Export Logs CSV
-    const logHeaders = ["ExecutionID", "Step", "Status", "Message", "ErrorType"];
+    const logHeaders = ["ExecutionID", "Step", "Status", "Message", "Payload", "Response", "ErrorType", "Timestamp"];
     const logRows = logsToExport.map(l => [
       l.executionId,
       l.step,
       l.status,
-      `"${l.message.replace(/"/g, '""')}"`,
-      l.errorType || ""
+      sanitizeCsvValue(l.message),
+      sanitizeCsvValue(l.payload),
+      sanitizeCsvValue(l.response),
+      l.errorType || "",
+      l.timestamp || ""
     ]);
 
     const logsCsvContent = [logHeaders, ...logRows].map(r => r.join(",")).join("\n");
