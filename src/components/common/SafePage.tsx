@@ -103,6 +103,28 @@ export class SafePage extends Component<SafePageProps, SafePageState> {
       retryCount: this.state.retryCount,
     });
     captureError(`SafePage:${this.props.pageName}`, error, { severity: "critical", recovered: true });
+
+    // ── AUTO-RECOVERY: Stale chunk after deploy ──
+    // "Failed to fetch dynamically imported module" happens when the browser has
+    // an old JS chunk hash cached that no longer exists on the server. The fix
+    // is a hard reload — but we only do it ONCE per session to avoid loops.
+    const msg = (error?.message || "").toLowerCase();
+    const isStaleChunkError =
+      msg.includes("failed to fetch dynamically imported module") ||
+      msg.includes("importing a module script failed") ||
+      msg.includes("error loading dynamically imported module") ||
+      (error?.name === "ChunkLoadError");
+
+    if (isStaleChunkError) {
+      const RELOAD_KEY = "__fj_chunk_reload_attempted__";
+      const alreadyTried = sessionStorage.getItem(RELOAD_KEY);
+      if (!alreadyTried) {
+        sessionStorage.setItem(RELOAD_KEY, "1");
+        console.warn("[SafePage] Stale chunk detected — forcing reload to fetch latest build.");
+        // Small delay so error is logged before reload
+        setTimeout(() => window.location.reload(), 300);
+      }
+    }
   }
 
   handleRetry = () => {
