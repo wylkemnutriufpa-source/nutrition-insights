@@ -383,7 +383,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       };
     });
 
-    try {
+    enqueuePersistence(async () => {
       await withRetry(async () => {
         // Delete existing items for current day
         if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
@@ -408,38 +408,11 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template...`),
       });
 
-      // Reload state
-      setLoading(true);
-      const { data: reloaded } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", mealPlanId)
-        .eq("day_of_week", currentDay);
-
-      const newBlocks = MEAL_TYPES.map(m => ({
-        ...m,
-        items: (reloaded || [])
-          .filter((i) => i.meal_type === m.type)
-          .map((i) => ({
-            id: i.id,
-            name: i.title || "Item",
-            calories: i.calories_target || 0,
-            protein: i.protein_target || 0,
-            carbs: i.carbs_target || 0,
-            fat: i.fat_target || 0,
-            meal_type: m.type,
-          })),
-      }));
-      setBlocks(newBlocks);
-      setLoading(false);
       setShowTemplateLoad(false);
       setPreviewTemplate(null);
       toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
-    } catch (err: any) {
-      toast.error("Erro ao aplicar template: " + err.message);
-    } finally {
-      setSaving(false);
-    }
+    });
+    setSaving(false);
   };
 
   // Apply template to whole week
