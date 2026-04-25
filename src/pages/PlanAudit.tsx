@@ -233,6 +233,7 @@ const PlanAudit = () => {
     payload?: any;
     response?: any;
     errorType?: "RLS" | "Validação" | "Persistência" | "Outro";
+    timestamp?: string;
   }[]>([]);
   const [lastExecutionId, setLastExecutionId] = useState<string | null>(null);
   const [emergencyProcessing, setEmergencyProcessing] = useState(false);
@@ -241,6 +242,8 @@ const PlanAudit = () => {
   const [emergencyPlanId, setEmergencyPlanId] = useState<string | null>(null);
   const [replayMode, setReplayMode] = useState(false);
   const [diffViewData, setDiffViewData] = useState<{ before: any, after: any, label: string } | null>(null);
+  const [executionIdFilter, setExecutionIdFilter] = useState<string>("");
+  const [correlatorId, setCorrelatorId] = useState<string>("");
 
 
   // RLS Validation state
@@ -295,7 +298,7 @@ const PlanAudit = () => {
     toast.info("Estado de emergência limpo.");
   };
 
-  const takeSnapshot = async (patientId: string, label: string) => {
+  const takeSnapshot = async (patientId: string, label: string, executionId?: string) => {
     if (!patientId) return;
     try {
       const { data, error } = await supabase
@@ -306,10 +309,22 @@ const PlanAudit = () => {
 
       if (error) throw error;
       
+      const snapshotKey = `${label}_${Date.now()}`;
       setSnapshots(prev => ({
         ...prev,
-        [`${label}_${Date.now()}`]: data
+        [snapshotKey]: data
       }));
+
+      if (executionId) {
+        setEmergencyLogs(prev => [...prev, { 
+          executionId, 
+          step: "Snapshot", 
+          status: "success", 
+          message: `Snapshot capturado: ${label}`, 
+          payload: { label, snapshotKey },
+          timestamp: new Date().toISOString()
+        }]);
+      }
     } catch (err) {
       console.error("Snapshot error:", err);
     }
@@ -406,8 +421,10 @@ const PlanAudit = () => {
       response?: any,
       errorType?: "RLS" | "Validação" | "Persistência" | "Outro"
     ) => {
-      setEmergencyLogs(prev => [...prev, { executionId, step, status, message, payload, response, errorType }]);
+      const timestamp = new Date().toISOString();
+      setEmergencyLogs(prev => [...prev, { executionId, step, status, message, payload, response, errorType, timestamp }]);
     };
+
 
 
     const runFromStep = async (startStep: number) => {
@@ -422,7 +439,7 @@ const PlanAudit = () => {
           if (replayMode && emergencyPatientId) {
             addLog("Replay Mode", "success", `Reusando paciente existente: ${emergencyPatientId}`);
             currentPatientId = emergencyPatientId;
-            await takeSnapshot(currentPatientId!, "Replay Inicial");
+            await takeSnapshot(currentPatientId!, "Replay Inicial", executionId);
           } else {
             addLog("Criar Paciente", "loading", "Convocando invite-patient...");
             const tempEmail = `test-${Date.now()}@fitjourney.test`;
@@ -449,7 +466,7 @@ const PlanAudit = () => {
             currentPatientId = inviteData.patient_id;
             setEmergencyPatientId(currentPatientId);
             addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
-            await takeSnapshot(currentPatientId!, "Inicial");
+            await takeSnapshot(currentPatientId!, "Inicial", executionId);
           }
         }
 
@@ -496,7 +513,7 @@ const PlanAudit = () => {
         if (startStep <= 3) {
           setEmergencyStep(3);
           addLog("Salvar/Aprovar", "loading", "Validando e aprovando...");
-          await takeSnapshot(currentPatientId!, "Antes de Salvar");
+          await takeSnapshot(currentPatientId!, "Antes de Salvar", executionId);
           
           const { savePlanAsApproved } = await import("@/lib/serverTransitions");
           const saveRes = await savePlanAsApproved(currentPlanId!, user.id);
@@ -506,14 +523,14 @@ const PlanAudit = () => {
             throw new Error(saveRes.error);
           }
           addLog("Salvar/Aprovar", "success", "Plano aprovado com sucesso.", { planId: currentPlanId }, saveRes);
-          await takeSnapshot(currentPatientId!, "Depois de Salvar");
+          await takeSnapshot(currentPatientId!, "Depois de Salvar", executionId);
         }
 
         // 4. Publicar
         if (startStep <= 4) {
           setEmergencyStep(4);
           addLog("Publicar", "loading", "Publicando para o paciente...");
-          await takeSnapshot(currentPatientId!, "Antes de Publicar");
+          await takeSnapshot(currentPatientId!, "Antes de Publicar", executionId);
           
           const { publishMealPlan } = await import("@/lib/serverTransitions");
           const pubRes = await publishMealPlan(currentPlanId!, user.id);
@@ -523,7 +540,7 @@ const PlanAudit = () => {
             throw new Error(pubRes.error);
           }
           addLog("Publicar", "success", "Plano publicado.", { planId: currentPlanId }, pubRes);
-          await takeSnapshot(currentPatientId!, "Depois de Publicar");
+          await takeSnapshot(currentPatientId!, "Depois de Publicar", executionId);
         }
 
         // 5. Validar Visualização
@@ -830,6 +847,68 @@ const PlanAudit = () => {
     URL.revokeObjectURL(url);
     toast.success("Relatório JSON exportado!");
   };
+
+  const handleExportCSV = () => {
+    const logsToExport = emergencyLogs.filter(l => 
+      !executionIdFilter || l.executionId.includes(executionIdFilter)
+    );
+
+    if (logsToExport.length === 0) {
+      toast.error("Nenhum log para exportar com o filtro atual.");
+      return;
+    }
+
+    // Export Logs CSV
+    const logHeaders = ["ExecutionID", "Step", "Status", "Message", "ErrorType"];
+    const logRows = logsToExport.map(l => [
+      l.executionId,
+      l.step,
+      l.status,
+      `"${l.message.replace(/"/g, '""')}"`,
+      l.errorType || ""
+    ]);
+
+    const logsCsvContent = [logHeaders, ...logRows].map(r => r.join(",")).join("\n");
+    const logsBlob = new Blob([logsCsvContent], { type: "text/csv;charset=utf-8;" });
+    const logsUrl = URL.createObjectURL(logsBlob);
+    const logsLink = document.createElement("a");
+    logsLink.setAttribute("href", logsUrl);
+    logsLink.setAttribute("download", `emergency-logs-${Date.now()}.csv`);
+    logsLink.click();
+
+    // Export Snapshots CSV (Changed Fields)
+    const snapshotKeys = Object.keys(snapshots);
+    if (snapshotKeys.length > 0) {
+      const snapshotHeaders = ["Moment", "PlanID", "Status", "IsActive"];
+      const snapshotRows: any[] = [];
+      
+      snapshotKeys.forEach(label => {
+        const data = snapshots[label];
+        if (Array.isArray(data)) {
+          data.forEach(p => {
+            snapshotRows.push([label.split('_')[0], p.id, p.plan_status, p.is_active]);
+          });
+        }
+      });
+
+      const snapshotsCsvContent = [snapshotHeaders, ...snapshotRows].map(r => r.join(",")).join("\n");
+      const snapshotsBlob = new Blob([snapshotsCsvContent], { type: "text/csv;charset=utf-8;" });
+      const snapshotsUrl = URL.createObjectURL(snapshotsBlob);
+      const snapshotsLink = document.createElement("a");
+      snapshotsLink.setAttribute("href", snapshotsUrl);
+      snapshotsLink.setAttribute("download", `emergency-snapshots-${Date.now()}.csv`);
+      snapshotsLink.click();
+    }
+
+    toast.success("CSV(s) exportado(s) com sucesso!");
+  };
+
+  const filteredEmergencyLogs = useMemo(() => {
+    return emergencyLogs.filter(l => 
+      !executionIdFilter || l.executionId.toLowerCase().includes(executionIdFilter.toLowerCase())
+    );
+  }, [emergencyLogs, executionIdFilter]);
+
 
 
   return (
@@ -1212,8 +1291,50 @@ const PlanAudit = () => {
                   Cria um cenário completo para validar se o sistema está salvando, publicando e exibindo corretamente.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 mr-4 border-r pr-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 border-r pr-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase">ID Execução</span>
+                    <Input 
+                      placeholder="Filtrar ID..." 
+                      value={executionIdFilter}
+                      onChange={(e) => setExecutionIdFilter(e.target.value)}
+                      className="h-8 text-xs w-32"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 border-r pr-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase">Request ID (Backend)</span>
+                    <div className="flex gap-1">
+                      <Input 
+                        placeholder="Correlator ID..." 
+                        value={correlatorId}
+                        onChange={(e) => setCorrelatorId(e.target.value)}
+                        className="h-8 text-xs w-40"
+                      />
+                      {correlatorId && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          asChild
+                        >
+                          <a 
+                            href={`https://console.cloud.google.com/logs/query;query=jsonPayload.correlator%3D%22${correlatorId}%22`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 border-r pr-4">
                   <span className="text-xs font-medium">Replay:</span>
                   <Button 
                     variant={replayMode ? "default" : "outline"} 
@@ -1226,25 +1347,31 @@ const PlanAudit = () => {
                 </div>
                 
                 {emergencyLogs.length > 0 && (
-                  <Button onClick={handleExportJSON} variant="outline" size="sm" className="gap-2">
-                    <Download className="w-3.5 h-3.5" />
-                    Exportar JSON
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={handleExportJSON} variant="outline" size="sm" className="h-8 gap-2">
+                      <Download className="w-3.5 h-3.5" />
+                      JSON
+                    </Button>
+                    <Button onClick={handleExportCSV} variant="outline" size="sm" className="h-8 gap-2">
+                      <FileText className="w-3.5 h-3.5" />
+                      Exportar CSV
+                    </Button>
+                  </div>
                 )}
 
                 {emergencyStep > 0 && (
-                  <Button onClick={clearEmergencyState} variant="ghost" size="sm">
+                  <Button onClick={clearEmergencyState} variant="ghost" size="sm" className="h-8">
                     Limpar
                   </Button>
                 )}
 
-                <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
+                <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary" className="h-8">
                   {emergencyProcessing ? (
-                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                    <Loader2 className="animate-spin w-3.5 h-3.5 mr-2" />
                   ) : emergencyStep > 0 && emergencyStep < 6 ? (
-                    <RefreshCw className="w-4 h-4 mr-2" />
+                    <RefreshCw className="w-3.5 h-3.5 mr-2" />
                   ) : (
-                    <Sparkles className="w-4 h-4 mr-2" />
+                    <Sparkles className="w-3.5 h-3.5 mr-2" />
                   )}
                   {emergencyStep > 0 && emergencyStep < 6 ? "Retomar" : "Iniciar Fluxo"}
                 </Button>
@@ -1260,7 +1387,7 @@ const PlanAudit = () => {
                   ))}
                 </div>
                 <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
-                  {emergencyLogs.map((log, i) => (
+                  {filteredEmergencyLogs.map((log, i) => (
                     <div key={i} className="space-y-2 border-b last:border-0 pb-2 last:pb-0">
                       <div className="flex items-start gap-3 text-sm">
                         {log.status === 'loading' ? (
@@ -1272,17 +1399,33 @@ const PlanAudit = () => {
                         )}
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-1">
-                            <span className="font-semibold">{log.step}:</span> 
+                            <span className="font-semibold text-xs">{log.step}:</span> 
                             <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1 rounded">{log.executionId.slice(-8)}</span>
+                            {log.timestamp && (
+                              <span className="text-[9px] text-muted-foreground">{format(new Date(log.timestamp), "HH:mm:ss.SSS")}</span>
+                            )}
                             {log.errorType && (
                               <Badge variant="outline" className="text-[9px] uppercase border-rose-500 text-rose-600">
                                 Erro: {log.errorType}
                               </Badge>
                             )}
+                            {log.step === "Snapshot" && log.payload?.snapshotKey && (
+                              <Badge 
+                                variant="secondary" 
+                                className="text-[9px] cursor-pointer hover:bg-secondary/80"
+                                onClick={() => {
+                                  const data = snapshots[log.payload.snapshotKey];
+                                  if (data) {
+                                    alert(JSON.stringify(data, null, 2));
+                                  }
+                                }}
+                              >
+                                Ver Snapshot
+                              </Badge>
+                            )}
                           </div>
-                          <div className="text-sm">{log.message}</div>
+                          <div className="text-sm font-medium">{log.message}</div>
                         </div>
-
                       </div>
                       
                       {(log.payload || log.response) && (
@@ -1324,7 +1467,7 @@ const PlanAudit = () => {
                <h3 className="text-sm font-semibold flex items-center gap-2">
                  <Sparkles className="w-4 h-4 text-amber-500" /> Diagnóstico Sugerido
                </h3>
-               <ActionableSummary logs={emergencyLogs} />
+               <ActionableSummary logs={filteredEmergencyLogs} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
