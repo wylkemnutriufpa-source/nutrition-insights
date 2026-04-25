@@ -1503,6 +1503,38 @@ const PlanAudit = () => {
                <ActionableSummary logs={filteredEmergencyLogs} />
             </div>
 
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-blue-500" /> Resumo por Etapa
+              </h3>
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Etapa</TableHead>
+                      <TableHead className="text-center">Total</TableHead>
+                      <TableHead className="text-center">Falhas</TableHead>
+                      <TableHead className="text-right">Taxa de Falha</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stepMetrics.map((m) => (
+                      <TableRow key={m.name}>
+                        <TableCell className="font-medium text-xs">{m.name}</TableCell>
+                        <TableCell className="text-center text-xs">{m.total}</TableCell>
+                        <TableCell className="text-center text-xs text-rose-500 font-semibold">{m.failures}</TableCell>
+                        <TableCell className="text-right text-xs">
+                          <Badge variant={m.rate > 0 ? "destructive" : "secondary"} className="text-[10px]">
+                            {m.rate.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
               {["RLS", "Validação", "Persistência"].map(type => {
