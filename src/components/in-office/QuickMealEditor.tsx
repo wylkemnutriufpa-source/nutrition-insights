@@ -192,12 +192,12 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
   // Remove item
   const removeItem = async (blockType: MealType, itemId: string) => {
-    if (!mealPlanId) {
-      console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em removeItem", { itemId, patientId });
+    if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+      console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em removeItem", { mealPlanId, itemId, patientId });
       throw new Error("DELETE bloqueado: mealPlanId inválido");
     }
     
-    console.info("[DELETE] Executando removeItem", { mealPlanId, itemId, patientId, operation: "removeItem" });
+    console.info("[DELETE] Executando removeItem", { mealPlanId, itemId, patientId, operation: "removeItem", timestamp: Date.now() });
     
     await supabase
       .from("meal_plan_items")
