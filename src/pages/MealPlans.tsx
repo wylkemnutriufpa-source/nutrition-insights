@@ -374,6 +374,13 @@ export default function MealPlans() {
       }
 
       // Step 2: Delete items (now safe — plan is archived, trigger allows)
+      if (!id) {
+        console.error("[CRITICAL] DELETE bloqueado: planId inválido em handleDelete", { id });
+        throw new Error("DELETE bloqueado: planId inválido");
+      }
+      
+      console.info("[DELETE] Excluindo itens do plano", { meal_plan_id: id, operation: "handleDeletePlan" });
+      
       const { error: itemsErr } = await supabase
         .from("meal_plan_items")
         .delete()
