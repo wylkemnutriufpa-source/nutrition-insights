@@ -1009,19 +1009,37 @@ const PlanAudit = () => {
     doc.text(`Gerado em: ${now}`, 14, 28);
     doc.text(`Filtro Execution ID: ${executionIdFilter || "Nenhum"}`, 14, 34);
 
-    const tableHeaders = [["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso"]];
-    const tableData = stepMetrics.map(m => [
-      m.name,
-      m.total,
-      m.successes,
-      m.failures,
-      `${m.successRate.toFixed(1)}%`
+    const tableHeaders = [["Execution ID", "Etapa", "Status", "Timestamp", "Log Link"]];
+    const tableData = filteredEmergencyLogs.map(l => [
+      l.executionId.slice(-8),
+      l.step,
+      l.status,
+      l.timestamp ? format(new Date(l.timestamp), "HH:mm:ss") : "—",
+      l.step === "Snapshot" ? "Link Snapshot" : (correlatorId ? "Log Oficial (GCP)" : "N/A")
     ]);
 
     (doc as any).autoTable({
       startY: 40,
       head: tableHeaders,
       body: tableData,
+      didDrawCell: (data: any) => {
+        if (data.section === 'body' && data.column.index === 4) {
+          const val = data.cell.raw;
+          let url = "";
+          if (val === "Log Oficial (GCP)" && correlatorId) {
+            url = `https://console.cloud.google.com/logs/query;query=jsonPayload.correlator%3D%22${correlatorId}%22`;
+          } else if (val === "Link Snapshot") {
+            // Placeholder: link para a aba de emergência com o filtro
+            url = `${window.location.origin}/plan-audit?tab=emergency&execId=${executionIdFilter}`;
+          }
+          
+          if (url) {
+            doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
+            doc.setTextColor(0, 0, 255);
+            doc.text(val, data.cell.x + 2, data.cell.y + data.cell.height - 2);
+          }
+        }
+      }
     });
 
     doc.save(`resumo-etapas-${executionIdFilter || "geral"}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
