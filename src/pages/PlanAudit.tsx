@@ -170,6 +170,69 @@ const PlanAudit = () => {
   const [consistencyRows, setConsistencyRows] = useState<any[]>([]);
   const [consistencyLoading, setConsistencyLoading] = useState(false);
 
+  // Persistence keys
+  const EMERGENCY_STATE_KEY = "plan_audit_emergency_state";
+
+  // Load emergency state on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(EMERGENCY_STATE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setEmergencyStep(parsed.step || 0);
+        setEmergencyLogs(parsed.logs || []);
+        setSnapshots(parsed.snapshots || {});
+        setEmergencyPatientId(parsed.patientId || null);
+        setEmergencyPlanId(parsed.planId || null);
+      } catch (e) {
+        console.error("Error loading emergency state", e);
+      }
+    }
+  }, []);
+
+  // Save emergency state when it changes
+  useEffect(() => {
+    if (emergencyStep > 0 || emergencyLogs.length > 0) {
+      localStorage.setItem(EMERGENCY_STATE_KEY, JSON.stringify({
+        step: emergencyStep,
+        logs: emergencyLogs,
+        snapshots,
+        patientId: emergencyPatientId,
+        planId: emergencyPlanId
+      }));
+    }
+  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId]);
+
+  const clearEmergencyState = () => {
+    localStorage.removeItem(EMERGENCY_STATE_KEY);
+    setEmergencyStep(0);
+    setEmergencyLogs([]);
+    setSnapshots({});
+    setEmergencyPatientId(null);
+    setEmergencyPlanId(null);
+    toast.info("Estado de emergência limpo.");
+  };
+
+  const takeSnapshot = async (patientId: string, label: string) => {
+    if (!patientId) return;
+    try {
+      const { data, error } = await supabase
+        .from("meal_plans")
+        .select("id, plan_status, is_active")
+        .eq("patient_id", patientId)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      
+      setSnapshots(prev => ({
+        ...prev,
+        [`${label}_${Date.now()}`]: data
+      }));
+    } catch (err) {
+      console.error("Snapshot error:", err);
+    }
+  };
+
   // Filters from URL
   const search = searchParams.get("q") || "";
   const statusFilter = (searchParams.get("status") as AuditStatus | "all") || "all";
