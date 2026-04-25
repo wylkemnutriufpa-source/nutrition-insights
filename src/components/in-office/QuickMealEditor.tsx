@@ -380,12 +380,12 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     try {
       await withRetry(async () => {
         // Delete existing items for current day
-        if (!mealPlanId) {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { patientId, currentDay });
+        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { mealPlanId, patientId, currentDay });
           throw new Error("DELETE bloqueado: mealPlanId inválido");
         }
         
-        console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay" });
+        console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay", timestamp: Date.now() });
         
         const { error: delErr } = await supabase
           .from("meal_plan_items")
