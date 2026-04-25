@@ -1646,7 +1646,7 @@ function generatePlanFromVisualLibrary(
   const items: any[] = [];
   const usedPerMealType = new Map<string, Set<string>>();
 
-  for (let day = 0; day < 7; day++) {
+  for (let day = 0; day <= 0; day++) { // Single Day Model (Dia 0)
     for (const mealType of mealTypes) {
       const currentKcalTarget = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];
