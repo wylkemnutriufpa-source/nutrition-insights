@@ -143,7 +143,7 @@ const PlanAudit = () => {
     if (!user || !row.latest_plan_id) return;
     setPublishingId(row.latest_plan_id);
     try {
-      const { publishMealPlan } = await import("@/lib/mealPlanLifecycle");
+      const { publishMealPlan } = await import("@/lib/serverTransitions");
       const result = await publishMealPlan(row.latest_plan_id, user.id);
       if (!result.success) {
         throw new Error(result.error || "Erro ao publicar.");
