@@ -82,15 +82,17 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<SavedTemplate | null>(null);
 
-  // Load existing items for current day
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const { data: items } = await supabase
+  // Refetch data function
+  const fetchData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    try {
+      const { data: items, error } = await supabase
         .from("meal_plan_items")
         .select("*")
         .eq("meal_plan_id", mealPlanId)
         .eq("day_of_week", currentDay);
+
+      if (error) throw error;
 
       const newBlocks = MEAL_TYPES.map(m => ({
         ...m,
@@ -107,9 +109,36 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           })),
       }));
       setBlocks(newBlocks);
-      setLoading(false);
-    })();
+      console.log("[REFETCH DONE]");
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      toast.error("Erro ao atualizar dados.");
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
   }, [mealPlanId, currentDay]);
+
+  // Load existing items for current day
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Simple sequential queue for persistence
+  const [queue, setQueue] = useState<Promise<any>>(Promise.resolve());
+
+  const enqueuePersistence = useCallback((task: () => Promise<any>) => {
+    setQueue(prev => prev.then(async () => {
+      console.log("[SAVE START]");
+      try {
+        await task();
+        console.log("[SAVE SUCCESS]");
+        await fetchData(true); // Refetch after success
+      } catch (err: any) {
+        console.error("Persistence error:", err);
+        toast.error("Erro ao persistir dados: " + err.message);
+      }
+    }));
+  }, [fetchData]);
 
   // Search foods
   const searchFoods = useCallback(async (query: string) => {
@@ -150,7 +179,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const addFoodToBlock = async (blockType: MealType, food: any) => {
     const itemId = crypto.randomUUID();
     
-    try {
+    enqueuePersistence(async () => {
       await withRetry(async () => {
         const { error } = await supabase
           .from("meal_plan_items")
@@ -172,22 +201,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       }, {
         onRetry: (attempt) => toast.info(`Tentativa ${attempt} de adicionar item...`),
       });
-
-      const newItem: MealItem = {
-        id: itemId,
-        name: food.name,
-        calories: food.calories || 0,
-        protein: food.protein || 0,
-        carbs: food.carbs || 0,
-        fat: food.fat || 0,
-        meal_type: blockType,
-      };
-      setBlocks(prev => prev.map(b =>
-        b.type === blockType ? { ...b, items: [...b.items, newItem] } : b
-      ));
-    } catch (err: any) {
-      toast.error("Falha ao adicionar item: " + err.message);
-    }
+    });
   };
 
   // Remove item
@@ -197,17 +211,16 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       throw new Error("DELETE bloqueado: mealPlanId inválido");
     }
     
-    console.info("[DELETE] Executando removeItem", { mealPlanId, itemId, patientId, operation: "removeItem", timestamp: Date.now() });
-    
-    await supabase
-      .from("meal_plan_items")
-      .delete()
-      .eq("meal_plan_id", mealPlanId)
-      .eq("id", itemId);
-
-    setBlocks(prev => prev.map(b =>
-      b.type === blockType ? { ...b, items: b.items.filter(i => i.id !== itemId) } : b
-    ));
+    enqueuePersistence(async () => {
+      console.info("[DELETE] Executando removeItem", { mealPlanId, itemId, patientId, operation: "removeItem", timestamp: Date.now() });
+      const { error } = await supabase
+        .from("meal_plan_items")
+        .delete()
+        .eq("meal_plan_id", mealPlanId)
+        .eq("id", itemId);
+      
+      if (error) throw error;
+    });
   };
 
   // Duplicate day
@@ -229,38 +242,38 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       tenant_id: tenantId,
     }));
 
-    try {
-      await withRetry(async () => {
-        // Clear previous state for that day to avoid ghost items if we switched logic
-        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em duplicateDay", { mealPlanId, patientId, nextDay });
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        console.info("[DELETE] Limpando dia para duplicação", { mealPlanId, patientId, day: nextDay, operation: "duplicateDay", timestamp: Date.now() });
-        
-        await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId)
-          .eq("day_of_week", nextDay);
-        
-        if (inserts.length > 0) {
-          const { error } = await supabase.from("meal_plan_items").upsert(inserts);
-          if (error) throw error;
-        }
-      }, {
-        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de duplicar dia...`),
-      });
+    enqueuePersistence(async () => {
+      try {
+        await withRetry(async () => {
+          // Clear previous state for that day to avoid ghost items if we switched logic
+          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em duplicateDay", { mealPlanId, patientId, nextDay });
+            throw new Error("DELETE bloqueado: mealPlanId inválido");
+          }
+          
+          console.info("[DELETE] Limpando dia para duplicação", { mealPlanId, patientId, day: nextDay, operation: "duplicateDay", timestamp: Date.now() });
+          
+          await supabase
+            .from("meal_plan_items")
+            .delete()
+            .eq("meal_plan_id", mealPlanId)
+            .eq("day_of_week", nextDay);
+          
+          if (inserts.length > 0) {
+            const { error } = await supabase.from("meal_plan_items").upsert(inserts);
+            if (error) throw error;
+          }
+        }, {
+          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de duplicar dia...`),
+        });
 
-      setTotalDays(Math.max(totalDays, nextDay));
-      setCurrentDay(nextDay);
-      toast.success(`Dia ${currentDay} duplicado para Dia ${nextDay}`);
-    } catch (err: any) {
-      toast.error("Erro ao duplicar: " + err.message);
-    } finally {
-      setSaving(false);
-    }
+        setTotalDays(Math.max(totalDays, nextDay));
+        setCurrentDay(nextDay);
+        toast.success(`Dia ${currentDay} duplicado para Dia ${nextDay}`);
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   // Apply to all week
@@ -285,70 +298,76 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       })));
     }
     
-    try {
-      await withRetry(async () => {
-        // Clear other days
-        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyToWeek", { mealPlanId, patientId });
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        console.info("[DELETE] Limpando semana exceto dia atual", { mealPlanId, patientId, currentDay, operation: "applyToWeek", timestamp: Date.now() });
-        
-        const { error: delErr } = await supabase.from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId)
-          .neq("day_of_week", currentDay);
-        if (delErr) throw delErr;
+    enqueuePersistence(async () => {
+      try {
+        await withRetry(async () => {
+          // Clear other days
+          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyToWeek", { mealPlanId, patientId });
+            throw new Error("DELETE bloqueado: mealPlanId inválido");
+          }
+          
+          console.info("[DELETE] Limpando semana exceto dia atual", { mealPlanId, patientId, currentDay, operation: "applyToWeek", timestamp: Date.now() });
+          
+          const { error: delErr } = await supabase.from("meal_plan_items")
+            .delete()
+            .eq("meal_plan_id", mealPlanId)
+            .neq("day_of_week", currentDay);
+          if (delErr) throw delErr;
 
-        if (allInserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
-          if (insErr) throw insErr;
-        }
-      }, {
-        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar para a semana...`),
-      });
+          if (allInserts.length > 0) {
+            const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
+            if (insErr) throw insErr;
+          }
+        }, {
+          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar para a semana...`),
+        });
 
-      setTotalDays(7);
-      toast.success("Plano aplicado para a semana toda!");
-    } catch (err: any) {
-      toast.error("Erro ao aplicar semana: " + err.message);
-    } finally {
-      setSaving(false);
-    }
+        setTotalDays(7);
+        toast.success("Plano aplicado para a semana toda!");
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   // Save as template
   const saveAsTemplate = async () => {
     if (!templateName.trim() || !user?.id) return;
-    const { data: np } = await supabase
-      .from("nutritionist_patients")
-      .select("tenant_id")
-      .eq("patient_id", patientId)
-      .eq("nutritionist_id", user.id)
-      .eq("status", "active")
-      .maybeSingle();
+    
+    enqueuePersistence(async () => {
+      const { data: np } = await supabase
+        .from("nutritionist_patients")
+        .select("tenant_id")
+        .eq("patient_id", patientId)
+        .eq("nutritionist_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
 
-    if (!np?.tenant_id) {
-      toast.error("Vínculo com paciente não encontrado.");
-      return;
-    }
+      if (!np?.tenant_id) {
+        toast.error("Vínculo com paciente não encontrado.");
+        return;
+      }
 
-    const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, meal_type: b.type })));
-    await supabase.from("quick_meal_templates" as any).insert({
-      nutritionist_id: user.id,
-      tenant_id: np.tenant_id,
-      template_name: templateName,
-      template_type: "day",
-      items: templateItems as any,
-      total_calories: Math.round(totalMacros.calories || 0),
-      total_protein: Math.round(totalMacros.protein || 0),
-      total_carbs: Math.round(totalMacros.carbs || 0),
-      total_fat: Math.round(totalMacros.fat || 0),
-    } as any);
-    setShowTemplateSave(false);
-    setTemplateName("");
-    toast.success("Template salvo!");
+      const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, meal_type: b.type })));
+      const { error } = await supabase.from("quick_meal_templates" as any).insert({
+        nutritionist_id: user.id,
+        tenant_id: np.tenant_id,
+        template_name: templateName,
+        template_type: "day",
+        items: templateItems as any,
+        total_calories: Math.round(totalMacros.calories || 0),
+        total_protein: Math.round(totalMacros.protein || 0),
+        total_carbs: Math.round(totalMacros.carbs || 0),
+        total_fat: Math.round(totalMacros.fat || 0),
+      } as any);
+      
+      if (error) throw error;
+      
+      setShowTemplateSave(false);
+      setTemplateName("");
+      toast.success("Template salvo!");
+    });
   };
 
   // Apply template to current day
@@ -377,63 +396,39 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       };
     });
 
-    try {
-      await withRetry(async () => {
-        // Delete existing items for current day
-        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { mealPlanId, patientId, currentDay });
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay", timestamp: Date.now() });
-        
-        const { error: delErr } = await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId)
-          .eq("day_of_week", currentDay);
-        if (delErr) throw delErr;
+    enqueuePersistence(async () => {
+      try {
+        await withRetry(async () => {
+          // Delete existing items for current day
+          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { mealPlanId, patientId, currentDay });
+            throw new Error("DELETE bloqueado: mealPlanId inválido");
+          }
+          
+          console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay", timestamp: Date.now() });
+          
+          const { error: delErr } = await supabase
+            .from("meal_plan_items")
+            .delete()
+            .eq("meal_plan_id", mealPlanId)
+            .eq("day_of_week", currentDay);
+          if (delErr) throw delErr;
 
-        if (inserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
-          if (insErr) throw insErr;
-        }
-      }, {
-        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template...`),
-      });
+          if (inserts.length > 0) {
+            const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
+            if (insErr) throw insErr;
+          }
+        }, {
+          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template...`),
+        });
 
-      // Reload state
-      setLoading(true);
-      const { data: reloaded } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", mealPlanId)
-        .eq("day_of_week", currentDay);
-
-      const newBlocks = MEAL_TYPES.map(m => ({
-        ...m,
-        items: (reloaded || [])
-          .filter((i) => i.meal_type === m.type)
-          .map((i) => ({
-            id: i.id,
-            name: i.title || "Item",
-            calories: i.calories_target || 0,
-            protein: i.protein_target || 0,
-            carbs: i.carbs_target || 0,
-            fat: i.fat_target || 0,
-            meal_type: m.type,
-          })),
-      }));
-      setBlocks(newBlocks);
-      setLoading(false);
-      setShowTemplateLoad(false);
-      setPreviewTemplate(null);
-      toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
-    } catch (err: any) {
-      toast.error("Erro ao aplicar template: " + err.message);
-    } finally {
-      setSaving(false);
-    }
+        setShowTemplateLoad(false);
+        setPreviewTemplate(null);
+        toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   // Apply template to whole week
@@ -467,62 +462,39 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       });
     }
 
-    try {
-      await withRetry(async () => {
-        // Clear all days
-        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToWeek", { mealPlanId, patientId });
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        console.info("[DELETE] Limpando semana para aplicar template", { mealPlanId, patientId, operation: "applyTemplateToWeek", timestamp: Date.now() });
-        
-        const { error: delErr } = await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId);
-        if (delErr) throw delErr;
+    enqueuePersistence(async () => {
+      try {
+        await withRetry(async () => {
+          // Clear all days
+          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToWeek", { mealPlanId, patientId });
+            throw new Error("DELETE bloqueado: mealPlanId inválido");
+          }
+          
+          console.info("[DELETE] Limpando semana para aplicar template", { mealPlanId, patientId, operation: "applyTemplateToWeek", timestamp: Date.now() });
+          
+          const { error: delErr } = await supabase
+            .from("meal_plan_items")
+            .delete()
+            .eq("meal_plan_id", mealPlanId);
+          if (delErr) throw delErr;
 
-        if (allInserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
-          if (insErr) throw insErr;
-        }
-      }, {
-        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template à semana...`),
-      });
+          if (allInserts.length > 0) {
+            const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
+            if (insErr) throw insErr;
+          }
+        }, {
+          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template à semana...`),
+        });
 
-      setTotalDays(7);
-      // Reload current day
-      setLoading(true);
-      const { data: reloaded } = await supabase
-        .from("meal_plan_items")
-        .select("*")
-        .eq("meal_plan_id", mealPlanId)
-        .eq("day_of_week", currentDay);
-      const newBlocks = MEAL_TYPES.map(m => ({
-        ...m,
-        items: (reloaded || [])
-          .filter((i) => i.meal_type === m.type)
-          .map((i) => ({
-            id: i.id,
-            name: i.title || "Item",
-            calories: i.calories_target || 0,
-            protein: i.protein_target || 0,
-            carbs: i.carbs_target || 0,
-            fat: i.fat_target || 0,
-            meal_type: m.type,
-          })),
-      }));
-      setBlocks(newBlocks);
-      setLoading(false);
-      setShowTemplateLoad(false);
-      setPreviewTemplate(null);
-      toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
-    } catch (err: any) {
-      toast.error("Erro ao aplicar template: " + err.message);
-    } finally {
-      setSaving(false);
-    }
+        setTotalDays(7);
+        setShowTemplateLoad(false);
+        setPreviewTemplate(null);
+        toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
+      } finally {
+        setSaving(false);
+      }
+    });
   };
 
   // Totals
@@ -550,7 +522,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           </div>
         </div>
         <div className="flex gap-1 ml-auto flex-wrap">
-          <Button variant="outline" size="sm" onClick={() => setCurrentDay(0)} disabled={saving} className="gap-1 text-xs">
+          <Button variant="outline" size="sm" onClick={() => fetchData()} disabled={saving} className="gap-1 text-xs">
             <RefreshCw className="w-3 h-3" /> Atualizar
           </Button>
 
