@@ -865,7 +865,7 @@ const PlanAudit = () => {
     };
 
     const logsToExport = emergencyLogs.filter(l => 
-      !executionIdFilter || l.executionId.includes(executionIdFilter)
+      !executionIdFilter || l.executionId.toLowerCase().includes(executionIdFilter.toLowerCase())
     );
 
     if (logsToExport.length === 0) {
