@@ -192,7 +192,19 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
   // Remove item
   const removeItem = async (blockType: MealType, itemId: string) => {
-    await supabase.from("meal_plan_items").delete().eq("id", itemId);
+    if (!mealPlanId) {
+      console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em removeItem", { itemId, patientId });
+      throw new Error("DELETE bloqueado: mealPlanId inválido");
+    }
+    
+    console.info("[DELETE] Executando removeItem", { mealPlanId, itemId, patientId, operation: "removeItem" });
+    
+    await supabase
+      .from("meal_plan_items")
+      .delete()
+      .eq("meal_plan_id", mealPlanId)
+      .eq("id", itemId);
+
     setBlocks(prev => prev.map(b =>
       b.type === blockType ? { ...b, items: b.items.filter(i => i.id !== itemId) } : b
     ));
@@ -220,7 +232,18 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     try {
       await withRetry(async () => {
         // Clear previous state for that day to avoid ghost items if we switched logic
-        await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", nextDay);
+        if (!mealPlanId) {
+          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em duplicateDay", { patientId, nextDay });
+          throw new Error("DELETE bloqueado: mealPlanId inválido");
+        }
+        
+        console.info("[DELETE] Limpando dia para duplicação", { mealPlanId, patientId, day: nextDay, operation: "duplicateDay" });
+        
+        await supabase
+          .from("meal_plan_items")
+          .delete()
+          .eq("meal_plan_id", mealPlanId)
+          .eq("day_of_week", nextDay);
         
         if (inserts.length > 0) {
           const { error } = await supabase.from("meal_plan_items").upsert(inserts);
@@ -265,6 +288,13 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     try {
       await withRetry(async () => {
         // Clear other days
+        if (!mealPlanId) {
+          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyToWeek", { patientId });
+          throw new Error("DELETE bloqueado: mealPlanId inválido");
+        }
+        
+        console.info("[DELETE] Limpando semana exceto dia atual", { mealPlanId, patientId, currentDay, operation: "applyToWeek" });
+        
         const { error: delErr } = await supabase.from("meal_plan_items")
           .delete()
           .eq("meal_plan_id", mealPlanId)
@@ -350,7 +380,18 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     try {
       await withRetry(async () => {
         // Delete existing items for current day
-        const { error: delErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId).eq("day_of_week", currentDay);
+        if (!mealPlanId) {
+          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { patientId, currentDay });
+          throw new Error("DELETE bloqueado: mealPlanId inválido");
+        }
+        
+        console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay" });
+        
+        const { error: delErr } = await supabase
+          .from("meal_plan_items")
+          .delete()
+          .eq("meal_plan_id", mealPlanId)
+          .eq("day_of_week", currentDay);
         if (delErr) throw delErr;
 
         if (inserts.length > 0) {
@@ -429,7 +470,17 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     try {
       await withRetry(async () => {
         // Clear all days
-        const { error: delErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", mealPlanId);
+        if (!mealPlanId) {
+          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToWeek", { patientId });
+          throw new Error("DELETE bloqueado: mealPlanId inválido");
+        }
+        
+        console.info("[DELETE] Limpando semana para aplicar template", { mealPlanId, patientId, operation: "applyTemplateToWeek" });
+        
+        const { error: delErr } = await supabase
+          .from("meal_plan_items")
+          .delete()
+          .eq("meal_plan_id", mealPlanId);
         if (delErr) throw delErr;
 
         if (allInserts.length > 0) {
