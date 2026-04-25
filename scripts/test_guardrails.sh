@@ -23,7 +23,7 @@ echo "Created test meal plan: $PLAN_ID"
 # 2. Insert a meal plan item
 ITEM_ID=$(psql -t -c "INSERT INTO meal_plan_items (meal_plan_id, meal_type, title, calories_target, protein_target, carbs_target, fat_target, tenant_id) 
 VALUES ('$PLAN_ID', 'lunch', 'Test Guardrail Item', 500, 20, 50, 10, '$TENANT_ID') 
-RETURNING id" | xargs)
+RETURNING id" | grep -E '[0-9a-f]{8}-' | head -n1 | xargs)
 
 echo "Created test item: $ITEM_ID"
 
