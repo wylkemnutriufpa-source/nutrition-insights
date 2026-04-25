@@ -429,7 +429,7 @@ function generateForTier(
 
   const tierSeed = tier === "easy" ? 7 : tier === "balanced" ? 13 : 23;
 
-  for (let day = 1; day <= 7; day++) {
+  for (let day = 0; day <= 0; day++) { // Master Day (Single Day Model)
     for (const mealType of mealConfig.types) {
       const targetKcal = Math.round(params.targetKcal * (mealConfig.distribution[mealType] || 0.15));
 
