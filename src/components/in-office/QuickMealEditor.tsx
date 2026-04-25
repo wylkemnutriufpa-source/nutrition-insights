@@ -232,12 +232,12 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     try {
       await withRetry(async () => {
         // Clear previous state for that day to avoid ghost items if we switched logic
-        if (!mealPlanId) {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em duplicateDay", { patientId, nextDay });
+        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em duplicateDay", { mealPlanId, patientId, nextDay });
           throw new Error("DELETE bloqueado: mealPlanId inválido");
         }
         
-        console.info("[DELETE] Limpando dia para duplicação", { mealPlanId, patientId, day: nextDay, operation: "duplicateDay" });
+        console.info("[DELETE] Limpando dia para duplicação", { mealPlanId, patientId, day: nextDay, operation: "duplicateDay", timestamp: Date.now() });
         
         await supabase
           .from("meal_plan_items")
