@@ -241,6 +241,8 @@ const PlanAudit = () => {
   const [emergencyPlanId, setEmergencyPlanId] = useState<string | null>(null);
   const [replayMode, setReplayMode] = useState(false);
   const [diffViewData, setDiffViewData] = useState<{ before: any, after: any, label: string } | null>(null);
+  const [executionIdFilter, setExecutionIdFilter] = useState<string>("");
+  const [correlatorId, setCorrelatorId] = useState<string>("");
 
 
   // RLS Validation state
