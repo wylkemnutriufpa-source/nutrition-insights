@@ -914,7 +914,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         } else {
           set({ items: (itemsData || []) as MealPlanItem[] });
           get()._persistSnapshot();
-          console.info(`[REFETCH DONE t=${Date.now()}]`);
+          console.info(`[REFETCH DONE t=${Date.now()}] Items count: ${itemsData?.length || 0}`);
         }
       }
 
