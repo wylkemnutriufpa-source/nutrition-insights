@@ -408,11 +408,12 @@ export default function SystemDiagnostics() {
     const startTime = Date.now();
     const tests = [
       { name: "Auth & Session", fn: runAuthTest, weight: 10 },
-      { name: "Database Integrity", fn: runDatabaseTest, weight: 30 },
-      { name: "Route Health", fn: runRouteTest, weight: 10 },
-      { name: "Notification Triggers", fn: runNotificationTest, weight: 15 },
+      { name: "Database Integrity", fn: runDatabaseTest, weight: 20 },
+      { name: "Route Health", fn: runRouteTest, weight: 5 },
+      { name: "Notification Triggers", fn: runNotificationTest, weight: 10 },
       { name: "Realtime Channels", fn: runRealtimeTest, weight: 15 },
       { name: "Data Consistency", fn: runConsistencyTest, weight: 20 },
+      { name: "Stability & Regressions", fn: runStabilityTest, weight: 20 },
     ];
 
     let totalOk = 0, totalWarn = 0, totalCrit = 0;
