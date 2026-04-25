@@ -861,60 +861,35 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       
       for (const op of ops) {
         try {
-          console.info(`[FLUSH] Persistindo: ${op.key}`, { payload: op.itemIds });
+          const t1 = Date.now();
+          console.info(`[SAVE START t=${t1}] Operação: ${op.key}`);
           await op.persist();
-          console.info(`[FLUSH] Sucesso: ${op.key}`);
+          const t2 = Date.now();
+          console.info(`[SAVE SUCCESS t=${t2}] Operação: ${op.key} (dur: ${t2 - t1}ms)`);
           processed.push({ key: op.key, ok: true, itemIds: op.itemIds });
+          
+          // Refetch após cada operação individualmente para evitar estado inconsistente
+          const planId = get().planId;
+          if (planId) {
+            console.info(`[REFETCH START t=${Date.now()}]`);
+            const { data: itemsData, error: refetchError } = await supabase
+              .from("meal_plan_items")
+              .select("*")
+              .eq("meal_plan_id", planId)
+              .order("created_at");
+            
+            if (refetchError) {
+              console.error("[REFETCH_ERROR]", refetchError);
+            } else {
+              set({ items: (itemsData || []) as MealPlanItem[] });
+              get()._persistSnapshot();
+              console.info(`[REFETCH DONE t=${Date.now()}]`);
+            }
+          }
         } catch (err: any) {
-          console.error(`[FLUSH] ERRO em ${op.key}:`, {
-            message: err?.message,
-            code: err?.code,
-            details: err?.details,
-            payload: op.itemIds
-          });
+          console.error(`[FLUSH] ERRO em ${op.key}:`, err);
           op.rollback?.();
           processed.push({ key: op.key, ok: false, itemIds: op.itemIds, err });
-        }
-      }
-
-      const processedKeys = processed.map((p) => p.key);
-
-      set((s) => {
-        const remaining = s.pendingOps.filter((p) => !processedKeys.includes(p.key));
-        const stillPendingIds = new Set(remaining.flatMap((p) => p.itemIds));
-        const syncing = { ...s.syncingMap };
-        processed.flatMap((p) => p.itemIds).forEach((id) => {
-          if (!stillPendingIds.has(id)) delete syncing[id];
-        });
-
-        return { pendingOps: remaining, syncingMap: syncing };
-      });
-
-      const failed = processed.find((p) => !p.ok);
-      const hasError = Boolean(failed);
-      get()._setSyncStatus(hasError ? "error" : "saved");
-      set({ lastSavedAt: Date.now() });
-      get()._persistSnapshot();
-
-      // ─── REFETCH OBRIGATÓRIO (Etapa 5) ───
-      if (!hasError) {
-        const planId = get().planId;
-        if (planId) {
-          console.info("[REFETCH] Sincronizando com verdade do banco...", { planId });
-          const { data: itemsData, error: refetchError } = await supabase
-            .from("meal_plan_items")
-            .select("*")
-            .eq("meal_plan_id", planId)
-            .order("created_at");
-          
-          if (refetchError) {
-            console.error("[REFETCH_ERROR]", refetchError);
-          } else {
-            const dbItems = (itemsData || []) as MealPlanItem[];
-            set({ items: dbItems });
-            get()._persistSnapshot();
-            console.info("[REFETCH_SUCCESS] UI sincronizada.");
-          }
         }
       }
 
