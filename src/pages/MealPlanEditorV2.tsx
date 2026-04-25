@@ -231,6 +231,7 @@ export default function MealPlanEditorV2() {
       return;
     }
     setSaving(true);
+    const toastId = toast.loading("Salvando e aprovando plano...");
     try {
       // Consolida automaticamente itens legados (day != 0) para o slot
       // canônico (day=0) antes de salvar, garantindo consistência futura.
@@ -247,7 +248,7 @@ export default function MealPlanEditorV2() {
           itemsById,
         });
         plan0.toMove.forEach((id) => store.updateItem(id, { day_of_week: 0 } as any));
-        toast.info(`${plan0.toMove.length} refeição(ões) legada(s) consolidada(s) em day 0.`);
+        toast.info(`${plan0.toMove.length} refeição(ões) legada(s) consolidada(s) em day 0.`, { id: toastId });
       }
 
       await store._flushQueue();
@@ -259,9 +260,9 @@ export default function MealPlanEditorV2() {
         await refreshPlanFromServer();
 
         if (totals.totals_status === "incomplete") {
-          toast.success("Rascunho auto-corrigido salvo. Os totais serão recalculados em segundo plano.");
+          toast.success("Rascunho auto-corrigido salvo. Os totais serão recalculados em segundo plano.", { id: toastId });
         } else {
-          toast.success("Rascunho auto-corrigido salvo com sucesso!");
+          toast.success("Rascunho auto-corrigido salvo com sucesso!", { id: toastId });
         }
         return;
       }
@@ -272,13 +273,13 @@ export default function MealPlanEditorV2() {
       await refreshPlanFromServer();
 
       if (totals.totals_status === "incomplete") {
-        toast.success("Plano salvo. Totais serão recalculados em segundo plano.");
+        toast.success("Plano salvo. Totais serão recalculados em segundo plano.", { id: toastId });
       } else {
-        toast.success("Plano salvo com sucesso!");
+        toast.success("Plano salvo com sucesso!", { id: toastId });
       }
     } catch (err: any) {
       console.error("[Save] Error:", err);
-      toast.error("Erro ao salvar: " + (err?.message || "Tente novamente"));
+      toast.error("Erro ao salvar: " + (err?.message || "Tente novamente"), { id: toastId });
     } finally {
       setSaving(false);
     }
@@ -298,6 +299,20 @@ export default function MealPlanEditorV2() {
     }
 
     setPublishing(true);
+    const toastId = toast.loading("Publicando plano...");
+    try {
+      const result = await publishMealPlan(plan.id, user.id);
+      if (!result.success) throw new Error(result.error || "Erro ao publicar");
+      
+      await refreshPlanFromServer();
+      toast.success("✅ Plano publicado com sucesso!", { id: toastId });
+    } catch (err: any) {
+      console.error("[Publish] Error:", err);
+      toast.error("Erro ao publicar: " + (err?.message || "Tente novamente"), { id: toastId });
+    } finally {
+      setPublishing(false);
+    }
+  };
     try {
       await store._flushQueue();
 
