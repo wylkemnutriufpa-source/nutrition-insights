@@ -1594,26 +1594,41 @@ const PlanAudit = () => {
                  <h3 className="text-sm font-semibold flex items-center gap-2">
                    <Terminal className="w-4 h-4 text-blue-500" /> Resumo por Etapa
                  </h3>
-                 <Button 
-                   variant="outline" 
-                   size="sm" 
-                   className="h-7 text-[10px] gap-1"
-                   onClick={exportSummaryCSV}
-                 >
-                   <Download className="w-3 h-3" /> Exportar CSV do Resumo
-                 </Button>
-               </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[10px] gap-1"
+                      onClick={exportSummaryCSV}
+                    >
+                      <Download className="w-3 h-3" /> CSV
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[10px] gap-1"
+                      onClick={exportSummaryPDF}
+                    >
+                      <FileText className="w-3 h-3" /> PDF
+                    </Button>
+                  </div>
+                </div>
 
-               {isIncompleteData && (
-                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-start gap-3">
-                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                   <div className="text-[10px] leading-relaxed">
-                     <span className="font-bold block uppercase mb-0.5">Dados Incompletos</span>
-                     Este ID de execução não possui todos os logs ou snapshots esperados. 
-                     As taxas de sucesso e falha podem estar distorcidas.
-                   </div>
-                 </div>
-               )}
+                {incompleteDataStatus.isIncomplete && (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-start gap-3">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <div className="text-[10px] leading-relaxed">
+                      <span className="font-bold block uppercase mb-0.5">Dados Incompletos</span>
+                      Este ID de execução não possui todos os logs ou snapshots esperados:
+                      <ul className="list-disc list-inside mt-1 font-medium">
+                        {incompleteDataStatus.missing.map((m, i) => (
+                          <li key={i}>{m}</li>
+                        ))}
+                      </ul>
+                      As taxas de sucesso e falha podem estar distorcidas.
+                    </div>
+                  </div>
+                )}
 
                <div className="border rounded-md overflow-hidden">
                  <Table>
