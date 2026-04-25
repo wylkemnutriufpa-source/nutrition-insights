@@ -361,13 +361,14 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Substituições</Label>
-                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v) as 0 | 1 | 2 | 3)}>
+                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v) as 0 | 1 | 2 | 3 | 4)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">Nenhuma</SelectItem>
                         <SelectItem value="1">1 por refeição</SelectItem>
                         <SelectItem value="2">2 por refeição</SelectItem>
                         <SelectItem value="3">3 por refeição</SelectItem>
+                        <SelectItem value="4">4 por refeição</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
