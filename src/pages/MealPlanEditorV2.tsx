@@ -340,6 +340,7 @@ export default function MealPlanEditorV2() {
     }
 
     setSavingAndPublishing(true);
+    const toastId = toast.loading("Salvando e publicando plano...");
     try {
       // Consolida itens legados antes de publicar
       const { planLegacyConsolidation } = await import("@/lib/legacyDayConsolidation");
@@ -355,7 +356,7 @@ export default function MealPlanEditorV2() {
           itemsById,
         });
         plan0.toMove.forEach((id) => store.updateItem(id, { day_of_week: 0 } as any));
-        toast.info(`${plan0.toMove.length} refeição(ões) legada(s) consolidada(s) em day 0.`);
+        toast.info(`${plan0.toMove.length} refeição(ões) legada(s) consolidada(s) em day 0.`, { id: toastId });
       }
 
       // 1) Flush pending edits
