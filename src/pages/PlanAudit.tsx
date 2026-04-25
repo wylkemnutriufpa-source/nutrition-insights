@@ -613,6 +613,26 @@ const PlanAudit = () => {
         </div>
       </header>
 
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="grid grid-cols-2 md:grid-cols-5 h-auto p-1 gap-1">
+          <TabsTrigger value="overview" className="text-xs py-2">
+            <Activity className="w-3.5 h-3.5 mr-1.5" /> Visão Geral
+          </TabsTrigger>
+          <TabsTrigger value="diagnostics" className="text-xs py-2">
+            <Terminal className="w-3.5 h-3.5 mr-1.5" /> Diagnóstico
+          </TabsTrigger>
+          <TabsTrigger value="emergency" className="text-xs py-2">
+            <Zap className="w-3.5 h-3.5 mr-1.5 text-amber-500" /> Emergência
+          </TabsTrigger>
+          <TabsTrigger value="rls" className="text-xs py-2">
+            <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Validador RLS
+          </TabsTrigger>
+          <TabsTrigger value="consistency" className="text-xs py-2" onClick={loadConsistencyReport}>
+            <Database className="w-3.5 h-3.5 mr-1.5" /> Consistência
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="space-y-6 m-0">
       {/* Summary cards */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         <Card className="p-4">
