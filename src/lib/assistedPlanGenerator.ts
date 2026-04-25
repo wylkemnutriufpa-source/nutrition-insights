@@ -372,6 +372,33 @@ export async function generateAssistedPlan(
     options.push(option);
   }
 
+  // Final Type Integrity Check
+  const allGeneratedSlots = options.flatMap(opt => opt.slots);
+  const mixedTypes = allGeneratedSlots.some(s => s.libraryItem.plan_type !== params.planType);
+  
+  if (mixedTypes) {
+    const mismatchDetails = allGeneratedSlots
+      .filter(s => s.libraryItem.plan_type !== params.planType)
+      .map(s => `${s.libraryItem.title} (${s.libraryItem.plan_type})`)
+      .join(", ");
+      
+    console.error("[ASSISTED] Inconsistência de tipo detectada!", { expected: params.planType });
+    
+    try {
+      const { logAudit } = await import("./auditLog");
+      logAudit("plan_type_mismatch", "meal_plan", context.patientId, {
+        expected_type: params.planType,
+        mismatch_count: allGeneratedSlots.filter(s => s.libraryItem.plan_type !== params.planType).length,
+        items: mismatchDetails,
+        engine: "assistedPlanGenerator"
+      });
+    } catch (e) {
+      console.error("Erro ao logar auditoria de mismatch", e);
+    }
+    
+    throw new Error(`Inconsistência crítica: O gerador incluiu itens de tipo diferente (${mismatchDetails}). Geração abortada.`);
+  }
+
   return {
     success: true,
     options,
