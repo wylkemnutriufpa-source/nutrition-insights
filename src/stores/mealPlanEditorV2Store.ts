@@ -535,9 +535,14 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Delete item ───────────────────────────────────────────
   deleteItem: (itemId) => {
-
     const prev = get().items;
     set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
+
+    // Se o item é temporário, apenas removemos do estado local.
+    // O insert pendente no flushQueue irá falhar ou não encontrar o item e ignorar.
+    if (itemId.startsWith("temp-")) {
+      return;
+    }
 
     get()._enqueue({
       key: `delete:${itemId}`,
@@ -545,19 +550,23 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       queuedAt: Date.now(),
       persist: async () => {
         const planId = get().planId;
-        if (!planId || typeof planId !== 'string' || planId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: planId inválido em deleteItem", { planId, itemId });
-          throw new Error("DELETE bloqueado: planId inválido");
+        if (!planId) {
+          console.error("[CRITICAL] DELETE abortado: planId nulo no store", { itemId });
+          throw new Error("DELETE abortado: plano não identificado");
         }
         
-        console.info("[DELETE] Executando deleteItem", { planId, itemId, operation: "deleteItem", timestamp: Date.now() });
+        console.info("[DELETE] Removendo item do banco", { planId, itemId });
         
         const { error } = await supabase
           .from("meal_plan_items")
           .delete()
-          .eq("meal_plan_id", planId)
-          .eq("id", itemId);
-        if (error) throw error;
+          .eq("id", itemId)
+          .eq("meal_plan_id", planId); // Segurança extra para garantir que pertence ao plano atual
+          
+        if (error) {
+          console.error("[DELETE_ERROR]", error);
+          throw error;
+        }
       },
       rollback: () => set({ items: prev }),
     });
