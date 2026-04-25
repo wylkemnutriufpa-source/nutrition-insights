@@ -259,6 +259,7 @@ const PlanAudit = () => {
   const [consistencyRows, setConsistencyRows] = useState<any[]>([]);
   const [consistencyLoading, setConsistencyLoading] = useState(false);
   const [mismatchRows, setMismatchRows] = useState<any[]>([]);
+  const [dayMismatchRows, setDayMismatchRows] = useState<any[]>([]);
   const [mismatchLoading, setMismatchLoading] = useState(false);
 
   // Persistence keys
