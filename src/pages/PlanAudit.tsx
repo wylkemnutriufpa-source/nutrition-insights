@@ -269,6 +269,7 @@ const PlanAudit = () => {
         setSnapshots(parsed.snapshots || {});
         setEmergencyPatientId(parsed.patientId || null);
         setEmergencyPlanId(parsed.planId || null);
+        if (parsed.activeTab) setActiveTab(parsed.activeTab);
         // Load persistent filters
         if (parsed.executionIdFilter) setExecutionIdFilter(parsed.executionIdFilter);
         if (parsed.correlatorId) setCorrelatorId(parsed.correlatorId);
@@ -287,9 +288,10 @@ const PlanAudit = () => {
       patientId: emergencyPatientId,
       planId: emergencyPlanId,
       executionIdFilter,
-      correlatorId
+      correlatorId,
+      activeTab
     }));
-  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId, executionIdFilter, correlatorId]);
+  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId, executionIdFilter, correlatorId, activeTab]);
 
   const clearEmergencyState = () => {
     localStorage.removeItem(EMERGENCY_STATE_KEY);
@@ -931,17 +933,54 @@ const PlanAudit = () => {
     const steps = ["Salvar/Aprovar", "Publicar", "Validar", "Snapshot"];
     return steps.map(stepName => {
       const stepLogs = filteredEmergencyLogs.filter(l => {
-        if (stepName === "Salvar/Aprovar") return l.step.includes("Criar") || l.step.includes("Plano") || l.step.includes("Item");
+        if (stepName === "Salvar/Aprovar") {
+          // Mais determinístico: baseia-se no step fixo ou tipo de erro de persistência
+          return l.step === "Criar Paciente" || l.step === "Criar Plano" || l.step === "Criar Item" || l.errorType === "Persistência";
+        }
         return l.step.includes(stepName);
       });
       
       const total = stepLogs.length;
       const failures = stepLogs.filter(l => l.status === "error").length;
-      const rate = total > 0 ? (failures / total) * 100 : 0;
+      const successes = total - failures;
+      const failureRate = total > 0 ? (failures / total) * 100 : 0;
+      const successRate = total > 0 ? (successes / total) * 100 : 0;
       
-      return { name: stepName, total, failures, rate };
+      return { name: stepName, total, failures, successes, failureRate, successRate };
     });
   }, [filteredEmergencyLogs]);
+
+  const isIncompleteData = useMemo(() => {
+    if (!executionIdFilter) return false;
+    // Considera incompleto se não houver pelo menos 4 logs ou nenhum snapshot para esse ID
+    const hasSnapshots = filteredEmergencyLogs.some(l => l.step === "Snapshot");
+    const logCount = filteredEmergencyLogs.length;
+    return logCount > 0 && (logCount < 4 || !hasSnapshots);
+  }, [filteredEmergencyLogs, executionIdFilter]);
+
+  const exportSummaryCSV = () => {
+    const headers = ["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso (%)", "Taxa de Falha (%)"];
+    const rows = stepMetrics.map(m => [
+      m.name,
+      m.total,
+      m.successes,
+      m.failures,
+      m.successRate.toFixed(1),
+      m.failureRate.toFixed(1)
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `resumo_auditoria_${executionIdFilter || 'geral'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Resumo exportado com sucesso!");
+  };
 
 
 
@@ -1504,37 +1543,61 @@ const PlanAudit = () => {
                <ActionableSummary logs={filteredEmergencyLogs} />
             </div>
 
-            <div className="space-y-4">
-              <h3 className="text-sm font-semibold flex items-center gap-2">
-                <Terminal className="w-4 h-4 text-blue-500" /> Resumo por Etapa
-              </h3>
-              <div className="border rounded-md overflow-hidden">
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Etapa</TableHead>
-                      <TableHead className="text-center">Total</TableHead>
-                      <TableHead className="text-center">Falhas</TableHead>
-                      <TableHead className="text-right">Taxa de Falha</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {stepMetrics.map((m) => (
-                      <TableRow key={m.name}>
-                        <TableCell className="font-medium text-xs">{m.name}</TableCell>
-                        <TableCell className="text-center text-xs">{m.total}</TableCell>
-                        <TableCell className="text-center text-xs text-rose-500 font-semibold">{m.failures}</TableCell>
-                        <TableCell className="text-right text-xs">
-                          <Badge variant={m.rate > 0 ? "destructive" : "secondary"} className="text-[10px]">
-                            {m.rate.toFixed(1)}%
-                          </Badge>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              </div>
-            </div>
+             <div className="space-y-4">
+               <div className="flex items-center justify-between">
+                 <h3 className="text-sm font-semibold flex items-center gap-2">
+                   <Terminal className="w-4 h-4 text-blue-500" /> Resumo por Etapa
+                 </h3>
+                 <Button 
+                   variant="outline" 
+                   size="sm" 
+                   className="h-7 text-[10px] gap-1"
+                   onClick={exportSummaryCSV}
+                 >
+                   <Download className="w-3 h-3" /> Exportar CSV do Resumo
+                 </Button>
+               </div>
+
+               {isIncompleteData && (
+                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-start gap-3">
+                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                   <div className="text-[10px] leading-relaxed">
+                     <span className="font-bold block uppercase mb-0.5">Dados Incompletos</span>
+                     Este ID de execução não possui todos os logs ou snapshots esperados. 
+                     As taxas de sucesso e falha podem estar distorcidas.
+                   </div>
+                 </div>
+               )}
+
+               <div className="border rounded-md overflow-hidden">
+                 <Table>
+                   <TableHeader>
+                     <TableRow>
+                       <TableHead>Etapa</TableHead>
+                       <TableHead className="text-center">Total</TableHead>
+                       <TableHead className="text-center">Sucessos</TableHead>
+                       <TableHead className="text-center text-rose-500">Falhas</TableHead>
+                       <TableHead className="text-right">Taxa de Sucesso</TableHead>
+                     </TableRow>
+                   </TableHeader>
+                   <TableBody>
+                     {stepMetrics.map((m) => (
+                       <TableRow key={m.name}>
+                         <TableCell className="font-medium text-xs">{m.name}</TableCell>
+                         <TableCell className="text-center text-xs">{m.total}</TableCell>
+                         <TableCell className="text-center text-xs text-emerald-600 font-medium">{m.successes}</TableCell>
+                         <TableCell className="text-center text-xs text-rose-500 font-semibold">{m.failures}</TableCell>
+                         <TableCell className="text-right text-xs">
+                           <Badge variant={m.successRate < 100 ? "destructive" : "secondary"} className="text-[10px]">
+                             {m.successRate.toFixed(1)}%
+                           </Badge>
+                         </TableCell>
+                       </TableRow>
+                     ))}
+                   </TableBody>
+                 </Table>
+               </div>
+             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
