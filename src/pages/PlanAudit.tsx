@@ -466,7 +466,7 @@ const PlanAudit = () => {
             currentPatientId = inviteData.patient_id;
             setEmergencyPatientId(currentPatientId);
             addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
-            await takeSnapshot(currentPatientId!, "Inicial");
+            await takeSnapshot(currentPatientId!, "Inicial", executionId);
           }
         }
 
@@ -513,7 +513,7 @@ const PlanAudit = () => {
         if (startStep <= 3) {
           setEmergencyStep(3);
           addLog("Salvar/Aprovar", "loading", "Validando e aprovando...");
-          await takeSnapshot(currentPatientId!, "Antes de Salvar");
+          await takeSnapshot(currentPatientId!, "Antes de Salvar", executionId);
           
           const { savePlanAsApproved } = await import("@/lib/serverTransitions");
           const saveRes = await savePlanAsApproved(currentPlanId!, user.id);
@@ -523,14 +523,14 @@ const PlanAudit = () => {
             throw new Error(saveRes.error);
           }
           addLog("Salvar/Aprovar", "success", "Plano aprovado com sucesso.", { planId: currentPlanId }, saveRes);
-          await takeSnapshot(currentPatientId!, "Depois de Salvar");
+          await takeSnapshot(currentPatientId!, "Depois de Salvar", executionId);
         }
 
         // 4. Publicar
         if (startStep <= 4) {
           setEmergencyStep(4);
           addLog("Publicar", "loading", "Publicando para o paciente...");
-          await takeSnapshot(currentPatientId!, "Antes de Publicar");
+          await takeSnapshot(currentPatientId!, "Antes de Publicar", executionId);
           
           const { publishMealPlan } = await import("@/lib/serverTransitions");
           const pubRes = await publishMealPlan(currentPlanId!, user.id);
@@ -540,7 +540,7 @@ const PlanAudit = () => {
             throw new Error(pubRes.error);
           }
           addLog("Publicar", "success", "Plano publicado.", { planId: currentPlanId }, pubRes);
-          await takeSnapshot(currentPatientId!, "Depois de Publicar");
+          await takeSnapshot(currentPatientId!, "Depois de Publicar", executionId);
         }
 
         // 5. Validar Visualização
