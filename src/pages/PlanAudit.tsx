@@ -761,7 +761,7 @@ const PlanAudit = () => {
             ) : (
               <RefreshCw className="w-4 h-4" />
             )}
-            Atualizar
+            Refazer sincronização
           </Button>
         </div>
       </div>
