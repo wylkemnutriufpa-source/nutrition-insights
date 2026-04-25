@@ -479,7 +479,6 @@ const PlanAudit = () => {
       runFromStep(1);
     }
   };
-  };
 
   const validateRLS = async (patientId: string) => {
     if (!patientId) return;
