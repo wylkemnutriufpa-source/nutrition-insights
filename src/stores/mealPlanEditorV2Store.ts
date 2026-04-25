@@ -497,8 +497,8 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       return;
     }
 
-    const currentState = get();
-    const prevItems = currentState.items;
+    const prevItems = get().items;
+    const originalItem = prevItems.find(i => i.id === itemId);
     
     // Atualiza estado local imediatamente (otimista)
     set((s) => ({
@@ -510,26 +510,27 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       return;
     }
 
-    // Estratégia de Mesclagem: Se já houver um update pendente para este item, mesclamos os patches
-    // para evitar perda de dados se o usuário editar múltiplos campos rapidamente.
     get()._enqueue({
       key: `update:${itemId}`,
       itemIds: [itemId],
       queuedAt: Date.now(),
       persist: async () => {
-        // Buscamos o item ATUALIZADO do estado no momento da persistência
         const item = get().items.find(i => i.id === itemId);
         if (!item) return;
 
-        // Ao invés de usar o closure original (que pode estar defasado), 
-        // persistimos o estado atual completo do item para garantir consistência.
         const { error } = await supabase
           .from("meal_plan_items")
           .update(sanitizeMealPlanItemPatch(item) as any)
           .eq("id", itemId);
         if (error) throw error;
       },
-      rollback: () => set({ items: prevItems }),
+      rollback: () => {
+        if (originalItem) {
+          set((s) => ({
+            items: s.items.map(i => i.id === itemId ? originalItem : i)
+          }));
+        }
+      },
     });
   },
 
