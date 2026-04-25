@@ -106,14 +106,14 @@ const OBJECTIVES = [
 
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-export default function WorkoutEditor({ students, onSaved, onCancel }: WorkoutEditorProps) {
+export default function WorkoutEditor({ students, onSaved, onCancel, initialData }: WorkoutEditorProps) {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [objective, setObjective] = useState("general");
   const [studentId, setStudentId] = useState("");
-  const [startDate, setStartDate] = useState("");
+  const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
   const [routines, setRoutines] = useState<EditorRoutine[]>([newRoutine(0)]);
   const [saving, setSaving] = useState(false);
