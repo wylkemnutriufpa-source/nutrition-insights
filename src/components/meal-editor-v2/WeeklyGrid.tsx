@@ -210,14 +210,12 @@ export function WeeklyGrid() {
               </p>
             </div>
             {(() => {
-              // Usa o snapshot do cabeçalho para garantir que os totais
-              // exibidos correspondem EXATAMENTE ao effectiveDay rotulado.
-              const t = headerSnapshot.totals;
+              const t = getDayTotals(effectiveDay);
               return (
                 <div className="flex gap-4">
                   <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
                     <span className="text-[9px] text-muted-foreground uppercase font-bold">Kcal</span>
-                    <span className="text-xs font-bold text-orange-500">{t.calories}</span>
+                    <span className="text-xs font-bold text-orange-500">{Math.round(t.calories)}</span>
                   </div>
                   <div className="flex flex-col items-center px-3 py-1 bg-background rounded-lg border border-primary/10 shadow-sm">
                     <span className="text-[9px] text-muted-foreground uppercase font-bold">Prot</span>
