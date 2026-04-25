@@ -737,43 +737,33 @@ export default function MealPlanEditorV2() {
               </>
             )}
 
-            {/* Publicar — visible for drafts AND approved plans (not yet delivered) */}
-            {canPublish && !isImmutable && (
-              <Button
-                size="sm"
-                onClick={handleSaveAndPublish}
-                disabled={
-                  savingAndPublishing ||
-                  saving ||
-                  publishing ||
-                  validating ||
-                  store.syncStatus === "saving"
-                }
-                title="Salvar (aprovar) e publicar para o paciente em uma única ação"
-                className="gradient-primary text-white border-0 gap-1.5 shadow-glow font-semibold"
-              >
-                {savingAndPublishing ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                ) : (
-                  <Send className="w-4 h-4 mr-1" />
-                )}
-                Salvar e Publicar
-              </Button>
-            )}
+            {!isImmutable && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="gap-1.5"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Salvar
+                </Button>
 
-            {/* Publicar — for already-approved plans (kept as fallback) */}
-            {canPublish && isApproved && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePublish}
-                disabled={publishing || savingAndPublishing || store.syncStatus === "saving"}
-                title="Publicar plano já aprovado"
-                className="gap-1.5"
-              >
-                {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-                Só Publicar
-              </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveAndPublish}
+                  disabled={savingAndPublishing || publishing}
+                  className="gradient-primary text-white border-0 gap-1.5 shadow-glow font-semibold"
+                >
+                  {savingAndPublishing ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-1" />
+                  )}
+                  Salvar e Publicar
+                </Button>
+              </>
             )}
 
             {/* Visual Library — always available for viewing */}
