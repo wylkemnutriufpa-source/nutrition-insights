@@ -1276,8 +1276,50 @@ const PlanAudit = () => {
                   Cria um cenário completo para validar se o sistema está salvando, publicando e exibindo corretamente.
                 </p>
               </div>
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex items-center gap-2 mr-4 border-r pr-4">
+              <div className="flex flex-wrap items-center gap-3">
+                <div className="flex items-center gap-2 border-r pr-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase">ID Execução</span>
+                    <Input 
+                      placeholder="Filtrar ID..." 
+                      value={executionIdFilter}
+                      onChange={(e) => setExecutionIdFilter(e.target.value)}
+                      className="h-8 text-xs w-32"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 border-r pr-4">
+                  <div className="flex flex-col gap-1">
+                    <span className="text-[10px] font-medium text-muted-foreground uppercase">Request ID (Backend)</span>
+                    <div className="flex gap-1">
+                      <Input 
+                        placeholder="Correlator ID..." 
+                        value={correlatorId}
+                        onChange={(e) => setCorrelatorId(e.target.value)}
+                        className="h-8 text-xs w-40"
+                      />
+                      {correlatorId && (
+                        <Button 
+                          variant="ghost" 
+                          size="icon" 
+                          className="h-8 w-8"
+                          asChild
+                        >
+                          <a 
+                            href={`https://console.cloud.google.com/logs/query;query=jsonPayload.correlator%3D%22${correlatorId}%22`} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                          </a>
+                        </Button>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2 border-r pr-4">
                   <span className="text-xs font-medium">Replay:</span>
                   <Button 
                     variant={replayMode ? "default" : "outline"} 
@@ -1290,25 +1332,31 @@ const PlanAudit = () => {
                 </div>
                 
                 {emergencyLogs.length > 0 && (
-                  <Button onClick={handleExportJSON} variant="outline" size="sm" className="gap-2">
-                    <Download className="w-3.5 h-3.5" />
-                    Exportar JSON
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button onClick={handleExportJSON} variant="outline" size="sm" className="h-8 gap-2">
+                      <Download className="w-3.5 h-3.5" />
+                      JSON
+                    </Button>
+                    <Button onClick={handleExportCSV} variant="outline" size="sm" className="h-8 gap-2">
+                      <FileText className="w-3.5 h-3.5" />
+                      Exportar CSV
+                    </Button>
+                  </div>
                 )}
 
                 {emergencyStep > 0 && (
-                  <Button onClick={clearEmergencyState} variant="ghost" size="sm">
+                  <Button onClick={clearEmergencyState} variant="ghost" size="sm" className="h-8">
                     Limpar
                   </Button>
                 )}
 
-                <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
+                <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary" className="h-8">
                   {emergencyProcessing ? (
-                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                    <Loader2 className="animate-spin w-3.5 h-3.5 mr-2" />
                   ) : emergencyStep > 0 && emergencyStep < 6 ? (
-                    <RefreshCw className="w-4 h-4 mr-2" />
+                    <RefreshCw className="w-3.5 h-3.5 mr-2" />
                   ) : (
-                    <Sparkles className="w-4 h-4 mr-2" />
+                    <Sparkles className="w-3.5 h-3.5 mr-2" />
                   )}
                   {emergencyStep > 0 && emergencyStep < 6 ? "Retomar" : "Iniciar Fluxo"}
                 </Button>
