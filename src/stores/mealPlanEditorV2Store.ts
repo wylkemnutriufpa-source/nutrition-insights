@@ -3,10 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
-import { assertSingleDayItems } from "@/lib/singleDayGuards";
-import { ensurePlanMode, classifyPlanMode } from "@/lib/singleDayPlanMigration";
-import { checkSingleDayConsistency } from "@/lib/singleDayConsistency";
-import { validateSingleDayConsistencyRpc } from "@/lib/singleDayRepair";
+
+/**
+ * Single-Day Editor Store (v3 - Pure Single Day)
+ * --------------------------------------------------------------
+ * Modelo oficial: APENAS day_of_week = 0. Sem réplicas, sem master_item_id.
+ * Após qualquer mutação persistida, refetch é obrigatório (DB é fonte de verdade).
+ */
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
@@ -96,7 +99,7 @@ function sanitizeMealPlanItemInsert(insert: MealPlanItemInsert): MealPlanItemIns
     title: insert.title,
     description: insert.description ?? null,
     meal_type: insert.meal_type,
-    day_of_week: insert.day_of_week ?? 0, 
+    day_of_week: 0, // Forçado: modelo single-day 
     is_primary: (insert as any).is_primary ?? true,
     substitution_group_id: (insert as any).substitution_group_id ?? null,
     calories_target: insert.calories_target ?? null,
@@ -146,7 +149,6 @@ const MEAL_PLAN_ITEM_PATCH_KEYS = new Set([
   "is_primary",
   "substitution_group_id",
   "target_percentage",
-  "master_item_id",
 ]);
 
 function sanitizeMealPlanItemPatch(patch: Partial<MealPlanItem>) {
@@ -224,10 +226,10 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     if (!planId || items.length === 0) return;
 
     const prevItems = [...items];
-    const masterItems = items.filter(i => i.day_of_week === 0);
-    const totalProt = masterItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-    const totalCarb = masterItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-    const totalKcal = masterItems.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    // Single-day puro: todos os items pertencem ao dia 0
+    const totalProt = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+    const totalCarb = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
+    const totalKcal = items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
 
     // Determinar Fatores de Escala
     const pScale = delta.protein ? (totalProt + delta.protein) / totalProt : 1;
@@ -235,7 +237,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const kScale = delta.calories ? (totalKcal + delta.calories) / totalKcal : 1;
 
     const updatedItems = items.map(item => {
-      if (item.day_of_week !== 0) return item;
 
       const nextProt = item.protein_target ? Number(item.protein_target) * pScale : 0;
       const nextCarb = item.carbs_target ? Number(item.carbs_target) * cScale : 0;
@@ -381,8 +382,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const patientName = profile?.full_name || "Paciente";
     const items = (itemsData || []) as MealPlanItem[];
 
-    // Migration defensiva: planos antigos sem plan_mode → 'weekly'
-    const normalizedPlan = ensurePlanMode(planData) as typeof planData;
+    const normalizedPlan = planData;
 
     set({
       plan: normalizedPlan,
@@ -421,10 +421,8 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   addItems: (inserts) => {
 
     const state = get();
-    // Guard Single Day: bloqueia variações multi-dia, normaliza com aviso
-    const isSingleDay = get().plan?.plan_mode === 'single_day';
-    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: isSingleDay, isSingleDay }) as typeof inserts;
-    const sanitizedInserts = safeInserts.map(sanitizeMealPlanItemInsert);
+    // Single-day puro: força day_of_week = 0 em todo insert (DB também garante via trigger)
+    const sanitizedInserts = inserts.map(sanitizeMealPlanItemInsert);
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
     const tIds = optimistic.map((o) => o.id);
@@ -754,25 +752,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           throw error;
         }
 
-        // Se mudou para single_day, garantimos que os itens atuais no dia 0
-        // sejam replicados pela trigger do banco
-        if (patch.plan_mode === "single_day") {
-          const items = get().items;
-          const masterItems = items.filter(i => i.day_of_week === 0);
-          
-          if (masterItems.length === 0 && items.length > 0) {
-            // Promover dia 1 para 0 se o 0 estiver vazio
-            const day1Items = items.filter(i => i.day_of_week === 1);
-            for (const it of day1Items) {
-              get().updateItem(it.id, { day_of_week: 0 });
-            }
-          } else {
-            // Tocar nos itens do dia 0 para disparar a trigger de replicação
-            for (const it of masterItems) {
-              get().updateItem(it.id, { updated_at: new Date().toISOString() } as any);
-            }
-          }
-        }
+        // Modelo single-day puro: nenhuma replicação ou promoção de dia necessária.
       },
       rollback: () => set({ plan: prevPlan }),
     });
@@ -848,11 +828,35 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
 
-      // EMERGENCY BYPASS: Removed rigid consistency guards that were causing inconsistent errors
-      /*
-      const planAfter = get().plan;
-      ...
-      */
+      // ─── REFETCH OBRIGATÓRIO ───
+      // Após qualquer mutação persistida, o DB é a fonte única de verdade.
+      // Recarregamos os items para detectar divergências e forçar consistência.
+      if (!hasError) {
+        const planId = get().planId;
+        if (planId) {
+          const { data: itemsData, error: refetchError } = await supabase
+            .from("meal_plan_items")
+            .select("*")
+            .eq("meal_plan_id", planId)
+            .order("created_at");
+          if (refetchError) {
+            console.error("[REFETCH] Falha ao recarregar items pós-save", refetchError);
+          } else {
+            const dbItems = (itemsData || []) as MealPlanItem[];
+            // Auditoria de divergência: compara contagem local vs DB
+            const localCount = get().items.filter(i => !i.id.startsWith("temp-")).length;
+            if (dbItems.length !== localCount) {
+              console.warn("[AUDIT][DIVERGENCE] UI vs DB", {
+                ui: localCount,
+                db: dbItems.length,
+                planId,
+              });
+            }
+            set({ items: dbItems });
+            get()._persistSnapshot();
+          }
+        }
+      }
 
       if (hasError) {
         throw failed?.err instanceof Error ? failed.err : new Error("Falha ao persistir alterações do plano.");

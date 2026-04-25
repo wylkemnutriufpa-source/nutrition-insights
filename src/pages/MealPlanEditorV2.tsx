@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
 import { ListView } from "@/components/meal-editor-v2/ListView";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
-import SingleDayDebugPanel from "@/components/meal-editor-v2/SingleDayDebugPanel";
+
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
@@ -233,23 +233,7 @@ export default function MealPlanEditorV2() {
     setSaving(true);
     const toastId = toast.loading("Salvando e aprovando plano...");
     try {
-      // Consolida automaticamente itens legados (day != 0) para o slot
-      // canônico (day=0) antes de salvar, garantindo consistência futura.
-      const { planLegacyConsolidation } = await import("@/lib/legacyDayConsolidation");
-      const { logConsolidationPlan } = await import("@/lib/legacyMigrationLogger");
-      const { resolveEffectiveDay } = await import("@/lib/resolveEffectiveDay");
-      const plan0 = planLegacyConsolidation(store.items);
-      if (plan0.toMove.length > 0) {
-        const itemsById = new Map(
-          store.items.map((i) => [i.id, { meal_type: i.meal_type, day_of_week: i.day_of_week }] as const)
-        );
-        logConsolidationPlan(plan0, {
-          effectiveDay: resolveEffectiveDay(store.items),
-          itemsById,
-        });
-        plan0.toMove.forEach((id) => store.updateItem(id, { day_of_week: 0 } as any));
-        toast.info(`${plan0.toMove.length} refeição(ões) legada(s) consolidada(s) em day 0.`, { id: toastId });
-      }
+      // Modelo single-day puro: nenhuma consolidação de dias legados necessária.
 
       await store._flushQueue();
 
@@ -338,22 +322,7 @@ export default function MealPlanEditorV2() {
     setSavingAndPublishing(true);
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
-      // Consolida itens legados antes de publicar
-      const { planLegacyConsolidation } = await import("@/lib/legacyDayConsolidation");
-      const { logConsolidationPlan } = await import("@/lib/legacyMigrationLogger");
-      const { resolveEffectiveDay } = await import("@/lib/resolveEffectiveDay");
-      const plan0 = planLegacyConsolidation(store.items);
-      if (plan0.toMove.length > 0) {
-        const itemsById = new Map(
-          store.items.map((i) => [i.id, { meal_type: i.meal_type, day_of_week: i.day_of_week }] as const)
-        );
-        logConsolidationPlan(plan0, {
-          effectiveDay: resolveEffectiveDay(store.items),
-          itemsById,
-        });
-        plan0.toMove.forEach((id) => store.updateItem(id, { day_of_week: 0 } as any));
-        toast.info(`${plan0.toMove.length} refeição(ões) legada(s) consolidada(s) em day 0.`, { id: toastId });
-      }
+      // Modelo single-day puro: sem consolidação de dias legados.
 
       // 1) Flush pending edits
       await store._flushQueue();
@@ -474,10 +443,6 @@ export default function MealPlanEditorV2() {
       <EditorSyncBadge status={store.syncStatus} />
 
       <div className="space-y-4">
-        <SingleDayDebugPanel
-          planId={plan?.id ?? null}
-          enabled={(plan as any)?.plan_mode === "single_day"}
-        />
         {/* ── Immutable Plan Banner ─────────────────────────────── */}
         {isImmutable && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200">

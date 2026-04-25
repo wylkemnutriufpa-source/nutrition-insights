@@ -6475,7 +6475,6 @@ export type Database = {
           is_manually_edited: boolean
           is_primary: boolean | null
           item_origin: string
-          master_item_id: string | null
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target: number | null
@@ -6500,7 +6499,6 @@ export type Database = {
           is_manually_edited?: boolean
           is_primary?: boolean | null
           item_origin?: string
-          master_item_id?: string | null
           meal_plan_id: string
           meal_type: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
@@ -6525,7 +6523,6 @@ export type Database = {
           is_manually_edited?: boolean
           is_primary?: boolean | null
           item_origin?: string
-          master_item_id?: string | null
           meal_plan_id?: string
           meal_type?: Database["public"]["Enums"]["meal_type"]
           protein_target?: number | null
@@ -6537,13 +6534,6 @@ export type Database = {
           was_auto_corrected?: boolean
         }
         Relationships: [
-          {
-            foreignKeyName: "meal_plan_items_master_item_id_fkey"
-            columns: ["master_item_id"]
-            isOneToOne: false
-            referencedRelation: "meal_plan_items"
-            referencedColumns: ["id"]
-          },
           {
             foreignKeyName: "meal_plan_items_meal_plan_id_fkey"
             columns: ["meal_plan_id"]
@@ -20078,7 +20068,6 @@ export type Database = {
         }
         Returns: Json
       }
-      repair_single_day_plan: { Args: { p_plan_id: string }; Returns: Json }
       reset_all_ranking_points: { Args: never; Returns: Json }
       reset_onboarding_pipeline: {
         Args: {
@@ -20186,23 +20175,10 @@ export type Database = {
         Args: { _nutritionist_id: string; _plan_id: string }
         Returns: Json
       }
-      validate_all_single_day_plans: {
-        Args: never
-        Returns: {
-          details: Json
-          issue: string
-          plan_id: string
-          plan_title: string
-        }[]
-      }
       validate_clinical_quality: { Args: { p_plan_id: string }; Returns: Json }
       validate_onboarding_token: { Args: { _token: string }; Returns: Json }
       validate_plan_integrity: { Args: { p_plan_id: string }; Returns: Json }
       validate_practical_template: { Args: { _meals: Json }; Returns: Json }
-      validate_single_day_consistency: {
-        Args: { p_plan_id: string }
-        Returns: Json
-      }
     }
     Enums: {
       achievement_type:
