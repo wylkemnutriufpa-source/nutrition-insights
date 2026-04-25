@@ -1924,6 +1924,66 @@ const PlanAudit = () => {
             )}
           </Card>
         </TabsContent>
+        
+        <TabsContent value="mismatches" className="m-0 space-y-4">
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-rose-500" /> Auditoria de Mismatch de Tipo
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Registra casos onde o sistema tentou gerar itens de tipo (Marmita/Normal) diferente do plano.
+                </p>
+              </div>
+              <Button onClick={loadMismatchReport} disabled={mismatchLoading} variant="outline" size="sm">
+                {mismatchLoading ? <Loader2 className="animate-spin w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+              </Button>
+            </div>
+
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead>Tipo Esperado</TableHead>
+                    <TableHead>Itens Incorretos</TableHead>
+                    <TableHead>Engine</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mismatchRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="text-xs">{formatDate(row.created_at)}</TableCell>
+                      <TableCell className="font-medium text-xs">{row.resource_id}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px] uppercase">
+                          {row.metadata?.expected_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-rose-600 dark:text-rose-400 max-w-xs truncate">
+                        {row.metadata?.items}
+                      </TableCell>
+                      <TableCell>
+                         <Badge variant="secondary" className="text-[10px]">
+                          {row.metadata?.engine}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {mismatchRows.length === 0 && !mismatchLoading && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Nenhum mismatch de tipo detectado até o momento.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </TabsContent>
 
         <TabsContent value="consistency" className="m-0 space-y-4">
           <Card className="p-6 space-y-4">
