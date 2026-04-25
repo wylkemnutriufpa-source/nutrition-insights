@@ -126,12 +126,38 @@ function getMetadataFromItem(item: Partial<MealPlanItem> & { metadata?: unknown 
   return (item as any).edit_metadata ?? (item as any).metadata ?? null;
 }
 
+const MEAL_PLAN_ITEM_PATCH_KEYS = new Set([
+  "title",
+  "description",
+  "meal_type",
+  "day_of_week",
+  "calories_target",
+  "protein_target",
+  "carbs_target",
+  "fat_target",
+  "tenant_id",
+  "visual_library_item_id",
+  "image_url",
+  "item_origin",
+  "is_manually_edited",
+  "is_locked",
+  "was_auto_corrected",
+  "edit_metadata",
+  "is_primary",
+  "substitution_group_id",
+  "target_percentage",
+  "master_item_id",
+]);
+
 function sanitizeMealPlanItemPatch(patch: Partial<MealPlanItem>) {
   const next: Record<string, unknown> = { ...patch };
   if ("metadata" in next && !("edit_metadata" in next)) {
     next.edit_metadata = (next as any).metadata;
   }
   delete next.metadata;
+  Object.keys(next).forEach((key) => {
+    if (!MEAL_PLAN_ITEM_PATCH_KEYS.has(key)) delete next[key];
+  });
   return next as Partial<MealPlanItem>;
 }
 
@@ -465,6 +491,13 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   updateItem: (itemId, patch) => {
 
     const sanitizedPatch = sanitizeMealPlanItemPatch(patch);
+    if (Object.keys(sanitizedPatch).length === 0) {
+      console.warn("[MealPlanEditorV2Store.updateItem] Ignorando patch sem campos persistíveis", {
+        itemId,
+        patchKeys: Object.keys(patch ?? {}),
+      });
+      return;
+    }
     const prev = get().items;
     set((s) => ({
       items: s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i)),
