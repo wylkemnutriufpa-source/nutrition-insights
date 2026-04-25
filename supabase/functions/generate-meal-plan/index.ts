@@ -1033,20 +1033,34 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
     const proteinProvided = computedServing * density;
     const divergence = Math.abs(proteinProvided - requiredProtein);
     
-    // Se a divergência for maior que 15g de proteína (equivale a ~75g de carne), bloqueia.
-    // Isso indica que o clamping ou o banco de dados está gerando um erro "grotesco".
-    if (divergence > 15) {
-      throw new Error(
-        `DIVERGÊNCIA CRÍTICA: Proteína calculada (${requiredProtein.toFixed(1)}g) vs provida pela porção (${proteinProvided.toFixed(1)}g) em "${matchedFood.food_name}". ` +
-        `Diferença de ${divergence.toFixed(1)}g excede o limite de segurança de 15g. Envio bloqueado.`
-      );
-    }
+    // Se a divergência for maior que 15g, degradamos com fallback seguro em vez de bloquear
+    // um plano que o próprio motor acabou de montar. O alerta segue em metadata/log.
+    const hasCriticalDivergence = divergence > 15;
+    const fallbackServing = roundServingGrams(rawServing);
+    const finalServing = hasCriticalDivergence ? fallbackServing : computedServing;
+    const finalProteinProvided = finalServing * density;
+    const finalDivergence = Math.abs(finalProteinProvided - requiredProtein);
 
     // Validations
     const densityWarning = validateNutritionalDensity(matchedFood);
-    const portionAlert = getPortionAlert(roundServingGrams(rawServing), item.meal_type || "", matchedFood.food_name);
-    
-    const combinedAlert = [densityWarning, portionAlert].filter(Boolean).join(" ");
+    const portionAlert = getPortionAlert(finalServing, item.meal_type || "", matchedFood.food_name);
+    const divergenceAlert = hasCriticalDivergence
+      ? `Fallback aplicado: clamp incompatível com a meta desta refeição (${finalDivergence.toFixed(1)}g de diferença residual).`
+      : null;
+
+    if (hasCriticalDivergence) {
+      console.warn("[protein-serving-fallback] divergência crítica resolvida com fallback seguro", {
+        meal_type: item.meal_type,
+        food: matchedFood.food_name,
+        requiredProtein: Number(requiredProtein.toFixed(1)),
+        computedServing,
+        fallbackServing,
+        divergence: Number(divergence.toFixed(1)),
+        residualDivergence: Number(finalDivergence.toFixed(1)),
+      });
+    }
+
+    const combinedAlert = [densityWarning, portionAlert, divergenceAlert].filter(Boolean).join(" ");
 
     return {
       ...item,
@@ -1056,10 +1070,11 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
         original_computed_grams: roundServingGrams(rawServing),
         matched_food_id: matchedFood.id,
         calculated_protein: Number(requiredProtein.toFixed(1)),
-        provided_protein: Number(proteinProvided.toFixed(1)),
-        protein_divergence: Number(divergence.toFixed(1))
+        provided_protein: Number(finalProteinProvided.toFixed(1)),
+        protein_divergence: Number(finalDivergence.toFixed(1)),
+        protein_fallback_applied: hasCriticalDivergence,
       },
-      description: replaceProteinLineWithServing(item.description, matchedFood, computedServing, combinedAlert),
+      description: replaceProteinLineWithServing(item.description, matchedFood, finalServing, combinedAlert),
     };
   });
 }

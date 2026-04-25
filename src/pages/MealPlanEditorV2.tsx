@@ -103,6 +103,11 @@ export default function MealPlanEditorV2() {
   useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
   useEffect(() => { localStorage.setItem(EDITOR_LAYOUT_KEY, editorLayout); }, [editorLayout]);
 
+  const refreshPlanFromServer = async () => {
+    if (!id || !user?.id) return;
+    await store.hydrate(id, user.id);
+  };
+
   // Keyboard shortcuts (Esc exits fullscreen)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -251,13 +256,7 @@ export default function MealPlanEditorV2() {
       // nem quebrar o fluxo por estado intermediário.
       const totals = await calculatePlanTotals(plan.id);
       if (planStatus === "draft_auto_corrected") {
-        store.updatePlan({
-          total_calories: totals.total_calories,
-          total_protein: totals.total_protein,
-          total_carbs: totals.total_carbs,
-          total_fat: totals.total_fat,
-          updated_at: new Date().toISOString(),
-        } as any);
+        await refreshPlanFromServer();
 
         if (totals.totals_status === "incomplete") {
           toast.success("Rascunho auto-corrigido salvo. Os totais serão recalculados em segundo plano.");
@@ -270,14 +269,7 @@ export default function MealPlanEditorV2() {
       const approveResult = await savePlanAsApproved(plan.id, user!.id);
       if (!approveResult.success) throw new Error(approveResult.error || "Erro ao aprovar");
 
-      store.updatePlan({
-        plan_status: "approved",
-        total_calories: totals.total_calories,
-        total_protein: totals.total_protein,
-        total_carbs: totals.total_carbs,
-        total_fat: totals.total_fat,
-        updated_at: new Date().toISOString(),
-      } as any);
+      await refreshPlanFromServer();
 
       if (totals.totals_status === "incomplete") {
         toast.success("Plano salvo. Totais serão recalculados em segundo plano.");
@@ -314,17 +306,8 @@ export default function MealPlanEditorV2() {
         throw new Error(publishResult.error || "Erro ao publicar");
       }
       // Recalcula totais após publicar (não bloqueia)
-      const totals = await calculatePlanTotals(plan.id);
-      store.updatePlan({
-        plan_status: "published_to_patient",
-        is_active: true,
-        overall_validation_status: "aprovado",
-        total_calories: totals.total_calories,
-        total_protein: totals.total_protein,
-        total_carbs: totals.total_carbs,
-        total_fat: totals.total_fat,
-        updated_at: new Date().toISOString(),
-      } as any);
+      await calculatePlanTotals(plan.id);
+      await refreshPlanFromServer();
       toast.success("✅ Plano publicado para o paciente!");
     } catch (err: any) {
       console.error("[Publish] Error:", err);
@@ -390,17 +373,7 @@ export default function MealPlanEditorV2() {
 
       // Recalcula totais consolidados — não bloqueia em caso de falha
       const totals = await calculatePlanTotals(plan.id);
-
-      store.updatePlan({
-        plan_status: "published_to_patient",
-        is_active: true,
-        overall_validation_status: "aprovado",
-        total_calories: totals.total_calories,
-        total_protein: totals.total_protein,
-        total_carbs: totals.total_carbs,
-        total_fat: totals.total_fat,
-        updated_at: new Date().toISOString(),
-      } as any);
+      await refreshPlanFromServer();
 
       if (totals.totals_status === "incomplete") {
         toast.success("✅ Plano publicado. Os totais nutricionais serão recalculados em segundo plano.", { duration: 5000 });
@@ -438,16 +411,13 @@ export default function MealPlanEditorV2() {
       const data = outcome.validationResult;
       const nextValidationStatus = resolveOverallValidationStatus(data);
 
-      store.updatePlan({
-        overall_validation_status: nextValidationStatus,
-        overall_score: typeof data?.score === "number" ? data.score : plan.overall_score,
-        last_validated_at: new Date().toISOString(),
-        validation_engine_version: "unified_v5",
-        updated_at: new Date().toISOString(),
-      } as any);
-
       if (outcome.kind === "validated") {
-        await store.hydrate(plan.id, user.id);
+        const approveResult = await savePlanAsApproved(plan.id, user.id);
+        if (!approveResult.success) {
+          throw new Error(approveResult.error || "Plano validado, mas houve erro ao marcar como aprovado.");
+        }
+
+        await refreshPlanFromServer();
         setValidationResult(null);
         setAutofixWasValid(true);
         setAutofixResult(null);
@@ -457,7 +427,14 @@ export default function MealPlanEditorV2() {
       }
 
       if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
-        await store.hydrate(plan.id, user.id);
+        if (outcome.kind === "fixed_and_validated") {
+          const approveResult = await savePlanAsApproved(plan.id, user.id);
+          if (!approveResult.success) {
+            throw new Error(approveResult.error || "Plano corrigido e validado, mas houve erro ao marcar como aprovado.");
+          }
+        }
+
+        await refreshPlanFromServer();
         setAutofixWasValid(false);
         setAutofixResult(outcome.fixedResult);
         setShowAutofixResults(true);
@@ -874,18 +851,11 @@ export default function MealPlanEditorV2() {
             onClose={() => setValidationResult(null)}
             onCorrectionApplied={async () => {
               await store._flushQueue();
-              await store.hydrate(plan.id, user?.id ?? "");
+                await refreshPlanFromServer();
               try {
                 const { data } = await supabase.functions.invoke("validate-meal-plan", { body: { meal_plan_id: plan.id } });
                 if (data) {
-                  const nextStatus = data.overall_status || (data.success ? "aprovado" : "sugestoes_pendentes");
-                  store.updatePlan({
-                    overall_validation_status: nextStatus,
-                    overall_score: typeof data.score === "number" ? data.score : plan.overall_score,
-                    last_validated_at: new Date().toISOString(),
-                    updated_at: new Date().toISOString(),
-                  } as any);
-                  await store.hydrate(plan.id, user?.id ?? "");
+                    await refreshPlanFromServer();
                   if (data.success) {
                     setValidationResult(null);
                     toast.success("✅ Correção aplicada e plano revalidado com sucesso!");
