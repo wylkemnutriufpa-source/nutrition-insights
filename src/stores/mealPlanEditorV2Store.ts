@@ -893,6 +893,25 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         }
       }
 
+      const processedKeys = processed.map((p) => p.key);
+
+      set((s) => {
+        const remaining = s.pendingOps.filter((p) => !processedKeys.includes(p.key));
+        const stillPendingIds = new Set(remaining.flatMap((p) => p.itemIds));
+        const syncing = { ...s.syncingMap };
+        processed.flatMap((p) => p.itemIds).forEach((id) => {
+          if (!stillPendingIds.has(id)) delete syncing[id];
+        });
+
+        return { pendingOps: remaining, syncingMap: syncing };
+      });
+
+      const failed = processed.find((p) => !p.ok);
+      const hasError = Boolean(failed);
+      get()._setSyncStatus(hasError ? "error" : "saved");
+      set({ lastSavedAt: Date.now() });
+      get()._persistSnapshot();
+
       if (hasError) {
         throw failed?.err instanceof Error ? failed.err : new Error("Falha ao persistir alterações do plano.");
       }
