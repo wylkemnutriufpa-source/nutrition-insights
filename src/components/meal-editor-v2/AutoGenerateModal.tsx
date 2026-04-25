@@ -178,7 +178,18 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       // 3. Only NOW delete old items (plan is never empty)
       const existingIds = currentItems.filter((i) => !i.id.startsWith("temp-")).map((i) => i.id);
       if (existingIds.length > 0) {
-        await supabase.from("meal_plan_items").delete().in("id", existingIds);
+        if (!planId) {
+          console.error("[CRITICAL] DELETE bloqueado: planId inválido em handleApply (AutoGenerate)", { existingIds });
+          throw new Error("DELETE bloqueado: planId inválido");
+        }
+        
+        console.info("[DELETE] Limpando itens existentes antes de aplicar plano gerado", { planId, existingIds, operation: "handleApplyAutoGenerate" });
+        
+        await supabase
+          .from("meal_plan_items")
+          .delete()
+          .eq("meal_plan_id", planId)
+          .in("id", existingIds);
       }
 
       // 4. Update store with real persisted items
