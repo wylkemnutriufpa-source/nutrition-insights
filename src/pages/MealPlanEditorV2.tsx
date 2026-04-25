@@ -352,7 +352,21 @@ export default function MealPlanEditorV2() {
 
       // 3) Refetch OBRIGATÓRIO (Etapa 5)
       await refreshPlanFromServer();
+
+      // ──── AUDIT DIVERGENCIA POS-PUBLISH ────
+      const localCount = store.items.length;
+      const { count: serverCount, error: auditErr } = await supabase
+        .from("meal_plan_items")
+        .select("id", { count: "exact", head: true })
+        .eq("meal_plan_id", plan.id);
       
+      if (!auditErr && serverCount !== null && serverCount !== localCount) {
+        console.error("[AUDIT] Divergência detectada pós-publish!", { local: localCount, server: serverCount });
+        toast.error("⚠️ Divergência detectada pós-publicação. Recarregando estado real...");
+        await store.hydrate(plan.id, user!.id);
+        return;
+      }
+
       toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { id: toastId, duration: 5000 });
     } catch (err: any) {
       console.error("[SaveAndPublish] Error:", err);
