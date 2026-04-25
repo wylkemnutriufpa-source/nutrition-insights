@@ -703,6 +703,27 @@ const PlanAudit = () => {
     }
   };
 
+  const loadMismatchReport = async () => {
+    setMismatchLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("audit_logs" as any)
+        .select("*")
+        .eq("action", "plan_type_mismatch")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setMismatchRows(data || []);
+    } catch (err: any) {
+      console.error("[PlanAudit] mismatch load error", err);
+      toast.error("Erro ao carregar auditoria de tipos.");
+    } finally {
+      setMismatchLoading(false);
+    }
+  };
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
     void load();
