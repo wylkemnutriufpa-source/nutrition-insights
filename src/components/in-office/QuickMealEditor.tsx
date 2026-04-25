@@ -179,7 +179,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const addFoodToBlock = async (blockType: MealType, food: any) => {
     const itemId = crypto.randomUUID();
     
-    try {
+    enqueuePersistence(async () => {
       await withRetry(async () => {
         const { error } = await supabase
           .from("meal_plan_items")
@@ -201,22 +201,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       }, {
         onRetry: (attempt) => toast.info(`Tentativa ${attempt} de adicionar item...`),
       });
-
-      const newItem: MealItem = {
-        id: itemId,
-        name: food.name,
-        calories: food.calories || 0,
-        protein: food.protein || 0,
-        carbs: food.carbs || 0,
-        fat: food.fat || 0,
-        meal_type: blockType,
-      };
-      setBlocks(prev => prev.map(b =>
-        b.type === blockType ? { ...b, items: [...b.items, newItem] } : b
-      ));
-    } catch (err: any) {
-      toast.error("Falha ao adicionar item: " + err.message);
-    }
+    });
   };
 
   // Remove item
