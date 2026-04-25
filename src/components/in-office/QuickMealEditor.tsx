@@ -82,15 +82,17 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const [templatesLoading, setTemplatesLoading] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState<SavedTemplate | null>(null);
 
-  // Load existing items for current day
-  useEffect(() => {
-    (async () => {
-      setLoading(true);
-      const { data: items } = await supabase
+  // Refetch data function
+  const fetchData = useCallback(async (isSilent = false) => {
+    if (!isSilent) setLoading(true);
+    try {
+      const { data: items, error } = await supabase
         .from("meal_plan_items")
         .select("*")
         .eq("meal_plan_id", mealPlanId)
         .eq("day_of_week", currentDay);
+
+      if (error) throw error;
 
       const newBlocks = MEAL_TYPES.map(m => ({
         ...m,
@@ -107,9 +109,36 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           })),
       }));
       setBlocks(newBlocks);
-      setLoading(false);
-    })();
+      console.log("[REFETCH DONE]");
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      toast.error("Erro ao atualizar dados.");
+    } finally {
+      if (!isSilent) setLoading(false);
+    }
   }, [mealPlanId, currentDay]);
+
+  // Load existing items for current day
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  // Simple sequential queue for persistence
+  const [queue, setQueue] = useState<Promise<any>>(Promise.resolve());
+
+  const enqueuePersistence = useCallback((task: () => Promise<any>) => {
+    setQueue(prev => prev.then(async () => {
+      console.log("[SAVE START]");
+      try {
+        await task();
+        console.log("[SAVE SUCCESS]");
+        await fetchData(true); // Refetch after success
+      } catch (err: any) {
+        console.error("Persistence error:", err);
+        toast.error("Erro ao persistir dados: " + err.message);
+      }
+    }));
+  }, [fetchData]);
 
   // Search foods
   const searchFoods = useCallback(async (query: string) => {
