@@ -211,17 +211,16 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       throw new Error("DELETE bloqueado: mealPlanId inválido");
     }
     
-    console.info("[DELETE] Executando removeItem", { mealPlanId, itemId, patientId, operation: "removeItem", timestamp: Date.now() });
-    
-    await supabase
-      .from("meal_plan_items")
-      .delete()
-      .eq("meal_plan_id", mealPlanId)
-      .eq("id", itemId);
-
-    setBlocks(prev => prev.map(b =>
-      b.type === blockType ? { ...b, items: b.items.filter(i => i.id !== itemId) } : b
-    ));
+    enqueuePersistence(async () => {
+      console.info("[DELETE] Executando removeItem", { mealPlanId, itemId, patientId, operation: "removeItem", timestamp: Date.now() });
+      const { error } = await supabase
+        .from("meal_plan_items")
+        .delete()
+        .eq("meal_plan_id", mealPlanId)
+        .eq("id", itemId);
+      
+      if (error) throw error;
+    });
   };
 
   // Duplicate day
