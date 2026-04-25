@@ -1372,7 +1372,7 @@ function buildMealFromDBFoods(
     if (subs) {
       const normFood = normalize(food.food_name);
       const foodGrams = Math.max(MIN_PORTION_GRAMS, Math.round((food.portion_grams || 100) * clampedScale));
-      const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 3);
+      const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 4);
       if (alts.length > 0) {
         const altsWithPortion = alts.map(a => `${a} (${foodGrams}g)`);
         subLines.push(`• ${food.food_name} → ${altsWithPortion.join(", ")}`);
