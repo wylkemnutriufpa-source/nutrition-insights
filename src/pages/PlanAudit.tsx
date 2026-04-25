@@ -1149,7 +1149,7 @@ const PlanAudit = () => {
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto p-1 gap-1">
+        <TabsList className="grid grid-cols-2 md:grid-cols-7 h-auto p-1 gap-1">
           <TabsTrigger value="overview" className="text-xs py-2">
             <Activity className="w-3.5 h-3.5 mr-1.5" /> Visão Geral
           </TabsTrigger>
@@ -1158,6 +1158,9 @@ const PlanAudit = () => {
           </TabsTrigger>
           <TabsTrigger value="emergency" className="text-xs py-2">
             <Zap className="w-3.5 h-3.5 mr-1.5 text-amber-500" /> Emergência
+          </TabsTrigger>
+          <TabsTrigger value="mismatches" className="text-xs py-2" onClick={loadMismatchReport}>
+            <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Tipo de Plano
           </TabsTrigger>
           <TabsTrigger value="failure-report" className="text-xs py-2">
             <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Relatório Erros
