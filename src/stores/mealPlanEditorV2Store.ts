@@ -865,8 +865,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     activeFlushPromise = (async () => {
       isFlushing = true;
 
-      // PROCESSAMENTO SEQUENCIAL (Etapa 3 - Garantia de Fluxo)
-      // Processamos em ordem de inserção para evitar race conditions entre insert/update/delete.
       const processed: { key: string; ok: boolean; itemIds: string[]; err?: any }[] = [];
       
       for (const op of ops) {
@@ -879,7 +877,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           
           processed.push({ key: op.key, ok: true, itemIds: op.itemIds });
           
-          // Remove a operação processada da fila IMEDIATAMENTE após sucesso
           set((s) => {
             const remaining = s.pendingOps.filter((p) => p.key !== op.key);
             const stillPendingIds = new Set(remaining.flatMap((p) => p.itemIds));
@@ -889,14 +886,20 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
             });
             return { pendingOps: remaining, syncingMap: syncing };
           });
-
-          // REFETCH movido para fora do loop para evitar race conditions (Etapa 5)
         } catch (err: any) {
-...
+          console.error(`[FLUSH] ERRO em ${op.key}:`, err);
+          op.rollback?.();
+          processed.push({ key: op.key, ok: false, itemIds: op.itemIds, err });
+          
+          set((s) => ({
+            pendingOps: s.pendingOps.filter((p) => p.key !== op.key),
+            syncingMap: s.syncingMap
+          }));
+        }
       }
 
       // ─── REFETCH OBRIGATÓRIO (Etapa 5) ───
-      // Executado apenas uma vez após processar o lote atual de operações
+      // Executado apenas UMA vez após o loop de operações
       const planId = get().planId;
       if (planId) {
         const { data: itemsData, error: refetchError } = await supabase
@@ -911,17 +914,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           set({ items: (itemsData || []) as MealPlanItem[] });
           get()._persistSnapshot();
           console.info(`[REFETCH DONE t=${Date.now()}]`);
-        }
-      }
-          console.error(`[FLUSH] ERRO em ${op.key}:`, err);
-          op.rollback?.();
-          processed.push({ key: op.key, ok: false, itemIds: op.itemIds, err });
-          
-          // Remove da fila mesmo com erro (após rollback)
-          set((s) => ({
-            pendingOps: s.pendingOps.filter((p) => p.key !== op.key),
-            syncingMap: s.syncingMap // Simplificado aqui, o cleanup final cuida do syncingMap se necessário
-          }));
         }
       }
 
