@@ -752,25 +752,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           throw error;
         }
 
-        // Se mudou para single_day, garantimos que os itens atuais no dia 0
-        // sejam replicados pela trigger do banco
-        if (patch.plan_mode === "single_day") {
-          const items = get().items;
-          const masterItems = items.filter(i => i.day_of_week === 0);
-          
-          if (masterItems.length === 0 && items.length > 0) {
-            // Promover dia 1 para 0 se o 0 estiver vazio
-            const day1Items = items.filter(i => i.day_of_week === 1);
-            for (const it of day1Items) {
-              get().updateItem(it.id, { day_of_week: 0 });
-            }
-          } else {
-            // Tocar nos itens do dia 0 para disparar a trigger de replicação
-            for (const it of masterItems) {
-              get().updateItem(it.id, { updated_at: new Date().toISOString() } as any);
-            }
-          }
-        }
+        // Modelo single-day puro: nenhuma replicação ou promoção de dia necessária.
       },
       rollback: () => set({ plan: prevPlan }),
     });
