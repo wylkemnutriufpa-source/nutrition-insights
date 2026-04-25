@@ -68,6 +68,7 @@ interface WorkoutEditorProps {
   onSaved: () => void;
   onCancel: () => void;
   initialData?: any;
+  initialStudentId?: string;
 }
 
 let tempCounter = 0;
