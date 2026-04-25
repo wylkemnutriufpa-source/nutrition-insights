@@ -933,17 +933,46 @@ const PlanAudit = () => {
     const steps = ["Salvar/Aprovar", "Publicar", "Validar", "Snapshot"];
     return steps.map(stepName => {
       const stepLogs = filteredEmergencyLogs.filter(l => {
-        if (stepName === "Salvar/Aprovar") return l.step.includes("Criar") || l.step.includes("Plano") || l.step.includes("Item");
+        if (stepName === "Salvar/Aprovar") {
+          // Mais determinístico: baseia-se no step fixo ou tipo de erro de persistência
+          return l.step === "Criar Paciente" || l.step === "Criar Plano" || l.step === "Criar Item" || l.errorType === "Persistência";
+        }
         return l.step.includes(stepName);
       });
       
       const total = stepLogs.length;
       const failures = stepLogs.filter(l => l.status === "error").length;
-      const rate = total > 0 ? (failures / total) * 100 : 0;
+      const successes = total - failures;
+      const failureRate = total > 0 ? (failures / total) * 100 : 0;
+      const successRate = total > 0 ? (successes / total) * 100 : 0;
       
-      return { name: stepName, total, failures, rate };
+      return { name: stepName, total, failures, successes, failureRate, successRate };
     });
   }, [filteredEmergencyLogs]);
+
+  const exportSummaryCSV = () => {
+    const headers = ["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso (%)", "Taxa de Falha (%)"];
+    const rows = stepMetrics.map(m => [
+      m.name,
+      m.total,
+      m.successes,
+      m.failures,
+      m.successRate.toFixed(1),
+      m.failureRate.toFixed(1)
+    ]);
+
+    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `resumo_auditoria_${executionIdFilter || 'geral'}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Resumo exportado com sucesso!");
+  };
 
 
 
