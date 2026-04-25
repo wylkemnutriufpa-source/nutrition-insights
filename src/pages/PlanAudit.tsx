@@ -292,14 +292,41 @@ const PlanAudit = () => {
         <link rel="canonical" href="/plan-audit" />
       </Helmet>
 
-      <header className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-display font-bold">
-          Auditoria de Planos
-        </h1>
-        <p className="text-sm text-muted-foreground max-w-2xl">
-          Visão única do estado de cada paciente. Identifique quem está sem plano,
-          quem precisa publicar e abra o editor com 1 clique.
-        </p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-display font-bold">
+            Auditoria de Planos
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-2xl">
+            Visão única do estado de cada paciente. Identifique quem está sem plano,
+            quem precisa publicar e abra o editor com 1 clique.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <Download className="w-4 h-4" />
+            PDF Relatório
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleBatchGenerate}
+            disabled={batchProcessing || loading}
+            className="gap-2"
+          >
+            {batchProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            Gerar em Lote
+          </Button>
+        </div>
       </header>
 
       {/* Summary cards */}
@@ -324,7 +351,7 @@ const PlanAudit = () => {
               className={`p-4 cursor-pointer transition-colors ${
                 active ? "ring-2 ring-primary" : "hover:bg-muted/40"
               }`}
-              onClick={() => setStatusFilter(active ? "all" : s)}
+              onClick={() => setFilter("status", active ? undefined : s)}
             >
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {meta.icon}
@@ -337,26 +364,87 @@ const PlanAudit = () => {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar paciente…"
-            className="pl-9"
-          />
+      <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setFilter("q", e.target.value)}
+              placeholder="Nome ou prontuário…"
+              className="pl-9"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {dateFrom || dateTo ? (
+                    <>
+                      {dateFrom ? format(dateFrom, "dd/MM") : "..."} - {dateTo ? format(dateTo, "dd/MM") : "..."}
+                    </>
+                  ) : (
+                    "Filtrar data"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-3 border-b flex items-center justify-between">
+                  <span className="text-xs font-medium">Faixa de atualização</span>
+                  {(dateFrom || dateTo) && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={() => {
+                        setFilter("from", undefined);
+                        setFilter("to", undefined);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row">
+                  <div className="p-1">
+                    <p className="text-[10px] text-muted-foreground px-2 py-1">Início</p>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={(d) => setFilter("from", d?.toISOString())}
+                      locale={ptBR}
+                    />
+                  </div>
+                  <div className="p-1 border-t sm:border-t-0 sm:border-l">
+                    <p className="text-[10px] text-muted-foreground px-2 py-1">Fim</p>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={(d) => setFilter("to", d?.toISOString())}
+                      locale={ptBR}
+                    />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {(statusFilter !== "all" || search || dateFrom || dateTo) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchParams(new URLSearchParams(), { replace: true });
+                }}
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
-          {statusFilter !== "all" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setStatusFilter("all")}
-            >
-              Limpar filtro
-            </Button>
-          )}
           <Button
             variant="outline"
             size="sm"
