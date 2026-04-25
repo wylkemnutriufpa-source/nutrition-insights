@@ -169,8 +169,8 @@ export async function generateMealPlanFromLibrary(
   });
 
   if (allItems.length === 0) {
-    console.warn("[RECOVERY] Biblioteca vazia ou filtrada, acionando fallback de presets");
-    return generateFromPresets(profile, distribution);
+    console.error(`[ENGINE] Falha crítica: Nenhum item do tipo "${profile.planType}" encontrado na biblioteca.`);
+    throw new Error(`Biblioteca de refeições não contém itens válidos para o tipo de plano: ${profile.planType}. Geração abortada para evitar mistura.`);
   }
 
   // 3. Pre-filter: remove items with rejected foods
