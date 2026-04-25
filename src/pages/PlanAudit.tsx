@@ -233,6 +233,7 @@ const PlanAudit = () => {
     payload?: any;
     response?: any;
     errorType?: "RLS" | "Validação" | "Persistência" | "Outro";
+    timestamp?: string;
   }[]>([]);
   const [lastExecutionId, setLastExecutionId] = useState<string | null>(null);
   const [emergencyProcessing, setEmergencyProcessing] = useState(false);
