@@ -316,8 +316,10 @@ const PlanAudit = () => {
   const runEmergencyFlow = async () => {
     if (!user) return;
     setEmergencyProcessing(true);
-    setEmergencyLogs([]);
-    setEmergencyStep(1);
+    
+    // Unique Execution ID
+    const executionId = `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setLastExecutionId(executionId);
 
     const addLog = (
       step: string, 
@@ -327,8 +329,9 @@ const PlanAudit = () => {
       response?: any,
       errorType?: "RLS" | "Validação" | "Persistência" | "Outro"
     ) => {
-      setEmergencyLogs(prev => [...prev, { step, status, message, payload, response, errorType }]);
+      setEmergencyLogs(prev => [...prev, { executionId, step, status, message, payload, response, errorType }]);
     };
+
 
     const runFromStep = async (startStep: number) => {
       let currentPatientId = emergencyPatientId;
