@@ -202,8 +202,8 @@ function PrePlanTab({ students, prePlanStudent, setPrePlanStudent, handleUseTemp
         <WorkoutPrePlanGenerator
           studentId={prePlanStudent.id}
           studentName={prePlanStudent.name}
-          onApproveAndPublish={(template: any) => { handleUseTemplate(template); setPrePlanStudent(null); }}
-          onEditPlan={(template: any) => { handleUseTemplate(template); setPrePlanStudent(null); }}
+          onApproveAndPublish={(template: any) => { handleUseTemplate(template, prePlanStudent.id); setPrePlanStudent(null); }}
+          onEditPlan={(template: any) => { handleUseTemplate(template, prePlanStudent.id); setPrePlanStudent(null); }}
         />
       ) : (
         <div className="grid gap-2">
@@ -246,6 +246,8 @@ export default function PersonalWorkouts() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("dashboard");
   const [creating, setCreating] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [planDetails, setPlanDetails] = useState<Record<string, any>>({});
   const [anamnesisStudent, setAnamnesisStudent] = useState<{ id: string; name: string } | null>(null);
@@ -292,7 +294,9 @@ export default function PersonalWorkouts() {
     setExpandedPlan(planId);
   };
 
-  const handleUseTemplate = (template: any) => {
+  const handleUseTemplate = (template: any, studentId?: string) => {
+    setSelectedTemplate(template);
+    if (studentId) setSelectedStudentId(studentId);
     setCreating(true);
     setActiveTab("plans");
     toast.info(`Template "${template.name}" carregado!`);
@@ -360,8 +364,10 @@ export default function PersonalWorkouts() {
           </div>
           <WorkoutEditor
             students={students}
-            onSaved={() => { setCreating(false); load(); }}
-            onCancel={() => setCreating(false)}
+            initialData={selectedTemplate}
+            initialStudentId={selectedStudentId || undefined}
+            onSaved={() => { setCreating(false); setSelectedTemplate(null); setSelectedStudentId(null); load(); }}
+            onCancel={() => { setCreating(false); setSelectedTemplate(null); setSelectedStudentId(null); }}
           />
         </div>
       </DashboardLayout>
