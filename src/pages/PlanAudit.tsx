@@ -258,6 +258,8 @@ const PlanAudit = () => {
   // Data Consistency state
   const [consistencyRows, setConsistencyRows] = useState<any[]>([]);
   const [consistencyLoading, setConsistencyLoading] = useState(false);
+  const [mismatchRows, setMismatchRows] = useState<any[]>([]);
+  const [mismatchLoading, setMismatchLoading] = useState(false);
 
   // Persistence keys
   const EMERGENCY_STATE_KEY = "plan_audit_emergency_state";
@@ -688,7 +690,8 @@ const PlanAudit = () => {
           inconsistent,
           anaWeight,
           assWeight
-        };
+  };
+
       });
 
       setConsistencyRows(report);
@@ -697,6 +700,25 @@ const PlanAudit = () => {
       toast.error("Erro ao carregar relatório.");
     } finally {
       setConsistencyLoading(false);
+    }
+  };
+
+  const loadMismatchReport = async () => {
+    setMismatchLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("audit_logs" as any)
+        .select("*")
+        .eq("action", "plan_type_mismatch")
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setMismatchRows(data || []);
+    } catch (err: any) {
+      console.error("[PlanAudit] mismatch load error", err);
+      toast.error("Erro ao carregar auditoria de tipos.");
+    } finally {
+      setMismatchLoading(false);
     }
   };
 
@@ -1128,7 +1150,7 @@ const PlanAudit = () => {
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto p-1 gap-1">
+        <TabsList className="grid grid-cols-2 md:grid-cols-7 h-auto p-1 gap-1">
           <TabsTrigger value="overview" className="text-xs py-2">
             <Activity className="w-3.5 h-3.5 mr-1.5" /> Visão Geral
           </TabsTrigger>
@@ -1137,6 +1159,9 @@ const PlanAudit = () => {
           </TabsTrigger>
           <TabsTrigger value="emergency" className="text-xs py-2">
             <Zap className="w-3.5 h-3.5 mr-1.5 text-amber-500" /> Emergência
+          </TabsTrigger>
+          <TabsTrigger value="mismatches" className="text-xs py-2" onClick={loadMismatchReport}>
+            <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Tipo de Plano
           </TabsTrigger>
           <TabsTrigger value="failure-report" className="text-xs py-2">
             <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Relatório Erros
@@ -1897,6 +1922,66 @@ const PlanAudit = () => {
                 </div>
               </div>
             )}
+          </Card>
+        </TabsContent>
+        
+        <TabsContent value="mismatches" className="m-0 space-y-4">
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-rose-500" /> Auditoria de Mismatch de Tipo
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Registra casos onde o sistema tentou gerar itens de tipo (Marmita/Normal) diferente do plano.
+                </p>
+              </div>
+              <Button onClick={loadMismatchReport} disabled={mismatchLoading} variant="outline" size="sm">
+                {mismatchLoading ? <Loader2 className="animate-spin w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+              </Button>
+            </div>
+
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Data</TableHead>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead>Tipo Esperado</TableHead>
+                    <TableHead>Itens Incorretos</TableHead>
+                    <TableHead>Engine</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {mismatchRows.map((row) => (
+                    <TableRow key={row.id}>
+                      <TableCell className="text-xs">{formatDate(row.created_at)}</TableCell>
+                      <TableCell className="font-medium text-xs">{row.resource_id}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline" className="text-[10px] uppercase">
+                          {row.metadata?.expected_type}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="text-xs text-rose-600 dark:text-rose-400 max-w-xs truncate">
+                        {row.metadata?.items}
+                      </TableCell>
+                      <TableCell>
+                         <Badge variant="secondary" className="text-[10px]">
+                          {row.metadata?.engine}
+                        </Badge>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {mismatchRows.length === 0 && !mismatchLoading && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Nenhum mismatch de tipo detectado até o momento.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
           </Card>
         </TabsContent>
 

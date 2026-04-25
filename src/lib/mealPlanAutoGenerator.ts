@@ -169,8 +169,8 @@ export async function generateMealPlanFromLibrary(
   });
 
   if (allItems.length === 0) {
-    console.warn("[RECOVERY] Biblioteca vazia ou filtrada, acionando fallback de presets");
-    return generateFromPresets(profile, distribution);
+    console.error(`[ENGINE] Falha crítica: Nenhum item do tipo "${profile.planType}" encontrado na biblioteca.`);
+    throw new Error(`Biblioteca de refeições não contém itens válidos para o tipo de plano: ${profile.planType}. Geração abortada para evitar mistura.`);
   }
 
   // 3. Pre-filter: remove items with rejected foods
@@ -218,28 +218,8 @@ export async function generateMealPlanFromLibrary(
     const selected = topN.length > 0 ? topN[deterministicPick(day, mealType, topN.length)] : null;
 
     if (!selected) {
-      // Fallback: use realistic presets
-      const presets = getRealisticOptions(mealType, profile.goal);
-      const presetIdx = day % presets.length;
-      const preset = presets[presetIdx];
-      
-      const fakeLibItem: MealLibraryItem = {
-        id: `preset-${mealType}-${presetIdx}`,
-        title: preset.name,
-        meal_type: mealType,
-        goal_tag: profile.goal,
-        clinical_tags: [],
-        base_calories: preset.kcal,
-        protein: preset.protein,
-        carbs: preset.carbs,
-        fat: preset.fat,
-        foods: preset.foods.map(f => ({ name: f, portion: f })),
-        substitutions: [],
-        plan_type: profile.planType,
-      };
-      const sf = calcScale(preset.kcal, targetKcal);
-      slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
-      continue;
+      console.error(`[ENGINE] Falha ao encontrar item para refeição "${mealType}" do tipo "${profile.planType}"`);
+      throw new Error(`Não foi possível encontrar uma refeição válida do tipo "${profile.planType}" para o horário: ${mealType}`);
     }
 
     const sf = calcScale(selected.item.base_calories, targetKcal);
@@ -258,19 +238,31 @@ export async function generateMealPlanFromLibrary(
   // 6. VALIDATION: Check for type consistency (CRITICAL GUARD)
   const mixedTypes = slots.some(s => s.libraryItem.plan_type !== profile.planType);
   if (mixedTypes) {
-    console.error("[ENGINE] Inconsistência de tipo detectada!", { expected: profile.planType });
-    throw new Error("Inconsistência de tipo de plano: mistura de marmita com normal detectada.");
+    const mismatchDetails = slots
+      .filter(s => s.libraryItem.plan_type !== profile.planType)
+      .map(s => `${s.libraryItem.title} (${s.libraryItem.plan_type})`)
+      .join(", ");
+    
+    console.error("[ENGINE] Inconsistência de tipo detectada!", { expected: profile.planType, mismatches: mismatchDetails });
+    
+    // Log do mismatch para auditoria
+    try {
+      const { logAudit } = await import("./auditLog");
+      logAudit("plan_type_mismatch", "meal_plan", profile.patientId, {
+        expected_type: profile.planType,
+        mismatch_count: slots.filter(s => s.libraryItem.plan_type !== profile.planType).length,
+        items: mismatchDetails,
+        engine: "mealPlanAutoGenerator"
+      });
+    } catch (e) {
+      console.error("Erro ao logar auditoria de mismatch", e);
+    }
+
+    throw new Error(`Inconsistência de tipo de plano: mistura de marmita com normal detectada. Itens: ${mismatchDetails}`);
   }
 
-  if (slots.length < 5) {
-    console.warn("[RECOVERY] Geração insuficiente detectada (< 5), acionando fallback de presets");
-    const recoveryResult = generateFromPresets(profile, distribution);
-    if (recoveryResult.slots.length >= 4) {
-      console.warn("[RECOVERY] Auto-correção via presets bem sucedida", { slots: recoveryResult.slots.length });
-      return recoveryResult;
-    }
-    console.error("[ENGINE] Auto-correção via presets também falhou", { slots: recoveryResult.slots.length });
-    throw new Error("Plano inválido: geração incompleta (auto-correção falhou)");
+  if (slots.length < 4) {
+    throw new Error("Plano inválido: geração incompleta (menos de 4 refeições encontradas)");
   }
 
   const metadata: AutoGenMetadata = {

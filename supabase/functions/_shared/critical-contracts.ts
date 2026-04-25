@@ -63,7 +63,11 @@ export function planGenerationContract(s: PlanGenerationSnapshot): ContractResul
   }
 
   for (const item of s.generatedItems ?? []) {
-    if (item.plan_type && item.plan_type !== s.planType) {
+    if (!item.plan_type) {
+      v.push(`Item "${item.title ?? "?"}" não possui plan_type definido`);
+      continue;
+    }
+    if (item.plan_type !== s.planType) {
       v.push(
         `Item "${item.title ?? "?"}" tem plan_type=${item.plan_type} mas plano é ${s.planType}`,
       );
