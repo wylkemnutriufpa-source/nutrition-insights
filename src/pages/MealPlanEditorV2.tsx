@@ -281,15 +281,9 @@ export default function MealPlanEditorV2() {
 
   const handlePublish = async () => {
     if (!user) return;
-    if (!canPublish) {
-      toast.error("🔒 Plano já publicado. Use '♻️ Gerar Novo Plano' para criar uma revisão.");
+    if (isImmutable) {
+      toast.error("🔒 Plano arquivado não pode ser publicado.");
       return;
-    }
-
-    const validationStatus = plan.overall_validation_status;
-    if (!validationStatus || validationStatus !== "aprovado") {
-      const proceed = confirm("⚠️ O plano ainda não foi validado pelo Motor Clínico. Deseja publicar mesmo assim?");
-      if (!proceed) return;
     }
 
     setPublishing(true);
@@ -312,32 +306,13 @@ export default function MealPlanEditorV2() {
   const handleSaveAndPublish = async () => {
     if (!user || !plan) return;
     if (isImmutable) {
-      toast.error("🔒 Plano imutável. Crie uma nova versão para editar.");
+      toast.error("🔒 Plano arquivado. Crie uma nova versão para editar.");
       return;
-    }
-    if (!canPublish) {
-      toast.error("🔒 Plano já publicado. Use '♻️ Gerar Novo Plano' para criar uma revisão.");
-      return;
-    }
-
-    const validationStatus = plan.overall_validation_status;
-    if (!validationStatus || validationStatus !== "aprovado") {
-      const proceed = confirm(
-        "⚠️ Este plano ainda não foi validado pelo Motor Clínico.\n\nDeseja SALVAR e PUBLICAR mesmo assim? O paciente verá o plano imediatamente."
-      );
-      if (!proceed) return;
-    } else {
-      const proceed = confirm(
-        "Confirmar SALVAR e PUBLICAR?\n\nO plano será aprovado e enviado ao paciente em uma única ação."
-      );
-      if (!proceed) return;
     }
 
     setSavingAndPublishing(true);
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
-      // Modelo single-day puro: sem consolidação de dias legados.
-
       // 1) Flush pending edits
       await store._flushQueue();
 
