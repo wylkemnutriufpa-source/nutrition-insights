@@ -85,11 +85,11 @@ export function MealSmartEditorModal({
     try {
       // Usar toast.promise ou gerenciar ID para evitar duplicatas
       const toastId = "meal-save-toast";
-      await updateItem(itemId, {
+      updateItem(itemId, {
         description: finalDescription,
-        notes,
         edit_metadata: {
           ...currentMeta,
+          notes,
           substitutions_json: cleanedSubs
         }
       } as any);
