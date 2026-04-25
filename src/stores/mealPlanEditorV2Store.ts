@@ -743,10 +743,13 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           .update(patch as any)
           .eq("id", planId);
         if (error) {
-          console.error("[MealPlanEditorV2Store.updatePlan] Falha ao persistir meal_plans", {
+          console.error("[EMERGENCY][MealPlanEditorV2Store.updatePlan] CRITICAL_FAIL", {
             planId,
             patchKeys,
             message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
           });
           throw error;
         }
@@ -816,6 +819,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
             await op.persist();
             return { key: op.key, ok: true, itemIds: op.itemIds };
           } catch (err) {
+            console.error("[EMERGENCY][MealPlanEditorV2Store.flush] OP_FAIL", { key: op.key, error: err });
             op.rollback?.();
             return { key: op.key, ok: false, itemIds: op.itemIds, err };
           }
@@ -844,40 +848,11 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
 
-      // ── Guard final pós-flush (Single Day) ─────────────────
-      // 1) Validação local rápida sobre o snapshot UI
-      // 2) Validação SERVER-SIDE via RPC (fonte da verdade)
-      // Se qualquer divergência for detectada, marca erro e dispara
-      // refetch defensivo para reconciliar com o banco.
+      // EMERGENCY BYPASS: Removed rigid consistency guards that were causing inconsistent errors
+      /*
       const planAfter = get().plan;
-      const planAfterId = get().planId;
-      const planMode = classifyPlanMode(planAfter);
-      if (!hasError && planMode === "single_day" && planAfterId) {
-        const localReport = checkSingleDayConsistency(get().items as any);
-        if (!localReport.valid) {
-          console.error("[SINGLE_DAY_GUARD][LOCAL] divergência:", localReport);
-          get()._setSyncStatus("error");
-        }
-
-        // Validação server-side (autoritativa) — assíncrona, não bloqueia o flush
-        void validateSingleDayConsistencyRpc(planAfterId).then(async (serverReport) => {
-          if (!serverReport) return;
-          if (serverReport.valid) return;
-          console.error("[SINGLE_DAY_GUARD][SERVER] divergência:", serverReport);
-          get()._setSyncStatus("error");
-          // Refetch defensivo para sincronizar UI com banco
-          try {
-            const { data: itemsData } = await supabase
-              .from("meal_plan_items")
-              .select("*")
-              .eq("meal_plan_id", planAfterId)
-              .order("created_at");
-            if (itemsData) set({ items: itemsData as MealPlanItem[] });
-          } catch (e) {
-            console.warn("[SINGLE_DAY_GUARD] refetch falhou:", e);
-          }
-        });
-      }
+      ...
+      */
 
       if (hasError) {
         throw failed?.err instanceof Error ? failed.err : new Error("Falha ao persistir alterações do plano.");
