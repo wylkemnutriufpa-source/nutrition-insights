@@ -397,35 +397,38 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     });
 
     enqueuePersistence(async () => {
-      await withRetry(async () => {
-        // Delete existing items for current day
-        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { mealPlanId, patientId, currentDay });
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay", timestamp: Date.now() });
-        
-        const { error: delErr } = await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId)
-          .eq("day_of_week", currentDay);
-        if (delErr) throw delErr;
+      try {
+        await withRetry(async () => {
+          // Delete existing items for current day
+          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { mealPlanId, patientId, currentDay });
+            throw new Error("DELETE bloqueado: mealPlanId inválido");
+          }
+          
+          console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay", timestamp: Date.now() });
+          
+          const { error: delErr } = await supabase
+            .from("meal_plan_items")
+            .delete()
+            .eq("meal_plan_id", mealPlanId)
+            .eq("day_of_week", currentDay);
+          if (delErr) throw delErr;
 
-        if (inserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
-          if (insErr) throw insErr;
-        }
-      }, {
-        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template...`),
-      });
+          if (inserts.length > 0) {
+            const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
+            if (insErr) throw insErr;
+          }
+        }, {
+          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template...`),
+        });
 
-      setShowTemplateLoad(false);
-      setPreviewTemplate(null);
-      toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
+        setShowTemplateLoad(false);
+        setPreviewTemplate(null);
+        toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
+      } finally {
+        setSaving(false);
+      }
     });
-    setSaving(false);
   };
 
   // Apply template to whole week
