@@ -264,7 +264,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
             Gerar Plano Automático
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Motor determinístico v1.0 — monta 7 dias a partir da biblioteca clínica
+            Motor determinístico v1.0 — monta Plano Único (Dia 0) a partir da biblioteca clínica
           </DialogDescription>
         </DialogHeader>
 
