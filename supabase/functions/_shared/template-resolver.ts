@@ -412,7 +412,7 @@ export function buildMealItemFromTemplate(
       const matchedScaled = scaledFoods.find(sf => sf.name === food.name);
       const rawGrams = matchedScaled?.portion_grams ?? food.portion_grams;
       const grams = Number.isFinite(Number(rawGrams)) && Number(rawGrams) > 0 ? Number(rawGrams) : 100;
-      const alts = food.substitutions.slice(0, 3).map(s => `${s} (${grams}g)`);
+      const alts = food.substitutions.slice(0, 4).map(s => `${s} (${grams}g)`);
       subLines.push(`• ${food.name} → ${alts.join(", ")}`);
     }
   }
