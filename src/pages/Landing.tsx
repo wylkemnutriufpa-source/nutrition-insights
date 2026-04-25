@@ -58,6 +58,7 @@ const features = [
   { icon: Brain, title: "IA Integrada", desc: "Análise de refeições por foto, geração automática de planos alimentares e receitas personalizadas com inteligência artificial.", tag: "Core" },
   { icon: Shield, title: "Protocolo FitJourney™", desc: "Motor clínico 100% determinístico: onboarding guiado, cálculos automáticos (TMB/TDEE), geração de pré-planos com scoring inteligente e auditabilidade total.", tag: "Exclusivo" },
   { icon: Users, title: "Gestão de Pacientes", desc: "Cadastro completo, anamnese inteligente, timeline de eventos, scoring de engajamento e prontuário digital.", tag: "Gestão" },
+  { icon: Dumbbell, title: "Módulo Personal Trainer", desc: "Gestão completa de treinos, anamnese fitness, biblioteca de exercícios e acompanhamento de carga e esforço.", tag: "Novo" },
   { icon: BarChart3, title: "Avaliação Física Completa", desc: "Dobras cutâneas (Jackson-Pollock 7), circunferências, composição corporal, IMC, TMB e TDEE automático.", tag: "Clínico" },
   { icon: Utensils, title: "Planos Alimentares", desc: "Crie planos detalhados por dia/refeição com metas de macros, templates reutilizáveis e agendamento inteligente.", tag: "Nutrição" },
   { icon: Zap, title: "Gamificação Avançada", desc: "XP, streaks, conquistas, desafios semanais e ranking. Aumente a adesão do paciente em até 3x.", tag: "Engajamento" },
