@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { autoFixMealPlan, type AutoFixResult } from "@/lib/autoFixEngine";
+import { isSimpleMode } from "@/lib/simpleModeFlag";
 
 export interface ClinicalValidationResult {
   success: boolean;
@@ -82,7 +83,21 @@ export async function runValidateAndFixMealPlan({
 }: RunValidateAndFixParams): Promise<ValidateAndFixOutcome> {
   await flush();
 
-  console.info("[ValidateAndFix] Starting", { planId, patientId, userId, tenantId });
+  console.info("[ValidateAndFix] Starting", { planId, patientId, userId, tenantId, simpleMode: isSimpleMode() });
+
+  // 🟢 MODO SIMPLES: SEMPRE retorna sucesso, sem validar/corrigir nada.
+  // O nutricionista decide. O sistema só persiste.
+  if (isSimpleMode()) {
+    return {
+      kind: "validated",
+      validationResult: {
+        success: true,
+        score: 100,
+        overall_status: "aprovado",
+        message: "Modo Simples: validação clínica desativada — você decide.",
+      },
+    };
+  }
 
   const validationResult = await validateMealPlan(planId);
   console.info("[ValidateAndFix] Validation result", { planId, success: validationResult.success, score: validationResult.score, status: validationResult.overall_status });
