@@ -345,7 +345,13 @@ export default function NutritionCopilot({
               <h2 className="font-display font-bold text-base">Nutrition Copilot</h2>
               {aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-primary/10 text-primary animate-pulse">Analisando...</span>}
               {highRisk > 0 && !aiLoading && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/20 text-destructive font-bold animate-pulse">{highRisk} urgente</span>}
-              <span className="text-[10px] text-muted-foreground ml-auto">{expanded ? "▲ Recolher" : "▼ Expandir"}</span>
+              <div className="flex items-center gap-1.5 ml-auto">
+                <div className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/10 border border-success/20">
+                  <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
+                  <span className="text-[9px] font-bold text-success uppercase tracking-wider">Sistema Estável</span>
+                </div>
+                <span className="text-[10px] text-muted-foreground">{expanded ? "▲ Recolher" : "▼ Expandir"}</span>
+              </div>
             </div>
             <p className="text-sm text-muted-foreground leading-relaxed">
               <span className="text-foreground font-medium">{patientCount} pacientes</span>
