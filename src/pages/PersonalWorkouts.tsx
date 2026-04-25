@@ -202,8 +202,8 @@ function PrePlanTab({ students, prePlanStudent, setPrePlanStudent, handleUseTemp
         <WorkoutPrePlanGenerator
           studentId={prePlanStudent.id}
           studentName={prePlanStudent.name}
-          onApproveAndPublish={(template: any) => { handleUseTemplate(template); setPrePlanStudent(null); }}
-          onEditPlan={(template: any) => { handleUseTemplate(template); setPrePlanStudent(null); }}
+          onApproveAndPublish={(template: any) => { handleUseTemplate(template, prePlanStudent.id); setPrePlanStudent(null); }}
+          onEditPlan={(template: any) => { handleUseTemplate(template, prePlanStudent.id); setPrePlanStudent(null); }}
         />
       ) : (
         <div className="grid gap-2">
