@@ -743,10 +743,13 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           .update(patch as any)
           .eq("id", planId);
         if (error) {
-          console.error("[MealPlanEditorV2Store.updatePlan] Falha ao persistir meal_plans", {
+          console.error("[EMERGENCY][MealPlanEditorV2Store.updatePlan] CRITICAL_FAIL", {
             planId,
             patchKeys,
             message: error.message,
+            details: error.details,
+            hint: error.hint,
+            code: error.code
           });
           throw error;
         }
@@ -816,6 +819,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
             await op.persist();
             return { key: op.key, ok: true, itemIds: op.itemIds };
           } catch (err) {
+            console.error("[EMERGENCY][MealPlanEditorV2Store.flush] OP_FAIL", { key: op.key, error: err });
             op.rollback?.();
             return { key: op.key, ok: false, itemIds: op.itemIds, err };
           }
