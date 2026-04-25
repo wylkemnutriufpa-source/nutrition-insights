@@ -373,18 +373,11 @@ const PlanAudit = () => {
     setConsistencyLoading(true);
     try {
       // Fetch anamnesis and assessments
-      const { data: anamnesis } = await supabase
-        .from("patient_anamnesis" as any)
-        .select("user_id, answers");
+      const { data: anamnesis } = await (supabase.from("patient_anamnesis" as any).select("user_id, answers") as any);
 
-      const { data: assessments } = await supabase
-        .from("patient_body_assessments" as any)
-        .select("patient_id, weight_kg, height_m, created_at")
-        .order("created_at", { ascending: false });
+      const { data: assessments } = await (supabase.from("patient_body_assessments" as any).select("patient_id, weight_kg, height_m, created_at").order("created_at", { ascending: false }) as any);
 
-      const { data: patients } = await supabase
-        .from("profiles")
-        .select("user_id, full_name");
+      const { data: patients } = await (supabase.from("profiles").select("user_id, full_name") as any);
 
       const report = (patients || []).map((p: any) => {
         const ana = (anamnesis || []).find((a: any) => a.user_id === p.user_id);
