@@ -374,13 +374,13 @@ export default function MealPlanEditorV2() {
       await refreshPlanFromServer();
 
       if (totals.totals_status === "incomplete") {
-        toast.success("✅ Plano publicado. Os totais nutricionais serão recalculados em segundo plano.", { duration: 5000 });
+        toast.success("✅ Plano publicado. Os totais nutricionais serão recalculados em segundo plano.", { id: toastId, duration: 5000 });
       } else {
-        toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { duration: 5000 });
+        toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { id: toastId, duration: 5000 });
       }
     } catch (err: any) {
       console.error("[SaveAndPublish] Error:", err);
-      toast.error(err?.message || "Erro ao salvar e publicar. Tente novamente.");
+      toast.error("Erro ao salvar/publicar: " + (err?.message || "Tente novamente"), { id: toastId });
     } finally {
       setSavingAndPublishing(false);
     }
@@ -394,6 +394,7 @@ export default function MealPlanEditorV2() {
     }
 
     setValidating(true);
+    const toastId = toast.loading("Motor Clínico: Validando e corrigindo plano...");
     setValidationResult(null);
     setAutofixResult(null);
 
@@ -407,7 +408,6 @@ export default function MealPlanEditorV2() {
       });
 
       const data = outcome.validationResult;
-      const nextValidationStatus = resolveOverallValidationStatus(data);
 
       if (outcome.kind === "validated") {
         const approveResult = await savePlanAsApproved(plan.id, user.id);
@@ -420,7 +420,7 @@ export default function MealPlanEditorV2() {
         setAutofixWasValid(true);
         setAutofixResult(null);
         setShowAutofixResults(true);
-        toast.success(data.message || "Motor Clínico: Plano válido! Pode ser publicado. ✅");
+        toast.success(data.message || "Motor Clínico: Plano válido! Pode ser publicado. ✅", { id: toastId });
         return;
       }
 
@@ -438,10 +438,10 @@ export default function MealPlanEditorV2() {
         setShowAutofixResults(true);
         if (outcome.kind === "fixed_and_validated") {
           setValidationResult(null);
-          toast.success(`✅ Plano corrigido e revalidado! ${outcome.fixedResult.changes.length} correção(ões).`);
+          toast.success(`✅ Plano corrigido e revalidado! ${outcome.fixedResult.changes.length} correção(ões).`, { id: toastId });
         } else {
           setValidationResult(data as unknown as ValidationResult);
-          toast.info("Correção aplicada. Ainda há sugestões pendentes.");
+          toast.info("Correção aplicada. Ainda há sugestões pendentes.", { id: toastId });
         }
         return;
       }
