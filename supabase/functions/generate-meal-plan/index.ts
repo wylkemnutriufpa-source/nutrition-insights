@@ -2539,29 +2539,10 @@ function validate2LayerIntegrity(
   dailyKcal: number,
   dailyMacros: { protein: number; carbs: number; fat: number },
 ): { valid: boolean; deviations: Record<string, number>; errors: string[] } {
-  // Check day 0 as representative
-  const day0Items = items.filter((i: any) => i.day_of_week === 0);
-  if (day0Items.length === 0) return { valid: true, deviations: {}, errors: [] };
-
-  const sumCal = day0Items.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
-  const sumP = day0Items.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
-  const sumC = day0Items.reduce((s: number, i: any) => s + (i.carbs_target || 0), 0);
-  const sumF = day0Items.reduce((s: number, i: any) => s + (i.fat_target || 0), 0);
-
-  const deviations = {
-    calories: dailyKcal > 0 ? Math.abs(sumCal - dailyKcal) / dailyKcal : 0,
-    protein: dailyMacros.protein > 0 ? Math.abs(sumP - dailyMacros.protein) / dailyMacros.protein : 0,
-    carbs: dailyMacros.carbs > 0 ? Math.abs(sumC - dailyMacros.carbs) / dailyMacros.carbs : 0,
-    fat: dailyMacros.fat > 0 ? Math.abs(sumF - dailyMacros.fat) / dailyMacros.fat : 0,
-  };
-
-  const errors: string[] = [];
-  if (deviations.calories > MAX_2LAYER_DEVIATION) errors.push(`Calorie deviation ${(deviations.calories * 100).toFixed(1)}%`);
-  if (deviations.protein > MAX_2LAYER_DEVIATION) errors.push(`Protein deviation ${(deviations.protein * 100).toFixed(1)}%`);
-  if (deviations.carbs > MAX_2LAYER_DEVIATION) errors.push(`Carbs deviation ${(deviations.carbs * 100).toFixed(1)}%`);
-  if (deviations.fat > MAX_2LAYER_DEVIATION) errors.push(`Fat deviation ${(deviations.fat * 100).toFixed(1)}%`);
-
-  return { valid: errors.length === 0, deviations, errors };
+  // [EMERGENCY MODE] Validação 2-layer de macros desativada.
+  // O profissional ajusta livremente; sistema apenas salva.
+  void items; void dailyKcal; void dailyMacros;
+  return { valid: true, deviations: {}, errors: [] };
 }
 
 // ──── Post-generation macro reconciliation ────
