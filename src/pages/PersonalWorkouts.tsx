@@ -294,8 +294,9 @@ export default function PersonalWorkouts() {
     setExpandedPlan(planId);
   };
 
-  const handleUseTemplate = (template: any) => {
+  const handleUseTemplate = (template: any, studentId?: string) => {
     setSelectedTemplate(template);
+    if (studentId) setSelectedStudentId(studentId);
     setCreating(true);
     setActiveTab("plans");
     toast.info(`Template "${template.name}" carregado!`);
