@@ -1,0 +1,1 @@
+UPDATE public.patient_anamnesis SET status = 'completed' WHERE id = 'd615d0bc-68f3-4dcd-9589-c4c89cafbda7';
