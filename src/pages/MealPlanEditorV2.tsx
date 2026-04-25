@@ -242,6 +242,20 @@ export default function MealPlanEditorV2() {
       // Refetch OBRIGATÓRIO (Etapa 5)
       await refreshPlanFromServer();
       
+      // ──── AUDIT DIVERGENCIA POS-SAVE ────
+      const localItemsCount = store.items.length;
+      const { data: serverItems, error: auditErr } = await supabase
+        .from("meal_plan_items")
+        .select("id", { count: "exact", head: true })
+        .eq("meal_plan_id", plan.id);
+      
+      if (!auditErr && serverItems !== null && serverItems !== localItemsCount) {
+        console.error("[AUDIT] Divergência detectada pós-save!", { local: localItemsCount, server: serverItems });
+        toast.error("⚠️ Divergência detectada entre editor e banco. Recarregando estado real...");
+        await store.hydrate(plan.id, user!.id);
+        return;
+      }
+
       const totals = await calculatePlanTotals(plan.id);
       
       if (planStatus === "draft_auto_corrected") {
