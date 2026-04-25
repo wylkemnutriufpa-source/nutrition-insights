@@ -565,6 +565,7 @@ export type Database = {
           data: Json
           expires_at: string
           id: string
+          plan_id: string | null
         }
         Insert: {
           cache_key: string
@@ -572,6 +573,7 @@ export type Database = {
           data: Json
           expires_at: string
           id?: string
+          plan_id?: string | null
         }
         Update: {
           cache_key?: string
@@ -579,6 +581,7 @@ export type Database = {
           data?: Json
           expires_at?: string
           id?: string
+          plan_id?: string | null
         }
         Relationships: []
       }

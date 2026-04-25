@@ -1,0 +1,1 @@
+ALTER FUNCTION public.invalidate_audit_cache() SET search_path TO 'public';
