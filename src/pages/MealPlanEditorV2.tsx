@@ -303,7 +303,7 @@ export default function MealPlanEditorV2() {
         throw new Error(publishResult.error || "Plano salvo, mas houve erro ao publicar");
       }
 
-      // 3) Refetch OBRIGATÓRIO (Etapa 5)
+      // 3) Refetch OBRIGATÓRIO (Etapa 5) - Apenas UM ao final
       await refreshPlanFromServer();
 
       // ──── AUDIT DIVERGENCIA POS-PUBLISH ────
