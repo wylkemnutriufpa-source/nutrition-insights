@@ -170,7 +170,18 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
         .filter(i => !i.id.startsWith("temp-"))
         .map(i => i.id);
       if (existingIds.length > 0) {
-        await supabase.from("meal_plan_items").delete().in("id", existingIds);
+        if (!planId) {
+          console.error("[CRITICAL] DELETE bloqueado: planId inválido em handleApply", { existingIds });
+          throw new Error("DELETE bloqueado: planId inválido");
+        }
+        
+        console.info("[DELETE] Limpando itens existentes antes de aplicar plano assistido", { planId, existingIds, operation: "handleApplyAssisted" });
+        
+        await supabase
+          .from("meal_plan_items")
+          .delete()
+          .eq("meal_plan_id", planId)
+          .in("id", existingIds);
       }
 
       useMealPlanEditorV2Store.setState({
