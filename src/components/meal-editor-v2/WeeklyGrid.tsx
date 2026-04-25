@@ -21,10 +21,6 @@ import { FOOD_DATABASE } from "@/components/meals/FoodAutocomplete";
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import FoodSearchInline from "@/components/hybrid-builder/FoodSearchInline";
 import { buildVisualLibraryMealInsert, parseDraggedVisualLibraryData } from "@/lib/mealEditorVisualInsert";
-import { resolveEffectiveDay } from "@/lib/resolveEffectiveDay";
-import { resolveHeaderSnapshot } from "@/lib/editorHeaderSnapshot";
-import { useForceCanonicalDay } from "@/hooks/useForceCanonicalDay";
-import LegacyDayBanner from "./LegacyDayBanner";
 
 const MEAL_TYPES: { key: MealType; label: string; icon: React.ReactNode; color: string }[] = [
   { key: "breakfast", label: "Café da Manhã", icon: <Coffee className="w-4 h-4" />, color: "text-amber-500" },
@@ -56,15 +52,9 @@ const findFoodMatch = (text: string): FoodItem | null => {
 export function WeeklyGrid() {
   const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell } = useMealPlanEditorV2Store();
 
-  // Modo Diário Único: usamos day=0 como slot canônico, mas se o plano
-  // legado tiver itens apenas em outros dias, exibimos o primeiro encontrado.
-  // A preferência do profissional fica persistida em URL/localStorage.
-  const [forceCanonical, setForceCanonical] = useForceCanonicalDay();
-  // Snapshot único garantindo que rótulo e totais do cabeçalho usam
-  // EXATAMENTE o mesmo effectiveDay.
-  const headerSnapshot = resolveHeaderSnapshot(items, { forceCanonical });
-  const effectiveDay = headerSnapshot.effectiveDay;
-  const effectiveDayLabel = headerSnapshot.effectiveDayLabel;
+  // Modelo single-day puro: tudo está em day=0
+  const effectiveDay = 0;
+  const effectiveDayLabel = "Plano Diário";
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
@@ -197,13 +187,6 @@ export function WeeklyGrid() {
 
   return (
     <>
-      <div className="mb-3">
-        <LegacyDayBanner
-          effectiveDay={effectiveDay}
-          forceCanonical={forceCanonical}
-          onToggleForceCanonical={setForceCanonical}
-        />
-      </div>
       <div className="overflow-x-auto">
         {/* Day headers */}
         <div className="grid grid-cols-[160px_1fr] gap-4 mb-6 sticky top-0 z-20 bg-background/80 backdrop-blur-md pb-4 border-b border-primary/10">
