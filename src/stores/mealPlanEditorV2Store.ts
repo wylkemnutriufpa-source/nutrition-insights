@@ -226,10 +226,10 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     if (!planId || items.length === 0) return;
 
     const prevItems = [...items];
-    const masterItems = items.filter(i => i.day_of_week === 0);
-    const totalProt = masterItems.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-    const totalCarb = masterItems.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-    const totalKcal = masterItems.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    // Single-day puro: todos os items pertencem ao dia 0
+    const totalProt = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+    const totalCarb = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
+    const totalKcal = items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
 
     // Determinar Fatores de Escala
     const pScale = delta.protein ? (totalProt + delta.protein) / totalProt : 1;
@@ -237,7 +237,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const kScale = delta.calories ? (totalKcal + delta.calories) / totalKcal : 1;
 
     const updatedItems = items.map(item => {
-      if (item.day_of_week !== 0) return item;
 
       const nextProt = item.protein_target ? Number(item.protein_target) * pScale : 0;
       const nextCarb = item.carbs_target ? Number(item.carbs_target) * cScale : 0;
