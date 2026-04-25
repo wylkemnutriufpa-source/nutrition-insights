@@ -47,7 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
@@ -440,12 +440,18 @@ export default function MealPlans() {
                 : `${effectivePlansCount} planos ativos · Gerencie todos os planos alimentares`}
             </p>
           </div>
-          <Dialog open={open} onOpenChange={setOpen}>
-            <DialogTrigger asChild>
-              <Button className="gradient-primary gap-2 shadow-glow">
-                <Plus className="w-4 h-4" /> Novo Plano
-              </Button>
-            </DialogTrigger>
+          <div className="flex items-center gap-2 flex-wrap">
+            <Button asChild variant="outline" className="gap-2">
+              <Link to="/plan-audit">
+                <ClipboardList className="w-4 h-4" /> Auditoria de Planos
+              </Link>
+            </Button>
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogTrigger asChild>
+                <Button className="gradient-primary gap-2 shadow-glow">
+                  <Plus className="w-4 h-4" /> Novo Plano
+                </Button>
+              </DialogTrigger>
             <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
               <DialogHeader>
                 <DialogTitle className="font-display">Criar Plano Alimentar</DialogTitle>
@@ -477,6 +483,7 @@ export default function MealPlans() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {loading ? (
