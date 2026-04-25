@@ -488,7 +488,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Update item ───────────────────────────────────────────
   updateItem: (itemId, patch) => {
-
     const sanitizedPatch = sanitizeMealPlanItemPatch(patch);
     if (Object.keys(sanitizedPatch).length === 0) {
       console.warn("[MealPlanEditorV2Store.updateItem] Ignorando patch sem campos persistíveis", {
@@ -497,28 +496,40 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       });
       return;
     }
-    const prev = get().items;
+
+    const currentState = get();
+    const prevItems = currentState.items;
+    
+    // Atualiza estado local imediatamente (otimista)
     set((s) => ({
       items: s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i)),
     }));
 
-    // For temp items (not yet persisted), only update local state — the pending insert will use the updated local data
+    // Se for item temporário, não enfileiramos update; o insert pendente já pegará o estado atualizado do store no momento do flush
     if (itemId.startsWith("temp-")) {
       return;
     }
 
+    // Estratégia de Mesclagem: Se já houver um update pendente para este item, mesclamos os patches
+    // para evitar perda de dados se o usuário editar múltiplos campos rapidamente.
     get()._enqueue({
       key: `update:${itemId}`,
       itemIds: [itemId],
       queuedAt: Date.now(),
       persist: async () => {
+        // Buscamos o item ATUALIZADO do estado no momento da persistência
+        const item = get().items.find(i => i.id === itemId);
+        if (!item) return;
+
+        // Ao invés de usar o closure original (que pode estar defasado), 
+        // persistimos o estado atual completo do item para garantir consistência.
         const { error } = await supabase
           .from("meal_plan_items")
-          .update(sanitizedPatch as any)
+          .update(sanitizeMealPlanItemPatch(item) as any)
           .eq("id", itemId);
         if (error) throw error;
       },
-      rollback: () => set({ items: prev }),
+      rollback: () => set({ items: prevItems }),
     });
   },
 
