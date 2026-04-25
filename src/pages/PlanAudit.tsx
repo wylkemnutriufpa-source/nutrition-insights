@@ -488,23 +488,29 @@ const PlanAudit = () => {
       // Mas podemos simular a query que o paciente faria e verificar as restrições via RPC ou apenas checar os campos.
       // O usuário pediu: "confirmando que somente os planos do paciente aparecem e que published_to_patient está correto."
       
-      const { data, error } = await supabase
+      // 1. Simular query total do nutricionista para este paciente
+      const { data: allPlans, error: allPlansError } = await supabase
         .from("meal_plans")
         .select("id, title, plan_status, is_active, patient_id")
         .eq("patient_id", patientId);
+      
+      if (allPlansError) throw allPlansError;
 
-      if (error) throw error;
+      // 2. Simular query que o PACIENTE faria (filtros de visibilidade)
+      const { data: patientVisible, error: patientError } = await supabase
+        .from("meal_plans")
+        .select("id, title, plan_status, is_active")
+        .eq("patient_id", patientId)
+        .eq("plan_status", "published_to_patient")
+        .eq("is_active", true);
 
-      const results = (data || []).map(p => ({
-        ...p,
-        is_published: p.plan_status === "published_to_patient",
-        rls_correct: p.patient_id === patientId // Isso sempre será true se a query usou .eq
-      }));
+      if (patientError) throw patientError;
 
       setRlsResult({
-        total: results.length,
-        published: results.filter(r => r.is_published).length,
-        plans: results
+        total: (allPlans || []).length,
+        visibleCount: (patientVisible || []).length,
+        allPlans: allPlans || [],
+        visiblePlans: patientVisible || []
       });
       
       toast.success("Verificação RLS concluída.");
