@@ -1507,7 +1507,7 @@ function generatePlanWithTemplates(
       if (matched.length > 0) {
         // Para o modelo global, pegamos a principal e adicionamos 3 substituições
         // No loop principal, pegamos as 4 melhores candidatas (1 principal + 3 subs)
-        const topCandidates = matched.slice(0, 4);
+        const topCandidates = matched.slice(0, 5); // 1 principal + 4 substituições
         
         for (let i = 0; i < topCandidates.length; i++) {
           let picked = topCandidates[i];
