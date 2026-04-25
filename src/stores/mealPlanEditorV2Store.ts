@@ -393,6 +393,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       hydrating: false,
     });
 
+    console.log(`[SELECT RESULT t=${Date.now()}] Plan loaded with ${items.length} items.`);
     writeCache(planId, normalizedPlan, patientName, items);
 
     // Silently resolve missing visuals for items without images
