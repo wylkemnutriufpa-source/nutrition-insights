@@ -713,7 +713,7 @@ export default function Landing() {
           <motion.div variants={fadeUp} initial="hidden" whileInView="show" viewport={{ once: true }} className="text-center mb-20">
             <span className="inline-block px-4 py-1.5 rounded-full glass-premium text-primary text-xs font-bold mb-5 gradient-border uppercase tracking-widest">Preços</span>
             <h2 className="font-display text-3xl md:text-5xl font-bold mb-4">Simples e <span className="text-gradient-animated">transparente</span></h2>
-            <p className="text-muted-foreground text-lg">Comece grátis. Escale quando precisar. Cancele quando quiser.</p>
+            <p className="text-muted-foreground text-lg">As regras do nosso plano: sempre fáceis ...Práticos.. e fáceis</p>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
