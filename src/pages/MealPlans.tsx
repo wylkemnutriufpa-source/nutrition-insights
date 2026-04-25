@@ -483,6 +483,7 @@ export default function MealPlans() {
               </div>
             </DialogContent>
           </Dialog>
+          </div>
         </div>
 
         {loading ? (
