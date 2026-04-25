@@ -139,7 +139,7 @@ export default function Pricing() {
             Escolha o plano ideal para você
           </h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            Comece com <strong>3 dias grátis</strong> em qualquer plano. Sem compromisso, cancele quando quiser.
+            As regras do nosso plano: sempre fáceis ...Práticos.. e fáceis
           </p>
         </motion.div>
 
