@@ -558,11 +558,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           ))}
         </div>
         <div className="flex gap-1 ml-auto flex-wrap">
-          <Button variant="outline" size="sm" onClick={duplicateDay} disabled={saving} className="gap-1 text-xs">
-            <Copy className="w-3 h-3" /> Duplicar
-          </Button>
-          <Button variant="outline" size="sm" onClick={applyToWeek} disabled={saving} className="gap-1 text-xs">
-            <Calendar className="w-3 h-3" /> Semana
+          <Button variant="outline" size="sm" onClick={() => setCurrentDay(0)} disabled={saving} className="gap-1 text-xs">
+            <RefreshCw className="w-3 h-3" /> Atualizar
           </Button>
 
           {/* Load Template */}
