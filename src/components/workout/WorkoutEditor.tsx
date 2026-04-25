@@ -113,7 +113,7 @@ export default function WorkoutEditor({ students, onSaved, onCancel, initialData
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [objective, setObjective] = useState("general");
-  const [studentId, setStudentId] = useState("");
+  const [studentId, setStudentId] = useState(initialStudentId || "");
   const [startDate, setStartDate] = useState(new Date().toISOString().split("T")[0]);
   const [endDate, setEndDate] = useState("");
   const [routines, setRoutines] = useState<EditorRoutine[]>([newRoutine(0)]);
