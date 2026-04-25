@@ -246,38 +246,38 @@ const PlanAudit = () => {
     };
 
     try {
-      // 1. Criar Paciente Temporário
-      addLog("Criar Paciente", "loading", "Gerando perfil de teste...");
-      const tempId = crypto.randomUUID();
+      // 1. Criar Paciente Temporário (via Edge Function para ser fiel ao fluxo real)
+      addLog("Criar Paciente", "loading", "Convocando invite-patient...");
+      const tempEmail = `test-${Date.now()}@fitjourney.test`;
       const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
       
-      const { error: pError } = await supabase.from("profiles").insert({
-        user_id: tempId,
-        full_name: tempName,
-        role: "patient"
-      } as any);
-      
-      if (pError) throw new Error("Erro ao criar perfil: " + pError.message);
-      
-      const { error: npError } = await supabase.from("nutritionist_patients").insert({
-        nutritionist_id: user.id,
-        patient_id: tempId,
-        status: "active"
-      } as any);
+      const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
+        body: {
+          name: tempName,
+          email: tempEmail,
+          method: "password",
+          password: "password123",
+          autoConfirm: true
+        }
+      });
 
-      if (npError) throw new Error("Erro ao vincular nutricionista: " + npError.message);
-      addLog("Criar Paciente", "success", `Paciente ${tempName} criado.`);
+      if (inviteError || !inviteData?.patient_id) {
+        throw new Error("Erro no invite: " + (inviteError?.message || inviteData?.error || "ID não retornado"));
+      }
+      
+      const tempId = inviteData.patient_id;
+      addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${tempId}).`);
 
       // 2. Criar Plano Simples
       setEmergencyStep(2);
       addLog("Criar Plano", "loading", "Iniciando rascunho de 1 refeição...");
-      const { data: plan, error: planError } = await supabase.from("meal_plans").insert({
+      const { data: plan, error: planError } = await (supabase.from("meal_plans").insert({
         patient_id: tempId,
         nutritionist_id: user.id,
         title: "Plano de Emergência",
         plan_status: "draft",
         is_active: false
-      } as any).select().single();
+      } as any).select().single() as any);
 
       if (planError) throw new Error("Erro ao criar plano: " + planError.message);
       
