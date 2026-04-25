@@ -1380,7 +1380,7 @@ const PlanAudit = () => {
                     </TableHeader>
                     <TableBody>
                       {Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).map(([label, data]: [string, any], index, arr) => (
-                        <React.Fragment key={label}>
+                        <Fragment key={label}>
                           <TableRow className="bg-muted/10">
                             <TableCell className="font-medium text-xs whitespace-nowrap" colSpan={4}>
                               {label.split('_')[0]}
