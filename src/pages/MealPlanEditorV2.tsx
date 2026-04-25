@@ -183,13 +183,7 @@ export default function MealPlanEditorV2() {
   const handleGenerateNewPlan = async () => {
     if (!plan || !user) return;
     
-    const proceed = confirm(
-      isImmutable
-        ? "Será criado um NOVO rascunho baseado nos dados do paciente. O plano atual publicado NÃO será alterado. Continuar?"
-        : "Será criado um NOVO plano baseado nos dados do paciente. Continuar?"
-    );
-    if (!proceed) return;
-
+    // No blocking confirm here, just generate
     console.warn("[PLAN] botão clicado");
     console.warn("[PLAN] função iniciou");
     setGeneratingNew(true);
