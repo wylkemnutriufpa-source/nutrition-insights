@@ -960,21 +960,41 @@ const PlanAudit = () => {
   }, [filteredEmergencyLogs]);
 
   const incompleteDataStatus = useMemo(() => {
-    if (!executionIdFilter) return { isIncomplete: false, missing: [] as string[] };
+    if (!executionIdFilter && filteredEmergencyLogs.length === 0) return { isIncomplete: false, missing: [] as string[] };
     
-    const missing = [];
-    const hasSnapshots = filteredEmergencyLogs.some(l => l.step === "Snapshot");
-    const hasPublish = filteredEmergencyLogs.some(l => l.step === "Publicar");
-    const hasSave = filteredEmergencyLogs.some(l => l.step === "Salvar/Aprovar");
-    const logCount = filteredEmergencyLogs.length;
+    const logs = filteredEmergencyLogs;
+    if (logs.length === 0) return { isIncomplete: false, missing: [] };
 
-    if (!hasSnapshots) missing.push("não há snapshots");
-    if (!hasPublish) missing.push("falta Publicar");
-    if (!hasSave) missing.push("falta Salvar/Aprovar");
-    if (logCount > 0 && logCount < 4) missing.push("logs insuficientes");
+    // Identifica o tipo de fluxo: Replay ou Completo
+    const isReplay = logs.some(l => l.step === "Replay Mode");
+    
+    // Etapas esperadas por tipo de fluxo
+    const expectedSteps = isReplay 
+      ? ["Snapshot", "Salvar/Aprovar", "Publicar", "Validar"] 
+      : ["Criar Paciente", "Criar Plano", "Snapshot", "Salvar/Aprovar", "Publicar", "Validar"];
+
+    const missing = expectedSteps.filter(step => {
+      // Mapeamento flexível para aceitar variações no nome da etapa se necessário
+      const hasStep = logs.some(l => {
+        if (step === "Snapshot") return l.step === "Snapshot";
+        if (step === "Salvar/Aprovar") return l.step === "Salvar/Aprovar";
+        if (step === "Publicar") return l.step === "Publicar";
+        if (step === "Validar") return l.step === "Validar";
+        if (step === "Criar Paciente") return l.step === "Criar Paciente";
+        if (step === "Criar Plano") return l.step === "Criar Plano";
+        return false;
+      });
+      return !hasStep;
+    });
+
+    const logCount = logs.length;
+    // Adiciona "logs insuficientes" se o total for muito baixo para o esperado
+    if (logCount > 0 && logCount < (isReplay ? 4 : 6) && missing.length === 0) {
+      missing.push("logs insuficientes para o fluxo");
+    }
     
     return { 
-      isIncomplete: missing.length > 0 && logCount > 0, 
+      isIncomplete: missing.length > 0, 
       missing 
     };
   }, [filteredEmergencyLogs, executionIdFilter]);
@@ -989,19 +1009,37 @@ const PlanAudit = () => {
     doc.text(`Gerado em: ${now}`, 14, 28);
     doc.text(`Filtro Execution ID: ${executionIdFilter || "Nenhum"}`, 14, 34);
 
-    const tableHeaders = [["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso"]];
-    const tableData = stepMetrics.map(m => [
-      m.name,
-      m.total,
-      m.successes,
-      m.failures,
-      `${m.successRate.toFixed(1)}%`
+    const tableHeaders = [["Execution ID", "Etapa", "Status", "Timestamp", "Log Link"]];
+    const tableData = filteredEmergencyLogs.map(l => [
+      l.executionId.slice(-8),
+      l.step,
+      l.status,
+      l.timestamp ? format(new Date(l.timestamp), "HH:mm:ss") : "—",
+      l.step === "Snapshot" ? "Link Snapshot" : (correlatorId ? "Log Oficial (GCP)" : "N/A")
     ]);
 
     (doc as any).autoTable({
       startY: 40,
       head: tableHeaders,
       body: tableData,
+      didDrawCell: (data: any) => {
+        if (data.section === 'body' && data.column.index === 4) {
+          const val = data.cell.raw;
+          let url = "";
+          if (val === "Log Oficial (GCP)" && correlatorId) {
+            url = `https://console.cloud.google.com/logs/query;query=jsonPayload.correlator%3D%22${correlatorId}%22`;
+          } else if (val === "Link Snapshot") {
+            // Placeholder: link para a aba de emergência com o filtro
+            url = `${window.location.origin}/plan-audit?tab=emergency&execId=${executionIdFilter}`;
+          }
+          
+          if (url) {
+            doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
+            doc.setTextColor(0, 0, 255);
+            doc.text(val, data.cell.x + 2, data.cell.y + data.cell.height - 2);
+          }
+        }
+      }
     });
 
     doc.save(`resumo-etapas-${executionIdFilter || "geral"}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
@@ -1009,24 +1047,31 @@ const PlanAudit = () => {
   };
 
   const exportSummaryCSV = () => {
-    const headers = ["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso (%)", "Taxa de Falha (%)"];
-    const rows = stepMetrics.map(m => [
-      m.name,
-      m.total,
-      m.successes,
-      m.failures,
-      m.successRate.toFixed(1),
-      m.failureRate.toFixed(1)
-    ]);
+    const headers = ["ExecutionID", "Etapa", "Status", "Timestamp", "Log Link"];
+    const rows = filteredEmergencyLogs.map(l => {
+      let logUrl = "";
+      if (correlatorId) {
+        logUrl = `https://console.cloud.google.com/logs/query;query=jsonPayload.correlator%3D%22${correlatorId}%22`;
+      } else if (l.step === "Snapshot") {
+        logUrl = `${window.location.origin}/plan-audit?tab=emergency&execId=${l.executionId}`;
+      }
+      
+      return [
+        l.executionId,
+        l.step,
+        l.status,
+        l.timestamp ? format(new Date(l.timestamp), "HH:mm:ss") : "—",
+        logUrl || "N/A"
+      ];
+    });
 
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
+    const link = document.body.appendChild(document.createElement("a"));
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute("download", `resumo_auditoria_${executionIdFilter || 'geral'}.csv`);
     link.style.visibility = 'hidden';
-    document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     toast.success("Resumo exportado com sucesso!");
