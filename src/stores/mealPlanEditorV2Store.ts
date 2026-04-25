@@ -383,8 +383,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const patientName = profile?.full_name || "Paciente";
     const items = (itemsData || []) as MealPlanItem[];
 
-    // Migration defensiva: planos antigos sem plan_mode → 'weekly'
-    const normalizedPlan = ensurePlanMode(planData) as typeof planData;
+    const normalizedPlan = planData;
 
     set({
       plan: normalizedPlan,
@@ -423,10 +422,8 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   addItems: (inserts) => {
 
     const state = get();
-    // Guard Single Day: bloqueia variações multi-dia, normaliza com aviso
-    const isSingleDay = get().plan?.plan_mode === 'single_day';
-    const safeInserts = assertSingleDayItems(inserts as any[], { autoFix: isSingleDay, isSingleDay }) as typeof inserts;
-    const sanitizedInserts = safeInserts.map(sanitizeMealPlanItemInsert);
+    // Single-day puro: força day_of_week = 0 em todo insert (DB também garante via trigger)
+    const sanitizedInserts = inserts.map(sanitizeMealPlanItemInsert);
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
     const tIds = optimistic.map((o) => o.id);
