@@ -19781,6 +19781,22 @@ export type Database = {
         Args: { _nutritionist_id: string }
         Returns: Json
       }
+      get_nutritionist_patients_plan_audit: {
+        Args: never
+        Returns: {
+          approved_count: number
+          audit_status: string
+          draft_count: number
+          latest_plan_id: string
+          latest_plan_status: string
+          latest_updated_at: string
+          latest_validation_status: string
+          patient_id: string
+          patient_name: string
+          published_count: number
+          total_plans: number
+        }[]
+      }
       get_patient_active_protocol: {
         Args: { _patient_id: string }
         Returns: {
