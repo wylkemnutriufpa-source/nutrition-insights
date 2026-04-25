@@ -12,7 +12,6 @@ import DietPreviewPanel from "./DietPreviewPanel";
 import MealClickToAddPanel from "./MealClickToAddPanel";
 import MealTemplatePanel from "./MealTemplatePanel";
 import MealSubstitutionPanel from "./MealSubstitutionPanel";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 
 type ViewMode = "grid" | "list";
 
@@ -41,8 +40,6 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
   const [assistedOpen, setAssistedOpen] = useState(false);
   const [librarySidebarOpen, setLibrarySidebarOpen] = useState(false);
   const [activeDay] = useState(SINGLE_DAY);
-  const { items } = useMealPlanEditorV2Store();
-
   return (
     <div className="space-y-3">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
