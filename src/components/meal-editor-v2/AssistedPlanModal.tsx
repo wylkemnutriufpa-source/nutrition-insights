@@ -255,7 +255,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
             Gerador Assistido de Plano
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Motor clínico v2.1 — gera 3 opções com substituições reais e ajuste proteico inteligente
+            Motor clínico v3.0 — gera Plano Único com 4 substituições reais por refeição
           </DialogDescription>
         </DialogHeader>
 
