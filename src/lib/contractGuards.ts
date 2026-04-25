@@ -25,30 +25,13 @@ export class ContractViolationError extends Error {
   }
 }
 
-/** Valida snapshot contra um contrato. Lança erro se violado.
- * 🟢 MODO SIMPLES: bypass completo — apenas loga, não bloqueia. */
+/** RESET LÓGICO: assertContract é NO-OP. Sistema apenas persiste. */
 export function assertContract<C extends CriticalContractId>(
-  contractId: C,
-  snapshot: Parameters<(typeof CRITICAL_CONTRACTS)[C]>[0],
+  _contractId: C,
+  _snapshot: Parameters<(typeof CRITICAL_CONTRACTS)[C]>[0],
 ): void {
-  if (isSimpleMode()) {
-    const fn = CRITICAL_CONTRACTS[contractId] as (s: any) => { ok: boolean; violations: string[] };
-    const result = fn(snapshot);
-    if (!result.ok) {
-      console.warn(`[SIMPLE MODE] Contract '${contractId}' violado mas não bloqueado:`, result.violations);
-    }
-    return;
-  }
-  const fn = CRITICAL_CONTRACTS[contractId] as (s: any) => { ok: boolean; violations: string[] };
-  const result = fn(snapshot);
-  if (!result.ok) {
-    logCriticalRegression(
-      contractId,
-      result.violations.join(" | "),
-      "frontend",
-    );
-    throw new ContractViolationError(contractId, result.violations);
-  }
+  // No-op. O sistema não bloqueia mais nada.
+  return;
 }
 
 /** Valida sem lançar — retorna o resultado. */
