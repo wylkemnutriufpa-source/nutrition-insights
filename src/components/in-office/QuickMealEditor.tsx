@@ -294,7 +294,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       })));
     }
     
-    try {
+    enqueuePersistence(async () => {
       await withRetry(async () => {
         // Clear other days
         if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
@@ -320,11 +320,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
       setTotalDays(7);
       toast.success("Plano aplicado para a semana toda!");
-    } catch (err: any) {
-      toast.error("Erro ao aplicar semana: " + err.message);
-    } finally {
-      setSaving(false);
-    }
+    });
+    setSaving(false);
   };
 
   // Save as template
