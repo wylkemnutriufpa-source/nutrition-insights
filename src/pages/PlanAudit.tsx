@@ -1238,7 +1238,15 @@ const PlanAudit = () => {
               </p>
             </div>
 
+            <div className="space-y-4">
+               <h3 className="text-sm font-semibold flex items-center gap-2">
+                 <Sparkles className="w-4 h-4 text-amber-500" /> Diagnóstico Sugerido
+               </h3>
+               <ActionableSummary logs={emergencyLogs} />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
               {["RLS", "Validação", "Persistência"].map(type => {
                 const count = emergencyLogs.filter(l => l.errorType === type).length;
                 return (
