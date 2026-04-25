@@ -298,7 +298,7 @@ const PlanAudit = () => {
     toast.info("Estado de emergência limpo.");
   };
 
-  const takeSnapshot = async (patientId: string, label: string) => {
+  const takeSnapshot = async (patientId: string, label: string, executionId?: string) => {
     if (!patientId) return;
     try {
       const { data, error } = await supabase
@@ -309,10 +309,22 @@ const PlanAudit = () => {
 
       if (error) throw error;
       
+      const snapshotKey = `${label}_${Date.now()}`;
       setSnapshots(prev => ({
         ...prev,
-        [`${label}_${Date.now()}`]: data
+        [snapshotKey]: data
       }));
+
+      if (executionId) {
+        setEmergencyLogs(prev => [...prev, { 
+          executionId, 
+          step: "Snapshot", 
+          status: "success", 
+          message: `Snapshot capturado: ${label}`, 
+          payload: { label, snapshotKey },
+          timestamp: new Date().toISOString()
+        }]);
+      }
     } catch (err) {
       console.error("Snapshot error:", err);
     }
