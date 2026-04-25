@@ -218,7 +218,11 @@ const PlanAudit = () => {
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("plan_audit_active_tab") || "overview");
+  
+  useEffect(() => {
+    localStorage.setItem("plan_audit_active_tab", activeTab);
+  }, [activeTab]);
   const [diagnosticPatientId, setDiagnosticPatientId] = useState<string>("");
   const [diagnosticLogs, setDiagnosticLogs] = useState<any[]>([]);
   const [diagnosticLoading, setDiagnosticLoading] = useState(false);
@@ -934,8 +938,7 @@ const PlanAudit = () => {
     return steps.map(stepName => {
       const stepLogs = filteredEmergencyLogs.filter(l => {
         if (stepName === "Salvar/Aprovar") {
-          // Mais determinístico: baseia-se no step fixo ou tipo de erro de persistência
-          return l.step === "Criar Paciente" || l.step === "Criar Plano" || l.step === "Criar Item" || l.errorType === "Persistência";
+          return l.step === "Criar Paciente" || l.step === "Criar Plano" || l.step === "Criar Item" || l.errorType === "Persistência" || l.step === "Salvar/Aprovar";
         }
         return l.step.includes(stepName);
       });
@@ -943,20 +946,67 @@ const PlanAudit = () => {
       const total = stepLogs.length;
       const failures = stepLogs.filter(l => l.status === "error").length;
       const successes = total - failures;
-      const failureRate = total > 0 ? (failures / total) * 100 : 0;
-      const successRate = total > 0 ? (successes / total) * 100 : 0;
+      
+      let successRate = 0;
+      let failureRate = 0;
+      
+      if (total > 0) {
+        successRate = (successes / total) * 100;
+        failureRate = 100 - successRate;
+      }
       
       return { name: stepName, total, failures, successes, failureRate, successRate };
     });
   }, [filteredEmergencyLogs]);
 
-  const isIncompleteData = useMemo(() => {
-    if (!executionIdFilter) return false;
-    // Considera incompleto se não houver pelo menos 4 logs ou nenhum snapshot para esse ID
+  const incompleteDataStatus = useMemo(() => {
+    if (!executionIdFilter) return { isIncomplete: false, missing: [] as string[] };
+    
+    const missing = [];
     const hasSnapshots = filteredEmergencyLogs.some(l => l.step === "Snapshot");
+    const hasPublish = filteredEmergencyLogs.some(l => l.step === "Publicar");
+    const hasSave = filteredEmergencyLogs.some(l => l.step === "Salvar/Aprovar");
     const logCount = filteredEmergencyLogs.length;
-    return logCount > 0 && (logCount < 4 || !hasSnapshots);
+
+    if (!hasSnapshots) missing.push("não há snapshots");
+    if (!hasPublish) missing.push("falta Publicar");
+    if (!hasSave) missing.push("falta Salvar/Aprovar");
+    if (logCount > 0 && logCount < 4) missing.push("logs insuficientes");
+    
+    return { 
+      isIncomplete: missing.length > 0 && logCount > 0, 
+      missing 
+    };
   }, [filteredEmergencyLogs, executionIdFilter]);
+
+  const exportSummaryPDF = () => {
+    const doc = new jsPDF();
+    const now = format(new Date(), "dd/MM/yyyy HH:mm");
+    
+    doc.setFontSize(18);
+    doc.text("Resumo por Etapa de Execução", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${now}`, 14, 28);
+    doc.text(`Filtro Execution ID: ${executionIdFilter || "Nenhum"}`, 14, 34);
+
+    const tableHeaders = [["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso"]];
+    const tableData = stepMetrics.map(m => [
+      m.name,
+      m.total,
+      m.successes,
+      m.failures,
+      `${m.successRate.toFixed(1)}%`
+    ]);
+
+    (doc as any).autoTable({
+      startY: 40,
+      head: tableHeaders,
+      body: tableData,
+    });
+
+    doc.save(`resumo-etapas-${executionIdFilter || "geral"}-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast.success("PDF do resumo gerado com sucesso!");
+  };
 
   const exportSummaryCSV = () => {
     const headers = ["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso (%)", "Taxa de Falha (%)"];
@@ -1548,26 +1598,41 @@ const PlanAudit = () => {
                  <h3 className="text-sm font-semibold flex items-center gap-2">
                    <Terminal className="w-4 h-4 text-blue-500" /> Resumo por Etapa
                  </h3>
-                 <Button 
-                   variant="outline" 
-                   size="sm" 
-                   className="h-7 text-[10px] gap-1"
-                   onClick={exportSummaryCSV}
-                 >
-                   <Download className="w-3 h-3" /> Exportar CSV do Resumo
-                 </Button>
-               </div>
+                  <div className="flex items-center gap-2">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[10px] gap-1"
+                      onClick={exportSummaryCSV}
+                    >
+                      <Download className="w-3 h-3" /> CSV
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[10px] gap-1"
+                      onClick={exportSummaryPDF}
+                    >
+                      <FileText className="w-3 h-3" /> PDF
+                    </Button>
+                  </div>
+                </div>
 
-               {isIncompleteData && (
-                 <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-start gap-3">
-                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
-                   <div className="text-[10px] leading-relaxed">
-                     <span className="font-bold block uppercase mb-0.5">Dados Incompletos</span>
-                     Este ID de execução não possui todos os logs ou snapshots esperados. 
-                     As taxas de sucesso e falha podem estar distorcidas.
-                   </div>
-                 </div>
-               )}
+                {incompleteDataStatus.isIncomplete && (
+                  <div className="p-3 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-700 flex items-start gap-3">
+                    <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
+                    <div className="text-[10px] leading-relaxed">
+                      <span className="font-bold block uppercase mb-0.5">Dados Incompletos</span>
+                      Este ID de execução não possui todos os logs ou snapshots esperados:
+                      <ul className="list-disc list-inside mt-1 font-medium">
+                        {incompleteDataStatus.missing.map((m, i) => (
+                          <li key={i}>{m}</li>
+                        ))}
+                      </ul>
+                      As taxas de sucesso e falha podem estar distorcidas.
+                    </div>
+                  </div>
+                )}
 
                <div className="border rounded-md overflow-hidden">
                  <Table>
