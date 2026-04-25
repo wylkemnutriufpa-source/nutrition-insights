@@ -16,7 +16,7 @@ fi
 # 1. Insert a dummy meal plan
 PLAN_ID=$(psql -t -c "INSERT INTO meal_plans (nutritionist_id, patient_id, title, start_date, tenant_id, is_active) 
 VALUES ('$USER_ID', '$PATIENT_ID', 'Test Guardrail Plan', '2024-01-01', '$TENANT_ID', false) 
-RETURNING id" | xargs)
+RETURNING id" | grep -E '[0-9a-f]{8}-' | head -n1 | xargs)
 
 echo "Created test meal plan: $PLAN_ID"
 
