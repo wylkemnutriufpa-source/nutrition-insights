@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, Fragment } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
@@ -133,7 +133,84 @@ const formatDate = (iso: string | null) => {
   }
 };
 
+const ActionableSummary = ({ logs }: { logs: any[] }) => {
+  const errors = logs.filter((l) => l.status === "error");
+  const alerts: { type: string; message: string; icon: any }[] = [];
+
+  if (errors.some((e) => e.errorType === "RLS")) {
+    alerts.push({
+      type: "warning",
+      message:
+        "Suspeita de RLS: O plano foi criado mas não aparece na query do paciente.",
+      icon: ShieldCheck,
+    });
+  }
+  if (errors.some((e) => e.errorType === "Persistência")) {
+    alerts.push({
+      type: "critical",
+      message:
+        "Suspeita de Persistência: Falha ao gravar dados no banco (meal_plans ou items).",
+      icon: Database,
+    });
+  }
+  if (errors.some((e) => e.errorType === "Validação")) {
+    alerts.push({
+      type: "info",
+      message:
+        "Suspeita de Validação: Dados rejeitados pelo servidor ou regras de negócio.",
+      icon: AlertTriangle,
+    });
+  }
+
+  if (
+    alerts.length === 0 &&
+    logs.length > 0 &&
+    logs.every((l) => l.status === "success")
+  ) {
+    return (
+      <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-emerald-700 flex items-center gap-3">
+        <CheckCircle2 className="w-5 h-5" />
+        <div className="text-sm font-medium">
+          Fluxo saudável! Nenhuma suspeita de erro estrutural detectada.
+        </div>
+      </div>
+    );
+  }
+
+  if (logs.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground italic">
+        Execute o fluxo para gerar diagnóstico.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {alerts.map((a, i) => (
+        <div
+          key={i}
+          className={`p-4 rounded-lg border flex items-start gap-3 ${
+            a.type === "critical"
+              ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-900/10 dark:text-rose-300 dark:border-rose-900/30"
+              : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/10 dark:text-amber-300 dark:border-amber-900/30"
+          }`}
+        >
+          <a.icon className="w-5 h-5 shrink-0" />
+          <div className="space-y-1">
+            <span className="text-sm font-bold uppercase block">
+              {a.type === "critical" ? "Alerta Crítico" : "Recomendação"}
+            </span>
+            <span className="text-xs font-medium">{a.message}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const PlanAudit = () => {
+
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<AuditRow[]>([]);
@@ -149,6 +226,7 @@ const PlanAudit = () => {
   // Emergency Flow state
   const [emergencyStep, setEmergencyStep] = useState<number>(0);
   const [emergencyLogs, setEmergencyLogs] = useState<{ 
+    executionId: string;
     step: string; 
     status: "loading" | "success" | "error"; 
     message: string;
@@ -156,10 +234,14 @@ const PlanAudit = () => {
     response?: any;
     errorType?: "RLS" | "Validação" | "Persistência" | "Outro";
   }[]>([]);
+  const [lastExecutionId, setLastExecutionId] = useState<string | null>(null);
   const [emergencyProcessing, setEmergencyProcessing] = useState(false);
   const [snapshots, setSnapshots] = useState<Record<string, any>>({});
   const [emergencyPatientId, setEmergencyPatientId] = useState<string | null>(null);
   const [emergencyPlanId, setEmergencyPlanId] = useState<string | null>(null);
+  const [replayMode, setReplayMode] = useState(false);
+  const [diffViewData, setDiffViewData] = useState<{ before: any, after: any, label: string } | null>(null);
+
 
   // RLS Validation state
   const [rlsPatientId, setRlsPatientId] = useState<string>("");
@@ -311,8 +393,10 @@ const PlanAudit = () => {
   const runEmergencyFlow = async () => {
     if (!user) return;
     setEmergencyProcessing(true);
-    setEmergencyLogs([]);
-    setEmergencyStep(1);
+    
+    // Unique Execution ID
+    const executionId = `exec-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    setLastExecutionId(executionId);
 
     const addLog = (
       step: string, 
@@ -322,44 +406,53 @@ const PlanAudit = () => {
       response?: any,
       errorType?: "RLS" | "Validação" | "Persistência" | "Outro"
     ) => {
-      setEmergencyLogs(prev => [...prev, { step, status, message, payload, response, errorType }]);
+      setEmergencyLogs(prev => [...prev, { executionId, step, status, message, payload, response, errorType }]);
     };
+
 
     const runFromStep = async (startStep: number) => {
       let currentPatientId = emergencyPatientId;
       let currentPlanId = emergencyPlanId;
 
       try {
-        // 1. Criar Paciente Temporário
+        // 1. Criar Paciente Temporário (ou usar existente no Replay)
         if (startStep <= 1) {
           setEmergencyStep(1);
-          addLog("Criar Paciente", "loading", "Convocando invite-patient...");
-          const tempEmail = `test-${Date.now()}@fitjourney.test`;
-          const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
           
-          const invitePayload = {
-            name: tempName,
-            email: tempEmail,
-            method: "password",
-            password: "password123",
-            autoConfirm: true
-          };
+          if (replayMode && emergencyPatientId) {
+            addLog("Replay Mode", "success", `Reusando paciente existente: ${emergencyPatientId}`);
+            currentPatientId = emergencyPatientId;
+            await takeSnapshot(currentPatientId!, "Replay Inicial");
+          } else {
+            addLog("Criar Paciente", "loading", "Convocando invite-patient...");
+            const tempEmail = `test-${Date.now()}@fitjourney.test`;
+            const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
+            
+            const invitePayload = {
+              name: tempName,
+              email: tempEmail,
+              method: "password",
+              password: "password123",
+              autoConfirm: true
+            };
 
-          const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
-            body: invitePayload
-          });
+            const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
+              body: invitePayload
+            });
 
-          if (inviteError || !inviteData?.patient_id) {
-            const errorMsg = inviteError?.message || inviteData?.error || "ID não retornado";
-            addLog("Criar Paciente", "error", `Erro no invite: ${errorMsg}`, invitePayload, inviteData, "Persistência");
-            throw new Error(errorMsg);
+            if (inviteError || !inviteData?.patient_id) {
+              const errorMsg = inviteError?.message || inviteData?.error || "ID não retornado";
+              addLog("Criar Paciente", "error", `Erro no invite: ${errorMsg}`, invitePayload, inviteData, "Persistência");
+              throw new Error(errorMsg);
+            }
+            
+            currentPatientId = inviteData.patient_id;
+            setEmergencyPatientId(currentPatientId);
+            addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
+            await takeSnapshot(currentPatientId!, "Inicial");
           }
-          
-          currentPatientId = inviteData.patient_id;
-          setEmergencyPatientId(currentPatientId);
-          addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
-          await takeSnapshot(currentPatientId!, "Inicial");
         }
+
 
         // 2. Criar Plano Simples
         if (startStep <= 2) {
@@ -717,6 +810,27 @@ const PlanAudit = () => {
     doc.save(`auditoria-planos-${format(new Date(), "yyyy-MM-dd")}.pdf`);
     toast.success("PDF gerado com sucesso!");
   };
+
+  const handleExportJSON = () => {
+    const data = {
+      executionId: lastExecutionId,
+      timestamp: new Date().toISOString(),
+      patientId: emergencyPatientId,
+      planId: emergencyPlanId,
+      logs: emergencyLogs,
+      snapshots: snapshots,
+      diagnostics: diagnosticLogs
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `emergency-flow-${lastExecutionId || 'report'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Relatório JSON exportado!");
+  };
+
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
@@ -1098,12 +1212,32 @@ const PlanAudit = () => {
                   Cria um cenário completo para validar se o sistema está salvando, publicando e exibindo corretamente.
                 </p>
               </div>
-              <div className="flex gap-2">
-                {emergencyStep > 0 && emergencyStep < 6 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 mr-4 border-r pr-4">
+                  <span className="text-xs font-medium">Replay:</span>
+                  <Button 
+                    variant={replayMode ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => setReplayMode(!replayMode)}
+                    className="h-8 text-[10px]"
+                  >
+                    {replayMode ? "ON" : "OFF"}
+                  </Button>
+                </div>
+                
+                {emergencyLogs.length > 0 && (
+                  <Button onClick={handleExportJSON} variant="outline" size="sm" className="gap-2">
+                    <Download className="w-3.5 h-3.5" />
+                    Exportar JSON
+                  </Button>
+                )}
+
+                {emergencyStep > 0 && (
                   <Button onClick={clearEmergencyState} variant="ghost" size="sm">
                     Limpar
                   </Button>
                 )}
+
                 <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
                   {emergencyProcessing ? (
                     <Loader2 className="animate-spin w-4 h-4 mr-2" />
@@ -1112,9 +1246,10 @@ const PlanAudit = () => {
                   ) : (
                     <Sparkles className="w-4 h-4 mr-2" />
                   )}
-                  {emergencyStep > 0 && emergencyStep < 6 ? "Retomar / Reiniciar" : "Iniciar Fluxo"}
+                  {emergencyStep > 0 && emergencyStep < 6 ? "Retomar" : "Iniciar Fluxo"}
                 </Button>
               </div>
+
             </div>
 
             {emergencyLogs.length > 0 && (
@@ -1136,13 +1271,18 @@ const PlanAudit = () => {
                           <XCircle className="w-4 h-4 mt-0.5 text-rose-500" />
                         )}
                         <div className="flex-1">
-                          <span className="font-semibold">{log.step}:</span> {log.message}
-                          {log.errorType && (
-                            <Badge variant="outline" className="ml-2 text-[9px] uppercase border-rose-500 text-rose-600">
-                              Erro: {log.errorType}
-                            </Badge>
-                          )}
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold">{log.step}:</span> 
+                            <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1 rounded">{log.executionId.slice(-8)}</span>
+                            {log.errorType && (
+                              <Badge variant="outline" className="text-[9px] uppercase border-rose-500 text-rose-600">
+                                Erro: {log.errorType}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm">{log.message}</div>
                         </div>
+
                       </div>
                       
                       {(log.payload || log.response) && (
@@ -1180,7 +1320,15 @@ const PlanAudit = () => {
               </p>
             </div>
 
+            <div className="space-y-4">
+               <h3 className="text-sm font-semibold flex items-center gap-2">
+                 <Sparkles className="w-4 h-4 text-amber-500" /> Diagnóstico Sugerido
+               </h3>
+               <ActionableSummary logs={emergencyLogs} />
+            </div>
+
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
               {["RLS", "Validação", "Persistência"].map(type => {
                 const count = emergencyLogs.filter(l => l.errorType === type).length;
                 return (
@@ -1197,9 +1345,28 @@ const PlanAudit = () => {
 
             {Object.keys(snapshots).length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Database className="w-4 h-4" /> Comparação de Snapshots (plan_status, is_active)
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Database className="w-4 h-4" /> Comparação de Snapshots (plan_status, is_active)
+                  </h3>
+                  {Object.keys(snapshots).length >= 2 && (
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="h-7 text-[10px] px-2"
+
+                      onClick={() => {
+                        const keys = Object.keys(snapshots).sort();
+                        const before = snapshots[keys[0]];
+                        const after = snapshots[keys[keys.length - 1]];
+                        setDiffViewData({ before, after, label: "Diff: Inicial vs Final" });
+                      }}
+                    >
+                      Comparar Primeiro vs Último
+                    </Button>
+                  )}
+                </div>
+                
                 <div className="border rounded-md overflow-hidden">
                   <Table>
                     <TableHeader>
@@ -1208,19 +1375,34 @@ const PlanAudit = () => {
                         <TableHead>ID Plano</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Ativo</TableHead>
-                        <TableHead>Visível Paciente</TableHead>
+                        <TableHead>Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).map(([label, data]: [string, any]) => (
-                        <TableRow key={label} className="bg-muted/10">
-                          <TableCell className="font-medium text-xs whitespace-nowrap" colSpan={5}>
-                            {label.split('_')[0]}
-                          </TableCell>
-                        </TableRow>
-                      )).concat(
-                        Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([label, data]: [string, any]) => 
-                          data.map((p: any) => (
+                      {Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).map(([label, data]: [string, any], index, arr) => (
+                        <Fragment key={label}>
+                          <TableRow className="bg-muted/10">
+                            <TableCell className="font-medium text-xs whitespace-nowrap" colSpan={4}>
+                              {label.split('_')[0]}
+                            </TableCell>
+                            <TableCell>
+                              {index < arr.length - 1 && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6"
+                                  onClick={() => setDiffViewData({ 
+                                    before: arr[index+1][1], 
+                                    after: data, 
+                                    label: `Diff: ${arr[index+1][0].split('_')[0]} → ${label.split('_')[0]}` 
+                                  })}
+                                >
+                                  <Activity className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                          {data.map((p: any) => (
                             <TableRow key={`${label}_${p.id}`}>
                               <TableCell className="text-[10px] pl-6 text-muted-foreground">↳ {label.split('_')[0]}</TableCell>
                               <TableCell className="text-[10px] font-mono">{p.id.slice(0, 8)}...</TableCell>
@@ -1230,16 +1412,15 @@ const PlanAudit = () => {
                               <TableCell>
                                 {p.is_active ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <XCircle className="w-3 h-3 text-muted" />}
                               </TableCell>
-                              <TableCell>
-                                {p.plan_status === 'published_to_patient' ? <ShieldCheck className="w-3 h-3 text-emerald-500" /> : <ShieldCheck className="w-3 h-3 text-muted" />}
-                              </TableCell>
+                              <TableCell>—</TableCell>
                             </TableRow>
-                          ))
-                        )
-                      )}
+                          ))}
+                        </Fragment>
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
+
               </div>
             )}
 
@@ -1397,8 +1578,66 @@ const PlanAudit = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!diffViewData} onOpenChange={(open) => !open && setDiffViewData(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" />
+              {diffViewData?.label}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold uppercase text-muted-foreground">Antes</h4>
+                <pre className="text-[9px] bg-muted/30 p-3 rounded-lg border overflow-auto max-h-[50vh]">
+                  {JSON.stringify(diffViewData?.before, null, 2)}
+                </pre>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold uppercase text-primary">Depois</h4>
+                <pre className="text-[9px] bg-primary/5 p-3 rounded-lg border border-primary/20 overflow-auto max-h-[50vh]">
+                  {JSON.stringify(diffViewData?.after, null, 2)}
+                </pre>
+              </div>
+            </div>
+            <div className="p-3 bg-muted/20 rounded-lg">
+               <h4 className="text-[10px] font-bold uppercase mb-2">Campos Alterados</h4>
+               <div className="space-y-1">
+                 {diffViewData && (() => {
+                    const beforeStr = JSON.stringify(diffViewData.before);
+                    const afterStr = JSON.stringify(diffViewData.after);
+                    if (beforeStr === afterStr) return <span className="text-xs text-muted-foreground italic">Nenhuma mudança detectada nos campos principais.</span>;
+                    
+                    // Simple field-level diff
+                    const b = Array.isArray(diffViewData.before) ? diffViewData.before[0] : diffViewData.before;
+                    const a = Array.isArray(diffViewData.after) ? diffViewData.after[0] : diffViewData.after;
+                    
+                    if (!b || !a) return null;
+
+                    return Object.keys({ ...b, ...a }).map(key => {
+                      if (JSON.stringify(b[key]) !== JSON.stringify(a[key])) {
+                        return (
+                          <div key={key} className="flex items-center gap-2 text-xs border-b border-muted py-1 last:border-0">
+                            <span className="font-mono font-semibold w-24 shrink-0">{key}:</span>
+                            <span className="text-rose-600 line-through truncate">{String(b[key])}</span>
+                            <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-emerald-600 font-bold truncate">{String(a[key])}</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    });
+                 })()}
+               </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default PlanAudit;
+
