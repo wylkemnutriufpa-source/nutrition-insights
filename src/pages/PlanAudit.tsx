@@ -269,6 +269,7 @@ const PlanAudit = () => {
         setSnapshots(parsed.snapshots || {});
         setEmergencyPatientId(parsed.patientId || null);
         setEmergencyPlanId(parsed.planId || null);
+        if (parsed.activeTab) setActiveTab(parsed.activeTab);
         // Load persistent filters
         if (parsed.executionIdFilter) setExecutionIdFilter(parsed.executionIdFilter);
         if (parsed.correlatorId) setCorrelatorId(parsed.correlatorId);
@@ -287,9 +288,10 @@ const PlanAudit = () => {
       patientId: emergencyPatientId,
       planId: emergencyPlanId,
       executionIdFilter,
-      correlatorId
+      correlatorId,
+      activeTab
     }));
-  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId, executionIdFilter, correlatorId]);
+  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId, executionIdFilter, correlatorId, activeTab]);
 
   const clearEmergencyState = () => {
     localStorage.removeItem(EMERGENCY_STATE_KEY);
