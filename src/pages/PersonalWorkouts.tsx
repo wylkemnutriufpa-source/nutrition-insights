@@ -294,6 +294,7 @@ export default function PersonalWorkouts() {
   };
 
   const handleUseTemplate = (template: any) => {
+    setSelectedTemplate(template);
     setCreating(true);
     setActiveTab("plans");
     toast.info(`Template "${template.name}" carregado!`);
