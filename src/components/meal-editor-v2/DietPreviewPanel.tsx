@@ -23,7 +23,10 @@ const DAYS = [
 
 export default function DietPreviewPanel() {
   const { items, plan } = useMealPlanEditorV2Store();
-  const [previewDay, setPreviewDay] = useState(1);
+  
+  // Modelo Single-Day (Dia 0) por padrão no editor Premium
+  const defaultDay = items.some(i => i.day_of_week === 0) ? 0 : 1;
+  const [previewDay, setPreviewDay] = useState(defaultDay);
 
   const dayItems = items.filter((i) => i.day_of_week === previewDay);
   const mealTypes = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
