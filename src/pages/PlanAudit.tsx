@@ -218,7 +218,11 @@ const PlanAudit = () => {
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
 
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState(() => localStorage.getItem("plan_audit_active_tab") || "overview");
+  
+  useEffect(() => {
+    localStorage.setItem("plan_audit_active_tab", activeTab);
+  }, [activeTab]);
   const [diagnosticPatientId, setDiagnosticPatientId] = useState<string>("");
   const [diagnosticLogs, setDiagnosticLogs] = useState<any[]>([]);
   const [diagnosticLoading, setDiagnosticLoading] = useState(false);
