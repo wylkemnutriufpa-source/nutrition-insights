@@ -414,7 +414,8 @@ export default function DietTemplates() {
         description: `Baseado no modelo "${template.name}".`,
         start_date: new Date().toISOString().split("T")[0],
         is_active: false,
-        plan_status: "draft",
+        plan_status: "draft_template",
+        tenant_id: tenantId || null,
         total_calories: getAdjustedCalories(template),
         total_protein: (template as any).protein || (template as any).macro_ratio?.protein || 0,
         total_carbs: (template as any).carbohydrates || (template as any).macro_ratio?.carbs || 0,
@@ -549,19 +550,14 @@ export default function DietTemplates() {
         return { id: result.planId, count: result.auditLog.items_total };
       };
 
-      // ── PATH A preferido quando há `meals`. PATH B (legacy) caso contrário. ──
-      // Em qualquer falha (incl. erros de autorização/edge function), tentamos
-      // o caminho alternativo automaticamente para nunca travar o profissional.
+      // ── Templates com refeições estruturadas SEMPRE entram direto. ──
+      // Não fazemos fallback para o motor genérico, porque isso pode trocar um
+      // template clínico (ex.: diabetes) por um plano qualquer e reintroduzir
+      // bloqueios de divergência que não pertencem ao fluxo de template.
       let outcome: { id: string; count: number } | null = null;
       if (isV2) {
-        try {
-          outcome = await tryPathA();
-          console.log("[DietTemplates] PATH A applied:", outcome);
-        } catch (errA: any) {
-          console.warn("[DietTemplates] PATH A failed, falling back to PATH B:", errA?.message);
-          outcome = await tryPathB();
-          console.log("[DietTemplates] PATH B fallback applied:", outcome);
-        }
+        outcome = await tryPathA();
+        console.log("[DietTemplates] PATH A applied:", outcome);
       } else {
         try {
           outcome = await tryPathB();
