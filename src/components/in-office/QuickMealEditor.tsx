@@ -545,17 +545,9 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       {/* Day selector + Actions */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 bg-muted rounded-xl p-1">
-          {Array.from({ length: Math.max(totalDays, 7) }, (_, i) => i + 1).map(day => (
-            <button
-              key={day}
-              onClick={() => setCurrentDay(day)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                currentDay === day ? "bg-primary text-primary-foreground shadow" : "hover:bg-background"
-              }`}
-            >
-              {DAY_LABELS[day - 1] || `D${day}`}
-            </button>
-          ))}
+          <div className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground shadow">
+            Plano Único
+          </div>
         </div>
         <div className="flex gap-1 ml-auto flex-wrap">
           <Button variant="outline" size="sm" onClick={() => setCurrentDay(0)} disabled={saving} className="gap-1 text-xs">
