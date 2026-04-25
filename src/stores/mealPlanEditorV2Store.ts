@@ -533,12 +533,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       queuedAt: Date.now(),
       persist: async () => {
         const planId = get().planId;
-        if (!planId) {
-          console.error("[CRITICAL] DELETE bloqueado: planId inválido em deleteItem", { itemId });
+        if (!planId || typeof planId !== 'string' || planId.trim() === "") {
+          console.error("[CRITICAL] DELETE bloqueado: planId inválido em deleteItem", { planId, itemId });
           throw new Error("DELETE bloqueado: planId inválido");
         }
         
-        console.info("[DELETE] Executando deleteItem", { planId, itemId, operation: "deleteItem" });
+        console.info("[DELETE] Executando deleteItem", { planId, itemId, operation: "deleteItem", timestamp: Date.now() });
         
         const { error } = await supabase
           .from("meal_plan_items")
@@ -568,12 +568,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         const planId = get().planId;
         const realIds = deleteIds.filter((id) => !id.startsWith("temp-"));
         if (realIds.length > 0) {
-          if (!planId) {
-            console.error("[CRITICAL] DELETE bloqueado: planId inválido em deleteItemsInCell", { day, mealType, realIds });
+          if (!planId || typeof planId !== 'string' || planId.trim() === "") {
+            console.error("[CRITICAL] DELETE bloqueado: planId inválido em deleteItemsInCell", { planId, day, mealType, realIds });
             throw new Error("DELETE bloqueado: planId inválido");
           }
           
-          console.info("[DELETE] Executando deleteItemsInCell", { planId, day, mealType, realIds, operation: "deleteItemsInCell" });
+          console.info("[DELETE] Executando deleteItemsInCell", { planId, day, mealType, realIds, operation: "deleteItemsInCell", timestamp: Date.now() });
           
           const { error } = await supabase
             .from("meal_plan_items")
@@ -601,12 +601,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: allIds,
       queuedAt: Date.now(),
       persist: async () => {
-        if (!planId) {
-          console.error("[CRITICAL] DELETE bloqueado: planId inválido em clearAllItems");
+        if (!planId || typeof planId !== 'string' || planId.trim() === "") {
+          console.error("[CRITICAL] DELETE bloqueado: planId inválido em clearAllItems", { planId });
           throw new Error("DELETE bloqueado: planId inválido");
         }
         
-        console.info("[DELETE] Executando clearAllItems", { planId, operation: "clearAllItems" });
+        console.info("[DELETE] Executando clearAllItems", { planId, operation: "clearAllItems", timestamp: Date.now() });
         
         const { error } = await supabase
           .from("meal_plan_items")
