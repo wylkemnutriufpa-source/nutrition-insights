@@ -408,8 +408,10 @@ const PlanAudit = () => {
       response?: any,
       errorType?: "RLS" | "Validação" | "Persistência" | "Outro"
     ) => {
-      setEmergencyLogs(prev => [...prev, { executionId, step, status, message, payload, response, errorType }]);
+      const timestamp = new Date().toISOString();
+      setEmergencyLogs(prev => [...prev, { executionId, step, status, message, payload, response, errorType, timestamp }]);
     };
+
 
 
     const runFromStep = async (startStep: number) => {
