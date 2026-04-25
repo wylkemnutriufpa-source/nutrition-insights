@@ -386,9 +386,9 @@ const PlanAudit = () => {
         .from("profiles")
         .select("user_id, full_name");
 
-      const report = (patients || []).map(p => {
-        const ana = (anamnesis || []).find(a => a.user_id === p.user_id);
-        const ass = (assessments || []).find(a => a.patient_id === p.user_id);
+      const report = (patients || []).map((p: any) => {
+        const ana = (anamnesis || []).find((a: any) => a.user_id === p.user_id);
+        const ass = (assessments || []).find((a: any) => a.patient_id === p.user_id);
         
         const anaWeight = ana?.answers?.weight;
         const anaHeight = ana?.answers?.height;
