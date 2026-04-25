@@ -218,28 +218,8 @@ export async function generateMealPlanFromLibrary(
     const selected = topN.length > 0 ? topN[deterministicPick(day, mealType, topN.length)] : null;
 
     if (!selected) {
-      // Fallback: use realistic presets
-      const presets = getRealisticOptions(mealType, profile.goal);
-      const presetIdx = day % presets.length;
-      const preset = presets[presetIdx];
-      
-      const fakeLibItem: MealLibraryItem = {
-        id: `preset-${mealType}-${presetIdx}`,
-        title: preset.name,
-        meal_type: mealType,
-        goal_tag: profile.goal,
-        clinical_tags: [],
-        base_calories: preset.kcal,
-        protein: preset.protein,
-        carbs: preset.carbs,
-        fat: preset.fat,
-        foods: preset.foods.map(f => ({ name: f, portion: f })),
-        substitutions: [],
-        plan_type: profile.planType,
-      };
-      const sf = calcScale(preset.kcal, targetKcal);
-      slots.push({ day, mealType, libraryItem: fakeLibItem, targetKcal, scaleFactor: sf, compatibilityScore: 50 });
-      continue;
+      console.error(`[ENGINE] Falha ao encontrar item para refeição "${mealType}" do tipo "${profile.planType}"`);
+      throw new Error(`Não foi possível encontrar uma refeição válida do tipo "${profile.planType}" para o horário: ${mealType}`);
     }
 
     const sf = calcScale(selected.item.base_calories, targetKcal);
