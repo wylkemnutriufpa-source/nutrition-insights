@@ -214,9 +214,17 @@ initFeatureFlags();
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000, // 2min default — critical queries override to 0-5s
-      retry: 1,
-      refetchOnWindowFocus: true, // refetch stale queries on tab focus
+      staleTime: 2 * 60 * 1000, 
+      retry: (failureCount, error: any) => {
+        // Retry more for network issues, less for auth errors
+        if (error?.status === 401 || error?.status === 403) return false;
+        return failureCount < 2;
+      },
+      refetchOnWindowFocus: true,
+      // Ensure we don't spam the user with the same error toast
+      meta: {
+        errorMessage: "Falha na comunicação com o servidor",
+      }
     },
     mutations: {
       retry: 0,

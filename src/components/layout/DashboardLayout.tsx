@@ -28,6 +28,7 @@ import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
 import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
 import { WorkspaceContext, useWorkspaceContextState, useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import SystemHealthBadge from "./SystemHealthBadge";
 
 const SIDEBAR_COLLAPSED_STORAGE_KEY = "fj_sidebar_collapsed";
 
@@ -669,6 +670,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <FitJourneyLogo collapsed={false} size="sm" />
           </div>
           <div className="flex items-center gap-2">
+            <SystemHealthBadge />
             <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
               <Search className="w-4 h-4" />
@@ -707,6 +709,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <main className="flex-1 transition-all duration-200" style={{ marginLeft: collapsed ? 72 : 260 }}>
         <div className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200" style={{ left: collapsed ? 72 : 260 }}>
           <div className="flex justify-end items-center gap-2">
+            <SystemHealthBadge />
             <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
               <Search className="w-4 h-4" />
