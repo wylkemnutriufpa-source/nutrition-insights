@@ -1340,9 +1340,27 @@ const PlanAudit = () => {
 
             {Object.keys(snapshots).length > 0 && (
               <div className="space-y-4">
-                <h3 className="text-sm font-semibold flex items-center gap-2">
-                  <Database className="w-4 h-4" /> Comparação de Snapshots (plan_status, is_active)
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-semibold flex items-center gap-2">
+                    <Database className="w-4 h-4" /> Comparação de Snapshots (plan_status, is_active)
+                  </h3>
+                  {Object.keys(snapshots).length >= 2 && (
+                    <Button 
+                      variant="outline" 
+                      size="xs" 
+                      className="h-7 text-[10px]"
+                      onClick={() => {
+                        const keys = Object.keys(snapshots).sort();
+                        const before = snapshots[keys[0]];
+                        const after = snapshots[keys[keys.length - 1]];
+                        setDiffViewData({ before, after, label: "Diff: Inicial vs Final" });
+                      }}
+                    >
+                      Comparar Primeiro vs Último
+                    </Button>
+                  )}
+                </div>
+                
                 <div className="border rounded-md overflow-hidden">
                   <Table>
                     <TableHeader>
@@ -1351,19 +1369,34 @@ const PlanAudit = () => {
                         <TableHead>ID Plano</TableHead>
                         <TableHead>Status</TableHead>
                         <TableHead>Ativo</TableHead>
-                        <TableHead>Visível Paciente</TableHead>
+                        <TableHead>Ações</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).map(([label, data]: [string, any]) => (
-                        <TableRow key={label} className="bg-muted/10">
-                          <TableCell className="font-medium text-xs whitespace-nowrap" colSpan={5}>
-                            {label.split('_')[0]}
-                          </TableCell>
-                        </TableRow>
-                      )).concat(
-                        Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([label, data]: [string, any]) => 
-                          data.map((p: any) => (
+                      {Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).map(([label, data]: [string, any], index, arr) => (
+                        <React.Fragment key={label}>
+                          <TableRow className="bg-muted/10">
+                            <TableCell className="font-medium text-xs whitespace-nowrap" colSpan={4}>
+                              {label.split('_')[0]}
+                            </TableCell>
+                            <TableCell>
+                              {index < arr.length - 1 && (
+                                <Button 
+                                  variant="ghost" 
+                                  size="icon" 
+                                  className="h-6 w-6"
+                                  onClick={() => setDiffViewData({ 
+                                    before: arr[index+1][1], 
+                                    after: data, 
+                                    label: `Diff: ${arr[index+1][0].split('_')[0]} → ${label.split('_')[0]}` 
+                                  })}
+                                >
+                                  <Activity className="w-3 h-3" />
+                                </Button>
+                              )}
+                            </TableCell>
+                          </TableRow>
+                          {data.map((p: any) => (
                             <TableRow key={`${label}_${p.id}`}>
                               <TableCell className="text-[10px] pl-6 text-muted-foreground">↳ {label.split('_')[0]}</TableCell>
                               <TableCell className="text-[10px] font-mono">{p.id.slice(0, 8)}...</TableCell>
@@ -1373,16 +1406,15 @@ const PlanAudit = () => {
                               <TableCell>
                                 {p.is_active ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <XCircle className="w-3 h-3 text-muted" />}
                               </TableCell>
-                              <TableCell>
-                                {p.plan_status === 'published_to_patient' ? <ShieldCheck className="w-3 h-3 text-emerald-500" /> : <ShieldCheck className="w-3 h-3 text-muted" />}
-                              </TableCell>
+                              <TableCell>—</TableCell>
                             </TableRow>
-                          ))
-                        )
-                      )}
+                          ))}
+                        </React.Fragment>
+                      ))}
                     </TableBody>
                   </Table>
                 </div>
+
               </div>
             )}
 
