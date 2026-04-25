@@ -162,6 +162,9 @@ const PlanAudit = () => {
   const [snapshots, setSnapshots] = useState<Record<string, any>>({});
   const [emergencyPatientId, setEmergencyPatientId] = useState<string | null>(null);
   const [emergencyPlanId, setEmergencyPlanId] = useState<string | null>(null);
+  const [replayMode, setReplayMode] = useState(false);
+  const [diffViewData, setDiffViewData] = useState<{ before: any, after: any, label: string } | null>(null);
+
 
   // RLS Validation state
   const [rlsPatientId, setRlsPatientId] = useState<string>("");
