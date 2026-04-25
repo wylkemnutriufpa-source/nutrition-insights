@@ -47,7 +47,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap } from "lucide-react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
 import { classifyPlanLoadError, type ClassifiedPlanLoadError } from "@/lib/planLoadErrorClassifier";
