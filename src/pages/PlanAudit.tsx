@@ -269,6 +269,9 @@ const PlanAudit = () => {
         setSnapshots(parsed.snapshots || {});
         setEmergencyPatientId(parsed.patientId || null);
         setEmergencyPlanId(parsed.planId || null);
+        // Load persistent filters
+        if (parsed.executionIdFilter) setExecutionIdFilter(parsed.executionIdFilter);
+        if (parsed.correlatorId) setCorrelatorId(parsed.correlatorId);
       } catch (e) {
         console.error("Error loading emergency state", e);
       }
@@ -277,16 +280,16 @@ const PlanAudit = () => {
 
   // Save emergency state when it changes
   useEffect(() => {
-    if (emergencyStep > 0 || emergencyLogs.length > 0) {
-      localStorage.setItem(EMERGENCY_STATE_KEY, JSON.stringify({
-        step: emergencyStep,
-        logs: emergencyLogs,
-        snapshots,
-        patientId: emergencyPatientId,
-        planId: emergencyPlanId
-      }));
-    }
-  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId]);
+    localStorage.setItem(EMERGENCY_STATE_KEY, JSON.stringify({
+      step: emergencyStep,
+      logs: emergencyLogs,
+      snapshots,
+      patientId: emergencyPatientId,
+      planId: emergencyPlanId,
+      executionIdFilter,
+      correlatorId
+    }));
+  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId, executionIdFilter, correlatorId]);
 
   const clearEmergencyState = () => {
     localStorage.removeItem(EMERGENCY_STATE_KEY);
@@ -849,8 +852,20 @@ const PlanAudit = () => {
   };
 
   const handleExportCSV = () => {
+    const sanitizeCsvValue = (val: any) => {
+      if (val === null || val === undefined) return "";
+      let str = typeof val === "string" ? val : JSON.stringify(val);
+      // Escape quotes and wrap in quotes
+      str = str.replace(/"/g, '""');
+      // Limit size to prevent breaking Excel/CSV readers
+      if (str.length > 30000) {
+        str = str.substring(0, 30000) + "... [TRUNCATED]";
+      }
+      return `"${str}"`;
+    };
+
     const logsToExport = emergencyLogs.filter(l => 
-      !executionIdFilter || l.executionId.includes(executionIdFilter)
+      !executionIdFilter || l.executionId.toLowerCase().includes(executionIdFilter.toLowerCase())
     );
 
     if (logsToExport.length === 0) {
@@ -859,13 +874,16 @@ const PlanAudit = () => {
     }
 
     // Export Logs CSV
-    const logHeaders = ["ExecutionID", "Step", "Status", "Message", "ErrorType"];
+    const logHeaders = ["ExecutionID", "Step", "Status", "Message", "Payload", "Response", "ErrorType", "Timestamp"];
     const logRows = logsToExport.map(l => [
       l.executionId,
       l.step,
       l.status,
-      `"${l.message.replace(/"/g, '""')}"`,
-      l.errorType || ""
+      sanitizeCsvValue(l.message),
+      sanitizeCsvValue(l.payload),
+      sanitizeCsvValue(l.response),
+      l.errorType || "",
+      l.timestamp || ""
     ]);
 
     const logsCsvContent = [logHeaders, ...logRows].map(r => r.join(",")).join("\n");
@@ -908,6 +926,22 @@ const PlanAudit = () => {
       !executionIdFilter || l.executionId.toLowerCase().includes(executionIdFilter.toLowerCase())
     );
   }, [emergencyLogs, executionIdFilter]);
+
+  const stepMetrics = useMemo(() => {
+    const steps = ["Salvar/Aprovar", "Publicar", "Validar", "Snapshot"];
+    return steps.map(stepName => {
+      const stepLogs = filteredEmergencyLogs.filter(l => {
+        if (stepName === "Salvar/Aprovar") return l.step.includes("Criar") || l.step.includes("Plano") || l.step.includes("Item");
+        return l.step.includes(stepName);
+      });
+      
+      const total = stepLogs.length;
+      const failures = stepLogs.filter(l => l.status === "error").length;
+      const rate = total > 0 ? (failures / total) * 100 : 0;
+      
+      return { name: stepName, total, failures, rate };
+    });
+  }, [filteredEmergencyLogs]);
 
 
 
@@ -1468,6 +1502,38 @@ const PlanAudit = () => {
                  <Sparkles className="w-4 h-4 text-amber-500" /> Diagnóstico Sugerido
                </h3>
                <ActionableSummary logs={filteredEmergencyLogs} />
+            </div>
+
+            <div className="space-y-4">
+              <h3 className="text-sm font-semibold flex items-center gap-2">
+                <Terminal className="w-4 h-4 text-blue-500" /> Resumo por Etapa
+              </h3>
+              <div className="border rounded-md overflow-hidden">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Etapa</TableHead>
+                      <TableHead className="text-center">Total</TableHead>
+                      <TableHead className="text-center">Falhas</TableHead>
+                      <TableHead className="text-right">Taxa de Falha</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {stepMetrics.map((m) => (
+                      <TableRow key={m.name}>
+                        <TableCell className="font-medium text-xs">{m.name}</TableCell>
+                        <TableCell className="text-center text-xs">{m.total}</TableCell>
+                        <TableCell className="text-center text-xs text-rose-500 font-semibold">{m.failures}</TableCell>
+                        <TableCell className="text-right text-xs">
+                          <Badge variant={m.rate > 0 ? "destructive" : "secondary"} className="text-[10px]">
+                            {m.rate.toFixed(1)}%
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
