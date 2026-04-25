@@ -349,6 +349,36 @@ export default function SystemDiagnostics() {
     return { ok, warn, crit };
   }, [addLog]);
 
+  const runStabilityTest = useCallback(async () => {
+    addLog("info", "Stability", "Verifying Critical Contracts & Regression Guards...");
+    let ok = 0, warn = 0, crit = 0;
+    try {
+      const { data, error } = await supabase
+        .from("regression_guard_logs" as any)
+        .select("*")
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+      if (error) {
+        crit++;
+        addLog("error", "Stability", `Failed to fetch regression logs: ${error.message}`);
+      } else {
+        const regressions = (data || []) as any[];
+        const criticalRegressions = regressions.filter(r => r.severity === "critical");
+        if (criticalRegressions.length > 0) {
+          crit++;
+          addLog("error", "Stability", `${criticalRegressions.length} critical regression(s) detected in the last 7 days!`);
+        } else {
+          ok++;
+          addLog("ok", "Stability", "No critical regressions detected in the last 7 days.");
+        }
+      }
+    } catch (e: any) {
+      crit++;
+      addLog("error", "Stability", `Exception: ${e.message}`);
+    }
+    return { ok, warn, crit };
+  }, [addLog]);
+
   // ─── Full Diagnostic Runner ────────────────────────────────────
   const runFullDiagnostic = useCallback(async () => {
     // Prevent duplicate runs from double-click or StrictMode
@@ -378,11 +408,12 @@ export default function SystemDiagnostics() {
     const startTime = Date.now();
     const tests = [
       { name: "Auth & Session", fn: runAuthTest, weight: 10 },
-      { name: "Database Integrity", fn: runDatabaseTest, weight: 30 },
-      { name: "Route Health", fn: runRouteTest, weight: 10 },
-      { name: "Notification Triggers", fn: runNotificationTest, weight: 15 },
+      { name: "Database Integrity", fn: runDatabaseTest, weight: 20 },
+      { name: "Route Health", fn: runRouteTest, weight: 5 },
+      { name: "Notification Triggers", fn: runNotificationTest, weight: 10 },
       { name: "Realtime Channels", fn: runRealtimeTest, weight: 15 },
       { name: "Data Consistency", fn: runConsistencyTest, weight: 20 },
+      { name: "Stability & Regressions", fn: runStabilityTest, weight: 20 },
     ];
 
     let totalOk = 0, totalWarn = 0, totalCrit = 0;
