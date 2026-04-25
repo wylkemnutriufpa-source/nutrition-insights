@@ -847,10 +847,18 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       const results = await Promise.allSettled(
         ops.map(async (op) => {
           try {
+            console.info(`[FLUSH] Iniciando operação: ${op.key}`, { itemIds: op.itemIds });
             await op.persist();
+            console.info(`[FLUSH] Sucesso: ${op.key}`);
             return { key: op.key, ok: true, itemIds: op.itemIds };
-          } catch (err) {
-            console.error("[EMERGENCY][MealPlanEditorV2Store.flush] OP_FAIL", { key: op.key, error: err });
+          } catch (err: any) {
+            console.error(`[FLUSH] ERRO em ${op.key}:`, {
+              message: err?.message,
+              details: err?.details,
+              hint: err?.hint,
+              code: err?.code,
+              payload: op.itemIds
+            });
             op.rollback?.();
             return { key: op.key, ok: false, itemIds: op.itemIds, err };
           }
