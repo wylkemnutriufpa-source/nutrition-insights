@@ -10,7 +10,7 @@ import {
   ArrowRight, Star, Zap, Heart, ChevronRight, Bot, Pill, Camera,
   Target, MessageSquare, FileText, Rocket, ClipboardCheck, ChefHat,
   Palette, DollarSign, Play, ArrowDown, Menu, X, BookOpen, TrendingUp,
-  Award, Globe, Lock, Cpu, Trophy, Crown, Flame
+  Award, Globe, Lock, Cpu, Trophy, Crown, Flame, Dumbbell
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import BrainIntelligence from "@/components/common/BrainIntelligence";
