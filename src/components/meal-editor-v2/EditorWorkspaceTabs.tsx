@@ -12,7 +12,6 @@ import DietPreviewPanel from "./DietPreviewPanel";
 import MealClickToAddPanel from "./MealClickToAddPanel";
 import MealTemplatePanel from "./MealTemplatePanel";
 import MealSubstitutionPanel from "./MealSubstitutionPanel";
-import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 
 type ViewMode = "grid" | "list";
 
@@ -21,15 +20,7 @@ interface Props {
   onViewModeChange: (mode: ViewMode) => void;
 }
 
-const DAYS = [
-  { key: 1, short: "Seg" },
-  { key: 2, short: "Ter" },
-  { key: 3, short: "Qua" },
-  { key: 4, short: "Qui" },
-  { key: 5, short: "Sex" },
-  { key: 6, short: "Sáb" },
-  { key: 0, short: "Dom" },
-];
+const SINGLE_DAY = 0;
 
 const EDITOR_TABS = [
   { key: "montar", label: "Montar", icon: LayoutGrid },
@@ -48,9 +39,7 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
   const [autoGenOpen, setAutoGenOpen] = useState(false);
   const [assistedOpen, setAssistedOpen] = useState(false);
   const [librarySidebarOpen, setLibrarySidebarOpen] = useState(false);
-  const [activeDay, setActiveDay] = useState(1);
-  const { items } = useMealPlanEditorV2Store();
-
+  const [activeDay] = useState(SINGLE_DAY);
   return (
     <div className="space-y-3">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
@@ -106,32 +95,6 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
         {/* Adicionar — Click-to-add panel (Phase 2) */}
         <TabsContent value="adicionar" className="mt-3">
           <div className="glass rounded-xl p-4">
-            {/* Day selector */}
-            <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
-              {DAYS.map((d) => {
-                const dayCount = items.filter(i => i.day_of_week === d.key).length;
-                const isActive = activeDay === d.key;
-                return (
-                  <button
-                    key={d.key}
-                    type="button"
-                    onClick={() => setActiveDay(d.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    {d.short}
-                    {dayCount > 0 && (
-                      <span className={`ml-1 text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                        ({dayCount})
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
             <MealClickToAddPanel day={activeDay} />
           </div>
         </TabsContent>
@@ -139,26 +102,6 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
         {/* Templates — Phase 3 */}
         <TabsContent value="templates" className="mt-3">
           <div className="glass rounded-xl p-4">
-            {/* Day selector */}
-            <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
-              {DAYS.map((d) => {
-                const isActive = activeDay === d.key;
-                return (
-                  <button
-                    key={d.key}
-                    type="button"
-                    onClick={() => setActiveDay(d.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    {d.short}
-                  </button>
-                );
-              })}
-            </div>
             <MealTemplatePanel day={activeDay} />
           </div>
         </TabsContent>
@@ -166,32 +109,6 @@ export default function EditorWorkspaceTabs({ viewMode, onViewModeChange }: Prop
         {/* Substituir — Phase 3 */}
         <TabsContent value="substituir" className="mt-3">
           <div className="glass rounded-xl p-4">
-            {/* Day selector */}
-            <div className="flex items-center gap-1 mb-3 overflow-x-auto pb-1">
-              {DAYS.map((d) => {
-                const dayCount = items.filter(i => i.day_of_week === d.key).length;
-                const isActive = activeDay === d.key;
-                return (
-                  <button
-                    key={d.key}
-                    type="button"
-                    onClick={() => setActiveDay(d.key)}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all shrink-0 ${
-                      isActive
-                        ? "bg-primary text-primary-foreground shadow-sm"
-                        : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                    }`}
-                  >
-                    {d.short}
-                    {dayCount > 0 && (
-                      <span className={`ml-1 text-[9px] ${isActive ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
-                        ({dayCount})
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
             <MealSubstitutionPanel day={activeDay} />
           </div>
         </TabsContent>

@@ -153,6 +153,7 @@ const MEAL_PLAN_ITEM_PATCH_KEYS = new Set([
 
 function sanitizeMealPlanItemPatch(patch: Partial<MealPlanItem>) {
   const next: Record<string, unknown> = { ...patch };
+  if ("day_of_week" in next) next.day_of_week = 0;
   if ("metadata" in next && !("edit_metadata" in next)) {
     next.edit_metadata = (next as any).metadata;
   }
@@ -621,7 +622,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   // ── Move item ─────────────────────────────────────────────
   moveItem: (itemId, targetDay, targetMealType) => {
     get().updateItem(itemId, {
-      day_of_week: targetDay,
+      day_of_week: 0,
       meal_type: targetMealType,
     } as Partial<MealPlanItem>);
   },
@@ -721,7 +722,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           return supabase
             .from("meal_plan_items")
             .update({
-              day_of_week: isSrc ? dstDay : srcDay,
+              day_of_week: 0,
               meal_type: isSrc ? dstMeal : srcMeal,
             })
             .eq("id", item.id);
