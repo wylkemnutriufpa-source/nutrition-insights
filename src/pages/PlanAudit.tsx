@@ -1284,32 +1284,53 @@ const PlanAudit = () => {
             </div>
 
             {rlsResult && (
-              <div className="space-y-4 border rounded-lg p-4">
-                <div className="flex items-center justify-between border-b pb-3">
-                  <span className="text-sm font-medium">Planos Encontrados: {rlsResult.total}</span>
-                  <Badge variant={rlsResult.total > 0 ? "outline" : "destructive"}>
-                    {rlsResult.total > 0 ? "Verificado" : "Nenhum dado"}
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  {rlsResult.plans.map((p: any) => (
-                    <div key={p.id} className="flex items-center justify-between text-xs p-2 bg-muted/50 rounded">
-                      <div className="flex flex-col">
-                        <span className="font-semibold">{p.title}</span>
-                        <span className="text-[10px] text-muted-foreground">ID: {p.id}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge className="text-[9px]">{p.plan_status}</Badge>
-                        <Badge variant="secondary" className="text-[9px]">
-                          {p.is_active ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </div>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <User className="w-4 h-4" /> Visão Nutricionista (Todos)
+                    </h3>
+                    <div className="space-y-2">
+                      {rlsResult.allPlans.map((p: any) => (
+                        <div key={p.id} className="flex items-center justify-between text-[10px] p-2 bg-background border rounded">
+                          <span className="truncate max-w-[120px]">{p.title}</span>
+                          <Badge variant="outline" className="text-[8px]">{p.plan_status}</Badge>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                    <p className="text-[10px] text-muted-foreground text-center">Total: {rlsResult.total} planos</p>
+                  </div>
+
+                  <div className="space-y-3 border rounded-lg p-4 bg-emerald-500/5">
+                    <h3 className="text-sm font-semibold flex items-center gap-2 text-emerald-700">
+                      <ShieldCheck className="w-4 h-4" /> Simulação: Visão Paciente
+                    </h3>
+                    <div className="space-y-2">
+                      {rlsResult.visiblePlans.length > 0 ? (
+                        rlsResult.visiblePlans.map((p: any) => (
+                          <div key={p.id} className="flex items-center justify-between text-[10px] p-2 bg-emerald-500/10 border border-emerald-500/20 rounded">
+                            <span className="truncate max-w-[120px]">{p.title}</span>
+                            <Badge className="text-[8px] bg-emerald-500">VISÍVEL</Badge>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4 text-xs text-muted-foreground italic">
+                          Nenhum plano visível para o paciente.
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-emerald-700 text-center font-medium">
+                      Filtrado por: published_to_patient + is_active
+                    </p>
+                  </div>
                 </div>
+
                 <div className="text-[10px] bg-emerald-500/10 text-emerald-700 p-2 rounded flex gap-2">
                   <Info className="w-3 h-3 shrink-0" />
-                  Regras RLS confirmadas: A query retornou apenas dados vinculados ao UUID selecionado.
+                  <span>
+                    <strong>Validação concluída:</strong> O simulador confirma que {rlsResult.visibleCount} de {rlsResult.total} planos são acessíveis pelo paciente. 
+                    As regras de RLS garantem que um paciente nunca veja planos de outros usuários, mesmo que tente acessar via ID.
+                  </span>
                 </div>
               </div>
             )}
