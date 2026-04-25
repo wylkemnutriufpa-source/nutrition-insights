@@ -908,21 +908,6 @@ const PlanAudit = () => {
           });
         }
       });
-  const stepMetrics = useMemo(() => {
-    const steps = ["Salvar/Aprovar", "Publicar", "Validar", "Snapshot"];
-    return steps.map(stepName => {
-      const stepLogs = filteredEmergencyLogs.filter(l => {
-        if (stepName === "Salvar/Aprovar") return l.step.includes("Criar") || l.step.includes("Plano") || l.step.includes("Item");
-        return l.step.includes(stepName);
-      });
-      
-      const total = stepLogs.length;
-      const failures = stepLogs.filter(l => l.status === "error").length;
-      const rate = total > 0 ? (failures / total) * 100 : 0;
-      
-      return { name: stepName, total, failures, rate };
-    });
-  }, [filteredEmergencyLogs]);
 
       const snapshotsCsvContent = [snapshotHeaders, ...snapshotRows].map(r => r.join(",")).join("\n");
       const snapshotsBlob = new Blob([snapshotsCsvContent], { type: "text/csv;charset=utf-8;" });
