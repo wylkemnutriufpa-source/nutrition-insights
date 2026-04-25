@@ -530,10 +530,11 @@ function generateForTier(
       totalF += Math.round(s.libraryItem.fat * baseSf);
     }
   }
-  const avgDailyKcal = Math.round(totalKcal / 7);
-  const avgDailyP = Math.round(totalP / 7);
-  const avgDailyC = Math.round(totalC / 7);
-  const avgDailyF = Math.round(totalF / 7);
+  const uniqueDaysCount = Math.max(1, new Set(slots.map(s => s.day)).size);
+  const avgDailyKcal = Math.round(totalKcal / uniqueDaysCount);
+  const avgDailyP = Math.round(totalP / uniqueDaysCount);
+  const avgDailyC = Math.round(totalC / uniqueDaysCount);
+  const avgDailyF = Math.round(totalF / uniqueDaysCount);
 
   // Clinical notes
   const clinicalNotes: string[] = [];
