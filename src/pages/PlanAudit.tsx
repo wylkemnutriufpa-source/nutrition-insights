@@ -734,6 +734,27 @@ const PlanAudit = () => {
     toast.success("PDF gerado com sucesso!");
   };
 
+  const handleExportJSON = () => {
+    const data = {
+      executionId: lastExecutionId,
+      timestamp: new Date().toISOString(),
+      patientId: emergencyPatientId,
+      planId: emergencyPlanId,
+      logs: emergencyLogs,
+      snapshots: snapshots,
+      diagnostics: diagnosticLogs
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `emergency-flow-${lastExecutionId || 'report'}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Relatório JSON exportado!");
+  };
+
+
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
       <Helmet>
