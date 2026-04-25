@@ -314,96 +314,171 @@ const PlanAudit = () => {
     setEmergencyLogs([]);
     setEmergencyStep(1);
 
-    const addLog = (step: string, status: "loading" | "success" | "error", message: string) => {
-      setEmergencyLogs(prev => [...prev, { step, status, message }]);
+    const addLog = (
+      step: string, 
+      status: "loading" | "success" | "error", 
+      message: string, 
+      payload?: any, 
+      response?: any,
+      errorType?: "RLS" | "Validação" | "Persistência" | "Outro"
+    ) => {
+      setEmergencyLogs(prev => [...prev, { step, status, message, payload, response, errorType }]);
     };
 
-    try {
-      // 1. Criar Paciente Temporário (via Edge Function para ser fiel ao fluxo real)
-      addLog("Criar Paciente", "loading", "Convocando invite-patient...");
-      const tempEmail = `test-${Date.now()}@fitjourney.test`;
-      const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
-      
-      const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
-        body: {
-          name: tempName,
-          email: tempEmail,
-          method: "password",
-          password: "password123",
-          autoConfirm: true
+    const runFromStep = async (startStep: number) => {
+      let currentPatientId = emergencyPatientId;
+      let currentPlanId = emergencyPlanId;
+
+      try {
+        // 1. Criar Paciente Temporário
+        if (startStep <= 1) {
+          setEmergencyStep(1);
+          addLog("Criar Paciente", "loading", "Convocando invite-patient...");
+          const tempEmail = `test-${Date.now()}@fitjourney.test`;
+          const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
+          
+          const invitePayload = {
+            name: tempName,
+            email: tempEmail,
+            method: "password",
+            password: "password123",
+            autoConfirm: true
+          };
+
+          const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
+            body: invitePayload
+          });
+
+          if (inviteError || !inviteData?.patient_id) {
+            const errorMsg = inviteError?.message || inviteData?.error || "ID não retornado";
+            addLog("Criar Paciente", "error", `Erro no invite: ${errorMsg}`, invitePayload, inviteData, "Persistência");
+            throw new Error(errorMsg);
+          }
+          
+          currentPatientId = inviteData.patient_id;
+          setEmergencyPatientId(currentPatientId);
+          addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
+          await takeSnapshot(currentPatientId!, "Inicial");
         }
-      });
 
-      if (inviteError || !inviteData?.patient_id) {
-        throw new Error("Erro no invite: " + (inviteError?.message || inviteData?.error || "ID não retornado"));
+        // 2. Criar Plano Simples
+        if (startStep <= 2) {
+          setEmergencyStep(2);
+          addLog("Criar Plano", "loading", "Iniciando rascunho de 1 refeição...");
+          const planPayload = {
+            patient_id: currentPatientId,
+            nutritionist_id: user.id,
+            title: "Plano de Emergência",
+            plan_status: "draft",
+            is_active: false
+          };
+
+          const { data: plan, error: planError } = await (supabase.from("meal_plans").insert(planPayload as any).select().single() as any);
+
+          if (planError) {
+            addLog("Criar Plano", "error", `Erro ao criar plano: ${planError.message}`, planPayload, planError, "Persistência");
+            throw new Error(planError.message);
+          }
+          
+          currentPlanId = plan.id;
+          setEmergencyPlanId(currentPlanId);
+
+          const itemPayload = {
+            meal_plan_id: currentPlanId,
+            title: "Café da Manhã",
+            description: "1 Fruta + 1 Iogurte",
+            order_index: 0
+          };
+
+          const { error: itemError } = await supabase.from("meal_plan_items").insert(itemPayload as any);
+
+          if (itemError) {
+            addLog("Criar Plano", "error", `Erro ao criar item: ${itemError.message}`, itemPayload, itemError, "Persistência");
+            throw new Error(itemError.message);
+          }
+          addLog("Criar Plano", "success", "Plano com 1 refeição criado.", { planPayload, itemPayload }, { plan });
+        }
+
+        // 3. Salvar (Simulado como Aprovar)
+        if (startStep <= 3) {
+          setEmergencyStep(3);
+          addLog("Salvar/Aprovar", "loading", "Validando e aprovando...");
+          await takeSnapshot(currentPatientId!, "Antes de Salvar");
+          
+          const { savePlanAsApproved } = await import("@/lib/serverTransitions");
+          const saveRes = await savePlanAsApproved(currentPlanId!, user.id);
+          
+          if (!saveRes.success) {
+            addLog("Salvar/Aprovar", "error", saveRes.error || "Erro ao salvar", { planId: currentPlanId }, saveRes, "Validação");
+            throw new Error(saveRes.error);
+          }
+          addLog("Salvar/Aprovar", "success", "Plano aprovado com sucesso.", { planId: currentPlanId }, saveRes);
+          await takeSnapshot(currentPatientId!, "Depois de Salvar");
+        }
+
+        // 4. Publicar
+        if (startStep <= 4) {
+          setEmergencyStep(4);
+          addLog("Publicar", "loading", "Publicando para o paciente...");
+          await takeSnapshot(currentPatientId!, "Antes de Publicar");
+          
+          const { publishMealPlan } = await import("@/lib/serverTransitions");
+          const pubRes = await publishMealPlan(currentPlanId!, user.id);
+          
+          if (!pubRes.success) {
+            addLog("Publicar", "error", pubRes.error || "Erro ao publicar", { planId: currentPlanId }, pubRes, "RLS");
+            throw new Error(pubRes.error);
+          }
+          addLog("Publicar", "success", "Plano publicado.", { planId: currentPlanId }, pubRes);
+          await takeSnapshot(currentPatientId!, "Depois de Publicar");
+        }
+
+        // 5. Validar Visualização
+        if (startStep <= 5) {
+          setEmergencyStep(5);
+          addLog("Validar", "loading", "Verificando visibilidade do banco...");
+          const { data: checkPlan, error: checkError } = await supabase
+            .from("meal_plans")
+            .select("plan_status, is_active")
+            .eq("id", currentPlanId!)
+            .single();
+          
+          if (checkError) {
+            addLog("Validar", "error", `Erro na checagem: ${checkError.message}`, { planId: currentPlanId }, checkError, "RLS");
+            throw checkError;
+          }
+          
+          if (checkPlan.plan_status === "published_to_patient" && checkPlan.is_active) {
+            addLog("Validar", "success", "Fluxo validado: Plano visível e ativo.", { planId: currentPlanId }, checkPlan);
+          } else {
+            const errorMsg = `Inconsistência detectada: Status=${checkPlan.plan_status}, Ativo=${checkPlan.is_active}`;
+            addLog("Validar", "error", errorMsg, { planId: currentPlanId }, checkPlan, "RLS");
+            throw new Error(errorMsg);
+          }
+        }
+
+        setEmergencyStep(6); // Concluído
+        toast.success("Fluxo de emergência concluído com sucesso!");
+        // Clear state on success if desired, or keep it to show the logs
+      } catch (err: any) {
+        console.error("Emergency Flow Error:", err);
+        // addLog was already called inside the specific step catch
+        toast.error("Falha no fluxo de emergência.");
+      } finally {
+        setEmergencyProcessing(false);
       }
-      
-      const tempId = inviteData.patient_id;
-      addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${tempId}).`);
+    };
 
-      // 2. Criar Plano Simples
-      setEmergencyStep(2);
-      addLog("Criar Plano", "loading", "Iniciando rascunho de 1 refeição...");
-      const { data: plan, error: planError } = await (supabase.from("meal_plans").insert({
-        patient_id: tempId,
-        nutritionist_id: user.id,
-        title: "Plano de Emergência",
-        plan_status: "draft",
-        is_active: false
-      } as any).select().single() as any);
-
-      if (planError) throw new Error("Erro ao criar plano: " + planError.message);
-      
-      const { error: itemError } = await supabase.from("meal_plan_items").insert({
-        meal_plan_id: plan.id,
-        title: "Café da Manhã",
-        description: "1 Fruta + 1 Iogurte",
-        order_index: 0
-      } as any);
-
-      if (itemError) throw new Error("Erro ao criar item: " + itemError.message);
-      addLog("Criar Plano", "success", "Plano com 1 refeição criado.");
-
-      // 3. Salvar (Simulado como Aprovar)
-      setEmergencyStep(3);
-      addLog("Salvar/Aprovar", "loading", "Validando e aprovando...");
-      const { savePlanAsApproved } = await import("@/lib/serverTransitions");
-      const saveRes = await savePlanAsApproved(plan.id, user.id);
-      if (!saveRes.success) throw new Error(saveRes.error);
-      addLog("Salvar/Aprovar", "success", "Plano aprovado com sucesso.");
-
-      // 4. Publicar
-      setEmergencyStep(4);
-      addLog("Publicar", "loading", "Publicando para o paciente...");
-      const { publishMealPlan } = await import("@/lib/serverTransitions");
-      const pubRes = await publishMealPlan(plan.id, user.id);
-      if (!pubRes.success) throw new Error(pubRes.error);
-      addLog("Publicar", "success", "Plano publicado.");
-
-      // 5. Validar Visualização
-      setEmergencyStep(5);
-      addLog("Validar", "loading", "Verificando visibilidade do banco...");
-      const { data: checkPlan, error: checkError } = await supabase
-        .from("meal_plans")
-        .select("plan_status, is_active")
-        .eq("id", plan.id)
-        .single();
-      
-      if (checkError) throw checkError;
-      if (checkPlan.plan_status === "published_to_patient" && checkPlan.is_active) {
-        addLog("Validar", "success", "Fluxo validado: Plano visível e ativo.");
-      } else {
-        throw new Error(`Inconsistência detectada: Status=${checkPlan.plan_status}, Ativo=${checkPlan.is_active}`);
-      }
-
-      toast.success("Fluxo de emergência concluído com sucesso!");
-    } catch (err: any) {
-      console.error("Emergency Flow Error:", err);
-      addLog("Erro", "error", err.message || "Erro desconhecido");
-      toast.error("Falha no fluxo de emergência.");
-    } finally {
-      setEmergencyProcessing(false);
+    if (emergencyStep > 0 && emergencyStep < 6 && !confirm("Deseja reiniciar do zero? Clique Cancelar para retomar de onde parou.")) {
+      runFromStep(emergencyStep);
+    } else {
+      setEmergencyLogs([]);
+      setSnapshots({});
+      setEmergencyPatientId(null);
+      setEmergencyPlanId(null);
+      runFromStep(1);
     }
+  };
   };
 
   const validateRLS = async (patientId: string) => {
