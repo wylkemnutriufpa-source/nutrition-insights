@@ -680,6 +680,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const planId = get().planId;
     if (!planId || !prevPlan) return;
 
+    const patchKeys = Object.keys(patch ?? {});
+    if (patchKeys.length === 0) {
+      console.warn("[MealPlanEditorV2Store.updatePlan] Ignorando patch vazio", { planId });
+      return;
+    }
+
     set((s) => ({
       plan: s.plan ? { ...s.plan, ...patch } as MealPlan : s.plan,
     }));
@@ -689,11 +695,28 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: [],
       queuedAt: Date.now(),
       persist: async () => {
+        if (!planId) {
+          throw new Error("Plano sem id ao persistir metadados.");
+        }
+
+        console.info("[MealPlanEditorV2Store.updatePlan] Persistindo meal_plans", {
+          planId,
+          patchKeys,
+          hasWhere: true,
+        });
+
         const { error } = await supabase
           .from("meal_plans")
           .update(patch as any)
           .eq("id", planId);
-        if (error) throw error;
+        if (error) {
+          console.error("[MealPlanEditorV2Store.updatePlan] Falha ao persistir meal_plans", {
+            planId,
+            patchKeys,
+            message: error.message,
+          });
+          throw error;
+        }
 
         // Se mudou para single_day, garantimos que os itens atuais no dia 0
         // sejam replicados pela trigger do banco
