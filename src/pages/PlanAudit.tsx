@@ -707,14 +707,20 @@ const PlanAudit = () => {
   const loadMismatchReport = async () => {
     setMismatchLoading(true);
     try {
+      // Fetch plan_type_mismatch and invalid_day_of_week from plan_audit_results
       const { data, error } = await supabase
-        .from("audit_logs" as any)
+        .from("plan_audit_results")
         .select("*")
-        .eq("action", "plan_type_mismatch")
+        .in("audit_type", ["plan_type_mismatch", "invalid_day_of_week"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setMismatchRows(data || []);
+      
+      const typeMismatches = (data || []).filter(r => r.audit_type === "plan_type_mismatch");
+      const dayMismatches = (data || []).filter(r => r.audit_type === "invalid_day_of_week");
+      
+      setMismatchRows(typeMismatches);
+      setDayMismatchRows(dayMismatches);
     } catch (err: any) {
       console.error("[PlanAudit] mismatch load error", err);
       toast.error("Erro ao carregar auditoria de tipos.");
