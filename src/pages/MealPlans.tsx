@@ -446,7 +446,17 @@ export default function MealPlans() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button asChild variant="outline" className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchPlans}
+              disabled={loading}
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              Refazer sincronização
+            </Button>
+            <Button asChild variant="outline" size="sm" className="gap-2">
               <Link to="/plan-audit">
                 <ClipboardList className="w-4 h-4" /> Auditoria de Planos
               </Link>
