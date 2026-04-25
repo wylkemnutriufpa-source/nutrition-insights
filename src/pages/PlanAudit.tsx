@@ -133,7 +133,84 @@ const formatDate = (iso: string | null) => {
   }
 };
 
+const ActionableSummary = ({ logs }: { logs: any[] }) => {
+  const errors = logs.filter((l) => l.status === "error");
+  const alerts: { type: string; message: string; icon: any }[] = [];
+
+  if (errors.some((e) => e.errorType === "RLS")) {
+    alerts.push({
+      type: "warning",
+      message:
+        "Suspeita de RLS: O plano foi criado mas não aparece na query do paciente.",
+      icon: ShieldCheck,
+    });
+  }
+  if (errors.some((e) => e.errorType === "Persistência")) {
+    alerts.push({
+      type: "critical",
+      message:
+        "Suspeita de Persistência: Falha ao gravar dados no banco (meal_plans ou items).",
+      icon: Database,
+    });
+  }
+  if (errors.some((e) => e.errorType === "Validação")) {
+    alerts.push({
+      type: "info",
+      message:
+        "Suspeita de Validação: Dados rejeitados pelo servidor ou regras de negócio.",
+      icon: AlertTriangle,
+    });
+  }
+
+  if (
+    alerts.length === 0 &&
+    logs.length > 0 &&
+    logs.every((l) => l.status === "success")
+  ) {
+    return (
+      <div className="p-4 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-emerald-700 flex items-center gap-3">
+        <CheckCircle2 className="w-5 h-5" />
+        <div className="text-sm font-medium">
+          Fluxo saudável! Nenhuma suspeita de erro estrutural detectada.
+        </div>
+      </div>
+    );
+  }
+
+  if (logs.length === 0) {
+    return (
+      <div className="text-xs text-muted-foreground italic">
+        Execute o fluxo para gerar diagnóstico.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      {alerts.map((a, i) => (
+        <div
+          key={i}
+          className={`p-4 rounded-lg border flex items-start gap-3 ${
+            a.type === "critical"
+              ? "bg-rose-50 border-rose-200 text-rose-800 dark:bg-rose-900/10 dark:text-rose-300 dark:border-rose-900/30"
+              : "bg-amber-50 border-amber-200 text-amber-800 dark:bg-amber-900/10 dark:text-amber-300 dark:border-amber-900/30"
+          }`}
+        >
+          <a.icon className="w-5 h-5 shrink-0" />
+          <div className="space-y-1">
+            <span className="text-sm font-bold uppercase block">
+              {a.type === "critical" ? "Alerta Crítico" : "Recomendação"}
+            </span>
+            <span className="text-xs font-medium">{a.message}</span>
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+};
+
 const PlanAudit = () => {
+
   const { user } = useAuth();
   const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<AuditRow[]>([]);
