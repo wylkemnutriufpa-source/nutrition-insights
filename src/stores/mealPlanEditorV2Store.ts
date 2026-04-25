@@ -601,12 +601,12 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: allIds,
       queuedAt: Date.now(),
       persist: async () => {
-        if (!planId) {
-          console.error("[CRITICAL] DELETE bloqueado: planId inválido em clearAllItems");
+        if (!planId || typeof planId !== 'string' || planId.trim() === "") {
+          console.error("[CRITICAL] DELETE bloqueado: planId inválido em clearAllItems", { planId });
           throw new Error("DELETE bloqueado: planId inválido");
         }
         
-        console.info("[DELETE] Executando clearAllItems", { planId, operation: "clearAllItems" });
+        console.info("[DELETE] Executando clearAllItems", { planId, operation: "clearAllItems", timestamp: Date.now() });
         
         const { error } = await supabase
           .from("meal_plan_items")
