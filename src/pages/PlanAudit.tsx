@@ -1933,14 +1933,14 @@ const PlanAudit = () => {
         </TabsContent>
         
         <TabsContent value="mismatches" className="m-0 space-y-4">
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-rose-500" /> Auditoria de Mismatch de Tipo
+                  <AlertTriangle className="w-5 h-5 text-rose-500" /> Auditoria de Mismatch de Tipo e Dia
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Registra casos onde o sistema tentou gerar itens de tipo (Marmita/Normal) diferente do plano.
+                  Registra itens com plan_type misturado ou day_of_week diferente de 0 (Single-Day).
                 </p>
               </div>
               <Button onClick={loadMismatchReport} disabled={mismatchLoading} variant="outline" size="sm">
@@ -1948,46 +1948,114 @@ const PlanAudit = () => {
               </Button>
             </div>
 
-            <div className="border rounded-md overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Tipo Esperado</TableHead>
-                    <TableHead>Itens Incorretos</TableHead>
-                    <TableHead>Engine</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mismatchRows.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="text-xs">{formatDate(row.created_at)}</TableCell>
-                      <TableCell className="font-medium text-xs">{row.resource_id}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-[10px] uppercase">
-                          {row.metadata?.expected_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-rose-600 dark:text-rose-400 max-w-xs truncate">
-                        {row.metadata?.items}
-                      </TableCell>
-                      <TableCell>
-                         <Badge variant="secondary" className="text-[10px]">
-                          {row.metadata?.engine}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {mismatchRows.length === 0 && !mismatchLoading && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        Nenhum mismatch de tipo detectado até o momento.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <Activity className="w-4 h-4" /> Mismatch de plan_type (NORMAL vs MARMITA)
+                </h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Plano/Paciente</TableHead>
+                        <TableHead>Esperado</TableHead>
+                        <TableHead>Encontrado</TableHead>
+                        <TableHead>Link/Snapshot</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mismatchRows.map((row) => (
+                        <TableRow key={row.id}>
+                          <TableCell className="text-[10px]">{formatDate(row.created_at)}</TableCell>
+                          <TableCell className="text-xs">
+                             <Link to={`/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
+                               {row.plan_id?.slice(0, 8)}
+                             </Link>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[9px] uppercase">
+                              {(row.details as any)?.expected}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-[10px] text-rose-600 font-medium">
+                            {(row.details as any)?.found?.join(", ")}
+                          </TableCell>
+                          <TableCell>
+                            {row.audit_run_id && (
+                              <Link 
+                                to={`/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
+                                className="text-[10px] text-primary hover:underline flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3 h-3" /> Snapshot
+                              </Link>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {mismatchRows.length === 0 && !mismatchLoading && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-xs">
+                            Nenhum mismatch de tipo detectado.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> Itens com day_of_week ≠ 0
+                </h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Plano</TableHead>
+                        <TableHead>Dias Encontrados</TableHead>
+                        <TableHead>Qtd Itens</TableHead>
+                        <TableHead>Link</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dayMismatchRows.map((row) => (
+                        <TableRow key={row.id}>
+                          <TableCell className="text-[10px]">{formatDate(row.created_at)}</TableCell>
+                          <TableCell className="text-xs">
+                             <Link to={`/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
+                               {row.plan_id?.slice(0, 8)}
+                             </Link>
+                          </TableCell>
+                          <TableCell className="text-[10px]">
+                            {(row.details as any)?.wrong_days?.join(", ")}
+                          </TableCell>
+                          <TableCell className="text-[10px]">
+                            {(row.details as any)?.count}
+                          </TableCell>
+                          <TableCell>
+                             <Link 
+                                to={`/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
+                                className="text-[10px] text-primary hover:underline flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3 h-3" /> Snapshot
+                              </Link>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {dayMismatchRows.length === 0 && !mismatchLoading && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-xs">
+                            Nenhuma inconsistência de dia detectada.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
           </Card>
         </TabsContent>
