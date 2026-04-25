@@ -6,6 +6,8 @@
  */
 import { useState, useMemo, useCallback } from "react";
 import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
+import { getSubstitutionsFor } from "@/lib/mealPlanFoodRules";
+import { getClosestValidatedFood } from "@/lib/validatedFoodDatabase";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
