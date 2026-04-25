@@ -439,7 +439,7 @@ const PlanAudit = () => {
           if (replayMode && emergencyPatientId) {
             addLog("Replay Mode", "success", `Reusando paciente existente: ${emergencyPatientId}`);
             currentPatientId = emergencyPatientId;
-            await takeSnapshot(currentPatientId!, "Replay Inicial");
+            await takeSnapshot(currentPatientId!, "Replay Inicial", executionId);
           } else {
             addLog("Criar Paciente", "loading", "Convocando invite-patient...");
             const tempEmail = `test-${Date.now()}@fitjourney.test`;
