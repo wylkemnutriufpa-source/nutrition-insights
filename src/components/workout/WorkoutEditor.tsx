@@ -142,6 +142,50 @@ export default function WorkoutEditor({ students, onSaved, onCancel, initialData
     checkMedical();
   }, [studentId]);
 
+  // ── Pre-fill data from template/initialData ──
+  useEffect(() => {
+    if (initialData) {
+      setTitle(initialData.name || initialData.title || "");
+      setDescription(initialData.description || "");
+      if (initialData.category) {
+        setObjective(initialData.category);
+      } else if (initialData.objective) {
+        setObjective(initialData.objective);
+      }
+      
+      if (initialData.routines) {
+        const mappedRoutines = initialData.routines.map((r: any, rIdx: number) => ({
+          tempId: genTempId(),
+          name: r.name,
+          description: r.description || "",
+          day_of_week: r.day_of_week || null,
+          estimated_duration: r.estimated_duration || 60,
+          collapsed: false,
+          exercises: r.exercises.map((e: any, eIdx: number) => ({
+            tempId: genTempId(),
+            name: e.name,
+            muscle_group: e.muscle_group || "Outro",
+            sets: e.sets || 3,
+            reps: e.reps || "12",
+            load_kg: e.load_kg || null,
+            rest_seconds: e.rest_seconds || 60,
+            notes: e.notes || "",
+            video_url: e.video_url || "",
+            rpe: e.rpe || null,
+            cadence: e.cadence || "",
+            method_label: e.method_label || "",
+            group_id: e.group_id || null,
+            group_type: e.group_type || "single",
+            group_order: e.group_order || 0,
+            exercise_library_id: e.exercise_library_id || null,
+            sort_order: eIdx,
+          }))
+        }));
+        setRoutines(mappedRoutines);
+      }
+    }
+  }, [initialData]);
+
   // ── Routine Management ──
   const addRoutine = () => setRoutines([...routines, newRoutine(routines.length)]);
 
