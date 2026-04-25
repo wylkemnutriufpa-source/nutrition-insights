@@ -432,16 +432,9 @@ function generateForTier(
       // Pick
       const topN = candidates.slice(0, Math.min(5, candidates.length));
       if (topN.length === 0) {
-        const fallback = library.find(item => item.meal_type === mealType);
-        if (fallback) {
-          const sf = calcScale(fallback.base_calories, targetKcal);
-          slots.push({
-            day, mealType, libraryItem: fallback, targetKcal, scaleFactor: sf, compatibilityScore: 0,
-            substitutions: [],
-          });
-          usageCount[fallback.id] = (usageCount[fallback.id] || 0) + 1;
-        }
-        continue;
+        console.error(`[ENGINE] Falha ao encontrar item para refeição "${mealType}" do tipo "${params.planType}" na tier ${tier}`);
+        // Em vez de fallback silencioso, lançamos erro na tier ou pulamos (pela regra rígida, melhor falhar)
+        throw new Error(`Não foi possível encontrar uma refeição válida do tipo "${params.planType}" para o horário: ${mealType} na tier ${tier}`);
       }
 
       const pickIdx = deterministicPick(day, mealType, topN.length, tierSeed, context.patientId);
