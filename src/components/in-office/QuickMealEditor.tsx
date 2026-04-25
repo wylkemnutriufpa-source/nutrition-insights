@@ -242,7 +242,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       tenant_id: tenantId,
     }));
 
-    try {
+    enqueuePersistence(async () => {
       await withRetry(async () => {
         // Clear previous state for that day to avoid ghost items if we switched logic
         if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
@@ -268,12 +268,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
       setTotalDays(Math.max(totalDays, nextDay));
       setCurrentDay(nextDay);
-      toast.success(`Dia ${currentDay} duplicado para Dia ${nextDay}`);
-    } catch (err: any) {
-      toast.error("Erro ao duplicar: " + err.message);
-    } finally {
-      setSaving(false);
-    }
+    });
+    setSaving(false);
   };
 
   // Apply to all week
