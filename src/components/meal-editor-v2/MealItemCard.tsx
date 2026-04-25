@@ -239,9 +239,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                 type="button"
                 onClick={(e) => { 
                   e.stopPropagation(); 
-                  if (confirm(`Remover "${item.title}"?`)) {
-                    deleteItem(item.id); 
-                  }
+                  deleteItem(item.id); 
                 }}
                 className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
                 title="Remover Alimento"
