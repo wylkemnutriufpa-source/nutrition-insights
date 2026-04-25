@@ -1208,12 +1208,12 @@ export async function undoAutoFix(planId: string): Promise<{ success: boolean; e
   }
 
   // Delete current items
-  if (!planId) {
-    console.error("[CRITICAL] DELETE bloqueado: planId inválido em undoAutoFix");
+  if (!planId || typeof planId !== 'string' || planId.trim() === "") {
+    console.error("[CRITICAL] DELETE bloqueado: planId inválido em undoAutoFix", { planId });
     throw new Error("DELETE bloqueado: planId inválido");
   }
   
-  console.info("[DELETE] Restaurando backup AutoFix (limpando itens atuais)", { planId, operation: "undoAutoFix" });
+  console.info("[DELETE] Restaurando backup AutoFix (limpando itens atuais)", { planId, operation: "undoAutoFix", timestamp: Date.now() });
   
   const { error: delErr } = await supabase
     .from("meal_plan_items")
