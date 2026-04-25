@@ -19,7 +19,7 @@ import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
 import { ListView } from "@/components/meal-editor-v2/ListView";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
-import SingleDayDebugPanel from "@/components/meal-editor-v2/SingleDayDebugPanel";
+
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
 import { AutoGenerateModal } from "@/components/meal-editor-v2/AutoGenerateModal";
@@ -443,10 +443,6 @@ export default function MealPlanEditorV2() {
       <EditorSyncBadge status={store.syncStatus} />
 
       <div className="space-y-4">
-        <SingleDayDebugPanel
-          planId={plan?.id ?? null}
-          enabled={(plan as any)?.plan_mode === "single_day"}
-        />
         {/* ── Immutable Plan Banner ─────────────────────────────── */}
         {isImmutable && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200">
