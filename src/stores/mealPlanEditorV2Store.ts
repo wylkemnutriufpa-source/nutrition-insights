@@ -781,27 +781,28 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           throw new Error("Plano sem id ao persistir metadados.");
         }
 
-        console.info("[MealPlanEditorV2Store.updatePlan] Persistindo meal_plans", {
+        console.info("[MealPlanEditorV2Store.updatePlan] Enviando para o Supabase", {
           planId,
-          patchKeys,
-          hasWhere: true,
+          patch,
         });
 
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("meal_plans")
           .update(patch as any)
-          .eq("id", planId);
+          .eq("id", planId)
+          .select();
+
         if (error) {
-          console.error("[EMERGENCY][MealPlanEditorV2Store.updatePlan] CRITICAL_FAIL", {
-            planId,
-            patchKeys,
+          console.error("[PLAN_UPDATE_ERROR]", {
             message: error.message,
+            code: error.code,
             details: error.details,
-            hint: error.hint,
-            code: error.code
+            patch
           });
           throw error;
         }
+        
+        console.info("[PLAN_UPDATE_SUCCESS]", { planId, updated: data });
 
         // Modelo single-day puro: nenhuma replicação ou promoção de dia necessária.
       },
