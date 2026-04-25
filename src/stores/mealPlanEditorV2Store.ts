@@ -488,7 +488,6 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
 
   // ── Update item ───────────────────────────────────────────
   updateItem: (itemId, patch) => {
-
     const sanitizedPatch = sanitizeMealPlanItemPatch(patch);
     if (Object.keys(sanitizedPatch).length === 0) {
       console.warn("[MealPlanEditorV2Store.updateItem] Ignorando patch sem campos persistíveis", {
@@ -497,12 +496,16 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       });
       return;
     }
-    const prev = get().items;
+
+    const prevItems = get().items;
+    const originalItem = prevItems.find(i => i.id === itemId);
+    
+    // Atualiza estado local imediatamente (otimista)
     set((s) => ({
       items: s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i)),
     }));
 
-    // For temp items (not yet persisted), only update local state — the pending insert will use the updated local data
+    // Se for item temporário, não enfileiramos update; o insert pendente já pegará o estado atualizado do store no momento do flush
     if (itemId.startsWith("temp-")) {
       return;
     }
@@ -512,21 +515,37 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: [itemId],
       queuedAt: Date.now(),
       persist: async () => {
+        const item = get().items.find(i => i.id === itemId);
+        if (!item) return;
+
         const { error } = await supabase
           .from("meal_plan_items")
-          .update(sanitizedPatch as any)
+          .update(sanitizeMealPlanItemPatch(item) as any)
           .eq("id", itemId);
         if (error) throw error;
       },
-      rollback: () => set({ items: prev }),
+      rollback: () => {
+        if (originalItem) {
+          set((s) => ({
+            items: s.items.map(i => i.id === itemId ? originalItem : i)
+          }));
+        }
+      },
     });
   },
 
   // ── Delete item ───────────────────────────────────────────
   deleteItem: (itemId) => {
-
     const prev = get().items;
     set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
+
+    // Se o item é temporário, removemos do estado local e também da fila de inserção pendente
+    if (itemId.startsWith("temp-")) {
+      set((s) => ({
+        pendingOps: s.pendingOps.filter(op => !op.itemIds.includes(itemId))
+      }));
+      return;
+    }
 
     get()._enqueue({
       key: `delete:${itemId}`,
@@ -534,21 +553,32 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       queuedAt: Date.now(),
       persist: async () => {
         const planId = get().planId;
-        if (!planId || typeof planId !== 'string' || planId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: planId inválido em deleteItem", { planId, itemId });
-          throw new Error("DELETE bloqueado: planId inválido");
+        if (!planId) {
+          console.error("[CRITICAL] DELETE abortado: planId nulo no store", { itemId });
+          throw new Error("DELETE abortado: plano não identificado");
         }
         
-        console.info("[DELETE] Executando deleteItem", { planId, itemId, operation: "deleteItem", timestamp: Date.now() });
+        console.info("[DELETE] Removendo item do banco", { planId, itemId });
         
         const { error } = await supabase
           .from("meal_plan_items")
           .delete()
-          .eq("meal_plan_id", planId)
-          .eq("id", itemId);
-        if (error) throw error;
+          .eq("id", itemId)
+          .eq("meal_plan_id", planId); // Segurança extra para garantir que pertence ao plano atual
+          
+        if (error) {
+          console.error("[DELETE_ERROR]", error);
+          throw error;
+        }
       },
-      rollback: () => set({ items: prev }),
+      rollback: () => {
+        const originalItem = prev.find(i => i.id === itemId);
+        if (originalItem) {
+          set((s) => ({
+            items: [...s.items, originalItem]
+          }));
+        }
+      },
     });
   },
 
@@ -761,27 +791,28 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           throw new Error("Plano sem id ao persistir metadados.");
         }
 
-        console.info("[MealPlanEditorV2Store.updatePlan] Persistindo meal_plans", {
+        console.info("[MealPlanEditorV2Store.updatePlan] Enviando para o Supabase", {
           planId,
-          patchKeys,
-          hasWhere: true,
+          patch,
         });
 
-        const { error } = await supabase
+        const { error, data } = await supabase
           .from("meal_plans")
           .update(patch as any)
-          .eq("id", planId);
+          .eq("id", planId)
+          .select();
+
         if (error) {
-          console.error("[EMERGENCY][MealPlanEditorV2Store.updatePlan] CRITICAL_FAIL", {
-            planId,
-            patchKeys,
+          console.error("[PLAN_UPDATE_ERROR]", {
             message: error.message,
+            code: error.code,
             details: error.details,
-            hint: error.hint,
-            code: error.code
+            patch
           });
           throw error;
         }
+        
+        console.info("[PLAN_UPDATE_SUCCESS]", { planId, updated: data });
 
         // Modelo single-day puro: nenhuma replicação ou promoção de dia necessária.
       },
@@ -824,23 +855,29 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     activeFlushPromise = (async () => {
       isFlushing = true;
 
-      const results = await Promise.allSettled(
-        ops.map(async (op) => {
-          try {
-            await op.persist();
-            return { key: op.key, ok: true, itemIds: op.itemIds };
-          } catch (err) {
-            console.error("[EMERGENCY][MealPlanEditorV2Store.flush] OP_FAIL", { key: op.key, error: err });
-            op.rollback?.();
-            return { key: op.key, ok: false, itemIds: op.itemIds, err };
-          }
-        })
-      );
+      // PROCESSAMENTO SEQUENCIAL (Etapa 3 - Garantia de Fluxo)
+      // Processamos em ordem de inserção para evitar race conditions entre insert/update/delete.
+      const processed: { key: string; ok: boolean; itemIds: string[]; err?: any }[] = [];
+      
+      for (const op of ops) {
+        try {
+          console.info(`[FLUSH] Persistindo: ${op.key}`, { payload: op.itemIds });
+          await op.persist();
+          console.info(`[FLUSH] Sucesso: ${op.key}`);
+          processed.push({ key: op.key, ok: true, itemIds: op.itemIds });
+        } catch (err: any) {
+          console.error(`[FLUSH] ERRO em ${op.key}:`, {
+            message: err?.message,
+            code: err?.code,
+            details: err?.details,
+            payload: op.itemIds
+          });
+          op.rollback?.();
+          processed.push({ key: op.key, ok: false, itemIds: op.itemIds, err });
+        }
+      }
 
-      const processed = results.map((r) =>
-        r.status === "fulfilled" ? r.value : { key: "", ok: false, itemIds: [] as string[] }
-      );
-      const processedKeys = processed.map((p) => p.key).filter(Boolean);
+      const processedKeys = processed.map((p) => p.key);
 
       set((s) => {
         const remaining = s.pendingOps.filter((p) => !processedKeys.includes(p.key));
@@ -853,38 +890,30 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         return { pendingOps: remaining, syncingMap: syncing };
       });
 
-      const failed = processed.find((p) => !p.ok) as ({ err?: unknown } & { ok: boolean }) | undefined;
+      const failed = processed.find((p) => !p.ok);
       const hasError = Boolean(failed);
       get()._setSyncStatus(hasError ? "error" : "saved");
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
 
-      // ─── REFETCH OBRIGATÓRIO ───
-      // Após qualquer mutação persistida, o DB é a fonte única de verdade.
-      // Recarregamos os items para detectar divergências e forçar consistência.
+      // ─── REFETCH OBRIGATÓRIO (Etapa 5) ───
       if (!hasError) {
         const planId = get().planId;
         if (planId) {
+          console.info("[REFETCH] Sincronizando com verdade do banco...", { planId });
           const { data: itemsData, error: refetchError } = await supabase
             .from("meal_plan_items")
             .select("*")
             .eq("meal_plan_id", planId)
             .order("created_at");
+          
           if (refetchError) {
-            console.error("[REFETCH] Falha ao recarregar items pós-save", refetchError);
+            console.error("[REFETCH_ERROR]", refetchError);
           } else {
             const dbItems = (itemsData || []) as MealPlanItem[];
-            // Auditoria de divergência: compara contagem local vs DB
-            const localCount = get().items.filter(i => !i.id.startsWith("temp-")).length;
-            if (dbItems.length !== localCount) {
-              console.warn("[AUDIT][DIVERGENCE] UI vs DB", {
-                ui: localCount,
-                db: dbItems.length,
-                planId,
-              });
-            }
             set({ items: dbItems });
             get()._persistSnapshot();
+            console.info("[REFETCH_SUCCESS] UI sincronizada.");
           }
         }
       }
