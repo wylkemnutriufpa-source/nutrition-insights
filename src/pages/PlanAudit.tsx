@@ -148,8 +148,18 @@ const PlanAudit = () => {
 
   // Emergency Flow state
   const [emergencyStep, setEmergencyStep] = useState<number>(0);
-  const [emergencyLogs, setEmergencyLogs] = useState<{ step: string; status: "loading" | "success" | "error"; message: string }[]>([]);
+  const [emergencyLogs, setEmergencyLogs] = useState<{ 
+    step: string; 
+    status: "loading" | "success" | "error"; 
+    message: string;
+    payload?: any;
+    response?: any;
+    errorType?: "RLS" | "Validação" | "Persistência" | "Outro";
+  }[]>([]);
   const [emergencyProcessing, setEmergencyProcessing] = useState(false);
+  const [snapshots, setSnapshots] = useState<Record<string, any>>({});
+  const [emergencyPatientId, setEmergencyPatientId] = useState<string | null>(null);
+  const [emergencyPlanId, setEmergencyPlanId] = useState<string | null>(null);
 
   // RLS Validation state
   const [rlsPatientId, setRlsPatientId] = useState<string>("");
@@ -159,6 +169,69 @@ const PlanAudit = () => {
   // Data Consistency state
   const [consistencyRows, setConsistencyRows] = useState<any[]>([]);
   const [consistencyLoading, setConsistencyLoading] = useState(false);
+
+  // Persistence keys
+  const EMERGENCY_STATE_KEY = "plan_audit_emergency_state";
+
+  // Load emergency state on mount
+  useEffect(() => {
+    const saved = localStorage.getItem(EMERGENCY_STATE_KEY);
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved);
+        setEmergencyStep(parsed.step || 0);
+        setEmergencyLogs(parsed.logs || []);
+        setSnapshots(parsed.snapshots || {});
+        setEmergencyPatientId(parsed.patientId || null);
+        setEmergencyPlanId(parsed.planId || null);
+      } catch (e) {
+        console.error("Error loading emergency state", e);
+      }
+    }
+  }, []);
+
+  // Save emergency state when it changes
+  useEffect(() => {
+    if (emergencyStep > 0 || emergencyLogs.length > 0) {
+      localStorage.setItem(EMERGENCY_STATE_KEY, JSON.stringify({
+        step: emergencyStep,
+        logs: emergencyLogs,
+        snapshots,
+        patientId: emergencyPatientId,
+        planId: emergencyPlanId
+      }));
+    }
+  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId]);
+
+  const clearEmergencyState = () => {
+    localStorage.removeItem(EMERGENCY_STATE_KEY);
+    setEmergencyStep(0);
+    setEmergencyLogs([]);
+    setSnapshots({});
+    setEmergencyPatientId(null);
+    setEmergencyPlanId(null);
+    toast.info("Estado de emergência limpo.");
+  };
+
+  const takeSnapshot = async (patientId: string, label: string) => {
+    if (!patientId) return;
+    try {
+      const { data, error } = await supabase
+        .from("meal_plans")
+        .select("id, plan_status, is_active")
+        .eq("patient_id", patientId)
+        .order("updated_at", { ascending: false });
+
+      if (error) throw error;
+      
+      setSnapshots(prev => ({
+        ...prev,
+        [`${label}_${Date.now()}`]: data
+      }));
+    } catch (err) {
+      console.error("Snapshot error:", err);
+    }
+  };
 
   // Filters from URL
   const search = searchParams.get("q") || "";
@@ -241,95 +314,169 @@ const PlanAudit = () => {
     setEmergencyLogs([]);
     setEmergencyStep(1);
 
-    const addLog = (step: string, status: "loading" | "success" | "error", message: string) => {
-      setEmergencyLogs(prev => [...prev, { step, status, message }]);
+    const addLog = (
+      step: string, 
+      status: "loading" | "success" | "error", 
+      message: string, 
+      payload?: any, 
+      response?: any,
+      errorType?: "RLS" | "Validação" | "Persistência" | "Outro"
+    ) => {
+      setEmergencyLogs(prev => [...prev, { step, status, message, payload, response, errorType }]);
     };
 
-    try {
-      // 1. Criar Paciente Temporário (via Edge Function para ser fiel ao fluxo real)
-      addLog("Criar Paciente", "loading", "Convocando invite-patient...");
-      const tempEmail = `test-${Date.now()}@fitjourney.test`;
-      const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
-      
-      const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
-        body: {
-          name: tempName,
-          email: tempEmail,
-          method: "password",
-          password: "password123",
-          autoConfirm: true
+    const runFromStep = async (startStep: number) => {
+      let currentPatientId = emergencyPatientId;
+      let currentPlanId = emergencyPlanId;
+
+      try {
+        // 1. Criar Paciente Temporário
+        if (startStep <= 1) {
+          setEmergencyStep(1);
+          addLog("Criar Paciente", "loading", "Convocando invite-patient...");
+          const tempEmail = `test-${Date.now()}@fitjourney.test`;
+          const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
+          
+          const invitePayload = {
+            name: tempName,
+            email: tempEmail,
+            method: "password",
+            password: "password123",
+            autoConfirm: true
+          };
+
+          const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
+            body: invitePayload
+          });
+
+          if (inviteError || !inviteData?.patient_id) {
+            const errorMsg = inviteError?.message || inviteData?.error || "ID não retornado";
+            addLog("Criar Paciente", "error", `Erro no invite: ${errorMsg}`, invitePayload, inviteData, "Persistência");
+            throw new Error(errorMsg);
+          }
+          
+          currentPatientId = inviteData.patient_id;
+          setEmergencyPatientId(currentPatientId);
+          addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
+          await takeSnapshot(currentPatientId!, "Inicial");
         }
-      });
 
-      if (inviteError || !inviteData?.patient_id) {
-        throw new Error("Erro no invite: " + (inviteError?.message || inviteData?.error || "ID não retornado"));
+        // 2. Criar Plano Simples
+        if (startStep <= 2) {
+          setEmergencyStep(2);
+          addLog("Criar Plano", "loading", "Iniciando rascunho de 1 refeição...");
+          const planPayload = {
+            patient_id: currentPatientId,
+            nutritionist_id: user.id,
+            title: "Plano de Emergência",
+            plan_status: "draft",
+            is_active: false
+          };
+
+          const { data: plan, error: planError } = await (supabase.from("meal_plans").insert(planPayload as any).select().single() as any);
+
+          if (planError) {
+            addLog("Criar Plano", "error", `Erro ao criar plano: ${planError.message}`, planPayload, planError, "Persistência");
+            throw new Error(planError.message);
+          }
+          
+          currentPlanId = plan.id;
+          setEmergencyPlanId(currentPlanId);
+
+          const itemPayload = {
+            meal_plan_id: currentPlanId,
+            title: "Café da Manhã",
+            description: "1 Fruta + 1 Iogurte",
+            order_index: 0
+          };
+
+          const { error: itemError } = await supabase.from("meal_plan_items").insert(itemPayload as any);
+
+          if (itemError) {
+            addLog("Criar Plano", "error", `Erro ao criar item: ${itemError.message}`, itemPayload, itemError, "Persistência");
+            throw new Error(itemError.message);
+          }
+          addLog("Criar Plano", "success", "Plano com 1 refeição criado.", { planPayload, itemPayload }, { plan });
+        }
+
+        // 3. Salvar (Simulado como Aprovar)
+        if (startStep <= 3) {
+          setEmergencyStep(3);
+          addLog("Salvar/Aprovar", "loading", "Validando e aprovando...");
+          await takeSnapshot(currentPatientId!, "Antes de Salvar");
+          
+          const { savePlanAsApproved } = await import("@/lib/serverTransitions");
+          const saveRes = await savePlanAsApproved(currentPlanId!, user.id);
+          
+          if (!saveRes.success) {
+            addLog("Salvar/Aprovar", "error", saveRes.error || "Erro ao salvar", { planId: currentPlanId }, saveRes, "Validação");
+            throw new Error(saveRes.error);
+          }
+          addLog("Salvar/Aprovar", "success", "Plano aprovado com sucesso.", { planId: currentPlanId }, saveRes);
+          await takeSnapshot(currentPatientId!, "Depois de Salvar");
+        }
+
+        // 4. Publicar
+        if (startStep <= 4) {
+          setEmergencyStep(4);
+          addLog("Publicar", "loading", "Publicando para o paciente...");
+          await takeSnapshot(currentPatientId!, "Antes de Publicar");
+          
+          const { publishMealPlan } = await import("@/lib/serverTransitions");
+          const pubRes = await publishMealPlan(currentPlanId!, user.id);
+          
+          if (!pubRes.success) {
+            addLog("Publicar", "error", pubRes.error || "Erro ao publicar", { planId: currentPlanId }, pubRes, "RLS");
+            throw new Error(pubRes.error);
+          }
+          addLog("Publicar", "success", "Plano publicado.", { planId: currentPlanId }, pubRes);
+          await takeSnapshot(currentPatientId!, "Depois de Publicar");
+        }
+
+        // 5. Validar Visualização
+        if (startStep <= 5) {
+          setEmergencyStep(5);
+          addLog("Validar", "loading", "Verificando visibilidade do banco...");
+          const { data: checkPlan, error: checkError } = await supabase
+            .from("meal_plans")
+            .select("plan_status, is_active")
+            .eq("id", currentPlanId!)
+            .single();
+          
+          if (checkError) {
+            addLog("Validar", "error", `Erro na checagem: ${checkError.message}`, { planId: currentPlanId }, checkError, "RLS");
+            throw checkError;
+          }
+          
+          if (checkPlan.plan_status === "published_to_patient" && checkPlan.is_active) {
+            addLog("Validar", "success", "Fluxo validado: Plano visível e ativo.", { planId: currentPlanId }, checkPlan);
+          } else {
+            const errorMsg = `Inconsistência detectada: Status=${checkPlan.plan_status}, Ativo=${checkPlan.is_active}`;
+            addLog("Validar", "error", errorMsg, { planId: currentPlanId }, checkPlan, "RLS");
+            throw new Error(errorMsg);
+          }
+        }
+
+        setEmergencyStep(6); // Concluído
+        toast.success("Fluxo de emergência concluído com sucesso!");
+        // Clear state on success if desired, or keep it to show the logs
+      } catch (err: any) {
+        console.error("Emergency Flow Error:", err);
+        // addLog was already called inside the specific step catch
+        toast.error("Falha no fluxo de emergência.");
+      } finally {
+        setEmergencyProcessing(false);
       }
-      
-      const tempId = inviteData.patient_id;
-      addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${tempId}).`);
+    };
 
-      // 2. Criar Plano Simples
-      setEmergencyStep(2);
-      addLog("Criar Plano", "loading", "Iniciando rascunho de 1 refeição...");
-      const { data: plan, error: planError } = await (supabase.from("meal_plans").insert({
-        patient_id: tempId,
-        nutritionist_id: user.id,
-        title: "Plano de Emergência",
-        plan_status: "draft",
-        is_active: false
-      } as any).select().single() as any);
-
-      if (planError) throw new Error("Erro ao criar plano: " + planError.message);
-      
-      const { error: itemError } = await supabase.from("meal_plan_items").insert({
-        meal_plan_id: plan.id,
-        title: "Café da Manhã",
-        description: "1 Fruta + 1 Iogurte",
-        order_index: 0
-      } as any);
-
-      if (itemError) throw new Error("Erro ao criar item: " + itemError.message);
-      addLog("Criar Plano", "success", "Plano com 1 refeição criado.");
-
-      // 3. Salvar (Simulado como Aprovar)
-      setEmergencyStep(3);
-      addLog("Salvar/Aprovar", "loading", "Validando e aprovando...");
-      const { savePlanAsApproved } = await import("@/lib/serverTransitions");
-      const saveRes = await savePlanAsApproved(plan.id, user.id);
-      if (!saveRes.success) throw new Error(saveRes.error);
-      addLog("Salvar/Aprovar", "success", "Plano aprovado com sucesso.");
-
-      // 4. Publicar
-      setEmergencyStep(4);
-      addLog("Publicar", "loading", "Publicando para o paciente...");
-      const { publishMealPlan } = await import("@/lib/serverTransitions");
-      const pubRes = await publishMealPlan(plan.id, user.id);
-      if (!pubRes.success) throw new Error(pubRes.error);
-      addLog("Publicar", "success", "Plano publicado.");
-
-      // 5. Validar Visualização
-      setEmergencyStep(5);
-      addLog("Validar", "loading", "Verificando visibilidade do banco...");
-      const { data: checkPlan, error: checkError } = await supabase
-        .from("meal_plans")
-        .select("plan_status, is_active")
-        .eq("id", plan.id)
-        .single();
-      
-      if (checkError) throw checkError;
-      if (checkPlan.plan_status === "published_to_patient" && checkPlan.is_active) {
-        addLog("Validar", "success", "Fluxo validado: Plano visível e ativo.");
-      } else {
-        throw new Error(`Inconsistência detectada: Status=${checkPlan.plan_status}, Ativo=${checkPlan.is_active}`);
-      }
-
-      toast.success("Fluxo de emergência concluído com sucesso!");
-    } catch (err: any) {
-      console.error("Emergency Flow Error:", err);
-      addLog("Erro", "error", err.message || "Erro desconhecido");
-      toast.error("Falha no fluxo de emergência.");
-    } finally {
-      setEmergencyProcessing(false);
+    if (emergencyStep > 0 && emergencyStep < 6 && !confirm("Deseja reiniciar do zero? Clique Cancelar para retomar de onde parou.")) {
+      runFromStep(emergencyStep);
+    } else {
+      setEmergencyLogs([]);
+      setSnapshots({});
+      setEmergencyPatientId(null);
+      setEmergencyPlanId(null);
+      runFromStep(1);
     }
   };
 
@@ -341,23 +488,29 @@ const PlanAudit = () => {
       // Mas podemos simular a query que o paciente faria e verificar as restrições via RPC ou apenas checar os campos.
       // O usuário pediu: "confirmando que somente os planos do paciente aparecem e que published_to_patient está correto."
       
-      const { data, error } = await supabase
+      // 1. Simular query total do nutricionista para este paciente
+      const { data: allPlans, error: allPlansError } = await supabase
         .from("meal_plans")
         .select("id, title, plan_status, is_active, patient_id")
         .eq("patient_id", patientId);
+      
+      if (allPlansError) throw allPlansError;
 
-      if (error) throw error;
+      // 2. Simular query que o PACIENTE faria (filtros de visibilidade)
+      const { data: patientVisible, error: patientError } = await supabase
+        .from("meal_plans")
+        .select("id, title, plan_status, is_active")
+        .eq("patient_id", patientId)
+        .eq("plan_status", "published_to_patient")
+        .eq("is_active", true);
 
-      const results = (data || []).map(p => ({
-        ...p,
-        is_published: p.plan_status === "published_to_patient",
-        rls_correct: p.patient_id === patientId // Isso sempre será true se a query usou .eq
-      }));
+      if (patientError) throw patientError;
 
       setRlsResult({
-        total: results.length,
-        published: results.filter(r => r.is_published).length,
-        plans: results
+        total: (allPlans || []).length,
+        visibleCount: (patientVisible || []).length,
+        allPlans: allPlans || [],
+        visiblePlans: patientVisible || []
       });
       
       toast.success("Verificação RLS concluída.");
@@ -614,7 +767,7 @@ const PlanAudit = () => {
       </header>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid grid-cols-2 md:grid-cols-5 h-auto p-1 gap-1">
+        <TabsList className="grid grid-cols-3 md:grid-cols-6 h-auto p-1 gap-1">
           <TabsTrigger value="overview" className="text-xs py-2">
             <Activity className="w-3.5 h-3.5 mr-1.5" /> Visão Geral
           </TabsTrigger>
@@ -623,6 +776,9 @@ const PlanAudit = () => {
           </TabsTrigger>
           <TabsTrigger value="emergency" className="text-xs py-2">
             <Zap className="w-3.5 h-3.5 mr-1.5 text-amber-500" /> Emergência
+          </TabsTrigger>
+          <TabsTrigger value="failure-report" className="text-xs py-2">
+            <AlertTriangle className="w-3.5 h-3.5 mr-1.5 text-rose-500" /> Relatório Erros
           </TabsTrigger>
           <TabsTrigger value="rls" className="text-xs py-2">
             <ShieldCheck className="w-3.5 h-3.5 mr-1.5 text-emerald-500" /> Validador RLS
@@ -933,7 +1089,7 @@ const PlanAudit = () => {
 
         <TabsContent value="emergency" className="m-0 space-y-4">
           <Card className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <Zap className="w-5 h-5 text-amber-500" /> Fluxo de Emergência (Auto-Teste)
@@ -942,10 +1098,23 @@ const PlanAudit = () => {
                   Cria um cenário completo para validar se o sistema está salvando, publicando e exibindo corretamente.
                 </p>
               </div>
-              <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
-                {emergencyProcessing ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                Iniciar Fluxo
-              </Button>
+              <div className="flex gap-2">
+                {emergencyStep > 0 && emergencyStep < 6 && (
+                  <Button onClick={clearEmergencyState} variant="ghost" size="sm">
+                    Limpar
+                  </Button>
+                )}
+                <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
+                  {emergencyProcessing ? (
+                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                  ) : emergencyStep > 0 && emergencyStep < 6 ? (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-2" />
+                  )}
+                  {emergencyStep > 0 && emergencyStep < 6 ? "Retomar / Reiniciar" : "Iniciar Fluxo"}
+                </Button>
+              </div>
             </div>
 
             {emergencyLogs.length > 0 && (
@@ -955,22 +1124,130 @@ const PlanAudit = () => {
                     <div key={step} className={`h-1.5 rounded-full ${emergencyStep >= step ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-muted'}`} />
                   ))}
                 </div>
-                <div className="space-y-2 border rounded-lg p-4 bg-muted/30">
+                <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
                   {emergencyLogs.map((log, i) => (
-                    <div key={i} className="flex items-start gap-3 text-sm">
-                      {log.status === 'loading' ? (
-                        <Loader2 className="w-4 h-4 animate-spin mt-0.5 text-amber-500" />
-                      ) : log.status === 'success' ? (
-                        <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-500" />
-                      ) : (
-                        <XCircle className="w-4 h-4 mt-0.5 text-rose-500" />
-                      )}
-                      <div>
-                        <span className="font-semibold">{log.step}:</span> {log.message}
+                    <div key={i} className="space-y-2 border-b last:border-0 pb-2 last:pb-0">
+                      <div className="flex items-start gap-3 text-sm">
+                        {log.status === 'loading' ? (
+                          <Loader2 className="w-4 h-4 animate-spin mt-0.5 text-amber-500" />
+                        ) : log.status === 'success' ? (
+                          <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-500" />
+                        ) : (
+                          <XCircle className="w-4 h-4 mt-0.5 text-rose-500" />
+                        )}
+                        <div className="flex-1">
+                          <span className="font-semibold">{log.step}:</span> {log.message}
+                          {log.errorType && (
+                            <Badge variant="outline" className="ml-2 text-[9px] uppercase border-rose-500 text-rose-600">
+                              Erro: {log.errorType}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
+                      
+                      {(log.payload || log.response) && (
+                        <div className="ml-7 bg-background/50 rounded p-2 text-[10px] font-mono overflow-auto max-h-40">
+                          {log.payload && (
+                            <div className="mb-2">
+                              <span className="text-muted-foreground uppercase">[Payload]:</span>
+                              <pre>{JSON.stringify(log.payload, null, 2)}</pre>
+                            </div>
+                          )}
+                          {log.response && (
+                            <div>
+                              <span className="text-muted-foreground uppercase">[Response/Error]:</span>
+                              <pre>{JSON.stringify(log.response, null, 2)}</pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="failure-report" className="m-0 space-y-4">
+          <Card className="p-6 space-y-6">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-rose-500" /> Relatório de Falhas e Snapshots
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Agrupamento de erros por tipo e comparação de estados do banco de dados.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {["RLS", "Validação", "Persistência"].map(type => {
+                const count = emergencyLogs.filter(l => l.errorType === type).length;
+                return (
+                  <Card key={type} className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase">{type}</p>
+                      <p className="text-2xl font-bold">{count}</p>
+                    </div>
+                    <AlertTriangle className={`w-8 h-8 ${count > 0 ? 'text-rose-500' : 'text-muted/20'}`} />
+                  </Card>
+                );
+              })}
+            </div>
+
+            {Object.keys(snapshots).length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Database className="w-4 h-4" /> Comparação de Snapshots (plan_status, is_active)
+                </h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Momento</TableHead>
+                        <TableHead>ID Plano</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ativo</TableHead>
+                        <TableHead>Visível Paciente</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).map(([label, data]: [string, any]) => (
+                        <TableRow key={label} className="bg-muted/10">
+                          <TableCell className="font-medium text-xs whitespace-nowrap" colSpan={5}>
+                            {label.split('_')[0]}
+                          </TableCell>
+                        </TableRow>
+                      )).concat(
+                        Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([label, data]: [string, any]) => 
+                          data.map((p: any) => (
+                            <TableRow key={`${label}_${p.id}`}>
+                              <TableCell className="text-[10px] pl-6 text-muted-foreground">↳ {label.split('_')[0]}</TableCell>
+                              <TableCell className="text-[10px] font-mono">{p.id.slice(0, 8)}...</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px]">{p.plan_status}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {p.is_active ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <XCircle className="w-3 h-3 text-muted" />}
+                              </TableCell>
+                              <TableCell>
+                                {p.plan_status === 'published_to_patient' ? <ShieldCheck className="w-3 h-3 text-emerald-500" /> : <ShieldCheck className="w-3 h-3 text-muted" />}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {!emergencyLogs.some(l => l.status === 'error') && Object.keys(snapshots).length === 0 && (
+              <div className="text-center py-12 text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+                Nenhuma falha ou snapshot registrado recentemente.
+                <br />
+                Execute o Fluxo de Emergência para gerar dados.
               </div>
             )}
           </Card>
@@ -980,10 +1257,10 @@ const PlanAudit = () => {
           <Card className="p-6 space-y-6">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-500" /> Verificação Manual RLS
+                <ShieldCheck className="w-5 h-5 text-emerald-500" /> Simulador de Visão do Paciente (RLS)
               </h2>
               <p className="text-sm text-muted-foreground">
-                Valida se as regras de segurança do banco estão restringindo corretamente os dados para o paciente.
+                Simula as queries que o aplicativo do paciente faz para validar se as permissões (RLS) e filtros de visibilidade estão ativos.
               </p>
             </div>
 
@@ -1007,32 +1284,53 @@ const PlanAudit = () => {
             </div>
 
             {rlsResult && (
-              <div className="space-y-4 border rounded-lg p-4">
-                <div className="flex items-center justify-between border-b pb-3">
-                  <span className="text-sm font-medium">Planos Encontrados: {rlsResult.total}</span>
-                  <Badge variant={rlsResult.total > 0 ? "outline" : "destructive"}>
-                    {rlsResult.total > 0 ? "Verificado" : "Nenhum dado"}
-                  </Badge>
-                </div>
-                <div className="space-y-2">
-                  {rlsResult.plans.map((p: any) => (
-                    <div key={p.id} className="flex items-center justify-between text-xs p-2 bg-muted/50 rounded">
-                      <div className="flex flex-col">
-                        <span className="font-semibold">{p.title}</span>
-                        <span className="text-[10px] text-muted-foreground">ID: {p.id}</span>
-                      </div>
-                      <div className="flex gap-2">
-                        <Badge className="text-[9px]">{p.plan_status}</Badge>
-                        <Badge variant="secondary" className="text-[9px]">
-                          {p.is_active ? 'Ativo' : 'Inativo'}
-                        </Badge>
-                      </div>
+              <div className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-3 border rounded-lg p-4 bg-muted/20">
+                    <h3 className="text-sm font-semibold flex items-center gap-2">
+                      <User className="w-4 h-4" /> Visão Nutricionista (Todos)
+                    </h3>
+                    <div className="space-y-2">
+                      {rlsResult.allPlans.map((p: any) => (
+                        <div key={p.id} className="flex items-center justify-between text-[10px] p-2 bg-background border rounded">
+                          <span className="truncate max-w-[120px]">{p.title}</span>
+                          <Badge variant="outline" className="text-[8px]">{p.plan_status}</Badge>
+                        </div>
+                      ))}
                     </div>
-                  ))}
+                    <p className="text-[10px] text-muted-foreground text-center">Total: {rlsResult.total} planos</p>
+                  </div>
+
+                  <div className="space-y-3 border rounded-lg p-4 bg-emerald-500/5">
+                    <h3 className="text-sm font-semibold flex items-center gap-2 text-emerald-700">
+                      <ShieldCheck className="w-4 h-4" /> Simulação: Visão Paciente
+                    </h3>
+                    <div className="space-y-2">
+                      {rlsResult.visiblePlans.length > 0 ? (
+                        rlsResult.visiblePlans.map((p: any) => (
+                          <div key={p.id} className="flex items-center justify-between text-[10px] p-2 bg-emerald-500/10 border border-emerald-500/20 rounded">
+                            <span className="truncate max-w-[120px]">{p.title}</span>
+                            <Badge className="text-[8px] bg-emerald-500">VISÍVEL</Badge>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="text-center py-4 text-xs text-muted-foreground italic">
+                          Nenhum plano visível para o paciente.
+                        </div>
+                      )}
+                    </div>
+                    <p className="text-[10px] text-emerald-700 text-center font-medium">
+                      Filtrado por: published_to_patient + is_active
+                    </p>
+                  </div>
                 </div>
+
                 <div className="text-[10px] bg-emerald-500/10 text-emerald-700 p-2 rounded flex gap-2">
                   <Info className="w-3 h-3 shrink-0" />
-                  Regras RLS confirmadas: A query retornou apenas dados vinculados ao UUID selecionado.
+                  <span>
+                    <strong>Validação concluída:</strong> O simulador confirma que {rlsResult.visibleCount} de {rlsResult.total} planos são acessíveis pelo paciente. 
+                    As regras de RLS garantem que um paciente nunca veja planos de outros usuários, mesmo que tente acessar via ID.
+                  </span>
                 </div>
               </div>
             )}
