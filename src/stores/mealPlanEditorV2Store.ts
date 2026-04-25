@@ -565,9 +565,21 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       itemIds: deleteIds,
       queuedAt: Date.now(),
       persist: async () => {
+        const planId = get().planId;
         const realIds = deleteIds.filter((id) => !id.startsWith("temp-"));
         if (realIds.length > 0) {
-          const { error } = await supabase.from("meal_plan_items").delete().in("id", realIds);
+          if (!planId) {
+            console.error("[CRITICAL] DELETE bloqueado: planId inválido em deleteItemsInCell", { day, mealType, realIds });
+            throw new Error("DELETE bloqueado: planId inválido");
+          }
+          
+          console.info("[DELETE] Executando deleteItemsInCell", { planId, day, mealType, realIds, operation: "deleteItemsInCell" });
+          
+          const { error } = await supabase
+            .from("meal_plan_items")
+            .delete()
+            .eq("meal_plan_id", planId)
+            .in("id", realIds);
           if (error) throw error;
         }
       },
