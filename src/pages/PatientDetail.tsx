@@ -1434,8 +1434,16 @@ export default function PatientDetail() {
                                     // Server-authoritative: archive → delete items → delete plan
                                     const { error: archErr } = await supabase.from("meal_plans").update({ is_active: false, plan_status: "archived" }).eq("id", activePlan.id);
                                     if (archErr) throw archErr;
+                                    if (!activePlan.id) {
+                                      console.error("[CRITICAL] DELETE bloqueado: activePlan.id inválido em PatientDetail");
+                                      throw new Error("DELETE bloqueado: planId inválido");
+                                    }
+                                    
+                                    console.info("[DELETE] Excluindo itens do plano em PatientDetail", { meal_plan_id: activePlan.id, operation: "deletePlanPatientDetail" });
+                                    
                                     const { error: itemsErr } = await supabase.from("meal_plan_items").delete().eq("meal_plan_id", activePlan.id);
                                     if (itemsErr) throw itemsErr;
+                                    
                                     const { error: delErr } = await supabase.from("meal_plans").delete().eq("id", activePlan.id);
                                     if (delErr) throw delErr;
                                     toast.success("Plano alimentar excluído!");
