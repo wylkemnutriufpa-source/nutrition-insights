@@ -255,28 +255,24 @@ export default function MealPlanEditorV2() {
 
       // draft_auto_corrected já é um rascunho persistido; salvar não deve forçar aprovação
       // nem quebrar o fluxo por estado intermediário.
+      // Refetch OBRIGATÓRIO (Etapa 5)
+      await refreshPlanFromServer();
+      
       const totals = await calculatePlanTotals(plan.id);
+      
       if (planStatus === "draft_auto_corrected") {
-        await refreshPlanFromServer();
-
-        if (totals.totals_status === "incomplete") {
-          toast.success("Rascunho auto-corrigido salvo. Os totais serão recalculados em segundo plano.", { id: toastId });
-        } else {
-          toast.success("Rascunho auto-corrigido salvo com sucesso!", { id: toastId });
-        }
+        toast.success("✅ Rascunho salvo com sucesso!", { id: toastId });
         return;
       }
 
       const approveResult = await savePlanAsApproved(plan.id, user!.id);
-      if (!approveResult.success) throw new Error(approveResult.error || "Erro ao aprovar");
+      if (!approveResult.success) {
+        console.error("[EMERGENCY] Erro ao aprovar:", approveResult.error);
+        throw new Error(approveResult.error || "Erro ao aprovar");
+      }
 
       await refreshPlanFromServer();
-
-      if (totals.totals_status === "incomplete") {
-        toast.success("Plano salvo. Totais serão recalculados em segundo plano.", { id: toastId });
-      } else {
-        toast.success("Plano salvo com sucesso!", { id: toastId });
-      }
+      toast.success("✅ Plano salvo com sucesso!", { id: toastId });
     } catch (err: any) {
       console.error("[Save] Error:", err);
       toast.error("Erro ao salvar: " + (err?.message || "Tente novamente"), { id: toastId });
