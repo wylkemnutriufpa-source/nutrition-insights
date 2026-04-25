@@ -349,6 +349,35 @@ export default function SystemDiagnostics() {
     return { ok, warn, crit };
   }, [addLog]);
 
+  const runStabilityTest = useCallback(async () => {
+    addLog("info", "Stability", "Verifying Critical Contracts & Regression Guards...");
+    let ok = 0, warn = 0, crit = 0;
+    try {
+      const { data: regressions, error } = await supabase
+        .from("regression_guard_logs" as any)
+        .select("*")
+        .gte("created_at", new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString());
+
+      if (error) {
+        crit++;
+        addLog("error", "Stability", `Failed to fetch regression logs: ${error.message}`);
+      } else {
+        const criticalRegressions = regressions?.filter(r => r.severity === "critical") || [];
+        if (criticalRegressions.length > 0) {
+          crit++;
+          addLog("error", "Stability", `${criticalRegressions.length} critical regression(s) detected in the last 7 days!`);
+        } else {
+          ok++;
+          addLog("ok", "Stability", "No critical regressions detected in the last 7 days.");
+        }
+      }
+    } catch (e: any) {
+      crit++;
+      addLog("error", "Stability", `Exception: ${e.message}`);
+    }
+    return { ok, warn, crit };
+  }, [addLog]);
+
   // ─── Full Diagnostic Runner ────────────────────────────────────
   const runFullDiagnostic = useCallback(async () => {
     // Prevent duplicate runs from double-click or StrictMode
