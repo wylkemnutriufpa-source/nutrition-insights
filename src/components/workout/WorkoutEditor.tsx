@@ -107,7 +107,7 @@ const OBJECTIVES = [
 
 const DAYS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
-export default function WorkoutEditor({ students, onSaved, onCancel, initialData }: WorkoutEditorProps) {
+export default function WorkoutEditor({ students, onSaved, onCancel, initialData, initialStudentId }: WorkoutEditorProps) {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const [title, setTitle] = useState("");
