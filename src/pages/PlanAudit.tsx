@@ -259,6 +259,7 @@ const PlanAudit = () => {
   const [consistencyRows, setConsistencyRows] = useState<any[]>([]);
   const [consistencyLoading, setConsistencyLoading] = useState(false);
   const [mismatchRows, setMismatchRows] = useState<any[]>([]);
+  const [dayMismatchRows, setDayMismatchRows] = useState<any[]>([]);
   const [mismatchLoading, setMismatchLoading] = useState(false);
 
   // Persistence keys
@@ -706,14 +707,20 @@ const PlanAudit = () => {
   const loadMismatchReport = async () => {
     setMismatchLoading(true);
     try {
+      // Fetch plan_type_mismatch and invalid_day_of_week from plan_audit_results
       const { data, error } = await supabase
-        .from("audit_logs" as any)
+        .from("plan_audit_results")
         .select("*")
-        .eq("action", "plan_type_mismatch")
+        .in("audit_type", ["plan_type_mismatch", "invalid_day_of_week"])
         .order("created_at", { ascending: false });
 
       if (error) throw error;
-      setMismatchRows(data || []);
+      
+      const typeMismatches = (data || []).filter(r => r.audit_type === "plan_type_mismatch");
+      const dayMismatches = (data || []).filter(r => r.audit_type === "invalid_day_of_week");
+      
+      setMismatchRows(typeMismatches);
+      setDayMismatchRows(dayMismatches);
     } catch (err: any) {
       console.error("[PlanAudit] mismatch load error", err);
       toast.error("Erro ao carregar auditoria de tipos.");
@@ -1031,34 +1038,36 @@ const PlanAudit = () => {
     doc.text(`Gerado em: ${now}`, 14, 28);
     doc.text(`Filtro Execution ID: ${executionIdFilter || "Nenhum"}`, 14, 34);
 
-    const tableHeaders = [["Execution ID", "Etapa", "Status", "Timestamp", "Log Link"]];
+    const tableHeaders = [["Execution ID", "Etapa", "Status", "Timestamp", "Link do Log/Snapshot"]];
     const tableData = filteredEmergencyLogs.map(l => [
-      l.executionId.slice(-8),
+      l.executionId,
       l.step,
       l.status,
       l.timestamp ? format(new Date(l.timestamp), "HH:mm:ss") : "—",
-      l.step === "Snapshot" ? "Link Snapshot" : (correlatorId ? "Log Oficial (GCP)" : "N/A")
+      l.step === "Snapshot" ? "Abrir Snapshot" : (correlatorId ? "GCP Cloud Logging" : "Ver no App")
     ]);
 
     (doc as any).autoTable({
       startY: 40,
       head: tableHeaders,
       body: tableData,
+      theme: 'grid',
+      styles: { fontSize: 7 },
       didDrawCell: (data: any) => {
         if (data.section === 'body' && data.column.index === 4) {
+          const rowData = filteredEmergencyLogs[data.row.index];
           const val = data.cell.raw;
           let url = "";
-          if (val === "Log Oficial (GCP)" && correlatorId) {
+          
+          if (val === "GCP Cloud Logging" && correlatorId) {
             url = `https://console.cloud.google.com/logs/query;query=jsonPayload.correlator%3D%22${correlatorId}%22`;
-          } else if (val === "Link Snapshot") {
-            // Placeholder: link para a aba de emergência com o filtro
-            url = `${window.location.origin}/plan-audit?tab=emergency&execId=${executionIdFilter}`;
+          } else {
+            url = `${window.location.origin}/plan-audit?tab=emergency&execId=${rowData.executionId}`;
           }
           
           if (url) {
             doc.link(data.cell.x, data.cell.y, data.cell.width, data.cell.height, { url });
             doc.setTextColor(0, 0, 255);
-            doc.text(val, data.cell.x + 2, data.cell.y + data.cell.height - 2);
           }
         }
       }
@@ -1926,14 +1935,14 @@ const PlanAudit = () => {
         </TabsContent>
         
         <TabsContent value="mismatches" className="m-0 space-y-4">
-          <Card className="p-6 space-y-4">
+          <Card className="p-6 space-y-6">
             <div className="flex items-center justify-between">
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-rose-500" /> Auditoria de Mismatch de Tipo
+                  <AlertTriangle className="w-5 h-5 text-rose-500" /> Auditoria de Mismatch de Tipo e Dia
                 </h2>
                 <p className="text-sm text-muted-foreground">
-                  Registra casos onde o sistema tentou gerar itens de tipo (Marmita/Normal) diferente do plano.
+                  Registra itens com plan_type misturado ou day_of_week diferente de 0 (Single-Day).
                 </p>
               </div>
               <Button onClick={loadMismatchReport} disabled={mismatchLoading} variant="outline" size="sm">
@@ -1941,46 +1950,114 @@ const PlanAudit = () => {
               </Button>
             </div>
 
-            <div className="border rounded-md overflow-hidden">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Data</TableHead>
-                    <TableHead>Paciente</TableHead>
-                    <TableHead>Tipo Esperado</TableHead>
-                    <TableHead>Itens Incorretos</TableHead>
-                    <TableHead>Engine</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {mismatchRows.map((row) => (
-                    <TableRow key={row.id}>
-                      <TableCell className="text-xs">{formatDate(row.created_at)}</TableCell>
-                      <TableCell className="font-medium text-xs">{row.resource_id}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline" className="text-[10px] uppercase">
-                          {row.metadata?.expected_type}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-xs text-rose-600 dark:text-rose-400 max-w-xs truncate">
-                        {row.metadata?.items}
-                      </TableCell>
-                      <TableCell>
-                         <Badge variant="secondary" className="text-[10px]">
-                          {row.metadata?.engine}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {mismatchRows.length === 0 && !mismatchLoading && (
-                    <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        Nenhum mismatch de tipo detectado até o momento.
-                      </TableCell>
-                    </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+            <div className="space-y-6">
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <Activity className="w-4 h-4" /> Mismatch de plan_type (NORMAL vs MARMITA)
+                </h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Plano/Paciente</TableHead>
+                        <TableHead>Esperado</TableHead>
+                        <TableHead>Encontrado</TableHead>
+                        <TableHead>Link/Snapshot</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {mismatchRows.map((row) => (
+                        <TableRow key={row.id}>
+                          <TableCell className="text-[10px]">{formatDate(row.created_at)}</TableCell>
+                          <TableCell className="text-xs">
+                             <Link to={`/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
+                               {row.plan_id?.slice(0, 8)}
+                             </Link>
+                          </TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[9px] uppercase">
+                              {(row.details as any)?.expected}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-[10px] text-rose-600 font-medium">
+                            {(row.details as any)?.found?.join(", ")}
+                          </TableCell>
+                          <TableCell>
+                            {row.audit_run_id && (
+                              <Link 
+                                to={`/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
+                                className="text-[10px] text-primary hover:underline flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3 h-3" /> Snapshot
+                              </Link>
+                            )}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {mismatchRows.length === 0 && !mismatchLoading && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-xs">
+                            Nenhum mismatch de tipo detectado.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              <div className="space-y-3">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <Calendar className="w-4 h-4" /> Itens com day_of_week ≠ 0
+                </h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Plano</TableHead>
+                        <TableHead>Dias Encontrados</TableHead>
+                        <TableHead>Qtd Itens</TableHead>
+                        <TableHead>Link</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dayMismatchRows.map((row) => (
+                        <TableRow key={row.id}>
+                          <TableCell className="text-[10px]">{formatDate(row.created_at)}</TableCell>
+                          <TableCell className="text-xs">
+                             <Link to={`/meal-plans/${row.plan_id}`} className="hover:underline font-medium">
+                               {row.plan_id?.slice(0, 8)}
+                             </Link>
+                          </TableCell>
+                          <TableCell className="text-[10px]">
+                            {(row.details as any)?.wrong_days?.join(", ")}
+                          </TableCell>
+                          <TableCell className="text-[10px]">
+                            {(row.details as any)?.count}
+                          </TableCell>
+                          <TableCell>
+                             <Link 
+                                to={`/plan-audit?tab=emergency&execId=${row.audit_run_id}`}
+                                className="text-[10px] text-primary hover:underline flex items-center gap-1"
+                              >
+                                <ExternalLink className="w-3 h-3" /> Snapshot
+                              </Link>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {dayMismatchRows.length === 0 && !mismatchLoading && (
+                        <TableRow>
+                          <TableCell colSpan={5} className="text-center py-8 text-muted-foreground text-xs">
+                            Nenhuma inconsistência de dia detectada.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
             </div>
           </Card>
         </TabsContent>
