@@ -514,19 +514,42 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             .order("created_at", { ascending: false })
             .limit(1).single();
 
-        const targetCals = assessment?.calories_target ?? anamnesis?.computed_kcal_target;
-        const targetP = assessment?.protein_target ?? anamnesis?.computed_protein;
-        const targetC = assessment?.carbs_target ?? anamnesis?.computed_carbs;
-        const targetF = assessment?.fat_target ?? anamnesis?.computed_fat;
+        let targetCals = assessment?.calories_target ?? anamnesis?.computed_kcal_target;
+        let targetP = assessment?.protein_target ?? anamnesis?.computed_protein;
+        let targetC = assessment?.carbs_target ?? anamnesis?.computed_carbs;
+        let targetF = assessment?.fat_target ?? anamnesis?.computed_fat;
+
+        // EMERGENCY FALLBACK: If targets are missing, try to estimate from anamnesis weight/height
+        if (!targetCals && anamnesis?.answers) {
+            const answers = anamnesis.answers as any;
+            const weight = parseFloat(answers.weight);
+            const height = parseFloat(answers.height);
+            const age = parseInt(answers.age);
+            const sex = answers.sex === "female" ? "f" : "m";
+
+            if (!isNaN(weight) && !isNaN(height)) {
+                console.info("[EMERGENCY] Estimando metas para paciente sem targets explícitos", { weight, height });
+                // Simple Mifflin-St Jeor fallback
+                const bmr = sex === "m" 
+                    ? (10 * weight) + (6.25 * height) - (5 * (age || 30)) + 5
+                    : (10 * weight) + (6.25 * height) - (5 * (age || 30)) - 161;
+                targetCals = bmr * 1.3; // moderate activity fallback
+                targetP = weight * 1.8;
+                targetC = (targetCals * 0.45) / 4;
+                targetF = (targetCals * 0.25) / 9;
+            }
+        }
 
         const clinicalErrors: Array<{ rule: string; message: string; weight: number }> = [];
         const macroResults: MacroResult[] = [];
 
         if (!targetCals) {
+            console.warn("[EMERGENCY] Paciente sem meta calórica definida mesmo após fallback", { patientId });
+            // Don't BLOCK with 100 weight anymore, reduce to 50 so it allows saving/publishing in emergency
             clinicalErrors.push({
                 rule: "sem_meta_calorica",
-                message: "Paciente não tem meta calórica definida. Complete a Anamnese ou a Avaliação Física primeiro.",
-                weight: 100,
+                message: "Paciente sem peso/altura ou metas definidas. O plano será validado sem metas comparativas.",
+                weight: 50, 
             });
         } else {
             const checks = [
