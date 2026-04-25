@@ -4,7 +4,7 @@ set -e
 echo "Starting Trigger Guardrail Integration Tests..."
 
 # Get dummy IDs
-USER_ID=$(psql -t -c "SELECT id FROM auth.users LIMIT 1" | xargs)
+USER_ID=$(psql -t -c "SELECT id FROM profiles LIMIT 1" | xargs)
 TENANT_ID=$(psql -t -c "SELECT id FROM tenants LIMIT 1" | xargs)
 
 if [ -z "$USER_ID" ] || [ -z "$TENANT_ID" ]; then
