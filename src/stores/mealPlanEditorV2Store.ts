@@ -866,12 +866,25 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           await op.persist();
           const t2 = Date.now();
           console.info(`[SAVE SUCCESS t=${t2}] Operação: ${op.key} (dur: ${t2 - t1}ms)`);
+          
           processed.push({ key: op.key, ok: true, itemIds: op.itemIds });
           
-          // Refetch após cada operação individualmente para evitar estado inconsistente
+          // Remove a operação processada da fila IMEDIATAMENTE após sucesso
+          set((s) => {
+            const remaining = s.pendingOps.filter((p) => p.key !== op.key);
+            const stillPendingIds = new Set(remaining.flatMap((p) => p.itemIds));
+            const syncing = { ...s.syncingMap };
+            op.itemIds.forEach((id) => {
+              if (!stillPendingIds.has(id)) delete syncing[id];
+            });
+            return { pendingOps: remaining, syncingMap: syncing };
+          });
+
+          // ─── REFETCH OBRIGATÓRIO (Etapa 5) ───
+          // Só roda se a fila estiver vazia (para as operações que pegamos no snapshot ou no store)
+          // Mas o critério 4 pede SAVE A -> REFETCH A -> SAVE B -> REFETCH B
           const planId = get().planId;
           if (planId) {
-            console.info(`[REFETCH START t=${Date.now()}]`);
             const { data: itemsData, error: refetchError } = await supabase
               .from("meal_plan_items")
               .select("*")
@@ -890,21 +903,14 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           console.error(`[FLUSH] ERRO em ${op.key}:`, err);
           op.rollback?.();
           processed.push({ key: op.key, ok: false, itemIds: op.itemIds, err });
+          
+          // Remove da fila mesmo com erro (após rollback)
+          set((s) => ({
+            pendingOps: s.pendingOps.filter((p) => p.key !== op.key),
+            syncingMap: s.syncingMap // Simplificado aqui, o cleanup final cuida do syncingMap se necessário
+          }));
         }
       }
-
-      const processedKeys = processed.map((p) => p.key);
-
-      set((s) => {
-        const remaining = s.pendingOps.filter((p) => !processedKeys.includes(p.key));
-        const stillPendingIds = new Set(remaining.flatMap((p) => p.itemIds));
-        const syncing = { ...s.syncingMap };
-        processed.flatMap((p) => p.itemIds).forEach((id) => {
-          if (!stillPendingIds.has(id)) delete syncing[id];
-        });
-
-        return { pendingOps: remaining, syncingMap: syncing };
-      });
 
       const failed = processed.find((p) => !p.ok);
       const hasError = Boolean(failed);
