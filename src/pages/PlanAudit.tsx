@@ -106,11 +106,27 @@ const formatDate = (iso: string | null) => {
 
 const PlanAudit = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<AuditStatus | "all">("all");
+  const [batchProcessing, setBatchProcessing] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  // Filters from URL
+  const search = searchParams.get("q") || "";
+  const statusFilter = (searchParams.get("status") as AuditStatus | "all") || "all";
+  const dateFrom = searchParams.get("from") ? new Date(searchParams.get("from")!) : undefined;
+  const dateTo = searchParams.get("to") ? new Date(searchParams.get("to")!) : undefined;
+
+  const setFilter = (key: string, value: string | undefined) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) {
+      next.set(key, value);
+    } else {
+      next.delete(key);
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -154,28 +170,115 @@ const PlanAudit = () => {
     const term = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (statusFilter !== "all" && r.audit_status !== statusFilter) return false;
-      if (!term) return true;
-      return (r.patient_name ?? "").toLowerCase().includes(term);
+      if (term && !(r.patient_name ?? "").toLowerCase().includes(term)) return false;
+      
+      if (dateFrom || dateTo) {
+        if (!r.latest_updated_at) return false;
+        const d = new Date(r.latest_updated_at);
+        if (dateFrom && d < dateFrom) return false;
+        if (dateTo && d > dateTo) return false;
+      }
+      
+      return true;
     });
-  }, [rows, search, statusFilter]);
+  }, [rows, search, statusFilter, dateFrom, dateTo]);
 
   const handleQuickPublish = async (row: AuditRow) => {
     if (!user || !row.latest_plan_id) return;
     setPublishingId(row.latest_plan_id);
+    const toastId = toast.loading(`Publicando plano para ${row.patient_name}...`);
     try {
       const { publishMealPlan } = await import("@/lib/serverTransitions");
       const result = await publishMealPlan(row.latest_plan_id, user.id);
       if (!result.success) {
         throw new Error(result.error || "Erro ao publicar.");
       }
-      toast.success(`✅ Plano publicado para ${row.patient_name ?? "paciente"}.`);
+      toast.success(`✅ Plano publicado para ${row.patient_name ?? "paciente"}.`, { id: toastId });
       await load();
     } catch (err: any) {
       console.error("[PlanAudit] publish error", err);
-      toast.error(err?.message || "Erro ao publicar o plano.");
+      toast.error(err?.message || "Erro ao publicar o plano.", { id: toastId });
     } finally {
       setPublishingId(null);
     }
+  };
+
+  const handleBatchGenerate = async () => {
+    const targets = rows.filter(r => r.audit_status === "SEM_PLANO");
+    if (targets.length === 0) {
+      toast.info("Nenhum paciente sem plano para processar.");
+      return;
+    }
+
+    if (!confirm(`Deseja gerar e validar planos para ${targets.length} pacientes?`)) return;
+
+    setBatchProcessing(true);
+    const results = { success: 0, fail: 0 };
+    
+    const toastId = toast.loading(`Processando ${targets.length} pacientes...`);
+
+    for (const target of targets) {
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+          body: {
+            patientId: target.patient_id,
+            nutritionistId: user?.id,
+            isPipeline: false,
+          },
+        });
+
+        if (error || !data?.success) throw new Error(data?.error || "Erro na geração");
+        
+        results.success++;
+      } catch (err) {
+        console.error(`Batch generate error for ${target.patient_name}:`, err);
+        results.fail++;
+      }
+    }
+
+    toast.success(`Lote finalizado: ${results.success} aprovados, ${results.fail} falharam.`, { id: toastId });
+    setBatchProcessing(false);
+    await load();
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const now = format(new Date(), "dd/MM/yyyy HH:mm");
+    
+    doc.setFontSize(18);
+    doc.text("Relatório de Auditoria de Planos", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${now}`, 14, 28);
+
+    // Summary table
+    (doc as any).autoTable({
+      startY: 35,
+      head: [["Status", "Quantidade"]],
+      body: [
+        ["Total de Pacientes", summary.total],
+        ["Publicados", summary.OK_PUBLICADO],
+        ["Aprovados", summary.APROVADO_NAO_PUBLICADO],
+        ["Rascunhos", summary.SO_RASCUNHO],
+        ["Sem Plano", summary.SEM_PLANO],
+      ],
+    });
+
+    // Patients table
+    const tableBody = filtered.map(r => [
+      r.patient_name || "Sem nome",
+      STATUS_META[r.audit_status].label,
+      formatDate(r.latest_updated_at),
+      `${r.published_count} P / ${r.approved_count} A / ${r.draft_count} R`
+    ]);
+
+    (doc as any).autoTable({
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [["Paciente", "Status", "Último Update", "P/A/R"]],
+      body: tableBody,
+    });
+
+    doc.save(`auditoria-planos-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast.success("PDF gerado com sucesso!");
   };
 
   return (
