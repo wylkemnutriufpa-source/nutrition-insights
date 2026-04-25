@@ -721,8 +721,6 @@ const PlanAudit = () => {
       setMismatchLoading(false);
     }
   };
-    }
-  };
 
   useEffect(() => {
     if (!user) return;
