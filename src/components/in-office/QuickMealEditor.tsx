@@ -463,35 +463,38 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     }
 
     enqueuePersistence(async () => {
-      await withRetry(async () => {
-        // Clear all days
-        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToWeek", { mealPlanId, patientId });
-          throw new Error("DELETE bloqueado: mealPlanId inválido");
-        }
-        
-        console.info("[DELETE] Limpando semana para aplicar template", { mealPlanId, patientId, operation: "applyTemplateToWeek", timestamp: Date.now() });
-        
-        const { error: delErr } = await supabase
-          .from("meal_plan_items")
-          .delete()
-          .eq("meal_plan_id", mealPlanId);
-        if (delErr) throw delErr;
+      try {
+        await withRetry(async () => {
+          // Clear all days
+          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToWeek", { mealPlanId, patientId });
+            throw new Error("DELETE bloqueado: mealPlanId inválido");
+          }
+          
+          console.info("[DELETE] Limpando semana para aplicar template", { mealPlanId, patientId, operation: "applyTemplateToWeek", timestamp: Date.now() });
+          
+          const { error: delErr } = await supabase
+            .from("meal_plan_items")
+            .delete()
+            .eq("meal_plan_id", mealPlanId);
+          if (delErr) throw delErr;
 
-        if (allInserts.length > 0) {
-          const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
-          if (insErr) throw insErr;
-        }
-      }, {
-        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template à semana...`),
-      });
+          if (allInserts.length > 0) {
+            const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
+            if (insErr) throw insErr;
+          }
+        }, {
+          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template à semana...`),
+        });
 
-      setTotalDays(7);
-      setShowTemplateLoad(false);
-      setPreviewTemplate(null);
-      toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
+        setTotalDays(7);
+        setShowTemplateLoad(false);
+        setPreviewTemplate(null);
+        toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
+      } finally {
+        setSaving(false);
+      }
     });
-    setSaving(false);
   };
 
   // Totals
