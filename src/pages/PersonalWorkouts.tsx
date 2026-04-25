@@ -365,8 +365,9 @@ export default function PersonalWorkouts() {
           <WorkoutEditor
             students={students}
             initialData={selectedTemplate}
-            onSaved={() => { setCreating(false); setSelectedTemplate(null); load(); }}
-            onCancel={() => { setCreating(false); setSelectedTemplate(null); }}
+            initialStudentId={selectedStudentId || undefined}
+            onSaved={() => { setCreating(false); setSelectedTemplate(null); setSelectedStudentId(null); load(); }}
+            onCancel={() => { setCreating(false); setSelectedTemplate(null); setSelectedStudentId(null); }}
           />
         </div>
       </DashboardLayout>
