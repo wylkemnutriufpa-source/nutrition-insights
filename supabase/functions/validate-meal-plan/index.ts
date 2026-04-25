@@ -566,8 +566,6 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
 
             simplicity_issues: simplicityResult.issues,
             adherence_factors: adherenceResult.factors,
-            cross_day_inconsistencies: crossDayInconsistencies,
-            per_day_macros: Object.fromEntries([...perDayMacros.entries()].map(([d, m]) => [d, { cals: Math.round(m.cals), prot: Math.round(m.prot), carbs: Math.round(m.carbs), fat: Math.round(m.fat) }])),
             suggestions: uniqueSuggestions,
             audit,
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
