@@ -21,6 +21,14 @@ import {
   Download,
   Calendar,
   X,
+  Zap,
+  ShieldCheck,
+  Activity,
+  User,
+  Info,
+  ChevronRight,
+  Database,
+  Terminal,
 } from "lucide-react";
 import {
   Select,
