@@ -592,10 +592,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => applyTemplateToDay(previewTemplate)} disabled={saving} className="flex-1 gap-1">
-                      <ArrowRight className="w-3 h-3" /> Aplicar ao dia {currentDay}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => applyTemplateToWeek(previewTemplate)} disabled={saving} className="flex-1 gap-1">
-                      <Calendar className="w-3 h-3" /> Aplicar à semana
+                      <ArrowRight className="w-3 h-3" /> Aplicar ao plano
                     </Button>
                   </div>
                 </div>
