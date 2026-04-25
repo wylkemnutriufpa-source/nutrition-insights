@@ -3,10 +3,13 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
-import { assertSingleDayItems } from "@/lib/singleDayGuards";
-import { ensurePlanMode, classifyPlanMode } from "@/lib/singleDayPlanMigration";
-import { checkSingleDayConsistency } from "@/lib/singleDayConsistency";
-import { validateSingleDayConsistencyRpc } from "@/lib/singleDayRepair";
+
+/**
+ * Single-Day Editor Store (v3 - Pure Single Day)
+ * --------------------------------------------------------------
+ * Modelo oficial: APENAS day_of_week = 0. Sem réplicas, sem master_item_id.
+ * Após qualquer mutação persistida, refetch é obrigatório (DB é fonte de verdade).
+ */
 
 // ── Types ────────────────────────────────────────────────────
 export type MealPlan = Tables<"meal_plans">;
