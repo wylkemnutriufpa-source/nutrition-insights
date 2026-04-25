@@ -1025,12 +1025,12 @@ export async function autoFixMealPlan(
     }
 
     // Delete old items
-    if (!planId) {
-      console.error("[CRITICAL] DELETE bloqueado: planId inválido em executeAutoFix", { patientId });
+    if (!planId || typeof planId !== 'string' || planId.trim() === "") {
+      console.error("[CRITICAL] DELETE bloqueado: planId inválido em executeAutoFix", { planId, patientId });
       throw new Error("DELETE bloqueado: planId inválido");
     }
     
-    console.info("[DELETE] Limpando itens para aplicar correções AutoFix", { planId, patientId, operation: "executeAutoFix" });
+    console.info("[DELETE] Limpando itens para aplicar correções AutoFix", { planId, patientId, operation: "executeAutoFix", timestamp: Date.now() });
     
     const { error: delErr } = await supabase
       .from("meal_plan_items")
