@@ -237,11 +237,14 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
               </button>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); deleteItem(item.id); }}
-                className="p-0.5 rounded hover:bg-destructive/10"
-                title="Remover"
+                onClick={(e) => { 
+                  e.stopPropagation(); 
+                  deleteItem(item.id); 
+                }}
+                className="p-1.5 rounded-lg hover:bg-destructive/10 text-destructive transition-colors"
+                title="Remover Alimento"
               >
-                <X className="w-3 h-3 text-destructive" />
+                <X className="w-4 h-4" />
               </button>
             </div>
           </>

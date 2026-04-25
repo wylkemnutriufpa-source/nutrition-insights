@@ -169,8 +169,8 @@ export default function MealPlanEditorV2() {
   // Extra checks to handle case where plan totals might be used for score
   const totalCalories = (plan as any).total_calories || 0;
   const totalProtein = (plan as any).total_protein || 0;
-  const isImmutable = IMMUTABLE_STATUSES.includes(planStatus);
-  const canPublish = !["published", "published_to_patient"].includes(planStatus);
+  const isImmutable = planStatus === "archived";
+  const canPublish = planStatus !== "archived";
   
   // Check if plan came from onboarding/auto-generation — block hybrid builder
   const genSource = (plan as any).generation_source || "";
@@ -183,13 +183,7 @@ export default function MealPlanEditorV2() {
   const handleGenerateNewPlan = async () => {
     if (!plan || !user) return;
     
-    const proceed = confirm(
-      isImmutable
-        ? "Será criado um NOVO rascunho baseado nos dados do paciente. O plano atual publicado NÃO será alterado. Continuar?"
-        : "Será criado um NOVO plano baseado nos dados do paciente. Continuar?"
-    );
-    if (!proceed) return;
-
+    // No blocking confirm here, just generate
     console.warn("[PLAN] botão clicado");
     console.warn("[PLAN] função iniciou");
     setGeneratingNew(true);
@@ -281,15 +275,9 @@ export default function MealPlanEditorV2() {
 
   const handlePublish = async () => {
     if (!user) return;
-    if (!canPublish) {
-      toast.error("🔒 Plano já publicado. Use '♻️ Gerar Novo Plano' para criar uma revisão.");
+    if (isImmutable) {
+      toast.error("🔒 Plano arquivado não pode ser publicado.");
       return;
-    }
-
-    const validationStatus = plan.overall_validation_status;
-    if (!validationStatus || validationStatus !== "aprovado") {
-      const proceed = confirm("⚠️ O plano ainda não foi validado pelo Motor Clínico. Deseja publicar mesmo assim?");
-      if (!proceed) return;
     }
 
     setPublishing(true);
@@ -312,32 +300,13 @@ export default function MealPlanEditorV2() {
   const handleSaveAndPublish = async () => {
     if (!user || !plan) return;
     if (isImmutable) {
-      toast.error("🔒 Plano imutável. Crie uma nova versão para editar.");
+      toast.error("🔒 Plano arquivado. Crie uma nova versão para editar.");
       return;
-    }
-    if (!canPublish) {
-      toast.error("🔒 Plano já publicado. Use '♻️ Gerar Novo Plano' para criar uma revisão.");
-      return;
-    }
-
-    const validationStatus = plan.overall_validation_status;
-    if (!validationStatus || validationStatus !== "aprovado") {
-      const proceed = confirm(
-        "⚠️ Este plano ainda não foi validado pelo Motor Clínico.\n\nDeseja SALVAR e PUBLICAR mesmo assim? O paciente verá o plano imediatamente."
-      );
-      if (!proceed) return;
-    } else {
-      const proceed = confirm(
-        "Confirmar SALVAR e PUBLICAR?\n\nO plano será aprovado e enviado ao paciente em uma única ação."
-      );
-      if (!proceed) return;
     }
 
     setSavingAndPublishing(true);
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
-      // Modelo single-day puro: sem consolidação de dias legados.
-
       // 1) Flush pending edits
       await store._flushQueue();
 
@@ -762,43 +731,33 @@ export default function MealPlanEditorV2() {
               </>
             )}
 
-            {/* Publicar — visible for drafts AND approved plans (not yet delivered) */}
-            {canPublish && !isImmutable && (
-              <Button
-                size="sm"
-                onClick={handleSaveAndPublish}
-                disabled={
-                  savingAndPublishing ||
-                  saving ||
-                  publishing ||
-                  validating ||
-                  store.syncStatus === "saving"
-                }
-                title="Salvar (aprovar) e publicar para o paciente em uma única ação"
-                className="gradient-primary text-white border-0 gap-1.5 shadow-glow font-semibold"
-              >
-                {savingAndPublishing ? (
-                  <Loader2 className="w-4 h-4 animate-spin mr-1" />
-                ) : (
-                  <Send className="w-4 h-4 mr-1" />
-                )}
-                Salvar e Publicar
-              </Button>
-            )}
+            {!isImmutable && (
+              <>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={saving}
+                  className="gap-1.5"
+                >
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                  Salvar
+                </Button>
 
-            {/* Publicar — for already-approved plans (kept as fallback) */}
-            {canPublish && isApproved && (
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handlePublish}
-                disabled={publishing || savingAndPublishing || store.syncStatus === "saving"}
-                title="Publicar plano já aprovado"
-                className="gap-1.5"
-              >
-                {publishing ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Send className="w-4 h-4 mr-1" />}
-                Só Publicar
-              </Button>
+                <Button
+                  size="sm"
+                  onClick={handleSaveAndPublish}
+                  disabled={savingAndPublishing || publishing}
+                  className="gradient-primary text-white border-0 gap-1.5 shadow-glow font-semibold"
+                >
+                  {savingAndPublishing ? (
+                    <Loader2 className="w-4 h-4 animate-spin mr-1" />
+                  ) : (
+                    <Send className="w-4 h-4 mr-1" />
+                  )}
+                  Salvar e Publicar
+                </Button>
+              </>
             )}
 
             {/* Visual Library — always available for viewing */}
