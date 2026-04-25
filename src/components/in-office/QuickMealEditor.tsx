@@ -327,34 +327,40 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   // Save as template
   const saveAsTemplate = async () => {
     if (!templateName.trim() || !user?.id) return;
-    const { data: np } = await supabase
-      .from("nutritionist_patients")
-      .select("tenant_id")
-      .eq("patient_id", patientId)
-      .eq("nutritionist_id", user.id)
-      .eq("status", "active")
-      .maybeSingle();
+    
+    enqueuePersistence(async () => {
+      const { data: np } = await supabase
+        .from("nutritionist_patients")
+        .select("tenant_id")
+        .eq("patient_id", patientId)
+        .eq("nutritionist_id", user.id)
+        .eq("status", "active")
+        .maybeSingle();
 
-    if (!np?.tenant_id) {
-      toast.error("Vínculo com paciente não encontrado.");
-      return;
-    }
+      if (!np?.tenant_id) {
+        toast.error("Vínculo com paciente não encontrado.");
+        return;
+      }
 
-    const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, meal_type: b.type })));
-    await supabase.from("quick_meal_templates" as any).insert({
-      nutritionist_id: user.id,
-      tenant_id: np.tenant_id,
-      template_name: templateName,
-      template_type: "day",
-      items: templateItems as any,
-      total_calories: Math.round(totalMacros.calories || 0),
-      total_protein: Math.round(totalMacros.protein || 0),
-      total_carbs: Math.round(totalMacros.carbs || 0),
-      total_fat: Math.round(totalMacros.fat || 0),
-    } as any);
-    setShowTemplateSave(false);
-    setTemplateName("");
-    toast.success("Template salvo!");
+      const templateItems = blocks.flatMap(b => b.items.map(i => ({ ...i, meal_type: b.type })));
+      const { error } = await supabase.from("quick_meal_templates" as any).insert({
+        nutritionist_id: user.id,
+        tenant_id: np.tenant_id,
+        template_name: templateName,
+        template_type: "day",
+        items: templateItems as any,
+        total_calories: Math.round(totalMacros.calories || 0),
+        total_protein: Math.round(totalMacros.protein || 0),
+        total_carbs: Math.round(totalMacros.carbs || 0),
+        total_fat: Math.round(totalMacros.fat || 0),
+      } as any);
+      
+      if (error) throw error;
+      
+      setShowTemplateSave(false);
+      setTemplateName("");
+      toast.success("Template salvo!");
+    });
   };
 
   // Apply template to current day
