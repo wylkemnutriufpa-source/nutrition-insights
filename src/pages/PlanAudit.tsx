@@ -833,6 +833,68 @@ const PlanAudit = () => {
     toast.success("Relatório JSON exportado!");
   };
 
+  const handleExportCSV = () => {
+    const logsToExport = emergencyLogs.filter(l => 
+      !executionIdFilter || l.executionId.includes(executionIdFilter)
+    );
+
+    if (logsToExport.length === 0) {
+      toast.error("Nenhum log para exportar com o filtro atual.");
+      return;
+    }
+
+    // Export Logs CSV
+    const logHeaders = ["ExecutionID", "Step", "Status", "Message", "ErrorType"];
+    const logRows = logsToExport.map(l => [
+      l.executionId,
+      l.step,
+      l.status,
+      `"${l.message.replace(/"/g, '""')}"`,
+      l.errorType || ""
+    ]);
+
+    const logsCsvContent = [logHeaders, ...logRows].map(r => r.join(",")).join("\n");
+    const logsBlob = new Blob([logsCsvContent], { type: "text/csv;charset=utf-8;" });
+    const logsUrl = URL.createObjectURL(logsBlob);
+    const logsLink = document.createElement("a");
+    logsLink.setAttribute("href", logsUrl);
+    logsLink.setAttribute("download", `emergency-logs-${Date.now()}.csv`);
+    logsLink.click();
+
+    // Export Snapshots CSV (Changed Fields)
+    const snapshotKeys = Object.keys(snapshots);
+    if (snapshotKeys.length > 0) {
+      const snapshotHeaders = ["Moment", "PlanID", "Status", "IsActive"];
+      const snapshotRows: any[] = [];
+      
+      snapshotKeys.forEach(label => {
+        const data = snapshots[label];
+        if (Array.isArray(data)) {
+          data.forEach(p => {
+            snapshotRows.push([label.split('_')[0], p.id, p.plan_status, p.is_active]);
+          });
+        }
+      });
+
+      const snapshotsCsvContent = [snapshotHeaders, ...snapshotRows].map(r => r.join(",")).join("\n");
+      const snapshotsBlob = new Blob([snapshotsCsvContent], { type: "text/csv;charset=utf-8;" });
+      const snapshotsUrl = URL.createObjectURL(snapshotsBlob);
+      const snapshotsLink = document.createElement("a");
+      snapshotsLink.setAttribute("href", snapshotsUrl);
+      snapshotsLink.setAttribute("download", `emergency-snapshots-${Date.now()}.csv`);
+      snapshotsLink.click();
+    }
+
+    toast.success("CSV(s) exportado(s) com sucesso!");
+  };
+
+  const filteredEmergencyLogs = useMemo(() => {
+    return emergencyLogs.filter(l => 
+      !executionIdFilter || l.executionId.toLowerCase().includes(executionIdFilter.toLowerCase())
+    );
+  }, [emergencyLogs, executionIdFilter]);
+
+
 
   return (
     <div className="container max-w-6xl mx-auto px-4 py-6 space-y-6">
