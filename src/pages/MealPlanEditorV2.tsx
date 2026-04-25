@@ -412,6 +412,11 @@ export default function MealPlanEditorV2() {
       const nextValidationStatus = resolveOverallValidationStatus(data);
 
       if (outcome.kind === "validated") {
+        const approveResult = await savePlanAsApproved(plan.id, user.id);
+        if (!approveResult.success) {
+          throw new Error(approveResult.error || "Plano validado, mas houve erro ao marcar como aprovado.");
+        }
+
         await refreshPlanFromServer();
         setValidationResult(null);
         setAutofixWasValid(true);
@@ -422,6 +427,13 @@ export default function MealPlanEditorV2() {
       }
 
       if (outcome.kind === "fixed_and_validated" || outcome.kind === "fixed_but_pending") {
+        if (outcome.kind === "fixed_and_validated") {
+          const approveResult = await savePlanAsApproved(plan.id, user.id);
+          if (!approveResult.success) {
+            throw new Error(approveResult.error || "Plano corrigido e validado, mas houve erro ao marcar como aprovado.");
+          }
+        }
+
         await refreshPlanFromServer();
         setAutofixWasValid(false);
         setAutofixResult(outcome.fixedResult);
