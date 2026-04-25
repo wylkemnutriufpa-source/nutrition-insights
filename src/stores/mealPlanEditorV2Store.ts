@@ -828,11 +828,35 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
 
-      // EMERGENCY BYPASS: Removed rigid consistency guards that were causing inconsistent errors
-      /*
-      const planAfter = get().plan;
-      ...
-      */
+      // ─── REFETCH OBRIGATÓRIO ───
+      // Após qualquer mutação persistida, o DB é a fonte única de verdade.
+      // Recarregamos os items para detectar divergências e forçar consistência.
+      if (!hasError) {
+        const planId = get().planId;
+        if (planId) {
+          const { data: itemsData, error: refetchError } = await supabase
+            .from("meal_plan_items")
+            .select("*")
+            .eq("meal_plan_id", planId)
+            .order("created_at");
+          if (refetchError) {
+            console.error("[REFETCH] Falha ao recarregar items pós-save", refetchError);
+          } else {
+            const dbItems = (itemsData || []) as MealPlanItem[];
+            // Auditoria de divergência: compara contagem local vs DB
+            const localCount = get().items.filter(i => !i.id.startsWith("temp-")).length;
+            if (dbItems.length !== localCount) {
+              console.warn("[AUDIT][DIVERGENCE] UI vs DB", {
+                ui: localCount,
+                db: dbItems.length,
+                planId,
+              });
+            }
+            set({ items: dbItems });
+            get()._persistSnapshot();
+          }
+        }
+      }
 
       if (hasError) {
         throw failed?.err instanceof Error ? failed.err : new Error("Falha ao persistir alterações do plano.");
