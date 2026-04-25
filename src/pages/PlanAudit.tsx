@@ -1550,7 +1550,7 @@ const PlanAudit = () => {
                  </h3>
                  <Button 
                    variant="outline" 
-                   size="xs" 
+                   size="sm" 
                    className="h-7 text-[10px] gap-1"
                    onClick={exportSummaryCSV}
                  >
