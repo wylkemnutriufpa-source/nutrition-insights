@@ -148,8 +148,18 @@ const PlanAudit = () => {
 
   // Emergency Flow state
   const [emergencyStep, setEmergencyStep] = useState<number>(0);
-  const [emergencyLogs, setEmergencyLogs] = useState<{ step: string; status: "loading" | "success" | "error"; message: string }[]>([]);
+  const [emergencyLogs, setEmergencyLogs] = useState<{ 
+    step: string; 
+    status: "loading" | "success" | "error"; 
+    message: string;
+    payload?: any;
+    response?: any;
+    errorType?: "RLS" | "Validação" | "Persistência" | "Outro";
+  }[]>([]);
   const [emergencyProcessing, setEmergencyProcessing] = useState(false);
+  const [snapshots, setSnapshots] = useState<Record<string, any>>({});
+  const [emergencyPatientId, setEmergencyPatientId] = useState<string | null>(null);
+  const [emergencyPlanId, setEmergencyPlanId] = useState<string | null>(null);
 
   // RLS Validation state
   const [rlsPatientId, setRlsPatientId] = useState<string>("");
