@@ -81,7 +81,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
   // Params
   const [targetKcal, setTargetKcal] = useState(2000);
   const [mealCount, setMealCount] = useState<3 | 4 | 5 | 6>(5);
-  const [subsPerMeal, setSubsPerMeal] = useState<0 | 1 | 2 | 3>(2);
+  const [subsPerMeal, setSubsPerMeal] = useState<0 | 1 | 2 | 3 | 4>(4);
   const [complexity, setComplexity] = useState<ComplexityTier>("balanced");
   const [focus, setFocus] = useState<PlanFocus>("aderencia");
   const [proteinLevel, setProteinLevel] = useState<ProteinLevel>("moderada");
