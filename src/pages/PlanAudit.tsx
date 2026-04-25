@@ -1573,8 +1573,66 @@ const PlanAudit = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      <Dialog open={!!diffViewData} onOpenChange={(open) => !open && setDiffViewData(null)}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm font-bold flex items-center gap-2">
+              <Activity className="w-4 h-4 text-primary" />
+              {diffViewData?.label}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold uppercase text-muted-foreground">Antes</h4>
+                <pre className="text-[9px] bg-muted/30 p-3 rounded-lg border overflow-auto max-h-[50vh]">
+                  {JSON.stringify(diffViewData?.before, null, 2)}
+                </pre>
+              </div>
+              <div className="space-y-2">
+                <h4 className="text-[10px] font-bold uppercase text-primary">Depois</h4>
+                <pre className="text-[9px] bg-primary/5 p-3 rounded-lg border border-primary/20 overflow-auto max-h-[50vh]">
+                  {JSON.stringify(diffViewData?.after, null, 2)}
+                </pre>
+              </div>
+            </div>
+            <div className="p-3 bg-muted/20 rounded-lg">
+               <h4 className="text-[10px] font-bold uppercase mb-2">Campos Alterados</h4>
+               <div className="space-y-1">
+                 {diffViewData && (() => {
+                    const beforeStr = JSON.stringify(diffViewData.before);
+                    const afterStr = JSON.stringify(diffViewData.after);
+                    if (beforeStr === afterStr) return <span className="text-xs text-muted-foreground italic">Nenhuma mudança detectada nos campos principais.</span>;
+                    
+                    // Simple field-level diff
+                    const b = Array.isArray(diffViewData.before) ? diffViewData.before[0] : diffViewData.before;
+                    const a = Array.isArray(diffViewData.after) ? diffViewData.after[0] : diffViewData.after;
+                    
+                    if (!b || !a) return null;
+
+                    return Object.keys({ ...b, ...a }).map(key => {
+                      if (JSON.stringify(b[key]) !== JSON.stringify(a[key])) {
+                        return (
+                          <div key={key} className="flex items-center gap-2 text-xs border-b border-muted py-1 last:border-0">
+                            <span className="font-mono font-semibold w-24 shrink-0">{key}:</span>
+                            <span className="text-rose-600 line-through truncate">{String(b[key])}</span>
+                            <ChevronRight className="w-3 h-3 text-muted-foreground" />
+                            <span className="text-emerald-600 font-bold truncate">{String(a[key])}</span>
+                          </div>
+                        );
+                      }
+                      return null;
+                    });
+                 })()}
+               </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
 
 export default PlanAudit;
+
