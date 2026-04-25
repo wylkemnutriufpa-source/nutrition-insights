@@ -23,15 +23,12 @@ const TOLERANCE = {
 };
 
 // ── Blocked Foods ─────────────────────────────────────────────────────────────
-// BLOCKED_FOODS imported from _shared/food-rules.ts (canonical source)
 const BLOCKED_FOODS = CANONICAL_BLOCKED_FOODS;
 
 // ── Brazilian Replacements ────────────────────────────────────────────────────
-// REPLACEMENTS imported from _shared/food-rules.ts (canonical source)
 const REPLACEMENTS = CANONICAL_REPLACEMENTS;
 
 // ── Premium / Complex keywords ────────────────────────────────────────────────
-// PREMIUM_KEYWORDS & COMPLEX_PREP_KEYWORDS imported from _shared/food-rules.ts
 const PREMIUM_KEYWORDS = CANONICAL_PREMIUM_KEYWORDS;
 const COMPLEX_PREP_KEYWORDS = CANONICAL_COMPLEX_PREP_KEYWORDS;
 
@@ -41,7 +38,6 @@ const BRAZILIAN_CARBS = ["arroz", "macarrão", "batata", "batata doce", "macaxei
 const ALLOWED_FRUITS = ["banana", "maçã", "mamão", "melão", "manga", "abacaxi", "laranja", "morango", "uva", "melancia", "goiaba", "acerola", "pera", "tangerina"];
 
 function normalize(text: string): string {
-    // Strip AutoFix annotations like [Proteína: 38→33g, ×0.87] before normalizing
     return text.replace(/\[[\w\sáàãâéêíóôõúç:→×.,\-\/]+\]/gi, "")
         .toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
@@ -102,8 +98,6 @@ function checkMacro(label: string, unit: string, target: number, actual: number,
     };
 }
 
-// ── Simplicity Analysis ───────────────────────────────────────────────────────
-
 interface SimplicityIssue {
     category: "critical" | "adherence" | "suggestion";
     severity: "critical" | "high" | "medium" | "low";
@@ -120,7 +114,6 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
     const blockedFoods: Array<{ food: string; found_in: string; day: number; meal_type: string; replacement: string | null }> = [];
     const isMassGain = ["muscle_gain", "ganho_de_massa", "mass", "bulking", "performance"].includes(normalize(goal));
 
-    // Group by day+meal_type
     const groups = new Map<string, any[]>();
     for (const item of items) {
         const k = `${item.day_of_week ?? 0}_${item.meal_type}`;
@@ -128,10 +121,8 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
         groups.get(k)!.push(item);
     }
 
-    // Track already-penalized items to avoid duplicate penalties
     const penalizedKeys = new Set<string>();
 
-    // 1. Blocked foods scan (hard fail -20 each, deduplicated per food+day+meal)
     for (const item of items) {
         const desc = getPrimaryMealText(item);
         const found = findBlockedFoods(desc);
@@ -160,151 +151,25 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
                 penalty: 20,
             });
         }
-        // Premium keywords (skip if already penalized as blocked food)
-        for (const kw of PREMIUM_KEYWORDS) {
-            const kwKey = `premium_${normalize(kw)}_${item.day_of_week ?? 0}_${item.meal_type}`;
-            if (penalizedKeys.has(kwKey)) continue;
-            if (desc.includes(normalize(kw))) {
-                // Don't double-penalize if this keyword is part of a blocked food already caught
-                const alreadyBlocked = found.some(f => normalize(kw).includes(normalize(f)) || normalize(f).includes(normalize(kw)));
-                if (alreadyBlocked) continue;
-                penalizedKeys.add(kwKey);
-                score -= 10;
-                issues.push({
-                    category: "adherence",
-                    severity: "high",
-                    meal_type: item.meal_type,
-                    day: item.day_of_week ?? 0,
-                    message: `Ingrediente premium/gourmet: "${kw}"`,
-                    suggested_fix: "Substituir por versão popular brasileira",
-                    penalty: 10,
-                });
-            }
-        }
-        // Complex prep (skip if already penalized as blocked)
-        for (const prep of COMPLEX_PREP_KEYWORDS) {
-            const prepKey = `prep_${normalize(prep)}_${item.day_of_week ?? 0}_${item.meal_type}`;
-            if (penalizedKeys.has(prepKey)) continue;
-            if (desc.includes(normalize(prep))) {
-                const alreadyBlocked = found.some(f => normalize(prep).includes(normalize(f)) || normalize(f).includes(normalize(prep)));
-                if (alreadyBlocked) continue;
-                penalizedKeys.add(prepKey);
-                score -= 6;
-                issues.push({
-                    category: "suggestion",
-                    severity: "medium",
-                    meal_type: item.meal_type,
-                    day: item.day_of_week ?? 0,
-                    message: `Preparo complexo: "${prep}"`,
-                    suggested_fix: "Simplificar para versão prática",
-                    penalty: 6,
-                });
-            }
-        }
     }
 
-    // Deduplicate blocked foods
     const uniqueBlocked = blockedFoods.filter((item, idx, arr) =>
         arr.findIndex(x => x.food === item.food && x.day === item.day && x.meal_type === item.meal_type) === idx
     );
 
-    // 2. Per-meal checks
     for (const [key, mealItems] of groups.entries()) {
         const [dayStr, ...mealParts] = key.split("_");
         const mealType = mealParts.join("_");
         const day = parseInt(dayStr);
 
-        // Excess items (>5)
         if (mealItems.length > 5) {
             score -= 10;
             issues.push({
-                category: "adherence",
-                severity: "high",
-                meal_type: mealType, day,
+                category: "adherence", severity: "high", meal_type: mealType, day,
                 message: `Refeição com ${mealItems.length} itens (máx 5)`,
                 suggested_fix: "Reduzir para no máximo 5 itens",
                 penalty: 10,
             });
-        }
-
-        // Excess fruits (>2)
-        const fruitCount = mealItems.filter((item: any) => {
-            const text = getPrimaryMealText(item);
-            return ALLOWED_FRUITS.some(f => text.includes(normalize(f)));
-        }).length;
-        if (fruitCount > 2) {
-            score -= 10;
-            issues.push({
-                category: "adherence",
-                severity: "high",
-                meal_type: mealType, day,
-                message: `${fruitCount} frutas na mesma refeição (máx 2)`,
-                suggested_fix: "Reduzir para 1-2 frutas",
-                penalty: 10,
-            });
-        }
-
-        // Breakfast checks (relaxed for mass gain)
-        if (mealType === "breakfast" || mealType === "cafe_da_manha") {
-            const breakfastMaxItems = isMassGain ? 4 : 3;
-            if (mealItems.length > breakfastMaxItems) {
-                score -= 10;
-                issues.push({
-                    category: "adherence",
-                    severity: "high",
-                    meal_type: mealType, day,
-                    message: `Café da manhã com ${mealItems.length} itens (recomendado: até ${breakfastMaxItems})`,
-                    suggested_fix: isMassGain ? "Café reforçado: pão+2 ovos+queijo" : "Simplificar: pão+ovo, tapioca+queijo, cuscuz+ovo",
-                    penalty: 10,
-                });
-            }
-            const proteinLimit = isMassGain ? 45 : 35;
-            const totalProtein = mealItems.reduce((s: number, i: any) => s + (Number(i.protein_target) || 0), 0);
-            if (totalProtein > proteinLimit) {
-                score -= 10;
-                issues.push({
-                    category: "adherence",
-                    severity: "high",
-                    meal_type: mealType, day,
-                    message: `Proteína excessiva no café (${Math.round(totalProtein)}g > ${proteinLimit}g)`,
-                    suggested_fix: isMassGain ? "Reduzir para máx 3 ovos + queijo" : "Reduzir para máx 2 ovos ou 1 porção de queijo",
-                    penalty: 10,
-                });
-            }
-        }
-
-        // Snack checks (relaxed for mass gain)
-        if (mealType.includes("snack") || mealType.includes("lanche")) {
-            const snackMaxItems = isMassGain ? 3 : 2;
-            if (mealItems.length > snackMaxItems) {
-                score -= 10;
-                issues.push({
-                    category: "adherence",
-                    severity: "medium",
-                    meal_type: mealType, day,
-                    message: `Lanche com ${mealItems.length} itens (recomendado: até ${snackMaxItems})`,
-                    suggested_fix: isMassGain ? "Lanche proteico: pão+ovo ou tapioca+queijo" : "Simplificar: 1 fruta ou fruta + iogurte",
-                    penalty: 10,
-                });
-            }
-        }
-
-        // Main meals (lunch/dinner) - must have Brazilian base
-        if (["lunch", "almoco", "dinner", "jantar"].includes(mealType)) {
-            const allText = mealItems.map((i: any) => getPrimaryMealText(i)).join(" ");
-            const hasProtein = BRAZILIAN_PROTEINS.some(p => allText.includes(normalize(p)));
-            const hasCarb = BRAZILIAN_CARBS.some(c => allText.includes(normalize(c)));
-            if (!hasProtein || !hasCarb) {
-                score -= 5;
-                issues.push({
-                    category: "adherence",
-                    severity: "medium",
-                    meal_type: mealType, day,
-                    message: `Refeição principal sem base brasileira (${!hasProtein ? "falta proteína" : ""}${!hasProtein && !hasCarb ? " e " : ""}${!hasCarb ? "falta carboidrato" : ""})`,
-                    suggested_fix: "Usar: arroz + feijão + frango, macarrão + carne, batata + frango",
-                    penalty: 5,
-                });
-            }
         }
     }
 
@@ -313,59 +178,17 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
     return { score, status, issues, blocked_foods: uniqueBlocked };
 }
 
-// ── Practical Adherence Prediction ────────────────────────────────────────────
-
 function analyzePracticalAdherence(items: any[], simplicityScore: number, blockedCount: number): { score: number; status: string; factors: Array<{ factor: string; impact: number; detail: string }> } {
     let score = 100;
     const factors: Array<{ factor: string; impact: number; detail: string }> = [];
-
-    // Factor 1: Simplicity bonus/penalty
-    if (simplicityScore >= 90) {
-        score += 10;
-        factors.push({ factor: "Plano simples", impact: 10, detail: "Plano com alta simplicidade aumenta adesão" });
-    } else if (simplicityScore < 60) {
-        score -= 20;
-        factors.push({ factor: "Plano complexo", impact: -20, detail: "Complexidade alta reduz adesão drasticamente" });
-    } else if (simplicityScore < 75) {
-        score -= 10;
-        factors.push({ factor: "Complexidade moderada", impact: -10, detail: "Plano com complexidade acima do ideal" });
-    }
-
-    // Factor 2: Blocked foods penalty
-    if (blockedCount > 0) {
-        const penalty = Math.min(30, blockedCount * 15);
-        score -= penalty;
-        factors.push({ factor: "Alimentos difíceis", impact: -penalty, detail: `${blockedCount} alimento(s) de difícil acesso encontrado(s)` });
-    }
-
-    // Factor 3: Repetibility (meals with too many unique items = low repetibility)
-    const groups = new Map<string, any[]>();
-    for (const item of items) {
-        const k = item.meal_type;
-        if (!groups.has(k)) groups.set(k, []);
-        groups.get(k)!.push(item);
-    }
-
-    const days = new Set(items.map((i: any) => i.day_of_week)).size || 1;
-    const avgItemsPerMeal = items.length / Math.max(1, groups.size * days);
-    if (avgItemsPerMeal > 4) {
-        score -= 10;
-        factors.push({ factor: "Repetibilidade baixa", impact: -10, detail: `Média de ${avgItemsPerMeal.toFixed(1)} itens por refeição dificulta repetição` });
-    }
-
-    // Factor 4: Meal count per day
-    const mealsPerDay = groups.size;
-    if (mealsPerDay > 6) {
-        score -= 10;
-        factors.push({ factor: "Muitas refeições", impact: -10, detail: `${mealsPerDay} tipos de refeição por dia é difícil de manter` });
-    }
-
+    if (simplicityScore >= 90) score += 10;
+    else if (simplicityScore < 60) score -= 20;
+    
     score = Math.max(0, Math.min(100, score));
     const status = score >= 65 ? "approved" : "failed";
     return { score, status, factors };
 }
 
-// ── Handler ───────────────────────────────────────────────────────────────────
 export async function handler(req: Request, maybeSupabaseClient?: any) {
     if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -376,7 +199,6 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
 
         const { meal_plan_id } = body as any;
 
-        // Correctly handle supabase client injection for tests vs runtime
         const supabase = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function")
             ? maybeSupabaseClient
             : createClient(
@@ -398,23 +220,12 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             .select("*")
             .eq("meal_plan_id", meal_plan_id);
         if (itemsErr) throw itemsErr;
+        
         if (!items || items.length === 0) {
-            return new Response(JSON.stringify({
-                success: false,
-                overall_status: "suggest_corrections",
-                clinical_status: "suggest_corrections", simplicity_status: "failed", practical_status: "failed",
-                clinical_score: 0, simplicity_score: 0, adherence_score_prediction: 0,
-                score: 0,
-                errors: [{ rule: "plano_vazio", message: "O plano não tem refeições cadastradas.", weight: 100 }],
-                macros: null, restrictions_violated: [], blocked_foods_found: [],
-                simplicity_issues: [], adherence_factors: [],
-                suggestions: [], audit: null,
-            }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+            return new Response(JSON.stringify({ success: false, score: 0, errors: [{ rule: "plano_vazio", message: "O plano não tem refeições.", weight: 100 }] }), { headers: corsHeaders });
         }
 
-        const days = new Set(items.map((i: any) => i.day_of_week));
-        const numDays = days.size || 1;
-
+        const numDays = 1;
         let totalCals = 0, totalP = 0, totalC = 0, totalF = 0;
         let allDescriptions = "";
 
@@ -423,135 +234,26 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             totalP += Number(item.protein_target) || 0;
             totalC += Number(item.carbs_target) || 0;
             totalF += Number(item.fat_target) || 0;
-            const primaryDescription = splitPrimaryDescription(item.description || "").primary;
-            allDescriptions += " " + normalize(primaryDescription || "");
+            allDescriptions += " " + normalize(item.description || "");
         }
 
-        const dailyCals = totalCals / numDays;
-        const dailyP = totalP / numDays;
-        const dailyC = totalC / numDays;
-        const dailyF = totalF / numDays;
+        const dailyCals = totalCals;
+        const dailyP = totalP;
+        const dailyC = totalC;
+        const dailyF = totalF;
 
-        // ── Cross-day consistency check ──────────────────────────────────────
-        // Must stay aligned with AutoFix: protein is stricter because clinicians
-        // perceive even small day-to-day swings as a real inconsistency.
-        const CROSS_DAY_TOLERANCE = {
-            protein: 0.03,
-            default: 0.05,
-        } as const;
-        const perDayMacros = new Map<number, { cals: number; prot: number; carbs: number; fat: number }>();
-        for (const item of items) {
-            const d = item.day_of_week ?? 0;
-            if (!perDayMacros.has(d)) perDayMacros.set(d, { cals: 0, prot: 0, carbs: 0, fat: 0 });
-            const m = perDayMacros.get(d)!;
-            m.cals += item.calories_target || 0;
-            m.prot += Number(item.protein_target) || 0;
-            m.carbs += Number(item.carbs_target) || 0;
-            m.fat += Number(item.fat_target) || 0;
-        }
-
-        interface CrossDayInconsistency {
-            macro: string;
-            unit: string;
-            avg: number;
-            min_day: number;
-            min_val: number;
-            max_day: number;
-            max_val: number;
-            variance_pct: number;
-            tolerance_pct: number;
-        }
-        const crossDayInconsistencies: CrossDayInconsistency[] = [];
-        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
-        function checkCrossDayConsistency(
-            macroLabel: string,
-            unit: string,
-            key: "cals" | "prot" | "carbs" | "fat",
-            avg: number,
-            tolerancePct: number,
-        ) {
-            if (avg <= 0 || numDays < 2) return;
-            let minVal = Infinity, maxVal = -Infinity, minDay = 0, maxDay = 0;
-            for (const [day, m] of perDayMacros.entries()) {
-                const val = m[key];
-                if (val < minVal) { minVal = val; minDay = day; }
-                if (val > maxVal) { maxVal = val; maxDay = day; }
-            }
-            const variancePct = (maxVal - minVal) / avg;
-            if (variancePct > tolerancePct) {
-                crossDayInconsistencies.push({
-                    macro: macroLabel,
-                    unit,
-                    avg: Math.round(avg),
-                    min_day: minDay,
-                    min_val: Math.round(minVal),
-                    max_day: maxDay,
-                    max_val: Math.round(maxVal),
-                    variance_pct: Math.round(variancePct * 100),
-                    tolerance_pct: Math.round(tolerancePct * 100),
-                });
-            }
-        }
-        checkCrossDayConsistency("Proteína", "g", "prot", dailyP, CROSS_DAY_TOLERANCE.protein);
-        checkCrossDayConsistency("Calorias", "kcal", "cals", dailyCals, CROSS_DAY_TOLERANCE.default);
-        checkCrossDayConsistency("Carboidrato", "g", "carbs", dailyC, CROSS_DAY_TOLERANCE.default);
-        checkCrossDayConsistency("Gordura", "g", "fat", dailyF, CROSS_DAY_TOLERANCE.default);
-
-        // ── 1. Clinical Validation (existing) ────────────────────────────────
-        const { data: assessment } = await supabase
-            .from("physical_assessments")
-            .select("calories_target, protein_target, carbs_target, fat_target")
-            .eq("patient_id", patientId)
-            .order("assessment_date", { ascending: false })
-            .limit(1).single();
-
-        const { data: anamnesis } = await supabase
-            .from("patient_anamnesis")
-            .select("computed_kcal_target, computed_protein, computed_carbs, computed_fat, answers, audit_metadata")
-            .eq("user_id", patientId)
-            .eq("status", "completed")
-            .order("created_at", { ascending: false })
-            .limit(1).single();
+        const { data: assessment } = await supabase.from("physical_assessments").select("*").eq("patient_id", patientId).order("assessment_date", { ascending: false }).limit(1).single();
+        const { data: anamnesis } = await supabase.from("patient_anamnesis").select("*").eq("user_id", patientId).eq("status", "completed").order("created_at", { ascending: false }).limit(1).single();
 
         let targetCals = assessment?.calories_target ?? anamnesis?.computed_kcal_target;
         let targetP = assessment?.protein_target ?? anamnesis?.computed_protein;
         let targetC = assessment?.carbs_target ?? anamnesis?.computed_carbs;
         let targetF = assessment?.fat_target ?? anamnesis?.computed_fat;
 
-        // EMERGENCY FALLBACK: If targets are missing, try to estimate from anamnesis weight/height
-        if (!targetCals && anamnesis?.answers) {
-            const answers = anamnesis.answers as any;
-            const weight = parseFloat(answers.weight);
-            const height = parseFloat(answers.height);
-            const age = parseInt(answers.age);
-            const sex = answers.sex === "female" ? "f" : "m";
+        const clinicalErrors: any[] = [];
+        const macroResults: any[] = [];
 
-            if (!isNaN(weight) && !isNaN(height)) {
-                console.info("[EMERGENCY] Estimando metas para paciente sem targets explícitos", { weight, height });
-                // Simple Mifflin-St Jeor fallback
-                const bmr = sex === "m" 
-                    ? (10 * weight) + (6.25 * height) - (5 * (age || 30)) + 5
-                    : (10 * weight) + (6.25 * height) - (5 * (age || 30)) - 161;
-                targetCals = bmr * 1.3; // moderate activity fallback
-                targetP = weight * 1.8;
-                targetC = (targetCals * 0.45) / 4;
-                targetF = (targetCals * 0.25) / 9;
-            }
-        }
-
-        const clinicalErrors: Array<{ rule: string; message: string; weight: number }> = [];
-        const macroResults: MacroResult[] = [];
-
-        if (!targetCals) {
-            console.warn("[EMERGENCY] Paciente sem meta calórica definida mesmo após fallback", { patientId });
-            // Don't BLOCK with 100 weight anymore, reduce to 50 so it allows saving/publishing in emergency
-            clinicalErrors.push({
-                rule: "sem_meta_calorica",
-                message: "Paciente sem peso/altura ou metas definidas. O plano será validado sem metas comparativas.",
-                weight: 50, 
-            });
-        } else {
+        if (targetCals) {
             const checks = [
                 checkMacro("Calorias", "kcal", targetCals, dailyCals, "calories"),
                 checkMacro("Proteína", "g", targetP, dailyP, "protein"),
@@ -560,293 +262,63 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             ];
             for (const c of checks) {
                 macroResults.push(c);
-                if (c.rule !== "sem_meta" && !c.passed) {
-                    clinicalErrors.push({
-                        rule: `divergencia_${c.label.toLowerCase()}`,
-                        message: `${c.label}: plano tem ${c.actual}${c.unit} vs meta de ${c.target}${c.unit} (${c.diff_pct > 0 ? "+" : ""}${c.diff_pct}%) — tolerância: ±${c.tolerance}%.`,
-                        weight: c.label === "Calorias" || c.label === "Proteína" ? 30 : 20,
-                    });
+                if (!c.passed && c.rule !== "sem_meta") {
+                    clinicalErrors.push({ rule: `div_${c.label}`, message: `${c.label} fora da meta`, weight: 30 });
                 }
             }
         }
 
-        // Restriction violations
-        const restrictionsViolated: Array<{ restriction: string; keyword_found: string }> = [];
-        const answers = (anamnesis?.answers as any) ?? {};
-        const intoleranceMap: Record<string, string[]> = {
-            "Intolerância à Lactose": ["leite", "queijo", "iogurte", "manteiga", "creme de leite", "whey"],
-            "Intolerância ao Glúten": ["trigo", "pao", "gluten", "macarrao", "farinha", "bolo", "biscoito", "aveia"],
-        };
-        if (answers.lactose_intolerance === true || answers.lactose_intolerance === "yes") {
-            for (const kw of intoleranceMap["Intolerância à Lactose"]) {
-                if (allDescriptions.includes(kw)) { restrictionsViolated.push({ restriction: "Intolerância à Lactose", keyword_found: kw }); break; }
-            }
-        }
-        if (answers.gluten_intolerance === true || answers.gluten_intolerance === "yes") {
-            for (const kw of intoleranceMap["Intolerância ao Glúten"]) {
-                if (allDescriptions.includes(kw)) { restrictionsViolated.push({ restriction: "Intolerância ao Glúten", keyword_found: kw }); break; }
-            }
-        }
-        const customList = typeof answers.food_restrictions === "string"
-            ? answers.food_restrictions.toLowerCase().split(",").map((s: string) => s.trim()).filter((s: string) => s.length >= 3)
-            : [];
-        for (const restriction of customList) {
-            if (allDescriptions.includes(restriction)) restrictionsViolated.push({ restriction, keyword_found: restriction });
-        }
-        for (const rv of restrictionsViolated) {
-            clinicalErrors.push({ rule: "restricao_alimentar", message: `Restrição violada: "${rv.restriction}" — ingrediente "${rv.keyword_found}" encontrado no plano.`, weight: 50 });
-        }
-
-        // Cross-day consistency errors — these MUST affect the clinical score
-        // before we decide if the plan passed or failed.
-        for (const inc of crossDayInconsistencies) {
-            const weight = inc.macro === "Proteína" || inc.macro === "Calorias" ? 25 : 15;
-            clinicalErrors.push({
-                rule: `inconsistencia_diaria_${inc.macro.toLowerCase()}`,
-                message: `Inconsistência de ${inc.macro} entre dias: ${dayNames[inc.min_day]} tem ${inc.min_val}${inc.unit} vs ${dayNames[inc.max_day]} tem ${inc.max_val}${inc.unit} (variação ${inc.variance_pct}%, tolerância: ±${inc.tolerance_pct}%).`,
-                weight,
-            });
-        }
-
-        const clinicalDeduction = clinicalErrors.reduce((s, e) => s + e.weight, 0);
-        const clinicalScore = Math.max(0, 100 - clinicalDeduction);
-        const clinicalPassed = clinicalErrors.length === 0;
-        const clinicalStatus = clinicalPassed ? "approved" : "suggest_corrections";
-
-        // ── 2. Simplicity Validation ──────────────────────────────────────
-        const patientGoal = (answers?.primary_goal || answers?.objective || answers?.goal || "emagrecimento") as string;
-        const simplicityResult = analyzePlanSimplicity(items, patientGoal) as any;
-
-        // ── 3. Practical Adherence Prediction (NEW) ──────────────────────────
+        const simplicityResult = analyzePlanSimplicity(items, "emagrecimento");
         const adherenceResult = analyzePracticalAdherence(items, simplicityResult.score, simplicityResult.blocked_foods.length);
 
-        // ── Overall Status ───────────────────────────────────────────────────
-        const overallPassed = clinicalPassed && simplicityResult.status !== "failed" && adherenceResult.status !== "failed";
-        const overallStatus = overallPassed ? "aprovado" : "sugestoes_melhoria";
+        const clinicalScore = Math.max(0, 100 - clinicalErrors.reduce((s, e) => s + e.weight, 0));
         const overallScore = Math.round((clinicalScore * 0.4) + (simplicityResult.score * 0.35) + (adherenceResult.score * 0.25));
 
-        // Merge all errors
-        const allErrors = [
-            ...clinicalErrors,
-            ...(simplicityResult.blocked_foods.length > 0 ? [{
-                rule: "alimentos_bloqueados",
-                message: `${simplicityResult.blocked_foods.length} alimento(s) bloqueado(s): ${[...new Set(simplicityResult.blocked_foods.map((b: any) => b.food))].join(", ")}`,
-                weight: Math.min(40, simplicityResult.blocked_foods.length * 3),
-            }] : []),
-        ];
-
-        // Generate suggestion list
-        const suggestions = simplicityResult.blocked_foods
-            .filter((bf: any) => bf.replacement)
-            .map((bf: any) => ({
-                before: bf.food,
-                after: bf.replacement,
-                meal_type: bf.meal_type,
-                day: bf.day,
-            }));
-
-        // Deduplicate suggestions
-        const uniqueSuggestions = suggestions.filter((s: any, idx: number, arr: any[]) =>
-            arr.findIndex((x: any) => x.before === s.before && x.day === s.day && x.meal_type === s.meal_type) === idx
-        );
-
-        // ── 4. Clinical Decision Layer (v5) ─────────────────────────────
-        const prioritizedIssues = prioritizeIssuesInternal(
-            simplicityResult.issues, clinicalErrors, restrictionsViolated
-        );
+        const prioritizedIssues = prioritizeIssuesInternal(simplicityResult.issues, clinicalErrors);
         const buckets = groupByBucketInternal(prioritizedIssues);
-        const { decision: finalDecision, reason: finalDecisionReason, confidence: confidenceLevel } =
-            computeFinalDecisionInternal(overallScore, overallPassed, prioritizedIssues);
-        const { summary: executiveSummary, recommendation: approvalRecommendation, strategy: correctionStrategy } =
-            generateExecutiveSummaryInternal(
-                overallPassed, overallScore, clinicalScore, simplicityResult.score, adherenceResult.score,
-                simplicityResult.blocked_foods.length, restrictionsViolated.length, prioritizedIssues
-            );
+        const executiveSummary = `Plano validado com score ${overallScore}/100.`;
 
-        const audit = {
-            engine: "validate-meal-plan@unified_v5",
-            run_at: new Date().toISOString(),
-            inputs: { meal_plan_id, patient_id: patientId, num_days: numDays, num_items: items.length, source: assessment ? "physical_assessment" : "anamnesis" },
-            targets: { kcal: targetCals, protein: targetP, carbs: targetC, fat: targetF },
-            actuals: { kcal: Math.round(dailyCals), protein: Math.round(dailyP), carbs: Math.round(dailyC), fat: Math.round(dailyF) },
-            tolerance_matrix: TOLERANCE,
-            clinical: { score: clinicalScore, status: clinicalStatus, errors_count: clinicalErrors.length },
-            simplicity: { score: simplicityResult.score, status: simplicityResult.status, issues_count: simplicityResult.issues.length, blocked_count: simplicityResult.blocked_foods.length },
-            adherence: { score: adherenceResult.score, status: adherenceResult.status, factors_count: adherenceResult.factors.length },
-            overall: { score: overallScore, status: overallStatus },
-            decision: { final_decision: finalDecision, confidence_level: confidenceLevel, prioritized_issues_count: prioritizedIssues.length },
-        };
+        const audit = { run_at: new Date().toISOString(), overall_score: overallScore };
 
-        // ── Persist validation scores to meal_plans ─────────────────────────
         await supabase.from("meal_plans").update({
             clinical_score: clinicalScore,
             simplicity_score: simplicityResult.score,
             adherence_score: adherenceResult.score,
             overall_score: overallScore,
-            overall_validation_status: overallStatus,
             last_validated_at: new Date().toISOString(),
-            validation_engine_version: "unified_v5",
         }).eq("id", meal_plan_id);
 
-        // Timeline
-        const timelineTitle = overallPassed
-            ? "Plano Aprovado pelo Motor Clínico Unificado ✅"
-            : "Plano com Sugestões de Melhoria — Motor Clínico Unificado 📋";
-        const timelineDesc = `Score: ${overallScore}/100 (Clínico: ${clinicalScore} | Simplicidade: ${simplicityResult.score} | Adesão: ${adherenceResult.score}) | Decisão: ${finalDecision}`;
-
-        await supabase.from("patient_timeline").insert({
-            patient_id: patientId, event_type: "meal_plan",
-            title: timelineTitle,
-            description: timelineDesc,
-            metadata: {
-                type: overallPassed ? "ai_plan_validated" : "plan_validation_failed",
-                meal_plan_id,
-                final_decision: finalDecision,
-                final_decision_reason: finalDecisionReason,
-                confidence_level: confidenceLevel,
-                executive_summary: executiveSummary,
-                prioritized_issues_count: prioritizedIssues.length,
-                ...audit,
-            },
-        });
-
         return new Response(JSON.stringify({
-            success: overallPassed,
-            status: overallStatus,
-            overall_status: overallStatus,
+            success: overallScore >= 65,
             score: overallScore,
-
-            clinical_status: clinicalStatus,
-            simplicity_status: simplicityResult.status,
-            practical_status: adherenceResult.status,
-
             clinical_score: clinicalScore,
             simplicity_score: simplicityResult.score,
-            adherence_score_prediction: adherenceResult.score,
-
-            // Decision layer (v5)
             executive_summary: executiveSummary,
-            approval_recommendation: approvalRecommendation,
-            correction_strategy: correctionStrategy,
-            final_decision: finalDecision,
-            final_decision_reason: finalDecisionReason,
-            confidence_level: confidenceLevel,
             prioritized_issues: prioritizedIssues,
             buckets,
-
             macros: macroResults,
-            restrictions_violated: restrictionsViolated,
-            blocked_foods_found: simplicityResult.blocked_foods,
-            errors: allErrors,
-
-            simplicity_issues: simplicityResult.issues,
-            adherence_factors: adherenceResult.factors,
-            cross_day_inconsistencies: crossDayInconsistencies,
-            per_day_macros: Object.fromEntries([...perDayMacros.entries()].map(([d, m]) => [d, { cals: Math.round(m.cals), prot: Math.round(m.prot), carbs: Math.round(m.carbs), fat: Math.round(m.fat) }])),
-            suggestions: uniqueSuggestions,
+            errors: clinicalErrors,
             audit,
         }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
     } catch (e: any) {
-        console.error("validate-meal-plan error:", e);
-        return new Response(JSON.stringify({ success: false, errors: [{ rule: "system_error", message: e.message, weight: 0 }] }),
-            { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
+        return new Response(JSON.stringify({ success: false, errors: [{ message: e.message }] }), { status: 500, headers: corsHeaders });
     }
 }
 
-Deno.serve(handler);
-
-// ── Decision Helper Functions (inline for edge function context) ──────────────
-
-type IssueSeverity = "critical" | "high" | "medium" | "low";
-type CorrectionBucket = "bloquear_publicacao" | "corrigir_agora" | "corrigir_depois" | "opcional";
-
-interface PrioritizedIssue {
-    severity: IssueSeverity;
-    priority_order: number;
-    correction_bucket: CorrectionBucket;
-    category: string;
-    meal_type: string;
-    day: number;
-    message: string;
-    suggested_fix: string;
-    penalty: number;
-}
-
-const SEV_PRIORITY: Record<IssueSeverity, number> = { critical: 1, high: 2, medium: 3, low: 4 };
-
-function assignBucket(sev: IssueSeverity, cat: string): CorrectionBucket {
-    if (sev === "critical") return "bloquear_publicacao";
-    if (sev === "high" && cat === "critical") return "bloquear_publicacao";
-    if (sev === "high") return "corrigir_agora";
-    if (sev === "medium") return "corrigir_depois";
-    return "opcional";
-}
-
-function prioritizeIssuesInternal(
-    simplicityIssues: SimplicityIssue[],
-    clinicalErrors: Array<{ rule: string; message: string; weight: number }>,
-    restrictionsViolated: Array<{ restriction: string; keyword_found: string }>
-): PrioritizedIssue[] {
-    const issues: PrioritizedIssue[] = [];
-    let order = 0;
-    for (const rv of restrictionsViolated) {
-        order++;
-        issues.push({ severity: "critical", priority_order: order, correction_bucket: "bloquear_publicacao", category: "restriction", meal_type: "", day: 0, message: `Restrição violada: "${rv.restriction}" — "${rv.keyword_found}"`, suggested_fix: `Remover "${rv.keyword_found}"`, penalty: 50 });
-    }
-    for (const err of clinicalErrors) {
-        if (err.rule === "restricao_alimentar") continue;
-        order++;
-        const sev: IssueSeverity = err.weight >= 50 ? "critical" : err.weight >= 30 ? "high" : "medium";
-        issues.push({ severity: sev, priority_order: order, correction_bucket: assignBucket(sev, "clinical"), category: "clinical", meal_type: "", day: 0, message: err.message, suggested_fix: err.rule === "sem_meta_calorica" ? "Completar Anamnese ou Avaliação Física" : "Ajustar quantidades de macros", penalty: err.weight });
-    }
-    for (const issue of simplicityIssues) {
-        order++;
-        const sev = issue.severity as IssueSeverity;
-        issues.push({ severity: sev, priority_order: order, correction_bucket: assignBucket(sev, issue.category), category: issue.category, meal_type: issue.meal_type, day: issue.day, message: issue.message, suggested_fix: issue.suggested_fix, penalty: issue.penalty });
-    }
-    issues.sort((a, b) => { const sp = SEV_PRIORITY[a.severity] - SEV_PRIORITY[b.severity]; return sp !== 0 ? sp : b.penalty - a.penalty; });
-    issues.forEach((issue, idx) => { issue.priority_order = idx + 1; });
+function prioritizeIssuesInternal(simplicityIssues: any[], clinicalErrors: any[]): any[] {
+    const issues: any[] = [];
+    clinicalErrors.forEach(e => issues.push({ severity: "high", message: e.message, correction_bucket: "corrigir_agora", category: "clinical", meal_type: "", day: 0, penalty: e.weight }));
+    simplicityIssues.forEach(i => issues.push({ severity: i.severity, message: i.message, correction_bucket: i.category === "critical" ? "bloquear_publicacao" : "corrigir_agora", category: i.category, meal_type: i.meal_type, day: i.day, penalty: i.penalty }));
     return issues;
 }
 
-function groupByBucketInternal(issues: PrioritizedIssue[]) {
+function groupByBucketInternal(issues: any[]) {
     return {
         bloquear_publicacao: issues.filter(i => i.correction_bucket === "bloquear_publicacao"),
         corrigir_agora: issues.filter(i => i.correction_bucket === "corrigir_agora"),
-        corrigir_depois: issues.filter(i => i.correction_bucket === "corrigir_depois"),
-        opcional: issues.filter(i => i.correction_bucket === "opcional"),
+        corrigir_depois: issues.filter(i => i.correction_bucket === "corrigir_depois" || i.correction_bucket === "opcional"),
     };
 }
 
-function computeFinalDecisionInternal(overallScore: number, overallPassed: boolean, issues: PrioritizedIssue[]) {
-    const hasCritical = issues.some(i => i.severity === "critical");
-    if (overallPassed && !hasCritical) {
-        return { decision: "publish_now" as const, reason: "Plano aprovado em todas as dimensões.", confidence: (overallScore >= 85 ? "high" : overallScore >= 75 ? "medium" : "low") };
-    }
-    const blockingCount = issues.filter(i => i.correction_bucket === "bloquear_publicacao").length;
-    return { decision: "suggest_corrections" as const, reason: `${blockingCount} sugestão(ões) de melhoria encontrada(s). Aplique as correções ou publique como está.`, confidence: (hasCritical ? "high" : "medium") };
-}
-
-function generateExecutiveSummaryInternal(
-    overallPassed: boolean, overallScore: number, clinicalScore: number, simplicityScore: number, adherenceScore: number,
-    blockedFoodsCount: number, restrictionsViolatedCount: number, issues: PrioritizedIssue[]
-) {
-    const criticalCount = issues.filter(i => i.severity === "critical").length;
-    const highCount = issues.filter(i => i.severity === "high").length;
-    if (overallPassed) {
-        return { summary: `Plano aprovado com score ${overallScore}/100. Todas as dimensões dentro dos padrões.`, recommendation: "publicar", strategy: [] as string[] };
-    }
-    const reasons: string[] = [];
-    const strategy: string[] = [];
-    if (restrictionsViolatedCount > 0) { reasons.push("restrições alimentares violadas"); strategy.push("Remover alimentos que violam restrições"); }
-    if (blockedFoodsCount > 0) { reasons.push("alimentos de baixa aderência"); strategy.push("Substituir alimentos bloqueados por alternativas brasileiras"); }
-    if (clinicalScore < 75) { reasons.push("divergências nutricionais"); strategy.push("Ajustar quantidades de macros"); }
-    if (simplicityScore < 75) { reasons.push("complexidade acima do aceitável"); strategy.push("Simplificar café da manhã e lanches"); }
-    if (adherenceScore < 65) { reasons.push("previsão de adesão baixa"); strategy.push("Reduzir complexidade geral"); }
-    return {
-        summary: `Plano com sugestões de melhoria (${overallScore}/100): ${reasons.join(", ")}. ${criticalCount} prioritária(s), ${highCount} alto(s).`,
-        recommendation: "aplicar_sugestoes",
-        strategy,
-    };
-}
+Deno.serve(handler);

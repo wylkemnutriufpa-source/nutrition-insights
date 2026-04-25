@@ -19549,10 +19549,6 @@ export type Database = {
         Args: { _patient_id: string; _program_id: string; _reason?: string }
         Returns: Json
       }
-      enforce_single_day_normalization: {
-        Args: { p_plan_id: string }
-        Returns: Json
-      }
       ensure_patient_ready: { Args: { _patient_id: string }; Returns: Json }
       extract_topic_uuid: { Args: { _topic: string }; Returns: string }
       finalize_pipeline_execution: {
@@ -20036,7 +20032,6 @@ export type Database = {
         }
         Returns: Json
       }
-      reconcile_published_plans: { Args: { p_limit?: number }; Returns: Json }
       record_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json
