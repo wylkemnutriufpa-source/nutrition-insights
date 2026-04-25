@@ -1347,8 +1347,9 @@ const PlanAudit = () => {
                   {Object.keys(snapshots).length >= 2 && (
                     <Button 
                       variant="outline" 
-                      size="xs" 
-                      className="h-7 text-[10px]"
+                      size="sm" 
+                      className="h-7 text-[10px] px-2"
+
                       onClick={() => {
                         const keys = Object.keys(snapshots).sort();
                         const before = snapshots[keys[0]];
