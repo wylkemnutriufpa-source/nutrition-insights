@@ -845,31 +845,29 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     activeFlushPromise = (async () => {
       isFlushing = true;
 
-      const results = await Promise.allSettled(
-        ops.map(async (op) => {
-          try {
-            console.info(`[FLUSH] Iniciando operação: ${op.key}`, { itemIds: op.itemIds });
-            await op.persist();
-            console.info(`[FLUSH] Sucesso: ${op.key}`);
-            return { key: op.key, ok: true, itemIds: op.itemIds };
-          } catch (err: any) {
-            console.error(`[FLUSH] ERRO em ${op.key}:`, {
-              message: err?.message,
-              details: err?.details,
-              hint: err?.hint,
-              code: err?.code,
-              payload: op.itemIds
-            });
-            op.rollback?.();
-            return { key: op.key, ok: false, itemIds: op.itemIds, err };
-          }
-        })
-      );
+      // PROCESSAMENTO SEQUENCIAL (Etapa 3 - Garantia de Fluxo)
+      // Processamos em ordem de inserção para evitar race conditions entre insert/update/delete.
+      const processed: { key: string; ok: boolean; itemIds: string[]; err?: any }[] = [];
+      
+      for (const op of ops) {
+        try {
+          console.info(`[FLUSH] Persistindo: ${op.key}`, { payload: op.itemIds });
+          await op.persist();
+          console.info(`[FLUSH] Sucesso: ${op.key}`);
+          processed.push({ key: op.key, ok: true, itemIds: op.itemIds });
+        } catch (err: any) {
+          console.error(`[FLUSH] ERRO em ${op.key}:`, {
+            message: err?.message,
+            code: err?.code,
+            details: err?.details,
+            payload: op.itemIds
+          });
+          op.rollback?.();
+          processed.push({ key: op.key, ok: false, itemIds: op.itemIds, err });
+        }
+      }
 
-      const processed = results.map((r) =>
-        r.status === "fulfilled" ? r.value : { key: "", ok: false, itemIds: [] as string[] }
-      );
-      const processedKeys = processed.map((p) => p.key).filter(Boolean);
+      const processedKeys = processed.map((p) => p.key);
 
       set((s) => {
         const remaining = s.pendingOps.filter((p) => !processedKeys.includes(p.key));
@@ -882,38 +880,30 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         return { pendingOps: remaining, syncingMap: syncing };
       });
 
-      const failed = processed.find((p) => !p.ok) as ({ err?: unknown } & { ok: boolean }) | undefined;
+      const failed = processed.find((p) => !p.ok);
       const hasError = Boolean(failed);
       get()._setSyncStatus(hasError ? "error" : "saved");
       set({ lastSavedAt: Date.now() });
       get()._persistSnapshot();
 
-      // ─── REFETCH OBRIGATÓRIO ───
-      // Após qualquer mutação persistida, o DB é a fonte única de verdade.
-      // Recarregamos os items para detectar divergências e forçar consistência.
+      // ─── REFETCH OBRIGATÓRIO (Etapa 5) ───
       if (!hasError) {
         const planId = get().planId;
         if (planId) {
+          console.info("[REFETCH] Sincronizando com verdade do banco...", { planId });
           const { data: itemsData, error: refetchError } = await supabase
             .from("meal_plan_items")
             .select("*")
             .eq("meal_plan_id", planId)
             .order("created_at");
+          
           if (refetchError) {
-            console.error("[REFETCH] Falha ao recarregar items pós-save", refetchError);
+            console.error("[REFETCH_ERROR]", refetchError);
           } else {
             const dbItems = (itemsData || []) as MealPlanItem[];
-            // Auditoria de divergência: compara contagem local vs DB
-            const localCount = get().items.filter(i => !i.id.startsWith("temp-")).length;
-            if (dbItems.length !== localCount) {
-              console.warn("[AUDIT][DIVERGENCE] UI vs DB", {
-                ui: localCount,
-                db: dbItems.length,
-                planId,
-              });
-            }
             set({ items: dbItems });
             get()._persistSnapshot();
+            console.info("[REFETCH_SUCCESS] UI sincronizada.");
           }
         }
       }
