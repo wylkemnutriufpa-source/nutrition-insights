@@ -1415,7 +1415,7 @@ const PlanAudit = () => {
                               <TableCell>—</TableCell>
                             </TableRow>
                           ))}
-                        </React.Fragment>
+                        </Fragment>
                       ))}
                     </TableBody>
                   </Table>
