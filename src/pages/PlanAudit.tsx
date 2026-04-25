@@ -269,6 +269,9 @@ const PlanAudit = () => {
         setSnapshots(parsed.snapshots || {});
         setEmergencyPatientId(parsed.patientId || null);
         setEmergencyPlanId(parsed.planId || null);
+        // Load persistent filters
+        if (parsed.executionIdFilter) setExecutionIdFilter(parsed.executionIdFilter);
+        if (parsed.correlatorId) setCorrelatorId(parsed.correlatorId);
       } catch (e) {
         console.error("Error loading emergency state", e);
       }
@@ -277,16 +280,16 @@ const PlanAudit = () => {
 
   // Save emergency state when it changes
   useEffect(() => {
-    if (emergencyStep > 0 || emergencyLogs.length > 0) {
-      localStorage.setItem(EMERGENCY_STATE_KEY, JSON.stringify({
-        step: emergencyStep,
-        logs: emergencyLogs,
-        snapshots,
-        patientId: emergencyPatientId,
-        planId: emergencyPlanId
-      }));
-    }
-  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId]);
+    localStorage.setItem(EMERGENCY_STATE_KEY, JSON.stringify({
+      step: emergencyStep,
+      logs: emergencyLogs,
+      snapshots,
+      patientId: emergencyPatientId,
+      planId: emergencyPlanId,
+      executionIdFilter,
+      correlatorId
+    }));
+  }, [emergencyStep, emergencyLogs, snapshots, emergencyPatientId, emergencyPlanId, executionIdFilter, correlatorId]);
 
   const clearEmergencyState = () => {
     localStorage.removeItem(EMERGENCY_STATE_KEY);
