@@ -960,21 +960,41 @@ const PlanAudit = () => {
   }, [filteredEmergencyLogs]);
 
   const incompleteDataStatus = useMemo(() => {
-    if (!executionIdFilter) return { isIncomplete: false, missing: [] as string[] };
+    if (!executionIdFilter && filteredEmergencyLogs.length === 0) return { isIncomplete: false, missing: [] as string[] };
     
-    const missing = [];
-    const hasSnapshots = filteredEmergencyLogs.some(l => l.step === "Snapshot");
-    const hasPublish = filteredEmergencyLogs.some(l => l.step === "Publicar");
-    const hasSave = filteredEmergencyLogs.some(l => l.step === "Salvar/Aprovar");
-    const logCount = filteredEmergencyLogs.length;
+    const logs = filteredEmergencyLogs;
+    if (logs.length === 0) return { isIncomplete: false, missing: [] };
 
-    if (!hasSnapshots) missing.push("não há snapshots");
-    if (!hasPublish) missing.push("falta Publicar");
-    if (!hasSave) missing.push("falta Salvar/Aprovar");
-    if (logCount > 0 && logCount < 4) missing.push("logs insuficientes");
+    // Identifica o tipo de fluxo: Replay ou Completo
+    const isReplay = logs.some(l => l.step === "Replay Mode");
+    
+    // Etapas esperadas por tipo de fluxo
+    const expectedSteps = isReplay 
+      ? ["Snapshot", "Salvar/Aprovar", "Publicar", "Validar"] 
+      : ["Criar Paciente", "Criar Plano", "Snapshot", "Salvar/Aprovar", "Publicar", "Validar"];
+
+    const missing = expectedSteps.filter(step => {
+      // Mapeamento flexível para aceitar variações no nome da etapa se necessário
+      const hasStep = logs.some(l => {
+        if (step === "Snapshot") return l.step === "Snapshot";
+        if (step === "Salvar/Aprovar") return l.step === "Salvar/Aprovar";
+        if (step === "Publicar") return l.step === "Publicar";
+        if (step === "Validar") return l.step === "Validar";
+        if (step === "Criar Paciente") return l.step === "Criar Paciente";
+        if (step === "Criar Plano") return l.step === "Criar Plano";
+        return false;
+      });
+      return !hasStep;
+    });
+
+    const logCount = logs.length;
+    // Adiciona "logs insuficientes" se o total for muito baixo para o esperado
+    if (logCount > 0 && logCount < (isReplay ? 4 : 6) && missing.length === 0) {
+      missing.push("logs insuficientes para o fluxo");
+    }
     
     return { 
-      isIncomplete: missing.length > 0 && logCount > 0, 
+      isIncomplete: missing.length > 0, 
       missing 
     };
   }, [filteredEmergencyLogs, executionIdFilter]);
