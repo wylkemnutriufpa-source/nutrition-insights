@@ -313,24 +313,6 @@ export default function MealPlanEditorV2() {
       setPublishing(false);
     }
   };
-    try {
-      await store._flushQueue();
-
-      const publishResult = await publishMealPlan(plan.id, user.id);
-      if (!publishResult.success) {
-        throw new Error(publishResult.error || "Erro ao publicar");
-      }
-      // Recalcula totais após publicar (não bloqueia)
-      await calculatePlanTotals(plan.id);
-      await refreshPlanFromServer();
-      toast.success("✅ Plano publicado para o paciente!");
-    } catch (err: any) {
-      console.error("[Publish] Error:", err);
-      toast.error(err?.message || "Erro ao publicar. Tente novamente.");
-    } finally {
-      setPublishing(false);
-    }
-  };
 
   // Quick action: combines Save (approve) + Publish in a single click to reduce errors
   const handleSaveAndPublish = async () => {
