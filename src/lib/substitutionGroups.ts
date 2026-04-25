@@ -87,8 +87,11 @@ const FOOD_GROUP_MAP: Record<string, SubstitutionGroup> = {
   "Barrinha de cereal": "lanche-leve",
   "Mix de oleaginosas": "lanche-leve",
 
-  // Ceia leve
+  // Ceia leve / Sopas
   "Sopa de legumes": "ceia-leve",
+  "Caldo de legumes": "ceia-leve",
+  "Canja de galinha": "ceia-leve",
+  "Sopa de abóbora": "ceia-leve",
   "Smoothie verde": "ceia-leve",
 
   // Salada base
