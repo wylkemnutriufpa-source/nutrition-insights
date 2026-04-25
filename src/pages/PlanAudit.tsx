@@ -1467,7 +1467,7 @@ const PlanAudit = () => {
                <h3 className="text-sm font-semibold flex items-center gap-2">
                  <Sparkles className="w-4 h-4 text-amber-500" /> Diagnóstico Sugerido
                </h3>
-               <ActionableSummary logs={emergencyLogs} />
+               <ActionableSummary logs={filteredEmergencyLogs} />
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
