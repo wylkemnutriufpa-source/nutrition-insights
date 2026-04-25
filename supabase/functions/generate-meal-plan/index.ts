@@ -2511,54 +2511,15 @@ function validatePlanBeforeSave(
   weight: number,
   goal: string,
 ): { valid: boolean; errors: string[] } {
-  const errors: string[] = [];
-
-  // Rule 1: Every item must have visual_library_item_id, _template_id OR _recipe_id (marmita)
-  const missingSource = items.filter(i => !i.visual_library_item_id && !i._template_id && !i._recipe_id);
-  if (missingSource.length > 0) {
-    errors.push(`${missingSource.length} items missing visual_library_item_id, _template_id or _recipe_id`);
-  }
-
-  // Rule 2: Mandatory Image & Protein Shielding (SHIELDING LAYER)
-  const missingImage = items.filter(i => {
-    // Both visual library and recipes MUST have images
-    const hasImage = i.image_url || i._image_url;
-    return !hasImage || hasImage.length < 5;
-  });
-  if (missingImage.length > 0) {
-    errors.push(`SHIELDING ERROR: ${missingImage.length} items missing image_url (IMAGE_MANDATORY_VIOLATION)`);
-  }
-
-  const missingProtein = items.filter(i => {
-    // Meal recipes MUST have protein_type
-    if (i._source === "meal_recipe") {
-      return !i.protein_type && !i._protein_type;
-    }
-    return false;
-  });
-  if (missingProtein.length > 0) {
-    errors.push(`SHIELDING ERROR: ${missingProtein.length} marmitas missing protein_type (PROTEIN_TYPE_MANDATORY_VIOLATION)`);
-  }
-
-  // Rule 3: Calorie deviation <= 5%
-  const day0Items = items.filter(i => i.day_of_week === 0);
-  if (day0Items.length > 0) {
-    const sumCal = day0Items.reduce((s: number, i: any) => s + (i.calories_target || 0), 0);
-    const calDev = dailyKcal > 0 ? Math.abs(sumCal - dailyKcal) / dailyKcal : 0;
-    if (calDev > 0.05) {
-      errors.push(`Calorie deviation ${(calDev * 100).toFixed(1)}% exceeds 5% tolerance (sum=${sumCal}, target=${dailyKcal})`);
-    }
-
-    // Rule 4: Protein within clinical range
-    const sumP = day0Items.reduce((s: number, i: any) => s + (i.protein_target || 0), 0);
-    const proteinPerKg = sumP / weight;
-    const proteinRange = CLINICAL_PROTEIN_RANGES[goal] || CLINICAL_PROTEIN_RANGES.maintain;
-    if (proteinPerKg < proteinRange.min * 0.9 || proteinPerKg > proteinRange.max * 1.1) {
-      errors.push(`Protein ${proteinPerKg.toFixed(2)}g/kg outside clinical range ${proteinRange.min}-${proteinRange.max}g/kg for goal=${goal}`);
-    }
-  }
-  
-  return { valid: errors.length === 0, errors };
+  // [EMERGENCY MODE] SHIELDING desativado a pedido do nutricionista.
+  // Todas as validações que bloqueavam salvar/publicar/gerar foram removidas:
+  // - IMAGE_MANDATORY_VIOLATION (image_url opcional)
+  // - PROTEIN_TYPE_MANDATORY_VIOLATION
+  // - Source obrigatório (visual_library/template/recipe)
+  // - Desvios de calorias / proteína por kg
+  // O profissional decide. O sistema só salva.
+  void items; void dailyKcal; void dailyMacros; void weight; void goal;
+  return { valid: true, errors: [] };
 }
 
 
