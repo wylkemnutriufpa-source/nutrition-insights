@@ -141,6 +141,25 @@ const PlanAudit = () => {
   const [batchProcessing, setBatchProcessing] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
 
+  const [activeTab, setActiveTab] = useState("overview");
+  const [diagnosticPatientId, setDiagnosticPatientId] = useState<string>("");
+  const [diagnosticLogs, setDiagnosticLogs] = useState<any[]>([]);
+  const [diagnosticLoading, setDiagnosticLoading] = useState(false);
+
+  // Emergency Flow state
+  const [emergencyStep, setEmergencyStep] = useState<number>(0);
+  const [emergencyLogs, setEmergencyLogs] = useState<{ step: string; status: "loading" | "success" | "error"; message: string }[]>([]);
+  const [emergencyProcessing, setEmergencyProcessing] = useState(false);
+
+  // RLS Validation state
+  const [rlsPatientId, setRlsPatientId] = useState<string>("");
+  const [rlsResult, setRlsResult] = useState<any>(null);
+  const [rlsLoading, setRlsLoading] = useState(false);
+
+  // Data Consistency state
+  const [consistencyRows, setConsistencyRows] = useState<any[]>([]);
+  const [consistencyLoading, setConsistencyLoading] = useState(false);
+
   // Filters from URL
   const search = searchParams.get("q") || "";
   const statusFilter = (searchParams.get("status") as AuditStatus | "all") || "all";
