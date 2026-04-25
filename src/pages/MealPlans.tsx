@@ -338,18 +338,23 @@ export default function MealPlans() {
 
   const toggleActive = async (id: string, current: boolean) => {
     if (!user) return;
-    if (current) {
-      // Server-authoritative deactivation
-      const result = await deactivateMealPlan(id, user.id);
-      if (!result.success) { toast.error(result.error || "Erro ao desativar"); }
-      else { toast.success("Plano desativado."); }
-    } else {
-      // Server-authoritative activation (ensures single active plan)
-      const result = await activateMealPlan(id);
-      if (!result.success) { toast.error(result.error || "Erro ao ativar plano"); }
-      else { toast.success("Plano ativado com segurança!"); }
+    const toastId = toast.loading(current ? "Desativando plano..." : "Ativando plano...");
+    try {
+      if (current) {
+        // Server-authoritative deactivation
+        const result = await deactivateMealPlan(id, user.id);
+        if (!result.success) { toast.error(result.error || "Erro ao desativar", { id: toastId }); }
+        else { toast.success("Plano desativado.", { id: toastId }); }
+      } else {
+        // Server-authoritative activation (ensures single active plan)
+        const result = await activateMealPlan(id);
+        if (!result.success) { toast.error(result.error || "Erro ao ativar plano", { id: toastId }); }
+        else { toast.success("Plano ativado com segurança!", { id: toastId }); }
+      }
+      fetchPlans();
+    } catch (err: any) {
+      toast.error("Erro inesperado: " + err.message, { id: toastId });
     }
-    fetchPlans();
   };
 
   const handleDeletePlan = async (id: string) => {
