@@ -1251,10 +1251,10 @@ const PlanAudit = () => {
           <Card className="p-6 space-y-6">
             <div className="space-y-1">
               <h2 className="text-lg font-semibold flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-500" /> Verificação Manual RLS
+                <ShieldCheck className="w-5 h-5 text-emerald-500" /> Simulador de Visão do Paciente (RLS)
               </h2>
               <p className="text-sm text-muted-foreground">
-                Valida se as regras de segurança do banco estão restringindo corretamente os dados para o paciente.
+                Simula as queries que o aplicativo do paciente faz para validar se as permissões (RLS) e filtros de visibilidade estão ativos.
               </p>
             </div>
 
