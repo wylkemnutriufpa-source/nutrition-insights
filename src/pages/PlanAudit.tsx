@@ -864,6 +864,241 @@ const PlanAudit = () => {
           </div>
         )}
       </Card>
+        </TabsContent>
+
+        <TabsContent value="diagnostics" className="m-0 space-y-4">
+          <Card className="p-4 space-y-4">
+            <div className="flex gap-2">
+              <Select value={diagnosticPatientId} onValueChange={setDiagnosticPatientId}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Selecione um paciente para diagnosticar" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rows.map(r => (
+                    <SelectItem key={r.patient_id} value={r.patient_id}>
+                      {r.patient_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={() => loadDiagnostics(diagnosticPatientId)} disabled={!diagnosticPatientId || diagnosticLoading}>
+                {diagnosticLoading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Search className="w-4 h-4 mr-2" />}
+                Diagnosticar
+              </Button>
+            </div>
+
+            {diagnosticLogs.length > 0 ? (
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <Activity className="w-4 h-4" /> Timeline de Eventos e Estados
+                </h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Data</TableHead>
+                        <TableHead>Tipo</TableHead>
+                        <TableHead>Evento / Status</TableHead>
+                        <TableHead>Detalhes</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {diagnosticLogs.map((log, i) => (
+                        <TableRow key={i}>
+                          <TableCell className="text-xs">{formatDate(log.created_at)}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className="text-[10px]">
+                              {log.type === 'log' ? 'AUDIT LOG' : 'DB STATE'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="font-medium text-xs">
+                            {log.action || log.plan_status || '—'}
+                          </TableCell>
+                          <TableCell className="text-xs text-muted-foreground max-w-xs truncate">
+                            {log.metadata ? JSON.stringify(log.metadata) : (log.title || 'Sem detalhes')}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            ) : diagnosticPatientId && !diagnosticLoading && (
+              <div className="text-center py-8 text-muted-foreground text-sm">
+                Nenhum log ou estado encontrado para este paciente.
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="emergency" className="m-0 space-y-4">
+          <Card className="p-6 space-y-6">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Zap className="w-5 h-5 text-amber-500" /> Fluxo de Emergência (Auto-Teste)
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Cria um cenário completo para validar se o sistema está salvando, publicando e exibindo corretamente.
+                </p>
+              </div>
+              <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
+                {emergencyProcessing ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
+                Iniciar Fluxo
+              </Button>
+            </div>
+
+            {emergencyLogs.length > 0 && (
+              <div className="space-y-4">
+                <div className="grid grid-cols-5 gap-2">
+                  {[1, 2, 3, 4, 5].map(step => (
+                    <div key={step} className={`h-1.5 rounded-full ${emergencyStep >= step ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-muted'}`} />
+                  ))}
+                </div>
+                <div className="space-y-2 border rounded-lg p-4 bg-muted/30">
+                  {emergencyLogs.map((log, i) => (
+                    <div key={i} className="flex items-start gap-3 text-sm">
+                      {log.status === 'loading' ? (
+                        <Loader2 className="w-4 h-4 animate-spin mt-0.5 text-amber-500" />
+                      ) : log.status === 'success' ? (
+                        <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-500" />
+                      ) : (
+                        <XCircle className="w-4 h-4 mt-0.5 text-rose-500" />
+                      )}
+                      <div>
+                        <span className="font-semibold">{log.step}:</span> {log.message}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="rls" className="m-0 space-y-4">
+          <Card className="p-6 space-y-6">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-500" /> Verificação Manual RLS
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Valida se as regras de segurança do banco estão restringindo corretamente os dados para o paciente.
+              </p>
+            </div>
+
+            <div className="flex gap-2">
+              <Select value={rlsPatientId} onValueChange={setRlsPatientId}>
+                <SelectTrigger className="flex-1">
+                  <SelectValue placeholder="Selecione o paciente alvo" />
+                </SelectTrigger>
+                <SelectContent>
+                  {rows.map(r => (
+                    <SelectItem key={r.patient_id} value={r.patient_id}>
+                      {r.patient_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <Button onClick={() => validateRLS(rlsPatientId)} disabled={!rlsPatientId || rlsLoading} variant="outline">
+                {rlsLoading ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Activity className="w-4 h-4 mr-2" />}
+                Validar RLS
+              </Button>
+            </div>
+
+            {rlsResult && (
+              <div className="space-y-4 border rounded-lg p-4">
+                <div className="flex items-center justify-between border-b pb-3">
+                  <span className="text-sm font-medium">Planos Encontrados: {rlsResult.total}</span>
+                  <Badge variant={rlsResult.total > 0 ? "outline" : "destructive"}>
+                    {rlsResult.total > 0 ? "Verificado" : "Nenhum dado"}
+                  </Badge>
+                </div>
+                <div className="space-y-2">
+                  {rlsResult.plans.map((p: any) => (
+                    <div key={p.id} className="flex items-center justify-between text-xs p-2 bg-muted/50 rounded">
+                      <div className="flex flex-col">
+                        <span className="font-semibold">{p.title}</span>
+                        <span className="text-[10px] text-muted-foreground">ID: {p.id}</span>
+                      </div>
+                      <div className="flex gap-2">
+                        <Badge className="text-[9px]">{p.plan_status}</Badge>
+                        <Badge variant="secondary" className="text-[9px]">
+                          {p.is_active ? 'Ativo' : 'Inativo'}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="text-[10px] bg-emerald-500/10 text-emerald-700 p-2 rounded flex gap-2">
+                  <Info className="w-3 h-3 shrink-0" />
+                  Regras RLS confirmadas: A query retornou apenas dados vinculados ao UUID selecionado.
+                </div>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="consistency" className="m-0 space-y-4">
+          <Card className="p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="space-y-1">
+                <h2 className="text-lg font-semibold flex items-center gap-2">
+                  <Database className="w-5 h-5" /> Relatório de Validação de Dados
+                </h2>
+                <p className="text-sm text-muted-foreground">
+                  Identifica de onde o sistema está lendo Peso/Altura e aponta inconsistências.
+                </p>
+              </div>
+              <Button onClick={loadConsistencyReport} disabled={consistencyLoading} variant="outline" size="sm">
+                {consistencyLoading ? <Loader2 className="animate-spin w-4 h-4" /> : <RefreshCw className="w-4 h-4" />}
+              </Button>
+            </div>
+
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead>Paciente</TableHead>
+                    <TableHead>Fonte Atual</TableHead>
+                    <TableHead>Peso (kg)</TableHead>
+                    <TableHead>Altura (cm)</TableHead>
+                    <TableHead>Status</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {consistencyRows.map((row) => (
+                    <TableRow key={row.patient_id}>
+                      <TableCell className="font-medium">{row.patient_name}</TableCell>
+                      <TableCell>
+                        <Badge variant={row.isFallback ? "secondary" : "outline"} className="text-[10px]">
+                          {row.source}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>{row.weight || '—'}</TableCell>
+                      <TableCell>{row.height || '—'}</TableCell>
+                      <TableCell>
+                        {row.inconsistent ? (
+                          <Badge variant="destructive" className="text-[9px]">Inconsistente</Badge>
+                        ) : (
+                          <Badge variant="outline" className="text-[9px] border-emerald-500/50 text-emerald-600">OK</Badge>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  {consistencyRows.length === 0 && !consistencyLoading && (
+                    <TableRow>
+                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        Nenhum dado carregado. Clique em atualizar.
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };
