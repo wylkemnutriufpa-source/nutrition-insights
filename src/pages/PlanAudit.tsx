@@ -1271,13 +1271,18 @@ const PlanAudit = () => {
                           <XCircle className="w-4 h-4 mt-0.5 text-rose-500" />
                         )}
                         <div className="flex-1">
-                          <span className="font-semibold">{log.step}:</span> {log.message}
-                          {log.errorType && (
-                            <Badge variant="outline" className="ml-2 text-[9px] uppercase border-rose-500 text-rose-600">
-                              Erro: {log.errorType}
-                            </Badge>
-                          )}
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="font-semibold">{log.step}:</span> 
+                            <span className="text-[9px] font-mono text-muted-foreground bg-muted px-1 rounded">{log.executionId.slice(-8)}</span>
+                            {log.errorType && (
+                              <Badge variant="outline" className="text-[9px] uppercase border-rose-500 text-rose-600">
+                                Erro: {log.errorType}
+                              </Badge>
+                            )}
+                          </div>
+                          <div className="text-sm">{log.message}</div>
                         </div>
+
                       </div>
                       
                       {(log.payload || log.response) && (
