@@ -950,6 +950,14 @@ const PlanAudit = () => {
     });
   }, [filteredEmergencyLogs]);
 
+  const isIncompleteData = useMemo(() => {
+    if (!executionIdFilter) return false;
+    // Considera incompleto se não houver pelo menos 4 logs ou nenhum snapshot para esse ID
+    const hasSnapshots = filteredEmergencyLogs.some(l => l.step === "Snapshot");
+    const logCount = filteredEmergencyLogs.length;
+    return logCount > 0 && (logCount < 4 || !hasSnapshots);
+  }, [filteredEmergencyLogs, executionIdFilter]);
+
   const exportSummaryCSV = () => {
     const headers = ["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso (%)", "Taxa de Falha (%)"];
     const rows = stepMetrics.map(m => [
