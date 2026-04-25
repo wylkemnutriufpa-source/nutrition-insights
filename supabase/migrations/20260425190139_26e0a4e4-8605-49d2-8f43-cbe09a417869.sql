@@ -1,0 +1,1 @@
+ALTER FUNCTION public.recalculate_meal_plan_totals(uuid) SET search_path = public;
