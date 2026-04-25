@@ -258,6 +258,8 @@ const PlanAudit = () => {
   // Data Consistency state
   const [consistencyRows, setConsistencyRows] = useState<any[]>([]);
   const [consistencyLoading, setConsistencyLoading] = useState(false);
+  const [mismatchRows, setMismatchRows] = useState<any[]>([]);
+  const [mismatchLoading, setMismatchLoading] = useState(false);
 
   // Persistence keys
   const EMERGENCY_STATE_KEY = "plan_audit_emergency_state";
