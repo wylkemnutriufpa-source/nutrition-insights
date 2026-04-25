@@ -338,36 +338,44 @@ const PlanAudit = () => {
       let currentPlanId = emergencyPlanId;
 
       try {
-        // 1. Criar Paciente Temporário
+        // 1. Criar Paciente Temporário (ou usar existente no Replay)
         if (startStep <= 1) {
           setEmergencyStep(1);
-          addLog("Criar Paciente", "loading", "Convocando invite-patient...");
-          const tempEmail = `test-${Date.now()}@fitjourney.test`;
-          const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
           
-          const invitePayload = {
-            name: tempName,
-            email: tempEmail,
-            method: "password",
-            password: "password123",
-            autoConfirm: true
-          };
+          if (replayMode && emergencyPatientId) {
+            addLog("Replay Mode", "success", `Reusando paciente existente: ${emergencyPatientId}`);
+            currentPatientId = emergencyPatientId;
+            await takeSnapshot(currentPatientId!, "Replay Inicial");
+          } else {
+            addLog("Criar Paciente", "loading", "Convocando invite-patient...");
+            const tempEmail = `test-${Date.now()}@fitjourney.test`;
+            const tempName = `Teste Emergência ${format(new Date(), "HH:mm:ss")}`;
+            
+            const invitePayload = {
+              name: tempName,
+              email: tempEmail,
+              method: "password",
+              password: "password123",
+              autoConfirm: true
+            };
 
-          const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
-            body: invitePayload
-          });
+            const { data: inviteData, error: inviteError } = await supabase.functions.invoke("invite-patient", {
+              body: invitePayload
+            });
 
-          if (inviteError || !inviteData?.patient_id) {
-            const errorMsg = inviteError?.message || inviteData?.error || "ID não retornado";
-            addLog("Criar Paciente", "error", `Erro no invite: ${errorMsg}`, invitePayload, inviteData, "Persistência");
-            throw new Error(errorMsg);
+            if (inviteError || !inviteData?.patient_id) {
+              const errorMsg = inviteError?.message || inviteData?.error || "ID não retornado";
+              addLog("Criar Paciente", "error", `Erro no invite: ${errorMsg}`, invitePayload, inviteData, "Persistência");
+              throw new Error(errorMsg);
+            }
+            
+            currentPatientId = inviteData.patient_id;
+            setEmergencyPatientId(currentPatientId);
+            addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
+            await takeSnapshot(currentPatientId!, "Inicial");
           }
-          
-          currentPatientId = inviteData.patient_id;
-          setEmergencyPatientId(currentPatientId);
-          addLog("Criar Paciente", "success", `Paciente ${tempName} criado (UUID: ${currentPatientId}).`, invitePayload, inviteData);
-          await takeSnapshot(currentPatientId!, "Inicial");
         }
+
 
         // 2. Criar Plano Simples
         if (startStep <= 2) {
