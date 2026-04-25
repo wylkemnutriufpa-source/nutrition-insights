@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
@@ -18,7 +18,27 @@ import {
   Sparkles,
   ExternalLink,
   Search,
+  Download,
+  Calendar,
+  X,
 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import jsPDF from "jspdf";
+import "jspdf-autotable";
 
 type AuditStatus =
   | "OK_PUBLICADO"
@@ -86,11 +106,27 @@ const formatDate = (iso: string | null) => {
 
 const PlanAudit = () => {
   const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [rows, setRows] = useState<AuditRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<AuditStatus | "all">("all");
+  const [batchProcessing, setBatchProcessing] = useState(false);
   const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  // Filters from URL
+  const search = searchParams.get("q") || "";
+  const statusFilter = (searchParams.get("status") as AuditStatus | "all") || "all";
+  const dateFrom = searchParams.get("from") ? new Date(searchParams.get("from")!) : undefined;
+  const dateTo = searchParams.get("to") ? new Date(searchParams.get("to")!) : undefined;
+
+  const setFilter = (key: string, value: string | undefined) => {
+    const next = new URLSearchParams(searchParams);
+    if (value) {
+      next.set(key, value);
+    } else {
+      next.delete(key);
+    }
+    setSearchParams(next, { replace: true });
+  };
 
   const load = async () => {
     setLoading(true);
@@ -134,28 +170,115 @@ const PlanAudit = () => {
     const term = search.trim().toLowerCase();
     return rows.filter((r) => {
       if (statusFilter !== "all" && r.audit_status !== statusFilter) return false;
-      if (!term) return true;
-      return (r.patient_name ?? "").toLowerCase().includes(term);
+      if (term && !(r.patient_name ?? "").toLowerCase().includes(term)) return false;
+      
+      if (dateFrom || dateTo) {
+        if (!r.latest_updated_at) return false;
+        const d = new Date(r.latest_updated_at);
+        if (dateFrom && d < dateFrom) return false;
+        if (dateTo && d > dateTo) return false;
+      }
+      
+      return true;
     });
-  }, [rows, search, statusFilter]);
+  }, [rows, search, statusFilter, dateFrom, dateTo]);
 
   const handleQuickPublish = async (row: AuditRow) => {
     if (!user || !row.latest_plan_id) return;
     setPublishingId(row.latest_plan_id);
+    const toastId = toast.loading(`Publicando plano para ${row.patient_name}...`);
     try {
       const { publishMealPlan } = await import("@/lib/serverTransitions");
       const result = await publishMealPlan(row.latest_plan_id, user.id);
       if (!result.success) {
         throw new Error(result.error || "Erro ao publicar.");
       }
-      toast.success(`✅ Plano publicado para ${row.patient_name ?? "paciente"}.`);
+      toast.success(`✅ Plano publicado para ${row.patient_name ?? "paciente"}.`, { id: toastId });
       await load();
     } catch (err: any) {
       console.error("[PlanAudit] publish error", err);
-      toast.error(err?.message || "Erro ao publicar o plano.");
+      toast.error(err?.message || "Erro ao publicar o plano.", { id: toastId });
     } finally {
       setPublishingId(null);
     }
+  };
+
+  const handleBatchGenerate = async () => {
+    const targets = rows.filter(r => r.audit_status === "SEM_PLANO");
+    if (targets.length === 0) {
+      toast.info("Nenhum paciente sem plano para processar.");
+      return;
+    }
+
+    if (!confirm(`Deseja gerar e validar planos para ${targets.length} pacientes?`)) return;
+
+    setBatchProcessing(true);
+    const results = { success: 0, fail: 0 };
+    
+    const toastId = toast.loading(`Processando ${targets.length} pacientes...`);
+
+    for (const target of targets) {
+      try {
+        const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+          body: {
+            patientId: target.patient_id,
+            nutritionistId: user?.id,
+            isPipeline: false,
+          },
+        });
+
+        if (error || !data?.success) throw new Error(data?.error || "Erro na geração");
+        
+        results.success++;
+      } catch (err) {
+        console.error(`Batch generate error for ${target.patient_name}:`, err);
+        results.fail++;
+      }
+    }
+
+    toast.success(`Lote finalizado: ${results.success} aprovados, ${results.fail} falharam.`, { id: toastId });
+    setBatchProcessing(false);
+    await load();
+  };
+
+  const handleExportPDF = () => {
+    const doc = new jsPDF();
+    const now = format(new Date(), "dd/MM/yyyy HH:mm");
+    
+    doc.setFontSize(18);
+    doc.text("Relatório de Auditoria de Planos", 14, 20);
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${now}`, 14, 28);
+
+    // Summary table
+    (doc as any).autoTable({
+      startY: 35,
+      head: [["Status", "Quantidade"]],
+      body: [
+        ["Total de Pacientes", summary.total],
+        ["Publicados", summary.OK_PUBLICADO],
+        ["Aprovados", summary.APROVADO_NAO_PUBLICADO],
+        ["Rascunhos", summary.SO_RASCUNHO],
+        ["Sem Plano", summary.SEM_PLANO],
+      ],
+    });
+
+    // Patients table
+    const tableBody = filtered.map(r => [
+      r.patient_name || "Sem nome",
+      STATUS_META[r.audit_status].label,
+      formatDate(r.latest_updated_at),
+      `${r.published_count} P / ${r.approved_count} A / ${r.draft_count} R`
+    ]);
+
+    (doc as any).autoTable({
+      startY: (doc as any).lastAutoTable.finalY + 10,
+      head: [["Paciente", "Status", "Último Update", "P/A/R"]],
+      body: tableBody,
+    });
+
+    doc.save(`auditoria-planos-${format(new Date(), "yyyy-MM-dd")}.pdf`);
+    toast.success("PDF gerado com sucesso!");
   };
 
   return (
@@ -169,14 +292,41 @@ const PlanAudit = () => {
         <link rel="canonical" href="/plan-audit" />
       </Helmet>
 
-      <header className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-display font-bold">
-          Auditoria de Planos
-        </h1>
-        <p className="text-sm text-muted-foreground max-w-2xl">
-          Visão única do estado de cada paciente. Identifique quem está sem plano,
-          quem precisa publicar e abra o editor com 1 clique.
-        </p>
+      <header className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <div className="space-y-1">
+          <h1 className="text-2xl md:text-3xl font-display font-bold">
+            Auditoria de Planos
+          </h1>
+          <p className="text-sm text-muted-foreground max-w-2xl">
+            Visão única do estado de cada paciente. Identifique quem está sem plano,
+            quem precisa publicar e abra o editor com 1 clique.
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleExportPDF}
+            className="gap-2"
+          >
+            <Download className="w-4 h-4" />
+            PDF Relatório
+          </Button>
+          <Button
+            size="sm"
+            variant="secondary"
+            onClick={handleBatchGenerate}
+            disabled={batchProcessing || loading}
+            className="gap-2"
+          >
+            {batchProcessing ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <Sparkles className="w-4 h-4" />
+            )}
+            Gerar em Lote
+          </Button>
+        </div>
       </header>
 
       {/* Summary cards */}
@@ -201,7 +351,7 @@ const PlanAudit = () => {
               className={`p-4 cursor-pointer transition-colors ${
                 active ? "ring-2 ring-primary" : "hover:bg-muted/40"
               }`}
-              onClick={() => setStatusFilter(active ? "all" : s)}
+              onClick={() => setFilter("status", active ? undefined : s)}
             >
               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                 {meta.icon}
@@ -214,26 +364,87 @@ const PlanAudit = () => {
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-2 sm:items-center sm:justify-between">
-        <div className="relative flex-1 max-w-md">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            placeholder="Buscar paciente…"
-            className="pl-9"
-          />
+      <div className="flex flex-col lg:flex-row gap-3 items-start lg:items-center justify-between">
+        <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+          <div className="relative flex-1 sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              value={search}
+              onChange={(e) => setFilter("q", e.target.value)}
+              placeholder="Nome ou prontuário…"
+              className="pl-9"
+            />
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className="gap-2">
+                  <Calendar className="w-4 h-4" />
+                  {dateFrom || dateTo ? (
+                    <>
+                      {dateFrom ? format(dateFrom, "dd/MM") : "..."} - {dateTo ? format(dateTo, "dd/MM") : "..."}
+                    </>
+                  ) : (
+                    "Filtrar data"
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <div className="p-3 border-b flex items-center justify-between">
+                  <span className="text-xs font-medium">Faixa de atualização</span>
+                  {(dateFrom || dateTo) && (
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-6 w-6" 
+                      onClick={() => {
+                        setFilter("from", undefined);
+                        setFilter("to", undefined);
+                      }}
+                    >
+                      <X className="h-3 w-3" />
+                    </Button>
+                  )}
+                </div>
+                <div className="flex flex-col sm:flex-row">
+                  <div className="p-1">
+                    <p className="text-[10px] text-muted-foreground px-2 py-1">Início</p>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateFrom}
+                      onSelect={(d) => setFilter("from", d?.toISOString())}
+                      locale={ptBR}
+                    />
+                  </div>
+                  <div className="p-1 border-t sm:border-t-0 sm:border-l">
+                    <p className="text-[10px] text-muted-foreground px-2 py-1">Fim</p>
+                    <CalendarComponent
+                      mode="single"
+                      selected={dateTo}
+                      onSelect={(d) => setFilter("to", d?.toISOString())}
+                      locale={ptBR}
+                    />
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+
+            {(statusFilter !== "all" || search || dateFrom || dateTo) && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setSearchParams(new URLSearchParams(), { replace: true });
+                }}
+              >
+                Limpar filtros
+              </Button>
+            )}
+          </div>
         </div>
+
         <div className="flex items-center gap-2">
-          {statusFilter !== "all" && (
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setStatusFilter("all")}
-            >
-              Limpar filtro
-            </Button>
-          )}
           <Button
             variant="outline"
             size="sm"
