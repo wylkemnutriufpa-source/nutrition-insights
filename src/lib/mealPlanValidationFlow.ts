@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { autoFixMealPlan, type AutoFixResult } from "@/lib/autoFixEngine";
+import { isSimpleMode } from "@/lib/simpleModeFlag";
 
 export interface ClinicalValidationResult {
   success: boolean;
