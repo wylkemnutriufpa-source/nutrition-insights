@@ -17702,6 +17702,42 @@ export type Database = {
           },
         ]
       }
+      trigger_audit_logs: {
+        Row: {
+          changed_data: Json | null
+          executed_by: string | null
+          id: string
+          operation: string
+          performed_at: string | null
+          record_id: string
+          table_name: string
+          trigger_depth: number | null
+          trigger_name: string
+        }
+        Insert: {
+          changed_data?: Json | null
+          executed_by?: string | null
+          id?: string
+          operation: string
+          performed_at?: string | null
+          record_id: string
+          table_name: string
+          trigger_depth?: number | null
+          trigger_name: string
+        }
+        Update: {
+          changed_data?: Json | null
+          executed_by?: string | null
+          id?: string
+          operation?: string
+          performed_at?: string | null
+          record_id?: string
+          table_name?: string
+          trigger_depth?: number | null
+          trigger_name?: string
+        }
+        Relationships: []
+      }
       user_achievements: {
         Row: {
           achievement_id: string
