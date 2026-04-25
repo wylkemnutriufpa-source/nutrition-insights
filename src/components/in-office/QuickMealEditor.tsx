@@ -288,6 +288,13 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     try {
       await withRetry(async () => {
         // Clear other days
+        if (!mealPlanId) {
+          console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyToWeek", { patientId });
+          throw new Error("DELETE bloqueado: mealPlanId inválido");
+        }
+        
+        console.info("[DELETE] Limpando semana exceto dia atual", { mealPlanId, patientId, currentDay, operation: "applyToWeek" });
+        
         const { error: delErr } = await supabase.from("meal_plan_items")
           .delete()
           .eq("meal_plan_id", mealPlanId)
