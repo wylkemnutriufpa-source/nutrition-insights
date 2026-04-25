@@ -571,7 +571,14 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
           throw error;
         }
       },
-      rollback: () => set({ items: prev }),
+      rollback: () => {
+        const originalItem = prev.find(i => i.id === itemId);
+        if (originalItem) {
+          set((s) => ({
+            items: [...s.items, originalItem]
+          }));
+        }
+      },
     });
   },
 
