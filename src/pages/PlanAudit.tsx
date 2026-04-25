@@ -1083,7 +1083,7 @@ const PlanAudit = () => {
 
         <TabsContent value="emergency" className="m-0 space-y-4">
           <Card className="p-6 space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="space-y-1">
                 <h2 className="text-lg font-semibold flex items-center gap-2">
                   <Zap className="w-5 h-5 text-amber-500" /> Fluxo de Emergência (Auto-Teste)
@@ -1092,10 +1092,23 @@ const PlanAudit = () => {
                   Cria um cenário completo para validar se o sistema está salvando, publicando e exibindo corretamente.
                 </p>
               </div>
-              <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
-                {emergencyProcessing ? <Loader2 className="animate-spin w-4 h-4 mr-2" /> : <Sparkles className="w-4 h-4 mr-2" />}
-                Iniciar Fluxo
-              </Button>
+              <div className="flex gap-2">
+                {emergencyStep > 0 && emergencyStep < 6 && (
+                  <Button onClick={clearEmergencyState} variant="ghost" size="sm">
+                    Limpar
+                  </Button>
+                )}
+                <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
+                  {emergencyProcessing ? (
+                    <Loader2 className="animate-spin w-4 h-4 mr-2" />
+                  ) : emergencyStep > 0 && emergencyStep < 6 ? (
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                  ) : (
+                    <Sparkles className="w-4 h-4 mr-2" />
+                  )}
+                  {emergencyStep > 0 && emergencyStep < 6 ? "Retomar / Reiniciar" : "Iniciar Fluxo"}
+                </Button>
+              </div>
             </div>
 
             {emergencyLogs.length > 0 && (
@@ -1105,22 +1118,130 @@ const PlanAudit = () => {
                     <div key={step} className={`h-1.5 rounded-full ${emergencyStep >= step ? 'bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.5)]' : 'bg-muted'}`} />
                   ))}
                 </div>
-                <div className="space-y-2 border rounded-lg p-4 bg-muted/30">
+                <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
                   {emergencyLogs.map((log, i) => (
-                    <div key={i} className="flex items-start gap-3 text-sm">
-                      {log.status === 'loading' ? (
-                        <Loader2 className="w-4 h-4 animate-spin mt-0.5 text-amber-500" />
-                      ) : log.status === 'success' ? (
-                        <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-500" />
-                      ) : (
-                        <XCircle className="w-4 h-4 mt-0.5 text-rose-500" />
-                      )}
-                      <div>
-                        <span className="font-semibold">{log.step}:</span> {log.message}
+                    <div key={i} className="space-y-2 border-b last:border-0 pb-2 last:pb-0">
+                      <div className="flex items-start gap-3 text-sm">
+                        {log.status === 'loading' ? (
+                          <Loader2 className="w-4 h-4 animate-spin mt-0.5 text-amber-500" />
+                        ) : log.status === 'success' ? (
+                          <CheckCircle2 className="w-4 h-4 mt-0.5 text-emerald-500" />
+                        ) : (
+                          <XCircle className="w-4 h-4 mt-0.5 text-rose-500" />
+                        )}
+                        <div className="flex-1">
+                          <span className="font-semibold">{log.step}:</span> {log.message}
+                          {log.errorType && (
+                            <Badge variant="outline" className="ml-2 text-[9px] uppercase border-rose-500 text-rose-600">
+                              Erro: {log.errorType}
+                            </Badge>
+                          )}
+                        </div>
                       </div>
+                      
+                      {(log.payload || log.response) && (
+                        <div className="ml-7 bg-background/50 rounded p-2 text-[10px] font-mono overflow-auto max-h-40">
+                          {log.payload && (
+                            <div className="mb-2">
+                              <span className="text-muted-foreground uppercase">[Payload]:</span>
+                              <pre>{JSON.stringify(log.payload, null, 2)}</pre>
+                            </div>
+                          )}
+                          {log.response && (
+                            <div>
+                              <span className="text-muted-foreground uppercase">[Response/Error]:</span>
+                              <pre>{JSON.stringify(log.response, null, 2)}</pre>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   ))}
                 </div>
+              </div>
+            )}
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="failure-report" className="m-0 space-y-4">
+          <Card className="p-6 space-y-6">
+            <div className="space-y-1">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5 text-rose-500" /> Relatório de Falhas e Snapshots
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Agrupamento de erros por tipo e comparação de estados do banco de dados.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {["RLS", "Validação", "Persistência"].map(type => {
+                const count = emergencyLogs.filter(l => l.errorType === type).length;
+                return (
+                  <Card key={type} className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-muted-foreground uppercase">{type}</p>
+                      <p className="text-2xl font-bold">{count}</p>
+                    </div>
+                    <AlertTriangle className={`w-8 h-8 ${count > 0 ? 'text-rose-500' : 'text-muted/20'}`} />
+                  </Card>
+                );
+              })}
+            </div>
+
+            {Object.keys(snapshots).length > 0 && (
+              <div className="space-y-4">
+                <h3 className="text-sm font-semibold flex items-center gap-2">
+                  <Database className="w-4 h-4" /> Comparação de Snapshots (plan_status, is_active)
+                </h3>
+                <div className="border rounded-md overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Momento</TableHead>
+                        <TableHead>ID Plano</TableHead>
+                        <TableHead>Status</TableHead>
+                        <TableHead>Ativo</TableHead>
+                        <TableHead>Visível Paciente</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).map(([label, data]: [string, any]) => (
+                        <TableRow key={label} className="bg-muted/10">
+                          <TableCell className="font-medium text-xs whitespace-nowrap" colSpan={5}>
+                            {label.split('_')[0]}
+                          </TableCell>
+                        </TableRow>
+                      )).concat(
+                        Object.entries(snapshots).sort((a, b) => b[0].localeCompare(a[0])).flatMap(([label, data]: [string, any]) => 
+                          data.map((p: any) => (
+                            <TableRow key={`${label}_${p.id}`}>
+                              <TableCell className="text-[10px] pl-6 text-muted-foreground">↳ {label.split('_')[0]}</TableCell>
+                              <TableCell className="text-[10px] font-mono">{p.id.slice(0, 8)}...</TableCell>
+                              <TableCell>
+                                <Badge variant="outline" className="text-[10px]">{p.plan_status}</Badge>
+                              </TableCell>
+                              <TableCell>
+                                {p.is_active ? <CheckCircle2 className="w-3 h-3 text-emerald-500" /> : <XCircle className="w-3 h-3 text-muted" />}
+                              </TableCell>
+                              <TableCell>
+                                {p.plan_status === 'published_to_patient' ? <ShieldCheck className="w-3 h-3 text-emerald-500" /> : <ShieldCheck className="w-3 h-3 text-muted" />}
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        )
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+            )}
+
+            {!emergencyLogs.some(l => l.status === 'error') && Object.keys(snapshots).length === 0 && (
+              <div className="text-center py-12 text-muted-foreground text-sm border-2 border-dashed rounded-lg">
+                Nenhuma falha ou snapshot registrado recentemente.
+                <br />
+                Execute o Fluxo de Emergência para gerar dados.
               </div>
             )}
           </Card>
