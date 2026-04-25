@@ -46,7 +46,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap } from "lucide-react";
+import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap, RefreshCw } from "lucide-react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
@@ -446,7 +446,17 @@ export default function MealPlans() {
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Button asChild variant="outline" className="gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={fetchPlans}
+              disabled={loading}
+              className="gap-2"
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
+              Refazer sincronização
+            </Button>
+            <Button asChild variant="outline" size="sm" className="gap-2">
               <Link to="/plan-audit">
                 <ClipboardList className="w-4 h-4" /> Auditoria de Planos
               </Link>
