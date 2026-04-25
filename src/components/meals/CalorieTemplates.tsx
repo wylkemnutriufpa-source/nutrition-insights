@@ -103,6 +103,13 @@ export default function CalorieTemplates({ mealPlanId, onApplied }: CalorieTempl
     }
 
     // Remove existing items for the affected days before inserting
+    if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+      console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em CalorieTemplates", { mealPlanId });
+      throw new Error("DELETE bloqueado: mealPlanId inválido");
+    }
+    
+    console.info("[DELETE] Limpando itens para aplicar template de calorias", { mealPlanId, days, operation: "applyCalorieTemplate", timestamp: Date.now() });
+    
     const { error: deleteError } = await supabase
       .from("meal_plan_items")
       .delete()
