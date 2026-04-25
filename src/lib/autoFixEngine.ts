@@ -1025,6 +1025,13 @@ export async function autoFixMealPlan(
     }
 
     // Delete old items
+    if (!planId) {
+      console.error("[CRITICAL] DELETE bloqueado: planId inválido em executeAutoFix", { patientId });
+      throw new Error("DELETE bloqueado: planId inválido");
+    }
+    
+    console.info("[DELETE] Limpando itens para aplicar correções AutoFix", { planId, patientId, operation: "executeAutoFix" });
+    
     const { error: delErr } = await supabase
       .from("meal_plan_items")
       .delete()
