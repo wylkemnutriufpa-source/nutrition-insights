@@ -60,6 +60,12 @@ const SUBSTITUTION_GROUPS: Record<string, SubstitutionOption[]> = {
     { id: "sub_mamao", title: "Mamão", description: "1 fatia (150g)", calories: 60, protein: 1, carbs: 15, fat: 0, emoji: "🥭" },
     { id: "sub_laranja", title: "Laranja", description: "1 unidade (150g)", calories: 70, protein: 1, carbs: 18, fat: 0, emoji: "🍊" },
   ],
+  // Light dinner/soups
+  dinner_light: [
+    { id: "sub_sopa_legumes", title: "Sopa de legumes", description: "1 prato (300ml)", calories: 80, protein: 2.5, carbs: 15, fat: 1, emoji: "🥣" },
+    { id: "sub_omelete", title: "Omelete de claras", description: "3 claras + legumes", calories: 120, protein: 15, carbs: 5, fat: 4, emoji: "🍳" },
+    { id: "sub_salada_frango", title: "Salada com frango", description: "Salada verde + 80g frango", calories: 150, protein: 25, carbs: 5, fat: 3, emoji: "🥗" },
+  ],
 };
 
 /** Detect which substitution group an item belongs to */
@@ -77,6 +83,7 @@ function detectGroup(item: MealPlanItem): string | null {
   if (mealType === "lunch" || mealType === "dinner") {
     if (/frango|carne|peixe|bife|fil[eé]/.test(title)) return "main_protein";
     if (/arroz|macarr[aã]o|pur[eê]|batata/.test(title)) return "main_carb";
+    if (/sopa|caldo|leve/.test(title)) return "dinner_light";
   }
 
   // Fruits in snacks

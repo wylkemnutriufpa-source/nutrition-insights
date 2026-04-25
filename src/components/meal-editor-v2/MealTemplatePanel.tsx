@@ -131,17 +131,17 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     totalCalories: 405, totalProtein: 33, totalCarbs: 25, totalFat: 19,
   },
   {
-    id: "t_peixe_macarrao",
-    title: "Peixe + Macarrão + Salada",
-    description: "Filé de peixe grelhado, macarrão e salada",
-    mealTypes: ["lunch"],
+    id: "t_peixe_legumes",
+    title: "Peixe + Legumes",
+    description: "Filé de peixe grelhado acompanhado de legumes no vapor",
+    mealTypes: ["lunch", "dinner"],
     emoji: "🐟",
     foods: [
       { name: "Filé de peixe grelhado", portion: "150g", calories: 180, protein: 36, carbs: 0, fat: 3 },
-      { name: "Macarrão", portion: "100g cozido", calories: 160, protein: 5, carbs: 31, fat: 1 },
+      { name: "Legumes no vapor", portion: "150g", calories: 60, protein: 3, carbs: 12, fat: 0.5 },
       { name: "Salada verde", portion: "1 porção", calories: 15, protein: 1, carbs: 3, fat: 0 },
     ],
-    totalCalories: 355, totalProtein: 42, totalCarbs: 34, totalFat: 4,
+    totalCalories: 255, totalProtein: 40, totalCarbs: 15, totalFat: 3.5,
   },
   // Dinner (lighter, no beans)
   {
@@ -158,17 +158,17 @@ export const MEAL_TEMPLATES: MealTemplate[] = [
     totalCalories: 345, totalProtein: 44, totalCarbs: 29, totalFat: 4,
   },
   {
-    id: "t_peixe_arroz_jantar",
-    title: "Peixe + Arroz + Salada",
-    description: "Filé de peixe, arroz integral e salada",
+    id: "t_peixe_pouco_arroz",
+    title: "Peixe + Pouco Arroz + Legumes",
+    description: "Filé de peixe, porção reduzida de arroz integral e legumes",
     mealTypes: ["dinner"],
     emoji: "🐟",
     foods: [
       { name: "Filé de peixe grelhado", portion: "130g", calories: 156, protein: 31, carbs: 0, fat: 3 },
-      { name: "Arroz integral", portion: "3 colheres (90g)", calories: 100, protein: 2, carbs: 21, fat: 1 },
-      { name: "Salada mista", portion: "1 porção", calories: 25, protein: 1, carbs: 5, fat: 0 },
+      { name: "Arroz integral (pouco)", portion: "2 colheres (60g)", calories: 66, protein: 1.5, carbs: 14, fat: 0.5 },
+      { name: "Legumes no vapor", portion: "100g", calories: 40, protein: 2, carbs: 8, fat: 0.3 },
     ],
-    totalCalories: 281, totalProtein: 34, totalCarbs: 26, totalFat: 4,
+    totalCalories: 262, totalProtein: 34.5, totalCarbs: 22, totalFat: 3.8,
   },
   // Evening snack
   {
