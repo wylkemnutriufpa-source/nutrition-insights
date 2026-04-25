@@ -65,8 +65,8 @@ interface Props {
 export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tenantId }: Props) {
   const { user } = useAuth();
   const [blocks, setBlocks] = useState<MealBlock[]>(MEAL_TYPES.map(m => ({ ...m, items: [] })));
-  const [currentDay, setCurrentDay] = useState(1);
-  const [totalDays, setTotalDays] = useState(7);
+  const [currentDay, setCurrentDay] = useState(0);
+  const [totalDays, setTotalDays] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [addingTo, setAddingTo] = useState<MealType | null>(null);
@@ -545,24 +545,13 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       {/* Day selector + Actions */}
       <div className="flex flex-wrap items-center gap-2">
         <div className="flex gap-1 bg-muted rounded-xl p-1">
-          {Array.from({ length: Math.max(totalDays, 7) }, (_, i) => i + 1).map(day => (
-            <button
-              key={day}
-              onClick={() => setCurrentDay(day)}
-              className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
-                currentDay === day ? "bg-primary text-primary-foreground shadow" : "hover:bg-background"
-              }`}
-            >
-              {DAY_LABELS[day - 1] || `D${day}`}
-            </button>
-          ))}
+          <div className="px-3 py-1.5 rounded-lg text-xs font-medium bg-primary text-primary-foreground shadow">
+            Plano Único
+          </div>
         </div>
         <div className="flex gap-1 ml-auto flex-wrap">
-          <Button variant="outline" size="sm" onClick={duplicateDay} disabled={saving} className="gap-1 text-xs">
-            <Copy className="w-3 h-3" /> Duplicar
-          </Button>
-          <Button variant="outline" size="sm" onClick={applyToWeek} disabled={saving} className="gap-1 text-xs">
-            <Calendar className="w-3 h-3" /> Semana
+          <Button variant="outline" size="sm" onClick={() => setCurrentDay(0)} disabled={saving} className="gap-1 text-xs">
+            <RefreshCw className="w-3 h-3" /> Atualizar
           </Button>
 
           {/* Load Template */}
@@ -603,10 +592,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
                   </div>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={() => applyTemplateToDay(previewTemplate)} disabled={saving} className="flex-1 gap-1">
-                      <ArrowRight className="w-3 h-3" /> Aplicar ao dia {currentDay}
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={() => applyTemplateToWeek(previewTemplate)} disabled={saving} className="flex-1 gap-1">
-                      <Calendar className="w-3 h-3" /> Aplicar à semana
+                      <ArrowRight className="w-3 h-3" /> Aplicar ao plano
                     </Button>
                   </div>
                 </div>
