@@ -413,7 +413,7 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
         }
 
         const days = new Set(items.map((i: any) => i.day_of_week));
-        const numDays = days.size || 1;
+        const numDays = 1; // Unificado: sempre 1 dia
 
         let totalCals = 0, totalP = 0, totalC = 0, totalF = 0;
         let allDescriptions = "";
@@ -427,76 +427,13 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             allDescriptions += " " + normalize(primaryDescription || "");
         }
 
-        const dailyCals = totalCals / numDays;
-        const dailyP = totalP / numDays;
-        const dailyC = totalC / numDays;
-        const dailyF = totalF / numDays;
+        const dailyCals = totalCals;
+        const dailyP = totalP;
+        const dailyC = totalC;
+        const dailyF = totalF;
 
-        // ── Cross-day consistency check ──────────────────────────────────────
-        // Must stay aligned with AutoFix: protein is stricter because clinicians
-        // perceive even small day-to-day swings as a real inconsistency.
-        const CROSS_DAY_TOLERANCE = {
-            protein: 0.03,
-            default: 0.05,
-        } as const;
-        const perDayMacros = new Map<number, { cals: number; prot: number; carbs: number; fat: number }>();
-        for (const item of items) {
-            const d = item.day_of_week ?? 0;
-            if (!perDayMacros.has(d)) perDayMacros.set(d, { cals: 0, prot: 0, carbs: 0, fat: 0 });
-            const m = perDayMacros.get(d)!;
-            m.cals += item.calories_target || 0;
-            m.prot += Number(item.protein_target) || 0;
-            m.carbs += Number(item.carbs_target) || 0;
-            m.fat += Number(item.fat_target) || 0;
-        }
-
-        interface CrossDayInconsistency {
-            macro: string;
-            unit: string;
-            avg: number;
-            min_day: number;
-            min_val: number;
-            max_day: number;
-            max_val: number;
-            variance_pct: number;
-            tolerance_pct: number;
-        }
-        const crossDayInconsistencies: CrossDayInconsistency[] = [];
-        const dayNames = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
-
-        function checkCrossDayConsistency(
-            macroLabel: string,
-            unit: string,
-            key: "cals" | "prot" | "carbs" | "fat",
-            avg: number,
-            tolerancePct: number,
-        ) {
-            if (avg <= 0 || numDays < 2) return;
-            let minVal = Infinity, maxVal = -Infinity, minDay = 0, maxDay = 0;
-            for (const [day, m] of perDayMacros.entries()) {
-                const val = m[key];
-                if (val < minVal) { minVal = val; minDay = day; }
-                if (val > maxVal) { maxVal = val; maxDay = day; }
-            }
-            const variancePct = (maxVal - minVal) / avg;
-            if (variancePct > tolerancePct) {
-                crossDayInconsistencies.push({
-                    macro: macroLabel,
-                    unit,
-                    avg: Math.round(avg),
-                    min_day: minDay,
-                    min_val: Math.round(minVal),
-                    max_day: maxDay,
-                    max_val: Math.round(maxVal),
-                    variance_pct: Math.round(variancePct * 100),
-                    tolerance_pct: Math.round(tolerancePct * 100),
-                });
-            }
-        }
-        checkCrossDayConsistency("Proteína", "g", "prot", dailyP, CROSS_DAY_TOLERANCE.protein);
-        checkCrossDayConsistency("Calorias", "kcal", "cals", dailyCals, CROSS_DAY_TOLERANCE.default);
-        checkCrossDayConsistency("Carboidrato", "g", "carbs", dailyC, CROSS_DAY_TOLERANCE.default);
-        checkCrossDayConsistency("Gordura", "g", "fat", dailyF, CROSS_DAY_TOLERANCE.default);
+        // ── Cross-day consistency check (REMOVIDO: Modelo single-day oficial) ──
+        const crossDayInconsistencies: any[] = [];
 
         // ── 1. Clinical Validation (existing) ────────────────────────────────
         const { data: assessment } = await supabase
