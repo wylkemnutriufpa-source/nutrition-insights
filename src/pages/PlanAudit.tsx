@@ -1135,12 +1135,32 @@ const PlanAudit = () => {
                   Cria um cenário completo para validar se o sistema está salvando, publicando e exibindo corretamente.
                 </p>
               </div>
-              <div className="flex gap-2">
-                {emergencyStep > 0 && emergencyStep < 6 && (
+              <div className="flex flex-wrap items-center gap-2">
+                <div className="flex items-center gap-2 mr-4 border-r pr-4">
+                  <span className="text-xs font-medium">Replay:</span>
+                  <Button 
+                    variant={replayMode ? "default" : "outline"} 
+                    size="sm" 
+                    onClick={() => setReplayMode(!replayMode)}
+                    className="h-8 text-[10px]"
+                  >
+                    {replayMode ? "ON" : "OFF"}
+                  </Button>
+                </div>
+                
+                {emergencyLogs.length > 0 && (
+                  <Button onClick={handleExportJSON} variant="outline" size="sm" className="gap-2">
+                    <Download className="w-3.5 h-3.5" />
+                    Exportar JSON
+                  </Button>
+                )}
+
+                {emergencyStep > 0 && (
                   <Button onClick={clearEmergencyState} variant="ghost" size="sm">
                     Limpar
                   </Button>
                 )}
+
                 <Button onClick={runEmergencyFlow} disabled={emergencyProcessing} variant="secondary">
                   {emergencyProcessing ? (
                     <Loader2 className="animate-spin w-4 h-4 mr-2" />
@@ -1149,9 +1169,10 @@ const PlanAudit = () => {
                   ) : (
                     <Sparkles className="w-4 h-4 mr-2" />
                   )}
-                  {emergencyStep > 0 && emergencyStep < 6 ? "Retomar / Reiniciar" : "Iniciar Fluxo"}
+                  {emergencyStep > 0 && emergencyStep < 6 ? "Retomar" : "Iniciar Fluxo"}
                 </Button>
               </div>
+
             </div>
 
             {emergencyLogs.length > 0 && (
