@@ -362,22 +362,19 @@ export default function MealPlanEditorV2() {
       // 1) Flush pending edits
       await store._flushQueue();
 
-      // 2) Publica via transição autoritativa do backend, sem depender de
-      // aprovação prévia local para rascunhos auto-corrigidos.
+      // 2) Publica via transição autoritativa do backend
+      console.info("[EMERGENCY] Iniciando publicação autoritativa...");
       const publishResult = await publishMealPlan(plan.id, user.id);
+      
       if (!publishResult.success) {
+        console.error("[EMERGENCY] Falha na RPC de publicação:", publishResult.error);
         throw new Error(publishResult.error || "Plano salvo, mas houve erro ao publicar");
       }
 
-      // Recalcula totais consolidados — não bloqueia em caso de falha
-      const totals = await calculatePlanTotals(plan.id);
+      // 3) Refetch OBRIGATÓRIO (Etapa 5)
       await refreshPlanFromServer();
-
-      if (totals.totals_status === "incomplete") {
-        toast.success("✅ Plano publicado. Os totais nutricionais serão recalculados em segundo plano.", { id: toastId, duration: 5000 });
-      } else {
-        toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { id: toastId, duration: 5000 });
-      }
+      
+      toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { id: toastId, duration: 5000 });
     } catch (err: any) {
       console.error("[SaveAndPublish] Error:", err);
       toast.error("Erro ao salvar/publicar: " + (err?.message || "Tente novamente"), { id: toastId });
