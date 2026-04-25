@@ -4,8 +4,9 @@ set -e
 echo "Starting Trigger Guardrail Integration Tests..."
 
 # Get dummy IDs
-USER_ID=$(psql -t -c "SELECT id FROM profiles LIMIT 1" | xargs)
-TENANT_ID=$(psql -t -c "SELECT id FROM tenants LIMIT 1" | xargs)
+USER_ID="67f47696-a778-4ada-9ff9-9615fb7a7c48"
+PATIENT_ID="b4696594-8e41-4521-a23b-e9e77c6538b4"
+TENANT_ID="20081963-8db9-4a6c-8181-6a820b86e12f"
 
 if [ -z "$USER_ID" ] || [ -z "$TENANT_ID" ]; then
   echo "Error: Could not find user or tenant for testing."
