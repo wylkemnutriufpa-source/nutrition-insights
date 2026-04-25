@@ -1047,24 +1047,31 @@ const PlanAudit = () => {
   };
 
   const exportSummaryCSV = () => {
-    const headers = ["Etapa", "Total", "Sucessos", "Falhas", "Taxa de Sucesso (%)", "Taxa de Falha (%)"];
-    const rows = stepMetrics.map(m => [
-      m.name,
-      m.total,
-      m.successes,
-      m.failures,
-      m.successRate.toFixed(1),
-      m.failureRate.toFixed(1)
-    ]);
+    const headers = ["ExecutionID", "Etapa", "Status", "Timestamp", "Log Link"];
+    const rows = filteredEmergencyLogs.map(l => {
+      let logUrl = "";
+      if (correlatorId) {
+        logUrl = `https://console.cloud.google.com/logs/query;query=jsonPayload.correlator%3D%22${correlatorId}%22`;
+      } else if (l.step === "Snapshot") {
+        logUrl = `${window.location.origin}/plan-audit?tab=emergency&execId=${l.executionId}`;
+      }
+      
+      return [
+        l.executionId,
+        l.step,
+        l.status,
+        l.timestamp ? format(new Date(l.timestamp), "HH:mm:ss") : "—",
+        logUrl || "N/A"
+      ];
+    });
 
     const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const link = document.createElement("a");
+    const link = document.body.appendChild(document.createElement("a"));
     const url = URL.createObjectURL(blob);
     link.setAttribute("href", url);
     link.setAttribute("download", `resumo_auditoria_${executionIdFilter || 'geral'}.csv`);
     link.style.visibility = 'hidden';
-    document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     toast.success("Resumo exportado com sucesso!");
