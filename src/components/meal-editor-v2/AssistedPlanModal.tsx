@@ -81,7 +81,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
   // Params
   const [targetKcal, setTargetKcal] = useState(2000);
   const [mealCount, setMealCount] = useState<3 | 4 | 5 | 6>(5);
-  const [subsPerMeal, setSubsPerMeal] = useState<0 | 1 | 2 | 3>(2);
+  const [subsPerMeal, setSubsPerMeal] = useState<0 | 1 | 2 | 3 | 4>(4);
   const [complexity, setComplexity] = useState<ComplexityTier>("balanced");
   const [focus, setFocus] = useState<PlanFocus>("aderencia");
   const [proteinLevel, setProteinLevel] = useState<ProteinLevel>("moderada");
@@ -255,7 +255,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
             Gerador Assistido de Plano
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Motor clínico v2.1 — gera 3 opções com substituições reais e ajuste proteico inteligente
+            Motor clínico v3.0 — gera Plano Único com 4 substituições reais por refeição
           </DialogDescription>
         </DialogHeader>
 
@@ -361,13 +361,14 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
                 <div className="grid grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <Label className="text-xs">Substituições</Label>
-                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v) as 0 | 1 | 2 | 3)}>
+                    <Select value={String(subsPerMeal)} onValueChange={v => setSubsPerMeal(Number(v) as 0 | 1 | 2 | 3 | 4)}>
                       <SelectTrigger className="h-8 text-sm"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="0">Nenhuma</SelectItem>
                         <SelectItem value="1">1 por refeição</SelectItem>
                         <SelectItem value="2">2 por refeição</SelectItem>
                         <SelectItem value="3">3 por refeição</SelectItem>
+                        <SelectItem value="4">4 por refeição</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

@@ -264,7 +264,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
             Gerar Plano Automático
           </DialogTitle>
           <DialogDescription className="text-xs">
-            Motor determinístico v1.0 — monta 7 dias a partir da biblioteca clínica
+            Motor determinístico v1.0 — monta Plano Único (Dia 0) a partir da biblioteca clínica
           </DialogDescription>
         </DialogHeader>
 
@@ -387,7 +387,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
               <div className="flex items-center gap-2">
                 <CheckCircle2 className="w-4 h-4 text-green-500" />
                 <span className="text-sm font-medium">
-                  {result.slots.length} refeições geradas para 7 dias
+                  {result.slots.length} refeições geradas para Plano Único (Dia 0)
                 </span>
               </div>
 

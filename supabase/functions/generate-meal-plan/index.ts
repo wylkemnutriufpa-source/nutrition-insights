@@ -1372,7 +1372,7 @@ function buildMealFromDBFoods(
     if (subs) {
       const normFood = normalize(food.food_name);
       const foodGrams = Math.max(MIN_PORTION_GRAMS, Math.round((food.portion_grams || 100) * clampedScale));
-      const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 3);
+      const alts = subs.filter(s => !normFood.includes(normalize(s))).slice(0, 4);
       if (alts.length > 0) {
         const altsWithPortion = alts.map(a => `${a} (${foodGrams}g)`);
         subLines.push(`• ${food.food_name} → ${altsWithPortion.join(", ")}`);
@@ -1507,7 +1507,7 @@ function generatePlanWithTemplates(
       if (matched.length > 0) {
         // Para o modelo global, pegamos a principal e adicionamos 3 substituições
         // No loop principal, pegamos as 4 melhores candidatas (1 principal + 3 subs)
-        const topCandidates = matched.slice(0, 4);
+        const topCandidates = matched.slice(0, 5); // 1 principal + 4 substituições
         
         for (let i = 0; i < topCandidates.length; i++) {
           let picked = topCandidates[i];
@@ -1646,7 +1646,7 @@ function generatePlanFromVisualLibrary(
   const items: any[] = [];
   const usedPerMealType = new Map<string, Set<string>>();
 
-  for (let day = 0; day < 7; day++) {
+  for (let day = 0; day <= 0; day++) { // Single Day Model (Dia 0)
     for (const mealType of mealTypes) {
       const currentKcalTarget = Math.round(kcalTarget * (MEAL_KCAL_SPLIT[mealType] || 0.15));
       const categories = MEAL_TYPE_TO_VISUAL_CATEGORY[mealType] || ["refeicao"];

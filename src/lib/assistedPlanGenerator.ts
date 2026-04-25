@@ -41,7 +41,7 @@ export interface FlagWithCatalog {
 export interface AssistedPlanParams {
   targetKcal: number;
   mealCount: 3 | 4 | 5 | 6;
-  substitutionsPerMeal: 0 | 1 | 2 | 3;
+  substitutionsPerMeal: 0 | 1 | 2 | 3 | 4;
   complexity: ComplexityTier;
   focus: PlanFocus;
   proteinLevel: ProteinLevel;
@@ -429,7 +429,7 @@ function generateForTier(
 
   const tierSeed = tier === "easy" ? 7 : tier === "balanced" ? 13 : 23;
 
-  for (let day = 1; day <= 7; day++) {
+  for (let day = 0; day <= 0; day++) { // Master Day (Single Day Model)
     for (const mealType of mealConfig.types) {
       const targetKcal = Math.round(params.targetKcal * (mealConfig.distribution[mealType] || 0.15));
 
@@ -530,10 +530,11 @@ function generateForTier(
       totalF += Math.round(s.libraryItem.fat * baseSf);
     }
   }
-  const avgDailyKcal = Math.round(totalKcal / 7);
-  const avgDailyP = Math.round(totalP / 7);
-  const avgDailyC = Math.round(totalC / 7);
-  const avgDailyF = Math.round(totalF / 7);
+  const uniqueDaysCount = Math.max(1, new Set(slots.map(s => s.day)).size);
+  const avgDailyKcal = Math.round(totalKcal / uniqueDaysCount);
+  const avgDailyP = Math.round(totalP / uniqueDaysCount);
+  const avgDailyC = Math.round(totalC / uniqueDaysCount);
+  const avgDailyF = Math.round(totalF / uniqueDaysCount);
 
   // Clinical notes
   const clinicalNotes: string[] = [];

@@ -6,6 +6,8 @@
  */
 import { useState, useMemo, useCallback } from "react";
 import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
+import { getSubstitutionsFor } from "@/lib/mealPlanFoodRules";
+import { getClosestValidatedFood } from "@/lib/validatedFoodDatabase";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
@@ -213,7 +215,19 @@ export default function MealTemplatePanel({ day }: Props) {
     if (!planId) return;
 
     // Add as a single composed meal item (1 refeição = 1 linha)
-    const description = template.foods.map(f => `${f.name} (${f.portion})`).join(" + ");
+    const mainDescription = template.foods.map(f => `${f.name} (${f.portion})`).join(" + ");
+    
+    // Generate automatic substitutions for the main ingredients (Phase 3 update)
+    const subLines: string[] = [];
+    template.foods.forEach(f => {
+      const alts = getSubstitutionsFor(f.name).slice(0, 4); // Max 4 subs as requested
+      if (alts.length > 0) {
+        subLines.push(`• ${f.name} → ${alts.join(", ")}`);
+      }
+    });
+
+    const description = mainDescription + (subLines.length > 0 ? `\n\n🔄 Substituições:\n${subLines.join("\n")}` : "");
+
     addItem({
       meal_plan_id: planId,
       title: template.title,
