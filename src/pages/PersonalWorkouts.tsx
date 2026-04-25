@@ -247,6 +247,7 @@ export default function PersonalWorkouts() {
   const [activeTab, setActiveTab] = useState("dashboard");
   const [creating, setCreating] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<any>(null);
+  const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
   const [expandedPlan, setExpandedPlan] = useState<string | null>(null);
   const [planDetails, setPlanDetails] = useState<Record<string, any>>({});
   const [anamnesisStudent, setAnamnesisStudent] = useState<{ id: string; name: string } | null>(null);
