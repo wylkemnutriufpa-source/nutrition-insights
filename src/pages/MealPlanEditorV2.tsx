@@ -231,28 +231,12 @@ export default function MealPlanEditorV2() {
 
       await store._flushQueue();
 
-      // draft_auto_corrected já é um rascunho persistido; salvar não deve forçar aprovação
-      // nem quebrar o fluxo por estado intermediário.
-      // Refetch OBRIGATÓRIO (Etapa 5)
-      await refreshPlanFromServer();
-      
-      // ──── AUDIT DIVERGENCIA POS-SAVE ────
-      const localItemsCount = store.items.length;
-      const { count: serverCount, error: auditErr } = await supabase
-        .from("meal_plan_items")
-        .select("id", { count: "exact", head: true })
-        .eq("meal_plan_id", plan.id);
-      
-      if (!auditErr && serverCount !== null && serverCount !== localItemsCount) {
-        console.error("[AUDIT] Divergência detectada pós-save!", { local: localItemsCount, server: serverCount });
-        toast.error("⚠️ Divergência detectada entre editor e banco. Recarregando estado real...");
-        await store.hydrate(plan.id, user!.id);
-        return;
-      }
-
+      // Recalcular totais via RPC (autoritativo) antes do refetch final
       const totals = await calculatePlanTotals(plan.id);
       
+      // draft_auto_corrected já é um rascunho persistido; salvar não deve forçar aprovação
       if (planStatus === "draft_auto_corrected") {
+        await refreshPlanFromServer();
         toast.success("✅ Rascunho salvo com sucesso!", { id: toastId });
         return;
       }
