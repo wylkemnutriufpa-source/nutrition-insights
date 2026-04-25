@@ -83,6 +83,7 @@ function detectGroup(item: MealPlanItem): string | null {
   if (mealType === "lunch" || mealType === "dinner") {
     if (/frango|carne|peixe|bife|fil[eé]/.test(title)) return "main_protein";
     if (/arroz|macarr[aã]o|pur[eê]|batata/.test(title)) return "main_carb";
+    if (/sopa|caldo|leve/.test(title)) return "dinner_light";
   }
 
   // Fruits in snacks
