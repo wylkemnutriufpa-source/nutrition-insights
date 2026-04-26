@@ -329,8 +329,8 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           <>
             <Compass className="w-5 h-5" />
             <div className="text-left">
-              <p className="font-bold">🧠 Motor Automático (Estratégia)</p>
-              <p className="text-[10px] opacity-80">Analisar paciente → 3 protocolos → escolher → gerar</p>
+              <p className="font-bold">🧠 Gerar Template de 1 Dia (Estratégia)</p>
+              <p className="text-[10px] opacity-80">Gera um plano de 1 dia com todas as substituições automáticas</p>
             </div>
           </>
         )}
