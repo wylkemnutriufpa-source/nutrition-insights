@@ -203,7 +203,7 @@ interface Props {
 }
 
 export default function MealTemplatePanel({ day }: Props) {
-  const { planId, addItem } = useMealPlanEditorV2Store();
+  const { planId, addItem, substitutionCount } = useMealPlanEditorV2Store();
   const [activeMealType, setActiveMealType] = useState<MealType>("breakfast");
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
 
