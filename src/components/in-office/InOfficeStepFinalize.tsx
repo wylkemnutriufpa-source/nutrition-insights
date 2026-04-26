@@ -269,14 +269,15 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                       <p className="text-xs text-muted-foreground">O plano ficará visível ao paciente no aplicativo.</p>
                     </div>
                   </div>
-                  <Button 
-                    onClick={handlePublish} 
-                    disabled={publishing} 
-                    className="gap-2 w-full bg-primary hover:bg-primary/90 min-h-[48px]"
-                  >
-                    {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {publishing ? "Publicando..." : "Salvar e Enviar ao Paciente"}
-                  </Button>
+                    <Button 
+                      onClick={handlePublish} 
+                      disabled={publishing} 
+                      className="gap-2 w-full bg-primary hover:bg-primary/90 min-h-[48px]"
+                      data-testid="publish-button"
+                    >
+                      {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {publishing ? "Publicando..." : "Salvar e Enviar ao Paciente"}
+                    </Button>
                 </div>
               )}
 
