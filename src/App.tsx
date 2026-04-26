@@ -176,6 +176,7 @@ const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashb
 const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin"));
 const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit"));
 const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit"));
+const TemplateMassReformulation = lazy(() => import("./pages/admin/TemplateMassReformulation"));
 const AdminExperienceModeAudit = lazy(() => import("./pages/admin/AdminExperienceModeAudit"));
 const AdminExperienceModeReconcile = lazy(() => import("./pages/admin/AdminExperienceModeReconcile"));
 const AdminPlanLoadingDiagnostics = lazy(() => import("./pages/admin/AdminPlanLoadingDiagnostics"));
