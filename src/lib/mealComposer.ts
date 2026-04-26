@@ -8,7 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ────────────────────────────────────────────────────
-export type FoodRole = "protein" | "carb" | "vegetable" | "fruit" | "fat" | "dairy" | "beverage" | "complement";
+export type FoodRole = "protein" | "carb" | "vegetable" | "fruit" | "fat" | "dairy" | "beverage" | "complement" | "soup";
 
 export interface ComposerFood {
   id: string;
@@ -77,7 +77,7 @@ const CATEGORY_ROLE_MAP: Record<string, FoodRole> = {
   lanche: "complement",
   acompanhamento: "complement",
   prato_composto: "protein",
-  sopa: "complement",
+  sopa: "soup",
   sobremesa: "fruit",
 };
 
@@ -99,7 +99,6 @@ const SLOT_TEMPLATES: Record<MealSlotType, SlotTemplate[]> = {
   ],
   lunch: [
     { roles: ["protein", "carb", "vegetable"], calorieShare: [0.40, 0.35, 0.25] },
-    { roles: ["protein", "carb", "complement", "vegetable"], calorieShare: [0.35, 0.30, 0.15, 0.20] },
   ],
   afternoon_snack: [
     { roles: ["fruit", "protein"], calorieShare: [0.50, 0.50] },
@@ -108,6 +107,7 @@ const SLOT_TEMPLATES: Record<MealSlotType, SlotTemplate[]> = {
   dinner: [
     { roles: ["protein", "carb", "vegetable"], calorieShare: [0.45, 0.30, 0.25] },
     { roles: ["protein", "vegetable", "fat"], calorieShare: [0.50, 0.30, 0.20] },
+    { roles: ["soup"], calorieShare: [1.0] },
   ],
   evening_snack: [
     { roles: ["fruit"], calorieShare: [1.0] },
