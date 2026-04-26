@@ -240,30 +240,30 @@ export function MealSmartEditorModal({
           handleOpenChange(false);
         }}
       >
-        <DialogHeader className="px-6 py-4 pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 pr-12 sm:pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-xl font-bold font-display tracking-tight">
+              <DialogTitle className="text-lg sm:text-xl font-bold font-display tracking-tight">
                 Editar {item.title}
               </DialogTitle>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                 Ajuste os alimentos, substituições e observações clínicas
               </p>
             </div>
-            <div className="flex items-center gap-4 bg-secondary/50 px-4 py-2 rounded-2xl border border-primary/10 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10">
               <div className="flex flex-col items-center">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
-                <span className="text-sm font-black text-orange-500">{totals.calories}</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
+                <span className="text-xs sm:text-sm font-black text-orange-500">{totals.calories}</span>
               </div>
-              <Separator orientation="vertical" className="h-6" />
+              <div className="h-6 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Prot</span>
-                <span className="text-sm font-black text-red-500">{totals.protein}g</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Prot</span>
+                <span className="text-xs sm:text-sm font-black text-red-500">{totals.protein}g</span>
               </div>
-              <Separator orientation="vertical" className="h-6" />
+              <div className="h-6 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Carb</span>
-                <span className="text-sm font-black text-amber-500">{totals.carbs}g</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Carb</span>
+                <span className="text-xs sm:text-sm font-black text-amber-500">{totals.carbs}g</span>
               </div>
             </div>
           </div>
