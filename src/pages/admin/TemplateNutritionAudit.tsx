@@ -537,6 +537,14 @@ export default function TemplateNutritionAudit() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.open("/admin/template-mass-reformulation", "_blank")}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Reformular em Massa
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportChecklist(audited)}>
+              <FileDown className="w-4 h-4 mr-2" />
+              Checklist
+            </Button>
             <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm">
