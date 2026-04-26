@@ -83,6 +83,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       const fixedLunch = (data || []).filter((r: any) => r.meal_type === "lunch" && r.is_fixed).length;
       const fixedDinner = (data || []).filter((r: any) => r.meal_type === "dinner" && r.is_fixed).length;
       setRecipeCounts({ lunch, dinner, fixedLunch, fixedDinner, loading: false });
+      setAllRecipes(data || []);
     })();
     return () => { cancelled = true; };
   }, [user]);
