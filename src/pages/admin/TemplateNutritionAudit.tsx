@@ -56,6 +56,8 @@ import {
   Minus,
   Plus,
   Equal,
+  Sparkles,
+  FileDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
