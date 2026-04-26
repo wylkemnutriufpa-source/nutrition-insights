@@ -433,7 +433,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
               </div>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="px-5 py-3 border-t border-border gap-2">
           {step === "config" && (
