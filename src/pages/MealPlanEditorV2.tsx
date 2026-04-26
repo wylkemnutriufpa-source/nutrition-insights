@@ -339,6 +339,52 @@ export default function MealPlanEditorV2() {
     setSavingAndPublishing(true);
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
+      // 🛡️ Validação de Substituições antes de publicar
+      const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount);
+      if (!subValidation.valid) {
+        toast.error("⚠️ Substituições fora do padrão", {
+          description: (
+            <div className="mt-2 space-y-2 max-h-[300px] overflow-auto pr-2 custom-scrollbar">
+              {subValidation.detailedErrors.map((err, i) => (
+                <div key={i} className="text-[11px] p-2 rounded bg-muted/50 border border-border/50">
+                  <div className="flex justify-between items-start gap-2">
+                    <span className="font-bold text-foreground truncate max-w-[150px]">{err.mealTitle}</span>
+                    <button 
+                      onClick={() => {
+                        const el = document.getElementById(`meal-item-${err.mealId}`);
+                        if (el) {
+                          el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                          window.location.hash = `meal-item-${err.mealId}`;
+                        }
+                      }}
+                      className="text-[10px] text-primary hover:underline shrink-0"
+                    >
+                      Ver item
+                    </button>
+                  </div>
+                  {err.limitError ? (
+                    <p className="text-destructive font-medium mt-1">{err.limitError}</p>
+                  ) : (
+                    <div className="mt-1 space-y-1">
+                      <p className="text-muted-foreground italic truncate">"{err.foodName}"</p>
+                      <div className="flex flex-wrap gap-x-2 gap-y-0.5 mt-1">
+                        {err.macros.kcal && <span className="text-orange-600 font-bold">Kcal: {err.macros.kcal.value}</span>}
+                        {err.macros.protein && <span className="text-red-600 font-bold">P: {err.macros.protein.value}g</span>}
+                        {err.macros.carbs && <span className="text-amber-600 font-bold">C: {err.macros.carbs.value}g</span>}
+                        {err.macros.fat && <span className="text-blue-600 font-bold">G: {err.macros.fat.value}g</span>}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ),
+          duration: 8000
+        });
+        setSavingAndPublishing(false);
+        return;
+      }
+
       // 1) Flush pending edits
       await store._flushQueue();
 
