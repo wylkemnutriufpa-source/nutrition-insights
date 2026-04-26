@@ -200,7 +200,7 @@ export function WeeklyGrid() {
               </span>
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 {effectiveDay === 0
-                  ? "Modelo de Dia Único com Substituições Inteligentes"
+                  ? "Modelo de Dia Único com Substituições Inteligentes (Dia 0)"
                   : `Mostrando refeições do dia legado #${effectiveDay}. Migre para dia 0 para padronizar.`}
                 {effectiveDay !== 0 && (
                   <span className="ml-2 text-warning-foreground bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
