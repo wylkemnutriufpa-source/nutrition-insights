@@ -400,7 +400,7 @@ export function MealSmartEditorModal({
                       </p>
                       <p className="text-[10px] text-muted-foreground leading-relaxed">
                         {isOverLimit 
-                          ? "Você atingiu o limite de 4 substituições únicas. Apenas as 4 primeiras serão salvas."
+                          ? `Você atingiu o limite de ${substitutionCount} substituições únicas. Apenas as ${substitutionCount} primeiras serão salvas.`
                           : "Veja como as substituições serão organizadas e formatadas após salvar:"}
                       </p>
                     </div>
