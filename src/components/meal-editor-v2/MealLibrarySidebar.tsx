@@ -265,12 +265,14 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       });
     }
 
-    // Increment usage count (fire-and-forget)
-    supabase
-      .from("nutritionist_meal_templates")
-      .update({ usage_count: (template.usage_count || 0) + 1, updated_at: new Date().toISOString() })
-      .eq("id", template.id)
-      .then();
+    // Increment usage count for non-recipe templates (fire-and-forget)
+    if (!template.is_recipe) {
+      supabase
+        .from("nutritionist_meal_templates")
+        .update({ usage_count: (template.usage_count || 0) + 1, updated_at: new Date().toISOString() })
+        .eq("id", template.id)
+        .then();
+    }
 
     toast.success(`"${template.name}" inserido no plano`);
     onOpenChange(false);
