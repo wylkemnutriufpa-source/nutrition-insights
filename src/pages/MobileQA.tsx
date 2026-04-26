@@ -88,12 +88,18 @@ export default function MobileQA() {
   return (
     <DashboardLayout>
       <div className="container max-w-4xl py-6 space-y-6">
-        <div className="flex items-center gap-3 border-b pb-4">
-          <Smartphone className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Mobile QA Dashboard</h1>
-            <p className="text-muted-foreground">Checklist de validação visual e testes de responsividade.</p>
+        <div className="flex items-center justify-between border-b pb-4">
+          <div className="flex items-center gap-3">
+            <Smartphone className="w-8 h-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Mobile QA Dashboard</h1>
+              <p className="text-muted-foreground">Checklist de validação visual e testes de responsividade.</p>
+            </div>
           </div>
+          <Button onClick={exportReport} className="gap-2">
+            <Download className="w-4 h-4" />
+            Exportar Relatório
+          </Button>
         </div>
 
         {hasOverflow && (
