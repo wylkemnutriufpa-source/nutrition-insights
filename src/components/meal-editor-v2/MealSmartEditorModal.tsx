@@ -45,6 +45,7 @@ export function MealSmartEditorModal({
 }: MealSmartEditorModalProps) {
   const { items, updateItem, substitutionCount, patientName } = useMealPlanEditorV2Store();
   const item = items.find((i) => i.id === itemId);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
   const [search, setSearch] = useState("");
@@ -52,6 +53,7 @@ export function MealSmartEditorModal({
   const [notes, setNotes] = useState((item as any)?.notes || "");
   const [substitutions, setSubstitutions] = useState<string[]>([]);
   const [portionFactor, setPortionFactor] = useState(1.0);
+  const [showConsistencyReport, setShowConsistencyReport] = useState(false);
 
   const currentMeta = React.useMemo(() => (item as any)?.edit_metadata || (item as any)?.metadata || {}, [item]);
   
@@ -66,6 +68,18 @@ export function MealSmartEditorModal({
     carbs: Math.round(carbBase * portionFactor * 10) / 10,
     fat: Math.round(fatBase * portionFactor * 10) / 10,
   }), [kcalBase, protBase, carbBase, fatBase, portionFactor]);
+
+  const isWannubia = patientName?.toLowerCase().includes("wannubia");
+
+  const isBlockedForWannubia = useCallback((sub: string) => {
+    if (!isWannubia) return false;
+    const forbiddenKeywords = ["ultraprocessado", "fritura", "doce", "açúcar", "refrigerante"];
+    return forbiddenKeywords.some(keyword => sub.toLowerCase().includes(keyword));
+  }, [isWannubia]);
+
+  const hasBlockedSubs = useMemo(() => {
+    return substitutions.some(sub => isBlockedForWannubia(sub));
+  }, [substitutions, isBlockedForWannubia]);
 
   useEffect(() => {
     if (item && open) {
