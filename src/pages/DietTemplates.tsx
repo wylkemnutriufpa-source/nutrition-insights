@@ -215,11 +215,38 @@ export default function DietTemplates() {
   const [previewTemplate, setPreviewTemplate] = useState<DietTemplate | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  // Consistency Report
+  const [showConsistencyReport, setShowConsistencyReport] = useState(false);
+  const [marmitaRecipes, setMarmitaRecipes] = useState<any[]>([]);
+
   // Anamnesis data for personalization
   const [anamnesis, setAnamnesis] = useState<AnamnesisData | null>(null);
   const [physicalAssessment, setPhysicalAssessment] = useState<PhysicalAssessmentData | null>(null);
   const [patientName, setPatientName] = useState("");
   const [applying, setApplying] = useState(false);
+
+  const fetchMarmitaRecipes = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("meal_recipes")
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .eq("is_active", true);
+    
+    if (data) {
+      const formatted = data.map(r => ({
+        name: r.name,
+        meal_type: r.meal_type || "lunch",
+        calories: r.fixed_calories || 0,
+        protein: r.fixed_protein || 0,
+        carbs: r.fixed_carbs || 0,
+        fat: r.fixed_fat || 0,
+        is_fixed: true
+      }));
+      setMarmitaRecipes(formatted);
+      setShowConsistencyReport(true);
+    }
+  };
 
   // Substitution toggles per food (index path)
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, number>>({});
