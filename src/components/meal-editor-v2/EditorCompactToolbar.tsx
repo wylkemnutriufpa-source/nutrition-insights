@@ -124,10 +124,12 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
     }
   };
 
+  const { substitutionCount, setSubstitutionCount } = useMealPlanEditorV2Store();
+
   return (
     <div className="space-y-3">
       {/* Compact toolbar */}
-      <div className="flex items-center gap-1.5 flex-wrap bg-card border border-border rounded-xl p-1.5">
+      <div className="flex items-center gap-1.5 flex-wrap bg-card border border-border rounded-xl p-1.5 shadow-sm">
         {/* View mode toggle */}
         <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5 mr-1">
           <button
@@ -152,6 +154,28 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
           >
             <List className="w-3.5 h-3.5" />
           </button>
+        </div>
+
+        <div className="w-px h-6 bg-border mx-1" />
+
+        {/* Substitution count control */}
+        <div className="flex items-center gap-2 px-2 py-1 rounded-lg border border-border/50 bg-primary/5 mr-1">
+          <span className="text-[10px] font-bold text-primary uppercase tracking-wider">Subst:</span>
+          <div className="flex items-center gap-1">
+            {[0, 1, 2, 3, 4].map((n) => (
+              <button
+                key={n}
+                onClick={() => setSubstitutionCount(n)}
+                className={`w-5 h-5 rounded-md text-[10px] font-bold transition-all ${
+                  substitutionCount === n
+                    ? "bg-primary text-white shadow-sm scale-110"
+                    : "text-muted-foreground hover:bg-primary/10 hover:text-primary"
+                }`}
+              >
+                {n}
+              </button>
+            ))}
+          </div>
         </div>
 
         <div className="w-px h-6 bg-border mx-1" />
