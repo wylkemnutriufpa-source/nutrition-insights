@@ -10,7 +10,7 @@ import { toast } from "sonner";
 import {
   Plus, Trash2, Copy, Save, Search,
   Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets,
-  Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle, Info, ShieldCheck
+  Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle, Info, ShieldCheck, Check
 } from "lucide-react";
 import { withRetry } from "@/lib/retry";
 import type { Database } from "@/integrations/supabase/types";
