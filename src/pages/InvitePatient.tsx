@@ -31,6 +31,10 @@ export default function InvitePatient() {
     () => `${window.location.origin}/onboarding`,
     [],
   );
+  const publicRegisterLink = useMemo(
+    () => `${window.location.origin}/register-patient?nutri=${user?.id}`,
+    [user?.id]
+  );
   const whatsappMessage = useMemo(() => {
     const greeting = name ? `Olá ${name.split(" ")[0]}! ` : "Olá! ";
     return `${greeting}Seu acesso ao FitJourney foi criado. Use o email *${email}* para entrar e completar seu onboarding aqui: ${onboardingLink}`;
