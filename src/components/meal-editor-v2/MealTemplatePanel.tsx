@@ -4,14 +4,16 @@
  * Pre-built meal templates that add a complete meal with one click.
  * Templates are composed of multiple foods with calculated macros.
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
 import { getSubstitutionsFor } from "@/lib/mealPlanFoodRules";
-import { getClosestValidatedFood } from "@/lib/validatedFoodDatabase";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Wheat, Droplets, Check, Sparkles,
+  ChefHat, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -203,13 +205,92 @@ interface Props {
 }
 
 export default function MealTemplatePanel({ day }: Props) {
+  const { user } = useAuth();
   const { planId, addItem, substitutionCount } = useMealPlanEditorV2Store();
   const [activeMealType, setActiveMealType] = useState<MealType>("breakfast");
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
+  const [customTemplates, setCustomTemplates] = useState<MealTemplate[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCustomRecipes = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("meal_recipes")
+          .select("*")
+          .eq("nutritionist_id", user.id)
+          .eq("is_active", true);
+
+        if (error) throw error;
+
+        const transformed: MealTemplate[] = (data || []).map((recipe) => {
+          const foods_json = Array.isArray(recipe.foods_json) ? recipe.foods_json : [];
+          
+          // Map database meal_type to store MealType
+          const mType = recipe.meal_type?.toLowerCase();
+          const mealTypes: MealType[] = [];
+          if (mType?.includes("almoco") || mType?.includes("almoço")) mealTypes.push("lunch");
+          if (mType?.includes("jantar")) mealTypes.push("dinner");
+          if (mealTypes.length === 0) mealTypes.push("lunch"); // Fallback
+
+          // Calculate totals if not present
+          let totalCal = recipe.fixed_calories || 0;
+          let totalProt = recipe.fixed_protein || 0;
+          let totalCarbs = recipe.fixed_carbs || 0;
+          let totalFat = recipe.fixed_fat || 0;
+
+          const foods = foods_json.map((f: any) => ({
+            name: f.name || f.food || "Alimento",
+            portion: f.grams ? `${f.grams}g` : (f.portion || "1 porção"),
+            calories: f.calories || 0,
+            protein: f.protein || 0,
+            carbs: f.carbs || 0,
+            fat: f.fat || 0
+          }));
+
+          if (totalCal === 0) {
+            foods.forEach(f => {
+              totalCal += f.calories;
+              totalProt += f.protein;
+              totalCarbs += f.carbs;
+              totalFat += f.fat;
+            });
+          }
+
+          return {
+            id: recipe.id,
+            title: recipe.name,
+            description: recipe.is_fixed ? "Marmita Fixa Selecionada" : "Sua receita customizada",
+            mealTypes,
+            emoji: "🍱",
+            foods,
+            totalCalories: totalCal,
+            totalProtein: totalProt,
+            totalCarbs: totalCarbs,
+            totalFat: totalFat
+          };
+        });
+
+        setCustomTemplates(transformed);
+      } catch (err) {
+        console.error("Error fetching custom recipes:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomRecipes();
+  }, [user?.id]);
+
+  const allTemplates = useMemo(() => {
+    return [...MEAL_TEMPLATES, ...customTemplates];
+  }, [customTemplates]);
 
   const filteredTemplates = useMemo(() => {
-    return MEAL_TEMPLATES.filter(t => t.mealTypes.includes(activeMealType));
-  }, [activeMealType]);
+    return allTemplates.filter(t => t.mealTypes.includes(activeMealType));
+  }, [allTemplates, activeMealType]);
 
   const handleApplyTemplate = useCallback((template: MealTemplate) => {
     if (!planId) return;
@@ -293,7 +374,12 @@ export default function MealTemplatePanel({ day }: Props) {
       </div>
 
       <ScrollArea className="flex-1">
-        {filteredTemplates.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm">Carregando suas marmitas...</p>
+          </div>
+        ) : filteredTemplates.length === 0 ? (
           <div className="text-center py-12 text-sm text-muted-foreground">
             <Utensils className="w-8 h-8 mx-auto mb-2 opacity-30" />
             <p>Nenhum template para esta refeição</p>
@@ -318,9 +404,17 @@ export default function MealTemplatePanel({ day }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold truncate">{template.title}</p>
+                        {template.id.length > 20 && (
+                          <span className="flex items-center gap-1 text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
+                            {template.description === "Marmita Fixa Selecionada" ? "Marmita Fixa" : "Personalizada"}
+                          </span>
+                        )}
                         {wasApplied && <Check className="w-4 h-4 text-green-500 shrink-0" />}
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{template.description}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                        {template.id.length > 20 && <ChefHat className="w-3 h-3 text-primary" />}
+                        {template.description}
+                      </p>
                       {/* Foods list */}
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {template.foods.map((f, i) => (
