@@ -53,7 +53,7 @@ export interface ValidationResult {
   detailedErrors: SubstitutionError[];
 }
 
-export function validateMealSubstitutions(item: MealPlanItem, maxCount: number = 4): ValidationResult {
+export function validateMealSubstitutions(item: MealPlanItem, maxCount: number = 4, patientName?: string): ValidationResult {
   const meta = (item as any).edit_metadata || (item as any).metadata || {};
   const substitutions = meta.substitutions_json as string[];
   
@@ -201,6 +201,30 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
         }
       }
     });
+
+    // 5. Wannubia Specific Rules
+    if (patientName?.toLowerCase().includes("wannubia")) {
+      individualFoods.forEach(foodText => {
+        const ft = normalize(foodText);
+        // Regra específica: Wannubia não pode misturar fontes de proteína diferentes na mesma linha
+        const hasFrango = ft.includes("frango");
+        const hasOvo = ft.includes("ovo");
+        const hasCarne = ft.includes("carne") || ft.includes("bovina");
+
+        if ((hasFrango && hasOvo) || (hasFrango && hasCarne) || (hasOvo && hasCarne)) {
+           const msg = `Combinação bloqueada para esta paciente: "${foodText}". Não misture fontes de proteína na mesma substituição.`;
+           errors.push(msg);
+           detailedErrors.push({
+             mealId: item.id,
+             mealTitle: item.title || "Sem título",
+             substitutionIndex: idx,
+             foodName: foodText,
+             macros: {},
+             limitError: msg
+           });
+        }
+      });
+    }
   });
 
   return {
@@ -210,12 +234,12 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
   };
 }
 
-export function validatePlanSubstitutions(items: MealPlanItem[], maxCount: number = 4): ValidationResult {
+export function validatePlanSubstitutions(items: MealPlanItem[], maxCount: number = 4, patientName?: string): ValidationResult {
   const allErrors: string[] = [];
   const allDetailedErrors: SubstitutionError[] = [];
   
   items.forEach(item => {
-    const result = validateMealSubstitutions(item, maxCount);
+    const result = validateMealSubstitutions(item, maxCount, patientName);
     if (!result.valid) {
       result.errors.forEach(err => allErrors.push(`[${item.title}] ${err}`));
       allDetailedErrors.push(...result.detailedErrors);

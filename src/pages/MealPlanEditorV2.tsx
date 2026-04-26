@@ -513,6 +513,15 @@ export default function MealPlanEditorV2() {
       toast.error("🔒 Plano imutável. Crie uma nova versão para editar.");
       return;
     }
+
+    const totalKcal = store.items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    if (totalKcal <= 0 && store.items.length > 0) {
+      toast.error("O plano não pode ter totais zerados.", {
+        description: "Adicione refeições com valores calóricos antes de salvar."
+      });
+      return;
+    }
+
     setReviewOpen(true);
   };
 
@@ -526,6 +535,16 @@ export default function MealPlanEditorV2() {
     setSaving(true);
     const toastId = toast.loading("Salvando e aprovando plano...");
     try {
+      // 🛡️ Validação de Substituições antes de salvar
+      const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount, store.patientName);
+      if (!subValidation.valid && subValidation.errors.some(err => err.includes("Combinação bloqueada"))) {
+        toast.error("Erro de Validação", {
+          description: "Existem combinações de substituições bloqueadas para esta paciente. Corrija antes de salvar."
+        });
+        setSaving(false);
+        return;
+      }
+
       await store._flushQueue();
       await calculatePlanTotals(plan.id);
       
@@ -582,11 +601,31 @@ export default function MealPlanEditorV2() {
     }
 
     setSavingAndPublishing(true);
+
+    const totalKcal = store.items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    if (totalKcal <= 0 && store.items.length > 0) {
+      toast.error("O plano não pode ter totais zerados.", {
+        description: "Adicione refeições com valores calóricos antes de salvar."
+      });
+      setSavingAndPublishing(false);
+      return;
+    }
+
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
-    // 🛡️ Validação de Substituições - Tornada não-bloqueante para simplicidade
-    const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount);
+    // 🛡️ Validação de Substituições
+    const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount, store.patientName);
     if (!subValidation.valid) {
+      const hasBlockedCombination = subValidation.errors.some(err => err.includes("Combinação bloqueada"));
+      
+      if (hasBlockedCombination) {
+        toast.error("Erro de Validação", {
+          description: "Existem combinações de substituições bloqueadas para esta paciente. Corrija antes de publicar."
+        });
+        setSavingAndPublishing(false);
+        return;
+      }
+
       console.warn("Substituições fora do padrão detectadas, mas prosseguindo a pedido do usuário.");
       toast.info("Atenção: Algumas substituições estão fora do padrão calórico, mas o plano será enviado mesmo assim.");
     }
