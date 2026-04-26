@@ -325,8 +325,23 @@ export default function PatientRegister() {
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
               </div>
               <div>
-                <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
-                <Input id="whatsapp" type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
+                <Label htmlFor="whatsapp" className="flex justify-between items-center">
+                  <span>WhatsApp *</span>
+                  {whatsappError && <span className="text-[10px] text-destructive animate-pulse">{whatsappError}</span>}
+                </Label>
+                <Input 
+                  id="whatsapp" 
+                  type="tel" 
+                  value={whatsapp} 
+                  onChange={(e) => {
+                    setWhatsapp(e.target.value);
+                    if (e.target.value) validateWhatsApp(e.target.value);
+                  }} 
+                  onBlur={() => validateWhatsApp(whatsapp)}
+                  placeholder="(11) 99999-9999" 
+                  required
+                  className={whatsappError ? "border-destructive" : ""}
+                />
               </div>
               <div>
                 <Label htmlFor="password">Senha</Label>
