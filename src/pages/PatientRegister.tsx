@@ -290,8 +290,8 @@ export default function PatientRegister() {
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
               </div>
               <div>
-                <Label htmlFor="phone">Telefone (opcional)</Label>
-                <Input id="phone" type="tel" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="(11) 99999-9999" />
+                <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
+                <Input id="whatsapp" type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
               </div>
               <div>
                 <Label htmlFor="password">Senha</Label>
