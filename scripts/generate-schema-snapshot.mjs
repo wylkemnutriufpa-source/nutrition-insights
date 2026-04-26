@@ -50,35 +50,33 @@ function generateSnapshot() {
       tables[tableName] = Array.from(new Set([...(tables[tableName] || []), ...columns]));
     }
 
-    // Parse ALTER TABLE ADD COLUMN
-    const alterTableAddMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:")?([a-z0-9_]+)(?:")?/gi);
-    for (const match of alterTableAddMatches) {
+    // Parse ALTER TABLE (handle multiline ADD COLUMN)
+    const alterTableMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+([\s\S]*?);/gi);
+    for (const match of alterTableMatches) {
       const tableName = match[1].toLowerCase();
-      const columnName = match[2].toLowerCase();
-      if (!tables[tableName]) tables[tableName] = [];
-      if (!tables[tableName].includes(columnName)) {
-        tables[tableName].push(columnName);
+      const body = match[2];
+      
+      // ADD COLUMN
+      const addMatches = body.matchAll(/ADD COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:")?([a-z0-9_]+)(?:")?/gi);
+      for (const m of addMatches) {
+        const col = m[1].toLowerCase();
+        if (!tables[tableName]) tables[tableName] = [];
+        if (!tables[tableName].includes(col)) tables[tableName].push(col);
       }
-    }
-
-    // Parse ALTER TABLE DROP COLUMN
-    const alterTableDropMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+DROP\s+COLUMN\s+(?:IF\s+EXISTS\s+)?(?:")?([a-z0-9_]+)(?:")?/gi);
-    for (const match of alterTableDropMatches) {
-      const tableName = match[1].toLowerCase();
-      const columnName = match[2].toLowerCase();
-      if (tables[tableName]) {
-        tables[tableName] = tables[tableName].filter(c => c !== columnName);
+      
+      // DROP COLUMN
+      const dropMatches = body.matchAll(/DROP COLUMN\s+(?:IF\s+EXISTS\s+)?(?:")?([a-z0-9_]+)(?:")?/gi);
+      for (const m of dropMatches) {
+        const col = m[1].toLowerCase();
+        if (tables[tableName]) tables[tableName] = tables[tableName].filter(c => c !== col);
       }
-    }
-    
-    // Parse ALTER TABLE RENAME COLUMN
-    const alterTableRenameMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+RENAME\s+COLUMN\s+(?:")?([a-z0-9_]+)(?:")?\s+TO\s+(?:")?([a-z0-9_]+)(?:")?/gi);
-    for (const match of alterTableRenameMatches) {
-      const tableName = match[1].toLowerCase();
-      const oldCol = match[2].toLowerCase();
-      const newCol = match[3].toLowerCase();
-      if (tables[tableName]) {
-        tables[tableName] = tables[tableName].map(c => c === oldCol ? newCol : c);
+      
+      // RENAME COLUMN
+      const renameMatches = body.matchAll(/RENAME COLUMN\s+(?:")?([a-z0-9_]+)(?:")?\s+TO\s+(?:")?([a-z0-9_]+)(?:")?/gi);
+      for (const m of renameMatches) {
+        const oldCol = m[1].toLowerCase();
+        const newCol = m[2].toLowerCase();
+        if (tables[tableName]) tables[tableName] = tables[tableName].map(c => c === oldCol ? newCol : c);
       }
     }
   }
