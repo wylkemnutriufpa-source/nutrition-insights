@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Smartphone, CheckCircle2, AlertCircle, X, Maximize2, MousePointer2 } from "lucide-react";
+import { Smartphone, CheckCircle2, AlertCircle, X, Maximize2, MousePointer2, Camera, Download, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import { useMobileValidation } from "@/hooks/useMobileValidation";
@@ -21,8 +21,68 @@ export default function MobileQA() {
     viewport360: false,
   });
 
+  const [evidences, setEvidences] = useState<Array<{ id: string, timestamp: string, item: string, viewport: string }>>([]);
+
+  // Automated Horizontal Scroll Check
+  useEffect(() => {
+    const checkScroll = () => {
+      const scrollX = window.scrollX;
+      const scrollWidth = document.documentElement.scrollWidth;
+      const clientWidth = document.documentElement.clientWidth;
+      
+      if (scrollX > 0 || scrollWidth > clientWidth) {
+        console.error("OVERFLOW-X DETECTED", { scrollX, scrollWidth, clientWidth });
+        toast.error("Overflow Horizontal Detectado!", {
+          description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}`,
+          duration: 5000,
+        });
+      }
+    };
+
+    window.addEventListener('scroll', checkScroll);
+    const interval = setInterval(checkScroll, 2000); // Periodic check
+    return () => {
+      window.removeEventListener('scroll', checkScroll);
+      clearInterval(interval);
+    };
+  }, []);
+
   const toggleCheck = (key: keyof typeof checklist) => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const registerEvidence = (item: string) => {
+    const newEvidence = {
+      id: Math.random().toString(36).substr(2, 9),
+      timestamp: new Date().toLocaleTimeString(),
+      item,
+      viewport: `${window.innerWidth}x${window.innerHeight}`,
+    };
+    setEvidences(prev => [...prev, newEvidence]);
+    toast.success("Evidência registrada!", {
+      description: `Snapshot capturado para: ${item}`,
+    });
+  };
+
+  const exportReport = () => {
+    const report = {
+      title: "Relatório de QA Mobile",
+      date: new Date().toLocaleDateString(),
+      checklist,
+      evidences,
+      summary: {
+        totalChecks: Object.values(checklist).filter(Boolean).length,
+        totalEvidences: evidences.length,
+      }
+    };
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mobile-qa-report-${new Date().getTime()}.json`;
+    a.click();
+    toast.success("Relatório exportado com sucesso!");
   };
 
   return (
