@@ -286,11 +286,24 @@ export default function TemplateMassReformulation() {
     let y = 20;
 
     doc.setFontSize(18);
-    doc.text("Relatório de Reformulação de Templates", pageWidth / 2, y, { align: "center" });
+    doc.text("Relatório de Impacto (Dry-Run)", pageWidth / 2, y, { align: "center" });
     y += 10;
     doc.setFontSize(10);
     doc.text(`Gerado em: ${new Date().toLocaleString()}`, pageWidth / 2, y, { align: "center" });
     y += 15;
+
+    // Resumo Global
+    const totalTemplates = previews.length;
+    const criticalTemplates = previews.filter(p => p.level === "critical").length;
+    const fallbacksCount = previews.reduce((acc, p) => acc + p.changes.filter(c => c.includes("fallback")).length, 0);
+
+    doc.setFontSize(12);
+    doc.text("Resumo de Impacto Estimado:", 15, y);
+    y += 7;
+    doc.setFontSize(10);
+    doc.text(`• Total de Templates: ${totalTemplates}`, 20, y); y += 5;
+    doc.text(`• Templates Críticos: ${criticalTemplates}`, 20, y); y += 5;
+    doc.text(`• Total de Fallbacks de Imagem: ${fallbacksCount}`, 20, y); y += 10;
 
     const selectedForExport = previews.filter(p => p.changes.length > 0);
 
@@ -313,12 +326,12 @@ export default function TemplateMassReformulation() {
       if (p.summary) {
         doc.setFontSize(9);
         doc.setTextColor(80, 80, 80);
-        doc.text(`Resumo do Payload: ${p.summary.totalMeals} refeições, ${p.summary.adjustedBlocksCount} blocos ajustados, ${p.summary.removedKeysCount} campos removidos (template_id).`, 15, y);
+        doc.text(`Resumo do Payload: ${p.summary.totalMeals} refeições, ${p.summary.adjustedBlocksCount} blocos ajustados, ${p.summary.removedKeysCount} campos removidos.`, 15, y);
         y += 7;
       }
 
       doc.setTextColor(200, 0, 0);
-      doc.text("Regras Quebradas / Alterações:", 15, y);
+      doc.text("Regras Quebradas / Fallbacks (Antes/Depois):", 15, y);
       y += 5;
       
       doc.setFontSize(9);
@@ -339,7 +352,7 @@ export default function TemplateMassReformulation() {
       y += 10;
     });
 
-    doc.save(`relatorio_reformulacao_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`relatorio_dryrun_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const exportChecklist = () => {
