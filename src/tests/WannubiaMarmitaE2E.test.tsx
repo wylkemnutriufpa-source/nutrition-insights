@@ -35,6 +35,7 @@ vi.mock('../integrations/supabase/client', () => {
 });
 
 vi.mock('../lib/auth', () => ({ useAuth: vi.fn() }));
+vi.mock('../lib/tenantContext', () => ({ useTenant: () => ({ tenantId: 'tenant-123' }), TenantProvider: ({ children }: any) => <div>{children}</div> }));
 
 // Fix para matchMedia
 Object.defineProperty(window, 'matchMedia', {
