@@ -74,6 +74,7 @@ export function MealSmartEditorModal({
       }
       
       setNotes((item as any).notes || "");
+      setPortionFactor(meta.portion_factor || 1.0);
     }
   }, [item, open]);
 
