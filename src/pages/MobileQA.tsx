@@ -183,6 +183,7 @@ export default function MobileQA() {
         context: activeModal || "Página Principal",
         modalId: activeModalId || "main",
         sequence,
+        grouping: activeModalId ? "modal-event" : "global-event",
         metrics
       };
       
