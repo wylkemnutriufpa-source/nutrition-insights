@@ -447,7 +447,12 @@ export default function MealPlanEditorV2() {
     setReviewOpen(true);
   };
 
-  const executeFinalSave = async () => {
+  const executeFinalSave = async (updatedItems?: any[]) => {
+    if (updatedItems && Array.isArray(updatedItems)) {
+      updatedItems.forEach(item => {
+        store.updateItem(item.id, item);
+      });
+    }
     setReviewOpen(false);
     setSaving(true);
     const toastId = toast.loading("Salvando e aprovando plano...");
