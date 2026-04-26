@@ -247,6 +247,8 @@ export function MealSmartEditorModal({
         setSubstitutions(subLines.slice(0, substitutionCount));
       }
       setPortionFactor(meta.portion_factor || 1.0);
+      setActiveTab("isolated");
+      setSearch("");
     }
     onOpenChange(newOpen);
   };
