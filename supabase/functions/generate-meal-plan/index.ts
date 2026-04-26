@@ -2515,6 +2515,7 @@ function generateAdjustableMealsForDay(
   patientFoodDatabase: any[] | undefined,
   recentMeals: RecentMealItem[] | undefined,
   targetDay: number,
+  prioritizedTemplateIds?: string[],
 ): any[] {
   const hasTpl = templates.length > 0;
   let result: any[];
