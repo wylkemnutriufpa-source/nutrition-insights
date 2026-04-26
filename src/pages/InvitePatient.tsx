@@ -34,7 +34,7 @@ export default function InvitePatient() {
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
 
   // Base URL for production
-  const siteUrl = "https://www.fitjourney.com.br";
+  const siteUrl = BASE_URL;
 
   // Generate friendly invitation link
   useEffect(() => {
