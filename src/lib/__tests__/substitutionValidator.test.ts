@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateMealSubstitutions } from "../lib/mealPlanSubstitutionValidator";
+import { validateMealSubstitutions } from "../mealPlanSubstitutionValidator";
 import type { Tables } from "@/integrations/supabase/types";
 
 type MealPlanItem = Tables<"meal_plan_items">;
