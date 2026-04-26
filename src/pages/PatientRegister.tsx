@@ -166,7 +166,8 @@ export default function PatientRegister() {
           nutritionist_id: "00000000-0000-0000-0000-000000000000",
           name,
           email: email.trim().toLowerCase(),
-          phone: phone || null,
+          phone: formattedWhatsapp, // Use formatted whatsapp as phone for leads if no specific phone
+          whatsapp: formattedWhatsapp,
           source: "self_register",
           referral_code: refCode || null,
           message: "Cadastro espontâneo sem nutricionista selecionado.",
