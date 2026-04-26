@@ -2355,7 +2355,7 @@ function generateFixedMarmitaPlan(
   const isHypertrophy = goal === "gain_muscle" || goal === "gain_weight";
   const portionMultiplier = isHypertrophy ? 1.5 : 1.0;
 
-  for (let day = 0; day < 7; day++) {
+  for (let day = 0; day < 1; day++) {
     let dayMarmitaCal = 0;
     let dayMarmitaP = 0;
     let dayMarmitaC = 0;
