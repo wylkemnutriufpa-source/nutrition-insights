@@ -315,16 +315,28 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
             Gere um plano pelo <strong>motor automático</strong> ou use uma <strong>receita de marmita</strong> como base.
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSettingsOpen(true)}
-          className="shrink-0 h-7 px-2 gap-1 text-[10px]"
-          title="Configurar mínimo de receitas por modo"
-        >
-          <Settings2 className="w-3.5 h-3.5" />
-          Mínimos
-        </Button>
+        <div className="flex flex-col gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSettingsOpen(true)}
+            className="h-7 px-2 gap-1 text-[10px]"
+            title="Configurar mínimo de receitas por modo"
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            Mínimos
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setConsistencyOpen(true)}
+            className="h-7 px-2 gap-1 text-[10px] text-primary"
+            title="Checar consistência de receitas e macros"
+          >
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            Auditoria
+          </Button>
+        </div>
       </div>
 
       {/* Option 1: Strategy Advisor */}
