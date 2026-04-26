@@ -109,18 +109,22 @@ export default function TemplateMassReformulation() {
   const reformulateTemplate = (meals: any[]) => {
     const changes: string[] = [];
     const reformulatedMeals = (meals || []).map(meal => {
-      let newMeal = { ...meal };
+      let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
+      
+      // Safety: Remove any recursive template_id or IDs that shouldn't be here
+      delete newMeal.template_id;
+      delete newMeal.id; // Usually template meals don't need their own ID if they are part of a structure
+      
       const title = (meal.title || "").toLowerCase();
       const isSolidMeal = title.includes("almoço") || title.includes("jantar");
 
       // 1. Transform legacy to V2 blocks
-      if (Array.isArray(meal.foods) && meal.foods.length > 0 && (!meal.blocks || meal.blocks.length === 0)) {
+      if (Array.isArray(newMeal.foods) && newMeal.foods.length > 0 && (!newMeal.blocks || newMeal.blocks.length === 0)) {
         changes.push(`Refeição ${meal.title}: Convertida de Lista para Blocos V2.`);
-        newMeal.blocks = meal.foods.map((f: any) => {
+        newMeal.blocks = newMeal.foods.map((f: any) => {
           const name = (f.name || "").toLowerCase();
           let blockLabel = f.name;
           
-          // Basic category inference for better V2 structure
           if (name.includes("frango") || name.includes("carne") || name.includes("peixe") || name.includes("ovo") || name.includes("whey")) {
             blockLabel = "Proteína Principal";
           } else if (name.includes("arroz") || name.includes("batata") || name.includes("mandioca") || name.includes("macarrão")) {
@@ -136,10 +140,10 @@ export default function TemplateMassReformulation() {
               {
                 name: f.name,
                 portion: f.portion,
-                kcal: f.kcal || f.calories,
-                protein: f.protein,
-                carbs: f.carbs,
-                fat: f.fat,
+                kcal: f.kcal || f.calories || 0,
+                protein: f.protein || 0,
+                carbs: f.carbs || 0,
+                fat: f.fat || 0,
                 substitutions: f.substitutions || []
               }
             ]
@@ -148,18 +152,38 @@ export default function TemplateMassReformulation() {
         delete newMeal.foods;
       }
 
-      // 2. Remove Soup from solid meal substitutions
-      if (isSolidMeal && newMeal.blocks) {
+      // 2. Coherent Substitutions & Cleanup
+      if (newMeal.blocks) {
         newMeal.blocks = newMeal.blocks.map((block: any) => {
           if (block.options) {
             const originalCount = block.options.length;
+            
+            // Filter out soup from solid meals
             block.options = block.options.filter((opt: any) => {
               const name = (opt.name || "").toLowerCase();
-              return !name.includes("sopa");
+              if (isSolidMeal && name.includes("sopa")) return false;
+              return true;
             });
+
             if (block.options.length < originalCount) {
-              changes.push(`Refeição ${meal.title}: Removida 'Sopa' como substituição.`);
+              changes.push(`Refeição ${meal.title}: Removida 'Sopa' de refeição sólida.`);
             }
+
+            // Cleanup nested template_id or inconsistent fields in options
+            block.options = block.options.map((opt: any) => {
+              const cleaned = { ...opt };
+              delete cleaned.template_id;
+              
+              // Ensure images are preserved or defaulted
+              if (!cleaned.visual_library_item_id && !cleaned.image_url) {
+                // If it's a known placeholder, it's ok, otherwise warning
+                if (cleaned.name && cleaned.name.toLowerCase().includes("marmita")) {
+                   changes.push(`Refeição ${meal.title}: Marmita detectada sem ID visual.`);
+                }
+              }
+              
+              return cleaned;
+            });
           }
           return block;
         });
