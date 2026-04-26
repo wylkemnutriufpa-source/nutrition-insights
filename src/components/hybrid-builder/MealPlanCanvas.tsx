@@ -34,10 +34,10 @@ interface Props {
 
 export default function MealPlanCanvas({ patientContext, composerMode = "quick", onRequestGenerate, showDropTargets = false }: Props) {
   const { items, plan, updatePlan } = useMealPlanEditorV2Store();
-  const [activeDay, setActiveDay] = useState(1);
+  const [activeDay, setActiveDay] = useState(0);
   const [manualMode, setManualMode] = useState(false);
 
-  const isSingleDay = plan?.plan_mode === "single_day";
+  const isSingleDay = plan?.plan_mode !== "weekly";
   const effectiveDay = isSingleDay ? 0 : activeDay;
 
   const dayItems = items.filter((i) => i.day_of_week === effectiveDay);
