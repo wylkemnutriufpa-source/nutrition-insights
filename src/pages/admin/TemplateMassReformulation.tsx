@@ -317,10 +317,16 @@ export default function TemplateMassReformulation() {
           </div>
           <div className="flex gap-2">
             {step === "preview" && (
-              <Button variant="outline" onClick={exportChecklist}>
-                <FileDown className="w-4 h-4 mr-2" />
-                Exportar Checklist
-              </Button>
+              <>
+                <Button variant="outline" onClick={exportChecklist}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  CSV
+                </Button>
+                <Button variant="outline" onClick={exportPDF}>
+                  <FileDown className="w-4 h-4 mr-2" />
+                  PDF
+                </Button>
+              </>
             )}
             {step === "load" ? (
               <Button onClick={loadTemplates} disabled={loading}>
@@ -330,41 +336,121 @@ export default function TemplateMassReformulation() {
             ) : step === "preview" ? (
               <Button onClick={applyReformulation} disabled={processing}>
                 {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Aplicar Reformulação
+                Aplicar Reformulação ({previews.filter(p => p.selected && p.status === "pending").length})
               </Button>
             ) : (
               <Button onClick={() => setStep("load")}>
                 <Undo2 className="w-4 h-4 mr-2" />
-                Voltar
+                Reiniciar
               </Button>
             )}
           </div>
         </div>
 
+        {processing && (
+          <Card className="border-primary/20 bg-primary/5">
+            <CardContent className="pt-6 space-y-4">
+              <div className="flex items-center justify-between text-sm">
+                <span className="font-medium">Processando templates...</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </CardContent>
+          </Card>
+        )}
+
         {step === "preview" && (
           <div className="grid gap-6">
             <Card>
-              <CardHeader>
-                <CardTitle>Prévia de Alterações</CardTitle>
-                <CardDescription>
-                  Revise o que será alterado antes de clicar em aplicar.
-                </CardDescription>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <CardTitle>Lista de Templates</CardTitle>
+                    <CardDescription>
+                      {filteredPreviews.length} templates encontrados com os filtros atuais.
+                    </CardDescription>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <div className="relative w-64">
+                      <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        placeholder="Buscar template..."
+                        className="pl-8"
+                        value={searchQuery}
+                        onChange={(e) => setSearchQuery(e.target.value)}
+                      />
+                    </div>
+                    <div className="flex border rounded-md p-1 bg-muted/50">
+                      {(["all", "critical", "warning", "ok"] as const).map((f) => (
+                        <Button
+                          key={f}
+                          variant={filter === f ? "secondary" : "ghost"}
+                          size="sm"
+                          className="px-3 h-8 text-xs capitalize"
+                          onClick={() => setFilter(f)}
+                        >
+                          {f === "all" ? "Todos" : f}
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
+                <div className="flex items-center gap-2 mb-4 p-2 bg-muted/30 rounded-lg">
+                  <Button variant="ghost" size="sm" onClick={toggleSelectAll} className="h-8">
+                    {filteredPreviews.every(p => p.selected) ? <CheckSquare className="w-4 h-4 mr-2" /> : <Square className="w-4 h-4 mr-2" />}
+                    Selecionar Todos Filtrados
+                  </Button>
+                  <Separator orientation="vertical" className="h-4" />
+                  <span className="text-xs text-muted-foreground">
+                    {previews.filter(p => p.selected).length} selecionados no total
+                  </span>
+                </div>
+
                 <ScrollArea className="h-[600px] pr-4">
                   <div className="space-y-4">
-                    {previews.map((p, idx) => (
-                      <div key={p.templateId} className="p-4 border rounded-lg space-y-3 bg-muted/30">
-                        <div className="flex items-center justify-between">
-                          <h3 className="font-bold">{p.name}</h3>
-                          <Badge variant={p.changes.length > 0 ? "secondary" : "outline"}>
-                            {p.changes.length > 0 ? `${p.changes.length} alterações` : "Sem alterações necessárias"}
+                    {filteredPreviews.map((p) => (
+                      <div 
+                        key={p.templateId} 
+                        className={cn(
+                          "p-4 border rounded-lg space-y-3 transition-colors",
+                          p.selected ? "bg-primary/5 border-primary/20" : "bg-muted/10",
+                          p.status === "applied" && "border-emerald-500/50 bg-emerald-500/5"
+                        )}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex items-center gap-3">
+                            <button onClick={() => toggleSelect(p.templateId)}>
+                              {p.selected ? <CheckSquare className="w-5 h-5 text-primary" /> : <Square className="w-5 h-5 text-muted-foreground" />}
+                            </button>
+                            <div>
+                              <h3 className="font-bold">{p.name}</h3>
+                              <div className="flex gap-2 mt-1">
+                                <Badge variant={p.level === "critical" ? "destructive" : p.level === "warning" ? "secondary" : "outline"}>
+                                  {p.level.toUpperCase()}
+                                </Badge>
+                                {p.status === "applied" && (
+                                  <Badge variant="outline" className="text-emerald-600 border-emerald-200 bg-emerald-50">
+                                    Aplicado
+                                  </Badge>
+                                )}
+                                {p.status === "processing" && (
+                                  <Badge variant="outline" className="animate-pulse">
+                                    Processando...
+                                  </Badge>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <Badge variant="secondary">
+                            {p.changes.length} alterações
                           </Badge>
                         </div>
-                        <div className="text-sm space-y-1">
+                        <div className="text-sm space-y-1 pl-8">
                           {p.changes.map((c, i) => (
                             <div key={i} className="flex items-center gap-2 text-amber-600">
-                              <AlertTriangle className="w-3 h-3" />
+                              <AlertTriangle className="w-3 h-3 flex-shrink-0" />
                               <span>{c}</span>
                             </div>
                           ))}
@@ -375,12 +461,6 @@ export default function TemplateMassReformulation() {
                             </div>
                           )}
                         </div>
-                        {p.status === "applied" && (
-                          <div className="flex items-center gap-2 text-emerald-600 font-bold text-xs uppercase">
-                            <CheckCircle2 className="w-4 h-4" />
-                            Aplicado com sucesso
-                          </div>
-                        )}
                       </div>
                     ))}
                   </div>
