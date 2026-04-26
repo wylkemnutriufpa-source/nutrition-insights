@@ -1,0 +1,103 @@
+#!/usr/bin/env node
+import fs from "node:fs";
+import path from "node:path";
+import url from "node:url";
+
+const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
+const projectRoot = path.resolve(__dirname, "..");
+const migrationsDir = path.join(projectRoot, "supabase", "migrations");
+const snapshotPath = path.join(__dirname, "schema-snapshot.json");
+
+// Tables we care about for the frontend
+const TRACKED_TABLES = [
+  "meal_plans",
+  "meal_plan_items",
+  "profiles",
+  "nutritionist_patients",
+  "patient_lifecycle_states",
+  "onboarding_pipelines",
+  "patient_anamnesis",
+  "system_alerts",
+];
+
+function generateSnapshot() {
+  const migrations = fs.readdirSync(migrationsDir)
+    .filter(f => f.endsWith(".sql"))
+    .sort();
+
+  const tables = {};
+
+  for (const file of migrations) {
+    const content = fs.readFileSync(path.join(migrationsDir, file), "utf8");
+    
+    // Parse CREATE TABLE (simple regex, handles standard Lovable/Supabase output)
+    const createTableMatches = content.matchAll(/CREATE TABLE (?:public\.)?(\w+) \(([\s\S]*?)\);/gi);
+    for (const match of createTableMatches) {
+      const tableName = match[1].toLowerCase();
+      const body = match[2];
+      
+      // Extract column names (first word of each line inside the parens, if not a constraint)
+      const lines = body.split("\n").map(l => l.trim()).filter(Boolean);
+      const columns = [];
+      for (const line of lines) {
+        if (/^(CONSTRAINT|PRIMARY KEY|FOREIGN KEY|UNIQUE|CHECK|INDEX)/i.test(line)) continue;
+        const colMatch = line.match(/^"?([a-z0-9_]+)"?\s+/i);
+        if (colMatch) {
+          columns.push(colMatch[1].toLowerCase());
+        }
+      }
+      
+      tables[tableName] = Array.from(new Set([...(tables[tableName] || []), ...columns]));
+    }
+
+    // Parse ALTER TABLE ADD COLUMN
+    const alterTableAddMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?(?:")?([a-z0-9_]+)(?:")?/gi);
+    for (const match of alterTableAddMatches) {
+      const tableName = match[1].toLowerCase();
+      const columnName = match[2].toLowerCase();
+      if (!tables[tableName]) tables[tableName] = [];
+      if (!tables[tableName].includes(columnName)) {
+        tables[tableName].push(columnName);
+      }
+    }
+
+    // Parse ALTER TABLE DROP COLUMN
+    const alterTableDropMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+DROP\s+COLUMN\s+(?:IF\s+EXISTS\s+)?(?:")?([a-z0-9_]+)(?:")?/gi);
+    for (const match of alterTableDropMatches) {
+      const tableName = match[1].toLowerCase();
+      const columnName = match[2].toLowerCase();
+      if (tables[tableName]) {
+        tables[tableName] = tables[tableName].filter(c => c !== columnName);
+      }
+    }
+    
+    // Parse ALTER TABLE RENAME COLUMN
+    const alterTableRenameMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+RENAME\s+COLUMN\s+(?:")?([a-z0-9_]+)(?:")?\s+TO\s+(?:")?([a-z0-9_]+)(?:")?/gi);
+    for (const match of alterTableRenameMatches) {
+      const tableName = match[1].toLowerCase();
+      const oldCol = match[2].toLowerCase();
+      const newCol = match[3].toLowerCase();
+      if (tables[tableName]) {
+        tables[tableName] = tables[tableName].map(c => c === oldCol ? newCol : c);
+      }
+    }
+  }
+
+  // Filter only TRACKED_TABLES and sort columns
+  const resultTables = {};
+  for (const tableName of TRACKED_TABLES) {
+    if (tables[tableName]) {
+      resultTables[tableName] = Array.from(new Set(tables[tableName])).sort();
+    }
+  }
+
+  return {
+    "$schema": "./schema-snapshot.schema.json",
+    "generatedAt": new Date().toISOString().split("T")[0],
+    "tables": resultTables
+  };
+}
+
+const newSnapshot = generateSnapshot();
+fs.writeFileSync(snapshotPath, JSON.stringify(newSnapshot, null, 2) + "\n");
+console.log(`✓ Generated ${snapshotPath} from ${fs.readdirSync(migrationsDir).length} migrations.`);
