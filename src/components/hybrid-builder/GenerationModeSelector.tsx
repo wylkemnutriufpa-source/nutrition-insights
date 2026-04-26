@@ -91,6 +91,9 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const fixedReady =
     recipeCounts.fixedLunch >= minSettings.fixed_min_lunch &&
     recipeCounts.fixedDinner >= minSettings.fixed_min_dinner;
+  
+  const is19FixedMissing = recipeCounts.fixedLunch < 19 || recipeCounts.fixedDinner < 19;
+  
   const checksLoading = recipeCounts.loading || settingsLoading;
 
   // Strategy Advisor confirmed → generate plan with strategy context
