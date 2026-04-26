@@ -173,7 +173,13 @@ export default function PatientRegister() {
         } as any);
       } catch (_) {}
 
-      toast.success("Conta criada! Verifique seu e-mail para confirmar.");
+      if (signUpData.session) {
+        toast.success("Conta criada! Redirecionando para o onboarding...");
+        navigate("/consent", { replace: true });
+        return;
+      }
+
+      toast.success("Conta criada! Verifique seu e-mail para confirmar e iniciar seu onboarding.");
       setDone(true);
     } catch (err) {
       console.error(err);
