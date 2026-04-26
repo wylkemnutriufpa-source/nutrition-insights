@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   CheckCircle2, ArrowLeft, Loader2, ClipboardList, Activity,
-  Utensils, FileText, Send, Eye, AlertTriangle
+  Utensils, FileText, Send, Eye, AlertTriangle, Sparkles, MagicWand01, BookOpen
 } from "lucide-react";
 
 interface Props {
@@ -25,6 +25,8 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
   const [published, setPublished] = useState(false);
   const [mealPlanId, setMealPlanId] = useState<string | null>(null);
   const [planStatus, setPlanStatus] = useState<string | null>(null);
+  const [generatingStory, setGeneratingStory] = useState(false);
+  const [hasStory, setHasStory] = useState(false);
 
   useEffect(() => {
     (async () => {
@@ -55,6 +57,15 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
             }
           }
         }
+        // Check for stories
+        const { data: story } = await supabase
+          .from("patient_journey_stories")
+          .select("id")
+          .eq("patient_id", patientId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (story) setHasStory(true);
       } catch (err) {
         console.error("Erro ao carregar sessão:", err);
       } finally {
@@ -88,6 +99,22 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
       toast.error("Erro ao publicar: " + err.message);
     } finally {
       setPublishing(false);
+    }
+  };
+  
+  const handleGenerateStory = async () => {
+    setGeneratingStory(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("generate-patient-story", {
+        body: { patientId }
+      });
+      if (error) throw error;
+      setHasStory(true);
+      toast.success("✨ Jornada mágica gerada para o paciente!");
+    } catch (err: any) {
+      toast.error("Erro ao gerar jornada: " + err.message);
+    } finally {
+      setGeneratingStory(false);
     }
   };
 
@@ -125,6 +152,31 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
               </div>
             );
           })}
+        </div>
+
+        {/* AI Section */}
+        <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 space-y-3">
+          <div className="flex items-start gap-2">
+            <Sparkles className="w-4 h-4 text-indigo-500 mt-0.5" />
+            <div>
+              <p className="text-sm font-medium">Inteligência Narrativa</p>
+              <p className="text-xs text-muted-foreground">Crie uma história personalizada sobre a jornada do paciente para aumentar o engajamento.</p>
+            </div>
+          </div>
+          <Button 
+            onClick={handleGenerateStory} 
+            disabled={generatingStory || hasStory} 
+            className={`gap-2 w-full transition-all ${hasStory ? "bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20 shadow-lg text-white"}`}
+            variant={hasStory ? "outline" : "default"}
+          >
+            {generatingStory ? <Loader2 className="w-4 h-4 animate-spin" /> : hasStory ? <CheckCircle2 className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+            {generatingStory ? "Tecendo narrativa..." : hasStory ? "Jornada Gerada!" : "Gerar Jornada Mágica"}
+          </Button>
+          {hasStory && (
+            <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
+               Disponível para o paciente no app <BookOpen className="w-2 h-2" />
+            </p>
+          )}
         </div>
 
         {/* Publish section */}

@@ -6,8 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { Activity, Save, ArrowRight, ArrowLeft, Loader2, Check, Scale, Ruler } from "lucide-react";
+import { Activity, Save, ArrowRight, ArrowLeft, Loader2, Check, Scale, Ruler, Camera } from "lucide-react";
 import SmartNumericInput from "@/components/ui/SmartNumericInput";
+import InOfficePhotoUpload from "./InOfficePhotoUpload";
 import {
   normalizeWeightInput, normalizeHeightInput, normalizeBodyFatInput,
   normalizeMeasurementInput, type NormalizationResult, type FieldNormalizer,
@@ -166,9 +167,13 @@ export default function InOfficeStepAssessment({ patientId, onNext, onPrev, sess
           );
         })}
 
-        <div className="space-y-1.5">
-          <Label className="text-xs">Observações</Label>
-          <Textarea value={notes} onChange={e => { setNotes(e.target.value); setSaved(false); }} placeholder="Observações do profissional..." rows={3} />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <InOfficePhotoUpload patientId={patientId} sessionId={sessionId} />
+          
+          <div className="space-y-1.5">
+            <Label className="text-xs">Observações</Label>
+            <Textarea value={notes} onChange={e => { setNotes(e.target.value); setSaved(false); }} placeholder="Observações do profissional..." className="h-full min-h-[120px]" />
+          </div>
         </div>
 
         <div className="flex items-center justify-end pt-2">
