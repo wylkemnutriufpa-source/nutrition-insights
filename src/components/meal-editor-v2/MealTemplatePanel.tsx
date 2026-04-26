@@ -205,13 +205,92 @@ interface Props {
 }
 
 export default function MealTemplatePanel({ day }: Props) {
+  const { user } = useAuth();
   const { planId, addItem, substitutionCount } = useMealPlanEditorV2Store();
   const [activeMealType, setActiveMealType] = useState<MealType>("breakfast");
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
+  const [customTemplates, setCustomTemplates] = useState<MealTemplate[]>([]);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const fetchCustomRecipes = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from("meal_recipes")
+          .select("*")
+          .eq("nutritionist_id", user.id)
+          .eq("is_active", true);
+
+        if (error) throw error;
+
+        const transformed: MealTemplate[] = (data || []).map((recipe) => {
+          const foods_json = Array.isArray(recipe.foods_json) ? recipe.foods_json : [];
+          
+          // Map database meal_type to store MealType
+          const mType = recipe.meal_type?.toLowerCase();
+          const mealTypes: MealType[] = [];
+          if (mType?.includes("almoco") || mType?.includes("almoço")) mealTypes.push("lunch");
+          if (mType?.includes("jantar")) mealTypes.push("dinner");
+          if (mealTypes.length === 0) mealTypes.push("lunch"); // Fallback
+
+          // Calculate totals if not present
+          let totalCal = recipe.fixed_calories || 0;
+          let totalProt = recipe.fixed_protein || 0;
+          let totalCarbs = recipe.fixed_carbs || 0;
+          let totalFat = recipe.fixed_fat || 0;
+
+          const foods = foods_json.map((f: any) => ({
+            name: f.name || f.food || "Alimento",
+            portion: f.grams ? `${f.grams}g` : (f.portion || "1 porção"),
+            calories: f.calories || 0,
+            protein: f.protein || 0,
+            carbs: f.carbs || 0,
+            fat: f.fat || 0
+          }));
+
+          if (totalCal === 0) {
+            foods.forEach(f => {
+              totalCal += f.calories;
+              totalProt += f.protein;
+              totalCarbs += f.carbs;
+              totalFat += f.fat;
+            });
+          }
+
+          return {
+            id: recipe.id,
+            title: recipe.name,
+            description: recipe.is_fixed ? "Marmita Fixa Selecionada" : "Sua receita customizada",
+            mealTypes,
+            emoji: "🍱",
+            foods,
+            totalCalories: totalCal,
+            totalProtein: totalProt,
+            totalCarbs: totalCarbs,
+            totalFat: totalFat
+          };
+        });
+
+        setCustomTemplates(transformed);
+      } catch (err) {
+        console.error("Error fetching custom recipes:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCustomRecipes();
+  }, [user?.id]);
+
+  const allTemplates = useMemo(() => {
+    return [...MEAL_TEMPLATES, ...customTemplates];
+  }, [customTemplates]);
 
   const filteredTemplates = useMemo(() => {
-    return MEAL_TEMPLATES.filter(t => t.mealTypes.includes(activeMealType));
-  }, [activeMealType]);
+    return allTemplates.filter(t => t.mealTypes.includes(activeMealType));
+  }, [allTemplates, activeMealType]);
 
   const handleApplyTemplate = useCallback((template: MealTemplate) => {
     if (!planId) return;
