@@ -192,7 +192,7 @@ test.describe("Plan Generation UX & Template Logic E2E", () => {
 
     await page.goto("/meal-plans/resp-plan-id");
     
-    const badge = page.getByText(/Template:/i);
+    const badge = page.getByTestId("builder-template-badge");
     await expect(badge).toBeVisible();
 
     // 2. Test Desktop
@@ -202,18 +202,12 @@ test.describe("Plan Generation UX & Template Logic E2E", () => {
     // 3. Test Mobile (384px)
     await page.setViewportSize({ width: 384, height: 800 });
     await expect(badge).toBeVisible();
-    // Check if it's still visible and not causing horizontal overflow if possible, 
-    // or just that it doesn't "break" (is still in the DOM and visible)
     await expect(badge).toBeInViewport();
   });
 
   test("should select default fallback for patient without active plan or previous template", async ({ nutriPage: page }) => {
-    // This patient should have no history
-    // We'll mock the generation to return fallback
+    // Mock the generation to return fallback
     await page.route("**/functions/v1/generate-meal-plan", async (route) => {
-      const body = JSON.parse(route.request().postData() || "{}");
-      // Verify no template_id was sent if possible
-      
       await route.fulfill({
         status: 200,
         contentType: "application/json",
@@ -221,24 +215,40 @@ test.describe("Plan Generation UX & Template Logic E2E", () => {
           mealPlanId: "new-fallback-id",
           template_name_used: "Base Nutricional",
           is_fallback_template: true,
-          items_count: 4
+          items_count: 4,
+          success: true
         })
       });
     });
 
-    // Navigate to a "new" patient (mocked or just one we know has no plan)
-    // For now we'll just use the first one and rely on the mock
+    // Mock fetching the generated plan
+    await page.route("**/rest/v1/meal_plans?id=eq.new-fallback-id*", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([{
+          id: "new-fallback-id",
+          title: "Plano Fallback",
+          generation_metadata: {
+            template_name_used: "Base Nutricional",
+            is_fallback_template: true
+          }
+        }])
+      });
+    });
+
+    // Go to first patient
     const patientRow = page.locator('tr').filter({ hasText: /./ }).first();
     await patientRow.click();
     
     await page.getByRole("button", { name: /Gerar Plano/i }).first().click();
 
     // Verify fallback toast
-    await expect(page.getByText(/Nenhum plano anterior encontrado/i)).toBeVisible();
+    await expect(page.getByText(/Nenhum plano anterior encontrado/i)).toBeVisible({ timeout: 15000 });
     await expect(page.getByText(/"Base Nutricional"/i)).toBeVisible();
     
     // Verify persistence is not blocked (redirects to builder)
     await page.waitForURL(/\/meal-plans\/new-fallback-id/);
-    await expect(page.getByText(/Plano Fallback/i).or(page.locator('h1'))).toBeVisible();
+    await expect(page.getByTestId("builder-template-badge")).toContainText("Template: Base Nutricional");
   });
 });
