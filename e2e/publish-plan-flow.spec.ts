@@ -78,32 +78,25 @@ test.describe("Publish Plan Flow - In-Office Wizard", () => {
     await expect(progressText).toHaveText(/50%/, { timeout: 2000 });
     await expect(progressText).toHaveText(/75%/, { timeout: 2000 });
 
-    // 4. Verify Failure State for 408
+    // 4. Verify Failure State for first attempt (Network Error)
+    await expect(page.getByText("Falha no envio")).toBeVisible({ timeout: 15000 });
+    
+    let retryBtn = page.getByTestId("retry-publish-button");
+    await expect(retryBtn).toBeVisible();
+    await retryBtn.click();
+
+    // Verify progress again for second attempt
+    await expect(progressText).toHaveText(/0%/, { timeout: 2000 });
+    await expect(progressText).toHaveText(/75%/, { timeout: 5000 });
+
+    // 5. Verify Failure State for second attempt (408 Timeout)
     await expect(page.getByText("Falha no envio")).toBeVisible({ timeout: 15000 });
     await expect(page.getByTestId("publish-error-message")).toContainText("Request Timeout");
     
-    const retryBtn = page.getByTestId("retry-publish-button");
     await expect(retryBtn).toBeVisible();
-    await expect(retryBtn).toBeEnabled();
-
-    // 5. Simulate Success for the second attempt
-    await page.unroute("**/rest/v1/meal_plans*");
-    await page.route("**/rest/v1/meal_plans*", async (route, request) => {
-      if (request.method() === "PATCH") {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ success: true }),
-        });
-      } else {
-        await route.continue();
-      }
-    });
-
-    // Click Retry
     await retryBtn.click();
 
-    // Check progress reaches 100% on success
+    // Check progress reaches 100% on success (third attempt)
     await expect(progressText).toHaveText(/100%/, { timeout: 10000 });
 
     // Verify success indication
