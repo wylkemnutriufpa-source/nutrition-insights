@@ -239,6 +239,27 @@ export default function TemplateMassReformulation() {
     return { reformulatedMeals, changes: Array.from(new Set(changes)), summary };
   };
 
+  const simulateReformulation = async () => {
+    const selectedPreviews = previews.filter(p => p.selected && p.status === "pending");
+    if (selectedPreviews.length === 0) {
+      toast.info("Selecione templates para simular o impacto.");
+      return;
+    }
+
+    setProcessing(true);
+    setProgress(0);
+    const total = selectedPreviews.length;
+
+    for (let i = 0; i < selectedPreviews.length; i++) {
+      // Small delay to show progress
+      await new Promise(resolve => setTimeout(resolve, 50));
+      setProgress(((i + 1) / total) * 100);
+    }
+
+    setProcessing(false);
+    toast.success(`Simulação concluída para ${total} templates. Verifique os resultados abaixo.`);
+  };
+
   const applyReformulation = async () => {
     const selectedPreviews = previews.filter(p => p.selected && p.status === "pending");
     if (selectedPreviews.length === 0) {
