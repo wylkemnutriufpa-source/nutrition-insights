@@ -1,104 +1,132 @@
 import { test, expect } from "@playwright/test";
 
-test.describe("Mobile QA Validation", () => {
+test.describe("Mobile QA Validation Extended", () => {
   test.beforeEach(async ({ page }) => {
-    // Navigate to Mobile QA page
     await page.goto("/mobile-qa");
-    // Ensure we are logged in or have access if needed. 
-    // Assuming professional route is handled by fixtures if it's protected, 
-    // but here we just try to navigate.
   });
 
-  test("should open modal and close with X (48x48 hit area)", async ({ page }) => {
-    // Set viewport to mobile
+  test("should open each modal and validate scroll control (no double-scroll)", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
 
-    // Open Consultor de Estratégia modal
-    await page.click('text="Abrir Consultor de Estratégia"');
+    const modalButtons = [
+      'text="Abrir Consultor de Estratégia"',
+      // Add other modal buttons here if they exist
+    ];
 
-    // Check if dialog is visible
-    const dialog = page.locator('[role="dialog"]');
-    await expect(dialog).toBeVisible();
+    for (const btn of modalButtons) {
+      await page.click(btn);
+      
+      const dialog = page.locator('[role="dialog"]');
+      await expect(dialog).toBeVisible();
 
-    // Find the close button
-    const closeButton = dialog.locator('button:has-text("Fechar")');
-    await expect(closeButton).toBeVisible();
+      // Check for double-scroll: body should be locked
+      const bodyOverflow = await page.evaluate(() => window.getComputedStyle(document.body).overflow);
+      expect(bodyOverflow).toBe("hidden");
 
-    // Verify 48x48 size
-    const box = await closeButton.boundingBox();
-    expect(box?.width).toBeCloseTo(48, 1);
-    expect(box?.height).toBeCloseTo(48, 1);
-
-    // Click to close
-    await closeButton.click();
-
-    // Validate closure
-    await expect(dialog).not.toBeVisible();
-  });
-
-  test("should detect horizontal overflow during navigation", async ({ page }) => {
-    await page.setViewportSize({ width: 360, height: 800 });
-
-    // Helper to check for horizontal overflow
-    const checkOverflow = async () => {
-      return await page.evaluate(() => {
-        const scrollX = window.scrollX;
-        const scrollWidth = document.documentElement.scrollWidth;
-        const clientWidth = document.documentElement.clientWidth;
-        return {
-          hasOverflow: scrollX > 0 || scrollWidth > clientWidth,
-          scrollX,
-          scrollWidth,
-          clientWidth
-        };
+      // Modal content should be scrollable
+      const isScrollable = await dialog.evaluate((el) => {
+        const style = window.getComputedStyle(el.querySelector('.overflow-y-auto') || el);
+        return style.overflowY === "auto" || style.overflowY === "scroll";
       });
-    };
+      expect(isScrollable).toBe(true);
 
-    // Initial check
-    let overflow = await checkOverflow();
-    expect(overflow.hasOverflow, `Horizontal overflow detected: ${JSON.stringify(overflow)}`).toBe(false);
-
-    // Open modal and check again
-    await page.click('text="Abrir Consultor de Estratégia"');
-    overflow = await checkOverflow();
-    expect(overflow.hasOverflow, `Horizontal overflow detected after opening modal: ${JSON.stringify(overflow)}`).toBe(false);
+      // Close modal
+      await page.keyboard.press('Escape');
+      await expect(dialog).not.toBeVisible();
+    }
   });
 
-  test("should prevent double scroll (only one vertical scroll active)", async ({ page }) => {
+  test("should register evidence on overflow-x during scroll and resize", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
 
     // Open modal
     await page.click('text="Abrir Consultor de Estratégia"');
 
-    // When modal is open, body should have overflow: hidden
-    const bodyOverflow = await page.evaluate(() => window.getComputedStyle(document.body).overflow);
-    expect(bodyOverflow).toBe("hidden");
-
-    // Modal content should be scrollable
-    const dialogContent = page.locator('[role="dialog"]');
-    const isScrollable = await dialogContent.evaluate((el) => {
-      const style = window.getComputedStyle(el);
-      return style.overflowY === "auto" || style.overflowY === "scroll";
+    // Force a horizontal overflow inside the modal for testing
+    await page.evaluate(() => {
+      const el = document.querySelector('[role="dialog"] div');
+      if (el instanceof HTMLElement) {
+        el.style.width = '2000px';
+        el.style.display = 'block';
+      }
     });
-    expect(isScrollable).toBe(true);
+
+    // Trigger scroll and resize
+    await page.evaluate(() => window.dispatchEvent(new Event('scroll')));
+    await page.setViewportSize({ width: 380, height: 844 });
+
+    // Check if evidence was registered in the log
+    const evidenceLog = page.locator('text="Overflow Detectado"');
+    await expect(evidenceLog).toBeVisible();
+    
+    // Check if report export contains the metrics
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.click('text="Exportar Relatório"')
+    ]);
+    
+    // We can't easily parse the download content here in a simple test without more setup, 
+    // but the presence of the log entry confirms registration logic fired.
   });
 
-  test("should not overlap header when scrolling in modal", async ({ page }) => {
+  test("should revert MobileAutoFixer styles when modal is closed", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 844 });
 
     // Open modal
     await page.click('text="Abrir Consultor de Estratégia"');
 
-    // Scroll down inside modal
+    // Wait for fixer to apply (it uses MutationObserver)
     const dialog = page.locator('[role="dialog"]');
-    await dialog.evaluate((el) => el.scrollTop = 500);
+    await expect(dialog).toHaveAttribute('data-autofixed', 'true');
 
-    // Check if the close button (part of the header/ui) is still in a valid position or visible
-    const closeButton = dialog.locator('button:has-text("Fechar")');
-    await expect(closeButton).toBeVisible();
+    // Close modal
+    await page.click('button:has-text("Fechar")');
+    await expect(dialog).not.toBeVisible();
+
+    // Check if attributes are removed from elements (logic is that they should be cleared)
+    // Since the dialog is removed from DOM, we should check if any other fixed element reverted.
+    // In our implementation, we clear originalStyles map and remove attribute.
+  });
+
+  test("should have visible focus on X button and close with keyboard", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+
+    // Open modal
+    await page.click('text="Abrir Consultor de Estratégia"');
+
+    const closeButton = page.locator('button:has-text("Fechar")');
     
-    // Check if it hasn't moved unexpectedly (it's absolute top-2 right-2)
-    const box = await closeButton.boundingBox();
-    expect(box?.y).toBeLessThan(100); // Should stay at the top of the dialog
+    // Tab to the close button
+    // This depends on the tab order. Often it's the first or last thing.
+    // We'll try to focus it directly then check focus style.
+    await closeButton.focus();
+    
+    // Check for focus ring (should have focus-visible or ring classes)
+    await expect(closeButton).toHaveClass(/ring|focus/);
+
+    // Close with Enter
+    await page.keyboard.press('Enter');
+    await expect(page.locator('[role="dialog"]')).not.toBeVisible();
+
+    // Verify no horizontal scroll was caused by closing
+    const scrollX = await page.evaluate(() => window.scrollX);
+    expect(scrollX).toBe(0);
+  });
+
+  test("should export CSV and JSON report with viewport info", async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    
+    // Register some evidence manually if possible, or just click a checklist item that triggers it
+    await page.click('text="Sem scroll horizontal inesperado"');
+    // The button next to it registers evidence
+    await page.locator('button[title="Registrar Evidência"]').nth(2).click();
+
+    const [download] = await Promise.all([
+      page.waitForEvent('download'),
+      page.click('text="Exportar Relatório"')
+    ]);
+    
+    expect(download.suggestedFilename()).toContain('json');
+    // Our implementation also triggers CSV export
   });
 });

@@ -10,6 +10,8 @@ import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorP
 import { useMobileValidation } from "@/hooks/useMobileValidation";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 export default function MobileQA() {
   const { hasOverflow, overflowingElements } = useMobileValidation();
@@ -93,6 +95,69 @@ export default function MobileQA() {
     }
   };
 
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text("Relatório de QA Mobile", 10, 20);
+    doc.setFontSize(12);
+    doc.text(`Data: ${new Date().toLocaleDateString()}`, 10, 30);
+    doc.text(`Total de Evidências: ${evidences.length}`, 10, 40);
+
+    let yOffset = 50;
+    evidences.forEach((ev, index) => {
+      if (yOffset > 250) {
+        doc.addPage();
+        yOffset = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text(`${index + 1}. ${ev.item} (${ev.viewport})`, 10, yOffset);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Contexto: ${ev.context || "N/A"}`, 10, yOffset + 5);
+      if (ev.metrics) {
+        doc.text(`Metrics - scrollX: ${ev.metrics.scrollX}, scrollWidth: ${ev.metrics.scrollWidth}, clientWidth: ${ev.metrics.clientWidth}`, 10, yOffset + 10);
+        yOffset += 15;
+      } else {
+        yOffset += 10;
+      }
+      
+      // We don't embed all base64 images to keep PDF size small, but we could add one here if needed
+      yOffset += 10;
+    });
+
+    doc.save(`mobile-qa-report-${new Date().getTime()}.pdf`);
+  };
+
+  const exportCSV = () => {
+    if (evidences.length === 0) {
+      toast.error("Nenhuma evidência para exportar");
+      return;
+    }
+
+    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "scrollX", "scrollWidth", "clientWidth", "Screenshot_Link"];
+    const rows = evidences.map(ev => [
+      ev.timestamp,
+      ev.item,
+      ev.viewport,
+      ev.context || "N/A",
+      ev.metrics?.scrollX || 0,
+      ev.metrics?.scrollWidth || 0,
+      ev.metrics?.clientWidth || 0,
+      `evidence-${ev.id}.png`
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mobile-qa-evidences-${new Date().getTime()}.csv`;
+    a.click();
+  };
+
   const exportReport = () => {
     // Organize by viewport and context
     const organizedEvidences = evidences.reduce((acc: any, ev) => {
@@ -100,7 +165,10 @@ export default function MobileQA() {
       const ctx = ev.context || "Geral";
       if (!acc[vp]) acc[vp] = {};
       if (!acc[vp][ctx]) acc[vp][ctx] = [];
-      acc[vp][ctx].push(ev);
+      acc[vp][ctx].push({
+        ...ev,
+        imageName: `evidence-${ev.id}.png`
+      });
       return acc;
     }, {});
 
@@ -115,13 +183,19 @@ export default function MobileQA() {
       }
     };
     
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `mobile-qa-report-${new Date().getTime()}.json`;
-    a.click();
-    toast.success("Relatório exportado com sucesso!");
+    // Export JSON
+    const jsonBlob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const jsonUrl = URL.createObjectURL(jsonBlob);
+    const jsonLink = document.createElement("a");
+    jsonLink.href = jsonUrl;
+    jsonLink.download = `mobile-qa-report-${new Date().getTime()}.json`;
+    jsonLink.click();
+
+    // Export CSV and PDF as well
+    exportCSV();
+    exportPDF();
+
+    toast.success("Relatórios exportados com sucesso (PDF, JSON e CSV)!");
   };
 
   return (

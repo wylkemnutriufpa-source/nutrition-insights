@@ -2,17 +2,24 @@ import { useEffect } from "react";
 
 export function MobileAutoFixer() {
   useEffect(() => {
+    const originalStyles = new Map<HTMLElement, { maxWidth: string, overflowX: string, boxSizing: string, paddingLeft: string, paddingRight: string }>();
+
     const fixOverflow = () => {
-      // Find active dialogs
       const activeDialogs = document.querySelectorAll('[role="dialog"], .dialog-content');
       
-      // If no dialog is active, we might still want to check the main container, 
-      // but according to requirements: "correções apenas dentro do dialog aberto (role=dialog ativo) e no seu container principal"
-      // This implies we should be careful about touching anything else.
-      
       const applyFix = (el: HTMLElement) => {
-        // Mark element as processed to avoid redundant fixes and for testing
-        el.setAttribute('data-autofixed', 'true');
+        if (!el.hasAttribute('data-autofixed')) {
+          // Store original styles before applying fixes
+          originalStyles.set(el, {
+            maxWidth: el.style.maxWidth,
+            overflowX: el.style.overflowX,
+            boxSizing: el.style.boxSizing,
+            paddingLeft: el.style.paddingLeft,
+            paddingRight: el.style.paddingRight
+          });
+          
+          el.setAttribute('data-autofixed', 'true');
+        }
         
         const rect = el.getBoundingClientRect();
         
@@ -27,31 +34,53 @@ export function MobileAutoFixer() {
           }
         }
         
-        // Check children for overflow relative to parent
         const children = el.querySelectorAll('*');
         children.forEach((child) => {
           const childEl = child as HTMLElement;
           const childRect = childEl.getBoundingClientRect();
           if (childRect.right > rect.right || childRect.left < rect.left) {
-            childEl.setAttribute('data-autofixed', 'true');
+            if (!childEl.hasAttribute('data-autofixed')) {
+              originalStyles.set(childEl, {
+                maxWidth: childEl.style.maxWidth,
+                overflowX: childEl.style.overflowX,
+                boxSizing: childEl.style.boxSizing,
+                paddingLeft: childEl.style.paddingLeft,
+                paddingRight: childEl.style.paddingRight
+              });
+              childEl.setAttribute('data-autofixed', 'true');
+            }
             childEl.style.maxWidth = '100%';
             childEl.style.overflowX = 'hidden';
           }
         });
       };
 
-      // Only apply fixes if there's an active dialog
       if (activeDialogs.length > 0) {
         activeDialogs.forEach((d) => applyFix(d as HTMLElement));
       } else {
-        // Optional: still check main container if explicitly required, 
-        // but the prompt says "apenas dentro do dialog aberto... e no seu container principal"
-        // Let's assume it means the container OF the dialog if it exists, or just the active dialog itself.
-        // We'll skip global fixes when no dialog is present to satisfy "ensure elements outside are not altered"
+        // Revert styles when no dialog is active
+        originalStyles.forEach((styles, el) => {
+          el.style.maxWidth = styles.maxWidth;
+          el.style.overflowX = styles.overflowX;
+          el.style.boxSizing = styles.boxSizing;
+          el.style.paddingLeft = styles.paddingLeft;
+          el.style.paddingRight = styles.paddingRight;
+          el.removeAttribute('data-autofixed');
+        });
+        originalStyles.clear();
       }
     };
 
-    const observer = new MutationObserver(fixOverflow);
+    const observer = new MutationObserver((mutations) => {
+      let shouldFix = false;
+      mutations.forEach(mutation => {
+        if (mutation.type === 'childList') {
+          shouldFix = true;
+        }
+      });
+      if (shouldFix) fixOverflow();
+    });
+    
     observer.observe(document.body, { childList: true, subtree: true });
     
     window.addEventListener('resize', fixOverflow);
