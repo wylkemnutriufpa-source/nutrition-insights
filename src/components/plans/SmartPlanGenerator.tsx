@@ -162,7 +162,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           : `⚡ Gerando ${MODES.find(m => m.key === selectedMode)?.label}...`
       );
 
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId,
           nutritionistId: user.id,
@@ -172,6 +172,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           ...(professionalOverride ? { professionalOverride } : {}),
         },
       });
+
 
       if (error || !data?.success) {
         // Edge function returned a structured error code we can recover from
