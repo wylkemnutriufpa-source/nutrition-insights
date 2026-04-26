@@ -292,7 +292,7 @@ export default function PublicPlans({ planType }: { planType: "patient_prestige"
                     {isPatient && (
                       <Button
                         className="w-full gradient-primary gap-2"
-                        onClick={() => navigate(`/register?ref=${slug}&plan=${selectedPlan.plan_label}`)}
+                        onClick={() => navigate(`/cadastro?ref=${slug}&plan=${selectedPlan.plan_label}`)}
                       >
                         <Award className="w-4 h-4" />
                         Já paguei — Criar minha conta

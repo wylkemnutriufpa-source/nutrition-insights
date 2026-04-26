@@ -146,7 +146,7 @@ const PATIENT_ONLY_ROUTES = [
   "/water-calculator",
   "/health-quiz",
   "/checkin",
-  "/consent-required",
+  "/consent",
   "/payment-required",
 ];
 
@@ -204,6 +204,8 @@ const PUBLIC_ROUTES = [
   "/biquini-branco",
   "/demo/",
   "/cadastro",
+  "/register",
+  "/register-patient",
   "/auth",
   "/reset-password",
   "/p/",

@@ -73,7 +73,7 @@ function getRouteLabel(route: string): string {
 
 export function saveSessionContext(route: string, userId?: string) {
   // Ignorar rotas que não fazem sentido restaurar
-  const ignoreRoutes = ["/auth", "/landing", "/consent-required", "/payment-required", "/reset-password"];
+  const ignoreRoutes = ["/auth", "/landing", "/consent", "/payment-required", "/reset-password"];
   if (ignoreRoutes.some(r => route.startsWith(r))) return;
   
   const ctx: SessionContext = {

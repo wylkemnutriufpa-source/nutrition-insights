@@ -311,9 +311,9 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
   if (isProfessional) return <>{children}</>;
 
   // Only mandatory redirect is for Consent if not provided
-  const consentAllowedRoutes = ["/consent-required", "/auth", "/settings", "/reset-password"];
+  const consentAllowedRoutes = ["/consent", "/auth", "/settings", "/reset-password"];
   if (isPatient && !hasConsent && !consentAllowedRoutes.some(r => location.pathname.startsWith(r))) {
-    return <Navigate to="/consent-required" replace />;
+    return <Navigate to="/consent" replace />;
   }
 
   return <>{children}</>;
@@ -517,7 +517,9 @@ const App = () => (
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
               <Route path="/demo/:mode" element={<Suspense fallback={<PageLoader />}><PublicDemo /></Suspense>} />
               {/* Patient self-registration disabled — access is invitation-based only */}
-              <Route path="/cadastro" element={<Navigate to="/auth" replace />} />
+              <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
+              <Route path="/register" element={<LP section="Cadastro"><PatientRegister /></LP>} />
+              <Route path="/register-patient" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
@@ -606,7 +608,8 @@ const App = () => (
               <Route path="/fitness-anamnesis" element={<ProtectedRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></ProtectedRoute>} />
 
               {/* Consent required page */}
-              <Route path="/consent-required" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
+              <Route path="/consent" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
+              <Route path="/consent-required" element={<Navigate to="/consent" replace />} />
               <Route path="/payment-required" element={<PatientRoute><LP section="Pagamento"><PaymentRequired /></LP></PatientRoute>} />
 
               {/* Patient portal — consent guarded */}
