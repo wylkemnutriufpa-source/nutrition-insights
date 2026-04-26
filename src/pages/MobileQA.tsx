@@ -338,7 +338,8 @@ export default function MobileQA() {
                 { id: "noContentCutoff", label: "Sem conteúdo cortado" },
                 { id: "noHorizontalScroll", label: "Sem scroll horizontal" },
                 { id: "focusVisibleX", label: "Foco visível no botão X (Acessibilidade)" },
-                { id: "noScrollResidualOnKeys", label: "Sem scroll residual (Enter/Espaço)" }
+                { id: "accessibilityTabOrder", label: "Botão X navegável por Tab" },
+                { id: "noScrollResidualOnKeys", label: "Sem scroll residual (Enter/Espaço/Esc)" }
               ].map((item) => (
                 <div key={item.id} className="flex items-center justify-between group">
                   <div className="flex items-center space-x-2">
@@ -359,6 +360,22 @@ export default function MobileQA() {
                   </Button>
                 </div>
               ))}
+              
+              <div className="pt-4 border-t mt-4">
+                <Label htmlFor="buffer-range" className="text-xs font-semibold mb-2 block">
+                  Buffer de Detecção Overflow: {overflowBuffer}ms
+                </Label>
+                <input 
+                  id="buffer-range"
+                  type="range" 
+                  min="0" 
+                  max="1000" 
+                  step="50"
+                  value={overflowBuffer}
+                  onChange={(e) => setOverflowBuffer(Number(e.target.value))}
+                  className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -371,14 +388,27 @@ export default function MobileQA() {
             </CardHeader>
             <CardContent className="space-y-3">
               {testScreens.map((screen) => (
-                <Dialog key={screen.id} onOpenChange={(open) => setActiveModal(open ? screen.label : null)}>
+                <Dialog key={screen.id} onOpenChange={(open) => {
+                  setActiveModal(open ? screen.label : null);
+                  setActiveModalId(open ? screen.id : null);
+                  logEvent(open ? "Modal aberto" : "Modal fechado", { screen: screen.label, id: screen.id });
+                }}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start gap-2 h-12" data-testid={`trigger-${screen.id}`}>
                       <screen.icon className="w-4 h-4" />
                       {screen.label}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px] h-[90vh] flex flex-col p-0 overflow-hidden" data-testid={`modal-${screen.id}`}>
+                  <DialogContent 
+                    className="sm:max-w-[600px] h-[90vh] flex flex-col p-0 overflow-hidden" 
+                    data-testid={`modal-${screen.id}`}
+                    onEscapeKeyDown={() => logEvent("Esc pressionado no modal", { screen: screen.label })}
+                  >
+                    <DialogHeader className="p-4 border-b bg-muted/30">
+                      <DialogTitle className="flex items-center justify-between pr-8">
+                        {screen.label}
+                      </DialogTitle>
+                    </DialogHeader>
                     <div className="p-4 overflow-y-auto overflow-x-hidden flex-1 bg-background">
                       <div className="space-y-4">
                         <h2 className="text-xl font-bold">Simulação: {screen.label}</h2>
