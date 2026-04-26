@@ -87,12 +87,25 @@ export function MealSmartEditorModal({
       
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
       
-      // Validação de macros base para marmitas fixas
+      // Validação aprofundada de macros base para marmitas fixas
       if (meta.is_fixed) {
-        if (meta.kcal_base === undefined || meta.protein_base === undefined) {
-          toast.warning("Aviso: Macros base não encontrados nesta marmita. O fator de ajuste pode ser impreciso.", {
-            description: "Certifique-se de que esta marmita foi cadastrada corretamente.",
-            duration: 6000
+        const missing = [];
+        if (meta.kcal_base === undefined || meta.kcal_base === null) missing.push("Calorias");
+        if (meta.protein_base === undefined || meta.protein_base === null) missing.push("Proteínas");
+        if (meta.carbs_base === undefined || meta.carbs_base === null) missing.push("Carboidratos");
+        if (meta.fat_base === undefined || meta.fat_base === null) missing.push("Gorduras");
+
+        if (missing.length > 0) {
+          toast.error("Dados Base Incompletos", {
+            description: `Esta marmita fixa está sem os macros base: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
+            action: {
+              label: "Corrigir Agora",
+              onClick: () => {
+                // Foca no campo de descrição para incentivar a correção manual se necessário
+                inputRef.current?.focus();
+              }
+            },
+            duration: 8000
           });
         }
       }
