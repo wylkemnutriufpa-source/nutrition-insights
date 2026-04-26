@@ -37,6 +37,7 @@ export default function MobileQA() {
     context?: string,
     modalId?: string,
     sequence?: number,
+    grouping?: string,
     metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }
   }>>([]);
   
