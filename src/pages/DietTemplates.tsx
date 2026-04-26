@@ -565,6 +565,14 @@ export default function DietTemplates() {
           let finalCarbs = f.carbs;
           let finalFat = f.fat;
           let finalPortion = f.portion || null;
+          const legacySubs: string[] = Array.isArray(f.substitutions) ? f.substitutions : [];
+
+          // Group id for substitutions if they exist
+          const groupId = legacySubs.length > 0 
+            ? ((typeof crypto !== "undefined" && (crypto as any).randomUUID)
+              ? (crypto as any).randomUUID()
+              : `grp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`)
+            : undefined;
 
           // Detect placeholder and replace with a recipe
           const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
@@ -591,6 +599,7 @@ export default function DietTemplates() {
             }
           }
 
+          // Insert primary item
           items.push({
             meal_plan_id: plan.id,
             day_of_week: day,
@@ -601,7 +610,25 @@ export default function DietTemplates() {
             protein_target: scaleNum(finalProtein),
             carbs_target: scaleNum(finalCarbs),
             fat_target: scaleNum(finalFat),
+            substitution_group_id: groupId,
             is_primary: true,
+          });
+
+          // Insert legacy substitutions as sibling items
+          legacySubs.forEach((subName) => {
+            items.push({
+              meal_plan_id: plan.id,
+              day_of_week: day,
+              meal_type: mealType,
+              title: subName,
+              description: "Substituição",
+              calories_target: scaleNum(finalCalories), // Assume same calories as primary for legacy
+              protein_target: scaleNum(finalProtein),
+              carbs_target: scaleNum(finalCarbs),
+              fat_target: scaleNum(finalFat),
+              substitution_group_id: groupId,
+              is_primary: false,
+            });
           });
         }
       }
