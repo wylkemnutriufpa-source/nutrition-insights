@@ -186,7 +186,7 @@ Deno.serve(async (req) => {
         await adminClient.auth.admin.generateLink({
           type: "magiclink",
           email: normalizedEmail,
-          options: { redirectTo: `${req.headers.get("origin") || "https://fijourney.lovable.app"}/` },
+          options: { redirectTo: `https://www.fitjourney.com.br/` },
         });
       } catch (e) {
         console.log("[invite-patient] Magic link generation failed, patient can use forgot password:", e);
