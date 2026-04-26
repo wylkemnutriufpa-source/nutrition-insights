@@ -159,15 +159,21 @@ describe('Mobile Experience E2E & QA Automation', () => {
     const cameraButtons = screen.getAllByRole('button').filter(b => b.querySelector('svg.lucide-camera'));
     fireEvent.click(cameraButtons[0]);
 
+    // Aguardar o registro da evidência no estado
+    await waitFor(() => {
+      expect(screen.getByText(/Evidências e Métricas Capturadas/i)).toBeInTheDocument();
+    }, { timeout: 3000 });
+
     // Exportar relatório
     const exportButton = screen.getByText(/Exportar Relatório/i);
     fireEvent.click(exportButton);
 
     await waitFor(() => {
       expect(spy).toHaveBeenCalled();
-      const lastCallArgs = spy.mock.calls.find(call => call[1]?.type === 'application/json');
-      if (lastCallArgs) {
-        const contentArray = lastCallArgs[0] as any[];
+      const jsonCall = spy.mock.calls.find(call => (call[1] as any)?.type === 'application/json');
+      expect(jsonCall).toBeDefined();
+      if (jsonCall) {
+        const contentArray = jsonCall[0] as any[];
         const reportData = JSON.parse(contentArray[0] as string);
         expect(reportData.evidences[0]).toHaveProperty('viewport', '390px');
         expect(reportData.evidences[0]).toHaveProperty('thumbnail');
