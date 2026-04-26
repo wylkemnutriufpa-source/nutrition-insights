@@ -226,10 +226,22 @@ export default function MealPlanEditorV2() {
       return;
     }
     setSaving(true);
+    
+    // 🛡️ Validação de Substituições antes de salvar
+    const subValidation = validatePlanSubstitutions(store.items);
+    if (!subValidation.valid) {
+      toast.error("⚠️ Substituições Inválidas", {
+        description: subValidation.errors[0].slice(0, 150) + "...",
+        duration: 5000
+      });
+      setSaving(false);
+      return;
+    }
+
     const toastId = toast.loading("Salvando e aprovando plano...");
     try {
       // Modelo single-day puro: nenhuma consolidação de dias legados necessária.
-
+      
       await store._flushQueue();
 
       // Recalcular totais via RPC (autoritativo) antes do refetch final
