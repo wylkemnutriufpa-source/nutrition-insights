@@ -462,6 +462,40 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
               ))}
             </div>
 
+            <div className="px-4 py-2 border-b border-border space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground">Objetivo</span>
+                <div className="flex gap-1">
+                  {["all", "definition", "gain", "maintenance"].map((obj) => (
+                    <button
+                      key={obj}
+                      onClick={() => setFilterObjective(obj)}
+                      className={`text-[9px] px-2 py-1 rounded-full border transition-colors ${
+                        filterObjective === obj 
+                          ? "bg-primary/10 border-primary text-primary" 
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      {obj === "all" ? "Todos" : obj === "definition" ? "Definição" : obj === "gain" ? "Ganho" : "Manutenção"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase text-muted-foreground">Compatibilidade</span>
+                <label className="flex items-center gap-2 cursor-pointer">
+                  <div 
+                    className={`w-8 h-4 rounded-full p-0.5 transition-colors ${showOnlyCompatible ? "bg-primary" : "bg-muted"}`}
+                    onClick={() => setShowOnlyCompatible(!showOnlyCompatible)}
+                  >
+                    <div className={`w-3 h-3 rounded-full bg-white transition-transform ${showOnlyCompatible ? "translate-x-4" : "translate-x-0"}`} />
+                  </div>
+                  <span className="text-[10px] text-muted-foreground">Auto-filtrar</span>
+                </label>
+              </div>
+            </div>
+
             <ScrollArea className="flex-1 px-4 py-2">
               {loading ? (
                 <div className="flex items-center justify-center py-12">
