@@ -11,16 +11,9 @@ const queryClient = new QueryClient();
 // Mock store
 vi.mock('../stores/mealPlanEditorV2Store', () => ({
   useMealPlanEditorV2Store: vi.fn(),
-  sortMealPlanItems: vi.fn((items) => [...items].sort((a, b) => {
-    const aPri = a.is_primary ? 1 : 0;
-    const bPri = b.is_primary ? 1 : 0;
-    if (aPri !== bPri) return bPri - aPri;
-    const aCal = Number(a.calories_target) || 0;
-    const bCal = Number(b.calories_target) || 0;
-    if (aCal !== bCal) return bCal - aCal;
-    return a.id.localeCompare(b.id);
-  }))
 }));
+
+import { sortMealPlanItems } from '../lib/mealPlanSort';
 
 describe('Deterministic Order E2E', () => {
   const itemPrimary = {
