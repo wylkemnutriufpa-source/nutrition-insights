@@ -542,6 +542,42 @@ export default function MealPlanEditorV2() {
     }
 
     const totalKcal = store.items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    
+    // Guardrail Check: calories between days (+/- 5%) and protein (+/- 3%)
+    const itemsByDay: Record<number, any[]> = {};
+    store.items.forEach(item => {
+      const day = Number(item.day_of_week) || 0;
+      if (!itemsByDay[day]) itemsByDay[day] = [];
+      itemsByDay[day].push(item);
+    });
+
+    const dayTotals = Object.entries(itemsByDay).map(([day, items]) => ({
+      day: Number(day),
+      kcal: items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0),
+      protein: items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0),
+    })).filter(d => d.kcal > 0);
+
+    if (dayTotals.length > 1) {
+      const avgKcal = dayTotals.reduce((s, d) => s + d.kcal, 0) / dayTotals.length;
+      const avgProt = dayTotals.reduce((s, d) => s + d.protein, 0) / dayTotals.length;
+
+      const deviations: string[] = [];
+      dayTotals.forEach(d => {
+        const kcalDev = Math.abs(d.kcal - avgKcal) / avgKcal;
+        const protDev = Math.abs(d.protein - avgProt) / avgProt;
+        if (kcalDev > 0.05) deviations.push(`Dia ${d.day}: Caloria desviou ${Math.round(kcalDev * 100)}% (máx 5%)`);
+        if (protDev > 0.03) deviations.push(`Dia ${d.day}: Proteína desviou ${Math.round(protDev * 100)}% (máx 3%)`);
+      });
+
+      if (deviations.length > 0) {
+        toast.warning("Desvio de Guardrails Detectado", {
+          description: `Os seguintes dias extrapolam os limites clínicos recomendados:\n${deviations.join("\n")}`,
+          duration: 6000,
+        });
+        // Note: We don't block the professional, we just alert.
+      }
+    }
+
     if (totalKcal <= 0 && store.items.length > 0) {
       toast.error("O plano não pode ter totais zerados.", {
         description: "Adicione refeições com valores calóricos antes de salvar."
