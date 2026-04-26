@@ -233,11 +233,14 @@ export default function MealTemplatePanel({ day }: Props) {
       title: template.title,
       description,
       meal_type: activeMealType,
-      day_of_week: day,
+      day_of_week: 0, // Enforce Day 0 for templates
       calories_target: template.totalCalories,
       protein_target: template.totalProtein,
       carbs_target: template.totalCarbs,
       fat_target: template.totalFat,
+      edit_metadata: {
+        substitutions_json: subLines
+      } as any
     });
 
     setRecentlyApplied(prev => new Set(prev).add(template.id));
