@@ -630,6 +630,25 @@ export default function MealPlanEditorV2() {
       return;
     }
 
+    // 🛡️ Validação de Marmitas Fixas
+    const missingBase = store.items.filter(item => {
+      const meta = (item as any).edit_metadata || (item as any).metadata || {};
+      return meta.is_fixed && (
+        meta.kcal_base === undefined || meta.kcal_base === null ||
+        meta.protein_base === undefined || meta.protein_base === null ||
+        meta.carbs_base === undefined || meta.carbs_base === null ||
+        meta.fat_base === undefined || meta.fat_base === null
+      );
+    });
+
+    if (missingBase.length > 0) {
+      toast.error("Publicação Bloqueada", {
+        description: `Existem ${missingBase.length} marmita(s) fixa(s) com dados base incompletos. Corrija-os antes de publicar.`
+      });
+      setSavingAndPublishing(false);
+      return;
+    }
+
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
     // 🛡️ Validação de Substituições
