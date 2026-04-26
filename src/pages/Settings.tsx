@@ -402,11 +402,19 @@ export default function Settings() {
                 />
               </div>
               <div>
-                <Label>WhatsApp</Label>
+                <Label className="flex justify-between items-center">
+                  <span>WhatsApp</span>
+                  {whatsappError && <span className="text-[10px] text-destructive animate-pulse">{whatsappError}</span>}
+                </Label>
                 <Input
                   value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="(11) 99999-9999"
+                  onChange={(e) => {
+                    setWhatsapp(e.target.value);
+                    validateWhatsApp(e.target.value);
+                  }}
+                  onBlur={() => validateWhatsApp(whatsapp)}
+                  placeholder="(11) 99999-9999 ou +55..."
+                  className={whatsappError ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
               </div>
               <Button type="submit" className="gradient-primary gap-2" disabled={savingProfile}>
