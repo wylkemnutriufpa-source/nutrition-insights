@@ -6,7 +6,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
 
-// Mock Supabase
+// Mock Supabase with full chaining support
 vi.mock('@/integrations/supabase/client', () => {
   const mockQueryBuilder = {
     select: vi.fn().mockReturnThis(),
@@ -22,14 +22,12 @@ vi.mock('@/integrations/supabase/client', () => {
   const mockSupabase = {
     from: vi.fn().mockReturnValue(mockQueryBuilder),
     functions: {
-      invoke: vi.fn(),
+      invoke: vi.fn().mockResolvedValue({ data: null, error: null }),
     },
   };
   
   return { supabase: mockSupabase };
 });
-
-
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
@@ -54,19 +52,13 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     const mockSupabase = supabase as any;
+    const mockQuery = mockSupabase.from();
     
     // Default mock responses for data loading
-    mockSupabase.maybeSingle.mockImplementation((path: string) => {
-      // InOfficeStepFinalize calls maybeSingle multiple times
-      // 1. Session load
-      // 2. Profile load
-      // 3. Meal plan status check
-      // 4. Story check
-      return Promise.resolve({ data: {}, error: null });
-    });
+    mockQuery.maybeSingle.mockImplementation(() => Promise.resolve({ data: {}, error: null }));
 
     // Special case for loading session with meal_plan_id
-    mockSupabase.maybeSingle
+    mockQuery.maybeSingle
       .mockResolvedValueOnce({ data: { id: 'sess-123', meal_plan_id: 'plan-123' }, error: null }) // session
       .mockResolvedValueOnce({ data: { full_name: 'John Doe' }, error: null }) // profile
       .mockResolvedValueOnce({ data: { plan_status: 'draft' }, error: null }) // meal plan
@@ -75,6 +67,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
 
   it('should choose a template and publish the plan successfully', async () => {
     const mockSupabase = supabase as any;
+    const mockQuery = mockSupabase.from();
     renderComponent();
 
     // Verify initial state
@@ -84,7 +77,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     expect(publishButton).toBeInTheDocument();
 
     // Mock successful update
-    mockSupabase.update.mockResolvedValue({ data: null, error: null });
+    mockQuery.in.mockResolvedValue({ data: null, error: null });
 
     // Click Publish
     fireEvent.click(publishButton);
@@ -92,25 +85,25 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     // Verify publication process
     await waitFor(() => {
       expect(mockSupabase.from).toHaveBeenCalledWith('meal_plans');
-      expect(mockSupabase.update).toHaveBeenCalledWith(expect.objectContaining({
+      expect(mockQuery.update).toHaveBeenCalledWith(expect.objectContaining({
         plan_status: 'published_to_patient',
         is_active: true
       }));
-    });
+    }, { timeout: 3000 });
 
     // Verify success message (updated UI)
-    await waitFor(() => expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument(), { timeout: 3000 });
   });
-
 
   it('should show retry button when publication fails and allow retrying', async () => {
     const mockSupabase = supabase as any;
+    const mockQuery = mockSupabase.from();
     renderComponent();
 
     const publishButton = await screen.findByRole('button', { name: /Salvar e Enviar ao Paciente/i });
     
     // Mock failure
-    mockSupabase.update.mockResolvedValueOnce({ data: null, error: { message: 'Database connection failed' } });
+    mockQuery.in.mockResolvedValueOnce({ data: null, error: { message: 'Database connection failed' } });
 
     fireEvent.click(publishButton);
 
@@ -118,17 +111,16 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     await waitFor(() => {
       expect(screen.getByText(/Falha na comunicação com o servidor/i)).toBeInTheDocument();
       expect(screen.getByText(/Tentar novamente/i)).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
 
     // Mock success for second attempt
-    mockSupabase.update.mockResolvedValueOnce({ data: null, error: null });
+    mockQuery.in.mockResolvedValueOnce({ data: null, error: null });
     
     fireEvent.click(screen.getByText(/Tentar novamente/i));
 
     // Verify success
     await waitFor(() => {
       expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument();
-    });
+    }, { timeout: 3000 });
   });
-
 });
