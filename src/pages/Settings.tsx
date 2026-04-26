@@ -109,6 +109,37 @@ export default function Settings() {
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || "");
+  const [whatsappError, setWhatsappError] = useState("");
+
+  const formatInternationalWhatsApp = (val: string) => {
+    const digits = val.replace(/\D/g, "");
+    if (!digits) return "";
+    if (val.startsWith("+")) return val.replace(/\s/g, "");
+    if (digits.length >= 10 && digits.length <= 11) return `+55${digits}`;
+    return `+${digits}`;
+  };
+
+  const validateWhatsApp = (val: string) => {
+    if (!val) {
+      setWhatsappError(""); // Optional in settings
+      return true;
+    }
+    const digits = val.replace(/\D/g, "");
+    if (digits.length < 7 || digits.length > 15) {
+      setWhatsappError("Número inválido");
+      return false;
+    }
+    const isBrazil = !val.startsWith("+") || val.startsWith("+55") || digits.startsWith("55");
+    if (isBrazil) {
+      const brDigits = digits.startsWith("55") ? digits.slice(2) : digits;
+      if (brDigits.length < 10 || brDigits.length > 11) {
+        setWhatsappError("Número brasileiro deve ter 10 ou 11 dígitos");
+        return false;
+      }
+    }
+    setWhatsappError("");
+    return true;
+  };
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -140,10 +171,22 @@ export default function Settings() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    
+    if (!validateWhatsApp(whatsapp)) {
+      toast.error("Por favor, corrija o número de WhatsApp");
+      return;
+    }
+
     setSavingProfile(true);
+    const formattedWhatsapp = whatsapp ? formatInternationalWhatsApp(whatsapp) : null;
+    
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, phone: phone || null, whatsapp: whatsapp || null })
+      .update({ 
+        full_name: fullName, 
+        phone: phone || null, 
+        whatsapp: formattedWhatsapp 
+      })
       .eq("user_id", user.id);
     setSavingProfile(false);
     if (error) {
@@ -359,11 +402,19 @@ export default function Settings() {
                 />
               </div>
               <div>
-                <Label>WhatsApp</Label>
+                <Label className="flex justify-between items-center">
+                  <span>WhatsApp</span>
+                  {whatsappError && <span className="text-[10px] text-destructive animate-pulse">{whatsappError}</span>}
+                </Label>
                 <Input
                   value={whatsapp}
-                  onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="(11) 99999-9999"
+                  onChange={(e) => {
+                    setWhatsapp(e.target.value);
+                    validateWhatsApp(e.target.value);
+                  }}
+                  onBlur={() => validateWhatsApp(whatsapp)}
+                  placeholder="(11) 99999-9999 ou +55..."
+                  className={whatsappError ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
               </div>
               <Button type="submit" className="gradient-primary gap-2" disabled={savingProfile}>
