@@ -74,8 +74,11 @@ export default function Invitation() {
         invitation_id: data.id,
         event_type: "viewed",
         details: { domain: currentDomain, host: window.location.host },
-        user_agent: navigator.userAgent
+        user_agent: navigator.userAgent,
+        professional_id: data.professional_id,
+        patient_email: data.patient_email
       });
+
 
       if (data.status === 'pending') {
         await supabase
