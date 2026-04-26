@@ -322,6 +322,55 @@ export default function PatientRegister() {
     );
   }
 
+  if (selectedProfessional && !isProfConfirmed && preselectedNutri) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/10 blur-3xl opacity-50" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/10 blur-3xl opacity-50" />
+        </div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md relative z-10 text-center">
+          <div className="mb-8 flex justify-center"><FitJourneyLogo size="lg" /></div>
+          <Card className="shadow-2xl border-primary/20 bg-card/90 backdrop-blur-md">
+            <CardContent className="pt-8 pb-8 space-y-6">
+              <div className="relative mx-auto w-24 h-24">
+                <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-25" />
+                <div className="relative w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center overflow-hidden">
+                  {selectedProfessional.avatar_url ? (
+                    <img src={selectedProfessional.avatar_url} alt={selectedProfessional.full_name} className="w-full h-full object-cover" />
+                  ) : (
+                    <UserPlus className="w-10 h-10 text-primary" />
+                  )}
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-foreground">Você foi convidado!</h2>
+                <p className="text-muted-foreground">
+                  O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> quer acompanhar sua jornada.
+                </p>
+              </div>
+
+              <div className="grid gap-3">
+                <Button onClick={() => setIsProfConfirmed(true)} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
+                  Aceitar Convite e Continuar <ArrowRight className="w-5 h-5 ml-2" />
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/auth")} className="text-muted-foreground hover:text-foreground">
+                  Já tenho uma conta
+                </Button>
+              </div>
+              
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
+                Vínculo profissional automático ao concluir
+              </p>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -342,15 +391,19 @@ export default function PatientRegister() {
               {/* Selected professional badge */}
               {selectedProfessional && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
-                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                    <Stethoscope className="w-4 h-4 text-primary" />
+                  <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                    {selectedProfessional.avatar_url ? (
+                      <img src={selectedProfessional.avatar_url} alt="Prof" className="w-full h-full object-cover" />
+                    ) : (
+                      <Stethoscope className="w-4 h-4 text-primary" />
+                    )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Profissional</p>
+                    <p className="text-xs text-muted-foreground">Profissional Vinculado</p>
                     <p className="font-medium text-sm text-foreground truncate">{selectedProfessional.full_name}</p>
                   </div>
                   {!preselectedNutri && (
-                    <button type="button" onClick={() => { setSelectedProfessional(null); setShowProfSearch(true); }}
+                    <button type="button" onClick={() => { setSelectedProfessional(null); setShowProfSearch(true); setIsProfConfirmed(false); }}
                       className="text-xs text-primary hover:underline shrink-0">Trocar</button>
                   )}
                 </div>
@@ -378,9 +431,9 @@ export default function PatientRegister() {
                     if (e.target.value) validateWhatsApp(e.target.value);
                   }} 
                   onBlur={() => validateWhatsApp(whatsapp)}
-                  placeholder="(11) 99999-9999" 
+                  placeholder="(11) 99999-9999 ou +55..." 
                   required
-                  className={whatsappError ? "border-destructive" : ""}
+                  className={whatsappError ? "border-destructive focus-visible:ring-destructive" : ""}
                 />
               </div>
               <div>
@@ -420,7 +473,7 @@ export default function PatientRegister() {
                         <div className="space-y-1 max-h-36 overflow-y-auto">
                           {profResults.map(prof => (
                             <button key={prof.user_id} type="button"
-                              onClick={() => { setSelectedProfessional(prof); setShowProfSearch(false); }}
+                              onClick={() => { setSelectedProfessional(prof); setShowProfSearch(false); setIsProfConfirmed(true); }}
                               className="w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm">
                               <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                 <span className="text-xs font-bold text-primary">{prof.full_name?.[0]?.toUpperCase()}</span>
@@ -447,18 +500,19 @@ export default function PatientRegister() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading || (preselectedNutri && sigValid === null)}>
+              <Button type="submit" className="w-full h-11 text-base font-bold gradient-primary shadow-md" disabled={loading || !!whatsappError || (preselectedNutri && sigValid === null)}>
                 {loading || (preselectedNutri && sigValid === null) ? (
-                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {sigValid === null ? "Validando link..." : "Criando conta..."}</span>
-                ) : (
-                  <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Criar Conta</span>
-                )}
+                  <span className="flex items-center justify-center gap-2">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    {sigValid === null ? "Validando link..." : "Criando conta..."}
+                  </span>
+                ) : "Concluir Cadastro"}
               </Button>
 
               <div className="text-center">
-                <Link to="/auth" className="text-sm text-primary hover:underline">
-                  Já tenho conta — fazer login
-                </Link>
+                <p className="text-xs text-muted-foreground">
+                  Já tem conta? <Link to="/auth" className="text-primary hover:underline font-medium">Entrar agora</Link>
+                </p>
               </div>
             </form>
           </CardContent>
@@ -470,4 +524,5 @@ export default function PatientRegister() {
       </motion.div>
     </div>
   );
+}
 }
