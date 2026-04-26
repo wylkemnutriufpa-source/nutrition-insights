@@ -591,6 +591,16 @@ export default function MealPlanEditorV2() {
     }
 
     setSavingAndPublishing(true);
+
+    const totalKcal = store.items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    if (totalKcal <= 0 && store.items.length > 0) {
+      toast.error("O plano não pode ter totais zerados.", {
+        description: "Adicione refeições com valores calóricos antes de salvar."
+      });
+      setSavingAndPublishing(false);
+      return;
+    }
+
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
     // 🛡️ Validação de Substituições - Tornada não-bloqueante para simplicidade
