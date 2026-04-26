@@ -53,7 +53,7 @@ export interface ValidationResult {
   detailedErrors: SubstitutionError[];
 }
 
-export function validateMealSubstitutions(item: MealPlanItem, maxCount: number = 4): ValidationResult {
+export function validateMealSubstitutions(item: MealPlanItem, maxCount: number = 4, patientName?: string): ValidationResult {
   const meta = (item as any).edit_metadata || (item as any).metadata || {};
   const substitutions = meta.substitutions_json as string[];
   
