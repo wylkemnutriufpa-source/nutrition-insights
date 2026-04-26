@@ -13,9 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Wheat, Droplets, Check, Sparkles,
-  ChefHat, Loader2,
+  ChefHat, Loader2, ClipboardCheck, Info, X
 } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface TemplateFood {
   name: string;
