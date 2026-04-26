@@ -14,10 +14,35 @@ interface Violation {
   severity: "high" | "medium";
 }
 
+const CRITICAL_COLUMNS: Record<string, string[]> = {
+  nutritionist_patients: ["default_meal_plan_id", "patient_id", "nutritionist_id"],
+  meal_plans: ["id", "patient_id", "plan_status"],
+  profiles: ["id", "user_id"]
+};
+
 export default function SchemaMonitor() {
   const [snapshot] = useState<any>(snapshotData);
   const [search, setSearch] = useState("");
-  const [violations] = useState<Violation[]>([]); // Mocked violations removed as requested
+  const [violations, setViolations] = useState<Violation[]>([]);
+
+  useEffect(() => {
+    // Basic integrity check for critical columns
+    const detected: Violation[] = [];
+    Object.entries(CRITICAL_COLUMNS).forEach(([table, cols]) => {
+      const existing = snapshot.tables[table] || [];
+      cols.forEach(col => {
+        if (!existing.includes(col)) {
+          detected.push({
+            file: "Critical Schema Integrity",
+            table,
+            column: col,
+            severity: "high"
+          });
+        }
+      });
+    });
+    setViolations(detected);
+  }, [snapshot]);
 
   return (
     <DashboardLayout>
