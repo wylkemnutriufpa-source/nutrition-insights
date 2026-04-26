@@ -171,10 +171,22 @@ export default function Settings() {
   const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user) return;
+    
+    if (!validateWhatsApp(whatsapp)) {
+      toast.error("Por favor, corrija o número de WhatsApp");
+      return;
+    }
+
     setSavingProfile(true);
+    const formattedWhatsapp = whatsapp ? formatInternationalWhatsApp(whatsapp) : null;
+    
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, phone: phone || null, whatsapp: whatsapp || null })
+      .update({ 
+        full_name: fullName, 
+        phone: phone || null, 
+        whatsapp: formattedWhatsapp 
+      })
       .eq("user_id", user.id);
     setSavingProfile(false);
     if (error) {
