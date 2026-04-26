@@ -404,9 +404,17 @@ export default function MealTemplatePanel({ day }: Props) {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold truncate">{template.title}</p>
+                        {template.id.length > 20 && (
+                          <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
+                            Personalizada
+                          </span>
+                        )}
                         {wasApplied && <Check className="w-4 h-4 text-green-500 shrink-0" />}
                       </div>
-                      <p className="text-[10px] text-muted-foreground mt-0.5">{template.description}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
+                        {template.id.length > 20 && <ChefHat className="w-3 h-3 text-primary" />}
+                        {template.description}
+                      </p>
                       {/* Foods list */}
                       <div className="flex flex-wrap gap-1 mt-1.5">
                         {template.foods.map((f, i) => (
