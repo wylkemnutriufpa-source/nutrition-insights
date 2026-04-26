@@ -58,7 +58,7 @@ export default function InvitePatient() {
     return `${greeting}Seu acesso ao FitJourney foi criado. Use o email *${email}* para entrar e completar seu onboarding aqui: ${onboardingLink}`;
   }, [name, email, onboardingLink]);
   const whatsappUrl = useMemo(() => {
-    const phoneDigits = (phone || "").replace(/\D/g, "");
+    const phoneDigits = normalizeWhatsApp(phone || "");
     const base = phoneDigits ? `https://wa.me/${phoneDigits}` : "https://wa.me/";
     return `${base}?text=${encodeURIComponent(whatsappMessage)}`;
   }, [phone, whatsappMessage]);
