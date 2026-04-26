@@ -34,6 +34,7 @@ interface EditorV2State {
   plan: MealPlan | null;
   patientName: string;
   items: MealPlanItem[];
+  substitutionCount: number; // 0, 1, 2, 3, 4
 
   // ── Lifecycle ─────────────────────────────────────────────
   hydrated: boolean;
