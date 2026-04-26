@@ -24,6 +24,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Tables } from "@/integrations/supabase/types";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+import { invokeWithRetry } from "@/lib/api/edgeFunctions";
 
 type MealPlanItem = Tables<"meal_plan_items">;
 
@@ -129,7 +130,7 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
   };
 
   try {
-    const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+    const { data, error } = await invokeWithRetry("generate-meal-plan", {
       body: {
         patientId: input.patientId,
         nutritionistId: input.nutritionistId,
@@ -138,6 +139,9 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
         isPipeline: false,
         templateSlug: input.templateSlug,
       },
+    }, {
+      maxRetries: 3,
+      initialDelay: 2000,
     });
 
     if (error) {
