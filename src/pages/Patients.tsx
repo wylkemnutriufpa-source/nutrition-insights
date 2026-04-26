@@ -18,8 +18,9 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2
+  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles
 } from "lucide-react";
+import { BASE_URL } from "@/lib/config";
 import { useNavigate } from "react-router-dom";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
@@ -791,43 +792,80 @@ export default function Patients() {
                         </form>
                       </TabsContent>
                       <TabsContent value="link" className="space-y-4">
-                        <div className="p-5 rounded-2xl bg-primary/5 border-2 border-primary/20 relative overflow-hidden group">
-                          <div className="absolute top-0 right-0 p-2">
-                            <Zap className="w-5 h-5 text-primary opacity-20" />
-                          </div>
-                          <h4 className="font-display font-bold text-base flex items-center gap-2 mb-2 text-primary">
-                            <Plus className="w-5 h-5" /> Por Link de Convite
-                          </h4>
-                          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
-                            Envie o link do seu perfil público. O paciente faz o cadastro, <strong>assina os termos</strong> e é vinculado <strong>automaticamente</strong> a você.
-                          </p>
-                          
-                          <div className="space-y-3">
-                            <Button 
-                              className="w-full gap-2 gradient-primary shadow-glow group-hover:scale-[1.02] transition-transform"
-                              onClick={() => {
-                                const link = `${window.location.origin}/profile/${profile?.id}`;
-                                navigator.clipboard.writeText(link);
-                                toast.success("Link do perfil copiado! Envie pelo WhatsApp.");
-                              }}
-                            >
-                              <Copy className="w-4 h-4" /> Copiar Link do Perfil Público
-                            </Button>
-                            
-                            <div className="p-3 rounded-lg bg-background/50 border border-dashed border-primary/30 text-[11px] text-muted-foreground italic flex items-center gap-2">
-                              <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                              Vínculo automático profissional-paciente garantido.
-                            </div>
-                          </div>
-                        </div>
-                        <div className="bg-muted/30 p-4 rounded-xl space-y-2">
-                          <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Como funciona?</p>
-                          <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
-                            <li>Você compartilha seu link do FitJourney</li>
-                            <li>O paciente preenche os dados básicos</li>
-                            <li>Ele é adicionado à sua lista em tempo real</li>
-                          </ol>
-                        </div>
+                        {(() => {
+                          const inviteLink = `${BASE_URL}/cadastro?nutri=${profile?.id}`;
+                          const proName = profile?.full_name?.split(" ")[0] || "seu nutricionista";
+                          const waMsg = `Olá! 👋 Aqui é *${profile?.full_name || "seu nutricionista"}*.\n\nCriei seu acesso ao *FitJourney* para acompanharmos sua evolução de forma personalizada. 🚀\n\nClique no link abaixo para fazer seu cadastro em 1 minuto:\n\n${inviteLink}`;
+                          const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waMsg)}`;
+
+                          return (
+                            <>
+                              {/* Hero card premium */}
+                              <div className="relative overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent p-5">
+                                <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-primary/10 blur-2xl" />
+                                <div className="relative">
+                                  <div className="flex items-start gap-3 mb-4">
+                                    <div className="p-2 rounded-xl bg-primary/15 ring-1 ring-primary/20">
+                                      <Sparkles className="w-5 h-5 text-primary" />
+                                    </div>
+                                    <div className="flex-1">
+                                      <h4 className="font-display font-bold text-base text-foreground">
+                                        Link de Cadastro Inteligente
+                                      </h4>
+                                      <p className="text-xs text-muted-foreground mt-0.5 leading-relaxed">
+                                        Compartilhe e o paciente já entra <strong className="text-foreground">vinculado a você</strong>.
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* URL preview */}
+                                  <div className="flex items-center gap-2 p-3 rounded-xl bg-background/80 border border-border/60 mb-3">
+                                    <Link2 className="w-4 h-4 text-muted-foreground shrink-0" />
+                                    <code className="flex-1 text-xs text-foreground font-mono truncate">
+                                      {inviteLink}
+                                    </code>
+                                  </div>
+
+                                  {/* Action buttons */}
+                                  <div className="grid grid-cols-2 gap-2">
+                                    <Button
+                                      variant="outline"
+                                      className="gap-2 h-11 border-primary/30 hover:bg-primary/5"
+                                      onClick={() => {
+                                        navigator.clipboard.writeText(inviteLink);
+                                        toast.success("Link copiado!", { description: "Cole onde preferir." });
+                                      }}
+                                    >
+                                      <Copy className="w-4 h-4" /> Copiar
+                                    </Button>
+                                    <Button
+                                      className="gap-2 h-11 bg-[#25D366] hover:bg-[#1fb858] text-white"
+                                      onClick={() => window.open(waUrl, "_blank")}
+                                    >
+                                      <MessageCircle className="w-4 h-4" /> WhatsApp
+                                    </Button>
+                                  </div>
+
+                                  {/* Trust badge */}
+                                  <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+                                    <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                                    <span>Vínculo automático • Termos assinados • Sem retrabalho</span>
+                                  </div>
+                                </div>
+                              </div>
+
+                              {/* How it works */}
+                              <div className="bg-muted/30 p-4 rounded-xl space-y-2">
+                                <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Como funciona?</p>
+                                <ol className="text-xs text-muted-foreground space-y-1.5 list-decimal list-inside leading-relaxed">
+                                  <li>Você compartilha o link via WhatsApp ou onde preferir</li>
+                                  <li>O paciente faz o cadastro em 1 minuto e aceita os termos</li>
+                                  <li>Ele aparece automaticamente na sua lista, pronto para começar</li>
+                                </ol>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </TabsContent>
                     </Tabs>
                   </DialogContent>
