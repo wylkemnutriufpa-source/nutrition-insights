@@ -234,7 +234,7 @@ export default function Invitation() {
         <meta property="og:title" content="Você foi convidado para o FitJourney!" />
         <meta property="og:description" content={`Acompanhamento com ${professional?.full_name || 'seu nutricionista'}`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:url" content={getInvitationUrl(code || "")} />
         <meta property="og:image" content={professional?.avatar_url || "/og-image.png"} />
       </Helmet>
 
