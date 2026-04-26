@@ -85,11 +85,12 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
   return (
     <motion.div
       layout
+      id={`meal-item-${item.id}`}
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.15 }}
-      className="bg-secondary/60 rounded-md hover:bg-secondary transition-colors group/item relative cursor-pointer overflow-hidden"
+      className="bg-secondary/60 rounded-md hover:bg-secondary transition-colors group/item relative cursor-pointer overflow-hidden border border-transparent target:border-primary target:ring-2 target:ring-primary/20"
       onClick={() => {
         if (!inlineEdit) {
           setSmartEditorOpen(true);
