@@ -84,21 +84,32 @@ export function MealSmartEditorModal({
     const finalDescription = formatFinalDescription(description, cleanedSubs);
 
     const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
+    
+    // Use base values for scaling to avoid cumulative drift
+    const kcalBase = currentMeta.kcal_base ?? item.calories_target ?? 0;
+    const protBase = currentMeta.protein_base ?? Number(item.protein_target) ?? 0;
+    const carbBase = currentMeta.carbs_base ?? Number(item.carbs_target) ?? 0;
+    const fatBase = currentMeta.fat_base ?? Number(item.fat_target) ?? 0;
 
     try {
       // Usar toast.promise ou gerenciar ID para evitar duplicatas
       const toastId = "meal-save-toast";
       updateItem(itemId, {
         description: finalDescription,
-        calories_target: Math.round((item.calories_target || 0) * portionFactor),
-        protein_target: Math.round((Number(item.protein_target) || 0) * portionFactor * 10) / 10,
-        carbs_target: Math.round((Number(item.carbs_target) || 0) * portionFactor * 10) / 10,
-        fat_target: Math.round((Number(item.fat_target) || 0) * portionFactor * 10) / 10,
+        calories_target: Math.round(kcalBase * portionFactor),
+        protein_target: Math.round(protBase * portionFactor * 10) / 10,
+        carbs_target: Math.round(carbBase * portionFactor * 10) / 10,
+        fat_target: Math.round(fatBase * portionFactor * 10) / 10,
         edit_metadata: {
           ...currentMeta,
           notes,
           substitutions_json: cleanedSubs,
-          portion_factor: portionFactor
+          portion_factor: portionFactor,
+          // Ensure base values are preserved
+          kcal_base: kcalBase,
+          protein_base: protBase,
+          carbs_base: carbBase,
+          fat_base: fatBase
         }
       } as any);
       toast.success("Refeição atualizada com sucesso", { id: toastId });
