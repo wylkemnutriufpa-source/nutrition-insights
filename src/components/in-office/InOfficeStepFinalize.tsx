@@ -167,6 +167,7 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-6"
+            data-testid="publish-progress-overlay"
           >
             <Card className="w-full max-w-md shadow-2xl border-primary/20">
               <CardContent className="pt-10 pb-8 px-8 flex flex-col items-center text-center space-y-6">
@@ -181,8 +182,8 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                       <p className="text-sm text-muted-foreground mt-1">Otimizando e publicando o plano para o paciente.</p>
                     </div>
                     <div className="w-full space-y-2">
-                      <Progress value={publishProgress} className="h-2" />
-                      <p className="text-[10px] text-muted-foreground font-mono">{publishProgress}% concluído</p>
+                      <Progress value={publishProgress} className="h-2" data-testid="publish-progress-bar" />
+                      <p className="text-[10px] text-muted-foreground font-mono" data-testid="publish-progress-text">{publishProgress}% concluído</p>
                     </div>
                   </>
                 ) : publishError ? (
@@ -192,14 +193,14 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                     </div>
                     <div>
                       <h3 className="text-xl font-display font-bold">Falha no envio</h3>
-                      <p className="text-sm text-destructive mt-1 font-medium">{publishError}</p>
+                      <p className="text-sm text-destructive mt-1 font-medium" data-testid="publish-error-message">{publishError}</p>
                       <p className="text-xs text-muted-foreground mt-2">Houve um problema ao salvar no banco de dados. Seus dados não foram perdidos.</p>
                     </div>
                     <div className="flex gap-3 w-full">
-                      <Button variant="outline" className="flex-1" onClick={() => setPublishError(null)}>
+                      <Button variant="outline" className="flex-1" onClick={() => setPublishError(null)} data-testid="cancel-error-button">
                         Cancelar
                       </Button>
-                      <Button className="flex-1 gap-2 bg-primary" onClick={handlePublish}>
+                      <Button className="flex-1 gap-2 bg-primary" onClick={handlePublish} data-testid="retry-publish-button">
                         <RefreshCw className="w-4 h-4" /> Tentar novamente
                       </Button>
                     </div>
