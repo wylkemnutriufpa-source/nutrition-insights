@@ -517,10 +517,10 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
                       {/* Substitutions */}
                       {substitutions.map(sub => (
-                        <div key={sub.id} className="flex items-center gap-2 p-2 ml-4 rounded-lg bg-emerald-50/50 border-l-2 border-emerald-300 group">
+                        <div key={sub.id} className="flex items-center gap-2 p-2 ml-4 rounded-lg bg-primary/5 border-l-2 border-primary/30 group">
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-medium truncate text-emerald-800">OU: {sub.name}</p>
-                            <p className="text-[9px] text-emerald-600/70">
+                            <p className="text-[10px] font-medium truncate">OU: {sub.name}</p>
+                            <p className="text-[9px] text-muted-foreground">
                               {Math.round(sub.calories)}kcal · P{Math.round(sub.protein)}g
                             </p>
                           </div>
@@ -539,7 +539,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
                         <Button 
                           variant="ghost" 
                           size="sm" 
-                          className="h-6 text-[10px] text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1 px-2"
+                          className="h-6 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/5 gap-1 px-2"
                           onClick={() => setAddingTo({ type: block.type, substitutionGroupId: primary.substitution_group_id } as any)}
                         >
                           <Plus className="w-3 h-3" /> Adicionar Substituição
