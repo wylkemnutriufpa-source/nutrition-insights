@@ -564,7 +564,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
               </Tabs>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="px-6 py-3 border-t border-border gap-2">
           {step === "params" && (
