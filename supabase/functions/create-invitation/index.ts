@@ -108,10 +108,10 @@ Deno.serve(async (req) => {
         name, 
         email, 
         tenant_id,
-        user_agent: userAgent,
         host: host
       },
-      domain_used: BASE_URL
+      domain_used: BASE_URL,
+      user_agent: userAgent
     });
 
     return new Response(JSON.stringify({ 
