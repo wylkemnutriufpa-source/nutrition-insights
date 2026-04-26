@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeWithRetry } from "@/lib/api/edgeFunctions";
 import { toast } from "sonner";
+
 import { useAuth } from "@/lib/auth";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 
