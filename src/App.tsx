@@ -519,6 +519,7 @@ const App = () => (
               {/* Patient self-registration disabled — access is invitation-based only */}
               <Route path="/cadastro" element={<Navigate to="/auth" replace />} />
               <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
+              <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
                <Route path="/politica-de-privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
                <Route path="/termos-de-uso" element={<Suspense fallback={<PageLoader />}><TermsOfUse /></Suspense>} />
