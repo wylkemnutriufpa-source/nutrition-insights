@@ -671,6 +671,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <FitJourneyLogo collapsed={false} size="sm" />
           </div>
           <div className="flex items-center gap-2">
+            <SyncButton />
             <SystemHealthBadge />
             <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
