@@ -123,7 +123,8 @@ export default function Invitation() {
         body: { 
           patient_name: invitation.patient_name,
           patient_email: invitation.patient_email,
-          tenant_id: invitation.tenant_id
+          tenant_id: invitation.tenant_id,
+          old_code: code
         }
       });
 
