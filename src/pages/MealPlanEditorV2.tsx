@@ -584,85 +584,13 @@ export default function MealPlanEditorV2() {
     setSavingAndPublishing(true);
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
-    // 🛡️ Validação de Substituições antes de publicar
+    // 🛡️ Validação de Substituições - Tornada não-bloqueante para simplicidade
     const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount);
     if (!subValidation.valid) {
-      // Agrupar erros por refeição
-      const groupedByMeal = subValidation.detailedErrors.reduce((acc, err) => {
-        if (!acc[err.mealId]) acc[err.mealId] = { title: err.mealTitle, errors: [] };
-        acc[err.mealId].errors.push(err);
-        return acc;
-      }, {} as Record<string, { title: string, errors: any[] }>);
-
-      toast.error("⚠️ Substituições fora do padrão", {
-        description: (
-          <div className="mt-2 space-y-3 max-h-[350px] overflow-auto pr-2 custom-scrollbar">
-            {Object.entries(groupedByMeal).map(([mealId, group]) => (
-              <div key={mealId} className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-2">
-                <div className="flex justify-between items-center border-b border-border/20 pb-1">
-                  <span className="font-black text-xs uppercase tracking-tighter text-foreground truncate">{group.title}</span>
-                  <button 
-                    onClick={() => {
-                      const el = document.getElementById(`meal-item-${mealId}`);
-                      if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
-                        setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 3000);
-                        (el as HTMLElement).focus();
-                      }
-                    }}
-                    className="text-[10px] font-bold text-primary hover:underline hover:scale-105 transition-transform"
-                  >
-                    Ver item
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {group.errors.map((err, i) => (
-                    <div key={i} className="text-[10px]">
-                      {err.limitError ? (
-                        <p className="text-destructive font-bold">{err.limitError}</p>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="text-muted-foreground font-medium italic">"{err.foodName}"</p>
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 bg-background/50 p-1.5 rounded border border-border/10">
-                            {Object.entries(err.macros).map(([macro, data]: [string, any]) => (
-                              <div key={macro} className="flex flex-col">
-                                <span className="text-[9px] uppercase opacity-60 font-bold">{macro === 'kcal' ? 'Kcal' : macro[0].toUpperCase()}</span>
-                                <span className={cn(
-                                  "font-mono font-bold",
-                                  macro === 'kcal' ? 'text-orange-600' :
-                                  macro === 'protein' ? 'text-red-600' :
-                                  macro === 'carbs' ? 'text-amber-600' : 'text-blue-600'
-                                )}>
-                                  {data.value}{macro === 'kcal' ? '' : 'g'} 
-                                  <span className="text-[8px] opacity-70 ml-1">
-                                    (alvo {data.target}{macro === 'kcal' ? '' : 'g'} ±{Math.round(data.tolerance * 100)}%)
-                                  </span>
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ),
-        duration: 10000,
-        onDismiss: () => {
-          setSavingAndPublishing(false);
-          editorRef.current?.focus();
-        },
-        onAutoClose: () => {
-          setSavingAndPublishing(false);
-          editorRef.current?.focus();
-        }
-      });
-      return;
+      console.warn("Substituições fora do padrão detectadas, mas prosseguindo a pedido do usuário.");
+      toast.info("Atenção: Algumas substituições estão fora do padrão calórico, mas o plano será enviado mesmo assim.");
     }
+
 
       // 1) Flush pending edits
       await store._flushQueue();
