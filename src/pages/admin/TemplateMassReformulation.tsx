@@ -49,6 +49,11 @@ interface ReformulationPreview {
   changes: string[];
   level: "critical" | "warning" | "ok";
   selected: boolean;
+  summary?: {
+    removedKeysCount: number;
+    adjustedBlocksCount: number;
+    totalMeals: number;
+  };
 }
 
 export default function TemplateMassReformulation() {
