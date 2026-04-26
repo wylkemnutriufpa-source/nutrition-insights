@@ -417,9 +417,9 @@ export default function DietTemplates() {
         plan_status: "draft_template",
         tenant_id: tenantId || null,
         total_calories: getAdjustedCalories(template),
-        total_protein: (template as any).protein || (template as any).macro_ratio?.protein || 0,
-        total_carbs: (template as any).carbohydrates || (template as any).macro_ratio?.carbs || 0,
-        total_fat: (template as any).fat || (template as any).macro_ratio?.fat || 0,
+        total_protein: getEffectiveMacros().protein || 0,
+        total_carbs: getEffectiveMacros().carbs || 0,
+        total_fat: getEffectiveMacros().fat || 0,
       }] as any) as any)
       .select("id")
       .single();
@@ -438,6 +438,31 @@ export default function DietTemplates() {
 
     const items: any[] = [];
     const day = 0; // single day
+
+    // NEW: Fetch nutritionist's meal recipes to replace "Marmita" placeholders if present
+    let mealRecipes: any[] = [];
+    const marmitaPlaceholders = ["Marmita congelada do dia", "Marmita do dia", "Marmita Selecionada", "marmita do dia"];
+    const hasMarmitaPlaceholder = meals.some(m => 
+      Array.isArray(m.blocks) && m.blocks.some((b: any) => 
+        Array.isArray(b.options) && b.options.some((o: any) => 
+          o.name && marmitaPlaceholders.some(p => o.name.includes(p))
+        )
+      )
+    );
+
+    if (hasMarmitaPlaceholder) {
+      console.log("[DietTemplates] Marmita placeholder detected, fetching recipes...");
+      const { data: recipes } = await supabase
+        .from("meal_recipes")
+        .select("*")
+        .eq("nutritionist_id", user!.id)
+        .eq("is_active", true);
+      mealRecipes = recipes || [];
+      console.log(`[DietTemplates] Found ${mealRecipes.length} recipes for replacement`);
+    }
+
+    let globalMarmitaCounter = 0;
+
     for (const meal of meals) {
       const mealType = meal.meal_type || meal.type;
       if (!mealType) continue;
@@ -457,19 +482,48 @@ export default function DietTemplates() {
               : `grp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
           opts.forEach((opt: any, idx: number) => {
-            // Apply patient-specific macro adjustment to EVERY option (substitution).
-            // This guarantees that all swap candidates honor the calorie/macro target,
-            // not just the primary item.
+            let finalName = opt?.name || b.label || "Item";
+            let finalCalories = opt?.calories;
+            let finalProtein = opt?.protein;
+            let finalCarbs = opt?.carbs;
+            let finalFat = opt?.fat;
+            let finalPortion = opt?.portion || b.base_quantity || null;
+
+            // Detect placeholder and replace with a recipe
+            const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
+            if (isPlaceholder && mealRecipes.length > 0) {
+              const isLunch = mealType === "lunch" || mealType === "almoco" || mealType === "almoço";
+              const candidates = mealRecipes
+                .filter(r => {
+                  const rt = r.meal_type?.toLowerCase() || "";
+                  if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "lunch";
+                  return rt === "jantar" || rt === "dinner";
+                })
+                .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+              
+              if (candidates.length > 0) {
+                const picked = candidates[globalMarmitaCounter % candidates.length];
+                globalMarmitaCounter++;
+                finalName = `🍱 ${picked.name}`;
+                finalCalories = picked.fixed_calories;
+                finalProtein = picked.fixed_protein;
+                finalCarbs = picked.fixed_carbs;
+                finalFat = picked.fixed_fat;
+                finalPortion = "1 marmita";
+                console.log(`[DietTemplates] Replaced placeholder with ${picked.name}`);
+              }
+            }
+
             items.push({
               meal_plan_id: plan.id,
               day_of_week: day,
               meal_type: mealType,
-              title: opt?.name || b.label || "Item",
-              description: opt?.portion || b.base_quantity || null,
-              calories_target: scaleNum(opt?.calories),
-              protein_target: scaleNum(opt?.protein),
-              carbs_target: scaleNum(opt?.carbs),
-              fat_target: scaleNum(opt?.fat),
+              title: finalName,
+              description: finalPortion,
+              calories_target: scaleNum(finalCalories),
+              protein_target: scaleNum(finalProtein),
+              carbs_target: scaleNum(finalCarbs),
+              fat_target: scaleNum(finalFat),
               substitution_group_id: groupId,
               is_primary: idx === 0,
             });
@@ -477,16 +531,48 @@ export default function DietTemplates() {
         }
       } else if (legacyFoods.length > 0) {
         for (const f of legacyFoods) {
+          let finalName = f.name || "Item";
+          let finalCalories = f.calories;
+          let finalProtein = f.protein;
+          let finalCarbs = f.carbs;
+          let finalFat = f.fat;
+          let finalPortion = f.portion || null;
+
+          // Detect placeholder and replace with a recipe
+          const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
+          if (isPlaceholder && mealRecipes.length > 0) {
+            const isLunch = mealType === "lunch" || mealType === "almoco" || mealType === "almoço";
+            const candidates = mealRecipes
+              .filter(r => {
+                const rt = r.meal_type?.toLowerCase() || "";
+                if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "lunch";
+                return rt === "jantar" || rt === "dinner";
+              })
+              .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+            
+            if (candidates.length > 0) {
+              const picked = candidates[globalMarmitaCounter % candidates.length];
+              globalMarmitaCounter++;
+              finalName = `🍱 ${picked.name}`;
+              finalCalories = picked.fixed_calories;
+              finalProtein = picked.fixed_protein;
+              finalCarbs = picked.fixed_carbs;
+              finalFat = picked.fixed_fat;
+              finalPortion = "1 marmita";
+              console.log(`[DietTemplates] Replaced legacy placeholder with ${picked.name}`);
+            }
+          }
+
           items.push({
             meal_plan_id: plan.id,
             day_of_week: day,
             meal_type: mealType,
-            title: f.name || "Item",
-            description: f.portion || null,
-            calories_target: scaleNum(f.calories),
-            protein_target: scaleNum(f.protein),
-            carbs_target: scaleNum(f.carbs),
-            fat_target: scaleNum(f.fat),
+            title: finalName,
+            description: finalPortion,
+            calories_target: scaleNum(finalCalories),
+            protein_target: scaleNum(finalProtein),
+            carbs_target: scaleNum(finalCarbs),
+            fat_target: scaleNum(finalFat),
             is_primary: true,
           });
         }
