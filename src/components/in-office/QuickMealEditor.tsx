@@ -25,6 +25,8 @@ interface MealItem {
   carbs: number;
   fat: number;
   meal_type: MealType;
+  is_primary?: boolean;
+  substitution_group_id?: string | null;
 }
 
 interface MealBlock {
@@ -65,11 +67,9 @@ interface Props {
 export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tenantId }: Props) {
   const { user } = useAuth();
   const [blocks, setBlocks] = useState<MealBlock[]>(MEAL_TYPES.map(m => ({ ...m, items: [] })));
-  const [currentDay, setCurrentDay] = useState(0);
-  const [totalDays, setTotalDays] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [addingTo, setAddingTo] = useState<MealType | null>(null);
+  const [addingTo, setAddingTo] = useState<MealType | { type: MealType; isPrimary?: boolean; substitutionGroupId?: string | null } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [foodResults, setFoodResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
@@ -90,7 +90,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         .from("meal_plan_items")
         .select("*")
         .eq("meal_plan_id", mealPlanId)
-        .eq("day_of_week", currentDay);
+        .eq("day_of_week", 0); // Always day 0 for In-Office simplified
 
       if (error) throw error;
 
@@ -106,6 +106,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
             carbs: i.carbs_target || 0,
             fat: i.fat_target || 0,
             meal_type: m.type,
+            is_primary: i.is_primary ?? true,
+            substitution_group_id: i.substitution_group_id,
           })),
       }));
       setBlocks(newBlocks);
@@ -116,7 +118,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     } finally {
       if (!isSilent) setLoading(false);
     }
-  }, [mealPlanId, currentDay]);
+  }, [mealPlanId]);
 
   // Load existing items for current day
   useEffect(() => {
@@ -176,8 +178,9 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   }, [showTemplateLoad, loadTemplates]);
 
   // Add food to block
-  const addFoodToBlock = async (blockType: MealType, food: any) => {
+  const addFoodToBlock = async (blockType: MealType, food: any, isPrimary = true, substitutionGroupId?: string | null) => {
     const itemId = crypto.randomUUID();
+    const finalGroupId = substitutionGroupId || (isPrimary ? crypto.randomUUID() : null);
     
     enqueuePersistence(async () => {
       await withRetry(async () => {
@@ -193,9 +196,11 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
             protein_target: food.protein || 0,
             carbs_target: food.carbs || 0,
             fat_target: food.fat || 0,
-            day_of_week: currentDay,
+            day_of_week: 0,
             item_origin: "in_office_manual",
             tenant_id: tenantId,
+            is_primary: isPrimary,
+            substitution_group_id: finalGroupId,
           });
         if (error) throw error;
       }, {
@@ -223,113 +228,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     });
   };
 
-  // Duplicate day
-  const duplicateDay = async () => {
-    setSaving(true);
-    const nextDay = currentDay + 1;
-    const allItems = blocks.flatMap(b => b.items);
-    const inserts = allItems.map(item => ({
-      id: crypto.randomUUID(),
-      meal_plan_id: mealPlanId,
-      meal_type: item.meal_type,
-      title: item.name,
-      calories_target: item.calories,
-      protein_target: item.protein,
-      carbs_target: item.carbs,
-      fat_target: item.fat,
-      day_of_week: nextDay,
-      item_origin: "in_office_duplicated" as const,
-      tenant_id: tenantId,
-    }));
-
-    enqueuePersistence(async () => {
-      try {
-        await withRetry(async () => {
-          // Clear previous state for that day to avoid ghost items if we switched logic
-          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em duplicateDay", { mealPlanId, patientId, nextDay });
-            throw new Error("DELETE bloqueado: mealPlanId inválido");
-          }
-          
-          console.info("[DELETE] Limpando dia para duplicação", { mealPlanId, patientId, day: nextDay, operation: "duplicateDay", timestamp: Date.now() });
-          
-          await supabase
-            .from("meal_plan_items")
-            .delete()
-            .eq("meal_plan_id", mealPlanId)
-            .eq("day_of_week", nextDay);
-          
-          if (inserts.length > 0) {
-            const { error } = await supabase.from("meal_plan_items").upsert(inserts);
-            if (error) throw error;
-          }
-        }, {
-          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de duplicar dia...`),
-        });
-
-        setTotalDays(Math.max(totalDays, nextDay));
-        setCurrentDay(nextDay);
-        toast.success(`Dia ${currentDay} duplicado para Dia ${nextDay}`);
-      } finally {
-        setSaving(false);
-      }
-    });
-  };
-
-  // Apply to all week
-  const applyToWeek = async () => {
-    setSaving(true);
-    const allItems = blocks.flatMap(b => b.items);
-    const allInserts: any[] = [];
-    for (let day = 1; day <= 7; day++) {
-      if (day === currentDay) continue;
-      allInserts.push(...allItems.map(item => ({
-        id: crypto.randomUUID(),
-        meal_plan_id: mealPlanId,
-        meal_type: item.meal_type,
-        title: item.name,
-        calories_target: item.calories,
-        protein_target: item.protein,
-        carbs_target: item.carbs,
-        fat_target: item.fat,
-        day_of_week: day,
-        item_origin: "in_office_duplicated" as const,
-        tenant_id: tenantId,
-      })));
-    }
-    
-    enqueuePersistence(async () => {
-      try {
-        await withRetry(async () => {
-          // Clear other days
-          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyToWeek", { mealPlanId, patientId });
-            throw new Error("DELETE bloqueado: mealPlanId inválido");
-          }
-          
-          console.info("[DELETE] Limpando semana exceto dia atual", { mealPlanId, patientId, currentDay, operation: "applyToWeek", timestamp: Date.now() });
-          
-          const { error: delErr } = await supabase.from("meal_plan_items")
-            .delete()
-            .eq("meal_plan_id", mealPlanId)
-            .neq("day_of_week", currentDay);
-          if (delErr) throw delErr;
-
-          if (allInserts.length > 0) {
-            const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
-            if (insErr) throw insErr;
-          }
-        }, {
-          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar para a semana...`),
-        });
-
-        setTotalDays(7);
-        toast.success("Plano aplicado para a semana toda!");
-      } finally {
-        setSaving(false);
-      }
-    });
-  };
+  // Duplication and Apply to Week features removed to focus on Single Day + Substitutions as requested.
 
   // Save as template
   const saveAsTemplate = async () => {
@@ -390,29 +289,27 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         protein_target: prot > 0 ? prot : null,
         carbs_target: carb > 0 ? carb : null,
         fat_target: fat > 0 ? fat : null,
-        day_of_week: currentDay,
+        day_of_week: 0,
         item_origin: "in_office_template" as const,
         tenant_id: tenantId,
+        is_primary: item.is_primary ?? true,
+        substitution_group_id: item.substitution_group_id || (item.is_primary ? crypto.randomUUID() : null),
       };
     });
 
     enqueuePersistence(async () => {
       try {
         await withRetry(async () => {
-          // Delete existing items for current day
+          // Delete existing items
           if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToDay", { mealPlanId, patientId, currentDay });
             throw new Error("DELETE bloqueado: mealPlanId inválido");
           }
           
-          console.info("[DELETE] Limpando dia para aplicar template", { mealPlanId, patientId, day: currentDay, operation: "applyTemplateToDay", timestamp: Date.now() });
-          
-          const { error: delErr } = await supabase
+          await supabase
             .from("meal_plan_items")
             .delete()
             .eq("meal_plan_id", mealPlanId)
-            .eq("day_of_week", currentDay);
-          if (delErr) throw delErr;
+            .eq("day_of_week", 0);
 
           if (inserts.length > 0) {
             const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
@@ -424,73 +321,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
         setShowTemplateLoad(false);
         setPreviewTemplate(null);
-        toast.success(`Template "${template.template_name}" aplicado ao dia ${currentDay}!`);
-      } finally {
-        setSaving(false);
-      }
-    });
-  };
-
-  // Apply template to whole week
-  const applyTemplateToWeek = async (template: SavedTemplate) => {
-    setSaving(true);
-    const items = (template.items || []) as MealItem[];
-    const totalItems = items.length;
-    const allInserts: any[] = [];
-    
-    // Generate UUIDs once for all items and all days for idempotency
-    for (let day = 1; day <= 7; day++) {
-      items.forEach(item => {
-        const cal = item.calories || (totalItems > 0 ? (template.total_calories || 0) / totalItems : 0);
-        const prot = item.protein || (totalItems > 0 ? (template.total_protein || 0) / totalItems : 0);
-        const carb = item.carbs || (totalItems > 0 ? (template.total_carbs || 0) / totalItems : 0);
-        const fat = item.fat || (totalItems > 0 ? (template.total_fat || 0) / totalItems : 0);
-
-        allInserts.push({
-          id: crypto.randomUUID(),
-          meal_plan_id: mealPlanId,
-          meal_type: item.meal_type,
-          title: item.name,
-          calories_target: cal > 0 ? cal : null,
-          protein_target: prot > 0 ? prot : null,
-          carbs_target: carb > 0 ? carb : null,
-          fat_target: fat > 0 ? fat : null,
-          day_of_week: day,
-          item_origin: "in_office_template" as const,
-          tenant_id: tenantId,
-        });
-      });
-    }
-
-    enqueuePersistence(async () => {
-      try {
-        await withRetry(async () => {
-          // Clear all days
-          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-            console.error("[CRITICAL] DELETE bloqueado: mealPlanId inválido em applyTemplateToWeek", { mealPlanId, patientId });
-            throw new Error("DELETE bloqueado: mealPlanId inválido");
-          }
-          
-          console.info("[DELETE] Limpando semana para aplicar template", { mealPlanId, patientId, operation: "applyTemplateToWeek", timestamp: Date.now() });
-          
-          const { error: delErr } = await supabase
-            .from("meal_plan_items")
-            .delete()
-            .eq("meal_plan_id", mealPlanId);
-          if (delErr) throw delErr;
-
-          if (allInserts.length > 0) {
-            const { error: insErr } = await supabase.from("meal_plan_items").upsert(allInserts);
-            if (insErr) throw insErr;
-          }
-        }, {
-          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template à semana...`),
-        });
-
-        setTotalDays(7);
-        setShowTemplateLoad(false);
-        setPreviewTemplate(null);
-        toast.success(`Template "${template.template_name}" aplicado à semana toda!`);
+        toast.success(`Template "${template.template_name}" aplicado!`);
       } finally {
         setSaving(false);
       }
@@ -499,7 +330,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
   // Totals
   const totalMacros = useMemo(() => {
-    const all = blocks.flatMap(b => b.items);
+    const all = blocks.flatMap(b => b.items.filter(i => i.is_primary));
     return {
       calories: all.reduce((s, i) => s + (i.calories || 0), 0),
       protein: all.reduce((s, i) => s + (i.protein || 0), 0),
@@ -641,7 +472,9 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       {/* Meal blocks grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {blocks.map(block => {
-          const blockCals = block.items.reduce((s, i) => s + (i.calories || 0), 0);
+          const primaryItems = block.items.filter(i => i.is_primary);
+          const blockCals = primaryItems.reduce((s, i) => s + (i.calories || 0), 0);
+          
           return (
             <Card key={block.type} className="border-border/50">
               <CardHeader className="py-3 px-4">
@@ -653,82 +486,144 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
                   <span className="text-xs font-normal text-muted-foreground">{Math.round(blockCals)} kcal</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-3 space-y-2">
+              <CardContent className="px-4 pb-3 space-y-3">
                 {block.items.length === 0 && (
                   <p className="text-xs text-muted-foreground text-center py-3">Nenhum item adicionado</p>
                 )}
-                {block.items.map(item => (
-                  <div key={item.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 group">
-                    <GripVertical className="w-3 h-3 text-muted-foreground/30" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{item.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {Math.round(item.calories)}kcal · P{Math.round(item.protein)}g · C{Math.round(item.carbs)}g · G{Math.round(item.fat)}g
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost" size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => item.id && removeItem(block.type, item.id)}
-                    >
-                      <Trash2 className="w-3 h-3 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-
-                {/* Add button */}
-                <Dialog open={addingTo === block.type} onOpenChange={open => { setAddingTo(open ? block.type : null); setSearchQuery(""); setFoodResults([]); }}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full gap-1 text-xs border-dashed">
-                      <Plus className="w-3 h-3" /> Adicionar alimento
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <span className="text-lg">{block.emoji}</span> Adicionar a {block.label}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Buscar alimento..."
-                          value={searchQuery}
-                          onChange={e => setSearchQuery(e.target.value)}
-                          className="pl-9"
-                          autoFocus
-                        />
-                      </div>
-                      <ScrollArea className="max-h-64">
-                        {searchLoading && <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
-                        {foodResults.map(food => (
-                          <button
-                            key={food.id}
-                            onClick={() => { addFoodToBlock(block.type, food); setAddingTo(null); }}
-                            className="w-full text-left p-3 hover:bg-muted rounded-lg transition-colors flex items-center justify-between"
+                
+                {primaryItems.map(primary => {
+                  const substitutions = block.items.filter(i => !i.is_primary && i.substitution_group_id === primary.substitution_group_id);
+                  
+                  return (
+                    <div key={primary.id} className="space-y-1">
+                      {/* Primary Item */}
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 group border border-border/20">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold truncate text-primary">{primary.name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {Math.round(primary.calories)}kcal · P{Math.round(primary.protein)}g · C{Math.round(primary.carbs)}g
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => primary.id && removeItem(block.type, primary.id)}
                           >
-                            <div>
-                              <p className="text-sm font-medium">{food.name}</p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {food.serving_size}{food.serving_unit} · {Math.round(food.calories)}kcal · P{Math.round(food.protein)}g
-                              </p>
-                            </div>
-                            <Plus className="w-4 h-4 text-primary" />
-                          </button>
-                        ))}
-                        {!searchLoading && searchQuery.length >= 2 && foodResults.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">Nenhum alimento encontrado</p>
-                        )}
-                      </ScrollArea>
+                            <Trash2 className="w-3 h-3 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Substitutions */}
+                      {substitutions.map(sub => (
+                        <div key={sub.id} className="flex items-center gap-2 p-2 ml-4 rounded-lg bg-primary/5 border-l-2 border-primary/30 group">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-medium truncate">OU: {sub.name}</p>
+                            <p className="text-[9px] text-muted-foreground">
+                              {Math.round(sub.calories)}kcal · P{Math.round(sub.protein)}g
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => sub.id && removeItem(block.type, sub.id)}
+                          >
+                            <Trash2 className="w-2.5 h-2.5 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+
+                      {/* Add Substitution Button */}
+                      <div className="ml-4 pt-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 text-[10px] text-primary hover:text-primary/80 hover:bg-primary/5 gap-1 px-2"
+                          onClick={() => setAddingTo({ type: block.type, substitutionGroupId: primary.substitution_group_id } as any)}
+                        >
+                          <Plus className="w-3 h-3" /> Adicionar Substituição
+                        </Button>
+                      </div>
                     </div>
-                  </DialogContent>
-                </Dialog>
+                  );
+                })}
+
+                {/* Add Primary Item button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full gap-1 text-xs border-dashed"
+                  onClick={() => setAddingTo({ type: block.type, isPrimary: true } as any)}
+                >
+                  <Plus className="w-3 h-3" /> Adicionar Opção Principal
+                </Button>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {/* Global Add Dialog */}
+      <Dialog 
+        open={!!addingTo} 
+        onOpenChange={open => { if(!open) setAddingTo(null); setSearchQuery(""); setFoodResults([]); }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="w-5 h-5" /> 
+              {addingTo && typeof addingTo === 'object' && (addingTo as any).substitutionGroupId 
+                ? "Adicionar Substituição" 
+                : "Buscar Alimento"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar alimento..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            <ScrollArea className="max-h-64">
+              {searchLoading && <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
+              {foodResults.map(food => (
+                <button
+                  key={food.id}
+                  onClick={() => { 
+                    if (addingTo) {
+                      const config = addingTo as any;
+                      addFoodToBlock(
+                        config.type, 
+                        food, 
+                        config.isPrimary ?? !config.substitutionGroupId, 
+                        config.substitutionGroupId
+                      );
+                      setAddingTo(null);
+                    }
+                  }}
+                  className="w-full text-left p-3 hover:bg-muted rounded-lg transition-colors flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{food.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {food.serving_size}{food.serving_unit} · {Math.round(food.calories)}kcal
+                    </p>
+                  </div>
+                  <Plus className="w-4 h-4 text-primary" />
+                </button>
+              ))}
+              {!searchLoading && searchQuery.length >= 2 && foodResults.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum alimento encontrado</p>
+              )}
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
