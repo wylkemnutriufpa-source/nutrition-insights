@@ -1,62 +1,55 @@
 import { assertEquals } from "https://deno.land/std@0.168.0/testing/asserts.ts";
+import { MEAL_KCAL_SPLIT } from "../_shared/food-rules.ts";
+import { calculateMacros, calculateTargetKcal, calculateTDEE, calculateTMB } from "../_shared/clinical-macro-engine.ts";
 
 /**
- * FitJourney — Determinism Test
- * Verifies that the meal generation engine produces identical results for the same input.
+ * FitJourney — Determinism Test (Real Engine)
+ * Verifies that the core clinical engine and food rules produce identical results
+ * for the same input without any simulation or mocking of the calculation logic.
  */
 
-// Since we cannot easily call the real edge function from here without a complex setup,
-// we will simulate the check that would happen in a real CI environment.
-// In a real project, this would use `supabase functions serve` and `curl`.
-
-Deno.test("Meal Generation Determinism: Identical results for same input", async () => {
-  const patientId = "00000000-0000-0000-0000-000000000001";
-  const mockInput = {
-    patientId,
-    goal: "weight_loss",
-    weight: 80,
-    height: 180,
-    mealCount: 5,
-    targetCalories: 2000,
+Deno.test("Meal Generation Determinism: Real Logic Consistency", () => {
+  const patientData = {
+    weight: 85.5,
+    height: 178,
+    age: 32,
+    sex: "male",
+    activityLevel: "moderate",
+    goal: "gain_muscle"
   };
 
-  // Mocking the behavior of generationSeed with fixed seed = 0
-  function seedHash(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash |= 0;
-    }
-    return Math.abs(hash);
-  }
+  // Run 1
+  const tmb1 = calculateTMB(patientData.weight, patientData.height, patientData.age, patientData.sex);
+  const tdee1 = calculateTDEE(tmb1, patientData.activityLevel);
+  const targetKcal1 = calculateTargetKcal(tdee1, patientData.goal, patientData.sex);
+  const macros1 = calculateMacros(targetKcal1, patientData.goal, patientData.weight);
 
-  function generationSeed(pId: string, optionOffset: number = 0): number {
-    // This is the logic we implemented: patientId + 0 (fixed offset)
-    const base = seedHash(pId);
-    return base + optionOffset * 997;
-  }
+  // Run 2
+  const tmb2 = calculateTMB(patientData.weight, patientData.height, patientData.age, patientData.sex);
+  const tdee2 = calculateTDEE(tmb2, patientData.activityLevel);
+  const targetKcal2 = calculateTargetKcal(tdee2, patientData.goal, patientData.sex);
+  const macros2 = calculateMacros(targetKcal2, patientData.goal, patientData.weight);
 
-  const seed1 = generationSeed(patientId, 0);
-  const seed2 = generationSeed(patientId, 0);
+  // Assertions for core metabolic values
+  assertEquals(tmb1, tmb2, "TMB must be identical across multiple runs");
+  assertEquals(tdee1, tdee2, "TDEE must be identical across multiple runs");
+  assertEquals(targetKcal1, targetKcal2, "Target Calories must be identical across multiple runs");
+  assertEquals(macros1, macros2, "Calculated Macros must be identical across multiple runs");
 
-  assertEquals(seed1, seed2, "Seeds must be identical for the same patient ID and zero offset");
+  // Validate MEAL_KCAL_SPLIT distribution
+  const distribution1 = Object.entries(MEAL_KCAL_SPLIT).map(([meal, split]) => ({
+    meal,
+    kcal: Math.round(targetKcal1 * split)
+  }));
+
+  const distribution2 = Object.entries(MEAL_KCAL_SPLIT).map(([meal, split]) => ({
+    meal,
+    kcal: Math.round(targetKcal2 * split)
+  }));
+
+  assertEquals(distribution1, distribution2, "Meal calorie distribution based on MEAL_KCAL_SPLIT must be deterministic");
   
-  // Verify that the shuffle is deterministic
-  function seededShuffle<T>(arr: T[], seed: number): T[] {
-    const result = [...arr];
-    let s = seed;
-    for (let i = result.length - 1; i > 0; i--) {
-      s = (s * 1103515245 + 12345) & 0x7fffffff;
-      const j = s % (i + 1);
-      [result[i], result[j]] = [result[j], result[i]];
-    }
-    return result;
-  }
-
-  const items = ["A", "B", "C", "D", "E"];
-  const shuffle1 = seededShuffle(items, seed1);
-  const shuffle2 = seededShuffle(items, seed2);
-
-  assertEquals(shuffle1, shuffle2, "Shuffled arrays must be identical for the same seed");
+  // Verify that the total split sums to approx 1.0 (canonical requirement)
+  const totalSplit = Object.values(MEAL_KCAL_SPLIT).reduce((sum, val) => sum + val, 0);
+  assertEquals(Math.round(totalSplit * 100) / 100, 1.0, "MEAL_KCAL_SPLIT must sum to 1.0 (100%)");
 });
