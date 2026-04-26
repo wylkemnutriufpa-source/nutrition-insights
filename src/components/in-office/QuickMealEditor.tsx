@@ -364,7 +364,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
                 <Download className="w-3 h-3" /> Carregar template
               </Button>
             </DialogTrigger>
-            <DialogContent className="max-w-lg">
+            <DialogContent className="max-w-lg w-[95vw] sm:w-full rounded-2xl">
               <DialogHeader><DialogTitle>Carregar Template</DialogTitle></DialogHeader>
               {templatesLoading ? (
                 <div className="flex justify-center py-8"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>
