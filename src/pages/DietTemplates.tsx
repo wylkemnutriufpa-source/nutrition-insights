@@ -1030,6 +1030,13 @@ export default function DietTemplates() {
             )}
           </DialogContent>
         </Dialog>
+
+        <ConsistencyReportModal 
+          open={showConsistencyReport} 
+          onOpenChange={setShowConsistencyReport} 
+          recipes={marmitaRecipes} 
+          targetKcal={getEffectiveCalories() || undefined} 
+        />
       </div>
     </DashboardLayout>
   );
