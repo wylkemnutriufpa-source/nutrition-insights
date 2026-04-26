@@ -44,9 +44,9 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Fechar"
-        className="absolute right-3 top-3 z-50 flex h-9 w-9 items-center justify-center rounded-full bg-background/95 border border-border shadow-md ring-offset-background transition-all hover:bg-accent hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none touch-manipulation"
+        className="absolute right-2 top-2 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-background/95 border border-border shadow-md ring-offset-background transition-all hover:bg-accent hover:scale-105 active:scale-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none touch-manipulation"
       >
-        <X className="h-4 w-4" />
+        <X className="h-5 w-5" />
         <span className="sr-only">Fechar</span>
       </DialogPrimitive.Close>
     </DialogPrimitive.Content>
