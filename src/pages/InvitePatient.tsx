@@ -34,6 +34,9 @@ export default function InvitePatient() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [signedLink, setSignedLink] = useState<string | null>(null);
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [clinic, setClinic] = useState<any>(null);
+
 
   // Base URL for production
   const siteUrl = BASE_URL;
