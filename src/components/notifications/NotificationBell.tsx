@@ -3,7 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Bell, Check, ExternalLink } from "lucide-react";
+import { Bell, Check, ExternalLink, Info } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -131,88 +131,102 @@ export default function NotificationBell() {
   return (
     <Popover open={open} onOpenChange={setOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="w-5 h-5" />
+        <Button variant="ghost" size="icon" className="relative group">
+          <Bell className="w-5 h-5 transition-transform group-hover:rotate-12" />
           {unread > 0 && (
-            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse">
+            <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-destructive text-destructive-foreground text-[10px] font-bold rounded-full flex items-center justify-center animate-pulse border-2 border-background">
               {unread}
             </span>
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
-        <div className="p-3 border-b border-border flex items-center justify-between">
-          <h4 className="font-medium text-sm">Notificações</h4>
+      <PopoverContent className="w-80 p-0 shadow-2xl border-primary/20" align="end">
+        <div className="p-3 border-b border-border flex items-center justify-between bg-muted/30">
+          <h4 className="font-bold text-xs uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+            <Bell className="w-3.5 h-3.5 text-primary" /> Central de Alertas
+          </h4>
           {unread > 0 && (
-            <span className="text-[10px] text-primary font-medium">{unread} novas</span>
+            <span className="text-[10px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-bold">{unread} novas</span>
           )}
         </div>
-        <div className="max-h-72 overflow-y-auto">
+        <div className="max-h-80 overflow-y-auto">
           {notifications.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-6">Sem notificações</p>
+            <div className="flex flex-col items-center justify-center py-10 opacity-50">
+              <Info className="w-8 h-8 mb-2" />
+              <p className="text-xs font-medium">Nenhuma notificação encontrada</p>
+            </div>
           ) : (
             notifications.map((n) => {
-              const hasRoute = !!(n.target_route || n.action_url);
               const targetPath = n.target_route || n.action_url || "";
+              const hasRoute = !!targetPath;
+              const isExternal = targetPath.startsWith("http");
               
               return (
                 <div
                   key={n.id}
-                  className={`px-3 py-3 border-b border-border/50 transition-all ${
-                    !n.is_read ? "bg-primary/5" : ""
+                  className={`px-3 py-3 border-b border-border/50 transition-all group relative ${
+                    !n.is_read ? "bg-primary/5" : "hover:bg-muted/30"
                   }`}
                 >
-                  <div className="flex items-start gap-2 mb-2">
+                  <div className="flex items-start gap-2 pr-6">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1.5 mb-0.5">
                         <p className={`font-semibold text-xs truncate ${!n.is_read ? "text-foreground" : "text-muted-foreground"}`}>
                           {n.title}
                         </p>
+                        {!n.is_read && <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0" />}
                       </div>
-                      <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">{n.message}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <span className="text-[10px] text-muted-foreground/60">
+                      <p className="text-muted-foreground text-[11px] leading-relaxed line-clamp-2 mb-2">{n.message}</p>
+                      
+                      <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 mt-2">
+                        <span className="text-[9px] text-muted-foreground/60 flex items-center gap-1">
+                          <Check className={`w-2.5 h-2.5 ${n.is_read ? "text-emerald-500" : "text-muted-foreground/30"}`} />
                           {formatTime(n.created_at)}
-                          {n.entity_type && ` · ${n.entity_type}`}
                         </span>
-                        {hasRoute && (
-                          <div className="px-1.5 py-0.5 rounded bg-muted text-[9px] text-muted-foreground font-mono truncate max-w-[120px]" title={targetPath}>
-                            {targetPath.split("/").pop() || "abrir"}
+
+                        {hasRoute ? (
+                          <div 
+                            className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-primary/10 text-[9px] text-primary font-medium border border-primary/10 cursor-help"
+                            title={`Destino: ${targetPath}`}
+                          >
+                            <ExternalLink className="w-2 h-2" />
+                            <span className="truncate max-w-[100px]">
+                              {isExternal ? "Link Externo" : (targetPath.split("/").pop() || "Início")}
+                            </span>
+                          </div>
+                        ) : (
+                          <div className="px-1.5 py-0.5 rounded bg-muted text-[9px] text-muted-foreground/50 border border-transparent flex items-center gap-1">
+                            <Info className="w-2 h-2 opacity-50" /> Sem rota
                           </div>
                         )}
                       </div>
                     </div>
-                    {!n.is_read && (
-                      <Button
-                        size="icon"
-                        variant="ghost"
-                        className="h-6 w-6 flex-shrink-0"
-                        onClick={(e) => markRead(e, n.id)}
-                      >
-                        <Check className="w-3 h-3" />
-                      </Button>
-                    )}
+
+                    <div className="absolute right-2 top-3 flex flex-col gap-1 sm:opacity-0 group-hover:opacity-100 transition-opacity">
+                      {!n.is_read && (
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 bg-background shadow-sm border border-border/50 hover:bg-primary hover:text-primary-foreground"
+                          onClick={(e) => markRead(e, n.id)}
+                          title="Marcar como lido"
+                        >
+                          <Check className="w-3 h-3" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
                   
                   {hasRoute && (
-                    <div className="flex gap-2 mt-2">
+                    <div className="mt-3">
                       <Button 
                         size="sm" 
                         variant="default" 
-                        className="h-7 text-[10px] flex-1 gap-1.5 gradient-primary"
+                        className="w-full h-8 text-[10px] gap-1.5 gradient-primary shadow-sm"
                         onClick={() => handleNotificationClick(n)}
                       >
-                        {n.type === "patient_registered" ? "Ver Paciente" : "Abrir Ação"}
+                        {n.type === "patient_registered" ? "Ver Perfil do Paciente" : "Executar Ação"}
                         <ExternalLink className="w-3 h-3" />
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="h-7 text-[10px] px-2"
-                        onClick={(e) => markRead(e, n.id)}
-                        disabled={n.is_read}
-                      >
-                        Lido
                       </Button>
                     </div>
                   )}
@@ -221,17 +235,17 @@ export default function NotificationBell() {
             })
           )}
         </div>
-        <div className="p-2 border-t border-border">
+        <div className="p-2 border-t border-border bg-muted/20">
           <Button
             variant="ghost"
             size="sm"
-            className="w-full text-xs"
+            className="w-full text-[10px] font-bold uppercase tracking-widest text-muted-foreground hover:text-primary"
             onClick={() => {
               setOpen(false);
               navigate("/notifications");
             }}
           >
-            Ver todas
+            Ver Histórico Completo
           </Button>
         </div>
       </PopoverContent>
