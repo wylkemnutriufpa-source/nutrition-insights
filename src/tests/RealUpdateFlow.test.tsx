@@ -35,14 +35,13 @@ describe('E2E Simulation: Real App Update Cycle', () => {
   });
 
   it('should show the update pop-up once and NOT loop on background/foreground transition', async () => {
-    const { useRegisterSW } = require('virtual:pwa-register/react');
-    
     // Simulate a new version being detected
-    useRegisterSW.mockReturnValue({
+    (pwa.useRegisterSW as any).mockReturnValue({
       needRefresh: [true, vi.fn()],
       offlineReady: [false, vi.fn()],
       updateServiceWorker: mockUpdateServiceWorker
     });
+
 
     render(
       <QueryClientProvider client={queryClient}>
