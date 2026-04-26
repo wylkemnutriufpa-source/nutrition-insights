@@ -201,6 +201,30 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
         }
       }
     });
+
+    // 5. Wannubia Specific Rules
+    if (patientName?.toLowerCase().includes("wannubia")) {
+      individualFoods.forEach(foodText => {
+        const ft = normalize(foodText);
+        // Regra específica: Wannubia não pode misturar fontes de proteína diferentes na mesma linha
+        const hasFrango = ft.includes("frango");
+        const hasOvo = ft.includes("ovo");
+        const hasCarne = ft.includes("carne") || ft.includes("bovina");
+
+        if ((hasFrango && hasOvo) || (hasFrango && hasCarne) || (hasOvo && hasCarne)) {
+           const msg = `Combinação bloqueada para esta paciente: "${foodText}". Não misture fontes de proteína na mesma substituição.`;
+           errors.push(msg);
+           detailedErrors.push({
+             mealId: item.id,
+             mealTitle: item.title || "Sem título",
+             substitutionIndex: idx,
+             foodName: foodText,
+             macros: {},
+             limitError: msg
+           });
+        }
+      });
+    }
   });
 
   return {
