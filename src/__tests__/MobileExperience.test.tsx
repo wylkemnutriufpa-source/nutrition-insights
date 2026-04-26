@@ -41,9 +41,11 @@ describe('Mobile Experience E2E & QA Automation', () => {
     return render(
       <QueryClientProvider client={queryClient}>
         <AuthProvider>
-          <MemoryRouter>
-            {ui}
-          </MemoryRouter>
+          <TooltipProvider>
+            <MemoryRouter>
+              {ui}
+            </MemoryRouter>
+          </TooltipProvider>
         </AuthProvider>
       </QueryClientProvider>
     );
