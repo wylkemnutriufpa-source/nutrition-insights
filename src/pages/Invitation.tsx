@@ -16,6 +16,79 @@ export default function Invitation() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isNutritionist, setIsNutritionist] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
+  const [isProcessingAction, setIsProcessingAction] = useState(false);
+
+  const fetchInvitation = async (showLoading = true) => {
+    if (!code) return;
+    if (showLoading) setLoading(true);
+    setError(null);
+    
+    try {
+      const officialDomains = ["lovable.app", "fitjourney.com.br", "localhost", "lovable.dev"];
+      const currentDomain = window.location.hostname;
+      const isOfficial = officialDomains.some(d => currentDomain.includes(d));
+
+      const { data, error: fetchError } = await supabase
+        .from("invitations")
+        .select(`
+          *,
+          professional:profiles!professional_id(full_name, avatar_url),
+          clinic:tenants(name)
+        `)
+        .eq("code", code)
+        .maybeSingle();
+
+      if (fetchError) throw fetchError;
+      
+      if (!data) {
+        setError("Este link de convite é inválido ou não foi encontrado.");
+        return;
+      }
+
+      if (!isOfficial) {
+        setError("Este link de convite veio de uma origem não autorizada.");
+        return;
+      }
+
+      const now = new Date();
+      const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
+      if (expiresAt && now > expiresAt) {
+        setInvitation(data);
+        setError("Este convite expirou.");
+        return;
+      }
+
+      if (data.status === 'completed' || data.used_at) {
+        setError("Este convite já foi utilizado para concluir um cadastro.");
+        return;
+      }
+
+      setInvitation(data);
+      
+      // Log view event
+      await supabase.from("invitation_logs").insert({
+        invitation_id: data.id,
+        event_type: "viewed",
+        details: { domain: currentDomain, host: window.location.host },
+        user_agent: navigator.userAgent
+      });
+
+      if (data.status === 'pending') {
+        await supabase
+          .from("invitations")
+          .update({ status: 'viewed' } as any)
+          .eq("id", data.id);
+      }
+
+    } catch (err: any) {
+      console.error("Error fetching invitation:", err);
+      setError("Erro ao validar convite. Tente novamente mais tarde.");
+    } finally {
+      setLoading(false);
+      setIsValidating(false);
+    }
+  };
 
   useEffect(() => {
     async function checkRole() {
@@ -32,88 +105,25 @@ export default function Invitation() {
   }, [user]);
 
   useEffect(() => {
-    async function fetchInvitation() {
-      if (!code) return;
-      
-      try {
-        const officialDomains = ["lovable.app", "fitjourney.com.br", "localhost", "lovable.dev"];
-        const currentDomain = window.location.hostname;
-        const isOfficial = officialDomains.some(d => currentDomain.includes(d));
-
-        const { data, error: fetchError } = await supabase
-          .from("invitations")
-          .select(`
-            *,
-            professional:profiles!professional_id(full_name, avatar_url),
-            clinic:tenants(name)
-          `)
-          .eq("code", code)
-          .maybeSingle();
-
-        if (fetchError) throw fetchError;
-        
-        if (!data || !isOfficial) {
-          setError("Este link de convite é inválido ou veio de uma origem não autorizada.");
-          return;
-        }
-
-        const now = new Date();
-        const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-        if (expiresAt && now > expiresAt) {
-          setInvitation(data);
-          setError("Este convite expirou.");
-          return;
-        }
-
-        if (data.status === 'completed' || data.used_at) {
-          setError("Este convite já foi utilizado para concluir um cadastro.");
-          return;
-        }
-
-        setInvitation(data);
-        
-        // Log view event
-        await supabase.from("invitation_logs").insert({
-          invitation_id: data.id,
-          event_type: "viewed",
-          details: { domain: currentDomain },
-          user_agent: navigator.userAgent
-        });
-
-        if (data.status === 'pending') {
-          await supabase
-            .from("invitations")
-            .update({ status: 'viewed' } as any)
-            .eq("id", data.id);
-        }
-
-      } catch (err: any) {
-        console.error("Error fetching invitation:", err);
-        setError("Erro ao validar convite. Tente novamente mais tarde.");
-      } finally {
-        setLoading(false);
-      }
-    }
-
     fetchInvitation();
   }, [code]);
 
   const handleAccept = () => {
-    if (!invitation || error) return;
+    if (!invitation || error || isProcessingAction) return;
+    setIsProcessingAction(true);
     navigate(`/register-patient?nutri=${invitation.professional_id}&code=${code}`);
   };
 
   const handleRegenerate = async () => {
-    if (!user || !invitation) return;
+    if (!user || !invitation || isProcessingAction) return;
     
-    setLoading(true);
+    setIsProcessingAction(true);
     try {
       const { data, error: genError } = await supabase.functions.invoke("create-invitation", {
         body: { 
-          professional_id: user.id,
-          tenant_id: invitation.tenant_id,
           patient_name: invitation.patient_name,
-          patient_email: invitation.patient_email
+          patient_email: invitation.patient_email,
+          tenant_id: invitation.tenant_id
         }
       });
 
@@ -122,20 +132,19 @@ export default function Invitation() {
       if (data?.code) {
         toast.success("Novo convite gerado!");
         navigate(`/convite/${data.code}`, { replace: true });
-        window.location.reload();
+        // Instead of reload, just let the useEffect handle it
+        setIsProcessingAction(false);
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Error regenerating invitation:", err);
-      toast.error("Erro ao gerar novo convite.");
-    } finally {
-      setLoading(false);
+      toast.error(err.message || "Erro ao gerar novo convite.");
+      setIsProcessingAction(false);
     }
   };
 
-  const openWhatsApp = () => {
+  const openWhatsApp = (customMessage?: string) => {
     if (!invitation) return;
-    const message = `Olá! Aqui está o seu convite para o FitJourney: ${window.location.href}`;
-    // Standard WhatsApp share URL that works well on mobile and web
+    const message = customMessage || `Olá! Aqui está o seu convite para o FitJourney: ${window.location.href}`;
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
