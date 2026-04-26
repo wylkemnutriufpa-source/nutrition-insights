@@ -100,7 +100,10 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
           <Button variant="outline" onClick={() => onOpenChange(false)}>
             Voltar ao Editor
           </Button>
-          <Button onClick={onConfirm} disabled={isSaving}>
+          <Button 
+            onClick={onConfirm} 
+            disabled={isSaving || items.some(item => !validateMealSubstitutions(item).valid)}
+          >
             {isSaving ? "Salvando..." : "Confirmar e Salvar"}
           </Button>
         </DialogFooter>
