@@ -2238,6 +2238,17 @@ export async function buildMarmitaItem(
   const visual = findVisualForRecipe(recipe, visualLibrary);
   console.log(`[buildMarmitaItem] ${recipe.name} | protein: ${recipe.protein_type || 'auto'} | visual: ${visual?.id || 'none'} | url: ${visual?.image_url || 'none'}`);
 
+  if (scaled.totals.cal === 0 || scaled.totals.p === 0) {
+    console.warn(`[telemetry] Macro output for "${recipe.name}" is ZERO. Reason check:`, {
+      recipe_id: recipe.id,
+      foods_json_empty: !recipe.foods_json || recipe.foods_json.length === 0,
+      macro_target_missing: !macroTarget,
+      is_scalable: recipe.is_scalable !== false,
+      calculated_cal: scaled.totals.cal,
+      calculated_protein: scaled.totals.p
+    });
+  }
+
   return {
     title: `🍱 ${recipe.name}`,
     description: description,
