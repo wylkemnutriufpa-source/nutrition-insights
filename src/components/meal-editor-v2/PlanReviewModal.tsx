@@ -30,7 +30,7 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {items.sort((a, b) => (a.order_index || 0) - (b.order_index || 0)).map((item) => {
+          {items.sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || "")).map((item) => {
             const validation = validateMealSubstitutions(item);
             const meta = (item as any).edit_metadata || (item as any).metadata || {};
             const substitutions = meta.substitutions_json as string[] || [];
