@@ -402,6 +402,7 @@ export default function MealPlanEditorV2() {
       return;
     }
 
+  const executeFinalSave = async () => {
     const toastId = toast.loading("Salvando e aprovando plano...");
     try {
       // Modelo single-day puro: nenhuma consolidação de dias legados necessária.
