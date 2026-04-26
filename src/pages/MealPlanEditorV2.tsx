@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { createPlanRevision } from "@/lib/createPlanRevision";
 import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
@@ -72,6 +72,7 @@ export default function MealPlanEditorV2() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
   const store = useMealPlanEditorV2Store();
+  const editorRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [savingAndPublishing, setSavingAndPublishing] = useState(false);
@@ -242,7 +243,9 @@ export default function MealPlanEditorV2() {
                       const el = document.getElementById(`meal-item-${err.mealId}`);
                       if (el) {
                         el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        window.location.hash = `meal-item-${err.mealId}`;
+                        el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+                        setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 3000);
+                        (el as HTMLElement).focus();
                       }
                     }}
                     className="text-[10px] text-primary hover:underline shrink-0"
@@ -267,7 +270,9 @@ export default function MealPlanEditorV2() {
             ))}
           </div>
         ),
-        duration: 8000
+        duration: 8000,
+        onDismiss: () => editorRef.current?.focus(),
+        onAutoClose: () => editorRef.current?.focus()
       });
       setSaving(false);
       return;
@@ -354,7 +359,9 @@ export default function MealPlanEditorV2() {
                         const el = document.getElementById(`meal-item-${err.mealId}`);
                         if (el) {
                           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          window.location.hash = `meal-item-${err.mealId}`;
+                          el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+                          setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 3000);
+                          (el as HTMLElement).focus();
                         }
                       }}
                       className="text-[10px] text-primary hover:underline shrink-0"
@@ -379,7 +386,9 @@ export default function MealPlanEditorV2() {
               ))}
             </div>
           ),
-          duration: 8000
+          duration: 8000,
+          onDismiss: () => editorRef.current?.focus(),
+          onAutoClose: () => editorRef.current?.focus()
         });
         setSavingAndPublishing(false);
         return;

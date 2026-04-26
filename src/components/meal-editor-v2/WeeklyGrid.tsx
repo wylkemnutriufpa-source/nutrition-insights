@@ -50,7 +50,7 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 export function WeeklyGrid() {
-  const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell } = useMealPlanEditorV2Store();
+  const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell, substitutionCount } = useMealPlanEditorV2Store();
 
   // Modelo single-day puro: tudo está em day=0
   const effectiveDay = 0;
@@ -200,7 +200,7 @@ export function WeeklyGrid() {
               </span>
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 {effectiveDay === 0
-                  ? "Modelo de Dia Único com Substituições Inteligentes (Dia 0)"
+                  ? `Modelo de Plano Único com ${substitutionCount} substituições disponíveis por refeição.`
                   : `Mostrando refeições do dia legado #${effectiveDay}. Migre para dia 0 para padronizar.`}
                 {effectiveDay !== 0 && (
                   <span className="ml-2 text-warning-foreground bg-warning/15 border border-warning/30 px-1.5 py-0.5 rounded text-[9px] font-bold">
@@ -246,7 +246,7 @@ export function WeeklyGrid() {
                 </div>
                 <div>
                   <span className="font-display text-[13px] font-bold block text-foreground tracking-tight">{meal.label}</span>
-                  <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + Alternativas</span>
+                  <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + {substitutionCount} Substs</span>
                 </div>
               </div>
             </div>
