@@ -54,7 +54,7 @@ export function WeeklyGrid() {
 
   // Modelo single-day puro: tudo está em day=0
   const effectiveDay = 0;
-  const effectiveDayLabel = "Plano Diário";
+  const effectiveDayLabel = "Template de Dia Único";
 
   // Quick-add state
   const [quickAddKey, setQuickAddKey] = useState<string | null>(null);
