@@ -50,7 +50,7 @@ test.describe('Meal Editor Robustness and UX Consistency', () => {
     }
   });
 
-  test('Mobile: Overlay clicks at 384px width', async ({ nutriPage }) => {
+  test('Mobile: Overlay clicks at 384px width using calculated coordinates', async ({ nutriPage }) => {
     // 1. Viewport mobile 384px
     await nutriPage.setViewportSize({ width: 384, height: 800 });
     
@@ -64,24 +64,30 @@ test.describe('Meal Editor Robustness and UX Consistency', () => {
     const macroSummary = nutriPage.getByTestId('modal-macro-summary');
     await expect(macroSummary).toBeVisible();
     
-    // 3. Clica no overlay em diferentes pontos
-    // Ponto 1: Canto superior esquerdo (quase fora da tela)
-    await nutriPage.mouse.click(1, 1);
-    await expect(modal).toBeHidden();
-    await expect(trigger).toBeFocused();
+    // 3. Clica no overlay usando coordenadas calculadas relativas ao Dialog
+    const dialogBox = await modal.boundingBox();
+    if (dialogBox) {
+      // Ponto 1: Acima do dialog (overlay superior)
+      // Se o dialog estiver centralizado, deve haver espaço acima ou abaixo
+      const clickY = Math.max(0, dialogBox.y - 10);
+      await nutriPage.mouse.click(dialogBox.x + dialogBox.width / 2, clickY);
+      await expect(modal).toBeHidden();
+      await expect(trigger).toBeFocused();
 
-    // Reabre para o segundo ponto
-    await trigger.click();
-    await expect(modal).toBeVisible();
+      // Reabre para o segundo ponto
+      await trigger.click();
+      await expect(modal).toBeVisible();
 
-    // Ponto 2: Meio lateral (overlay costuma ocupar as laterais se o modal não for full width)
-    // Em 384px, o modal costuma ser quase full width, mas clicamos na bordinha lateral se houver, 
-    // ou usamos as coordenadas do mouse.click fora da área do DialogContent.
-    // O DialogContent no código tem max-w-4xl, mas em mobile ele deve ocupar a largura disponível.
-    // Vamos clicar bem embaixo, fora da área do modal.
-    await nutriPage.mouse.click(192, 790); // Meio horizontal, rodapé
-    await expect(modal).toBeHidden();
-    await expect(trigger).toBeFocused();
+      // Ponto 2: Abaixo do dialog (overlay inferior)
+      const clickYBottom = Math.min(800, dialogBox.y + dialogBox.height + 10);
+      await nutriPage.mouse.click(dialogBox.x + dialogBox.width / 2, clickYBottom);
+      await expect(modal).toBeHidden();
+      await expect(trigger).toBeFocused();
+    } else {
+      // Fallback para coordenadas seguras se boundingBox falhar
+      await nutriPage.mouse.click(1, 1);
+      await expect(modal).toBeHidden();
+    }
   });
 
   test('Logic: Positive daily total with zero partial macros in multiple items', async ({ nutriPage }) => {
