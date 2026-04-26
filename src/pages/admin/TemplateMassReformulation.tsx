@@ -119,12 +119,18 @@ export default function TemplateMassReformulation() {
 
   const reformulateTemplate = (meals: any[]) => {
     const changes: string[] = [];
+    let removedKeysCount = 0;
+    let adjustedBlocksCount = 0;
+
     const reformulatedMeals = (meals || []).map(meal => {
       let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
       
       // Safety: Recursively remove any template_id or other poisoning keys
+      const beforeKeys = JSON.stringify(newMeal).length;
       deepRemoveKey(newMeal, "template_id");
       delete newMeal.id; 
+      const afterKeys = JSON.stringify(newMeal).length;
+      if (beforeKeys > afterKeys) removedKeysCount++;
 
       const title = (meal.title || "").toLowerCase();
       const isSolidMeal = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
@@ -132,6 +138,7 @@ export default function TemplateMassReformulation() {
       // 1. Transform legacy to V2 blocks
       if (Array.isArray(newMeal.foods) && newMeal.foods.length > 0 && (!newMeal.blocks || newMeal.blocks.length === 0)) {
         changes.push(`Refeição ${meal.title}: Convertida de Lista para Blocos V2.`);
+        adjustedBlocksCount++;
         newMeal.blocks = newMeal.foods.map((f: any) => {
           const name = (f.name || "").toLowerCase();
           let blockLabel = f.name;
@@ -155,7 +162,8 @@ export default function TemplateMassReformulation() {
                 protein: f.protein || 0,
                 carbs: f.carbs || 0,
                 fat: f.fat || 0,
-                substitutions: f.substitutions || []
+                substitutions: f.substitutions || [],
+                image_url: f.image_url || null
               }
             ]
           };
@@ -200,11 +208,10 @@ export default function TemplateMassReformulation() {
                  changes.push(`Refeição ${meal.title}: Substituição de Almoço contém item de Café da Manhã (${cleaned.name}).`);
               }
 
-              // Ensure images are preserved or defaulted
+              // Image Validation and Fallback
               if (!cleaned.visual_library_item_id && !cleaned.image_url) {
-                if (optName.includes("marmita")) {
-                   changes.push(`Refeição ${meal.title}: Marmita detectada sem ID visual.`);
-                }
+                cleaned.image_url = FALLBACK_IMAGE_URL;
+                changes.push(`Refeição ${meal.title}: Asset visual ausente em '${cleaned.name}'. Aplicado fallback automático.`);
               }
               
               return cleaned;
@@ -217,7 +224,13 @@ export default function TemplateMassReformulation() {
       return newMeal;
     });
 
-    return { reformulatedMeals, changes: Array.from(new Set(changes)) };
+    const summary = {
+      removedKeysCount,
+      adjustedBlocksCount,
+      totalMeals: reformulatedMeals.length
+    };
+
+    return { reformulatedMeals, changes: Array.from(new Set(changes)), summary };
   };
 
   const applyReformulation = async () => {
