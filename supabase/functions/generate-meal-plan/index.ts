@@ -1064,8 +1064,8 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
 
     return {
       ...item,
-      metadata: {
-        ...(item.metadata || {}),
+      edit_metadata: {
+        ...(item.edit_metadata || item.metadata || {}),
         portion_alert: combinedAlert || null,
         original_computed_grams: roundServingGrams(rawServing),
         matched_food_id: matchedFood.id,
@@ -1422,6 +1422,7 @@ function generatePlanWithTemplates(
   strategy?: string,
   dbFoods?: any[],
   recentMeals?: RecentMealItem[],
+  prioritizedTemplateIds?: string[],
 ): { items: any[]; templateHits: number; visualFallbacks: number } {
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
@@ -1505,6 +1506,7 @@ function generatePlanWithTemplates(
         mealType,
         strategy,
         excludeTemplateIds: Array.from(usedForType),
+        prioritizedTemplateIds,
       };
 
       let matched = resolveMealTemplates(templates, resolverParams);
@@ -2345,6 +2347,7 @@ function generateFixedMarmitaPlan(
   strategy?: string,
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
+  prioritizedTemplateIds?: string[],
 ): { items: any[]; marmitasUsed: string[]; warning?: string } {
   console.log(`[fixed_marmita] Starting generation for ${goal}. Total recipes: ${fixedRecipes.length}`);
 
@@ -2482,7 +2485,7 @@ function generateFixedMarmitaPlan(
       const dayItems = generateAdjustableMealsForDay(
         templates, visualLibrary, goal, remainderKcal, remainderMacros,
         restrictions, disliked, allergies, nonMarmitaMealTypes, mealTimes,
-        strategy, patientFoodDatabase, recentMeals, day,
+        strategy, patientFoodDatabase, recentMeals, day, prioritizedTemplateIds,
       );
       for (const it of dayItems) items.push(it);
     }
@@ -2512,6 +2515,7 @@ function generateAdjustableMealsForDay(
   patientFoodDatabase: any[] | undefined,
   recentMeals: RecentMealItem[] | undefined,
   targetDay: number,
+  prioritizedTemplateIds?: string[],
 ): any[] {
   const hasTpl = templates.length > 0;
   let result: any[];
@@ -2519,7 +2523,7 @@ function generateAdjustableMealsForDay(
     const r = generatePlanWithTemplates(
       templates, visualLibrary, goal, remainderKcal, remainderMacros,
       restrictions, disliked, allergies, targetDay, mealTypes, mealTimes,
-      strategy, patientFoodDatabase, recentMeals,
+      strategy, patientFoodDatabase, recentMeals, prioritizedTemplateIds,
     );
     result = r.items;
   } else {
@@ -3061,11 +3065,17 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     let resolvedTenantId = tenantProfile?.tenant_id || null;
 
     // Load patient profile to check identity and modes (Marmita Mode)
-    const { data: patientProfile } = await serviceClient
-      .from("profiles")
-      .select("id, user_id, marmita_mode, fast_marmita_mode")
-      .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
-      .maybeSingle();
+    const [patientProfileRes, latestPlanRes] = await Promise.all([
+      serviceClient.from("profiles").select("id, user_id, marmita_mode, fast_marmita_mode")
+        .or(`id.eq.${patient_id},user_id.eq.${patient_id}`).maybeSingle(),
+      serviceClient.from("meal_plans").select("template_id, template_slug")
+        .eq("patient_id", patient_id).not("template_id", "is", null)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle()
+    ]);
+
+    const patientProfile = patientProfileRes.data;
+    const lastUsedTemplateId = latestPlanRes.data?.template_id;
+    const prioritizedTemplateIds = lastUsedTemplateId ? [lastUsedTemplateId] : [];
 
     const fastMarmitaMode = !!patientProfile?.fast_marmita_mode;
 
@@ -3519,7 +3529,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     if (generationMode === "smart") {
       const [{ data: behavProfile }, { data: prevPlans }] = await Promise.all([
         serviceClient.from("behavioral_profile").select("*").eq("patient_id", patient_id).maybeSingle(),
-        serviceClient.from("meal_plans").select("generation_metadata, template_slug")
+        serviceClient.from("meal_plans").select("id, generation_metadata, template_id, template_slug, title")
           .eq("patient_id", patient_id).order("created_at", { ascending: false }).limit(3),
       ]);
       
@@ -3620,7 +3630,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         const tplSeed = generationSeed(patient_id, tplIdx, useFixedSeed);
         // CAMADA 2: Template-first → Visual Library fallback → reconciled with Layer 1 macros
         const { items: rawItems, templateHits, visualFallbacks } = hasTemplates
-          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals)
+          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals, prioritizedTemplateIds)
           : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
         console.log(`[Multi-plan ${tplIdx}] Templates: ${templateHits}, Visual fallbacks: ${visualFallbacks}`);
         // ── GUARDRAILS (MANDATORY) ──
@@ -3807,6 +3817,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         fixedRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
         restrictions, disliked, allergies, enabledMeals, mealTimes,
         resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+        prioritizedTemplateIds,
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
@@ -3814,7 +3825,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
       visualFallbacksCount = rawPlanItems.length - templateHitsCount;
     } else if (hasTemplates) {
-      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals);
+      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals, prioritizedTemplateIds);
       rawPlanItems = result.items;
       templateHitsCount = result.templateHits;
       visualFallbacksCount = result.visualFallbacks;

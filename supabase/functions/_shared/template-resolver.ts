@@ -62,6 +62,7 @@ export interface TemplateResolverParams {
   nutritionistId?: string;
   complexityPreference?: string;
   excludeTemplateIds?: string[];
+  prioritizedTemplateIds?: string[];
 }
 
 /**
@@ -158,7 +159,7 @@ export function resolveMealTemplates(
   templates: ResolvedTemplate[],
   params: TemplateResolverParams,
 ): ResolvedTemplate[] {
-  const { goal, mealType, strategy, complexityPreference, excludeTemplateIds } = params;
+  const { goal, mealType, strategy, complexityPreference, excludeTemplateIds, prioritizedTemplateIds } = params;
 
   // Step 1: Filter by meal_type
   const mealTypeKeys = MEAL_TYPE_DB_MAP[mealType] || [mealType];
@@ -187,6 +188,13 @@ export function resolveMealTemplates(
     const templateTags = t.goal_tags.map(tag => tag.toLowerCase());
     if (goalTags.some(gt => templateTags.includes(gt.toLowerCase()))) {
       score += 40;
+    }
+
+    // Prioritized match (HIGH PRIORITY: +150)
+    if (prioritizedTemplateIds && prioritizedTemplateIds.length > 0) {
+      if (prioritizedTemplateIds.includes(t.id)) {
+        score += 150;
+      }
     }
 
     // Satiety score bonus (+20 max)
