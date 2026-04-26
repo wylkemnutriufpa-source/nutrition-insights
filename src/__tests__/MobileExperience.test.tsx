@@ -6,6 +6,7 @@ import MobileQA from '@/pages/MobileQA';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { AuthProvider } from '@/lib/auth';
+import { TooltipProvider } from '@/components/ui/tooltip';
 import '@testing-library/jest-dom';
 
 const queryClient = new QueryClient();
