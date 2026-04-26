@@ -26,15 +26,31 @@ export default function InvitePatient() {
   const [copied, setCopied] = useState<string | null>(null);
   const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
+  const [signedLink, setSignedLink] = useState<string | null>(null);
+
+  // Generate signed public registration link
+  useEffect(() => {
+    if (!user?.id) return;
+    const generateSignedLink = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("sign-registration-link", {
+          body: { nutriId: user.id }
+        });
+        if (error) throw error;
+        const link = `${window.location.origin}/register-patient?nutri=${user.id}&sig=${data.signature}`;
+        setSignedLink(link);
+      } catch (err) {
+        console.error("Error signing registration link:", err);
+      }
+    };
+    generateSignedLink();
+  }, [user?.id]);
 
   const onboardingLink = useMemo(
     () => `${window.location.origin}/onboarding`,
     [],
   );
-  const publicRegisterLink = useMemo(
-    () => `${window.location.origin}/register-patient?nutri=${user?.id}`,
-    [user?.id]
-  );
+  const publicRegisterLink = signedLink || `${window.location.origin}/register-patient?nutri=${user?.id}`;
   const whatsappMessage = useMemo(() => {
     const greeting = name ? `Olá ${name.split(" ")[0]}! ` : "Olá! ";
     return `${greeting}Seu acesso ao FitJourney foi criado. Use o email *${email}* para entrar e completar seu onboarding aqui: ${onboardingLink}`;
