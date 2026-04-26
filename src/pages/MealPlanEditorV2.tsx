@@ -603,9 +603,19 @@ export default function MealPlanEditorV2() {
 
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
-    // 🛡️ Validação de Substituições - Tornada não-bloqueante para simplicidade
+    // 🛡️ Validação de Substituições
     const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount, store.patientName);
     if (!subValidation.valid) {
+      const hasBlockedCombination = subValidation.errors.some(err => err.includes("Combinação bloqueada"));
+      
+      if (hasBlockedCombination) {
+        toast.error("Erro de Validação", {
+          description: "Existem combinações de substituições bloqueadas para esta paciente. Corrija antes de publicar."
+        });
+        setSavingAndPublishing(false);
+        return;
+      }
+
       console.warn("Substituições fora do padrão detectadas, mas prosseguindo a pedido do usuário.");
       toast.info("Atenção: Algumas substituições estão fora do padrão calórico, mas o plano será enviado mesmo assim.");
     }
