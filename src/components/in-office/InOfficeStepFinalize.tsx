@@ -6,8 +6,12 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   CheckCircle2, ArrowLeft, Loader2, ClipboardList, Activity,
-  Utensils, FileText, Send, Eye, AlertTriangle, Sparkles, Wand2, BookOpen
+  Utensils, FileText, Send, Eye, AlertTriangle, Sparkles, Wand2, BookOpen,
+  RefreshCw, XCircle
 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Progress } from "@/components/ui/progress";
+
 
 interface Props {
   patientId: string;
