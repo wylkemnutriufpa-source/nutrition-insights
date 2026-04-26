@@ -70,7 +70,9 @@ describe('Deterministic Order E2E', () => {
       clipboardItems: null,
       copyCell: vi.fn(),
       pasteToCell: vi.fn(),
-      substitutionCount: 3
+      substitutionCount: 3,
+      updatePlan: vi.fn(),
+      plan: { id: 'plan-1' }
     });
 
     render(
