@@ -483,9 +483,9 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         )}
         
         {!checksLoading && is19FixedMissing && (
-          <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-amber-500/10 border border-amber-500/30">
-            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
-            <p className="text-[10px] text-amber-700 leading-relaxed">
+          <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-warning/10 border border-warning/30">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
+            <p className="text-[10px] text-warning-foreground leading-relaxed font-medium">
               <strong>Aviso:</strong> O padrão ouro é ter 19 marmitas fixas de almoço e 19 de jantar para máxima variedade. Você tem {recipeCounts.fixedLunch} e {recipeCounts.fixedDinner}.
             </p>
           </div>
