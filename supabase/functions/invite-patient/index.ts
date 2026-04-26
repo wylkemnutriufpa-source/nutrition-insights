@@ -181,13 +181,15 @@ Deno.serve(async (req) => {
       tenant_id: callerTenantLink,
     });
 
+    const host = req.headers.get("host") || "unknown";
+    const userAgent = req.headers.get("user-agent") || "unknown";
+
     // Magic link opcional
     if (method === "magic_link") {
       try {
         const redirectTo = BASE_URL;
         if (!isValidDomain(redirectTo)) {
           console.error(`[invite-patient] Tentativa de usar domínio inválido: ${redirectTo}`);
-          // Embora o BASE_URL seja fixo, mantemos a verificação para consistência futura
         }
 
         await adminClient.auth.admin.generateLink({
@@ -203,9 +205,11 @@ Deno.serve(async (req) => {
             patient_id: patientId, 
             method: "magic_link", 
             invited_by: caller.id,
-            email: normalizedEmail 
+            email: normalizedEmail,
+            host: host
           },
-          domain_used: redirectTo
+          domain_used: redirectTo,
+          user_agent: userAgent
         });
       } catch (e) {
         console.log("[invite-patient] Magic link generation failed, patient can use forgot password:", e);
@@ -218,8 +222,10 @@ Deno.serve(async (req) => {
           patient_id: patientId, 
           method: "password", 
           invited_by: caller.id,
-          email: normalizedEmail 
-        }
+          email: normalizedEmail,
+          host: host
+        },
+        user_agent: userAgent
       });
     }
 
