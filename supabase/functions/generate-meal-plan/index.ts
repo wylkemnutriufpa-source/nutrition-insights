@@ -3630,7 +3630,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         const tplSeed = generationSeed(patient_id, tplIdx, useFixedSeed);
         // CAMADA 2: Template-first → Visual Library fallback → reconciled with Layer 1 macros
         const { items: rawItems, templateHits, visualFallbacks } = hasTemplates
-          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals)
+          ? generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals, prioritizedTemplateIds)
           : { items: generatePlanFromVisualLibrary(visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, tplSeed, enabledMeals, mealTimes), templateHits: 0, visualFallbacks: 42 };
         console.log(`[Multi-plan ${tplIdx}] Templates: ${templateHits}, Visual fallbacks: ${visualFallbacks}`);
         // ── GUARDRAILS (MANDATORY) ──
