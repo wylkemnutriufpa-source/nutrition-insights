@@ -391,15 +391,15 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
             <>
               <CalendarDays className="w-5 h-5 text-primary" />
               <div className="text-left flex-1">
-                <p className="font-bold">📅 Cardápio Semanal de Marmitas</p>
+                <p className="font-bold">📅 Template Diário de Marmitas</p>
                 <p className="text-[10px] text-muted-foreground">
                   {checksLoading
                     ? "verificando…"
-                    : `Almoço ${recipeCounts.lunch}/${minSettings.weekly_min_lunch} · Jantar ${recipeCounts.dinner}/${minSettings.weekly_min_dinner}`}
+                    : `Gera 1 dia padrão com substituições a partir de suas receitas.`}
                 </p>
                 {!checksLoading && (
                   <p className={`text-[9px] mt-0.5 ${MODE_HINTS.weekly.className}`}>
-                    ℹ️ {MODE_HINTS.weekly.text}
+                    ℹ️ Modelo de dia único + substituições inteligentes
                   </p>
                 )}
               </div>
