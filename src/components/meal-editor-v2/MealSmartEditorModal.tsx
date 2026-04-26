@@ -90,14 +90,14 @@ export function MealSmartEditorModal({
       // Validação aprofundada de macros base para marmitas fixas
       if (meta.is_fixed) {
         const missing = [];
-        if (meta.kcal_base === undefined || meta.kcal_base === null) missing.push("Calorias");
-        if (meta.protein_base === undefined || meta.protein_base === null) missing.push("Proteínas");
-        if (meta.carbs_base === undefined || meta.carbs_base === null) missing.push("Carboidratos");
-        if (meta.fat_base === undefined || meta.fat_base === null) missing.push("Gorduras");
+        if (meta.kcal_base === undefined || meta.kcal_base === null) missing.push("kcal_base");
+        if (meta.protein_base === undefined || meta.protein_base === null) missing.push("protein_base");
+        if (meta.carbs_base === undefined || meta.carbs_base === null) missing.push("carbs_base");
+        if (meta.fat_base === undefined || meta.fat_base === null) missing.push("fat_base");
 
         if (missing.length > 0) {
           toast.error("Dados Base Incompletos", {
-            description: `Esta marmita fixa está sem os macros base: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
+            description: `Campos ausentes no edit_metadata: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
             action: {
               label: "Corrigir Agora",
               onClick: () => {
