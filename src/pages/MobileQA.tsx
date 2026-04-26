@@ -24,6 +24,7 @@ export default function MobileQA() {
     viewport360: false,
     focusVisibleX: false,
     noScrollResidualOnKeys: false,
+    accessibilityTabOrder: false,
   });
 
   const [evidences, setEvidences] = useState<Array<{ 
@@ -34,10 +35,17 @@ export default function MobileQA() {
     screenshot: string,
     thumbnail: string,
     context?: string,
+    modalId?: string,
+    sequence?: number,
     metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }
   }>>([]);
+  
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [activeModalId, setActiveModalId] = useState<string | null>(null);
+  const [eventLog, setEventLog] = useState<Array<{ timestamp: string, event: string, details?: any }>>([]);
+  const [overflowBuffer, setOverflowBuffer] = useState(300); // 300ms buffer
   const lastOverflowTime = useRef<number>(0);
+  const overflowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const testScreens = [
     { id: "strategy", label: "Consultor de Estratégia", icon: MousePointer2, component: "StrategyAdvisor" },
@@ -46,39 +54,74 @@ export default function MobileQA() {
     { id: "wizard", label: "InOffice Wizard", icon: Maximize2, component: "InOfficeWizard" },
   ];
 
-  // Automated Horizontal Scroll Check & Capture
+  const logEvent = (event: string, details?: any) => {
+    const timestamp = new Date().toISOString();
+    setEventLog(prev => [...prev, { timestamp, event, details }]);
+  };
+
+  // Automated Horizontal Scroll Check & Capture with Debounce
   useEffect(() => {
     const checkScroll = async () => {
       const scrollX = window.scrollX;
       const scrollWidth = document.documentElement.scrollWidth;
       const clientWidth = document.documentElement.clientWidth;
+      const isOverflowing = scrollX > 0 || scrollWidth > clientWidth;
       
-      if (scrollX > 0 || scrollWidth > clientWidth) {
-        const now = Date.now();
-        // Throttling captures to avoid freezing and duplicated logs
-        if (now - lastOverflowTime.current > 5000) {
-          lastOverflowTime.current = now;
-          console.error("OVERFLOW-X DETECTED", { scrollX, scrollWidth, clientWidth });
+      if (isOverflowing) {
+        logEvent("Overflow detectado (inicial)", { scrollX, scrollWidth, clientWidth });
+        
+        // Clear previous timeout if exists
+        if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
+        
+        // Wait for buffer/debounce
+        overflowTimeoutRef.current = setTimeout(async () => {
+          // Re-verify after buffer
+          const currentScrollX = window.scrollX;
+          const currentScrollWidth = document.documentElement.scrollWidth;
+          const currentClientWidth = document.documentElement.clientWidth;
           
-          toast.error("Overflow Horizontal Detectado!", {
-            description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}. Capturando evidência...`,
-            duration: 5000,
-          });
-          
-          await registerEvidence("Overflow Detectado Automático", { scrollX, scrollWidth, clientWidth });
-        }
+          if (currentScrollX > 0 || currentScrollWidth > currentClientWidth) {
+            const now = Date.now();
+            if (now - lastOverflowTime.current > 5000) {
+              lastOverflowTime.current = now;
+              logEvent("Overflow persistente capturado", { currentScrollX, currentScrollWidth, currentClientWidth });
+              
+              toast.error("Overflow Horizontal Persistente!", {
+                description: `Buffer de ${overflowBuffer}ms atingido. Capturando evidência...`,
+                duration: 5000,
+              });
+              
+              await registerEvidence("Overflow Detectado Automático", { 
+                scrollX: currentScrollX, 
+                scrollWidth: currentScrollWidth, 
+                clientWidth: currentClientWidth 
+              });
+            }
+          }
+        }, overflowBuffer);
       }
     };
 
-    window.addEventListener('scroll', checkScroll);
-    window.addEventListener('resize', checkScroll);
+    const handleResize = () => {
+      logEvent("Resize detectado", { width: window.innerWidth, height: window.innerHeight });
+      checkScroll();
+    };
+
+    const handleScroll = () => {
+      logEvent("Scroll detectado", { scrollX: window.scrollX, scrollY: window.scrollY });
+      checkScroll();
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
     const interval = setInterval(checkScroll, 2000);
     return () => {
-      window.removeEventListener('scroll', checkScroll);
-      window.removeEventListener('resize', checkScroll);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
       clearInterval(interval);
+      if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
     };
-  }, [evidences]);
+  }, [evidences, overflowBuffer]);
 
   const toggleCheck = (key: keyof typeof checklist) => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
