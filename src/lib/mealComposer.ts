@@ -108,6 +108,7 @@ const SLOT_TEMPLATES: Record<MealSlotType, SlotTemplate[]> = {
   dinner: [
     { roles: ["protein", "carb", "vegetable"], calorieShare: [0.45, 0.30, 0.25] },
     { roles: ["protein", "vegetable", "fat"], calorieShare: [0.50, 0.30, 0.20] },
+    { roles: ["soup"], calorieShare: [1.0] },
   ],
   evening_snack: [
     { roles: ["fruit"], calorieShare: [1.0] },
