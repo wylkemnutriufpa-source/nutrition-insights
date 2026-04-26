@@ -124,6 +124,12 @@ export default function BuilderTopbar({
                   <CheckCircle2 className="w-3 h-3 mr-1" /> Publicado
                 </Badge>
               )}
+              {(plan as any)?.generation_metadata?.template_name_used && (
+                <Badge variant="secondary" className="text-[10px] shrink-0 border-primary/20 bg-primary/5">
+                  <BookOpen className="w-3 h-3 mr-1 text-primary" />
+                  Template: {(plan as any).generation_metadata.template_name_used}
+                </Badge>
+              )}
             </div>
             <p className="text-xs text-muted-foreground truncate">
               {patientName}{objective ? ` • ${objective}` : ""}
