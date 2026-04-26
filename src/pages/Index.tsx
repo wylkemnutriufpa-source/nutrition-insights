@@ -158,6 +158,15 @@ function NutritionistDashboardContent() {
       setUnreadChats(chatsRes.count || 0);
       setPendingCheckins(pendingRes.count || 0);
 
+      setActiveSessions(sessionsRes.data || []);
+      if (sessionsRes.data && sessionsRes.data.length > 0) {
+        const sIds = sessionsRes.data.map((s: any) => s.patient_id);
+        const { data: pData } = await supabase.from("profiles").select("user_id, full_name").in("user_id", sIds);
+        const m: Record<string, string> = {};
+        (pData || []).forEach(p => { m[p.user_id] = p.full_name; });
+        setSessionProfiles(m);
+      }
+
       // Fetch timeline filtered by nutritionist's patients with patient names
       const patientIds = (patientsRes.data || []).map((p: any) => p.patient_id);
       if (patientIds.length > 0) {
