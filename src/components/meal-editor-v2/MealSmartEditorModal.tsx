@@ -243,7 +243,7 @@ export function MealSmartEditorModal({
             </div>
 
             <ScrollArea className="flex-1 p-4">
-              {activeTab === "isolated" ? (
+              {activeTab === "isolated" && !patientName?.toLowerCase().includes("wannubia") ? (
                 <div className="grid grid-cols-1 gap-2">
                   {FOOD_DATABASE.filter(f => 
                     f.name.toLowerCase().includes(search.toLowerCase())
