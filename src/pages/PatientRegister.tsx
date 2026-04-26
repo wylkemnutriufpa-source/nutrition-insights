@@ -109,6 +109,33 @@ export default function PatientRegister() {
     return () => clearTimeout(t);
   }, [profSearch, searchProfessionals]);
 
+  const formatInternationalWhatsApp = (val: string) => {
+    // Remove non-digits
+    const digits = val.replace(/\D/g, "");
+    if (!digits) return "";
+    
+    // If it doesn't start with 55 (Brazil) or other country code and has 10-11 digits, assume 55
+    if (digits.length >= 10 && digits.length <= 11 && !val.startsWith("+")) {
+      return `+55${digits}`;
+    }
+    
+    return val.startsWith("+") ? val : `+${digits}`;
+  };
+
+  const validateWhatsApp = (val: string) => {
+    if (!val) {
+      setWhatsappError("WhatsApp é obrigatório");
+      return false;
+    }
+    const digits = val.replace(/\D/g, "");
+    if (digits.length < 10) {
+      setWhatsappError("Número inválido (mínimo 10 dígitos)");
+      return false;
+    }
+    setWhatsappError("");
+    return true;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (preselectedNutri && sigValid === false) {
