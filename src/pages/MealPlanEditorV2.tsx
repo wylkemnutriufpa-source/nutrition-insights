@@ -127,6 +127,12 @@ export default function MealPlanEditorV2() {
   useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
   useEffect(() => { localStorage.setItem(EDITOR_LAYOUT_KEY, editorLayout); }, [editorLayout]);
 
+  const [lastAttemptParams, setLastAttemptParams] = useState<any>(() => {
+    const saved = localStorage.getItem(`last_gen_params_${id}`);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+
   const exportToPDF = async () => {
     if (!plan || store.items.length === 0) return;
     setExportingPDF(true);
