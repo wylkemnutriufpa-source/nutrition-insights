@@ -385,7 +385,6 @@ export function MealSmartEditorModal({
                 </div>
 
                 {/* Portion Adjustment for Fixed Meals */}
-                {(item as any).edit_metadata?.is_fixed && (
                 {currentMeta?.is_fixed && (
                   <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
                     <div className="flex items-center justify-between">
@@ -439,7 +438,6 @@ export function MealSmartEditorModal({
                       Isso recalculará proporcionalmente todos os macros desta marmita em tempo real.
                     </p>
                   </div>
-                )}
                 )}
 
                 <div className="space-y-4">
