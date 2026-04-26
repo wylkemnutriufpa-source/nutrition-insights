@@ -81,7 +81,7 @@ serve(async (req) => {
       }
     }
 
-    const origin = req.headers.get("origin") || "https://fijourney.lovable.app";
+    const origin = "https://www.fitjourney.com.br";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
