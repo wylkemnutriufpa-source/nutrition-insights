@@ -3074,7 +3074,26 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     ]);
 
     const patientProfile = patientProfileRes.data;
-    const lastUsedTemplateId = latestPlanRes.data?.template_id;
+    let lastUsedTemplateId = latestPlanRes.data?.template_id;
+    let isFallbackTemplate = false;
+    
+    if (!lastUsedTemplateId) {
+      // Fallback: seleciona o template global mais utilizado como base padrão
+      const { data: defaultTemplate } = await serviceClient
+        .from("nutritionist_meal_templates")
+        .select("id")
+        .eq("is_global", true)
+        .order("usage_count", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (defaultTemplate) {
+        lastUsedTemplateId = defaultTemplate.id;
+        isFallbackTemplate = true;
+        console.log(`[generate-meal-plan] 🔄 No previous plan found. Using fallback default template: ${lastUsedTemplateId}`);
+      }
+    }
+
     const prioritizedTemplateIds = lastUsedTemplateId ? [lastUsedTemplateId] : [];
 
     const fastMarmitaMode = !!patientProfile?.fast_marmita_mode;
