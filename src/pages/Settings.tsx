@@ -357,6 +357,14 @@ export default function Settings() {
                   placeholder="(11) 99999-9999"
                 />
               </div>
+              <div>
+                <Label>WhatsApp</Label>
+                <Input
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
               <Button type="submit" className="gradient-primary gap-2" disabled={savingProfile}>
                 <Save className="w-4 h-4" />
                 {savingProfile ? t("common.saving") : t("settings.saveProfile")}
