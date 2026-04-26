@@ -195,17 +195,17 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
   }
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4 w-full max-w-full overflow-x-hidden">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Brain className="w-5 h-5 text-primary" />
-          <div>
-            <h2 className="text-sm font-bold">Consultor de Estratégia IFJ</h2>
-            <p className="text-[10px] text-muted-foreground">Análise clínica + 3 protocolos sugeridos</p>
+      <div className="flex items-center justify-between gap-2 pr-10">
+        <div className="flex items-center gap-2 min-w-0 flex-1">
+          <Brain className="w-5 h-5 text-primary shrink-0" />
+          <div className="min-w-0">
+            <h2 className="text-sm font-bold truncate">Consultor de Estratégia IFJ</h2>
+            <p className="text-[10px] text-muted-foreground truncate">Análise clínica + 3 protocolos sugeridos</p>
           </div>
         </div>
-        <Button variant="ghost" size="sm" onClick={onCancel} className="text-xs h-7">
+        <Button variant="ghost" size="sm" onClick={onCancel} className="text-xs h-7 shrink-0">
           <ArrowLeft className="w-3 h-3 mr-1" /> Voltar
         </Button>
       </div>
@@ -215,7 +215,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
       {/* Preview disclaimer */}
       <div className="flex items-start gap-2 bg-amber-500/10 border border-amber-500/20 rounded-lg p-2">
         <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
-        <p className="text-[9px] text-amber-700 dark:text-amber-400 leading-relaxed">
+        <p className="text-[10px] text-amber-700 dark:text-amber-400 leading-relaxed break-words">
           {analysis.previewDisclaimer}
         </p>
       </div>
@@ -223,25 +223,23 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
       {/* Strategy Cards */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
-          <Sparkles className="w-4 h-4 text-primary" />
-          <h3 className="text-xs font-bold uppercase tracking-wider">3 Estratégias Recomendadas</h3>
+          <Sparkles className="w-4 h-4 text-primary shrink-0" />
+          <h3 className="text-xs font-bold uppercase tracking-wider truncate">3 Estratégias Recomendadas</h3>
         </div>
         
-        <ScrollArea className="max-h-[500px]">
-          <div className="space-y-3 pr-2">
-            {strategies.map((strategy, idx) => (
-              <StrategyCard
-                key={strategy.id}
-                strategy={strategy}
-                rank={idx + 1}
-                isSelected={selectedStrategyId === strategy.id}
-                onSelect={() => handleSelectStrategy(strategy.id)}
-                onPreview={() => handleOpenPreview(strategy.id)}
-                onSizeChange={(size) => handleSizeChange(strategy.id, size)}
-              />
-            ))}
-          </div>
-        </ScrollArea>
+        <div className="space-y-3 w-full">
+          {strategies.map((strategy, idx) => (
+            <StrategyCard
+              key={strategy.id}
+              strategy={strategy}
+              rank={idx + 1}
+              isSelected={selectedStrategyId === strategy.id}
+              onSelect={() => handleSelectStrategy(strategy.id)}
+              onPreview={() => handleOpenPreview(strategy.id)}
+              onSizeChange={(size) => handleSizeChange(strategy.id, size)}
+            />
+          ))}
+        </div>
       </div>
 
       {selectedStrategy && (
@@ -249,8 +247,8 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
           onClick={() => handleOpenPreview(selectedStrategy.id)}
           className="w-full h-10 text-xs gap-2 gradient-primary shadow-glow"
         >
-          <Sparkles className="w-4 h-4" />
-          Abrir Preview de "{selectedStrategy.name}"
+          <Sparkles className="w-4 h-4 shrink-0" />
+          <span className="truncate">Abrir Preview de "{selectedStrategy.name}"</span>
         </Button>
       )}
     </div>
