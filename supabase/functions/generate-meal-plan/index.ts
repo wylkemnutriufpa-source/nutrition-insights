@@ -1658,27 +1658,21 @@ function generatePlanFromVisualLibrary(
         candidates.push(...catItems);
       }
 
-      // ──── NO_FALLBACK: Throw error instead of improvising ────
       if (candidates.length === 0) {
         throw new Error(`[STRICT] No visual library items found for meal type "${mealType}" on day ${day}. No fallback allowed.`);
       }
 
-      // Anti-repetition tracking
-      if (!usedPerMealType.has(mealType)) usedPerMealType.set(mealType, new Set());
-      const usedSet = usedPerMealType.get(mealType)!;
-      if (usedSet.size >= candidates.length) usedSet.clear();
-
       // Seeded shuffle for variety
       const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
       const shuffled = seededShuffle(candidates, seed);
+      
+      // No modelo de template diário, pegamos as 5 melhores opções (1 principal + 4 subs)
+      const topCandidates = shuffled.slice(0, 5);
+      const subGroupId = crypto.randomUUID();
 
-      // Pick first unused item
-      let picked: VisualLibraryItem | null = null;
-      for (const c of shuffled) {
-        if (!usedSet.has(c.id)) { picked = c; break; }
-      }
-      if (!picked) picked = shuffled[0];
-      usedSet.add(picked.id);
+      for (let i = 0; i < topCandidates.length; i++) {
+        const picked = topCandidates[i];
+        const isPrimary = i === 0;
 
       // ──── STRICT_DB_EXCLUSIVE: Validate item has image ────
       if (!picked.image_url || picked.image_url.length < 5) {
