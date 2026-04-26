@@ -183,6 +183,7 @@ test.describe("Mobile QA Automated Steps", () => {
         expect(ev).toHaveProperty('modalId');
         expect(ev).toHaveProperty('viewport');
         expect(ev).toHaveProperty('sequence');
+        expect(ev).toHaveProperty('grouping');
         expect(typeof ev.sequence).toBe('number');
       }
     } else if (fileName.endsWith('.csv')) {
