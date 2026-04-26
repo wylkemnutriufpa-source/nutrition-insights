@@ -14,6 +14,7 @@ import {
   X,
   CalendarRange,
   RefreshCcw,
+  Sparkles,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import type { MealPlanItem } from "@/stores/mealPlanEditorV2Store";
@@ -92,6 +93,14 @@ export default function MealSlotItemCard({
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1">
           {isSub && <span className="text-[9px] bg-accent text-accent-foreground px-1 rounded">Sub</span>}
+          {(item as any).item_origin === 'auto_generated_sub' && (
+            <span 
+              className="text-[9px] bg-amber-100 text-amber-700 px-1 rounded flex items-center gap-0.5"
+              title="Esta substituição foi gerada automaticamente pelo motor de nutrição para garantir o equilíbrio de macros."
+            >
+              <Sparkles className="w-2.5 h-2.5" /> Auto
+            </span>
+          )}
           <p className="font-medium truncate">{item.title}</p>
         </div>
         <div className="flex items-center gap-2 text-[10px] text-muted-foreground mt-0.5">

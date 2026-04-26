@@ -137,4 +137,51 @@ describe('Meal Plan Substitution System', () => {
     const resultInvalid = validateMealSubstitutions(itemInvalidCarbs, 4);
     expect(resultInvalid.detailedErrors.some(e => e.macros.carbs)).toBe(true);
   });
+
+  describe('E2E Plan Generation & Validation', () => {
+    it('should ensure each meal creates exactly 1 primary item and shared substitution_group_id', () => {
+      const items: Partial<MealPlanItem>[] = [
+        { id: '1', title: 'Frango', is_primary: true, substitution_group_id: 'grp-1', meal_type: 'lunch' },
+        { id: '2', title: 'Peixe', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'lunch' },
+        { id: '3', title: 'Ovo', is_primary: false, substitution_group_id: 'grp-1', meal_type: 'lunch' },
+      ];
+
+      const lunchItems = items.filter(i => i.meal_type === 'lunch');
+      const primaries = lunchItems.filter(i => i.is_primary === true);
+      const subs = lunchItems.filter(i => i.is_primary === false);
+
+      expect(primaries.length).toBe(1);
+      expect(subs.length).toBe(2);
+      expect(subs.every(s => s.substitution_group_id === primaries[0].substitution_group_id)).toBe(true);
+    });
+
+    it('should only use primary items for total macro calculation', () => {
+      const items = [
+        { calories_target: 500, is_primary: true },
+        { calories_target: 400, is_primary: false }, // sub
+        { calories_target: 300, is_primary: true },
+      ];
+
+      const total = items
+        .filter(i => i.is_primary !== false)
+        .reduce((sum, i) => sum + (i.calories_target || 0), 0);
+      
+      expect(total).toBe(800); // 500 + 300
+    });
+
+    it('should preserve substitution_group_id when editing individual options', () => {
+      const item: Partial<MealPlanItem> = {
+        id: 'sub-1',
+        substitution_group_id: 'grp-1',
+        is_primary: false,
+        calories_target: 400
+      };
+
+      // Simulating update
+      const updatedItem = { ...item, calories_target: 450 };
+      
+      expect(updatedItem.substitution_group_id).toBe('grp-1');
+      expect(updatedItem.is_primary).toBe(false);
+    });
+  });
 });

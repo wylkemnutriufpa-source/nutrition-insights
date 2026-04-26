@@ -53,7 +53,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [loadTemplateOpen, setLoadTemplateOpen] = useState(false);
 
   const primaryItems = items.filter((i) => (i as any).is_primary !== false);
-  const substitutionItems = items.filter((i) => (i as any).is_primary === false);
+  const substitutionItems = items
+    .filter((i) => (i as any).is_primary === false)
+    .sort((a, b) => (b.calories_target || 0) - (a.calories_target || 0));
 
   const totalKcal = primaryItems.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = primaryItems.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -232,6 +234,8 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
         carbs_target: item.carbs_target,
         fat_target: item.fat_target,
         item_origin: (item as any).item_origin || "manual",
+        is_primary: (item as any).is_primary ?? true,
+        substitution_group_id: (item as any).substitution_group_id,
       });
     });
 
@@ -265,6 +269,8 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           carbs_target: item.carbs_target,
           fat_target: item.fat_target,
           item_origin: (item as any).item_origin || "manual",
+          is_primary: (item as any).is_primary ?? true,
+          substitution_group_id: (item as any).substitution_group_id,
         });
       });
     });
@@ -385,7 +391,16 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
 
             {substitutionItems.length > 0 && (
               <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
-                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">Substituições</p>
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                    Substituições ({substitutionItems.length})
+                  </p>
+                  {substitutionItems.some(i => (i as any).item_origin === 'auto_generated_sub') && (
+                    <div className="flex items-center gap-1 text-[8px] text-amber-600 font-medium bg-amber-50 px-1 rounded animate-pulse" title="Contém sugestões automáticas">
+                      <Sparkles className="w-2.5 h-2.5" /> AUTO
+                    </div>
+                  )}
+                </div>
                 {substitutionItems.map((item) => (
                   <MealSlotItemCard
                     key={item.id}
