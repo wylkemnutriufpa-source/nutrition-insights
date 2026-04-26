@@ -32,14 +32,29 @@ test.describe("Publish Plan Flow - In-Office Wizard", () => {
     const publishBtn = page.getByTestId("publish-button");
     await expect(publishBtn).toBeVisible({ timeout: 10000 });
 
-    // 2. Simulate Timeout Error (408)
+    // 2. Simulate Network Error followed by Timeout (408)
+    let attempt = 0;
     await page.route("**/rest/v1/meal_plans*", async (route, request) => {
       if (request.method() === "PATCH") {
-        await route.fulfill({
-          status: 408,
-          contentType: "application/json",
-          body: JSON.stringify({ message: "Request Timeout" }),
-        });
+        attempt++;
+        if (attempt === 1) {
+          // First attempt: Network Error
+          await route.abort("internetdisconnected");
+        } else if (attempt === 2) {
+          // Second attempt: 408 Timeout
+          await route.fulfill({
+            status: 408,
+            contentType: "application/json",
+            body: JSON.stringify({ message: "Request Timeout" }),
+          });
+        } else {
+          // Third attempt onwards: Success
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ success: true }),
+          });
+        }
       } else {
         await route.continue();
       }
