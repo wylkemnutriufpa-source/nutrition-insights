@@ -97,7 +97,9 @@ describe('Invitation E2E Simulation', () => {
     const pastDate = new Date();
     pastDate.setFullYear(pastDate.getFullYear() - 1);
 
-    (supabase.maybeSingle as any).mockResolvedValue({
+    const fromMock = supabase.from as any;
+    fromMock().select().eq().maybeSingle.mockResolvedValue({
+
       data: {
         id: '1',
         code: 'EXPIRED',
