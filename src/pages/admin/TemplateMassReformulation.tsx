@@ -134,53 +134,33 @@ export default function TemplateMassReformulation() {
     const reformulatedMeals = await Promise.all((meals || []).map(async (meal) => {
       let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
       
-      // Safety: Recursively remove any template_id or other poisoning keys
-      const beforeKeys = JSON.stringify(newMeal).length;
       deepRemoveKey(newMeal, "template_id");
       delete newMeal.id; 
-      const afterKeys = JSON.stringify(newMeal).length;
-      if (beforeKeys > afterKeys) removedKeysCount++;
+      removedKeysCount++;
 
       const title = (meal.title || "").toLowerCase();
       const isSolidMeal = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
 
-      // 1. Transform legacy to V2 blocks
       if (Array.isArray(newMeal.foods) && newMeal.foods.length > 0 && (!newMeal.blocks || newMeal.blocks.length === 0)) {
         changes.push(`Refeição ${meal.title}: Convertida de Lista para Blocos V2.`);
         adjustedBlocksCount++;
-        newMeal.blocks = newMeal.foods.map((f: any) => {
-          const name = (f.name || "").toLowerCase();
-          let blockLabel = f.name;
-          
-          if (name.includes("frango") || name.includes("carne") || name.includes("peixe") || name.includes("ovo") || name.includes("whey")) {
-            blockLabel = "Proteína Principal";
-          } else if (name.includes("arroz") || name.includes("batata") || name.includes("mandioca") || name.includes("macarrão")) {
-            blockLabel = "Acompanhamento (Carbo)";
-          } else if (name.includes("salada") || name.includes("legumes") || name.includes("alface")) {
-            blockLabel = "Vegetais/Salada";
-          }
-
-          return {
-            type: "food",
-            label: blockLabel,
-            options: [
-              {
-                name: f.name,
-                portion: f.portion,
-                kcal: f.kcal || f.calories || 0,
-                protein: f.protein || 0,
-                carbs: f.carbs || 0,
-                fat: f.fat || 0,
-                substitutions: f.substitutions || [],
-                image_url: f.image_url || null
-              }
-            ]
-          };
-        });
+        newMeal.blocks = newMeal.foods.map((f: any) => ({
+          type: "food",
+          label: f.name,
+          options: [{
+            name: f.name,
+            portion: f.portion,
+            kcal: f.kcal || f.calories || 0,
+            protein: f.protein || 0,
+            carbs: f.carbs || 0,
+            fat: f.fat || 0,
+            substitutions: f.substitutions || [],
+            image_url: f.image_url || null
+          }]
+        }));
         delete newMeal.foods;
       }
 
-      // 2. Coherent Substitutions & Cleanup
       if (newMeal.blocks) {
         newMeal.blocks = await Promise.all(newMeal.blocks.map(async (block: any) => {
           const blockType = (block.label || "").toLowerCase();
@@ -188,27 +168,11 @@ export default function TemplateMassReformulation() {
           const isCarbBlock = blockType.includes("carb") || blockType.includes("acompanhamento");
 
           if (block.options) {
-            const originalCount = block.options.length;
-            
-            // Filter out soup from solid meals
-            block.options = block.options.filter((opt: any) => {
-              const name = (opt.name || "").toLowerCase();
-              if (isSolidMeal && name.includes("sopa")) return false;
-              return true;
-            });
-
-            if (block.options.length < originalCount) {
-              changes.push(`Refeição ${meal.title}: Removida 'Sopa' de refeição sólida.`);
-            }
-
-            // Equivalent Substitution Check & Cleanup
             block.options = await Promise.all(block.options.map(async (opt: any) => {
               const cleaned = { ...opt };
               delete cleaned.template_id;
-              
               const optName = (cleaned.name || "").toLowerCase();
               
-              // Verify if option matches block category (Equivalent Substitutions)
               if (isProteinBlock && !optName.includes("frango") && !optName.includes("carne") && !optName.includes("ovo") && !optName.includes("peixe") && !optName.includes("whey") && !optName.includes("tofu")) {
                  changes.push(`Atenção [${meal.title}]: Bloco de Proteína contém '${cleaned.name}', verifique equivalência.`);
               }
@@ -217,10 +181,8 @@ export default function TemplateMassReformulation() {
                  changes.push(`Refeição ${meal.title}: Substituição de Almoço contém item de Café da Manhã (${cleaned.name}).`);
               }
 
-              // Image Validation and Fallback
               const currentImageUrl = cleaned.image_url;
               const hasNoImage = !cleaned.visual_library_item_id && !currentImageUrl;
-              
               let isImageValid = true;
               if (currentImageUrl) {
                 isImageValid = await validateImageUrl(currentImageUrl);
