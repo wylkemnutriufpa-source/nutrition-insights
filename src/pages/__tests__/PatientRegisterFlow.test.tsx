@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useAuth } from "@/lib/auth";
 import { usePatientsList, useAddPatient } from "@/hooks/queries/usePatientsList";
 import { toast } from "sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 // Create a mock navigate function
 const mockNavigate = vi.fn();
@@ -13,6 +14,11 @@ const mockNavigate = vi.fn();
 // Mock dependencies
 vi.mock("@/lib/auth", () => ({
   useAuth: vi.fn(),
+}));
+
+// Mock DashboardLayout to avoid complex nested dependencies
+vi.mock("@/components/layout/DashboardLayout", () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
 }));
 
 vi.mock("@/hooks/queries/usePatientsList", () => ({
@@ -32,7 +38,7 @@ vi.mock("@/hooks/useOnlinePatients", () => ({
 }));
 
 vi.mock("@/hooks/useExperienceMode", () => ({
-  useExperienceMode: vi.fn(() => ({ minMode: () => true })),
+  useExperienceMode: vi.fn(() => ({ minMode: () => true, isBasic: false })),
 }));
 
 vi.mock("react-router-dom", async () => {
@@ -61,9 +67,11 @@ const queryClient = new QueryClient({
 const renderWithProviders = (component: React.ReactNode) => {
   return render(
     <QueryClientProvider client={queryClient}>
-      <BrowserRouter>
-        {component}
-      </BrowserRouter>
+      <TooltipProvider>
+        <BrowserRouter>
+          {component}
+        </BrowserRouter>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 };
