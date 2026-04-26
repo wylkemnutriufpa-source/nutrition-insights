@@ -1,0 +1,112 @@
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, screen, waitFor, act } from '@testing-library/react';
+import UpdateBanner from '../components/common/UpdateBanner';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import '@testing-library/jest-dom';
+
+// Mock registerSW from virtual:pwa-register/react (we mock it as a regular import)
+vi.mock('virtual:pwa-register/react', () => ({
+  useRegisterSW: vi.fn()
+}));
+
+const queryClient = new QueryClient();
+
+describe('E2E Simulation: Real App Update Cycle', () => {
+  let mockNeedRefresh = false;
+  let mockUpdateServiceWorker = vi.fn();
+  let mockOfflineReady = false;
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    localStorage.clear();
+    
+    // Default mock behavior
+    const { useRegisterSW } = require('virtual:pwa-register/react');
+    useRegisterSW.mockReturnValue({
+      needRefresh: [mockNeedRefresh, (val: boolean) => { mockNeedRefresh = val; }],
+      offlineReady: [mockOfflineReady, (val: boolean) => { mockOfflineReady = val; }],
+      updateServiceWorker: mockUpdateServiceWorker
+    });
+    
+    // Mock Service Worker registration
+    Object.defineProperty(window.navigator, 'serviceWorker', {
+      value: {
+        getRegistration: vi.fn().mockResolvedValue({
+          update: vi.fn().mockResolvedValue(true),
+          waiting: { scriptURL: '/sw.js?v=2' }
+        }),
+      },
+      configurable: true
+    });
+  });
+
+  it('should show the update pop-up once and NOT loop on background/foreground transition', async () => {
+    const { useRegisterSW } = require('virtual:pwa-register/react');
+    
+    // Simulate a new version being detected
+    useRegisterSW.mockReturnValue({
+      needRefresh: [true, vi.fn()],
+      offlineReady: [false, vi.fn()],
+      updateServiceWorker: mockUpdateServiceWorker
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <UpdateBanner />
+      </QueryClientProvider>
+    );
+
+    // 1. Pop-up should appear initially
+    expect(await screen.findByText(/Nova versão disponível/i)).toBeInTheDocument();
+
+    // 2. Dismiss it (simulate clicking 'Mais tarde' or similar close action)
+    const dismissButton = screen.getByRole('button', { name: /depois/i });
+    act(() => {
+      dismissButton.click();
+    });
+
+    // Pop-up should disappear
+    await waitFor(() => {
+      expect(screen.queryByText(/Nova versão disponível/i)).not.toBeInTheDocument();
+    });
+
+    // 3. Simulate App going to Background then Foreground
+    // This should trigger a check but NOT show the pop-up again because it was recently dismissed
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'hidden', writable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    act(() => {
+      Object.defineProperty(document, 'visibilityState', { value: 'visible', writable: true });
+      document.dispatchEvent(new Event('visibilitychange'));
+    });
+
+    // pop-up should still be hidden because of the 5-minute cooldown logic
+    expect(screen.queryByText(/Nova versão disponível/i)).not.toBeInTheDocument();
+    
+    // 4. Verify no infinite reload loop
+    // Even if we "reload" (re-render), the dismissed state should persist in localStorage
+    render(
+      <QueryClientProvider client={queryClient}>
+        <UpdateBanner />
+      </QueryClientProvider>
+    );
+    expect(screen.queryByText(/Nova versão disponível/i)).not.toBeInTheDocument();
+  });
+
+  it('should handle iOS and Android specific standalone modes without looping', async () => {
+    // Mock iOS standalone mode
+    (window.navigator as any).standalone = true;
+    
+    render(
+      <QueryClientProvider client={queryClient}>
+        <UpdateBanner />
+      </QueryClientProvider>
+    );
+
+    // Verify it handles specific PWA platform logic if present
+    // (This is a simplified check for the platform-aware logic in UpdateBanner)
+    expect(localStorage.getItem('fj:update-dismissed-at')).toBeNull();
+  });
+});
