@@ -95,6 +95,38 @@ export default function MobileQA() {
     }
   };
 
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    doc.setFontSize(20);
+    doc.text("Relatório de QA Mobile", 10, 20);
+    doc.setFontSize(12);
+    doc.text(`Data: ${new Date().toLocaleDateString()}`, 10, 30);
+    doc.text(`Total de Evidências: ${evidences.length}`, 10, 40);
+
+    let yOffset = 50;
+    evidences.forEach((ev, index) => {
+      if (yOffset > 250) {
+        doc.addPage();
+        yOffset = 20;
+      }
+      doc.setFont("helvetica", "bold");
+      doc.text(`${index + 1}. ${ev.item} (${ev.viewport})`, 10, yOffset);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Contexto: ${ev.context || "N/A"}`, 10, yOffset + 5);
+      if (ev.metrics) {
+        doc.text(`Metrics - scrollX: ${ev.metrics.scrollX}, scrollWidth: ${ev.metrics.scrollWidth}, clientWidth: ${ev.metrics.clientWidth}`, 10, yOffset + 10);
+        yOffset += 15;
+      } else {
+        yOffset += 10;
+      }
+      
+      // We don't embed all base64 images to keep PDF size small, but we could add one here if needed
+      yOffset += 10;
+    });
+
+    doc.save(`mobile-qa-report-${new Date().getTime()}.pdf`);
+  };
+
   const exportCSV = () => {
     if (evidences.length === 0) {
       toast.error("Nenhuma evidência para exportar");
@@ -159,10 +191,11 @@ export default function MobileQA() {
     jsonLink.download = `mobile-qa-report-${new Date().getTime()}.json`;
     jsonLink.click();
 
-    // Export CSV as well
+    // Export CSV and PDF as well
     exportCSV();
+    exportPDF();
 
-    toast.success("Relatórios exportados com sucesso (JSON e CSV)!");
+    toast.success("Relatórios exportados com sucesso (PDF, JSON e CSV)!");
   };
 
   return (
