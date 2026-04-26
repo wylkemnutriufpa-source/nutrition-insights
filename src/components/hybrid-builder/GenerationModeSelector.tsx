@@ -70,7 +70,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     (async () => {
       const { data, error } = await supabase
         .from("meal_recipes")
-        .select("meal_type, is_fixed")
+        .select("id, name, meal_type, is_fixed, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
         .eq("nutritionist_id", user.id)
         .eq("is_active", true);
       if (cancelled) return;
