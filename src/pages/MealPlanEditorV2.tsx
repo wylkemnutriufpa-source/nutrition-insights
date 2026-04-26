@@ -106,12 +106,6 @@ export default function MealPlanEditorV2() {
     }
     return true;
   };
-  const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
-  const { user } = useAuth();
-  const { tenantId } = useTenant();
-  const store = useMealPlanEditorV2Store();
-  const editorRef = useRef<HTMLDivElement>(null);
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [savingAndPublishing, setSavingAndPublishing] = useState(false);
