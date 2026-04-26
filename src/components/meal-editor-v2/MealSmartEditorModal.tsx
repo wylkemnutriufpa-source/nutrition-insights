@@ -122,11 +122,18 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = async () => {
-    // Validação de macros zerados para marmitas ou refeições planejadas
-    if (adjustedMacros.calories <= 0 || adjustedMacros.protein <= 0) {
-      toast.error("Não é possível salvar uma refeição com macros zerados.", {
-        description: "Adicione alimentos ou selecione uma refeição pronta válida."
+    // Bloqueio específico para Wannubia
+    if (hasBlockedSubs) {
+      toast.error("Combinação proibida detectada", {
+        description: "Esta paciente possui restrições severas. Remova itens como ultraprocessados ou frituras das substituições."
       });
+      return;
+    }
+
+    // Validação de macros relaxada: permite macros parciais zerados
+    // O sistema agora bloqueia apenas na publicação final se o total do dia for zero.
+    if (adjustedMacros.calories < 0) {
+      toast.error("Erro: Calorias não podem ser negativas.");
       return;
     }
 
