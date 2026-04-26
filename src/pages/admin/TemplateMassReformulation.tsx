@@ -218,20 +218,29 @@ export default function TemplateMassReformulation() {
               }
 
               // Image Validation and Fallback
-              if (!cleaned.visual_library_item_id && !cleaned.image_url) {
+              const currentImageUrl = cleaned.image_url;
+              const hasNoImage = !cleaned.visual_library_item_id && !currentImageUrl;
+              
+              let isImageValid = true;
+              if (currentImageUrl) {
+                isImageValid = await validateImageUrl(currentImageUrl);
+              }
+
+              if (hasNoImage || !isImageValid) {
                 cleaned.image_url = FALLBACK_IMAGE_URL;
-                changes.push(`Refeição ${meal.title}: Asset visual ausente em '${cleaned.name}'. Aplicado fallback automático.`);
+                const reason = hasNoImage ? "ausente" : "indisponível (HTTP Check)";
+                changes.push(`Refeição ${meal.title}: Asset visual ${reason} em '${cleaned.name}'. Aplicado fallback automático.`);
               }
               
               return cleaned;
-            });
+            }));
           }
           return block;
-        });
+        }));
       }
 
       return newMeal;
-    });
+    }));
 
     const summary = {
       removedKeysCount,
