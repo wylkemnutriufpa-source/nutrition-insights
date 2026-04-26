@@ -124,12 +124,6 @@ export default function TemplateMassReformulation() {
       deepRemoveKey(newMeal, "template_id");
       delete newMeal.id; 
 
-      let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
-      
-      // Safety: Remove any recursive template_id or IDs that shouldn't be here
-      delete newMeal.template_id;
-      delete newMeal.id; 
-      
       const title = (meal.title || "").toLowerCase();
       const isSolidMeal = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
 
