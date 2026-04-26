@@ -1373,6 +1373,11 @@ export default function PatientDetail() {
                               userId: user!.id,
                               tenantId,
                             });
+                            if (genData.is_fallback_template) {
+                              toast.info(`Nota: Nenhum plano anterior encontrado. Usamos o template padrão "${genData.template_name_used || "Base"}" como fallback.`, { duration: 6000 });
+                            } else if (genData.template_name_used) {
+                              toast.success(`Plano gerado usando o template: ${genData.template_name_used}`);
+                            }
                             toast.success(
                               finalized.corrected
                                 ? "Plano gerado e revisado pelo motor clínico."
