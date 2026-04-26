@@ -239,7 +239,7 @@ export function validatePlanSubstitutions(items: MealPlanItem[], maxCount: numbe
   const allDetailedErrors: SubstitutionError[] = [];
   
   items.forEach(item => {
-    const result = validateMealSubstitutions(item, maxCount);
+    const result = validateMealSubstitutions(item, maxCount, patientName);
     if (!result.valid) {
       result.errors.forEach(err => allErrors.push(`[${item.title}] ${err}`));
       allDetailedErrors.push(...result.detailedErrors);
