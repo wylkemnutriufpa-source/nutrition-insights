@@ -142,7 +142,7 @@ export default function Settings() {
     setSavingProfile(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, phone: phone || null })
+      .update({ full_name: fullName, phone: phone || null, whatsapp: whatsapp || null })
       .eq("user_id", user.id);
     setSavingProfile(false);
     if (error) {
