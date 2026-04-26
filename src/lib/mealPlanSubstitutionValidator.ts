@@ -163,6 +163,44 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
         }
       }
     });
+    // 4. Mixing validation (Requirement: Prevent mixing substitutions from different meals/templates)
+    const mealType = (item.meal_type as string || "").toLowerCase();
+    individualFoods.forEach(foodText => {
+      const ft = normalize(foodText);
+      // Heuristic: check if food contains keywords of other meals that are incompatible
+      const lunchKeywords = ["arroz", "feijao", "carne", "frango", "peixe", "salada", "legumes"];
+      const breakfastKeywords = ["pao", "ovo", "cafe", "leite", "fruta", "iogurte", "aveia", "tapioca"];
+      
+      if (mealType.includes("breakfast") || mealType.includes("desjejum") || mealType.includes("cafe")) {
+        if (lunchKeywords.some(k => ft.includes(k) && !ft.includes("ovo") && !ft.includes("fruta"))) {
+           const msg = `Possível mistura: "${foodText}" parece ser uma opção de Almoço/Jantar em uma refeição de Café da Manhã.`;
+           errors.push(msg);
+           detailedErrors.push({
+             mealId: item.id,
+             mealTitle: item.title || "Sem título",
+             substitutionIndex: idx,
+             foodName: foodText,
+             macros: {},
+             limitError: msg
+           });
+        }
+      }
+      
+      if (mealType.includes("lunch") || mealType.includes("dinner") || mealType.includes("almoco") || mealType.includes("jantar")) {
+        if (breakfastKeywords.some(k => ft.includes(k) && !ft.includes("frango") && !ft.includes("carne"))) {
+           const msg = `Possível mistura: "${foodText}" parece ser uma opção de Café da Manhã em uma refeição de Almoço/Jantar.`;
+           errors.push(msg);
+           detailedErrors.push({
+             mealId: item.id,
+             mealTitle: item.title || "Sem título",
+             substitutionIndex: idx,
+             foodName: foodText,
+             macros: {},
+             limitError: msg
+           });
+        }
+      }
+    });
   });
 
   return {
