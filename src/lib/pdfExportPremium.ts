@@ -588,10 +588,74 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
     const dayKcal = dayItems.reduce((s, i) => s + (i.calories_target || 0), 0);
     const dayProt = dayItems.reduce((s, i) => s + (i.protein_target || 0), 0);
 
-    // Sort meals by type
-    const sorted = [...dayItems].sort((a, b) => 
-      mealOrder.indexOf(a.mealType) - mealOrder.indexOf(b.mealType)
-    );
+    // Group meals by type then by substitution group
+    const mealTypeGroups = mealOrder.map(mType => {
+      const typeItems = dayItems.filter(i => i.mealType === mType);
+      if (typeItems.length === 0) return "";
+
+      // Within this meal type, group by substitution_group_id
+      const subGroups: Record<string, MealPlanPDFItem[]> = {};
+      const orphans: MealPlanPDFItem[] = [];
+
+      typeItems.forEach(item => {
+        if (item.substitution_group_id) {
+          if (!subGroups[item.substitution_group_id]) subGroups[item.substitution_group_id] = [];
+          subGroups[item.substitution_group_id].push(item);
+        } else {
+          orphans.push(item);
+        }
+      });
+
+      const mealInfo = MEAL_LABELS[mType] || { label: mType, emoji: "🍽️", color: "#888" };
+
+      const renderGroup = (groupItems: MealPlanPDFItem[]) => {
+        const primary = groupItems.find(i => i.is_primary) || groupItems[0];
+        const substitutions = groupItems.filter(i => i !== primary);
+
+        return `
+          <div class="meal-row">
+            <div class="meal-type-bar" style="background: ${mealInfo.color}"></div>
+            <div class="meal-content">
+              <div class="meal-info">
+                <div class="meal-type-label" style="color: ${mealInfo.color}">
+                  ${mealInfo.emoji} ${escapeHtml(mealInfo.label)}
+                </div>
+                <div class="meal-title">${escapeHtml(primary.title)}</div>
+                ${primary.description ? formatDescription(primary.description) : ""}
+                
+                ${substitutions.length > 0 ? `
+                  <div style="margin-top: 10px; padding: 8px; background: #fafafa; border-radius: 6px; border-left: 3px solid #eee;">
+                    <div style="font-size: 9px; font-weight: 800; color: #999; margin-bottom: 5px; text-transform: uppercase;">Opções de Substituição</div>
+                    ${substitutions.map(sub => `
+                      <div style="margin-bottom: 8px; padding-bottom: 4px; border-bottom: 1px dashed #eee;">
+                        <div style="font-size: 11px; font-weight: 700; color: #444;">${escapeHtml(sub.title)}</div>
+                        ${sub.description ? `<div style="font-size: 9px; color: #777;">${escapeHtml(sub.description)}</div>` : ""}
+                        <div style="font-size: 9px; color: #999; margin-top: 2px;">
+                          ${sub.calories_target} kcal · P ${sub.protein_target}g · C ${sub.carbs_target}g · G ${sub.fat_target}g
+                          <span style="font-style: italic; color: #c44; margin-left: 4px;">(Macros não considerados no total)</span>
+                        </div>
+                      </div>
+                    `).join("")}
+                  </div>
+                ` : ""}
+
+                ${primary.scheduled_time ? `<div class="meal-time">🕐 ${escapeHtml(primary.scheduled_time)}</div>` : ""}
+              </div>
+              <div class="meal-macros">
+                <div class="kcal-value">${primary.calories_target || 0}</div>
+                <div class="macro-detail">kcal</div>
+                <div class="macro-detail" style="margin-top:4px">
+                  P ${primary.protein_target || 0}g · C ${primary.carbs_target || 0}g · G ${primary.fat_target || 0}g
+                </div>
+                <div style="font-size: 8px; color: #D4A84B; font-weight: 700; margin-top: 2px;">(Total Considerado)</div>
+              </div>
+            </div>
+          </div>
+        `;
+      };
+
+      return Object.values(subGroups).map(renderGroup).join("") + orphans.map(i => renderGroup([i])).join("");
+    }).join("");
 
     return `
       <div class="day-section">
@@ -600,31 +664,7 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
           <div class="day-name">${escapeHtml(dayName)}</div>
           <div class="day-totals"><strong>${dayKcal}</strong> kcal · <strong>${dayProt}g</strong> prot</div>
         </div>
-        ${sorted.map(item => {
-          const mealInfo = MEAL_LABELS[item.mealType] || { label: item.mealType, emoji: "🍽️", color: "#888" };
-          return `
-            <div class="meal-row">
-              <div class="meal-type-bar" style="background: ${mealInfo.color}"></div>
-              <div class="meal-content">
-                <div class="meal-info">
-                  <div class="meal-type-label" style="color: ${mealInfo.color}">
-                    ${mealInfo.emoji} ${escapeHtml(mealInfo.label)}
-                  </div>
-                  <div class="meal-title">${escapeHtml(item.title)}</div>
-                  ${item.description ? formatDescription(item.description) : ""}
-                  ${item.scheduled_time ? `<div class="meal-time">🕐 ${escapeHtml(item.scheduled_time)}</div>` : ""}
-                </div>
-                <div class="meal-macros">
-                  <div class="kcal-value">${item.calories_target || 0}</div>
-                  <div class="macro-detail">kcal</div>
-                  <div class="macro-detail" style="margin-top:4px">
-                    P ${item.protein_target || 0}g · C ${item.carbs_target || 0}g · G ${item.fat_target || 0}g
-                  </div>
-                </div>
-              </div>
-            </div>
-          `;
-        }).join("")}
+        ${mealTypeGroups}
       </div>
     `;
   }).join("")}
