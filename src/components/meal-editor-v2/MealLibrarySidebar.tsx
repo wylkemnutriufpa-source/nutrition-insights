@@ -285,10 +285,15 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
         calories_target: template.kcal_base,
         protein_target: template.protein_base,
         carbs_target: template.carbs_base,
+        fat_target: template.fat_base,
         edit_metadata: {
           is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
           original_recipe_id: template.is_recipe ? template.id : null,
-          foods_json: template.foods_structure
+          foods_json: template.foods_structure,
+          kcal_base: template.kcal_base,
+          protein_base: template.protein_base,
+          carbs_base: template.carbs_base,
+          fat_base: template.fat_base,
         } as any,
       });
     }
