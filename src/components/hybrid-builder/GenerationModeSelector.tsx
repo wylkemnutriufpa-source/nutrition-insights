@@ -49,6 +49,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const [generating, setGenerating] = useState(false);
   const [view, setView] = useState<View>("menu");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [consistencyOpen, setConsistencyOpen] = useState(false);
   const [useFixedSeed, setUseFixedSeed] = useState(true);
 
   const { settings: minSettings, loading: settingsLoading } = useMarmitaSettings();
