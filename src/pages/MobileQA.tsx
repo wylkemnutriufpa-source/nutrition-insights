@@ -1,14 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Smartphone, CheckCircle2, AlertCircle, X, Maximize2, MousePointer2 } from "lucide-react";
+import { Smartphone, CheckCircle2, AlertCircle, X, Maximize2, MousePointer2, Camera, Download, FileText } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import { useMobileValidation } from "@/hooks/useMobileValidation";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
 
 export default function MobileQA() {
   const { hasOverflow, overflowingElements } = useMobileValidation();
@@ -21,19 +22,95 @@ export default function MobileQA() {
     viewport360: false,
   });
 
+  const [evidences, setEvidences] = useState<Array<{ id: string, timestamp: string, item: string, viewport: string }>>([]);
+
+  // Automated Horizontal Scroll Check
+  useEffect(() => {
+    const checkScroll = () => {
+      const scrollX = window.scrollX;
+      const scrollWidth = document.documentElement.scrollWidth;
+      const clientWidth = document.documentElement.clientWidth;
+      
+      if (scrollX > 0 || scrollWidth > clientWidth) {
+        console.error("OVERFLOW-X DETECTED", { scrollX, scrollWidth, clientWidth });
+        toast.error("Overflow Horizontal Detectado!", {
+          description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}`,
+          duration: 5000,
+        });
+      }
+    };
+
+    window.addEventListener('scroll', checkScroll);
+    const interval = setInterval(checkScroll, 2000); // Periodic check
+    return () => {
+      window.removeEventListener('scroll', checkScroll);
+      clearInterval(interval);
+    };
+  }, []);
+
   const toggleCheck = (key: keyof typeof checklist) => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
+  };
+
+  const registerEvidence = async (item: string) => {
+    try {
+      const canvas = await html2canvas(document.body);
+      const screenshot = canvas.toDataURL("image/png");
+      
+      const newEvidence = {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString(),
+        item,
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        screenshot, // Store the base64 screenshot
+      };
+      
+      setEvidences(prev => [...prev, newEvidence]);
+      toast.success("Evidência registrada!", {
+        description: `Snapshot capturado para: ${item}`,
+      });
+    } catch (error) {
+      console.error("Erro ao capturar snapshot:", error);
+      toast.error("Erro ao registrar evidência");
+    }
+  };
+
+  const exportReport = () => {
+    const report = {
+      title: "Relatório de QA Mobile",
+      date: new Date().toLocaleDateString(),
+      checklist,
+      evidences,
+      summary: {
+        totalChecks: Object.values(checklist).filter(Boolean).length,
+        totalEvidences: evidences.length,
+      }
+    };
+    
+    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mobile-qa-report-${new Date().getTime()}.json`;
+    a.click();
+    toast.success("Relatório exportado com sucesso!");
   };
 
   return (
     <DashboardLayout>
       <div className="container max-w-4xl py-6 space-y-6">
-        <div className="flex items-center gap-3 border-b pb-4">
-          <Smartphone className="w-8 h-8 text-primary" />
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Mobile QA Dashboard</h1>
-            <p className="text-muted-foreground">Checklist de validação visual e testes de responsividade.</p>
+        <div className="flex items-center justify-between border-b pb-4">
+          <div className="flex items-center gap-3">
+            <Smartphone className="w-8 h-8 text-primary" />
+            <div>
+              <h1 className="text-2xl font-bold tracking-tight">Mobile QA Dashboard</h1>
+              <p className="text-muted-foreground">Checklist de validação visual e testes de responsividade.</p>
+            </div>
           </div>
+          <Button onClick={exportReport} className="gap-2">
+            <Download className="w-4 h-4" />
+            Exportar Relatório
+          </Button>
         </div>
 
         {hasOverflow && (
@@ -58,57 +135,59 @@ export default function MobileQA() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="modalClosesWithX" 
-                  checked={checklist.modalClosesWithX} 
-                  onCheckedChange={() => toggleCheck("modalClosesWithX")}
-                />
-                <Label htmlFor="modalClosesWithX">Modal fecha corretamente com o botão X</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="noContentCutoff" 
-                  checked={checklist.noContentCutoff} 
-                  onCheckedChange={() => toggleCheck("noContentCutoff")}
-                />
-                <Label htmlFor="noContentCutoff">Nenhum conteúdo está cortado nas bordas</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="noHorizontalScroll" 
-                  checked={checklist.noHorizontalScroll} 
-                  onCheckedChange={() => toggleCheck("noHorizontalScroll")}
-                />
-                <Label htmlFor="noHorizontalScroll">Sem scroll horizontal inesperado</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="touchTargetSpacing" 
-                  checked={checklist.touchTargetSpacing} 
-                  onCheckedChange={() => toggleCheck("touchTargetSpacing")}
-                />
-                <Label htmlFor="touchTargetSpacing">Espaçamento e área de toque adequados (44px+)</Label>
-              </div>
+              {[
+                { id: "modalClosesWithX", label: "Modal fecha corretamente com o botão X" },
+                { id: "noContentCutoff", label: "Nenhum conteúdo está cortado nas bordas" },
+                { id: "noHorizontalScroll", label: "Sem scroll horizontal inesperado" },
+                { id: "touchTargetSpacing", label: "Espaçamento e área de toque adequados (44px+)" }
+              ].map((item) => (
+                <div key={item.id} className="flex items-center justify-between group">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={item.id} 
+                      checked={checklist[item.id as keyof typeof checklist]} 
+                      onCheckedChange={() => toggleCheck(item.id as keyof typeof checklist)}
+                    />
+                    <Label htmlFor={item.id} className="text-sm">{item.label}</Label>
+                  </div>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="opacity-0 group-hover:opacity-100 h-8 w-8"
+                    onClick={() => registerEvidence(item.label)}
+                    title="Registrar Evidência"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
               <div className="pt-2 border-t">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">RESOLUÇÕES TESTADAS:</p>
-                <div className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="viewport390" 
-                      checked={checklist.viewport390} 
-                      onCheckedChange={() => toggleCheck("viewport390")}
-                    />
-                    <Label htmlFor="viewport390">iPhone 12/13/14 (390px)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="viewport360" 
-                      checked={checklist.viewport360} 
-                      onCheckedChange={() => toggleCheck("viewport360")}
-                    />
-                    <Label htmlFor="viewport360">Android Médio (360px)</Label>
-                  </div>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { id: "viewport390", label: "iPhone 12/13/14 (390px)" },
+                    { id: "viewport360", label: "Android Médio (360px)" }
+                  ].map((vp) => (
+                    <div key={vp.id} className="flex items-center justify-between group">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={vp.id} 
+                          checked={checklist[vp.id as keyof typeof checklist]} 
+                          onCheckedChange={() => toggleCheck(vp.id as keyof typeof checklist)}
+                        />
+                        <Label htmlFor={vp.id} className="text-sm">{vp.label}</Label>
+                      </div>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="opacity-0 group-hover:opacity-100 h-8 w-8"
+                        onClick={() => registerEvidence(vp.label)}
+                        title="Registrar Evidência"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
@@ -156,7 +235,31 @@ export default function MobileQA() {
               <div className="p-3 bg-muted rounded-lg border border-dashed text-[10px] text-muted-foreground leading-relaxed">
                 <p className="font-bold mb-1 uppercase">Dica para Mobile:</p>
                 Ao abrir o Consultor, tente rolar até o final. O botão "X" deve permanecer acessível e o conteúdo não deve vazar para os lados.
+        </div>
+
+        {evidences.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                Log de Evidências
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {evidences.map((ev) => (
+                  <div key={ev.id} className="text-xs p-2 bg-muted rounded flex justify-between items-center">
+                    <span>
+                      <span className="font-bold">[{ev.timestamp}]</span> {ev.item} 
+                      <span className="text-muted-foreground ml-2">({ev.viewport})</span>
+                    </span>
+                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                  </div>
+                ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
             </CardContent>
           </Card>
         </div>
