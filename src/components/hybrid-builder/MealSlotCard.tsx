@@ -52,8 +52,11 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [loadTemplateOpen, setLoadTemplateOpen] = useState(false);
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
+  const primaryItems = items.filter((i) => (i as any).is_primary !== false);
+  const substitutionItems = items.filter((i) => (i as any).is_primary === false);
+
+  const totalKcal = primaryItems.reduce((s, i) => s + (i.calories_target || 0), 0);
+  const totalProt = primaryItems.reduce((s, i) => s + (i.protein_target || 0), 0);
   const hasItems = items.length > 0;
 
   const handleDelete = (itemId: string) => {
@@ -362,7 +365,7 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
           </div>
         ) : (
           <div className="space-y-1.5">
-            {items.map((item) => (
+            {primaryItems.map((item) => (
               <MealSlotItemCard
                 key={item.id}
                 item={item}
@@ -379,6 +382,30 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                 onReplace={handleReplace}
               />
             ))}
+
+            {substitutionItems.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
+                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">Substituições</p>
+                {substitutionItems.map((item) => (
+                  <MealSlotItemCard
+                    key={item.id}
+                    item={item}
+                    qty={parseQuantity(item)}
+                    editingId={editingId}
+                    editGrams={editGrams}
+                    setEditingId={setEditingId}
+                    setEditGrams={setEditGrams}
+                    onApplyGramsChange={handleGramsChange}
+                    onApplyGramsChangeAllDays={handleGramsChangeAllDays}
+                    onToggleLock={handleToggleLock}
+                    onDuplicate={handleDuplicate}
+                    onDelete={handleDelete}
+                    onReplace={handleReplace}
+                  />
+                ))}
+              </div>
+            )}
+
             {foodSearchOpen && (
               <FoodSearchInline
                 day={day}
