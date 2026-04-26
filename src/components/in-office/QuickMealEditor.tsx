@@ -354,6 +354,22 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     };
   }, [blocks]);
 
+  const guardrailAlerts = useMemo(() => {
+    // These targets would ideally come from the session or latest assessment
+    // For now we check consistency between the items if they have a target defined
+    const primaryItems = blocks.flatMap(b => b.items.filter(i => i.is_primary));
+    if (primaryItems.length === 0) return [];
+
+    const alerts: string[] = [];
+    const validation = validatePlanSubstitutions(primaryItems as any);
+    
+    if (!validation.valid) {
+      alerts.push(...validation.errors);
+    }
+
+    return alerts;
+  }, [blocks]);
+
   const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
