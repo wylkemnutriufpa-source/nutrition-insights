@@ -37,15 +37,16 @@ export default function MobileQA() {
     context?: string,
     modalId?: string,
     sequence?: number,
+    grouping?: string,
     metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }
   }>>([]);
   
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [activeModalId, setActiveModalId] = useState<string | null>(null);
   const [eventLog, setEventLog] = useState<Array<{ timestamp: string, event: string, details?: any }>>([]);
-  const [overflowBuffer, setOverflowBuffer] = useState(300); // 300ms buffer
-  const lastOverflowTime = useRef<number>(0);
-  const overflowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [overflowFrames, setOverflowFrames] = useState(15); // Default to 15 frames
+  const frameCountRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
 
   const testScreens = [
     { id: "strategy", label: "Consultor de Estratégia", icon: MousePointer2, component: "StrategyAdvisor" },
@@ -68,37 +69,55 @@ export default function MobileQA() {
       const isOverflowing = scrollX > 0 || scrollWidth > clientWidth;
       
       if (isOverflowing) {
-        logEvent("Overflow detectado (inicial)", { scrollX, scrollWidth, clientWidth });
-        
-        // Clear previous timeout if exists
-        if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
-        
-        // Wait for buffer/debounce
-        overflowTimeoutRef.current = setTimeout(async () => {
-          // Re-verify after buffer
-          const currentScrollX = window.scrollX;
-          const currentScrollWidth = document.documentElement.scrollWidth;
-          const currentClientWidth = document.documentElement.clientWidth;
+        if (!animationFrameRef.current) {
+          logEvent("Overflow detectado (inicial)", { scrollX, scrollWidth, clientWidth });
           
-          if (currentScrollX > 0 || currentScrollWidth > currentClientWidth) {
-            const now = Date.now();
-            if (now - lastOverflowTime.current > 5000) {
-              lastOverflowTime.current = now;
-              logEvent("Overflow persistente capturado", { currentScrollX, currentScrollWidth, currentClientWidth });
-              
-              toast.error("Overflow Horizontal Persistente!", {
-                description: `Buffer de ${overflowBuffer}ms atingido. Capturando evidência...`,
-                duration: 5000,
-              });
-              
-              await registerEvidence("Overflow Detectado Automático", { 
-                scrollX: currentScrollX, 
-                scrollWidth: currentScrollWidth, 
-                clientWidth: currentClientWidth 
-              });
+          const processFrame = async () => {
+            const curScrollX = window.scrollX;
+            const curScrollWidth = document.documentElement.scrollWidth;
+            const curClientWidth = document.documentElement.clientWidth;
+            const stillOverflowing = curScrollX > 0 || curScrollWidth > curClientWidth;
+
+            if (stillOverflowing) {
+              frameCountRef.current += 1;
+              if (frameCountRef.current >= overflowFrames) {
+                frameCountRef.current = 0;
+                animationFrameRef.current = null;
+                
+                logEvent("Overflow persistente capturado (frames)", { 
+                  frames: overflowFrames,
+                  scrollX: curScrollX, 
+                  scrollWidth: curScrollWidth, 
+                  clientWidth: curClientWidth 
+                });
+                
+                toast.error("Overflow Horizontal Persistente!", {
+                  description: `${overflowFrames} frames atingidos. Capturando evidência...`,
+                  duration: 5000,
+                });
+                
+                await registerEvidence("Overflow Detectado Automático", { 
+                  scrollX: curScrollX, 
+                  scrollWidth: curScrollWidth, 
+                  clientWidth: curClientWidth 
+                });
+                return;
+              }
+              animationFrameRef.current = requestAnimationFrame(processFrame);
+            } else {
+              frameCountRef.current = 0;
+              animationFrameRef.current = null;
             }
-          }
-        }, overflowBuffer);
+          };
+          
+          animationFrameRef.current = requestAnimationFrame(processFrame);
+        }
+      } else {
+        frameCountRef.current = 0;
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
       }
     };
 
@@ -114,14 +133,15 @@ export default function MobileQA() {
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
-    const interval = setInterval(checkScroll, 2000);
+    const interval = setInterval(checkScroll, 1000);
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       clearInterval(interval);
-      if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [evidences, overflowBuffer]);
+  }, [evidences, overflowFrames]);
 
   const toggleCheck = (key: keyof typeof checklist) => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
@@ -163,6 +183,7 @@ export default function MobileQA() {
         context: activeModal || "Página Principal",
         modalId: activeModalId || "main",
         sequence,
+        grouping: activeModalId ? "modal-event" : "global-event",
         metrics
       };
       
@@ -230,7 +251,7 @@ export default function MobileQA() {
       return;
     }
 
-    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "ModalID", "Sequencia", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
+    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "ModalID", "Sequencia", "Agrupamento", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
     const rows = evidences.map(ev => [
       `"${ev.timestamp}"`,
       `"${ev.item}"`,
@@ -238,6 +259,7 @@ export default function MobileQA() {
       `"${ev.context || "N/A"}"`,
       `"${ev.modalId || "main"}"`,
       ev.sequence || 0,
+      `"${ev.grouping || "N/A"}"`,
       ev.metrics?.scrollX || 0,
       ev.metrics?.scrollWidth || 0,
       ev.metrics?.clientWidth || 0,
@@ -272,6 +294,7 @@ export default function MobileQA() {
         context: e.context,
         modalId: e.modalId,
         sequence: e.sequence,
+        grouping: e.grouping,
         metrics: e.metrics,
         thumbnail: e.thumbnail 
       })),
@@ -363,17 +386,18 @@ export default function MobileQA() {
               
               <div className="pt-4 border-t mt-4">
                 <Label htmlFor="buffer-range" className="text-xs font-semibold mb-2 block">
-                  Buffer de Detecção Overflow: {overflowBuffer}ms
+                  Threshold de Overflow: {overflowFrames} frames
                 </Label>
                 <input 
                   id="buffer-range"
                   type="range" 
-                  min="0" 
-                  max="1000" 
-                  step="50"
-                  value={overflowBuffer}
-                  onChange={(e) => setOverflowBuffer(Number(e.target.value))}
+                  min="2" 
+                  max="120" 
+                  step="1"
+                  value={overflowFrames}
+                  onChange={(e) => setOverflowFrames(Number(e.target.value))}
                   className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+                  data-testid="overflow-threshold-slider"
                 />
               </div>
             </CardContent>
