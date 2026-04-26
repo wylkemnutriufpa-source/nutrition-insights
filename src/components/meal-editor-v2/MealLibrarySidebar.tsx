@@ -93,6 +93,8 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
   const [loadingDiet, setLoadingDiet] = useState(false);
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<string>("all");
+  const [filterObjective, setFilterObjective] = useState<string>("all");
+  const [showOnlyCompatible, setShowOnlyCompatible] = useState(true);
   const [activeTab, setActiveTab] = useState<"my" | "prebuilt">("my");
 
   // Load nutritionist templates & recipes (marmitas)
