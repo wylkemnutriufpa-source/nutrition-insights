@@ -13,6 +13,14 @@ vi.mock('../stores/mealPlanEditorV2Store', () => ({
   useMealPlanEditorV2Store: vi.fn(),
 }));
 
+vi.mock('../lib/auth', () => ({
+  useAuth: vi.fn(() => ({ user: { id: 'user-1' } }))
+}));
+
+vi.mock('../lib/tenantContext', () => ({
+  useTenant: vi.fn(() => ({ tenantId: 'tenant-1' }))
+}));
+
 import { sortMealPlanItems } from '../lib/mealPlanSort';
 
 describe('Deterministic Order E2E', () => {
