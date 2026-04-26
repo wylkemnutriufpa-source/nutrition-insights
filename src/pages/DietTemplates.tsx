@@ -16,10 +16,11 @@ import { toast } from "sonner";
 import {
   BookOpen, Search, ArrowLeft, ChevronRight, Sparkles, Loader2,
   Coffee, Apple, Utensils, Cookie, Moon, Sun, ArrowRight,
-  Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw
+  Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw, ClipboardCheck
 } from "lucide-react";
 import { TemplateFoodVisual } from "@/components/meal/TemplateFoodVisual";
 import { safeNum, fmtMacro } from "@/lib/formatMacros";
+import ConsistencyReportModal from "@/components/hybrid-builder/ConsistencyReportModal";
 
 interface DietTemplate {
   id: string;
@@ -214,11 +215,38 @@ export default function DietTemplates() {
   const [previewTemplate, setPreviewTemplate] = useState<DietTemplate | null>(null);
   const [previewOpen, setPreviewOpen] = useState(false);
 
+  // Consistency Report
+  const [showConsistencyReport, setShowConsistencyReport] = useState(false);
+  const [marmitaRecipes, setMarmitaRecipes] = useState<any[]>([]);
+
   // Anamnesis data for personalization
   const [anamnesis, setAnamnesis] = useState<AnamnesisData | null>(null);
   const [physicalAssessment, setPhysicalAssessment] = useState<PhysicalAssessmentData | null>(null);
   const [patientName, setPatientName] = useState("");
   const [applying, setApplying] = useState(false);
+
+  const fetchMarmitaRecipes = async () => {
+    if (!user) return;
+    const { data } = await supabase
+      .from("meal_recipes")
+      .select("*")
+      .eq("nutritionist_id", user.id)
+      .eq("is_active", true);
+    
+    if (data) {
+      const formatted = data.map(r => ({
+        name: r.name,
+        meal_type: r.meal_type || "lunch",
+        calories: r.fixed_calories || 0,
+        protein: r.fixed_protein || 0,
+        carbs: r.fixed_carbs || 0,
+        fat: r.fixed_fat || 0,
+        is_fixed: true
+      }));
+      setMarmitaRecipes(formatted);
+      setShowConsistencyReport(true);
+    }
+  };
 
   // Substitution toggles per food (index path)
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, number>>({});
@@ -713,6 +741,17 @@ export default function DietTemplates() {
           )}
         </div>
 
+        <div className="flex items-center gap-2 justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 text-xs border-primary/20 text-primary hover:bg-primary/5"
+            onClick={fetchMarmitaRecipes}
+          >
+            <ClipboardCheck className="w-4 h-4" /> Relatório de Consistência
+          </Button>
+        </div>
+
         {/* Search + filters */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
@@ -991,6 +1030,13 @@ export default function DietTemplates() {
             )}
           </DialogContent>
         </Dialog>
+
+        <ConsistencyReportModal 
+          open={showConsistencyReport} 
+          onOpenChange={setShowConsistencyReport} 
+          recipes={marmitaRecipes} 
+          targetKcal={getEffectiveCalories() || undefined} 
+        />
       </div>
     </DashboardLayout>
   );

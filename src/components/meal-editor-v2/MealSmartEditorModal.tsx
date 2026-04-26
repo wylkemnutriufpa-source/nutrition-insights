@@ -50,12 +50,36 @@ export function MealSmartEditorModal({
   const [substitutions, setSubstitutions] = useState<string[]>([]);
   const [portionFactor, setPortionFactor] = useState(1.0);
 
+  const currentMeta = React.useMemo(() => (item as any)?.edit_metadata || (item as any)?.metadata || {}, [item]);
+  
+  const kcalBase = currentMeta.kcal_base ?? item?.calories_target ?? 0;
+  const protBase = currentMeta.protein_base ?? Number(item?.protein_target) ?? 0;
+  const carbBase = currentMeta.carbs_base ?? Number(item?.carbs_target) ?? 0;
+  const fatBase = currentMeta.fat_base ?? Number(item?.fat_target) ?? 0;
+
+  const adjustedMacros = React.useMemo(() => ({
+    calories: Math.round(kcalBase * portionFactor),
+    protein: Math.round(protBase * portionFactor * 10) / 10,
+    carbs: Math.round(carbBase * portionFactor * 10) / 10,
+    fat: Math.round(fatBase * portionFactor * 10) / 10,
+  }), [kcalBase, protBase, carbBase, fatBase, portionFactor]);
+
   useEffect(() => {
     if (item && open) {
       setDescription(item.description || "");
       
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
       
+      // Validação de macros base para marmitas fixas
+      if (meta.is_fixed) {
+        if (meta.kcal_base === undefined || meta.protein_base === undefined) {
+          toast.warning("Aviso: Macros base não encontrados nesta marmita. O fator de ajuste pode ser impreciso.", {
+            description: "Certifique-se de que esta marmita foi cadastrada corretamente.",
+            duration: 6000
+          });
+        }
+      }
+
       // Validação robusta com fallback para substitutions_json
       const hasValidJson = Array.isArray(meta.substitutions_json) && 
                           meta.substitutions_json.every((s: any) => typeof s === "string");
@@ -76,37 +100,35 @@ export function MealSmartEditorModal({
       setNotes((item as any).notes || "");
       setPortionFactor(meta.portion_factor || 1.0);
     }
-  }, [item, open]);
+  }, [item, open, substitutionCount]);
 
   if (!item) return null;
 
   const handleSave = async () => {
+    // Validação de macros zerados para marmitas ou refeições planejadas
+    if (adjustedMacros.calories <= 0 || adjustedMacros.protein <= 0) {
+      toast.error("Não é possível salvar uma refeição com macros zerados.", {
+        description: "Adicione alimentos ou selecione uma refeição pronta válida."
+      });
+      return;
+    }
+
     const cleanedSubs = normalizeSubstitutions(substitutions);
     const finalDescription = formatFinalDescription(description, cleanedSubs);
-
-    const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
     
-    // Use base values for scaling to avoid cumulative drift
-    const kcalBase = currentMeta.kcal_base ?? item.calories_target ?? 0;
-    const protBase = currentMeta.protein_base ?? Number(item.protein_target) ?? 0;
-    const carbBase = currentMeta.carbs_base ?? Number(item.carbs_target) ?? 0;
-    const fatBase = currentMeta.fat_base ?? Number(item.fat_target) ?? 0;
-
     try {
-      // Usar toast.promise ou gerenciar ID para evitar duplicatas
       const toastId = "meal-save-toast";
       updateItem(itemId, {
         description: finalDescription,
-        calories_target: Math.round(kcalBase * portionFactor),
-        protein_target: Math.round(protBase * portionFactor * 10) / 10,
-        carbs_target: Math.round(carbBase * portionFactor * 10) / 10,
-        fat_target: Math.round(fatBase * portionFactor * 10) / 10,
+        calories_target: adjustedMacros.calories,
+        protein_target: adjustedMacros.protein,
+        carbs_target: adjustedMacros.carbs,
+        fat_target: adjustedMacros.fat,
         edit_metadata: {
           ...currentMeta,
           notes,
           substitutions_json: cleanedSubs,
           portion_factor: portionFactor,
-          // Ensure base values are preserved
           kcal_base: kcalBase,
           protein_base: protBase,
           carbs_base: carbBase,
@@ -117,7 +139,6 @@ export function MealSmartEditorModal({
       onOpenChange(false);
     } catch (error) {
       toast.error("Erro ao salvar alterações. Tente novamente.", { id: "meal-save-toast" });
-      // Keep modal open on error
     }
   };
 
@@ -372,11 +393,21 @@ export function MealSmartEditorModal({
                 </div>
 
                 {/* Portion Adjustment for Fixed Meals */}
-                {(item as any).edit_metadata?.is_fixed && (
+                {currentMeta?.is_fixed && (
                   <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                      <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                        <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
+                      </h3>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-primary/10 shadow-sm">
+                        <span className="text-[10px] font-bold text-orange-600">{adjustedMacros.calories} kcal</span>
+                        <Separator orientation="vertical" className="h-3 mx-1" />
+                        <span className="text-[10px] font-bold text-red-600">{adjustedMacros.protein}g P</span>
+                        <Separator orientation="vertical" className="h-3 mx-1" />
+                        <span className="text-[10px] font-bold text-amber-600">{adjustedMacros.carbs}g C</span>
+                      </div>
+                    </div>
+
                     <div className="flex items-center gap-4">
                       <div className="flex-1 space-y-1.5">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground">Fator de Ajuste</Label>
@@ -412,7 +443,7 @@ export function MealSmartEditorModal({
                       </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground italic">
-                      Isso recalculará proporcionalmente todos os macros desta marmita.
+                      Isso recalculará proporcionalmente todos os macros desta marmita em tempo real.
                     </p>
                   </div>
                 )}
