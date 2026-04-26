@@ -89,7 +89,7 @@ export default function TemplateMassReformulation() {
     })) as Template[];
 
     setTemplates(typedTemplates);
-    generatePreviews(typedTemplates);
+    await generatePreviews(typedTemplates);
     setStep("preview");
     setLoading(false);
   };
