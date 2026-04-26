@@ -180,8 +180,9 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   }, [showTemplateLoad, loadTemplates]);
 
   // Add food to block
-  const addFoodToBlock = async (blockType: MealType, food: any) => {
+  const addFoodToBlock = async (blockType: MealType, food: any, isPrimary = true, substitutionGroupId?: string | null) => {
     const itemId = crypto.randomUUID();
+    const finalGroupId = substitutionGroupId || (isPrimary ? crypto.randomUUID() : null);
     
     enqueuePersistence(async () => {
       await withRetry(async () => {
@@ -197,9 +198,11 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
             protein_target: food.protein || 0,
             carbs_target: food.carbs || 0,
             fat_target: food.fat || 0,
-            day_of_week: currentDay,
+            day_of_week: 0,
             item_origin: "in_office_manual",
             tenant_id: tenantId,
+            is_primary: isPrimary,
+            substitution_group_id: finalGroupId,
           });
         if (error) throw error;
       }, {
