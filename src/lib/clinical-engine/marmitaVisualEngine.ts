@@ -13,9 +13,10 @@ const DEFAULT_IMAGE_URL = 'https://images.unsplash.com/photo-1547592166-23ac4574
 
 /**
  * Valida a disponibilidade de uma URL de imagem via HTTP 200 com cache.
+ * Retorna { isValid: boolean, statusCode?: number }
  */
-export async function validateImageUrl(url: string): Promise<boolean> {
-  if (!url || url.length < 10) return false;
+export async function validateImageUrl(url: string): Promise<{ isValid: boolean, statusCode?: number }> {
+  if (!url || url.length < 10) return { isValid: false };
 
   // 1. Check Cache
   const { data: cached } = await supabase
@@ -26,17 +27,13 @@ export async function validateImageUrl(url: string): Promise<boolean> {
 
   // Se validado nas últimas 24h, usar cache
   if (cached && (new Date().getTime() - new Date(cached.last_validated).getTime() < 86400000)) {
-    return cached.is_valid;
+    return { isValid: cached.is_valid };
   }
 
   try {
     const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
-    // Note: no-cors doesn't allow reading status, but we can't do much on client-side without a proxy or edge function
-    // For now, we'll assume that if fetch doesn't throw, it's "probably" reachable, 
-    // but ideally this should be done in an Edge Function.
-    // However, the user specifically asked for status 200 check.
     
-    // Fallback strategy for client-side status check (limited by CORS)
+    // Note: no-cors doesn't allow reading status accurately
     const isValid = response.type === 'opaque' || response.ok;
     
     await supabase.from('recipe_image_cache').upsert({
@@ -45,14 +42,14 @@ export async function validateImageUrl(url: string): Promise<boolean> {
       last_validated: new Date().toISOString()
     });
 
-    return isValid;
+    return { isValid, statusCode: response.status };
   } catch (e) {
     await supabase.from('recipe_image_cache').upsert({
       image_url: url,
       is_valid: false,
       last_validated: new Date().toISOString()
     });
-    return false;
+    return { isValid: false, statusCode: 0 };
   }
 }
 
@@ -97,13 +94,15 @@ export async function ensureMarmitaVisualAssociation(
 
   let needsFallback = false;
   let fallbackReason = "";
+  let httpStatusCode: number | null = null;
 
   // Validar URL atual
   if (currentUrl) {
-    const isAvailable = await validateImageUrl(currentUrl);
-    if (!isAvailable) {
+    const { isValid, statusCode } = await validateImageUrl(currentUrl);
+    if (!isValid) {
       needsFallback = true;
-      fallbackReason = "URL indisponível (HTTP Error)";
+      fallbackReason = `URL indisponível (HTTP ${statusCode || 'Error'})`;
+      httpStatusCode = statusCode || 0;
     }
   } else {
     needsFallback = true;
@@ -131,11 +130,12 @@ export async function ensureMarmitaVisualAssociation(
       recipe_id: recipeId,
       recipe_name: name,
       original_url: currentUrl,
-      fallback_url: visualId, // O ID da biblioteca visual ou uma URL default
+      fallback_url: visualId,
       template_name: templateName,
       meal_name: mealName,
       severity: currentUrl ? 'critical' : 'alert',
-      error_message: fallbackReason
+      error_message: fallbackReason,
+      http_status_code: httpStatusCode
     });
   }
 }
@@ -145,5 +145,3 @@ export function validateMarmitaVisualIntegrity(marmita: { image_url?: string | n
   if (!marmita.protein_type) return false;
   return true;
 }
-
-
