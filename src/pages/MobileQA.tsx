@@ -22,7 +22,16 @@ export default function MobileQA() {
     viewport360: false,
   });
 
-  const [evidences, setEvidences] = useState<Array<{ id: string, timestamp: string, item: string, viewport: string }>>([]);
+  const [evidences, setEvidences] = useState<Array<{ 
+    id: string, 
+    timestamp: string, 
+    item: string, 
+    viewport: string, 
+    screenshot: string,
+    context?: string, // e.g., "Modal Consultor"
+    metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }
+  }>>([]);
+  const [activeModal, setActiveModal] = useState<string | null>(null);
 
   // Automated Horizontal Scroll Check
   useEffect(() => {
@@ -33,20 +42,27 @@ export default function MobileQA() {
       
       if (scrollX > 0 || scrollWidth > clientWidth) {
         console.error("OVERFLOW-X DETECTED", { scrollX, scrollWidth, clientWidth });
-        toast.error("Overflow Horizontal Detectado!", {
-          description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}`,
-          duration: 5000,
-        });
+        
+        // Auto-register evidence for overflow
+        if (!evidences.some(e => e.item === "Overflow Detectado" && e.timestamp.split(':')[1] === new Date().toLocaleTimeString().split(':')[1])) {
+          toast.error("Overflow Horizontal Detectado!", {
+            description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}`,
+            duration: 5000,
+          });
+          registerEvidence("Overflow Detectado", { scrollX, scrollWidth, clientWidth });
+        }
       }
     };
 
     window.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
     const interval = setInterval(checkScroll, 2000); // Periodic check
     return () => {
       window.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
       clearInterval(interval);
     };
-  }, []);
+  }, [evidences]);
 
   const toggleCheck = (key: keyof typeof checklist) => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
