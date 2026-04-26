@@ -17,5 +17,5 @@ Deno.test("compute-clinical-brain - invalid payload", async () => {
   const req = buildToxicRequest(URL);
   const mockClient = createMockSupabaseClient();
   const res = await handler(req, mockClient);
-  assertEquals(res.status, 200);
+  assertEquals(res.status, 400); // Should be 400 for invalid/malformed payload
 });
