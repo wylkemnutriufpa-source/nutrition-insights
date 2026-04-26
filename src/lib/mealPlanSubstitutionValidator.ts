@@ -109,8 +109,28 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
         const fatDiff = mainFat > 1 ? Math.abs(foodMatch.fat - mainFat) / mainFat : 0;
 
         const macroErrors: SubstitutionError["macros"] = {};
+        const missingFields: string[] = [];
 
-        // 3. Macro Validation with all fields (Requirement 1)
+        // 3. Macro Validation with all fields (Requirement 1 & Requirement 4: Missing macros)
+        if (foodMatch.calories === undefined || foodMatch.calories === null) missingFields.push("calorias");
+        if (foodMatch.protein === undefined || foodMatch.protein === null) missingFields.push("proteínas");
+        if (foodMatch.carbs === undefined || foodMatch.carbs === null) missingFields.push("carboidratos");
+        if (foodMatch.fat === undefined || foodMatch.fat === null) missingFields.push("gorduras");
+
+        if (missingFields.length > 0) {
+          const msg = `Alimento "${foodMatch.name}" não possui valores de ${missingFields.join(", ")} no banco de dados.`;
+          errors.push(msg);
+          detailedErrors.push({
+            mealId: item.id,
+            mealTitle: item.title || "Sem título",
+            substitutionIndex: idx,
+            foodName: foodMatch.name,
+            macros: {},
+            limitError: msg // Using limitError for missing macro message to highlight it differently
+          });
+          return; // Skip further macro checks for this food
+        }
+
         if (kcalDiff > SUB_TOLERANCE.kcalPct) {
           macroErrors.kcal = { value: foodMatch.calories, target: mainKcal, diff: kcalDiff, tolerance: SUB_TOLERANCE.kcalPct };
         }
