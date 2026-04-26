@@ -104,12 +104,25 @@ export default function MealPlanEditorV2() {
       // 42703 = undefined_column
       if ((error as any).code === "42703") {
         toast.error(`Erro de Schema: A coluna '${column}' na tabela '${table}' falharia nesta operação.`, {
-          description: "Detectamos um schema drift. Sugestão: rode 'npm run schema:update' no terminal ou verifique as migrações.",
-          duration: 8000,
+          description: (
+            <div className="flex flex-col gap-2">
+              <span>Detectamos um schema drift. Sugestão: rode 'npm run schema:update' no terminal ou verifique as migrações.</span>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-fit"
+                onClick={() => navigate(`/schema-monitor?search=${column}`)}
+              >
+                Abrir Monitor de Schema
+              </Button>
+            </div>
+          ),
+          duration: 10000,
           id: "schema-drift-alert"
         });
         return false;
       }
+
       
       // Se for erro de permissão (42501) ou outros não relacionados a schema missing, não bloqueamos o fluxo
       // a menos que seja crítico para a função. Aqui apenas avisamos no console.

@@ -19915,6 +19915,13 @@ export type Database = {
           total_points: number
         }[]
       }
+      get_schema_info: {
+        Args: { target_tables: string[] }
+        Returns: {
+          column_name: string
+          table_name: string
+        }[]
+      }
       get_system_health_score: { Args: never; Returns: Json }
       get_team_head_id: { Args: { _user_id: string }; Returns: string }
       get_team_permissions: { Args: { _user_id: string }; Returns: Json }
