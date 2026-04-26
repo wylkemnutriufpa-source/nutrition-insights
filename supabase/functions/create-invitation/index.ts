@@ -39,13 +39,26 @@ Deno.serve(async (req) => {
     if (!rl.allowed) return rateLimitResponse();
 
     const body = await req.json();
-    const { tenant_id } = body;
+    const { tenant_id, old_code } = body;
     const name = body.name || body.patient_name;
     const email = body.email || body.patient_email;
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    // Se um código antigo foi passado, valida se o solicitante é o dono original
+    if (old_code) {
+      const { data: oldInvitation } = await adminClient
+        .from("invitations")
+        .select("professional_id")
+        .eq("code", old_code)
+        .maybeSingle();
+      
+      if (oldInvitation && oldInvitation.professional_id !== caller.id) {
+        throw new Error("Você não tem permissão para gerar um novo convite a partir deste link.");
+      }
+    }
 
     // Bloqueio de duplicados: verifica se já existe um convite PENDENTE para este email e nutricionista nos últimos 5 minutos
     if (email) {
