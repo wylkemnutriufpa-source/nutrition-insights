@@ -417,6 +417,9 @@ export default function MealPlanEditorV2() {
       patientId: plan.patient_id,
       nutritionistId: user.id,
       tenantId: tenantId || "",
+      planTitle: `${plan.title} (Revisão)`,
+      startDate: new Date().toISOString().split("T")[0],
+      generationMode: "smart" as const,
     };
     
     localStorage.setItem(`last_gen_params_${id}`, JSON.stringify(params));
@@ -425,11 +428,8 @@ export default function MealPlanEditorV2() {
     setGeneratingNew(true);
     try {
       console.warn("[PLAN] chamando edge function via pipeline");
-      const result = await runPlanPipeline(params, {
-        planTitle: `${plan.title} (Revisão)`,
-        startDate: new Date().toISOString().split("T")[0],
-        generationMode: "smart",
-      });
+      const result = await runPlanPipeline(params);
+
 
 
       console.warn("[PLAN] resposta recebida", result);
