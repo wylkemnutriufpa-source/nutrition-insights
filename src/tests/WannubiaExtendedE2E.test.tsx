@@ -17,6 +17,12 @@ vi.mock('../lib/auth', () => ({
   AuthProvider: ({ children }: any) => <div>{children}</div>,
 }));
 
+// Mock tenant
+vi.mock('../lib/tenantContext', () => ({
+  useTenant: vi.fn(() => ({ tenantId: 'tenant-1' })),
+  TenantProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
 // Mock i18n if needed
 vi.mock('react-i18next', () => ({
   useTranslation: () => ({
