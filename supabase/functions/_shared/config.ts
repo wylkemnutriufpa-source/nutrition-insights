@@ -37,11 +37,12 @@ export function unauthorizedDomainResponse() {
  */
 export async function logInvitation(
   adminClient: any, 
-  { invitation_id, event_type, details, domain_used }: {
+  { invitation_id, event_type, details, domain_used, user_agent }: {
     invitation_id?: string;
     event_type: string;
     details?: any;
     domain_used?: string;
+    user_agent?: string;
   }
 ) {
   try {
@@ -50,6 +51,7 @@ export async function logInvitation(
       event_type,
       details,
       domain_used: domain_used || BASE_URL,
+      user_agent: user_agent || null
     });
   } catch (err) {
     console.error("[config:logInvitation] Falha ao registrar log:", err);
