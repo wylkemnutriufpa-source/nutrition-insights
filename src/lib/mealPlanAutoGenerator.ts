@@ -145,6 +145,19 @@ export async function generateMealPlanFromLibrary(
 ): Promise<AutoGenerationResult> {
   console.warn("[PLAN] engine iniciou geração determinística v3.1");
   const warnings: string[] = [];
+  
+  if (!profile.planType) {
+    throw new Error("O tipo de plano (plan_type) é obrigatório para a geração determinística.");
+  }
+
+  const { logEngineStep } = await import("./clinicalEngineAudit");
+
+  await logEngineStep(profile.patientId, null, "generation_started", {
+    goal: profile.goal,
+    plan_type: profile.planType,
+    target_calories: profile.targetCalories,
+    distribution
+  });
 
   // 1. Fetch all active library items
   const { data: rawItems } = await supabase
@@ -156,7 +169,14 @@ export async function generateMealPlanFromLibrary(
   
   // 1.5 FILTER: Exact plan_type match (CRITICAL RULE)
   console.warn(`[ENGINE] Aplicando filtro de tipo: ${profile.planType}`);
+  const initialCount = allItems.length;
   allItems = allItems.filter(item => item.plan_type === profile.planType);
+  
+  await logEngineStep(profile.patientId, null, "filter_plan_type", {
+    expected: profile.planType,
+    items_before: initialCount,
+    items_after: allItems.length
+  });
 
   // 2. FILTER: Remove items with blocked or banned foods
   allItems = allItems.filter(item => {
@@ -170,6 +190,10 @@ export async function generateMealPlanFromLibrary(
 
   if (allItems.length === 0) {
     console.error(`[ENGINE] Falha crítica: Nenhum item do tipo "${profile.planType}" encontrado na biblioteca.`);
+    await logEngineStep(profile.patientId, null, "critical_failure", {
+      reason: "no_items_found",
+      plan_type: profile.planType
+    });
     throw new Error(`Biblioteca de refeições não contém itens válidos para o tipo de plano: ${profile.planType}. Geração abortada para evitar mistura.`);
   }
 
@@ -219,6 +243,7 @@ export async function generateMealPlanFromLibrary(
 
     if (!selected) {
       console.error(`[ENGINE] Falha ao encontrar item para refeição "${mealType}" do tipo "${profile.planType}"`);
+      await logEngineStep(profile.patientId, null, "meal_selection_failed", { meal_type: mealType });
       throw new Error(`Não foi possível encontrar uma refeição válida do tipo "${profile.planType}" para o horário: ${mealType}`);
     }
 
@@ -230,6 +255,14 @@ export async function generateMealPlanFromLibrary(
       targetKcal,
       scaleFactor: sf,
       compatibilityScore: selected.score,
+    });
+
+    await logEngineStep(profile.patientId, null, "meal_selected", {
+      meal_type: mealType,
+      title: selected.item.title,
+      score: selected.score,
+      target_kcal: targetKcal,
+      scale_factor: sf
     });
   }
 
@@ -286,6 +319,11 @@ export async function generateMealPlanFromLibrary(
       target_kcal: s.targetKcal,
     })),
   };
+
+  await logEngineStep(profile.patientId, null, "generation_completed", {
+    slots_count: slots.length,
+    engine_version: ENGINE_VERSION
+  });
 
   console.warn("[PLAN] engine finalizou geração", { success: true, slots: slots.length });
   return { success: true, slots, metadata, warnings };

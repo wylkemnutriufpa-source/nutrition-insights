@@ -310,6 +310,15 @@ export async function generateAssistedPlan(
 ): Promise<AssistedGenerationResult> {
   const warnings: string[] = [];
 
+  const { logEngineStep } = await import("./clinicalEngineAudit");
+
+  await logEngineStep(context.patientId, null, "assisted_generation_started", {
+    params,
+    objective: context.objective,
+    strategy: context.strategy,
+    protocol: context.protocol
+  });
+
   const { data: rawItems } = await supabase
     .from("meal_library" as any)
     .select("*")
@@ -336,6 +345,7 @@ export async function generateAssistedPlan(
   });
 
   if (allItems.length === 0) {
+    await logEngineStep(context.patientId, null, "assisted_failure", { reason: "no_items_after_filters" });
     return {
       success: false,
       options: [],
@@ -398,6 +408,11 @@ export async function generateAssistedPlan(
     
     throw new Error(`Inconsistência crítica: O gerador incluiu itens de tipo diferente (${mismatchDetails}). Geração abortada.`);
   }
+
+  await logEngineStep(context.patientId, null, "assisted_generation_completed", {
+    options_count: options.length,
+    tiers: options.map(o => o.tier)
+  });
 
   return {
     success: true,

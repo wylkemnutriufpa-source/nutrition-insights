@@ -70,6 +70,8 @@ import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
 import { deactivateMealPlan } from "@/lib/serverTransitions";
 import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
+import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
+
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
@@ -684,7 +686,11 @@ export default function PatientDetail() {
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/physical-assessment?patientId=${patientId}`)}>
               <Activity className="w-4 h-4" /> Avaliação Física
             </Button>
+            <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => setOpenSection("audit-log")}>
+              <Shield className="w-4 h-4" /> Auditoria Motor
+            </Button>
             <Button variant="outline" className="gap-2" onClick={() => navigate(`/diet-templates?patientId=${patientId}`)}>
+
               <BookOpen className="w-4 h-4" /> Modelos de Dieta
             </Button>
             {activeMealPlan && (
@@ -2046,7 +2052,20 @@ export default function PatientDetail() {
                   )}
                 </DialogContent>
               </Dialog>
+
+              {/* Deterministic Audit Modal */}
+              <Dialog open={openSection === "audit-log"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="font-display flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-primary" /> Auditoria de Decisão Clínica
+                    </DialogTitle>
+                  </DialogHeader>
+                  {patientId && <DeterministicAuditLog patientId={resolvedPatientId} />}
+                </DialogContent>
+              </Dialog>
             </>
+
           );
         })()}
 

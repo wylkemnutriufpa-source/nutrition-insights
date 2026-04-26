@@ -127,6 +127,12 @@ export default function MealPlanEditorV2() {
   useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
   useEffect(() => { localStorage.setItem(EDITOR_LAYOUT_KEY, editorLayout); }, [editorLayout]);
 
+  const [lastAttemptParams, setLastAttemptParams] = useState<any>(() => {
+    const saved = localStorage.getItem(`last_gen_params_${id}`);
+    return saved ? JSON.parse(saved) : null;
+  });
+
+
   const exportToPDF = async () => {
     if (!plan || store.items.length === 0) return;
     setExportingPDF(true);
@@ -406,17 +412,25 @@ export default function MealPlanEditorV2() {
     // No blocking confirm here, just generate
     console.warn("[PLAN] botão clicado");
     console.warn("[PLAN] função iniciou");
+    
+    const params = {
+      patientId: plan.patient_id,
+      nutritionistId: user.id,
+      tenantId: tenantId || "",
+      planTitle: `${plan.title} (Revisão)`,
+      startDate: new Date().toISOString().split("T")[0],
+      generationMode: "smart" as const,
+    };
+    
+    localStorage.setItem(`last_gen_params_${id}`, JSON.stringify(params));
+    setLastAttemptParams(params);
+
     setGeneratingNew(true);
     try {
       console.warn("[PLAN] chamando edge function via pipeline");
-      const result = await runPlanPipeline({
-        patientId: plan.patient_id,
-        nutritionistId: user.id,
-        tenantId: tenantId || "",
-        planTitle: `${plan.title} (Revisão)`,
-        startDate: new Date().toISOString().split("T")[0],
-        generationMode: "smart",
-      });
+      const result = await runPlanPipeline(params);
+
+
 
       console.warn("[PLAN] resposta recebida", result);
       if (!result.success || !result.planId) {
@@ -1071,7 +1085,16 @@ export default function MealPlanEditorV2() {
                       <Zap className="w-4 h-4" /> Builder Híbrido
                     </DropdownMenuItem>
                   )}
+                  {lastAttemptParams && (
+                    <DropdownMenuItem 
+                      onClick={handleGenerateNewPlan} 
+                      className="gap-2 bg-primary/5 text-primary font-bold animate-pulse"
+                    >
+                      <RefreshCw className="w-4 h-4" /> Recuperar Última Tentativa
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => setAssistedOpen(true)} className="gap-2">
+
                     <Sparkles className="w-4 h-4" /> Plano Assistido
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setAutoGenOpen(true)} className="gap-2">
