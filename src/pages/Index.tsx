@@ -385,6 +385,34 @@ function NutritionistDashboardContent() {
         </motion.div>
       )}
 
+      {/* Active Session Resume Banner */}
+      {activeSessions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-primary shadow-lg shadow-primary/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-white"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
+              <Stethoscope className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-medium opacity-80 uppercase tracking-wider">Atendimento em andamento</p>
+              <h3 className="text-lg font-bold font-display">{sessionProfiles[activeSessions[0].patient_id] || "Paciente"}</h3>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button 
+              variant="secondary" 
+              className="w-full sm:w-auto gap-2"
+              onClick={() => navigate(`/in-office/${activeSessions[0].patient_id}`)}
+            >
+              Retomar Consulta <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
+        </motion.div>
+      )}
+
       {/* ── Quick Access: Other Views — PRO+ ── */}
       {minMode("pro") && (
       <div className="flex flex-wrap items-center gap-2">
