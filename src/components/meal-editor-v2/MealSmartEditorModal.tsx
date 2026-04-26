@@ -87,12 +87,25 @@ export function MealSmartEditorModal({
       
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
       
-      // Validação de macros base para marmitas fixas
+      // Validação aprofundada de macros base para marmitas fixas
       if (meta.is_fixed) {
-        if (meta.kcal_base === undefined || meta.protein_base === undefined) {
-          toast.warning("Aviso: Macros base não encontrados nesta marmita. O fator de ajuste pode ser impreciso.", {
-            description: "Certifique-se de que esta marmita foi cadastrada corretamente.",
-            duration: 6000
+        const missing = [];
+        if (meta.kcal_base === undefined || meta.kcal_base === null) missing.push("Calorias");
+        if (meta.protein_base === undefined || meta.protein_base === null) missing.push("Proteínas");
+        if (meta.carbs_base === undefined || meta.carbs_base === null) missing.push("Carboidratos");
+        if (meta.fat_base === undefined || meta.fat_base === null) missing.push("Gorduras");
+
+        if (missing.length > 0) {
+          toast.error("Dados Base Incompletos", {
+            description: `Esta marmita fixa está sem os macros base: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
+            action: {
+              label: "Corrigir Agora",
+              onClick: () => {
+                // Foca no campo de descrição para incentivar a correção manual se necessário
+                inputRef.current?.focus();
+              }
+            },
+            duration: 8000
           });
         }
       }
@@ -213,6 +226,7 @@ export function MealSmartEditorModal({
           .map(l => l.trim());
         setSubstitutions(subLines.slice(0, substitutionCount));
       }
+      setPortionFactor(meta.portion_factor || 1.0);
     }
     onOpenChange(newOpen);
   };
@@ -250,7 +264,7 @@ export function MealSmartEditorModal({
                 Ajuste os alimentos, substituições e observações clínicas
               </p>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10">
+            <div className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10 sm:mr-0 mr-4">
               <div className="flex flex-col items-center">
                 <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
                 <span className="text-xs sm:text-sm font-black text-orange-500">{totals.calories}</span>
