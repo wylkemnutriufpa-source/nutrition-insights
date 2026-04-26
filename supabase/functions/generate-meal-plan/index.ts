@@ -3961,6 +3961,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       enabled_meals: enabledMeals || "default",
       meal_times: mealTimes || null,
       template_id_used: lastUsedTemplateId,
+      template_name_used: templateNameUsed,
       is_fallback_template: isFallbackTemplate,
     };
 
