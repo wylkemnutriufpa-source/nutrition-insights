@@ -791,27 +791,42 @@ export default function Patients() {
                         </form>
                       </TabsContent>
                       <TabsContent value="link" className="space-y-4">
-                        <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                          <h4 className="font-medium text-sm flex items-center gap-2 mb-2 text-primary">
-                            <Plus className="w-4 h-4" /> Convite via Perfil Público
+                        <div className="p-5 rounded-2xl bg-primary/5 border-2 border-primary/20 relative overflow-hidden group">
+                          <div className="absolute top-0 right-0 p-2">
+                            <Zap className="w-5 h-5 text-primary opacity-20" />
+                          </div>
+                          <h4 className="font-display font-bold text-base flex items-center gap-2 mb-2 text-primary">
+                            <Plus className="w-5 h-5" /> Por Link de Convite
                           </h4>
-                          <p className="text-xs text-muted-foreground mb-4">
-                            Envie o link do seu perfil público para o paciente. Ele poderá realizar o cadastro sozinho e será vinculado automaticamente ao seu perfil.
+                          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+                            Envie o link do seu perfil público. O paciente faz o cadastro, <strong>assina os termos</strong> e é vinculado <strong>automaticamente</strong> a você.
                           </p>
-                          <Button 
-                            variant="outline" 
-                            className="w-full gap-2"
-                            onClick={() => {
-                              const link = `${window.location.origin}/profile/${profile?.id}`;
-                              navigator.clipboard.writeText(link);
-                              toast.success("Link copiado para a área de transferência!");
-                            }}
-                          >
-                            <Copy className="w-4 h-4" /> Copiar Link do Perfil
-                          </Button>
+                          
+                          <div className="space-y-3">
+                            <Button 
+                              className="w-full gap-2 gradient-primary shadow-glow group-hover:scale-[1.02] transition-transform"
+                              onClick={() => {
+                                const link = `${window.location.origin}/profile/${profile?.id}`;
+                                navigator.clipboard.writeText(link);
+                                toast.success("Link do perfil copiado! Envie pelo WhatsApp.");
+                              }}
+                            >
+                              <Copy className="w-4 h-4" /> Copiar Link do Perfil Público
+                            </Button>
+                            
+                            <div className="p-3 rounded-lg bg-background/50 border border-dashed border-primary/30 text-[11px] text-muted-foreground italic flex items-center gap-2">
+                              <CheckCircle2 className="w-3.5 h-3.5 text-success" />
+                              Vínculo automático profissional-paciente garantido.
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-center text-xs text-muted-foreground italic">
-                          O paciente segue o fluxo de cadastro e você recebe uma notificação assim que ele entrar.
+                        <div className="bg-muted/30 p-4 rounded-xl space-y-2">
+                          <p className="text-xs font-semibold text-foreground uppercase tracking-wider">Como funciona?</p>
+                          <ol className="text-xs text-muted-foreground space-y-1 list-decimal list-inside">
+                            <li>Você compartilha seu link do FitJourney</li>
+                            <li>O paciente preenche os dados básicos</li>
+                            <li>Ele é adicionado à sua lista em tempo real</li>
+                          </ol>
                         </div>
                       </TabsContent>
                     </Tabs>
