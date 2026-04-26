@@ -199,7 +199,24 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
             </Button>
             <Button 
               size="sm"
-              onClick={onConfirm} 
+              onClick={() => {
+                const finalItems = sortedItems.map(item => {
+                  const itemExclusions = localAprovals[item.id] || {};
+                  const meta = (item as any).edit_metadata || (item as any).metadata || {};
+                  const substitutions = meta.substitutions_json as string[] || [];
+                  
+                  const filteredSubstitutions = substitutions.filter((_, idx) => !itemExclusions[idx]);
+                  
+                  return {
+                    ...item,
+                    edit_metadata: {
+                      ...meta,
+                      substitutions_json: filteredSubstitutions
+                    }
+                  } as MealPlanItem;
+                });
+                onConfirm(finalItems);
+              }} 
               disabled={isSaving || items.some(item => !validateMealSubstitutions(item).valid)}
               className="shadow-lg shadow-primary/20"
             >
