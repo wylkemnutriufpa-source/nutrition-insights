@@ -2052,7 +2052,20 @@ export default function PatientDetail() {
                   )}
                 </DialogContent>
               </Dialog>
+
+              {/* Deterministic Audit Modal */}
+              <Dialog open={openSection === "audit-log"} onOpenChange={(v) => !v && setOpenSection(null)}>
+                <DialogContent className="sm:max-w-xl max-h-[85vh] overflow-y-auto">
+                  <DialogHeader>
+                    <DialogTitle className="font-display flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-primary" /> Auditoria de Decisão Clínica
+                    </DialogTitle>
+                  </DialogHeader>
+                  {patientId && <DeterministicAuditLog patientId={resolvedPatientId} />}
+                </DialogContent>
+              </Dialog>
             </>
+
           );
         })()}
 
