@@ -16,10 +16,11 @@ import { toast } from "sonner";
 import {
   BookOpen, Search, ArrowLeft, ChevronRight, Sparkles, Loader2,
   Coffee, Apple, Utensils, Cookie, Moon, Sun, ArrowRight,
-  Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw
+  Flame, Beef, Wheat, Droplets, AlertTriangle, Check, RefreshCw, ClipboardCheck
 } from "lucide-react";
 import { TemplateFoodVisual } from "@/components/meal/TemplateFoodVisual";
 import { safeNum, fmtMacro } from "@/lib/formatMacros";
+import ConsistencyReportModal from "@/components/hybrid-builder/ConsistencyReportModal";
 
 interface DietTemplate {
   id: string;
