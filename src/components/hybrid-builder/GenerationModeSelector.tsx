@@ -11,6 +11,7 @@ import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import MealRecipeSelector from "./MealRecipeSelector";
 import MarmitaSettingsDialog from "./MarmitaSettingsDialog";
+import ConsistencyReportModal from "./ConsistencyReportModal";
 import { useMarmitaSettings } from "@/hooks/useMarmitaSettings";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
