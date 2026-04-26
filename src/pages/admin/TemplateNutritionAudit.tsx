@@ -237,29 +237,75 @@ const isItemBroken = (item: FoodItem): boolean => {
 };
 
 function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
+  // We handle both TableRow (nutritionist_meal_templates) and DietTemplate (diet_templates)
+  const isDietTemplate = 'meals' in t;
   const items = Array.isArray(t.foods_structure) ? t.foods_structure : [];
-  const itemsTotal = items.length;
-  const itemsBroken = items.filter(isItemBroken).length;
+  const meals = Array.isArray((t as any).meals) ? (t as any).meals : [];
+  
+  const itemsTotal = isDietTemplate 
+    ? meals.reduce((acc: number, m: any) => acc + (Array.isArray(m.blocks) ? m.blocks.length : (Array.isArray(m.foods) ? m.foods.length : 0)), 0)
+    : items.length;
+    
+  const itemsBroken = isDietTemplate ? 0 : items.filter(isItemBroken).length;
 
   const triggered: { key: RuleKey; message: string }[] = [];
 
-  if (itemsTotal === 0) triggered.push({ key: "noItems", message: "Template sem itens (foods_structure vazio)" });
-  if (isMissingNumber(t.kcal_base) || Number(t.kcal_base) <= 0)
-    triggered.push({ key: "kcalBaseMissing", message: "kcal_base ausente ou zero (causa NaN/divisão por zero)" });
-  if (isMissingNumber(t.protein_base))
-    triggered.push({ key: "proteinBaseMissing", message: "protein_base ausente" });
-  if (isMissingNumber(t.carbs_base))
-    triggered.push({ key: "carbsBaseMissing", message: "carbs_base ausente" });
-  if (isMissingNumber(t.fat_base)) triggered.push({ key: "fatBaseMissing", message: "fat_base ausente" });
+  if (itemsTotal === 0) triggered.push({ key: "noItems", message: "Template sem itens ou blocos configurados" });
+  
+  // kcal_base check (DietTemplate uses base_calories)
+  const kcal = isDietTemplate ? (t as any).base_calories : t.kcal_base;
+  if (isMissingNumber(kcal) || Number(kcal) <= 0)
+    triggered.push({ key: "kcalBaseMissing", message: "Caloria base ausente ou zero (causa NaN no UI)" });
+  
+  if (!isDietTemplate) {
+    if (isMissingNumber(t.protein_base)) triggered.push({ key: "proteinBaseMissing", message: "protein_base ausente" });
+    if (isMissingNumber(t.carbs_base)) triggered.push({ key: "carbsBaseMissing", message: "carbs_base ausente" });
+    if (isMissingNumber(t.fat_base)) triggered.push({ key: "fatBaseMissing", message: "fat_base ausente" });
+  }
+
   if (itemsBroken > 0)
     triggered.push({
       key: "itemsBroken",
       message: `${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`,
     });
 
+  // Legacy structure check
+  if (isDietTemplate) {
+    const hasLegacy = meals.some((m: any) => Array.isArray(m.foods) && m.foods.length > 0);
+    const hasV2 = meals.some((m: any) => Array.isArray(m.blocks) && m.blocks.length > 0);
+    if (hasLegacy && !hasV2) {
+      triggered.push({ key: "legacyStructure", message: "Usa estrutura 'foods' (Legado V1) em vez de 'blocks' (V2)" });
+    }
+  }
+
+  // Coherence check (Simplified heuristic)
+  if (isDietTemplate) {
+    meals.forEach((meal: any) => {
+      const title = (meal.title || "").toLowerCase();
+      const isLunch = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
+      
+      const allOptions = (meal.blocks || []).flatMap((b: any) => b.options || []);
+      const legacySubs = (meal.foods || []).flatMap((f: any) => f.substitutions || []);
+      
+      allOptions.forEach((opt: any) => {
+        const optName = (opt.name || "").toLowerCase();
+        if (isLunch && (optName.includes("pão") || optName.includes("tapioca")) && !optName.includes("frango") && !optName.includes("carne")) {
+          triggered.push({ key: "incoherentSubstitutions", message: `Refeição '${meal.title}': Opção '${opt.name}' parece ser de Café da Manhã.` });
+        }
+      });
+
+      legacySubs.forEach((sub: string) => {
+        const subName = sub.toLowerCase();
+        if (isLunch && (subName.includes("pão") || subName.includes("tapioca"))) {
+          triggered.push({ key: "incoherentSubstitutions", message: `Refeição '${meal.title}': Substituição '${sub}' parece ser de Café da Manhã.` });
+        }
+      });
+    });
+  }
+
   // Apply user-configured severity, drop ignored.
   const issues = triggered
-    .map((t) => ({ ...t, severity: config[t.key] }))
+    .map((t) => ({ ...t, severity: config[t.key] || "warning" }))
     .filter((i) => i.severity !== "ignore");
 
   let level: IssueLevel = "ok";
