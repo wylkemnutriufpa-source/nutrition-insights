@@ -3073,6 +3073,16 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         .order("created_at", { ascending: false }).limit(1).maybeSingle()
     ]);
 
+    let templateNameUsed = "";
+    if (latestPlanRes.data?.template_id) {
+      const { data: tpl } = await serviceClient
+        .from("nutritionist_meal_templates")
+        .select("name")
+        .eq("id", latestPlanRes.data.template_id)
+        .maybeSingle();
+      if (tpl) templateNameUsed = tpl.name;
+    }
+
     const patientProfile = patientProfileRes.data;
     let lastUsedTemplateId = latestPlanRes.data?.template_id;
     let isFallbackTemplate = false;
