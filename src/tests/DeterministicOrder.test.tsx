@@ -50,8 +50,7 @@ describe('Deterministic Order E2E', () => {
   it('deve exibir itens na ordem determinística (Primário > Caloria Descendente > ID)', () => {
     const items = [itemSub1, itemSub2, itemPrimary];
     
-    // O mock da store deve retornar os itens já ordenados (como o store real faz agora)
-    const { sortMealPlanItems } = require('../stores/mealPlanEditorV2Store');
+    // O store real agora usa sortMealPlanItems internamente.
     const sortedItems = sortMealPlanItems(items);
 
     (useMealPlanEditorV2Store as any).mockReturnValue({
