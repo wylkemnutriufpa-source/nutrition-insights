@@ -131,8 +131,8 @@ test.describe('Meal Editor Robustness and UX Consistency', () => {
 
       // Verifica a string exata dos campos ausentes conforme requisitado
       const expectedText = "kcal_base, protein_base, carbs_base, fat_base";
-      // Usamos uma asserção que garante que o texto está presente exatamente nessa ordem
-      await expect(nutriPage.locator('div[role="status"], [class*="toast"]')).toContainText(expectedText);
+      // O uso de getByText garante que o texto exato está visível na tela (comum em toasts)
+      await expect(nutriPage.getByText(expectedText)).toBeVisible({ timeout: 10000 });
     } else {
       test.skip(); // Ignora se não houver marmita fixa no estado atual
     }
