@@ -290,6 +290,10 @@ export default function MealPlanEditorV2() {
 
   const handleSaveAsDefault = async () => {
     if (!plan?.patient_id || !user?.id) return;
+    
+    // Runtime assertion
+    if (!(await checkDefaultPlanColumn())) return;
+
     setIsDefaultSaving(true);
     const toastId = toast.loading("Salvando como template padrão...");
     try {
