@@ -4,14 +4,16 @@
  * Pre-built meal templates that add a complete meal with one click.
  * Templates are composed of multiple foods with calculated macros.
  */
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { useMealPlanEditorV2Store, type MealType } from "@/stores/mealPlanEditorV2Store";
 import { getSubstitutionsFor } from "@/lib/mealPlanFoodRules";
-import { getClosestValidatedFood } from "@/lib/validatedFoodDatabase";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/lib/auth";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Wheat, Droplets, Check, Sparkles,
+  ChefHat, Loader2,
 } from "lucide-react";
 import { toast } from "sonner";
 
