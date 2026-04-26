@@ -17,6 +17,10 @@ vi.mock('../lib/auth', () => ({
   useAuth: vi.fn(() => ({ user: { id: 'user-1' } }))
 }));
 
+vi.mock('../lib/tenantContext', () => ({
+  useTenant: vi.fn(() => ({ tenantId: 'tenant-1' }))
+}));
+
 describe('Substitution Grams Edit E2E', () => {
   const mockPrimary = {
     id: 'primary-1',
