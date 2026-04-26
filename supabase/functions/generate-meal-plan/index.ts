@@ -1506,6 +1506,7 @@ function generatePlanWithTemplates(
         mealType,
         strategy,
         excludeTemplateIds: Array.from(usedForType),
+        prioritizedTemplateIds,
       };
 
       let matched = resolveMealTemplates(templates, resolverParams);
