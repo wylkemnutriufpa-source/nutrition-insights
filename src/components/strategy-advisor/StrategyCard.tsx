@@ -34,7 +34,7 @@ export default function StrategyCard({ strategy, rank, isSelected, onSelect, onP
     <motion.div
       layout
       onClick={onSelect}
-      className={`relative rounded-xl border p-3 cursor-pointer transition-all ${
+      className={`relative rounded-xl border p-3 cursor-pointer transition-all w-full max-w-full overflow-hidden ${
         isSelected
           ? "border-primary ring-2 ring-primary/20 bg-primary/5"
           : `bg-gradient-to-br ${rankColor} hover:shadow-md`
