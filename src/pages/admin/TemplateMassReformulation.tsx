@@ -94,12 +94,12 @@ export default function TemplateMassReformulation() {
     setLoading(false);
   };
 
-  const generatePreviews = (data: Template[]) => {
-    const newPreviews: ReformulationPreview[] = data.map(t => {
-      const { reformulatedMeals, changes, summary } = reformulateTemplate(t.meals);
+  const generatePreviews = async (data: Template[]) => {
+    const newPreviews: ReformulationPreview[] = await Promise.all(data.map(async (t) => {
+      const { reformulatedMeals, changes, summary } = await reformulateTemplate(t.meals);
       
       let level: "critical" | "warning" | "ok" = "ok";
-      if (changes.some(c => c.includes("NaN") || c.includes("inválido") || c.includes("ausente"))) level = "critical";
+      if (changes.some(c => c.includes("NaN") || c.includes("inválido") || c.includes("ausente") || c.includes("indisponível"))) level = "critical";
       else if (changes.length > 0) level = "warning";
 
       return {
@@ -107,13 +107,13 @@ export default function TemplateMassReformulation() {
         name: t.name,
         before: t.meals,
         after: reformulatedMeals,
-        status: "pending",
+        status: "pending" as const,
         changes,
         level,
         selected: level !== "ok",
         summary
       };
-    });
+    }));
     setPreviews(newPreviews);
   };
 
