@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import MealPlanEditorV2 from '../pages/MealPlanEditorV2';
+import { MealSmartEditorModal } from '../components/meal-editor-v2/MealSmartEditorModal';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 import { supabase } from '../integrations/supabase/client';
 import { useAuth } from '../lib/auth';
@@ -10,7 +11,7 @@ import '@testing-library/jest-dom';
 // Mock store to control state precisely
 const mockStore = {
   items: [
-    { id: 'item-1', title: 'Frango', calories_target: 0, protein_target: 0, carbs_target: 0, fat_target: 0, meal_type: 'lunch', day_of_week: 0 }
+    { id: 'item-1', title: 'Frango', calories_target: 0, protein_target: 0, carbs_target: 0, fat_target: 0, meal_type: 'lunch' as const, day_of_week: 0, description: 'Desc original', edit_metadata: { is_fixed: true, kcal_base: 500, protein_base: 30, carbs_base: 40, fat_base: 10, portion_factor: 1.0 } }
   ],
   plan: { id: 'plan-456', title: 'Plano Teste', plan_status: 'draft', patient_id: 'pat-123', start_date: '2023-01-01' },
   planId: 'plan-456',
@@ -102,7 +103,6 @@ describe('Wannubia Marmita E2E - Validações e Mobile', () => {
       </QueryClientProvider>
     );
 
-    // Esperar o render
     await waitFor(() => expect(screen.getByText('Plano Teste')).toBeInTheDocument());
 
     const saveButton = screen.getByText('Salvar Rascunho');
@@ -111,5 +111,60 @@ describe('Wannubia Marmita E2E - Validações e Mobile', () => {
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith("O plano não pode ter totais zerados.", expect.any(Object));
     });
+  });
+
+  it('deve resetar o estado local ao fechar o modal de edição', async () => {
+    const onOpenChange = vi.fn();
+    
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <MealSmartEditorModal open={true} onOpenChange={onOpenChange} itemId="item-1" />
+      </QueryClientProvider>
+    );
+
+    const textarea = screen.getByPlaceholderText(/Os alimentos selecionados aparecerão aqui/i);
+    fireEvent.change(textarea, { target: { value: 'Nova descrição temporária' } });
+    expect(textarea).toHaveValue('Nova descrição temporária');
+
+    // Fechar o modal
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MealSmartEditorModal open={false} onOpenChange={onOpenChange} itemId="item-1" />
+      </QueryClientProvider>
+    );
+
+    // Reabrir o modal
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MealSmartEditorModal open={true} onOpenChange={onOpenChange} itemId="item-1" />
+      </QueryClientProvider>
+    );
+
+    // O valor deve ter voltado para o original (Desc original)
+    await waitFor(() => {
+      expect(screen.getByPlaceholderText(/Os alimentos selecionados aparecerão aqui/i)).toHaveValue('Desc original');
+    });
+  });
+
+  it('deve validar macros base ausentes em marmitas fixas', async () => {
+    // Alterar mockStore temporariamente para simular marmita com macros ausentes
+    const originalItem = mockStore.items[0];
+    mockStore.items[0] = { 
+      ...originalItem, 
+      edit_metadata: { ...originalItem.edit_metadata, kcal_base: undefined } as any
+    };
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MealSmartEditorModal open={true} onOpenChange={vi.fn()} itemId="item-1" />
+      </QueryClientProvider>
+    );
+
+    await waitFor(() => {
+      expect(toast.error).toHaveBeenCalledWith("Dados Base Incompletos", expect.any(Object));
+    });
+
+    // Restaurar
+    mockStore.items[0] = originalItem;
   });
 });
