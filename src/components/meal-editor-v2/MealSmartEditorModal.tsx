@@ -206,7 +206,7 @@ export function MealSmartEditorModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent 
-        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl"
+        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl [&>button]:z-[60] [&>button]:bg-background/80 [&>button]:backdrop-blur-sm [&>button]:rounded-full [&>button]:p-1.5 [&>button]:opacity-100 [&>button]:hover:bg-primary/10"
         onEscapeKeyDown={(e) => {
           // Garante que o estado local seja resetado ao fechar via ESC
           handleOpenChange(false);
@@ -216,9 +216,9 @@ export function MealSmartEditorModal({
           handleOpenChange(false);
         }}
       >
-        <DialogHeader className="px-6 py-4 bg-gradient-to-r from-primary/10 via-background to-background border-b">
-          <div className="flex items-center justify-between">
-            <div>
+        <DialogHeader className="px-6 py-4 pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="min-w-0 flex-1">
               <DialogTitle className="text-xl font-bold font-display tracking-tight">
                 Editar {item.title}
               </DialogTitle>
@@ -226,7 +226,7 @@ export function MealSmartEditorModal({
                 Ajuste os alimentos, substituições e observações clínicas
               </p>
             </div>
-            <div className="flex items-center gap-4 bg-secondary/50 px-4 py-2 rounded-2xl border border-primary/10">
+            <div className="flex items-center gap-4 bg-secondary/50 px-4 py-2 rounded-2xl border border-primary/10 shrink-0">
               <div className="flex flex-col items-center">
                 <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
                 <span className="text-sm font-black text-orange-500">{totals.calories}</span>
