@@ -425,12 +425,12 @@ export default function MealPlanEditorV2() {
     setGeneratingNew(true);
     try {
       console.warn("[PLAN] chamando edge function via pipeline");
-      const result = await runPlanPipeline(params);
-
+      const result = await runPlanPipeline(params, {
         planTitle: `${plan.title} (Revisão)`,
         startDate: new Date().toISOString().split("T")[0],
         generationMode: "smart",
       });
+
 
       console.warn("[PLAN] resposta recebida", result);
       if (!result.success || !result.planId) {
