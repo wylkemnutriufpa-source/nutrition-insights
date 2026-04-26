@@ -52,24 +52,32 @@ export default function PatientRegister() {
   useEffect(() => {
     if (!preselectedNutri) return;
     (async () => {
-      const { data } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
-        .select("user_id, full_name, avatar_url, phone, clinic_name")
+        .select("user_id, full_name, avatar_url, phone")
         .eq("user_id", preselectedNutri)
         .maybeSingle();
-      if (data) {
+      
+      const { data: profData } = await supabase
+        .from("professional_profiles")
+        .select("clinic_name")
+        .eq("user_id", preselectedNutri)
+        .maybeSingle();
+
+      if (profileData) {
         setSelectedProfessional({
-          user_id: data.user_id,
-          full_name: data.full_name,
-          avatar_url: data.avatar_url,
-          clinic_name: data.clinic_name,
-          phone: data.phone,
+          user_id: profileData.user_id,
+          full_name: profileData.full_name,
+          avatar_url: profileData.avatar_url,
+          clinic_name: (profData as any)?.clinic_name || null,
+          phone: profileData.phone,
         });
         // Reset confirmation if nutri changes
         setIsProfConfirmed(false);
       }
     })();
   }, [preselectedNutri]);
+
 
   // Verify signature if nutri is provided
   useEffect(() => {
