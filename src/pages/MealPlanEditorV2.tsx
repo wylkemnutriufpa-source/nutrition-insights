@@ -108,6 +108,7 @@ export default function MealPlanEditorV2() {
   const [exportingPDF, setExportingPDF] = useState(false);
   const [pdfOrientation, setPdfOrientation] = useState<"p" | "l">("p");
   const [pdfTheme, setPdfTheme] = useState<"modern" | "classic">("modern");
+  const [historyOpen, setHistoryOpen] = useState(false);
   const [isDefaultSaving, setIsDefaultSaving] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
