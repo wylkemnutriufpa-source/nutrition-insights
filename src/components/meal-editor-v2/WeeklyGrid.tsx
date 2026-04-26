@@ -50,7 +50,7 @@ const findFoodMatch = (text: string): FoodItem | null => {
 };
 
 export function WeeklyGrid() {
-  const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell } = useMealPlanEditorV2Store();
+  const { items, syncingMap, planId, addItem, swapCells, clipboardItems, copyCell, pasteToCell, substitutionCount } = useMealPlanEditorV2Store();
 
   // Modelo single-day puro: tudo está em day=0
   const effectiveDay = 0;
