@@ -436,10 +436,16 @@ export default function TemplateMassReformulation() {
                 Carregar Templates
               </Button>
             ) : step === "preview" ? (
-              <Button onClick={applyReformulation} disabled={processing}>
-                {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Aplicar Reformulação ({previews.filter(p => p.selected && p.status === "pending").length})
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={simulateReformulation} disabled={processing}>
+                  <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
+                  Simular Impacto
+                </Button>
+                <Button onClick={applyReformulation} disabled={processing}>
+                  {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  Aplicar Reformulação ({previews.filter(p => p.selected && p.status === "pending").length})
+                </Button>
+              </div>
             ) : (
               <Button onClick={() => setStep("load")}>
                 <Undo2 className="w-4 h-4 mr-2" />
@@ -545,9 +551,16 @@ export default function TemplateMassReformulation() {
                               </div>
                             </div>
                           </div>
-                          <Badge variant="secondary">
-                            {p.changes.length} alterações
-                          </Badge>
+                          <div className="text-right">
+                            <Badge variant="secondary">
+                              {p.changes.length} alterações
+                            </Badge>
+                            {p.summary && (
+                              <div className="text-[10px] text-muted-foreground mt-1">
+                                {p.summary.totalMeals} ref | {p.summary.adjustedBlocksCount} blc | {p.summary.removedKeysCount} rem
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="text-sm space-y-1 pl-8">
                           {p.changes.map((c, i) => (
