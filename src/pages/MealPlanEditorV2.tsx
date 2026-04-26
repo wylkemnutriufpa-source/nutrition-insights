@@ -1150,57 +1150,34 @@ export default function MealPlanEditorV2() {
 
             {/* Critical action buttons — hidden when immutable */}
             {!isImmutable && (
-              <>
+              <div className="flex items-center gap-2">
                 <Button
                   variant="outline"
                   size="sm"
                   onClick={handleSave}
                   disabled={saving || store.syncStatus === "saving"}
+                  className="h-9 px-4"
                 >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-1" /> : <Save className="w-4 h-4 mr-1" />}
-                  Salvar
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleValidate}
-                  disabled={validating || store.syncStatus === "saving"}
-                  className="gradient-primary text-white border-0 gap-1.5 shadow-glow"
-                >
-                  {validating ? <Loader2 className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
-                  <span className="hidden sm:inline">Validar e Corrigir</span>
-                </Button>
-              </>
-            )}
-
-            {!isImmutable && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={saving}
-                  className="gap-1.5"
-                >
-                  {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  Salvar
+                  {saving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                  Salvar Rascunho
                 </Button>
 
                 <Button
                   size="sm"
                   onClick={handleSaveAndPublish}
                   disabled={savingAndPublishing || publishing}
-                  className="gradient-primary text-white border-0 gap-1.5 shadow-glow font-semibold"
+                  className="h-9 px-6 gradient-primary text-white border-0 gap-2 shadow-glow font-bold animate-pulse-subtle"
                 >
                   {savingAndPublishing ? (
                     <Loader2 className="w-4 h-4 animate-spin mr-1" />
                   ) : (
                     <Send className="w-4 h-4 mr-1" />
                   )}
-                  Salvar e Publicar
+                  Salvar e Enviar ao Paciente
                 </Button>
-              </>
+              </div>
             )}
+
         <PlanHistoryModal
           open={historyOpen}
           onOpenChange={setHistoryOpen}
