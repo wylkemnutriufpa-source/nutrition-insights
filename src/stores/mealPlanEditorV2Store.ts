@@ -569,7 +569,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   // ── Delete item ───────────────────────────────────────────
   deleteItem: (itemId) => {
     const prev = get().items;
-    set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
+    set((s) => ({ items: sortMealPlanItems(s.items.filter((i) => i.id !== itemId)) }));
 
     // Se o item é temporário, removemos do estado local e também da fila de inserção pendente
     if (itemId.startsWith("temp-")) {
