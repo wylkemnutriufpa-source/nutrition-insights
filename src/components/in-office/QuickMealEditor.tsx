@@ -25,6 +25,8 @@ interface MealItem {
   carbs: number;
   fat: number;
   meal_type: MealType;
+  is_primary?: boolean;
+  substitution_group_id?: string | null;
 }
 
 interface MealBlock {
