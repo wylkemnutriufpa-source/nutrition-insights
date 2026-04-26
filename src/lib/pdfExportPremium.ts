@@ -491,7 +491,7 @@ function buildPremiumCSS(): string {
   `;
 }
 
-export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
+export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   // Group items by day
   const groupedByDay = data.items.reduce((acc, item) => {
     const dayKey = item.day_of_week ?? -1;
