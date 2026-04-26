@@ -82,6 +82,9 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     // Click Publish
     fireEvent.click(publishButton);
 
+    // Verify button is disabled and shows "Publicando..."
+    expect(screen.getByRole('button', { name: /Publicando.../i })).toBeDisabled();
+
     // Verify publication process
     await waitFor(() => {
       expect(mockSupabase.from).toHaveBeenCalledWith('meal_plans');
