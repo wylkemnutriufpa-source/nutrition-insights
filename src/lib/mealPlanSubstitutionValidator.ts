@@ -134,6 +134,7 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
           const msg = `Substituição ${idx + 1}: "${foodMatch.name}" está fora da tolerância em: ${errorParts.join(", ")}.`;
           errors.push(msg);
           detailedErrors.push({
+            mealId: item.id,
             mealTitle: item.title || "Sem título",
             substitutionIndex: idx,
             foodName: foodMatch.name,
