@@ -64,7 +64,7 @@ export default function UpdateBanner() {
       // Update check — every 5min (was 30s, too aggressive and contributed to reload loops)
       const intervalId = setInterval(() => {
         registration.update().catch(() => {});
-      }, 1 * 60 * 1000); // Check every 1 minute for faster updates
+      }, 30 * 1000); // Check every 30 seconds for near real-time updates
 
       // Check on visibility change (tab becomes visible)
       const onVisibility = () => {
