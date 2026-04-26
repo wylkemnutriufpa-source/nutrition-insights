@@ -334,6 +334,11 @@ export default function MealTemplatePanel({ day }: Props) {
     });
 
     setRecentlyApplied(prev => new Set(prev).add(template.id));
+    setAppliedHistory(prev => [...prev, { 
+      name: template.title, 
+      date: new Date(), 
+      nutrients: { kcal: template.totalCalories, protein: template.totalProtein } 
+    }]);
     toast.success(`✅ ${template.title} adicionado!`);
     setTimeout(() => {
       setRecentlyApplied(prev => {
