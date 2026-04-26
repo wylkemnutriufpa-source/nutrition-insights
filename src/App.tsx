@@ -311,9 +311,9 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
   if (isProfessional) return <>{children}</>;
 
   // Only mandatory redirect is for Consent if not provided
-  const consentAllowedRoutes = ["/consent-required", "/auth", "/settings", "/reset-password"];
+  const consentAllowedRoutes = ["/consent", "/auth", "/settings", "/reset-password"];
   if (isPatient && !hasConsent && !consentAllowedRoutes.some(r => location.pathname.startsWith(r))) {
-    return <Navigate to="/consent-required" replace />;
+    return <Navigate to="/consent" replace />;
   }
 
   return <>{children}</>;
