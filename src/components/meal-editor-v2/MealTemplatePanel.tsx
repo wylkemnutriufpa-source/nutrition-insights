@@ -405,8 +405,8 @@ export default function MealTemplatePanel({ day }: Props) {
                       <div className="flex items-center gap-2">
                         <p className="text-sm font-bold truncate">{template.title}</p>
                         {template.id.length > 20 && (
-                          <span className="text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
-                            Personalizada
+                          <span className="flex items-center gap-1 text-[9px] bg-primary/10 text-primary px-1.5 py-0.5 rounded font-medium shrink-0">
+                            {template.description === "Marmita Fixa Selecionada" ? "Marmita Fixa" : "Personalizada"}
                           </span>
                         )}
                         {wasApplied && <Check className="w-4 h-4 text-green-500 shrink-0" />}
