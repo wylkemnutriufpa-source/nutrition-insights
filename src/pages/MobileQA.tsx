@@ -68,7 +68,7 @@ export default function MobileQA() {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const registerEvidence = async (item: string) => {
+  const registerEvidence = async (item: string, metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }) => {
     try {
       const canvas = await html2canvas(document.body);
       const screenshot = canvas.toDataURL("image/png");
@@ -77,8 +77,10 @@ export default function MobileQA() {
         id: Math.random().toString(36).substr(2, 9),
         timestamp: new Date().toLocaleTimeString(),
         item,
-        viewport: `${window.innerWidth}x${window.innerHeight}`,
-        screenshot, // Store the base64 screenshot
+        viewport: `${window.innerWidth}px`,
+        screenshot,
+        context: activeModal || "Página Principal",
+        metrics
       };
       
       setEvidences(prev => [...prev, newEvidence]);
@@ -92,11 +94,21 @@ export default function MobileQA() {
   };
 
   const exportReport = () => {
+    // Organize by viewport and context
+    const organizedEvidences = evidences.reduce((acc: any, ev) => {
+      const vp = ev.viewport;
+      const ctx = ev.context || "Geral";
+      if (!acc[vp]) acc[vp] = {};
+      if (!acc[vp][ctx]) acc[vp][ctx] = [];
+      acc[vp][ctx].push(ev);
+      return acc;
+    }, {});
+
     const report = {
       title: "Relatório de QA Mobile",
       date: new Date().toLocaleDateString(),
       checklist,
-      evidences,
+      organizedEvidences,
       summary: {
         totalChecks: Object.values(checklist).filter(Boolean).length,
         totalEvidences: evidences.length,
