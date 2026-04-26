@@ -147,10 +147,18 @@ export default function Invitation() {
 
   const openWhatsApp = (customMessage?: string) => {
     if (!invitation) return;
-    const message = customMessage || `Olá! Aqui está o seu convite para o FitJourney: ${window.location.href}`;
+    
+    const message = customMessage || getWhatsAppInvitationMessage({
+      patientName: invitation.patient_name || "",
+      professionalName: invitation.professional?.full_name || "Seu Nutricionista",
+      clinicName: invitation.clinic?.name,
+      invitationCode: code || ""
+    });
+
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
+
 
   if (loading) {
     return (
