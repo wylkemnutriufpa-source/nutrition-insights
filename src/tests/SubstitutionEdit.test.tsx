@@ -73,9 +73,7 @@ describe('Substitution Grams Edit E2E', () => {
       </QueryClientProvider>
     );
 
-    // Clica nos gramas da substituição para editar
-    const gramsButton = screen.getByText('100g', { selector: 'button' });
-    // Pegar o segundo botão de 100g (o da sub)
+    // Clica nos gramas da substituição para editar (segundo botão de 100g)
     const gramsButtons = screen.getAllByText('100g', { selector: 'button' });
     fireEvent.click(gramsButtons[1]);
 
