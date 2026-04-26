@@ -397,9 +397,28 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                     Substituições ({substitutionItems.length})
                   </p>
                   {substitutionItems.some(i => (i as any).item_origin === 'auto_generated_sub') && (
-                    <div className="flex items-center gap-1 text-[8px] text-amber-600 font-medium bg-amber-50 px-1 rounded animate-pulse" title="Contém sugestões automáticas">
-                      <Sparkles className="w-2.5 h-2.5" /> AUTO
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div 
+                            tabIndex={0}
+                            role="status"
+                            aria-label="Sugestões automáticas disponíveis"
+                            className="flex items-center gap-1 text-[8px] text-amber-600 font-medium bg-amber-50 px-1 rounded animate-pulse cursor-help focus:ring-1 focus:ring-amber-400 outline-none"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                toast.info("Essas sugestões foram geradas automaticamente pelo motor clínico.");
+                              }
+                            }}
+                          >
+                            <Sparkles className="w-2.5 h-2.5" /> AUTO
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-[10px]">Sugestões geradas automaticamente pelo motor clínico</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </div>
                 {substitutionItems.map((item) => (
