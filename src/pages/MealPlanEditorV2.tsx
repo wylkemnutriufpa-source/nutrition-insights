@@ -1,11 +1,11 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback } from "react";
 import { createPlanRevision } from "@/lib/createPlanRevision";
 import { MealDetailProvider } from "@/components/patient/MealDetailContext";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
-  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil
+  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -31,7 +31,10 @@ import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal
 import type { AutoFixResult } from "@/lib/autoFixEngine";
 import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
 import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
+import { PlanReviewModal } from "@/components/meal-editor-v2/PlanReviewModal";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import { toast } from "sonner";
 import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
@@ -89,6 +92,9 @@ export default function MealPlanEditorV2() {
   const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
   const [showAutofixResults, setShowAutofixResults] = useState(false);
   const [autofixWasValid, setAutofixWasValid] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const [isDefaultSaving, setIsDefaultSaving] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "grid";
@@ -105,6 +111,93 @@ export default function MealPlanEditorV2() {
   useEffect(() => { localStorage.setItem(VIEW_MODE_KEY, viewMode); }, [viewMode]);
   useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
   useEffect(() => { localStorage.setItem(EDITOR_LAYOUT_KEY, editorLayout); }, [editorLayout]);
+
+  const exportToPDF = async () => {
+    if (!plan || store.items.length === 0) return;
+    setExportingPDF(true);
+    const toastId = toast.loading("Gerando PDF...");
+    try {
+      const doc = new jsPDF();
+      const patientName = store.patientName || "Paciente";
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(40);
+      doc.text("Plano Alimentar", 14, 22);
+      
+      doc.setFontSize(10);
+      doc.text(`Paciente: ${patientName}`, 14, 30);
+      doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, 14, 35);
+      doc.text(`Título: ${plan.title}`, 14, 40);
+      
+      let y = 50;
+      
+      store.items.sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || "")).forEach((item, idx) => {
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+        
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${item.title}`, 14, y);
+        y += 7;
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(item.description || "", 180);
+        doc.text(lines, 14, y);
+        y += (lines.length * 5) + 5;
+        
+        const meta = (item as any).edit_metadata || (item as any).metadata || {};
+        const substitutions = meta.substitutions_json as string[] || [];
+        
+        if (substitutions.length > 0) {
+          doc.setFont("helvetica", "bold");
+          doc.text("Substituições:", 14, y);
+          y += 5;
+          doc.setFont("helvetica", "normal");
+          substitutions.forEach(sub => {
+            const subLines = doc.splitTextToSize(`• ${sub}`, 170);
+            doc.text(subLines, 20, y);
+            y += (subLines.length * 5);
+          });
+          y += 5;
+        }
+        
+        y += 10;
+      });
+      
+      doc.save(`Plano_Alimentar_${patientName.replace(/\s+/g, "_")}.pdf`);
+      toast.success("PDF gerado com sucesso!", { id: toastId });
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      toast.error("Erro ao gerar PDF", { id: toastId });
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
+  const handleSaveAsDefault = async () => {
+    if (!plan?.patient_id || !user?.id) return;
+    setIsDefaultSaving(true);
+    const toastId = toast.loading("Salvando como template padrão...");
+    try {
+      const { error } = await supabase
+        .from("nutritionist_patients")
+        .update({ default_meal_plan_id: plan.id } as any)
+        .eq("patient_id", plan.patient_id)
+        .eq("nutritionist_id", user.id);
+        
+      if (error) throw error;
+      toast.success("Template salvo como padrão para este paciente!", { id: toastId });
+    } catch (err) {
+      console.error("Erro ao salvar padrão:", err);
+      toast.error("Erro ao salvar padrão", { id: toastId });
+    } finally {
+      setIsDefaultSaving(false);
+    }
+  };
 
   const refreshPlanFromServer = async () => {
     if (!id || !user?.id) return;
@@ -130,6 +223,61 @@ export default function MealPlanEditorV2() {
     return () => {};
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id, user?.id]);
+
+  const plan = store.plan;
+  const planStatus = (plan as any)?.plan_status || "draft";
+  const isImmutable = planStatus === "archived";
+  const genSource = (plan as any)?.generation_source || "";
+  const isAutoGenerated = /pipeline|onboarding|smart|protocol|auto/i.test(genSource);
+  const statusInfo = STATUS_LABELS[planStatus] || STATUS_LABELS.draft;
+  const clinicalScore = (plan as any)?.clinical_score || 0;
+  const qualityAlerts = (plan as any)?.quality_alerts || [];
+
+  const loadDefaultTemplate = useCallback(async () => {
+    if (!plan?.patient_id || !user?.id) return;
+    
+    const { data: np } = await supabase
+      .from("nutritionist_patients")
+      .select("default_meal_plan_id")
+      .eq("patient_id", plan.patient_id)
+      .eq("nutritionist_id", user.id)
+      .maybeSingle();
+      
+    if (np?.default_meal_plan_id) {
+      const toastId = toast.loading("Carregando seu template padrão...");
+      try {
+        const { data: defaultItems } = await supabase
+          .from("meal_plan_items")
+          .select("*")
+          .eq("meal_plan_id", np.default_meal_plan_id);
+          
+        if (defaultItems && defaultItems.length > 0) {
+          const newItems = defaultItems.map(item => ({
+            ...item,
+            id: undefined,
+            meal_plan_id: plan.id,
+            created_at: undefined,
+            tenant_id: tenantId
+          }));
+          
+          await store.addItems(newItems as any);
+          toast.success("Template padrão carregado!", { id: toastId });
+        } else {
+          toast.dismiss(toastId);
+        }
+      } catch (err) {
+        console.error("Erro ao carregar template padrão:", err);
+        toast.error("Erro ao carregar template padrão", { id: toastId });
+      }
+    }
+  }, [plan?.id, plan?.patient_id, user?.id, tenantId, store]);
+
+  // Auto-load default if plan is empty
+  useEffect(() => {
+    if (store.hydrated && store.items.length === 0 && plan && !isImmutable) {
+      loadDefaultTemplate();
+    }
+  }, [store.hydrated, store.items.length, plan, isImmutable, loadDefaultTemplate]);
 
   // ── Loading gate ─────────────────────────────────────────────
   const storeMatchesRoute = store.planId === id;
@@ -158,29 +306,12 @@ export default function MealPlanEditorV2() {
     );
   }
 
-  const plan = store.plan;
   if (!plan) return null;
 
   const planState = resolvePlanState(plan);
   const isPublished = planState.isEffective;
   const isApproved = planState.isApproved;
-  const planStatus = (plan as any).plan_status || "draft";
-  const clinicalStatus = (plan as any).clinical_status || "pending_evaluation";
-  const clinicalScore = (plan as any).clinical_score || 0;
-  const qualityAlerts = (plan as any).quality_alerts || [];
-  
-  // Extra checks to handle case where plan totals might be used for score
-  const totalCalories = (plan as any).total_calories || 0;
-  const totalProtein = (plan as any).total_protein || 0;
-  const isImmutable = planStatus === "archived";
-  const canPublish = planStatus !== "archived";
-  
-  // Check if plan came from onboarding/auto-generation — block hybrid builder
-  const genSource = (plan as any).generation_source || "";
-  const isAutoGenerated = /pipeline|onboarding|smart|protocol|auto/i.test(genSource);
 
-  // Status display info
-  const statusInfo = STATUS_LABELS[planStatus] || STATUS_LABELS.draft;
 
   // ── Generate new plan (creates a new draft, never touches current plan) ──
   const handleGenerateNewPlan = async () => {
@@ -227,98 +358,17 @@ export default function MealPlanEditorV2() {
       toast.error("🔒 Plano imutável. Crie uma nova versão para editar.");
       return;
     }
+    setReviewOpen(true);
+  };
+
+  const executeFinalSave = async () => {
+    setReviewOpen(false);
     setSaving(true);
-    
-    // 🛡️ Validação de Substituições antes de salvar
-    const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount);
-    if (!subValidation.valid) {
-      // Agrupar erros por refeição
-      const groupedByMeal = subValidation.detailedErrors.reduce((acc, err) => {
-        if (!acc[err.mealId]) acc[err.mealId] = { title: err.mealTitle, errors: [] };
-        acc[err.mealId].errors.push(err);
-        return acc;
-      }, {} as Record<string, { title: string, errors: any[] }>);
-
-      toast.error("⚠️ Substituições fora do padrão", {
-        description: (
-          <div className="mt-2 space-y-3 max-h-[350px] overflow-auto pr-2 custom-scrollbar">
-            {Object.entries(groupedByMeal).map(([mealId, group]) => (
-              <div key={mealId} className="p-3 rounded-lg bg-muted/30 border border-border/50 space-y-2">
-                <div className="flex justify-between items-center border-b border-border/20 pb-1">
-                  <span className="font-black text-xs uppercase tracking-tighter text-foreground truncate">{group.title}</span>
-                  <button 
-                    onClick={() => {
-                      const el = document.getElementById(`meal-item-${mealId}`);
-                      if (el) {
-                        el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                        el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
-                        setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 3000);
-                        (el as HTMLElement).focus();
-                      }
-                    }}
-                    className="text-[10px] font-bold text-primary hover:underline hover:scale-105 transition-transform"
-                  >
-                    Ver item
-                  </button>
-                </div>
-                <div className="space-y-2">
-                  {group.errors.map((err, i) => (
-                    <div key={i} className="text-[10px]">
-                      {err.limitError ? (
-                        <p className="text-destructive font-bold">{err.limitError}</p>
-                      ) : (
-                        <div className="space-y-1">
-                          <p className="text-muted-foreground font-medium italic">"{err.foodName}"</p>
-                          <div className="grid grid-cols-2 gap-x-2 gap-y-1 bg-background/50 p-1.5 rounded border border-border/10">
-                            {Object.entries(err.macros).map(([macro, data]: [string, any]) => (
-                              <div key={macro} className="flex flex-col">
-                                <span className="text-[9px] uppercase opacity-60 font-bold">{macro === 'kcal' ? 'Kcal' : macro[0].toUpperCase()}</span>
-                                <span className={cn(
-                                  "font-mono font-bold",
-                                  macro === 'kcal' ? 'text-orange-600' :
-                                  macro === 'protein' ? 'text-red-600' :
-                                  macro === 'carbs' ? 'text-amber-600' : 'text-blue-600'
-                                )}>
-                                  {data.value}{macro === 'kcal' ? '' : 'g'} 
-                                  <span className="text-[8px] opacity-70 ml-1">
-                                    (alvo {data.target}{macro === 'kcal' ? '' : 'g'} ±{Math.round(data.tolerance * 100)}%)
-                                  </span>
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
-        ),
-        duration: 10000,
-        onDismiss: () => {
-          setSaving(false);
-          editorRef.current?.focus();
-        },
-        onAutoClose: () => {
-          setSaving(false);
-          editorRef.current?.focus();
-        }
-      });
-      return;
-    }
-
     const toastId = toast.loading("Salvando e aprovando plano...");
     try {
-      // Modelo single-day puro: nenhuma consolidação de dias legados necessária.
-      
       await store._flushQueue();
-
-      // Recalcular totais via RPC (autoritativo) antes do refetch final
-      const totals = await calculatePlanTotals(plan.id);
+      await calculatePlanTotals(plan.id);
       
-      // draft_auto_corrected já é um rascunho persistido; salvar não deve forçar aprovação
       if (planStatus === "draft_auto_corrected") {
         await refreshPlanFromServer();
         toast.success("✅ Rascunho salvo com sucesso!", { id: toastId });
@@ -327,7 +377,6 @@ export default function MealPlanEditorV2() {
 
       const approveResult = await savePlanAsApproved(plan.id, user!.id);
       if (!approveResult.success) {
-        console.error("[EMERGENCY] Erro ao aprovar:", approveResult.error);
         throw new Error(approveResult.error || "Erro ao aprovar");
       }
 
@@ -748,6 +797,61 @@ export default function MealPlanEditorV2() {
               <span className="hidden sm:inline">♻️ Novo Plano</span>
             </Button>
 
+            {/* PDF Export */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToPDF}
+              disabled={exportingPDF || store.items.length === 0}
+              className="gap-1.5"
+            >
+              {exportingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span className="hidden sm:inline">Exportar PDF</span>
+            </Button>
+
+            {/* Mode Selector */}
+            {!isImmutable && (
+              <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5 ml-2">
+                <button
+                  type="button"
+                  onClick={() => store.updatePlan({ plan_mode: "single_day" } as any)}
+                  className={`px-3 py-1 rounded text-[11px] font-bold transition-all ${
+                    (plan as any).plan_mode === "single_day" || !(plan as any).plan_mode
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Dia Único
+                </button>
+                <button
+                  type="button"
+                  onClick={() => store.updatePlan({ plan_mode: "weekly" } as any)}
+                  className={`px-3 py-1 rounded text-[11px] font-bold transition-all ${
+                    (plan as any).plan_mode === "weekly"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Semanal
+                </button>
+              </div>
+            )}
+
+            {/* Save as Default */}
+            {!isImmutable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveAsDefault}
+                disabled={isDefaultSaving}
+                className="gap-1.5 ml-2 border-primary/20 hover:bg-primary/5 text-primary"
+                title="Tornar este template o padrão para este paciente"
+              >
+                {isDefaultSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4 fill-primary" />}
+                <span className="hidden sm:inline">Definir como Padrão</span>
+              </Button>
+            )}
+
             {/* Substitutions Control */}
             {!isImmutable && (
               <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5 ml-2">
@@ -1058,6 +1162,13 @@ export default function MealPlanEditorV2() {
         }))}
         mealType={(plan as any)?.plan_type || "custom"}
         defaultName={plan?.title || ""}
+      />
+      <PlanReviewModal
+        open={reviewOpen}
+        onOpenChange={setReviewOpen}
+        items={store.items}
+        onConfirm={executeFinalSave}
+        isSaving={saving}
       />
     </>
   );

@@ -7846,6 +7846,7 @@ export type Database = {
           attendance_mode: string
           checkin_frequency: string | null
           created_at: string
+          default_meal_plan_id: string | null
           expires_at: string | null
           id: string
           journey_status: string
@@ -7860,6 +7861,7 @@ export type Database = {
           attendance_mode?: string
           checkin_frequency?: string | null
           created_at?: string
+          default_meal_plan_id?: string | null
           expires_at?: string | null
           id?: string
           journey_status?: string
@@ -7874,6 +7876,7 @@ export type Database = {
           attendance_mode?: string
           checkin_frequency?: string | null
           created_at?: string
+          default_meal_plan_id?: string | null
           expires_at?: string | null
           id?: string
           journey_status?: string
@@ -7885,6 +7888,27 @@ export type Database = {
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "nutritionist_patients_default_meal_plan_id_fkey"
+            columns: ["default_meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutritionist_patients_default_meal_plan_id_fkey"
+            columns: ["default_meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "nutritionist_patients_default_meal_plan_id_fkey"
+            columns: ["default_meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
           {
             foreignKeyName: "nutritionist_patients_tenant_id_fkey"
             columns: ["tenant_id"]
