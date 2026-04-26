@@ -100,6 +100,8 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
         carbs_target: i.carbs_target || undefined,
         fat_target: i.fat_target || undefined,
         day_of_week: i.day_of_week ?? undefined,
+        is_primary: (i as any).is_primary,
+        substitution_group_id: (i as any).substitution_group_id,
       })),
       targetCalories: plan?.total_target_calories || undefined,
       targetProtein: plan?.total_target_protein || undefined,
