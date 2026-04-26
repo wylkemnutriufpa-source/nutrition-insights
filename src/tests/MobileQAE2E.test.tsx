@@ -16,7 +16,9 @@ vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
 // Mock html2canvas and jsPDF
 vi.mock("html2canvas", () => ({
   default: vi.fn().mockResolvedValue({
-    toDataURL: () => "data:image/png;base64,mock"
+    toDataURL: () => "data:image/png;base64,mock",
+    width: 1000,
+    height: 1000,
   })
 }));
 
@@ -32,6 +34,21 @@ vi.mock("jspdf", () => ({
     save: vi.fn(),
   }))
 }));
+
+// Mock canvas for createThumbnail
+const mockCanvas = {
+  getContext: vi.fn().mockReturnValue({
+    drawImage: vi.fn(),
+  }),
+  toDataURL: vi.fn().mockReturnValue("data:image/jpeg;base64,mock"),
+  width: 0,
+  height: 0,
+};
+vi.stubGlobal('HTMLCanvasElement', vi.fn());
+document.createElement = vi.fn().mockImplementation((tagName) => {
+  if (tagName === 'canvas') return mockCanvas;
+  return document.createElement.bind(document)(tagName);
+});
 
 // Mocking window.scrollX and document.documentElement.scrollWidth
 const mockScrollX = vi.fn().mockReturnValue(0);
