@@ -234,7 +234,7 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
   };
 }
 
-export function validatePlanSubstitutions(items: MealPlanItem[], maxCount: number = 4): ValidationResult {
+export function validatePlanSubstitutions(items: MealPlanItem[], maxCount: number = 4, patientName?: string): ValidationResult {
   const allErrors: string[] = [];
   const allDetailedErrors: SubstitutionError[] = [];
   
