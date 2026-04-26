@@ -379,7 +379,8 @@ function RootRoute() {
   if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
     return <Navigate to="/client/dashboard" replace />;
   }
-  if (isPersonal) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
+  // Prioritize Index (Nutritionist Dashboard) as requested to focus on Nutricionista
+  if (isPersonal && !isNutritionist && !isAdmin) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
 }
 

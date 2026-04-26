@@ -22,9 +22,13 @@ export function useProfessionalModules(): ProfessionalModules {
       return;
     }
 
-    // Admins always have access
+    // Admins always have access, but we'll respect the user's wish to leave personal for later
     if (isAdmin) {
-      setModules({ coachBodybuilderEnabled: true, personalTrainerEnabled: true, loading: false });
+      setModules({ 
+        coachBodybuilderEnabled: true, 
+        personalTrainerEnabled: false, // Disabled as requested for focus on Nutritionist
+        loading: false 
+      });
       return;
     }
 

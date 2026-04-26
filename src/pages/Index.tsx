@@ -44,7 +44,7 @@ import {
   UtensilsCrossed, Users, TrendingUp, Target, Plus,
   CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
   Calendar, ArrowRight, ClipboardList, Heart, Brain,
-  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill
+  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -74,6 +74,8 @@ function NutritionistDashboardContent() {
   const [appointmentsToday, setAppointmentsToday] = useState(0);
   const [pendingCheckins, setPendingCheckins] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
+  const [activeSessions, setActiveSessions] = useState<any[]>([]);
+  const [sessionProfiles, setSessionProfiles] = useState<Record<string, string>>({});
 
   // Pending approvals modal
   const pendingApprovalsCount = usePendingApprovals();
@@ -136,7 +138,7 @@ function NutritionistDashboardContent() {
       const todayStart = new Date(); todayStart.setHours(0, 0, 0, 0);
       const todayEnd = new Date(); todayEnd.setHours(23, 59, 59, 999);
 
-      const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, programsListRes] = await Promise.all([
+      const [patientsRes, protocolsRes, programsRes, plansRes, aptsRes, chatsRes, pendingRes, programsListRes, sessionsRes] = await Promise.all([
         supabase.from("nutritionist_patients").select("id, patient_id", { count: "exact" }).eq("nutritionist_id", userId).eq("status", "active"),
         supabase.from("protocols").select("id", { count: "exact" }).eq("created_by", userId),
         supabase.from("programs").select("id", { count: "exact" }).eq("created_by", userId).eq("is_active", true),
@@ -145,6 +147,7 @@ function NutritionistDashboardContent() {
         supabase.from("chat_messages").select("id", { count: "exact", head: true }).eq("receiver_id", userId).eq("is_read", false),
         supabase.from("patient_checkins").select("id", { count: "exact", head: true }).eq("nutritionist_id", userId).eq("status", "pending"),
         supabase.from("programs").select("id, title").eq("created_by", userId).eq("is_active", true).limit(5),
+        supabase.from("in_office_sessions" as any).select("*").eq("nutritionist_id", userId).is("completed_at", null).order("created_at", { ascending: false }),
       ]);
 
       setPatientCount(patientsRes.count || 0);
@@ -154,6 +157,15 @@ function NutritionistDashboardContent() {
       setAppointmentsToday(aptsRes.count || 0);
       setUnreadChats(chatsRes.count || 0);
       setPendingCheckins(pendingRes.count || 0);
+
+      setActiveSessions(sessionsRes.data || []);
+      if (sessionsRes.data && sessionsRes.data.length > 0) {
+        const sIds = sessionsRes.data.map((s: any) => s.patient_id);
+        const { data: pData } = await supabase.from("profiles").select("user_id, full_name").in("user_id", sIds);
+        const m: Record<string, string> = {};
+        (pData || []).forEach(p => { m[p.user_id] = p.full_name; });
+        setSessionProfiles(m);
+      }
 
       // Fetch timeline filtered by nutritionist's patients with patient names
       const patientIds = (patientsRes.data || []).map((p: any) => p.patient_id);
@@ -329,10 +341,10 @@ function NutritionistDashboardContent() {
   useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
 
   const quickActions = [
-    { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-primary/10 text-primary hover:bg-primary/20" },
-    { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-info/10 text-info hover:bg-info/20" },
-    { label: "Criar Programa", icon: Rocket, to: "/programs", color: "bg-accent/10 text-accent hover:bg-accent/20" },
-    { label: "Criar Protocolo", icon: FileText, to: "/protocols", color: "bg-warning/10 text-warning hover:bg-warning/20" },
+    { label: "Modo Consultório", icon: Stethoscope, to: "/in-office", color: "bg-primary/20 text-primary hover:bg-primary/30 shadow-md shadow-primary/5 border border-primary/20" },
+    { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary" },
+    { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-muted/50 text-muted-foreground hover:bg-info/10 hover:text-info" },
+    { label: "Criar Programa", icon: Rocket, to: "/programs", color: "bg-muted/50 text-muted-foreground hover:bg-accent/10 hover:text-accent" },
   ];
 
   const timelineEventIcons: Record<string, { icon: any; color: string }> = {
@@ -370,6 +382,34 @@ function NutritionistDashboardContent() {
           <Button size="sm" variant="outline">
             Revisar agora <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
+        </motion.div>
+      )}
+
+      {/* Active Session Resume Banner */}
+      {activeSessions.length > 0 && (
+        <motion.div
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="bg-primary shadow-lg shadow-primary/20 rounded-2xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 text-white"
+        >
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center animate-pulse">
+              <Stethoscope className="w-6 h-6" />
+            </div>
+            <div>
+              <p className="text-xs font-medium opacity-80 uppercase tracking-wider">Atendimento em andamento</p>
+              <h3 className="text-lg font-bold font-display">{sessionProfiles[activeSessions[0].patient_id] || "Paciente"}</h3>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <Button 
+              variant="secondary" 
+              className="w-full sm:w-auto gap-2"
+              onClick={() => navigate(`/in-office/${activeSessions[0].patient_id}`)}
+            >
+              Retomar Consulta <ArrowRight className="w-4 h-4" />
+            </Button>
+          </div>
         </motion.div>
       )}
 
