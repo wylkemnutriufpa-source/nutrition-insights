@@ -26,7 +26,7 @@ export function useProfessionalModules(): ProfessionalModules {
     if (isAdmin) {
       setModules({ 
         coachBodybuilderEnabled: true, 
-        personalTrainerEnabled: false, // Disabled as requested for focus on Nutritionist
+        personalTrainerEnabled: true,
         loading: false 
       });
       return;
