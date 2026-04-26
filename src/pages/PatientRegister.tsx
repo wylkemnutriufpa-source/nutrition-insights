@@ -25,6 +25,8 @@ export default function PatientRegister() {
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get("ref") || "";
   const preselectedNutri = searchParams.get("nutri") || "";
+  const signature = searchParams.get("sig") || "";
+  const [sigValid, setSigValid] = useState<boolean | null>(null);
 
   // Form
   const [name, setName] = useState("");
@@ -63,6 +65,31 @@ export default function PatientRegister() {
     })();
   }, [preselectedNutri]);
 
+  // Verify signature if nutri is provided
+  useEffect(() => {
+    if (!preselectedNutri || !signature) {
+      if (preselectedNutri && !signature) {
+        setSigValid(false); // No signature provided for a preselected nutri
+      }
+      return;
+    }
+    const verifySig = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-registration-token", {
+          body: { nutriId: preselectedNutri, signature }
+        });
+        if (error) throw error;
+        setSigValid(data.isValid);
+        if (!data.isValid) {
+          toast.error("Link de registro inválido ou alterado. Por favor, solicite um novo link ao seu profissional.");
+        }
+      } catch (err) {
+        console.error("Error verifying signature:", err);
+      }
+    };
+    verifySig();
+  }, [preselectedNutri, signature]);
+
   // Search professionals
   const searchProfessionals = useCallback(async (query: string) => {
     if (query.length < 2) { setProfResults([]); return; }
@@ -82,6 +109,10 @@ export default function PatientRegister() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (preselectedNutri && sigValid === false) {
+      toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
+      return;
+    }
     if (password.length < 6) {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
@@ -325,9 +356,9 @@ export default function PatientRegister() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Criando conta...</span>
+              <Button type="submit" className="w-full" disabled={loading || (preselectedNutri && sigValid === null)}>
+                {loading || (preselectedNutri && sigValid === null) ? (
+                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {sigValid === null ? "Validando link..." : "Criando conta..."}</span>
                 ) : (
                   <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Criar Conta</span>
                 )}

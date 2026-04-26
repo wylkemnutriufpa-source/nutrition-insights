@@ -112,8 +112,8 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
       weight: profile?.weight,
     };
 
-    // Seed with patient ID + timestamp for unique plans
-    setGenerationSeed(plan?.patient_id || "", Date.now() % 1000);
+    // 100% Deterministic: Seed with patient ID only (no timestamp)
+    setGenerationSeed(plan?.patient_id || "", 0);
     console.warn("[PLAN] chamando generateMealPlanFromLibrary");
     let res;
     try {

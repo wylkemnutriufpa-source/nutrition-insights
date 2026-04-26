@@ -123,6 +123,7 @@ const ClinicalHealthDashboard = lazy(() => import("./pages/ClinicalHealthDashboa
 const Curiosidades = lazy(() => import("./pages/Curiosidades"));
 const Planner = lazy(() => import("./pages/Planner"));
 const OnboardingPipeline = lazy(() => import("./pages/OnboardingPipeline"));
+const OnboardingTracker = lazy(() => import("./pages/OnboardingTracker"));
 const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
@@ -534,6 +535,7 @@ const App = () => (
 
               {/* Nutritionist-only routes */}
               <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
+              <Route path="/onboarding-tracker" element={<NutritionistRoute><LP section="Onboarding"><OnboardingTracker /></LP></NutritionistRoute>} />
               <Route path="/patients/:patientId" element={<NutritionistRoute><LP section="Pacientes"><PatientDetail /></LP></NutritionistRoute>} />
               <Route path="/preview-patient/:patientId" element={<NutritionistRoute><LP section="Preview do Paciente"><PreviewPatient /></LP></NutritionistRoute>} />
               <Route path="/protocols" element={<NutritionistRoute><LP section="Protocolos"><Protocols /></LP></NutritionistRoute>} />
