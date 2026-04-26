@@ -38,7 +38,7 @@ export function MealSmartEditorModal({
   onOpenChange,
   itemId,
 }: MealSmartEditorModalProps) {
-  const { items, updateItem } = useMealPlanEditorV2Store();
+  const { items, updateItem, substitutionCount } = useMealPlanEditorV2Store();
   const item = items.find((i) => i.id === itemId);
 
   const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
@@ -67,7 +67,7 @@ export function MealSmartEditorModal({
         const subLines = subsPart.split("\n")
           .filter(l => l.trim().length > 0)
           .map(l => l.trim());
-        setSubstitutions(subLines.slice(0, 4));
+        setSubstitutions(subLines.slice(0, substitutionCount));
       }
       
       setNotes((item as any).notes || "");
@@ -146,7 +146,7 @@ export function MealSmartEditorModal({
         const subLines = subsPart.split("\n")
           .filter(l => l.trim().length > 0)
           .map(l => l.trim());
-        setSubstitutions(subLines.slice(0, 4));
+        setSubstitutions(subLines.slice(0, substitutionCount));
       }
     }
     onOpenChange(newOpen);
@@ -160,7 +160,7 @@ export function MealSmartEditorModal({
     substitutions
       .map(s => String(s).trim().replace(/\s+/g, ' '))
       .filter(s => s.length > 0)
-  )).length > 4;
+  )).length > substitutionCount;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -327,9 +327,9 @@ export function MealSmartEditorModal({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2" data-testid="substitutions-header">
-                      🔄 Substituições ({substitutions.length}/4)
+                      🔄 Substituições ({substitutions.length}/{substitutionCount})
                     </h3>
-                    {substitutions.length < 4 && !isOverLimit && (
+                    {substitutions.length < substitutionCount && !isOverLimit && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
@@ -400,7 +400,7 @@ export function MealSmartEditorModal({
                       </p>
                       <p className="text-[10px] text-muted-foreground leading-relaxed">
                         {isOverLimit 
-                          ? "Você atingiu o limite de 4 substituições únicas. Apenas as 4 primeiras serão salvas."
+                          ? `Você atingiu o limite de ${substitutionCount} substituições únicas. Apenas as ${substitutionCount} primeiras serão salvas.`
                           : "Veja como as substituições serão organizadas e formatadas após salvar:"}
                       </p>
                     </div>

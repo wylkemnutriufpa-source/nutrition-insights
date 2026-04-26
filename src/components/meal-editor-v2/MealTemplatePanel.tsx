@@ -203,7 +203,7 @@ interface Props {
 }
 
 export default function MealTemplatePanel({ day }: Props) {
-  const { planId, addItem } = useMealPlanEditorV2Store();
+  const { planId, addItem, substitutionCount } = useMealPlanEditorV2Store();
   const [activeMealType, setActiveMealType] = useState<MealType>("breakfast");
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
 
@@ -220,7 +220,7 @@ export default function MealTemplatePanel({ day }: Props) {
     // Generate automatic substitutions for the main ingredients (Phase 3 update)
     const subLines: string[] = [];
     template.foods.forEach(f => {
-      const alts = getSubstitutionsFor(f.name).slice(0, 4); // Max 4 subs as requested
+      const alts = getSubstitutionsFor(f.name).slice(0, substitutionCount); // Respect user choice (0-4)
       if (alts.length > 0) {
         subLines.push(`• ${f.name} → ${alts.join(", ")}`);
       }
@@ -233,11 +233,14 @@ export default function MealTemplatePanel({ day }: Props) {
       title: template.title,
       description,
       meal_type: activeMealType,
-      day_of_week: day,
+      day_of_week: 0, // Enforce Day 0 for templates
       calories_target: template.totalCalories,
       protein_target: template.totalProtein,
       carbs_target: template.totalCarbs,
       fat_target: template.totalFat,
+      edit_metadata: {
+        substitutions_json: subLines
+      } as any
     });
 
     setRecentlyApplied(prev => new Set(prev).add(template.id));

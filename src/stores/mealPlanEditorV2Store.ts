@@ -34,6 +34,7 @@ interface EditorV2State {
   plan: MealPlan | null;
   patientName: string;
   items: MealPlanItem[];
+  substitutionCount: number; // 0, 1, 2, 3, 4
 
   // ── Lifecycle ─────────────────────────────────────────────
   hydrated: boolean;
@@ -72,6 +73,7 @@ interface EditorV2State {
   // Plan-level
   updatePlan: (patch: Partial<MealPlan>) => void;
   recalculateMealPlan: (delta: { protein?: number; carbs?: number; calories?: number }) => void;
+  setSubstitutionCount: (count: number) => void;
 
   // Internal helpers
   _enqueue: (op: PendingOp) => void;
@@ -283,10 +285,27 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     });
   },
 
+  setSubstitutionCount: (count: number) => {
+    const { planId, plan } = get();
+    set({ substitutionCount: count });
+    
+    // Persist to plan metadata
+    if (planId && plan) {
+      const currentMeta = (plan as any).edit_metadata || {};
+      get().updatePlan({
+        edit_metadata: {
+          ...currentMeta,
+          substitution_count: count
+        }
+      } as any);
+    }
+  },
+
   planId: null,
   plan: null,
   patientName: "",
   items: [],
+  substitutionCount: 4,
   hydrated: false,
   hydrating: false,
   syncStatus: "idle",
@@ -389,6 +408,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       plan: normalizedPlan,
       patientName,
       items,
+      substitutionCount: (normalizedPlan as any).edit_metadata?.substitution_count ?? 4,
       hydrated: true,
       hydrating: false,
     });
