@@ -703,7 +703,7 @@ export default function OnboardingPipeline() {
                       {syncRetrying ? (
                         <><Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" /> Sincronizando…</>
                       ) : (
-                        <>Tentar sincronizar novamente</>
+                        <>Tentar novamente agora</>
                       )}
                     </Button>
                     {!autoRetryCancelled && autoRetryCountdown > 0 && !syncRetrying && (
