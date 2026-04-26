@@ -1,0 +1,110 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import MealSlotCard from '../components/hybrid-builder/MealSlotCard';
+import { useMealPlanEditorV2Store } from '../stores/mealPlanEditorV2Store';
+import { TooltipProvider } from '../components/ui/tooltip';
+import { sortMealPlanItems } from '../lib/mealPlanSort';
+import '@testing-library/jest-dom';
+
+// Mock the store
+vi.mock('../stores/mealPlanEditorV2Store', () => ({
+  useMealPlanEditorV2Store: vi.fn(),
+}));
+
+describe('Extended E2E Tests', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('AUTO badge should support keyboard focus and show tooltip', async () => {
+    const mockUpdateItem = vi.fn();
+    (useMealPlanEditorV2Store as any).mockReturnValue({
+      items: [
+        { 
+          id: 'sub-1', 
+          title: 'Sub Auto', 
+          item_origin: 'auto_generated_sub', 
+          is_primary: false,
+          day_of_week: 1,
+          meal_type: 'breakfast',
+          calories_target: 100
+        }
+      ],
+      updateItem: mockUpdateItem,
+      plan: { id: 'plan-1' }
+    });
+
+    render(
+      <TooltipProvider>
+        <MealSlotCard 
+          day={1} 
+          mealType="breakfast" 
+          label="Café" 
+          icon={null} 
+          items={[
+            { 
+              id: 'sub-1', 
+              title: 'Sub Auto', 
+              item_origin: 'auto_generated_sub', 
+              is_primary: false,
+              day_of_week: 1,
+              meal_type: 'breakfast',
+              calories_target: 100
+            }
+          ] as any}
+        />
+      </TooltipProvider>
+    );
+
+    const badge = screen.getByLabelText('Sugestões automáticas disponíveis');
+    expect(badge).toBeInTheDocument();
+    expect(badge).toHaveAttribute('tabIndex', '0');
+
+    // Focus the badge
+    fireEvent.focus(badge);
+
+    // Wait for tooltip to appear
+    await waitFor(() => {
+      expect(screen.getByText('Sugestões geradas automaticamente pelo motor clínico')).toBeInTheDocument();
+    });
+
+    // Press Enter to trigger toast (simulated here)
+    fireEvent.keyDown(badge, { key: 'Enter' });
+  });
+
+  it('should maintain deterministic order after editing calories_target of primary item', () => {
+    const itemPri = { id: 'pri', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'lunch' } as any;
+    const itemSub = { id: 'sub', is_primary: false, calories_target: 600, day_of_week: 1, meal_type: 'lunch' } as any;
+
+    let items = [itemSub, itemPri];
+    
+    // Initial sort
+    let sorted = sortMealPlanItems(items);
+    expect(sorted[0].id).toBe('pri'); // Primary always first
+    expect(sorted[1].id).toBe('sub');
+
+    // Edit calories_target of primary
+    const updatedPri = { ...itemPri, calories_target: 700 };
+    items = [itemSub, updatedPri];
+    
+    // Sort again
+    sorted = sortMealPlanItems(items);
+    expect(sorted[0].id).toBe('pri'); // Still first
+    expect(sorted[1].id).toBe('sub');
+
+    // Even if sub has more calories than initial pri but less than updated pri, 
+    // or vice versa, Primary is always first.
+    // Let's test tie-breaking on ID if calories were same
+    const itemPri2 = { id: 'pri-a', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'lunch' } as any;
+    const itemPri3 = { id: 'pri-b', is_primary: true, calories_target: 500, day_of_week: 1, meal_type: 'lunch' } as any;
+    
+    sorted = sortMealPlanItems([itemPri3, itemPri2]);
+    expect(sorted[0].id).toBe('pri-a');
+    expect(sorted[1].id).toBe('pri-b');
+
+    // Change pri-b calories to 600
+    sorted = sortMealPlanItems([itemPri2, { ...itemPri3, calories_target: 600 }]);
+    expect(sorted[0].id).toBe('pri-b'); // 600 > 500
+    expect(sorted[1].id).toBe('pri-a');
+  });
+});
