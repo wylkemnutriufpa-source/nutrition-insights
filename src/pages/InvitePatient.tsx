@@ -95,9 +95,15 @@ export default function InvitePatient() {
   );
   const publicRegisterLink = signedLink || `${siteUrl}/cadastro?nutri=${user?.id}`;
   const whatsappMessage = useMemo(() => {
-    const greeting = name ? `Olá ${name.split(" ")[0]}! ` : "Olá! ";
-    return `${greeting}Seu acesso ao FitJourney foi criado. Use o email *${email}* para entrar e completar seu onboarding aqui: ${onboardingLink}`;
-  }, [name, email, onboardingLink]);
+    if (!invitationCode || !profile) return "";
+    return getWhatsAppInvitationMessage({
+      patientName: name,
+      professionalName: profile.full_name || "Seu Nutricionista",
+      clinicName: clinic?.name,
+      invitationCode: invitationCode
+    });
+  }, [name, invitationCode, profile, clinic]);
+
   const whatsappUrl = useMemo(() => {
     const phoneDigits = normalizeWhatsApp(phone || "");
     const base = phoneDigits ? `https://wa.me/${phoneDigits}` : "https://wa.me/";
