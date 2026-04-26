@@ -1156,7 +1156,17 @@ export default function MealPlanEditorV2() {
                 </Button>
               </>
             )}
-
+        <PlanHistoryModal
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+          patientId={plan.patient_id}
+          currentPlanId={plan.id}
+          onRestore={(oldPlanId) => {
+            setHistoryOpen(false);
+            navigate(`/meal-plans/${oldPlanId}`);
+            toast.info("Visualizando versão anterior. Clique em 'Rascunho' para editar se necessário.");
+          }}
+        />
             {/* Visual Library — always available for viewing */}
             <Button
               variant="outline"
