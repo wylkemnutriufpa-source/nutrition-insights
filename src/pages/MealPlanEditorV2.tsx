@@ -1085,7 +1085,16 @@ export default function MealPlanEditorV2() {
                       <Zap className="w-4 h-4" /> Builder Híbrido
                     </DropdownMenuItem>
                   )}
+                  {lastAttemptParams && (
+                    <DropdownMenuItem 
+                      onClick={handleGenerateNewPlan} 
+                      className="gap-2 bg-primary/5 text-primary font-bold animate-pulse"
+                    >
+                      <RefreshCw className="w-4 h-4" /> Recuperar Última Tentativa
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => setAssistedOpen(true)} className="gap-2">
+
                     <Sparkles className="w-4 h-4" /> Plano Assistido
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => setAutoGenOpen(true)} className="gap-2">
