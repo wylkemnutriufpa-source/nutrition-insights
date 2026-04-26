@@ -759,6 +759,61 @@ export default function MealPlanEditorV2() {
               <span className="hidden sm:inline">♻️ Novo Plano</span>
             </Button>
 
+            {/* PDF Export */}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={exportToPDF}
+              disabled={exportingPDF || store.items.length === 0}
+              className="gap-1.5"
+            >
+              {exportingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+              <span className="hidden sm:inline">Exportar PDF</span>
+            </Button>
+
+            {/* Mode Selector */}
+            {!isImmutable && (
+              <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5 ml-2">
+                <button
+                  type="button"
+                  onClick={() => store.updatePlan({ plan_mode: "single_day" } as any)}
+                  className={`px-3 py-1 rounded text-[11px] font-bold transition-all ${
+                    (plan as any).plan_mode === "single_day" || !(plan as any).plan_mode
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Dia Único
+                </button>
+                <button
+                  type="button"
+                  onClick={() => store.updatePlan({ plan_mode: "weekly" } as any)}
+                  className={`px-3 py-1 rounded text-[11px] font-bold transition-all ${
+                    (plan as any).plan_mode === "weekly"
+                      ? "bg-primary text-primary-foreground shadow-sm"
+                      : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
+                  Semanal
+                </button>
+              </div>
+            )}
+
+            {/* Save as Default */}
+            {!isImmutable && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleSaveAsDefault}
+                disabled={isDefaultSaving}
+                className="gap-1.5 ml-2 border-primary/20 hover:bg-primary/5 text-primary"
+                title="Tornar este template o padrão para este paciente"
+              >
+                {isDefaultSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Star className="w-4 h-4 fill-primary" />}
+                <span className="hidden sm:inline">Definir como Padrão</span>
+              </Button>
+            )}
+
             {/* Substitutions Control */}
             {!isImmutable && (
               <div className="flex items-center rounded-lg border border-border bg-muted/50 p-0.5 ml-2">
