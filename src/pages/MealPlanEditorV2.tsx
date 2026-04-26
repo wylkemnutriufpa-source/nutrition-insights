@@ -1302,13 +1302,13 @@ export default function MealPlanEditorV2() {
         mealType={(plan as any)?.plan_type || "custom"}
         defaultName={plan?.title || ""}
       />
-      <PlanReviewModal
-        open={reviewOpen}
-        onOpenChange={setReviewOpen}
-        items={store.items}
-        onConfirm={executeFinalSave}
-        isSaving={saving}
-      />
+        <PlanReviewModal
+          open={reviewOpen}
+          onOpenChange={setReviewOpen}
+          items={store.items}
+          onConfirm={(updated) => executeFinalSave(updated)}
+          isSaving={saving}
+        />
     </>
   );
 
