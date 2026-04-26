@@ -194,12 +194,13 @@ export default function Invitation() {
                   {isProcessingAction ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                   Gerar Novo Convite
                 </Button>
-                {error === "Este convite expirou." && (
-                   <Button 
-                    variant="outline" 
-                    onClick={() => openWhatsApp(`Olá! Seu convite anterior expirou. Aqui está o novo link para o FitJourney: ${window.location.href}`)}
-                    className="w-full gap-2 h-12"
-                   >
+                 {error === "Este convite expirou." && (
+                    <Button 
+                     variant="outline" 
+                     onClick={() => openWhatsApp(`Olá! Seu convite anterior expirou. Aqui está o novo link para o FitJourney: ${getInvitationUrl(code || "")}`)}
+                     className="w-full gap-2 h-12"
+                    >
+
                     <MessageSquare className="w-5 h-5" /> Notificar Paciente (Novo Link)
                    </Button>
                 )}
