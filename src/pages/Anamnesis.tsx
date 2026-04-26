@@ -578,7 +578,7 @@ export default function Anamnesis() {
           return;
         }
         if (data?.tenant_id) setResolvedTenantId(data.tenant_id);
-        if (isNutritionistMode && data?.full_name) setPatientName(data.full_name);
+        if (data?.full_name) setPatientName(data.full_name);
       });
   }, [tenantId, targetUserId, isNutritionistMode]);
 
@@ -1036,6 +1036,29 @@ export default function Anamnesis() {
     }
 
     setAnalyzing(false);
+
+    // Notify professional that everything is ready for evaluation
+    try {
+      const { data: nutriData } = await supabase
+        .from("nutritionist_patients")
+        .select("nutritionist_id")
+        .eq("patient_id", targetUserId)
+        .maybeSingle();
+
+      if (nutriData?.nutritionist_id) {
+        await supabase.from("notifications").insert({
+          user_id: nutriData.nutritionist_id,
+          title: "Anamnese e Análise Prontas! 🎯",
+          message: `${patientName || "Seu paciente"} concluiu o onboarding e a análise clínica de IA já está disponível.`,
+          type: "anamnesis_completed",
+          entity_type: "patient",
+          entity_id: targetUserId,
+          target_route: `/patients/${targetUserId}`,
+        } as any);
+      }
+    } catch (err) {
+      console.error("Error sending final anamnesis notification:", err);
+    }
   };
 
   // Pipeline mode: auto-redirect back to onboarding pipeline after completion
