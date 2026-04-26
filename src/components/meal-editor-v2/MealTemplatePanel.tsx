@@ -320,7 +320,12 @@ export default function MealTemplatePanel({ day }: Props) {
       carbs_target: template.totalCarbs,
       fat_target: template.totalFat,
       edit_metadata: {
-        substitutions_json: subLines
+        substitutions_json: subLines,
+        is_fixed: template.description === "Marmita Fixa Selecionada",
+        kcal_base: template.totalCalories,
+        protein_base: template.totalProtein,
+        carbs_base: template.totalCarbs,
+        fat_base: template.totalFat,
       } as any
     });
 
