@@ -278,16 +278,14 @@ export default function PlanAuditPanel({ mealPlanId, patientId, onApproved, onFi
 
   return (
     <div className="space-y-4">
-      <div className="flex gap-2">
-        <Button onClick={runAudit} disabled={loading} variant="outline" className="flex-1 gap-2 border-primary/40 hover:border-primary hover:bg-primary/5">
-          {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Auditando...</> : <><ShieldCheck className="w-4 h-4 text-primary" /> Validar Plano</>}
-        </Button>
-        {patientId && (
-          <Button onClick={runValidateAndFix} disabled={loading} className="flex-1 gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-lg">
-            {loading ? <><Loader2 className="w-4 h-4 animate-spin" /> Analisando...</> : <><Hammer className="w-4 h-4" /> Validar e Corrigir</>}
-          </Button>
-        )}
-      </div>
+      {/* Validação manual removida a pedido do usuário para maior simplicidade */}
+      {loading && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Loader2 className="w-4 h-4 animate-spin" />
+          Auditando plano...
+        </div>
+      )}
+
 
       {/* Auto-fix button — shows only when plan has been audited and failed */}
       {patientId && result && !result.success && (
