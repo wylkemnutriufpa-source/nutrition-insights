@@ -30,6 +30,8 @@ export interface MealItemInput {
   is_manually_edited?: boolean;
   is_locked?: boolean;
   was_auto_corrected?: boolean;
+  is_primary?: boolean;
+  substitution_group_id?: string | null;
   /** Foods used to compose this item — used to auto-build description if missing */
   foods?: string[];
 }
