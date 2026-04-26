@@ -1,6 +1,7 @@
 
 import { describe, it, expect, vi } from "vitest";
-import { generateWeeklyMarmitaPlan } from "../../supabase/functions/generate-meal-plan/index";
+// Removed direct import to avoid Deno dependency issues in Vitest
+// import { generateWeeklyMarmitaPlan } from "../../supabase/functions/generate-meal-plan/index";
 
 // Mocking Supabase and shared modules is complex in a browser environment, 
 // so we'll focus on the core logic of placeholder replacement and rotation.
