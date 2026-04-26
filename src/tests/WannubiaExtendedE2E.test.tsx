@@ -11,6 +11,26 @@ vi.mock('../stores/mealPlanEditorV2Store', () => ({
   useMealPlanEditorV2Store: vi.fn(),
 }));
 
+// Mock auth
+vi.mock('../lib/auth', () => ({
+  useAuth: vi.fn(() => ({ user: { id: 'user-1' } })),
+  AuthProvider: ({ children }: any) => <div>{children}</div>,
+}));
+
+// Mock i18n if needed
+vi.mock('react-i18next', () => ({
+  useTranslation: () => ({
+    t: (str: string) => str,
+    i18n: {
+      changeLanguage: () => Promise.resolve(),
+    },
+  }),
+  initReactI18next: {
+    type: '3rdParty',
+    init: () => {},
+  },
+}));
+
 describe('Extended E2E Tests', () => {
   beforeEach(() => {
     vi.clearAllMocks();
