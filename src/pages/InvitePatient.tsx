@@ -138,6 +138,34 @@ export default function InvitePatient() {
           </div>
         </div>
 
+        <Card className="border-primary/20 bg-primary/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2 text-primary">
+              <Zap className="w-4 h-4" />
+              <CardTitle className="text-sm">Link de Cadastro Automático (Auto-Onboarding)</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Mande esse link para pacientes que já pagaram. Eles mesmos fazem o cadastro, 
+              assinam o termo de consentimento e preenchem a anamnese. 
+              Você receberá uma notificação assim que tudo estiver pronto para avaliação.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+              <LinkIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+              <code className="text-[10px] md:text-xs flex-1 truncate">{publicRegisterLink}</code>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 gap-1"
+                onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Link público")}
+              >
+                {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {!created ? (
           <Card>
             <CardHeader>
