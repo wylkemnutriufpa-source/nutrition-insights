@@ -38,7 +38,7 @@ export function MealSmartEditorModal({
   onOpenChange,
   itemId,
 }: MealSmartEditorModalProps) {
-  const { items, updateItem } = useMealPlanEditorV2Store();
+  const { items, updateItem, substitutionCount } = useMealPlanEditorV2Store();
   const item = items.find((i) => i.id === itemId);
 
   const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
