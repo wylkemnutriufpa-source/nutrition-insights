@@ -5,9 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
-import { Utensils, ArrowRight, ArrowLeft, Loader2, Plus, Sparkles, Wand2 } from "lucide-react";
+import { Utensils, ArrowRight, ArrowLeft, Loader2, Plus, Sparkles, Wand2, ShieldCheck } from "lucide-react";
 import QuickMealEditor from "@/components/in-office/QuickMealEditor";
 import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
+import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
 
 interface Props {
   patientId: string;
@@ -187,7 +188,9 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
               <Wand2 className="w-6 h-6" />
               <div className="text-left">
                 <span className="block font-bold">Auto-Gerar</span>
-                <span className="block text-[10px] font-normal opacity-70">FitJourney Intelligence Engine</span>
+                <span className="block text-[10px] font-normal opacity-70 flex items-center gap-1">
+                  <ShieldCheck className="w-2.5 h-2.5" /> Engine v{CURRENT_ENGINE_VERSION}
+                </span>
               </div>
             </Button>
 

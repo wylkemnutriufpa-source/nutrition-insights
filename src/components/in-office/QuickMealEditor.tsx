@@ -10,11 +10,13 @@ import { toast } from "sonner";
 import {
   Plus, Trash2, Copy, Save, Search,
   Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets,
-  Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle
+  Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle, Info, ShieldCheck, Check
 } from "lucide-react";
 import { withRetry } from "@/lib/retry";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
+import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 
@@ -76,6 +78,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const [searchLoading, setSearchLoading] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [showDecisions, setShowDecisions] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // Template loading state
   const [showTemplateLoad, setShowTemplateLoad] = useState(false);
@@ -120,6 +124,16 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       if (!isSilent) setLoading(false);
     }
   }, [mealPlanId]);
+
+  const fetchAuditLogs = useCallback(async () => {
+    const { data } = await supabase
+      .from("clinical_engine_audit_logs" as any)
+      .select("*")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setAuditLogs(data || []);
+  }, [patientId]);
 
   // Load existing items for current day
   useEffect(() => {
@@ -340,6 +354,22 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     };
   }, [blocks]);
 
+  const guardrailAlerts = useMemo(() => {
+    // These targets would ideally come from the session or latest assessment
+    // For now we check consistency between the items if they have a target defined
+    const primaryItems = blocks.flatMap(b => b.items.filter(i => i.is_primary));
+    if (primaryItems.length === 0) return [];
+
+    const alerts: string[] = [];
+    const validation = validatePlanSubstitutions(primaryItems as any);
+    
+    if (!validation.valid) {
+      alerts.push(...validation.errors);
+    }
+
+    return alerts;
+  }, [blocks]);
+
   const DAY_LABELS = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
@@ -354,6 +384,15 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           </div>
         </div>
         <div className="flex gap-1 ml-auto flex-wrap">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => { setShowDecisions(true); fetchAuditLogs(); }} 
+            className="gap-1 text-xs border-primary/20 text-primary"
+          >
+            <Info className="w-3 h-3" /> Ver Decisões do Motor
+          </Button>
+
           <Button variant="outline" size="sm" onClick={() => fetchData()} disabled={saving} className="gap-1 text-xs">
             <RefreshCw className="w-3 h-3" /> Atualizar
           </Button>
@@ -625,6 +664,82 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           </div>
         </DialogContent>
       </Dialog>
+      {/* Decisions Dialog */}
+      <Dialog open={showDecisions} onOpenChange={setShowDecisions}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-primary" /> 
+              Decisões do Motor FitJourney v{CURRENT_ENGINE_VERSION}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4 py-4">
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <h4 className="text-sm font-bold flex items-center gap-2 mb-2">
+                  <ClipboardCheck className="w-4 h-4" /> Trilha de Regras Aplicadas
+                </h4>
+                <ul className="text-xs space-y-2 text-muted-foreground">
+                  <li className="flex gap-2">
+                    <Check className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
+                    <span><strong>MEAL_KCAL_SPLIT:</strong> Distribuição calórica otimizada por horário (Café 20%, Almoço 30%, Jantar 22%).</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
+                    <span><strong>BLOQUEIO DE ALIMENTOS:</strong> Exclusão de alimentos ultraprocessados ou fora do perfil clínico.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
+                    <span><strong>SUBSTITUIÇÕES EQUIVALENTES:</strong> Cálculo de equivalência calórica em todas as variações geradas.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-sm font-bold">Histórico de Execuções Recentes</h4>
+                {auditLogs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">Nenhuma execução registrada recentemente.</p>
+                ) : (
+                  auditLogs.map((log: any) => (
+                    <div key={log.id} className="border border-border rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="font-bold text-primary uppercase">{log.step_name}</span>
+                        <span className="text-muted-foreground">{new Date(log.created_at).toLocaleString("pt-BR")}</span>
+                      </div>
+                      <p className="text-xs">{log.message}</p>
+                      {log.metadata && (
+                        <pre className="text-[10px] bg-muted p-2 rounded overflow-x-auto">
+                          {JSON.stringify(log.metadata, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Guardrail Alerts */}
+      {guardrailAlerts.length > 0 && (
+        <div className="mt-4 p-4 rounded-xl border border-warning/30 bg-warning/5 space-y-2">
+          <h4 className="text-sm font-bold flex items-center gap-2 text-warning">
+            <AlertTriangle className="w-4 h-4" /> Alertas de Guardrails Clínica
+          </h4>
+          <ul className="text-xs space-y-1 text-muted-foreground">
+            {guardrailAlerts.map((alert, idx) => (
+              <li key={idx} className="flex gap-2">
+                <span className="text-warning">•</span>
+                {alert}
+              </li>
+            ))}
+          </ul>
+          <p className="text-[10px] text-muted-foreground italic mt-2">
+            * Estes alertas são informativos para auxílio na decisão clínica. O profissional mantém controle total sobre o plano.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
