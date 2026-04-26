@@ -317,7 +317,7 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
         </DialogHeader>
 
         {/* Options list */}
-        <ScrollArea className="flex-1 min-h-0">
+        <div className="flex-1 min-h-0 overflow-y-auto scrollbar-thin">
           <div className="p-3 space-y-1">
             {loading ? (
               <div className="flex items-center justify-center py-12">
@@ -399,7 +399,7 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
               })
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Footer: summary + apply mode + confirm */}
         {selectedIds.size > 0 && (

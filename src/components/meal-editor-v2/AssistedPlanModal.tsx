@@ -259,7 +259,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-6 py-4">
+        <div className="flex-1 px-6 py-4 overflow-y-auto scrollbar-thin">
           {step === "params" && (
             <div className="space-y-5">
               {loadingCtx && (
@@ -564,7 +564,7 @@ export function AssistedPlanModal({ open, onOpenChange }: Props) {
               </Tabs>
             </div>
           )}
-        </ScrollArea>
+        </div>
 
         <DialogFooter className="px-6 py-3 border-t border-border gap-2">
           {step === "params" && (

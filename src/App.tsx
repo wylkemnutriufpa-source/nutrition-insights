@@ -31,6 +31,7 @@ import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { usePaymentGuard } from "@/hooks/usePaymentGuard";
 import { useOnboardingGuard, isOnboardingAllowedRoute } from "@/hooks/useOnboardingGuard";
+import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
@@ -209,6 +210,7 @@ const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
 const StoreDashboard = lazy(() => import("./pages/store/StoreDashboard"));
 const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
+const MobileQA = lazy(() => import("./pages/MobileQA"));
 const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
 
 // Install global error handlers once at module load
@@ -489,6 +491,7 @@ const App = () => (
         </Helmet>
         <Toaster />
         <Sonner />
+        <MobileAutoFixer />
         <GlobalErrorBoundary />
         <BrowserRouter basename="/">
           <AuthProvider>
@@ -628,6 +631,7 @@ const App = () => (
               <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia"><UserGuide /></LP></ProtectedRoute>} />
               <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
               <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação"><SystemPresentation /></LP></ProtectedRoute>} />
+              <Route path="/mobile-qa" element={<ProfessionalRoute><LP section="Mobile QA"><Suspense fallback={<PageLoader />}><MobileQA /></Suspense></LP></ProfessionalRoute>} />
               <Route path="/onboarding-profissional" element={<ProtectedRoute><LP section="Onboarding"><OnboardingProfissional /></LP></ProtectedRoute>} />
               <Route path="/onboarding-paciente" element={<ProtectedRoute><LP section="Onboarding Paciente"><OnboardingPaciente /></LP></ProtectedRoute>} />
               <Route path="/my-story" element={<PaymentGuardedPatientRoute><LP section="Minha História"><MagicJourneyStory /></LP></PaymentGuardedPatientRoute>} />
