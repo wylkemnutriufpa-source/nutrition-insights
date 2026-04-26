@@ -86,8 +86,8 @@ describe("validateMealSubstitutions", () => {
     // This validator doesn't block counts > 4 currently, but the UI does.
     // However, the prompt says "no máximo 4 substituições equivalentes por refeição".
     // I'll update the validator to also check count.
-    const result = validateMealSubstitutions(itemWithManySubs);
-    // Expect failure if count > 4 (assuming default limit of 4)
-    // Actually, I should pass the limit to the validator.
+    const result = validateMealSubstitutions(itemWithManySubs, 4);
+    expect(result.valid).toBe(false);
+    expect(result.errors[0]).toContain("limite definido é 4");
   });
 });
