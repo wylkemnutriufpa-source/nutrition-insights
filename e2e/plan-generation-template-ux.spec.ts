@@ -131,14 +131,22 @@ test.describe("Plan Generation UX & Template Logic E2E", () => {
   });
 
   test("should intercept console errors and network failures during generation", async ({ nutriPage: page }) => {
-    const errors: Error[] = [];
-    page.on("pageerror", (err) => errors.push(err));
+    const errors: string[] = [];
+    page.on("pageerror", (err) => errors.push(`Page Error: ${err.message}`));
     page.on("console", (msg) => {
       if (msg.type() === "error") {
-        // Filter out expected errors if any
-        if (!msg.text().includes("Failed to load resource")) {
-          errors.push(new Error(`Console error: ${msg.text()}`));
+        if (!msg.text().includes("Failed to load resource") && !msg.text().includes("404")) {
+          errors.push(`Console Error: ${msg.text()}`);
         }
+      }
+    });
+
+    // Intercept network failures
+    page.on("requestfailed", (request) => {
+      const url = request.url();
+      // Ignore non-essential failures (analytics, etc.)
+      if (url.includes("/functions/v1/") || url.includes("/rest/v1/")) {
+        errors.push(`Network Failure: ${request.failure()?.errorText || "Unknown error"} at ${url}`);
       }
     });
 
@@ -150,14 +158,16 @@ test.describe("Plan Generation UX & Template Logic E2E", () => {
     await page.getByRole("button", { name: /Gerar Plano/i }).first().click();
 
     // 3. Wait for builder to load
-    await page.waitForURL(/\/meal-plans\//);
+    await page.waitForURL(/\/meal-plans\/|\/plan-builder\//);
     
     // 4. Check for UI "column errors" (NaN, undefined, etc)
+    // We wait a bit for the data to settle in the builder
+    await page.waitForTimeout(2000);
     await expect(page.getByText("NaN")).not.toBeVisible();
     await expect(page.getByText("undefined")).not.toBeVisible();
     
-    // 5. Verify no console errors were captured
-    expect(errors.length, `Expected 0 errors, but found: ${errors.map(e => e.message).join(", ")}`).toBe(0);
+    // 5. Verify no critical errors were captured
+    expect(errors.length, `Critical errors found during generation: \n${errors.join("\n")}`).toBe(0);
   });
 
   test("should verify BuilderTopbar badge responsiveness", async ({ nutriPage: page }) => {
