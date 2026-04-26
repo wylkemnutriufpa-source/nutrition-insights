@@ -121,7 +121,7 @@ interface BiquiniEnrollment {
 }
 
 export default function ClientDashboard() {
-  const { user, profile } = useAuth();
+  const { user, profile, isPatient } = useAuth();
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
