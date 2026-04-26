@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { validateWhatsApp, normalizeWhatsApp } from "@/utils/whatsapp";
+
 
 export interface WhatsAppIntegration {
   id: string;
