@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { NeuralStepTransition } from "@/components/ui/neural-transitions";
 import { ProgressPulse } from "@/components/ui/micro-interactions";
 import { useAuth } from "@/lib/auth";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
