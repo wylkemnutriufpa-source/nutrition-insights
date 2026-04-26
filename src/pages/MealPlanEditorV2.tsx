@@ -8,7 +8,7 @@ import {
   PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+// DropdownMenu imported below with additional components
 import { useTenant } from "@/lib/tenantContext";
 import SimplifyPlanButton from "@/components/meal-simplification/SimplifyPlanButton";
 import { useAuth } from "@/lib/auth";
