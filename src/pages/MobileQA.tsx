@@ -1,10 +1,10 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
-import { Smartphone, CheckCircle2, AlertCircle, X, Maximize2, MousePointer2, Camera, Download, FileText } from "lucide-react";
+import { Smartphone, CheckCircle2, AlertCircle, X, Maximize2, MousePointer2, Camera, Download, FileText, Settings, User } from "lucide-react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import { useMobileValidation } from "@/hooks/useMobileValidation";
@@ -22,6 +22,8 @@ export default function MobileQA() {
     touchTargetSpacing: false,
     viewport390: false,
     viewport360: false,
+    focusVisibleX: false,
+    noScrollResidualOnKeys: false,
   });
 
   const [evidences, setEvidences] = useState<Array<{ 
@@ -30,35 +32,47 @@ export default function MobileQA() {
     item: string, 
     viewport: string, 
     screenshot: string,
-    context?: string, // e.g., "Modal Consultor"
+    thumbnail: string,
+    context?: string,
     metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }
   }>>([]);
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const lastOverflowTime = useRef<number>(0);
 
-  // Automated Horizontal Scroll Check
+  const testScreens = [
+    { id: "strategy", label: "Consultor de Estratégia", icon: MousePointer2, component: "StrategyAdvisor" },
+    { id: "settings", label: "Configurações Profissionais", icon: Settings, component: "ProfessionalSettings" },
+    { id: "profile", label: "Perfil do Usuário", icon: User, component: "UserProfile" },
+    { id: "wizard", label: "InOffice Wizard", icon: Maximize2, component: "InOfficeWizard" },
+  ];
+
+  // Automated Horizontal Scroll Check & Capture
   useEffect(() => {
-    const checkScroll = () => {
+    const checkScroll = async () => {
       const scrollX = window.scrollX;
       const scrollWidth = document.documentElement.scrollWidth;
       const clientWidth = document.documentElement.clientWidth;
       
       if (scrollX > 0 || scrollWidth > clientWidth) {
-        console.error("OVERFLOW-X DETECTED", { scrollX, scrollWidth, clientWidth });
-        
-        // Auto-register evidence for overflow
-        if (!evidences.some(e => e.item === "Overflow Detectado" && e.timestamp.split(':')[1] === new Date().toLocaleTimeString().split(':')[1])) {
+        const now = Date.now();
+        // Throttling captures to avoid freezing and duplicated logs
+        if (now - lastOverflowTime.current > 5000) {
+          lastOverflowTime.current = now;
+          console.error("OVERFLOW-X DETECTED", { scrollX, scrollWidth, clientWidth });
+          
           toast.error("Overflow Horizontal Detectado!", {
-            description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}`,
+            description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}. Capturando evidência...`,
             duration: 5000,
           });
-          registerEvidence("Overflow Detectado", { scrollX, scrollWidth, clientWidth });
+          
+          await registerEvidence("Overflow Detectado Automático", { scrollX, scrollWidth, clientWidth });
         }
       }
     };
 
     window.addEventListener('scroll', checkScroll);
     window.addEventListener('resize', checkScroll);
-    const interval = setInterval(checkScroll, 2000); // Periodic check
+    const interval = setInterval(checkScroll, 2000);
     return () => {
       window.removeEventListener('scroll', checkScroll);
       window.removeEventListener('resize', checkScroll);
@@ -70,10 +84,28 @@ export default function MobileQA() {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
+  const createThumbnail = (canvas: HTMLCanvasElement): string => {
+    const thumbCanvas = document.createElement('canvas');
+    const ctx = thumbCanvas.getContext('2d');
+    const scale = 0.2; // 20% size
+    thumbCanvas.width = canvas.width * scale;
+    thumbCanvas.height = canvas.height * scale;
+    if (ctx) {
+      ctx.drawImage(canvas, 0, 0, thumbCanvas.width, thumbCanvas.height);
+    }
+    return thumbCanvas.toDataURL("image/jpeg", 0.7);
+  };
+
   const registerEvidence = async (item: string, metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }) => {
     try {
-      const canvas = await html2canvas(document.body);
+      const canvas = await html2canvas(document.body, {
+        scale: 1, // Keep scale 1 for main capture
+        useCORS: true,
+        logging: false
+      });
+      
       const screenshot = canvas.toDataURL("image/png");
+      const thumbnail = createThumbnail(canvas);
       
       const newEvidence = {
         id: Math.random().toString(36).substr(2, 9),
@@ -81,13 +113,14 @@ export default function MobileQA() {
         item,
         viewport: `${window.innerWidth}px`,
         screenshot,
+        thumbnail,
         context: activeModal || "Página Principal",
         metrics
       };
       
       setEvidences(prev => [...prev, newEvidence]);
       toast.success("Evidência registrada!", {
-        description: `Snapshot capturado para: ${item}`,
+        description: `Snapshot e miniatura capturados para: ${item}`,
       });
     } catch (error) {
       console.error("Erro ao capturar snapshot:", error);
@@ -98,33 +131,46 @@ export default function MobileQA() {
   const exportPDF = () => {
     const doc = new jsPDF();
     doc.setFontSize(20);
-    doc.text("Relatório de QA Mobile", 10, 20);
-    doc.setFontSize(12);
-    doc.text(`Data: ${new Date().toLocaleDateString()}`, 10, 30);
-    doc.text(`Total de Evidências: ${evidences.length}`, 10, 40);
+    doc.text("Relatório de QA Mobile - Detalhado", 10, 20);
+    doc.setFontSize(10);
+    doc.text(`Data: ${new Date().toLocaleDateString()}`, 10, 28);
+    doc.text(`Resoluções Alvo: 390px / 360px`, 10, 33);
 
-    let yOffset = 50;
+    let yOffset = 45;
     evidences.forEach((ev, index) => {
-      if (yOffset > 250) {
+      if (yOffset > 240) {
         doc.addPage();
         yOffset = 20;
       }
+      
+      doc.setDrawColor(200, 200, 200);
+      doc.line(10, yOffset, 200, yOffset);
+      yOffset += 7;
+
       doc.setFont("helvetica", "bold");
-      doc.text(`${index + 1}. ${ev.item} (${ev.viewport})`, 10, yOffset);
+      doc.text(`${index + 1}. ${ev.item}`, 10, yOffset);
       doc.setFont("helvetica", "normal");
-      doc.text(`Contexto: ${ev.context || "N/A"}`, 10, yOffset + 5);
+      doc.text(`[${ev.timestamp}] Viewport: ${ev.viewport} | Contexto: ${ev.context || "N/A"}`, 10, yOffset + 5);
+      
       if (ev.metrics) {
-        doc.text(`Metrics - scrollX: ${ev.metrics.scrollX}, scrollWidth: ${ev.metrics.scrollWidth}, clientWidth: ${ev.metrics.clientWidth}`, 10, yOffset + 10);
+        doc.setFont("courier", "normal");
+        doc.text(`MÉTRICAS: scrollX: ${ev.metrics.scrollX} | scrollWidth: ${ev.metrics.scrollWidth} | clientWidth: ${ev.metrics.clientWidth}`, 10, yOffset + 10);
         yOffset += 15;
       } else {
         yOffset += 10;
       }
       
-      // We don't embed all base64 images to keep PDF size small, but we could add one here if needed
-      yOffset += 10;
+      // Adicionar miniatura ao PDF
+      try {
+        doc.addImage(ev.thumbnail, 'JPEG', 160, yOffset - 15, 30, 30);
+      } catch (e) {
+        console.error("Erro ao adicionar miniatura ao PDF", e);
+      }
+      
+      yOffset += 5;
     });
 
-    doc.save(`mobile-qa-report-${new Date().getTime()}.pdf`);
+    doc.save(`mobile-qa-full-report-${new Date().getTime()}.pdf`);
   };
 
   const exportCSV = () => {
@@ -133,16 +179,16 @@ export default function MobileQA() {
       return;
     }
 
-    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "scrollX", "scrollWidth", "clientWidth", "Screenshot_Link"];
+    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
     const rows = evidences.map(ev => [
-      ev.timestamp,
-      ev.item,
-      ev.viewport,
-      ev.context || "N/A",
+      `"${ev.timestamp}"`,
+      `"${ev.item}"`,
+      `"${ev.viewport}"`,
+      `"${ev.context || "N/A"}"`,
       ev.metrics?.scrollX || 0,
       ev.metrics?.scrollWidth || 0,
       ev.metrics?.clientWidth || 0,
-      `evidence-${ev.id}.png`
+      `"${ev.thumbnail.substring(0, 100)}..."` // Just a snippet to keep CSV readable
     ]);
 
     const csvContent = [
@@ -154,48 +200,40 @@ export default function MobileQA() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `mobile-qa-evidences-${new Date().getTime()}.csv`;
+    a.download = `mobile-qa-metrics-${new Date().getTime()}.csv`;
     a.click();
   };
 
   const exportReport = () => {
-    // Organize by viewport and context
-    const organizedEvidences = evidences.reduce((acc: any, ev) => {
-      const vp = ev.viewport;
-      const ctx = ev.context || "Geral";
-      if (!acc[vp]) acc[vp] = {};
-      if (!acc[vp][ctx]) acc[vp][ctx] = [];
-      acc[vp][ctx].push({
-        ...ev,
-        imageName: `evidence-${ev.id}.png`
-      });
-      return acc;
-    }, {});
-
     const report = {
-      title: "Relatório de QA Mobile",
-      date: new Date().toLocaleDateString(),
+      title: "Relatório Consolidado de QA Mobile",
+      date: new Date().toISOString(),
       checklist,
-      organizedEvidences,
+      evidences: evidences.map(e => ({
+        id: e.id,
+        timestamp: e.timestamp,
+        item: e.item,
+        viewport: e.viewport,
+        context: e.context,
+        metrics: e.metrics,
+        thumbnail: e.thumbnail // Inclusion of full thumbnail B64 for E2E validation
+      })),
       summary: {
         totalChecks: Object.values(checklist).filter(Boolean).length,
         totalEvidences: evidences.length,
       }
     };
     
-    // Export JSON
     const jsonBlob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
     const jsonUrl = URL.createObjectURL(jsonBlob);
     const jsonLink = document.createElement("a");
     jsonLink.href = jsonUrl;
-    jsonLink.download = `mobile-qa-report-${new Date().getTime()}.json`;
+    jsonLink.download = `mobile-qa-full-data-${new Date().getTime()}.json`;
     jsonLink.click();
 
-    // Export CSV and PDF as well
     exportCSV();
     exportPDF();
-
-    toast.success("Relatórios exportados com sucesso (PDF, JSON e CSV)!");
+    toast.success("Todos os formatos exportados (PDF, JSON, CSV)!");
   };
 
   return (
@@ -206,7 +244,7 @@ export default function MobileQA() {
             <Smartphone className="w-8 h-8 text-primary" />
             <div>
               <h1 className="text-2xl font-bold tracking-tight">Mobile QA Dashboard</h1>
-              <p className="text-muted-foreground">Checklist de validação visual e testes de responsividade.</p>
+              <p className="text-muted-foreground">Validação dinâmica de modais e automação de screenshots.</p>
             </div>
           </div>
           <Button onClick={exportReport} className="gap-2">
@@ -221,8 +259,7 @@ export default function MobileQA() {
             <div>
               <p className="text-sm font-bold text-destructive">Overflow Horizontal Detectado!</p>
               <p className="text-xs text-destructive/80">
-                Elementos que ultrapassaram a largura da tela: {overflowingElements.slice(0, 3).join(", ")}
-                {overflowingElements.length > 3 && ` e mais ${overflowingElements.length - 3}`}
+                Elementos: {overflowingElements.slice(0, 3).join(", ")}
               </p>
             </div>
           </div>
@@ -238,10 +275,11 @@ export default function MobileQA() {
             </CardHeader>
             <CardContent className="space-y-4">
               {[
-                { id: "modalClosesWithX", label: "Modal fecha corretamente com o botão X" },
-                { id: "noContentCutoff", label: "Nenhum conteúdo está cortado nas bordas" },
-                { id: "noHorizontalScroll", label: "Sem scroll horizontal inesperado" },
-                { id: "touchTargetSpacing", label: "Espaçamento e área de toque adequados (44px+)" }
+                { id: "modalClosesWithX", label: "Modal fecha com botão X" },
+                { id: "noContentCutoff", label: "Sem conteúdo cortado" },
+                { id: "noHorizontalScroll", label: "Sem scroll horizontal" },
+                { id: "focusVisibleX", label: "Foco visível no botão X (Acessibilidade)" },
+                { id: "noScrollResidualOnKeys", label: "Sem scroll residual (Enter/Espaço)" }
               ].map((item) => (
                 <div key={item.id} className="flex items-center justify-between group">
                   <div className="flex items-center space-x-2">
@@ -257,41 +295,11 @@ export default function MobileQA() {
                     variant="ghost" 
                     className="opacity-0 group-hover:opacity-100 h-8 w-8"
                     onClick={() => registerEvidence(item.label)}
-                    title="Registrar Evidência"
                   >
                     <Camera className="w-4 h-4" />
                   </Button>
                 </div>
               ))}
-              <div className="pt-2 border-t">
-                <p className="text-xs font-semibold text-muted-foreground mb-2">RESOLUÇÕES TESTADAS:</p>
-                <div className="flex flex-col gap-2">
-                  {[
-                    { id: "viewport390", label: "iPhone 12/13/14 (390px)" },
-                    { id: "viewport360", label: "Android Médio (360px)" }
-                  ].map((vp) => (
-                    <div key={vp.id} className="flex items-center justify-between group">
-                      <div className="flex items-center space-x-2">
-                        <Checkbox 
-                          id={vp.id} 
-                          checked={checklist[vp.id as keyof typeof checklist]} 
-                          onCheckedChange={() => toggleCheck(vp.id as keyof typeof checklist)}
-                        />
-                        <Label htmlFor={vp.id} className="text-sm">{vp.label}</Label>
-                      </div>
-                      <Button 
-                        size="icon" 
-                        variant="ghost" 
-                        className="opacity-0 group-hover:opacity-100 h-8 w-8"
-                        onClick={() => registerEvidence(vp.label)}
-                        title="Registrar Evidência"
-                      >
-                        <Camera className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </CardContent>
           </Card>
 
@@ -299,73 +307,83 @@ export default function MobileQA() {
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2">
                 <Maximize2 className="w-5 h-5 text-primary" />
-                Telas de Teste
+                Telas com Modais (Dinâmico)
               </CardTitle>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground mb-4">
-                Abra as telas abaixo para testar o comportamento do modal e scroll no mobile.
-              </p>
-              
-              <Dialog onOpenChange={(open) => setActiveModal(open ? "Consultor de Estratégia" : null)}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start gap-2 h-12">
-                    <MousePointer2 className="w-4 h-4" />
-                    Abrir Consultor de Estratégia
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="sm:max-w-[600px] h-[90vh] flex flex-col p-0 overflow-hidden">
-                  <div className="p-4 overflow-y-auto overflow-x-hidden flex-1">
-                    <StrategyAdvisorPanel 
-                      patientId="test-id" 
-                      onStrategyConfirmed={() => toast.success("Confirmado!")}
-                      onCancel={() => {}}
-                    />
-                  </div>
-                </DialogContent>
-              </Dialog>
-
-              <Button 
-                variant="outline" 
-                className="w-full justify-start gap-2 h-12"
-                onClick={() => toast.info("Navegando para MealPlans...")}
-              >
-                <CheckCircle2 className="w-4 h-4" />
-                Validar Tela de Planos (MealPlans)
-              </Button>
-
-              <div className="p-3 bg-muted rounded-lg border border-dashed text-[10px] text-muted-foreground leading-relaxed">
-                <p className="font-bold mb-1 uppercase">Dica para Mobile:</p>
-                Ao abrir o Consultor, tente rolar até o final. O botão "X" deve permanecer acessível e o conteúdo não deve vazar para os lados.
+            <CardContent className="space-y-3">
+              {testScreens.map((screen) => (
+                <Dialog key={screen.id} onOpenChange={(open) => setActiveModal(open ? screen.label : null)}>
+                  <DialogTrigger asChild>
+                    <Button variant="outline" className="w-full justify-start gap-2 h-12" data-testid={`trigger-${screen.id}`}>
+                      <screen.icon className="w-4 h-4" />
+                      {screen.label}
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="sm:max-w-[600px] h-[90vh] flex flex-col p-0 overflow-hidden" data-testid={`modal-${screen.id}`}>
+                    <div className="p-4 overflow-y-auto overflow-x-hidden flex-1 bg-background">
+                      <div className="space-y-4">
+                        <h2 className="text-xl font-bold">Simulação: {screen.label}</h2>
+                        {screen.id === "strategy" ? (
+                          <StrategyAdvisorPanel 
+                            patientId="test-id" 
+                            onStrategyConfirmed={() => toast.success("Confirmado!")}
+                            onCancel={() => {}}
+                          />
+                        ) : (
+                          <div className="p-20 border-2 border-dashed rounded-lg flex items-center justify-center text-muted-foreground italic">
+                            Conteúdo de {screen.label} (Scroll-Test)
+                            <div style={{ width: '110%', height: '100px', background: 'linear-gradient(90deg, transparent, red)' }} className="mt-4 opacity-10">
+                              Simulador de Overflow
+                            </div>
+                          </div>
+                        )}
+                        <div className="h-[1000px] w-full bg-gradient-to-b from-muted/20 to-transparent rounded-lg">
+                          Área de Scroll Longo
+                        </div>
+                      </div>
+                    </div>
+                  </DialogContent>
+                </Dialog>
+              ))}
+            </CardContent>
+          </Card>
         </div>
 
         {evidences.length > 0 && (
           <Card>
-            <CardHeader>
+            <CardHeader className="flex flex-row items-center justify-between">
               <CardTitle className="text-lg flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary" />
-                Log de Evidências
+                Evidências e Métricas Capturadas
               </CardTitle>
+              <span className="text-xs bg-primary/10 text-primary px-2 py-1 rounded-full">{evidences.length}</span>
             </CardHeader>
             <CardContent>
-              <div className="space-y-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {evidences.map((ev) => (
-                  <div key={ev.id} className="text-xs p-2 bg-muted rounded flex justify-between items-center">
-                    <span>
-                      <span className="font-bold">[{ev.timestamp}]</span> {ev.item} 
-                      <span className="text-muted-foreground ml-2">({ev.viewport})</span>
-                    </span>
-                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                  <div key={ev.id} className="p-3 bg-muted/50 rounded-lg border flex flex-col gap-2">
+                    <div className="flex justify-between items-start">
+                      <div className="space-y-1">
+                        <p className="font-bold text-xs">{ev.item}</p>
+                        <p className="text-[10px] text-muted-foreground">{ev.timestamp} - {ev.viewport}</p>
+                      </div>
+                      <img src={ev.thumbnail} className="w-12 h-12 rounded object-cover border" alt="Thumb" />
+                    </div>
+                    {ev.metrics && (
+                      <div className="grid grid-cols-3 gap-1 text-[8px] uppercase font-bold text-muted-foreground">
+                        <div className="bg-background p-1 rounded">X: {ev.metrics.scrollX}</div>
+                        <div className="bg-background p-1 rounded">SW: {ev.metrics.scrollWidth}</div>
+                        <div className="bg-background p-1 rounded">CW: {ev.metrics.clientWidth}</div>
+                      </div>
+                    )}
                   </div>
                 ))}
               </div>
             </CardContent>
           </Card>
         )}
-            </CardContent>
-          </Card>
-        </div>
       </div>
     </DashboardLayout>
   );
 }
+
