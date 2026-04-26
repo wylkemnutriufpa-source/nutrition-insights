@@ -4,6 +4,15 @@ import MealPlanEditorV2 from "../MealPlanEditorV2";
 import { BrowserRouter } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 // Mock Supabase
 vi.mock("@/integrations/supabase/client", () => ({
@@ -35,6 +44,14 @@ describe("MealPlanEditorV2 Schema Check", () => {
     vi.clearAllMocks();
   });
 
+  const renderComponent = () => render(
+    <QueryClientProvider client={queryClient}>
+      <BrowserRouter>
+        <MealPlanEditorV2 />
+      </BrowserRouter>
+    </QueryClientProvider>
+  );
+
   it("blocks flow and shows toast on undefined_column error (42703)", async () => {
     // Mock 42703 error
     (supabase.from as any).mockReturnValue({
@@ -46,11 +63,7 @@ describe("MealPlanEditorV2 Schema Check", () => {
       }))
     });
 
-    render(
-      <BrowserRouter>
-        <MealPlanEditorV2 />
-      </BrowserRouter>
-    );
+    renderComponent();
 
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
@@ -71,11 +84,7 @@ describe("MealPlanEditorV2 Schema Check", () => {
       }))
     });
 
-    render(
-      <BrowserRouter>
-        <MealPlanEditorV2 />
-      </BrowserRouter>
-    );
+    renderComponent();
 
     // We expect it to NOT show the schema drift toast
     await waitFor(() => {
@@ -87,3 +96,4 @@ describe("MealPlanEditorV2 Schema Check", () => {
     });
   });
 });
+
