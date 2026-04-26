@@ -62,6 +62,7 @@ export interface TemplateResolverParams {
   nutritionistId?: string;
   complexityPreference?: string;
   excludeTemplateIds?: string[];
+  prioritizedTemplateIds?: string[];
 }
 
 /**
