@@ -92,7 +92,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
         .from("meal_plan_items")
         .select("*")
         .eq("meal_plan_id", mealPlanId)
-        .eq("day_of_week", currentDay);
+        .eq("day_of_week", 0); // Always day 0 for In-Office simplified
 
       if (error) throw error;
 
@@ -108,6 +108,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
             carbs: i.carbs_target || 0,
             fat: i.fat_target || 0,
             meal_type: m.type,
+            is_primary: i.is_primary ?? true,
+            substitution_group_id: i.substitution_group_id,
           })),
       }));
       setBlocks(newBlocks);
@@ -118,7 +120,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     } finally {
       if (!isSilent) setLoading(false);
     }
-  }, [mealPlanId, currentDay]);
+  }, [mealPlanId]);
 
   // Load existing items for current day
   useEffect(() => {
