@@ -369,15 +369,24 @@ export default function PatientRegister() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Profissional Vinculado</p>
-                    <p className="font-medium text-sm text-foreground truncate">{selectedProfessional.full_name}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Profissional Vinculado</p>
+                    <p className="font-medium text-xs text-foreground truncate">{selectedProfessional.full_name}</p>
+                    {selectedProfessional.clinic_name && (
+                      <p className="text-[9px] text-muted-foreground truncate">{selectedProfessional.clinic_name}</p>
+                    )}
                   </div>
-                  {!preselectedNutri && (
+                  {preselectedNutri ? (
+                    <button type="button" onClick={() => setIsProfConfirmed(false)}
+                      className="text-[10px] text-primary hover:underline shrink-0 flex items-center gap-1">
+                      <ArrowLeft className="w-2.5 h-2.5" /> Voltar
+                    </button>
+                  ) : (
                     <button type="button" onClick={() => { setSelectedProfessional(null); setShowProfSearch(true); setIsProfConfirmed(false); }}
                       className="text-xs text-primary hover:underline shrink-0">Trocar</button>
                   )}
                 </div>
               )}
+
 
               <div>
                 <Label htmlFor="name">Nome completo</Label>
