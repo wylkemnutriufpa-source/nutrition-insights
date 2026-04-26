@@ -294,6 +294,7 @@ export default function MobileQA() {
         context: e.context,
         modalId: e.modalId,
         sequence: e.sequence,
+        grouping: e.grouping,
         metrics: e.metrics,
         thumbnail: e.thumbnail 
       })),
