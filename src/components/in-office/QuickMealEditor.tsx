@@ -1,19 +1,20 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import {
   Plus, Trash2, Copy, Save, Search,
   Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets,
-  Download, Eye, ArrowRight, RefreshCw
+  Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle
 } from "lucide-react";
 import { withRetry } from "@/lib/retry";
 import type { Database } from "@/integrations/supabase/types";
+import { cn } from "@/lib/utils";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 
