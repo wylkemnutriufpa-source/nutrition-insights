@@ -78,6 +78,8 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   const [searchLoading, setSearchLoading] = useState(false);
   const [templateName, setTemplateName] = useState("");
   const [showTemplateSave, setShowTemplateSave] = useState(false);
+  const [showDecisions, setShowDecisions] = useState(false);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
 
   // Template loading state
   const [showTemplateLoad, setShowTemplateLoad] = useState(false);
