@@ -150,14 +150,28 @@ export default function UpdateBanner() {
         <span className="text-sm font-medium text-foreground">
           {updating ? "Atualizando…" : isiOSPwa ? "Nova versão pronta para reabrir" : "Nova versão disponível"}
         </span>
-        <Button
-          size="sm"
-          onClick={handleUpdate}
-          disabled={updating}
-          className="ml-2"
-        >
-          {updating ? "Aguarde…" : isiOSPwa ? "Reabrir app" : "Atualizar agora"}
-        </Button>
+        <div className="flex items-center gap-2 ml-2">
+          <Button
+            size="sm"
+            onClick={handleUpdate}
+            disabled={updating}
+          >
+            {updating ? "Aguarde…" : isiOSPwa ? "Reabrir app" : "Atualizar agora"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              await clearRuntimeCaches();
+              toast.success("Cache limpo com sucesso!");
+              setTimeout(() => forceHardReload(), 500);
+            }}
+            disabled={updating}
+            className="border-primary/30"
+          >
+            Limpar Cache
+          </Button>
+        </div>
         {!updating && (
           <button
             onClick={handleDismiss}
