@@ -233,7 +233,7 @@ export default function MobileQA() {
                 Abra as telas abaixo para testar o comportamento do modal e scroll no mobile.
               </p>
               
-              <Dialog>
+              <Dialog onOpenChange={(open) => setActiveModal(open ? "Consultor de Estratégia" : null)}>
                 <DialogTrigger asChild>
                   <Button variant="outline" className="w-full justify-start gap-2 h-12">
                     <MousePointer2 className="w-4 h-4" />
