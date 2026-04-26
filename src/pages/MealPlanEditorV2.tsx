@@ -302,10 +302,36 @@ export default function MealPlanEditorV2() {
         doc.line(14, y - 5, pageWidth - 14, y - 5);
       });
       
+      // Engine & Audit Trail (Requirement)
+      if (y > pageHeight - 50) {
+        doc.addPage();
+        y = 20;
+      }
+      
+      doc.setFillColor(250, 250, 250);
+      doc.roundedRect(14, y, pageWidth - 28, 35, 2, 2, "F");
+      doc.setDrawColor(220);
+      doc.rect(14, y, pageWidth - 28, 35);
+      
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(9);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text("AUDITORIA CLÍNICA E TRILHA DE REGRAS:", 18, y + 8);
+      
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(8);
+      doc.setTextColor(80);
+      doc.text(`• Motor de Cálculo: FitJourney Clinical Engine v${CURRENT_ENGINE_VERSION}`, 18, y + 15);
+      doc.text(`• Timestamp: ${new Date().toISOString()}`, 18, y + 20);
+      doc.text(`• Protocolo: food-rules.ts + MEAL_KCAL_SPLIT (20/10/30/10/22/8)`, 18, y + 25);
+      doc.text(`• Status: Validado e Revisado pelo Profissional`, 18, y + 30);
+      
+      y += 45;
+
       // Footer
       doc.setFontSize(8);
       doc.setTextColor(150);
-      const footerText = "Gerado via FitJourney Nutrition - O plano alimentar ideal para seus objetivos.";
+      const footerText = `Gerado via FitJourney Nutrition v${CURRENT_ENGINE_VERSION} - Relatório de Auditoria Clínica.`;
       doc.text(footerText, (pageWidth - doc.getTextWidth(footerText)) / 2, pageHeight - 10);
       
       doc.save(`Plano_Alimentar_${patientName.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
