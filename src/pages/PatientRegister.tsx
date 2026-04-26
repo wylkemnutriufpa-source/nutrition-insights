@@ -25,6 +25,8 @@ export default function PatientRegister() {
   const [searchParams] = useSearchParams();
   const refCode = searchParams.get("ref") || "";
   const preselectedNutri = searchParams.get("nutri") || "";
+  const signature = searchParams.get("sig") || "";
+  const [sigValid, setSigValid] = useState<boolean | null>(null);
 
   // Form
   const [name, setName] = useState("");
