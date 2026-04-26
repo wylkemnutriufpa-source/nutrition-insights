@@ -611,6 +611,11 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
       const renderGroup = (groupItems: MealPlanPDFItem[]) => {
         const primary = groupItems.find(i => i.is_primary) || groupItems[0];
         const substitutions = groupItems.filter(i => i !== primary);
+        
+        const subKcal = substitutions.reduce((s, i) => s + (i.calories_target || 0), 0);
+        const subProt = substitutions.reduce((s, i) => s + (i.protein_target || 0), 0);
+        const subCarb = substitutions.reduce((s, i) => s + (i.carbs_target || 0), 0);
+        const subFat = substitutions.reduce((s, i) => s + (i.fat_target || 0), 0);
 
         return `
           <div class="meal-row">
@@ -632,10 +637,14 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
                         ${sub.description ? `<div style="font-size: 9px; color: #777;">${escapeHtml(sub.description)}</div>` : ""}
                         <div style="font-size: 9px; color: #999; margin-top: 2px;">
                           ${sub.calories_target} kcal · P ${sub.protein_target}g · C ${sub.carbs_target}g · G ${sub.fat_target}g
-                          <span style="font-style: italic; color: #c44; margin-left: 4px;">(Macros não considerados no total)</span>
                         </div>
                       </div>
                     `).join("")}
+                    
+                    <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #eee; font-size: 9px; color: #777;">
+                      <span style="font-weight: 800; color: #c44; text-transform: uppercase;">Macros não considerados:</span>
+                      <span style="margin-left: 4px;">${subKcal} kcal · P ${subProt}g · C ${subCarb}g · G ${subFat}g</span>
+                    </div>
                   </div>
                 ` : ""}
 
