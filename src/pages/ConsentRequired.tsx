@@ -71,7 +71,7 @@ export default function ConsentRequired() {
       await queryClient.invalidateQueries({ queryKey: ["clinical-consent"] });
       await queryClient.invalidateQueries({ queryKey: ["payment-guard"] });
       toast.success("Consentimento registrado com sucesso!");
-      navigate("/client/dashboard", { replace: true });
+      navigate("/anamnesis", { replace: true });
     } catch (err) {
       console.error("Consent error:", err);
       toast.error("Erro ao registrar consentimento. Tente novamente.");
