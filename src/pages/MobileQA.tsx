@@ -10,6 +10,8 @@ import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorP
 import { useMobileValidation } from "@/hooks/useMobileValidation";
 import { toast } from "sonner";
 import html2canvas from "html2canvas";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 export default function MobileQA() {
   const { hasOverflow, overflowingElements } = useMobileValidation();
