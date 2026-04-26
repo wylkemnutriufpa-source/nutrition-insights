@@ -100,6 +100,12 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
           setSmartEditorOpen(true);
         }
       }}
+      onKeyDown={(e) => {
+        if (!inlineEdit && (e.key === "Enter" || e.key === " ")) {
+          e.preventDefault();
+          setSmartEditorOpen(true);
+        }
+      }}
     >
       <MealSmartEditorModal 
         open={smartEditorOpen}
