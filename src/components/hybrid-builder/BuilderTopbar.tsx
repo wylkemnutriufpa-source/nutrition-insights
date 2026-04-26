@@ -125,7 +125,11 @@ export default function BuilderTopbar({
                 </Badge>
               )}
               {(plan as any)?.generation_metadata?.template_name_used && (
-                <Badge variant="secondary" className="text-[10px] shrink-0 border-primary/20 bg-primary/5">
+                <Badge 
+                  variant="secondary" 
+                  className="text-[10px] shrink-0 border-primary/20 bg-primary/5"
+                  data-testid="builder-template-badge"
+                >
                   <BookOpen className="w-3 h-3 mr-1 text-primary" />
                   Template: {(plan as any).generation_metadata.template_name_used}
                 </Badge>
