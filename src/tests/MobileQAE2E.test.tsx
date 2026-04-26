@@ -3,6 +3,8 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import MobileQA from "@/pages/MobileQA";
 import { BrowserRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
+import { AuthProvider } from "@/lib/auth";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 
 // Mocking window.scrollX and document.documentElement.scrollWidth
 const mockScrollX = vi.fn().mockReturnValue(0);
@@ -12,6 +14,14 @@ const mockClientWidth = vi.fn().mockReturnValue(1000);
 Object.defineProperty(window, 'scrollX', { get: mockScrollX });
 Object.defineProperty(document.documentElement, 'scrollWidth', { get: mockScrollWidth });
 Object.defineProperty(document.documentElement, 'clientWidth', { get: mockClientWidth });
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
 
 describe("Mobile QA E2E Simulation", () => {
   beforeEach(() => {
@@ -23,9 +33,13 @@ describe("Mobile QA E2E Simulation", () => {
 
   const renderComponent = () => {
     return render(
-      <BrowserRouter>
-        <MobileQA />
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <BrowserRouter>
+            <MobileQA />
+          </BrowserRouter>
+        </AuthProvider>
+      </QueryClientProvider>
     );
   };
 
