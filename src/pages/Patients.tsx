@@ -575,7 +575,7 @@ export default function Patients() {
       
       // Redireciona para o perfil do paciente recém-criado
       if (patientId) {
-        navigate(`/patients/${patientId}`);
+        navigateToPatient(patientId);
       }
     } catch (error) {
       // O erro já é tratado pelo hook toast.error
