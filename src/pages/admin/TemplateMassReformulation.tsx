@@ -93,7 +93,7 @@ export default function TemplateMassReformulation() {
 
   const generatePreviews = (data: Template[]) => {
     const newPreviews: ReformulationPreview[] = data.map(t => {
-      const { reformulatedMeals, changes } = reformulateTemplate(t.meals);
+      const { reformulatedMeals, changes, summary } = reformulateTemplate(t.meals);
       
       let level: "critical" | "warning" | "ok" = "ok";
       if (changes.some(c => c.includes("NaN") || c.includes("inválido") || c.includes("ausente"))) level = "critical";
@@ -107,7 +107,8 @@ export default function TemplateMassReformulation() {
         status: "pending",
         changes,
         level,
-        selected: level !== "ok"
+        selected: level !== "ok",
+        summary
       };
     });
     setPreviews(newPreviews);
