@@ -73,12 +73,15 @@ describe('Invitation E2E Simulation', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/convite/TEST12']}>
-        <Routes>
-          <Route path="/convite/:code" element={<Invitation />} />
-        </Routes>
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/convite/TEST12']}>
+          <Routes>
+            <Route path="/convite/:code" element={<Invitation />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
     );
+
 
     await waitFor(() => {
       expect(screen.getByText(/Este link de convite veio de uma origem não autorizada/i)).toBeInTheDocument();
