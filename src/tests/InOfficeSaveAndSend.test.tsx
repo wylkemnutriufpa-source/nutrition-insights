@@ -8,8 +8,7 @@ import '@testing-library/jest-dom';
 
 // Mock Supabase
 vi.mock('@/integrations/supabase/client', () => {
-  const mock = {
-    from: vi.fn().mockReturnThis(),
+  const mockQueryBuilder = {
     select: vi.fn().mockReturnThis(),
     update: vi.fn().mockReturnThis(),
     eq: vi.fn().mockReturnThis(),
@@ -17,21 +16,19 @@ vi.mock('@/integrations/supabase/client', () => {
     order: vi.fn().mockReturnThis(),
     limit: vi.fn().mockReturnThis(),
     maybeSingle: vi.fn(),
+    single: vi.fn(),
+  };
+
+  const mockSupabase = {
+    from: vi.fn().mockReturnValue(mockQueryBuilder),
     functions: {
       invoke: vi.fn(),
     },
   };
-  // Ensure chaining works by returning the mock itself for certain methods
-  mock.from.mockReturnValue(mock);
-  mock.select.mockReturnValue(mock);
-  mock.update.mockReturnValue(mock);
-  mock.eq.mockReturnValue(mock);
-  mock.in.mockReturnValue(mock);
-  mock.order.mockReturnValue(mock);
-  mock.limit.mockReturnValue(mock);
   
-  return { supabase: mock };
+  return { supabase: mockSupabase };
 });
+
 
 
 const queryClient = new QueryClient({
