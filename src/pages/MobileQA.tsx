@@ -150,23 +150,31 @@ export default function MobileQA() {
       const screenshot = canvas.toDataURL("image/png");
       const thumbnail = createThumbnail(canvas);
       
+      const sequence = evidences.filter(e => e.modalId === activeModalId).length + 1;
+      const uniqueKey = `${activeModalId || "main"}-${window.innerWidth}-${sequence}-${Date.now()}`;
+      
       const newEvidence = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: uniqueKey,
         timestamp: new Date().toLocaleTimeString(),
         item,
         viewport: `${window.innerWidth}px`,
         screenshot,
         thumbnail,
         context: activeModal || "Página Principal",
+        modalId: activeModalId || "main",
+        sequence,
         metrics
       };
       
       setEvidences(prev => [...prev, newEvidence]);
+      logEvent("Evidência registrada", { item, viewport: newEvidence.viewport, uniqueKey });
+      
       toast.success("Evidência registrada!", {
         description: `Snapshot e miniatura capturados para: ${item}`,
       });
     } catch (error) {
       console.error("Erro ao capturar snapshot:", error);
+      logEvent("Erro ao registrar evidência", { error: String(error) });
       toast.error("Erro ao registrar evidência");
     }
   };
