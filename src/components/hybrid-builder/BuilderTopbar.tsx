@@ -139,28 +139,14 @@ export default function BuilderTopbar({
           )}
           <Button variant="outline" size="sm" onClick={onSave} disabled={saving || syncStatus === "saving"} className="h-8 gap-1.5 text-xs">
             {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            Salvar
+            Salvar Rascunho
           </Button>
-          <Button variant="outline" size="sm" onClick={onValidate} disabled={validating} className="h-8 gap-1.5 text-xs gradient-primary text-white border-0">
-            {validating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : lockedValidationMode === "MANUAL_EDIT" ? <PenTool className="w-3.5 h-3.5" /> : <Sparkles className="w-3.5 h-3.5" />}
-            {lockedValidationMode === "MANUAL_EDIT" ? "Validar Manual" : lockedValidationMode === "AUTO_ENGINE" ? "Validar Auto" : "Validar"}
-            {lockedValidationMode && <Lock className="w-2.5 h-2.5 ml-0.5 opacity-60" />}
+          
+          <Button size="sm" onClick={onPublish} disabled={publishing} className="h-8 gap-1.5 text-xs gradient-primary text-white border-0 shadow-glow font-bold">
+            {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
+            Salvar e Enviar ao Paciente
           </Button>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <span>
-                <Button size="sm" onClick={onPublish} disabled={publishing || (lockedValidationMode === "AUTO_ENGINE" && !isApproved)} className="h-8 gap-1.5 text-xs">
-                  {publishing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Send className="w-3.5 h-3.5" />}
-                  Publicar
-                </Button>
-              </span>
-            </TooltipTrigger>
-            {lockedValidationMode === "AUTO_ENGINE" && !isApproved && (
-              <TooltipContent side="bottom" className="text-xs">
-                Valide o plano antes de publicar (modo automático)
-              </TooltipContent>
-            )}
-          </Tooltip>
+
         </div>
       </div>
 
