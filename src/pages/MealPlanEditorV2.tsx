@@ -535,6 +535,25 @@ export default function MealPlanEditorV2() {
     setSaving(true);
     const toastId = toast.loading("Salvando e aprovando plano...");
     try {
+      // 🛡️ Validação de Marmitas Fixas
+      const missingBase = store.items.filter(item => {
+        const meta = (item as any).edit_metadata || (item as any).metadata || {};
+        return meta.is_fixed && (
+          meta.kcal_base === undefined || meta.kcal_base === null ||
+          meta.protein_base === undefined || meta.protein_base === null ||
+          meta.carbs_base === undefined || meta.carbs_base === null ||
+          meta.fat_base === undefined || meta.fat_base === null
+        );
+      });
+
+      if (missingBase.length > 0) {
+        toast.error("Salvamento Bloqueado", {
+          description: `Existem ${missingBase.length} marmita(s) fixa(s) com dados base incompletos. Corrija-os no editor de cada item.`
+        });
+        setSaving(false);
+        return;
+      }
+
       // 🛡️ Validação de Substituições antes de salvar
       const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount, store.patientName);
       if (!subValidation.valid && subValidation.errors.some(err => err.includes("Combinação bloqueada"))) {
@@ -606,6 +625,25 @@ export default function MealPlanEditorV2() {
     if (totalKcal <= 0 && store.items.length > 0) {
       toast.error("O plano não pode ter totais zerados.", {
         description: "Adicione refeições com valores calóricos antes de salvar."
+      });
+      setSavingAndPublishing(false);
+      return;
+    }
+
+    // 🛡️ Validação de Marmitas Fixas
+    const missingBase = store.items.filter(item => {
+      const meta = (item as any).edit_metadata || (item as any).metadata || {};
+      return meta.is_fixed && (
+        meta.kcal_base === undefined || meta.kcal_base === null ||
+        meta.protein_base === undefined || meta.protein_base === null ||
+        meta.carbs_base === undefined || meta.carbs_base === null ||
+        meta.fat_base === undefined || meta.fat_base === null
+      );
+    });
+
+    if (missingBase.length > 0) {
+      toast.error("Publicação Bloqueada", {
+        description: `Existem ${missingBase.length} marmita(s) fixa(s) com dados base incompletos. Corrija-os antes de publicar.`
       });
       setSavingAndPublishing(false);
       return;

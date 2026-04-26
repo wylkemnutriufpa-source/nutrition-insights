@@ -90,14 +90,14 @@ export function MealSmartEditorModal({
       // Validação aprofundada de macros base para marmitas fixas
       if (meta.is_fixed) {
         const missing = [];
-        if (meta.kcal_base === undefined || meta.kcal_base === null) missing.push("Calorias");
-        if (meta.protein_base === undefined || meta.protein_base === null) missing.push("Proteínas");
-        if (meta.carbs_base === undefined || meta.carbs_base === null) missing.push("Carboidratos");
-        if (meta.fat_base === undefined || meta.fat_base === null) missing.push("Gorduras");
+        if (meta.kcal_base === undefined || meta.kcal_base === null) missing.push("kcal_base");
+        if (meta.protein_base === undefined || meta.protein_base === null) missing.push("protein_base");
+        if (meta.carbs_base === undefined || meta.carbs_base === null) missing.push("carbs_base");
+        if (meta.fat_base === undefined || meta.fat_base === null) missing.push("fat_base");
 
         if (missing.length > 0) {
           toast.error("Dados Base Incompletos", {
-            description: `Esta marmita fixa está sem os macros base: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
+            description: `Campos ausentes no edit_metadata: ${missing.join(", ")}. O ajuste de porção não funcionará corretamente.`,
             action: {
               label: "Corrigir Agora",
               onClick: () => {
@@ -141,6 +141,26 @@ export function MealSmartEditorModal({
         description: "Esta paciente possui restrições severas. Remova itens como ultraprocessados ou frituras das substituições."
       });
       return;
+    }
+
+    // Bloqueio para Marmita Fixa sem Macros Base
+    if (currentMeta?.is_fixed) {
+      const missing = [];
+      if (currentMeta.kcal_base === undefined || currentMeta.kcal_base === null) missing.push("kcal_base");
+      if (currentMeta.protein_base === undefined || currentMeta.protein_base === null) missing.push("protein_base");
+      if (currentMeta.carbs_base === undefined || currentMeta.carbs_base === null) missing.push("carbs_base");
+      if (currentMeta.fat_base === undefined || currentMeta.fat_base === null) missing.push("fat_base");
+
+      if (missing.length > 0) {
+        toast.error("Salvamento Bloqueado", {
+          description: `Esta marmita fixa está com dados base incompletos (${missing.join(", ")}). Preencha os campos antes de salvar.`,
+          action: {
+            label: "Corrigir Agora",
+            onClick: () => inputRef.current?.focus()
+          }
+        });
+        return;
+      }
     }
 
     // Validação de macros relaxada: permite macros parciais zerados
