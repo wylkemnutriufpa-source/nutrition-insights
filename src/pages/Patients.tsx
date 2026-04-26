@@ -567,9 +567,19 @@ export default function Patients() {
     e.preventDefault();
     if (!patientName.trim()) { toast.error("Informe o nome do paciente"); return; }
     if (patientPassword.length < 6) { toast.error("Senha deve ter mínimo 6 caracteres"); return; }
-    await addPatientMutation.mutateAsync({ email, name: patientName, password: patientPassword });
-    setOpen(false);
-    setEmail(""); setPatientName(""); setPatientPassword("");
+    
+    try {
+      const patientId = await addPatientMutation.mutateAsync({ email, name: patientName, password: patientPassword });
+      setOpen(false);
+      setEmail(""); setPatientName(""); setPatientPassword("");
+      
+      // Redireciona para o perfil do paciente recém-criado
+      if (patientId) {
+        navigateToPatient(patientId);
+      }
+    } catch (error) {
+      // O erro já é tratado pelo hook toast.error
+    }
   };
 
   const toggleStatus = (id: string, currentStatus: string) => {
