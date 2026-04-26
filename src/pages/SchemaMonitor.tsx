@@ -5,7 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, FileJson, AlertTriangle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import snapshotData from "../../scripts/schema-snapshot.json";
+import snapshotData from "@/integrations/supabase/schema-snapshot.json";
 
 interface Violation {
   file: string;
