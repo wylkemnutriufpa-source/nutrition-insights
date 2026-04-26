@@ -18,8 +18,9 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2
+  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles
 } from "lucide-react";
+import { BASE_URL } from "@/lib/config";
 import { useNavigate } from "react-router-dom";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
