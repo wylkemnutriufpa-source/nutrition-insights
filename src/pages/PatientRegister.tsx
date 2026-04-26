@@ -33,6 +33,7 @@ export default function PatientRegister() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [whatsappError, setWhatsappError] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
