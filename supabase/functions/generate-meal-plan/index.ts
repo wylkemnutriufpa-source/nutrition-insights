@@ -1942,6 +1942,8 @@ export async function generateWeeklyMarmitaPlan(
   fastMarmitaMode: boolean = false,
   seed: number = 0,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
+  console.log(`[weekly_marmita] Engine started. Input targets: ${targetKcal}kcal, P:${targetMacros.protein}g, C:${targetMacros.carbs}g, F:${targetMacros.fat}g`);
+
   const kcalTarget = targetKcal;
   const macros = targetMacros;
 
