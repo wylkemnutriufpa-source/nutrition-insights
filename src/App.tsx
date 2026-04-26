@@ -206,6 +206,7 @@ const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
 const StoreDashboard = lazy(() => import("./pages/store/StoreDashboard"));
 const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
+const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -629,6 +630,7 @@ const App = () => (
 
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><LP section="Admin"><AdminDashboard /></LP></AdminRoute>} />
+              <Route path="/admin/schema" element={<AdminRoute><LP section="Admin"><SchemaMonitor /></LP></AdminRoute>} />
               <Route path="/admin/features" element={<AdminRoute><LP section="Admin"><AdminFeatureControl /></LP></AdminRoute>} />
               <Route path="/admin/testimonials" element={<AdminRoute><LP section="Admin"><AdminTestimonials /></LP></AdminRoute>} />
               <Route path="/admin/site-editor" element={<AdminRoute><LP section="Admin"><AdminSiteEditor /></LP></AdminRoute>} />

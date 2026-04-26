@@ -89,6 +89,23 @@ export default function MealPlanEditorV2() {
   const { tenantId } = useTenant();
   const store = useMealPlanEditorV2Store();
   const editorRef = useRef<HTMLDivElement>(null);
+
+  /** Runtime safeguard for schema transitions */
+  const checkDefaultPlanColumn = async () => {
+    const { error } = await supabase
+      .from("nutritionist_patients")
+      .select("default_meal_plan_id" as any)
+      .limit(0);
+    
+    if (error && (error as any).code === "42703") {
+      toast.error("Erro de Versão: A coluna 'default_meal_plan_id' ainda não está disponível no banco de dados. Por favor, aguarde a conclusão da migração.", {
+        duration: 5000,
+        id: "schema-drift-alert"
+      });
+      return false;
+    }
+    return true;
+  };
   const [saving, setSaving] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [savingAndPublishing, setSavingAndPublishing] = useState(false);
@@ -273,6 +290,10 @@ export default function MealPlanEditorV2() {
 
   const handleSaveAsDefault = async () => {
     if (!plan?.patient_id || !user?.id) return;
+    
+    // Runtime assertion
+    if (!(await checkDefaultPlanColumn())) return;
+
     setIsDefaultSaving(true);
     const toastId = toast.loading("Salvando como template padrão...");
     try {
@@ -329,6 +350,9 @@ export default function MealPlanEditorV2() {
   const loadDefaultTemplate = useCallback(async () => {
     if (!plan?.patient_id || !user?.id) return;
     
+    // Runtime assertion
+    if (!(await checkDefaultPlanColumn())) return;
+
     const { data: np } = await supabase
       .from("nutritionist_patients")
       .select("default_meal_plan_id")
