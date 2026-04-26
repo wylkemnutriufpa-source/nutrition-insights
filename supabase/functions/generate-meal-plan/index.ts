@@ -3626,6 +3626,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
             end_date: endDate.toISOString().split("T")[0],
             is_active: false,
             plan_status: "draft_auto_generated",
+            plan_mode: "single_day",
             generation_source: "protocol_fitjourney_v4",
             generated_by: userId,
             generation_metadata: genMeta,
