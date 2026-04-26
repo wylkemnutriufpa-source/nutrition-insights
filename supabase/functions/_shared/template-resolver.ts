@@ -158,7 +158,7 @@ export function resolveMealTemplates(
   templates: ResolvedTemplate[],
   params: TemplateResolverParams,
 ): ResolvedTemplate[] {
-  const { goal, mealType, strategy, complexityPreference, excludeTemplateIds } = params;
+  const { goal, mealType, strategy, complexityPreference, excludeTemplateIds, prioritizedTemplateIds } = params;
 
   // Step 1: Filter by meal_type
   const mealTypeKeys = MEAL_TYPE_DB_MAP[mealType] || [mealType];
