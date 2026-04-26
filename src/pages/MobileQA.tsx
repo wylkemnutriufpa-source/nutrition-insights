@@ -230,16 +230,18 @@ export default function MobileQA() {
       return;
     }
 
-    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
+    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "ModalID", "Sequencia", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
     const rows = evidences.map(ev => [
       `"${ev.timestamp}"`,
       `"${ev.item}"`,
       `"${ev.viewport}"`,
       `"${ev.context || "N/A"}"`,
+      `"${ev.modalId || "main"}"`,
+      ev.sequence || 0,
       ev.metrics?.scrollX || 0,
       ev.metrics?.scrollWidth || 0,
       ev.metrics?.clientWidth || 0,
-      `"${ev.thumbnail.substring(0, 100)}..."` // Just a snippet to keep CSV readable
+      `"${ev.thumbnail.substring(0, 100)}..."`
     ]);
 
     const csvContent = [
@@ -253,6 +255,7 @@ export default function MobileQA() {
     a.href = url;
     a.download = `mobile-qa-metrics-${new Date().getTime()}.csv`;
     a.click();
+    logEvent("Exportação CSV concluída");
   };
 
   const exportReport = () => {
@@ -260,18 +263,22 @@ export default function MobileQA() {
       title: "Relatório Consolidado de QA Mobile",
       date: new Date().toISOString(),
       checklist,
+      eventTimeline: eventLog,
       evidences: evidences.map(e => ({
         id: e.id,
         timestamp: e.timestamp,
         item: e.item,
         viewport: e.viewport,
         context: e.context,
+        modalId: e.modalId,
+        sequence: e.sequence,
         metrics: e.metrics,
-        thumbnail: e.thumbnail // Inclusion of full thumbnail B64 for E2E validation
+        thumbnail: e.thumbnail 
       })),
       summary: {
         totalChecks: Object.values(checklist).filter(Boolean).length,
         totalEvidences: evidences.length,
+        totalEvents: eventLog.length
       }
     };
     
@@ -284,6 +291,7 @@ export default function MobileQA() {
 
     exportCSV();
     exportPDF();
+    logEvent("Exportação total (JSON, CSV, PDF) concluída");
     toast.success("Todos os formatos exportados (PDF, JSON, CSV)!");
   };
 
