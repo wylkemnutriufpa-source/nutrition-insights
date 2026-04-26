@@ -1,84 +1,167 @@
-/**
- * Snapshot de colunas das tabelas mais consultadas no frontend.
- *
- * Este arquivo é o "ground truth" usado pelo `scripts/check-schema-references.mjs`
- * para detectar quando o frontend referencia colunas que não existem mais
- * (ex.: `plan_name`, `lifecycle_state` em meal_plans).
- *
- * Como atualizar:
- *   1. Após uma migração que adiciona/remove colunas, rode:
- *      psql -tA -c "SELECT column_name FROM information_schema.columns
- *                   WHERE table_schema='public' AND table_name='X'
- *                   ORDER BY column_name;"
- *   2. Cole as colunas no array correspondente abaixo.
- *
- * Tabelas listadas devem ser as que o script de check inspeciona.
- * Tabelas não listadas são ignoradas pelo check (não geram erro).
- */
 {
   "$schema": "./schema-snapshot.schema.json",
-  "generatedAt": "2026-04-24",
+  "generatedAt": "2026-04-26",
   "tables": {
     "meal_plans": [
-      "id","nutritionist_id","patient_id","title","description","start_date","end_date",
-      "is_active","created_at","updated_at","plan_status","template_id","template_slug",
-      "template_version","generation_metadata","generation_source","generated_by",
-      "therapeutic_effectiveness_status","therapeutic_efficacy_score","previous_plan_id",
-      "transition_origin_id","total_target_calories","total_target_protein","total_target_carbs",
-      "total_target_fat","editor_version","requires_regeneration","tenant_id","clinical_score",
-      "simplicity_score","adherence_score","overall_score","overall_validation_status",
-      "last_validated_at","validation_engine_version","pipeline_version","pipeline_completed_at",
-      "personalization_applied","total_calories","total_protein","total_carbs","total_fat",
-      "totals_status","plan_type","is_global_model","quality_alerts","clinical_status",
-      "global_protein_target","global_carbs_target","global_fat_target","global_calories_target",
-      "plan_mode","correlation_id"
+      "clinical_score",
+      "correlation_id",
+      "created_at",
+      "description",
+      "editor_version",
+      "end_date",
+      "global_protein_target",
+      "id",
+      "is_active",
+      "nutritionist_id",
+      "patient_id",
+      "pipeline_version",
+      "plan_mode",
+      "plan_status",
+      "plan_type",
+      "previous_plan_id",
+      "requires_regeneration",
+      "start_date",
+      "tenant_id",
+      "therapeutic_effectiveness_status",
+      "therapeutic_efficacy_score",
+      "title",
+      "total_calories",
+      "total_target_calories",
+      "total_target_carbs",
+      "total_target_fat",
+      "total_target_protein",
+      "totals_status",
+      "updated_at"
     ],
     "meal_plan_items": [
-      "id","meal_plan_id","meal_type","title","description","calories_target","protein_target",
-      "carbs_target","fat_target","day_of_week","created_at","tenant_id","image_url",
-      "visual_library_item_id","item_origin","is_manually_edited","is_locked","was_auto_corrected",
-      "edit_metadata","is_primary","substitution_group_id","target_percentage","master_item_id"
+      "calories_target",
+      "carbs_target",
+      "created_at",
+      "day_of_week",
+      "description",
+      "fat_target",
+      "id",
+      "image_url",
+      "is_primary",
+      "item_origin",
+      "meal_plan_id",
+      "meal_type",
+      "protein_target",
+      "target_percentage",
+      "tenant_id",
+      "title",
+      "visual_library_item_id"
     ],
     "profiles": [
-      "id","user_id","full_name","avatar_url","phone","created_at","updated_at","show_in_ranking",
-      "ranking_nickname","clinical_risk_score","clinical_risk_level","weight_trend_status",
-      "weight_velocity_kg_week","adherence_momentum","adherence_score_7d","adherence_score_prev_7d",
-      "engagement_index","engagement_level","metabolic_response_type","historical_loss_rate",
-      "regain_probability","plateau_probability","behavioral_consistency_score",
-      "weight_history_analyzed_at","metabolic_confidence_score","metabolic_last_evaluated_at",
-      "metabolic_phase","metabolic_phase_last_updated_at","goal","notes","fit_intelligence_enabled",
-      "fit_intelligence_onboarded","fit_intelligence_mode","fit_intelligence_last_seen_at",
-      "fit_intelligence_snoozed_until","fit_intelligence_access_mode","fit_intelligence_expires_at",
-      "fit_intelligence_first_experience_seen","tenant_id","experience_mode","marmita_mode",
-      "fast_marmita_mode","experience_mode_locked","unlock_date"
+      "avatar_url",
+      "clinical_risk_score",
+      "created_at",
+      "experience_mode",
+      "experience_mode_locked",
+      "fast_marmita_mode",
+      "fit_intelligence_access_mode",
+      "fit_intelligence_enabled",
+      "fit_intelligence_first_experience_seen",
+      "fit_intelligence_mode",
+      "fit_intelligence_onboarded",
+      "full_name",
+      "goal",
+      "id",
+      "marmita_mode",
+      "metabolic_confidence_score",
+      "metabolic_last_evaluated_at",
+      "metabolic_phase",
+      "metabolic_response_type",
+      "notes",
+      "phone",
+      "ranking_nickname",
+      "search_vector",
+      "show_in_ranking",
+      "tenant_id",
+      "unlock_date",
+      "updated_at",
+      "user_id",
+      "weight_trend_status"
     ],
     "nutritionist_patients": [
-      "id","nutritionist_id","patient_id","status","notes","created_at","checkin_frequency",
-      "last_checkin_reminder","expires_at","journey_status","tenant_id","attendance_mode",
-      "default_meal_plan_id"
+      "attendance_mode",
+      "checkin_frequency",
+      "created_at",
+      "default_meal_plan_id",
+      "expires_at",
+      "id",
+      "journey_status",
+      "notes",
+      "nutritionist_id",
+      "patient_id",
+      "status",
+      "tenant_id"
     ],
     "patient_lifecycle_states": [
-      "patient_id","lifecycle_state","has_active_plan","has_pending_onboarding","has_clinical_alert",
-      "has_retention_risk","last_checkin_at","last_plan_delivery_at","adherence_score","risk_score",
-      "next_recommended_action","updated_at","computed_at","is_onboarding_blocked","onboarding_block_reason"
+      "adherence_score",
+      "computed_at",
+      "has_active_plan",
+      "has_clinical_alert",
+      "has_pending_onboarding",
+      "has_retention_risk",
+      "is_onboarding_blocked",
+      "last_checkin_at",
+      "last_plan_delivery_at",
+      "lifecycle_state",
+      "next_recommended_action",
+      "patient_id",
+      "risk_score",
+      "updated_at"
     ],
     "onboarding_pipelines": [
-      "id","patient_id","nutritionist_id","status","anamnesis_completed","body_data_completed",
-      "preferences_completed","plan_generated","plan_approved","weight","height","photo_front_url",
-      "photo_side_url","photo_back_url","wake_time","sleep_time","meal_count","cooking_preference",
-      "food_preferences","generated_plan_id","generated_plan_data","use_scheduling_criteria",
-      "scheduling_criteria","approved_by","approved_at","rejection_reason","created_at","updated_at",
-      "release_status","released_by","released_at","release_config","clinical_flags",
-      "onboarding_step_completed","sync_pending","sync_error","sync_last_attempt_at","sync_attempts"
+      "anamnesis_completed",
+      "approved_at",
+      "approved_by",
+      "body_data_completed",
+      "cooking_preference",
+      "created_at",
+      "food_preferences",
+      "generated_plan_data",
+      "generated_plan_id",
+      "height",
+      "id",
+      "meal_count",
+      "nutritionist_id",
+      "onboarding_step_completed",
+      "patient_id",
+      "photo_back_url",
+      "photo_front_url",
+      "photo_side_url",
+      "plan_approved",
+      "plan_generated",
+      "preferences_completed",
+      "rejection_reason",
+      "release_status",
+      "scheduling_criteria",
+      "sleep_time",
+      "status",
+      "sync_pending",
+      "updated_at",
+      "use_scheduling_criteria",
+      "wake_time",
+      "weight"
     ],
     "patient_anamnesis": [
-      "id","user_id","answers","computed_tmb","computed_kcal_target","computed_protein",
-      "computed_carbs","computed_fat","status","created_at","updated_at","audit_metadata",
-      "computed_tdee","tenant_id"
+      "answers",
+      "computed_carbs",
+      "computed_fat",
+      "computed_kcal_target",
+      "computed_protein",
+      "computed_tmb",
+      "created_at",
+      "id",
+      "status",
+      "tenant_id",
+      "updated_at",
+      "user_id"
     ],
     "system_alerts": [
-      "id","alert_type","severity","function_name","message","metadata","is_resolved",
-      "resolved_at","resolved_by","created_at","correlation_id"
+      "correlation_id"
     ]
   }
 }
