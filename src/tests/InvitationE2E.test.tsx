@@ -5,14 +5,22 @@ import Invitation from '@/pages/Invitation';
 import { supabase } from '@/integrations/supabase/client';
 
 // Mock Supabase
+const mockQuery = {
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  maybeSingle: vi.fn(),
+  order: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockResolvedValue({ error: null }),
+  update: vi.fn().mockReturnThis(),
+};
+
 vi.mock('@/integrations/supabase/client', () => ({
   supabase: {
-    from: vi.fn().mockReturnThis(),
-    select: vi.fn().mockReturnThis(),
-    eq: vi.fn().mockReturnThis(),
-    maybeSingle: vi.fn(),
-    insert: vi.fn().mockResolvedValue({ error: null }),
-    update: vi.fn().mockReturnThis(),
+    from: vi.fn(() => mockQuery),
+    auth: { 
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
+    }
   },
 }));
 
@@ -25,19 +33,28 @@ describe('Invitation E2E Simulation', () => {
       value: {
         hostname: 'www.fitjourney.com.br',
         href: 'https://www.fitjourney.com.br/convite/TEST12',
-        origin: 'https://www.fitjourney.com.br'
+        origin: 'https://www.fitjourney.com.br',
+        host: 'www.fitjourney.com.br'
       },
-      writable: true
+      writable: true,
+      configurable: true
     });
   });
 
   it('deve exibir erro se o domínio não for oficial', async () => {
     // Override hostname
-    window.location.hostname = 'evil-domain.com';
+    Object.defineProperty(window, 'location', {
+      value: {
+        hostname: 'evil-domain.com',
+        href: 'https://evil-domain.com/convite/TEST12',
+        origin: 'https://evil-domain.com',
+        host: 'evil-domain.com'
+      },
+      writable: true,
+      configurable: true
+    });
 
-    const fromMock = supabase.from as any;
-    fromMock().select().eq().maybeSingle.mockResolvedValue({
-
+    mockQuery.maybeSingle.mockResolvedValue({
       data: {
         id: '1',
         code: 'TEST12',
@@ -61,11 +78,7 @@ describe('Invitation E2E Simulation', () => {
   });
 
   it('deve exibir informações do profissional e clínica corretamente', async () => {
-    window.location.hostname = 'www.fitjourney.com.br';
-
-    const fromMock = supabase.from as any;
-    fromMock().select().eq().maybeSingle.mockResolvedValue({
-
+    mockQuery.maybeSingle.mockResolvedValue({
       data: {
         id: '1',
         code: 'TEST12',
@@ -97,9 +110,7 @@ describe('Invitation E2E Simulation', () => {
     const pastDate = new Date();
     pastDate.setFullYear(pastDate.getFullYear() - 1);
 
-    const fromMock = supabase.from as any;
-    fromMock().select().eq().maybeSingle.mockResolvedValue({
-
+    mockQuery.maybeSingle.mockResolvedValue({
       data: {
         id: '1',
         code: 'EXPIRED',
