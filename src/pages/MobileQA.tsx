@@ -24,6 +24,7 @@ export default function MobileQA() {
     viewport360: false,
     focusVisibleX: false,
     noScrollResidualOnKeys: false,
+    accessibilityTabOrder: false,
   });
 
   const [evidences, setEvidences] = useState<Array<{ 
@@ -34,10 +35,17 @@ export default function MobileQA() {
     screenshot: string,
     thumbnail: string,
     context?: string,
+    modalId?: string,
+    sequence?: number,
     metrics?: { scrollX: number, scrollWidth: number, clientWidth: number }
   }>>([]);
+  
   const [activeModal, setActiveModal] = useState<string | null>(null);
+  const [activeModalId, setActiveModalId] = useState<string | null>(null);
+  const [eventLog, setEventLog] = useState<Array<{ timestamp: string, event: string, details?: any }>>([]);
+  const [overflowBuffer, setOverflowBuffer] = useState(300); // 300ms buffer
   const lastOverflowTime = useRef<number>(0);
+  const overflowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const testScreens = [
     { id: "strategy", label: "Consultor de Estratégia", icon: MousePointer2, component: "StrategyAdvisor" },
@@ -46,39 +54,74 @@ export default function MobileQA() {
     { id: "wizard", label: "InOffice Wizard", icon: Maximize2, component: "InOfficeWizard" },
   ];
 
-  // Automated Horizontal Scroll Check & Capture
+  const logEvent = (event: string, details?: any) => {
+    const timestamp = new Date().toISOString();
+    setEventLog(prev => [...prev, { timestamp, event, details }]);
+  };
+
+  // Automated Horizontal Scroll Check & Capture with Debounce
   useEffect(() => {
     const checkScroll = async () => {
       const scrollX = window.scrollX;
       const scrollWidth = document.documentElement.scrollWidth;
       const clientWidth = document.documentElement.clientWidth;
+      const isOverflowing = scrollX > 0 || scrollWidth > clientWidth;
       
-      if (scrollX > 0 || scrollWidth > clientWidth) {
-        const now = Date.now();
-        // Throttling captures to avoid freezing and duplicated logs
-        if (now - lastOverflowTime.current > 5000) {
-          lastOverflowTime.current = now;
-          console.error("OVERFLOW-X DETECTED", { scrollX, scrollWidth, clientWidth });
+      if (isOverflowing) {
+        logEvent("Overflow detectado (inicial)", { scrollX, scrollWidth, clientWidth });
+        
+        // Clear previous timeout if exists
+        if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
+        
+        // Wait for buffer/debounce
+        overflowTimeoutRef.current = setTimeout(async () => {
+          // Re-verify after buffer
+          const currentScrollX = window.scrollX;
+          const currentScrollWidth = document.documentElement.scrollWidth;
+          const currentClientWidth = document.documentElement.clientWidth;
           
-          toast.error("Overflow Horizontal Detectado!", {
-            description: `scrollX: ${scrollX}, scrollWidth: ${scrollWidth}, clientWidth: ${clientWidth}. Capturando evidência...`,
-            duration: 5000,
-          });
-          
-          await registerEvidence("Overflow Detectado Automático", { scrollX, scrollWidth, clientWidth });
-        }
+          if (currentScrollX > 0 || currentScrollWidth > currentClientWidth) {
+            const now = Date.now();
+            if (now - lastOverflowTime.current > 5000) {
+              lastOverflowTime.current = now;
+              logEvent("Overflow persistente capturado", { currentScrollX, currentScrollWidth, currentClientWidth });
+              
+              toast.error("Overflow Horizontal Persistente!", {
+                description: `Buffer de ${overflowBuffer}ms atingido. Capturando evidência...`,
+                duration: 5000,
+              });
+              
+              await registerEvidence("Overflow Detectado Automático", { 
+                scrollX: currentScrollX, 
+                scrollWidth: currentScrollWidth, 
+                clientWidth: currentClientWidth 
+              });
+            }
+          }
+        }, overflowBuffer);
       }
     };
 
-    window.addEventListener('scroll', checkScroll);
-    window.addEventListener('resize', checkScroll);
+    const handleResize = () => {
+      logEvent("Resize detectado", { width: window.innerWidth, height: window.innerHeight });
+      checkScroll();
+    };
+
+    const handleScroll = () => {
+      logEvent("Scroll detectado", { scrollX: window.scrollX, scrollY: window.scrollY });
+      checkScroll();
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
     const interval = setInterval(checkScroll, 2000);
     return () => {
-      window.removeEventListener('scroll', checkScroll);
-      window.removeEventListener('resize', checkScroll);
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
       clearInterval(interval);
+      if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
     };
-  }, [evidences]);
+  }, [evidences, overflowBuffer]);
 
   const toggleCheck = (key: keyof typeof checklist) => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
@@ -107,23 +150,31 @@ export default function MobileQA() {
       const screenshot = canvas.toDataURL("image/png");
       const thumbnail = createThumbnail(canvas);
       
+      const sequence = evidences.filter(e => e.modalId === activeModalId).length + 1;
+      const uniqueKey = `${activeModalId || "main"}-${window.innerWidth}-${sequence}-${Date.now()}`;
+      
       const newEvidence = {
-        id: Math.random().toString(36).substr(2, 9),
+        id: uniqueKey,
         timestamp: new Date().toLocaleTimeString(),
         item,
         viewport: `${window.innerWidth}px`,
         screenshot,
         thumbnail,
         context: activeModal || "Página Principal",
+        modalId: activeModalId || "main",
+        sequence,
         metrics
       };
       
       setEvidences(prev => [...prev, newEvidence]);
+      logEvent("Evidência registrada", { item, viewport: newEvidence.viewport, uniqueKey });
+      
       toast.success("Evidência registrada!", {
         description: `Snapshot e miniatura capturados para: ${item}`,
       });
     } catch (error) {
       console.error("Erro ao capturar snapshot:", error);
+      logEvent("Erro ao registrar evidência", { error: String(error) });
       toast.error("Erro ao registrar evidência");
     }
   };
@@ -179,16 +230,18 @@ export default function MobileQA() {
       return;
     }
 
-    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
+    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "ModalID", "Sequencia", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
     const rows = evidences.map(ev => [
       `"${ev.timestamp}"`,
       `"${ev.item}"`,
       `"${ev.viewport}"`,
       `"${ev.context || "N/A"}"`,
+      `"${ev.modalId || "main"}"`,
+      ev.sequence || 0,
       ev.metrics?.scrollX || 0,
       ev.metrics?.scrollWidth || 0,
       ev.metrics?.clientWidth || 0,
-      `"${ev.thumbnail.substring(0, 100)}..."` // Just a snippet to keep CSV readable
+      `"${ev.thumbnail.substring(0, 100)}..."`
     ]);
 
     const csvContent = [
@@ -202,6 +255,7 @@ export default function MobileQA() {
     a.href = url;
     a.download = `mobile-qa-metrics-${new Date().getTime()}.csv`;
     a.click();
+    logEvent("Exportação CSV concluída");
   };
 
   const exportReport = () => {
@@ -209,18 +263,22 @@ export default function MobileQA() {
       title: "Relatório Consolidado de QA Mobile",
       date: new Date().toISOString(),
       checklist,
+      eventTimeline: eventLog,
       evidences: evidences.map(e => ({
         id: e.id,
         timestamp: e.timestamp,
         item: e.item,
         viewport: e.viewport,
         context: e.context,
+        modalId: e.modalId,
+        sequence: e.sequence,
         metrics: e.metrics,
-        thumbnail: e.thumbnail // Inclusion of full thumbnail B64 for E2E validation
+        thumbnail: e.thumbnail 
       })),
       summary: {
         totalChecks: Object.values(checklist).filter(Boolean).length,
         totalEvidences: evidences.length,
+        totalEvents: eventLog.length
       }
     };
     
@@ -233,6 +291,7 @@ export default function MobileQA() {
 
     exportCSV();
     exportPDF();
+    logEvent("Exportação total (JSON, CSV, PDF) concluída");
     toast.success("Todos os formatos exportados (PDF, JSON, CSV)!");
   };
 
@@ -279,7 +338,8 @@ export default function MobileQA() {
                 { id: "noContentCutoff", label: "Sem conteúdo cortado" },
                 { id: "noHorizontalScroll", label: "Sem scroll horizontal" },
                 { id: "focusVisibleX", label: "Foco visível no botão X (Acessibilidade)" },
-                { id: "noScrollResidualOnKeys", label: "Sem scroll residual (Enter/Espaço)" }
+                { id: "accessibilityTabOrder", label: "Botão X navegável por Tab" },
+                { id: "noScrollResidualOnKeys", label: "Sem scroll residual (Enter/Espaço/Esc)" }
               ].map((item) => (
                 <div key={item.id} className="flex items-center justify-between group">
                   <div className="flex items-center space-x-2">
@@ -300,6 +360,22 @@ export default function MobileQA() {
                   </Button>
                 </div>
               ))}
+              
+              <div className="pt-4 border-t mt-4">
+                <Label htmlFor="buffer-range" className="text-xs font-semibold mb-2 block">
+                  Buffer de Detecção Overflow: {overflowBuffer}ms
+                </Label>
+                <input 
+                  id="buffer-range"
+                  type="range" 
+                  min="0" 
+                  max="1000" 
+                  step="50"
+                  value={overflowBuffer}
+                  onChange={(e) => setOverflowBuffer(Number(e.target.value))}
+                  className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -312,14 +388,27 @@ export default function MobileQA() {
             </CardHeader>
             <CardContent className="space-y-3">
               {testScreens.map((screen) => (
-                <Dialog key={screen.id} onOpenChange={(open) => setActiveModal(open ? screen.label : null)}>
+                <Dialog key={screen.id} onOpenChange={(open) => {
+                  setActiveModal(open ? screen.label : null);
+                  setActiveModalId(open ? screen.id : null);
+                  logEvent(open ? "Modal aberto" : "Modal fechado", { screen: screen.label, id: screen.id });
+                }}>
                   <DialogTrigger asChild>
                     <Button variant="outline" className="w-full justify-start gap-2 h-12" data-testid={`trigger-${screen.id}`}>
                       <screen.icon className="w-4 h-4" />
                       {screen.label}
                     </Button>
                   </DialogTrigger>
-                  <DialogContent className="sm:max-w-[600px] h-[90vh] flex flex-col p-0 overflow-hidden" data-testid={`modal-${screen.id}`}>
+                  <DialogContent 
+                    className="sm:max-w-[600px] h-[90vh] flex flex-col p-0 overflow-hidden" 
+                    data-testid={`modal-${screen.id}`}
+                    onEscapeKeyDown={() => logEvent("Esc pressionado no modal", { screen: screen.label })}
+                  >
+                    <DialogHeader className="p-4 border-b bg-muted/30">
+                      <DialogTitle className="flex items-center justify-between pr-8">
+                        {screen.label}
+                      </DialogTitle>
+                    </DialogHeader>
                     <div className="p-4 overflow-y-auto overflow-x-hidden flex-1 bg-background">
                       <div className="space-y-4">
                         <h2 className="text-xl font-bold">Simulação: {screen.label}</h2>
