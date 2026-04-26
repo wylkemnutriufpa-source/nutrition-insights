@@ -146,7 +146,7 @@ const PATIENT_ONLY_ROUTES = [
   "/water-calculator",
   "/health-quiz",
   "/checkin",
-  "/consent-required",
+  "/consent",
   "/payment-required",
 ];
 
