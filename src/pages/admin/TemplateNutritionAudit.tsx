@@ -336,6 +336,7 @@ export default function TemplateNutritionAudit() {
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [revertingId, setRevertingId] = useState<string | null>(null);
   const [diffVersion, setDiffVersion] = useState<RuleVersion | null>(null);
+  const [templateSource, setTemplateSource] = useState<"nutritionist" | "official">("official");
 
   const refreshVersions = async () => {
     setVersionsLoading(true);
@@ -454,11 +455,14 @@ export default function TemplateNutritionAudit() {
 
   const fetchTemplates = async () => {
     setLoading(true);
+    const table = templateSource === "nutritionist" ? "nutritionist_meal_templates" : "diet_templates";
+    const columns = templateSource === "nutritionist" 
+      ? "id, name, meal_type, is_global, kcal_base, protein_base, carbs_base, fat_base, foods_structure, updated_at"
+      : "id, name, category, base_calories, meals, updated_at";
+
     const { data, error } = await supabase
-      .from("nutritionist_meal_templates")
-      .select(
-        "id, name, meal_type, is_global, kcal_base, protein_base, carbs_base, fat_base, foods_structure, updated_at",
-      )
+      .from(table as any)
+      .select(columns)
       .order("updated_at", { ascending: false })
       .limit(1000);
 
@@ -466,14 +470,14 @@ export default function TemplateNutritionAudit() {
       toast.error("Falha ao carregar templates", { description: error.message });
       setRows([]);
     } else {
-      setRows((data || []) as TemplateRow[]);
+      setRows((data || []) as any[]);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     fetchTemplates();
-  }, []);
+  }, [templateSource]);
 
   const audited = useMemo(() => rows.map((r) => auditTemplate(r, config)), [rows, config]);
 
