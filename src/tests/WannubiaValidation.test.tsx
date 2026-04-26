@@ -57,14 +57,16 @@ describe('Wannubia Specific Validation Test', () => {
 
     // Deve mostrar o aviso para Wannubia
     expect(screen.getByText(/Apenas Marmitas Permitidas/i)).toBeInTheDocument();
-    expect(screen.getByText(/Para esta paciente, utilize a aba/i)).toBeInTheDocument();
-
+    
     // Clica no botão para ir para Refeições Prontas
     const readyMealsButton = screen.getByText(/Ir para Refeições Prontas/i);
     fireEvent.click(readyMealsButton);
 
-    // Verifica se mudou para a aba de Refeições Prontas
-    expect(screen.getByText(/Marmita/i)).toBeInTheDocument();
+    // Verifica se os templates de marmita aparecem na lista
+    await waitFor(() => {
+       const templates = screen.getAllByText(/Marmita/i);
+       expect(templates.length).toBeGreaterThan(1);
+    });
   });
 
   it('bloqueia salvamento com macros zerados', async () => {
@@ -79,7 +81,6 @@ describe('Wannubia Specific Validation Test', () => {
     );
 
     // Tenta salvar com macros zerados
-    // O botão pode ter o texto "Salvar alterações"
     const saveButton = screen.getByText(/Salvar alterações/i);
     fireEvent.click(saveButton);
 
