@@ -1422,6 +1422,7 @@ function generatePlanWithTemplates(
   strategy?: string,
   dbFoods?: any[],
   recentMeals?: RecentMealItem[],
+  prioritizedTemplateIds?: string[],
 ): { items: any[]; templateHits: number; visualFallbacks: number } {
   const defaultMeals = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "dinner", "evening_snack"];
   const mealTypes = enabledMeals && enabledMeals.length > 0 ? enabledMeals : defaultMeals;
