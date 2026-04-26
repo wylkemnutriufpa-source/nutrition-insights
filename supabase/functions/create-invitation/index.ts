@@ -38,11 +38,30 @@ Deno.serve(async (req) => {
     const rl = await checkRateLimit("create-invitation", caller.id, 20, 15);
     if (!rl.allowed) return rateLimitResponse();
 
-    const { name, email, tenant_id } = await req.json();
+    const body = await req.json();
+    const { tenant_id } = body;
+    const name = body.name || body.patient_name;
+    const email = body.email || body.patient_email;
 
     const adminClient = createClient(supabaseUrl, serviceRoleKey, {
       auth: { autoRefreshToken: false, persistSession: false },
     });
+
+    // Bloqueio de duplicados: verifica se já existe um convite PENDENTE para este email e nutricionista nos últimos 5 minutos
+    if (email) {
+      const { data: existingPending } = await adminClient
+        .from("invitations")
+        .select("id, created_at")
+        .eq("professional_id", caller.id)
+        .eq("patient_email", email)
+        .eq("status", "pending")
+        .gt("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .maybeSingle();
+
+      if (existingPending) {
+        throw new Error("Já existe um convite pendente recente para este paciente. Aguarde alguns minutos ou use o link anterior.");
+      }
+    }
 
     // Tenta gerar um código único até 3 vezes
     let code = "";
@@ -77,13 +96,21 @@ Deno.serve(async (req) => {
 
     if (insertError) throw insertError;
 
+    const host = req.headers.get("host") || "unknown";
+    const userAgent = req.headers.get("user-agent") || "unknown";
     const friendlyUrl = `${BASE_URL}/convite/${code}`;
 
     // Log da criação
     await logInvitation(adminClient, {
       invitation_id: invitation.id,
       event_type: "generated",
-      details: { name, email, tenant_id },
+      details: { 
+        name, 
+        email, 
+        tenant_id,
+        user_agent: userAgent,
+        host: host
+      },
       domain_used: BASE_URL
     });
 
