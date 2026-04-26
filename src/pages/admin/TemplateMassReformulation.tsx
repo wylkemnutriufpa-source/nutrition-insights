@@ -31,7 +31,10 @@ import { Input } from "@/components/ui/input";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
+import { validateImageUrl } from "@/lib/clinical-engine/marmitaVisualEngine";
+
 const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
+
 
 interface Template {
   id: string;
@@ -86,17 +89,17 @@ export default function TemplateMassReformulation() {
     })) as Template[];
 
     setTemplates(typedTemplates);
-    generatePreviews(typedTemplates);
+    await generatePreviews(typedTemplates);
     setStep("preview");
     setLoading(false);
   };
 
-  const generatePreviews = (data: Template[]) => {
-    const newPreviews: ReformulationPreview[] = data.map(t => {
-      const { reformulatedMeals, changes, summary } = reformulateTemplate(t.meals);
+  const generatePreviews = async (data: Template[]) => {
+    const newPreviews: ReformulationPreview[] = await Promise.all(data.map(async (t) => {
+      const { reformulatedMeals, changes, summary } = await reformulateTemplate(t.meals);
       
       let level: "critical" | "warning" | "ok" = "ok";
-      if (changes.some(c => c.includes("NaN") || c.includes("inválido") || c.includes("ausente"))) level = "critical";
+      if (changes.some(c => c.includes("NaN") || c.includes("inválido") || c.includes("ausente") || c.includes("indisponível"))) level = "critical";
       else if (changes.length > 0) level = "warning";
 
       return {
@@ -104,13 +107,13 @@ export default function TemplateMassReformulation() {
         name: t.name,
         before: t.meals,
         after: reformulatedMeals,
-        status: "pending",
+        status: "pending" as const,
         changes,
         level,
         selected: level !== "ok",
         summary
       };
-    });
+    }));
     setPreviews(newPreviews);
   };
 
@@ -123,89 +126,53 @@ export default function TemplateMassReformulation() {
     }
   };
 
-  const reformulateTemplate = (meals: any[]) => {
+  const reformulateTemplate = async (meals: any[]) => {
     const changes: string[] = [];
     let removedKeysCount = 0;
     let adjustedBlocksCount = 0;
 
-    const reformulatedMeals = (meals || []).map(meal => {
+    const reformulatedMeals = await Promise.all((meals || []).map(async (meal) => {
       let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
       
-      // Safety: Recursively remove any template_id or other poisoning keys
-      const beforeKeys = JSON.stringify(newMeal).length;
       deepRemoveKey(newMeal, "template_id");
       delete newMeal.id; 
-      const afterKeys = JSON.stringify(newMeal).length;
-      if (beforeKeys > afterKeys) removedKeysCount++;
+      removedKeysCount++;
 
       const title = (meal.title || "").toLowerCase();
       const isSolidMeal = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
 
-      // 1. Transform legacy to V2 blocks
       if (Array.isArray(newMeal.foods) && newMeal.foods.length > 0 && (!newMeal.blocks || newMeal.blocks.length === 0)) {
         changes.push(`Refeição ${meal.title}: Convertida de Lista para Blocos V2.`);
         adjustedBlocksCount++;
-        newMeal.blocks = newMeal.foods.map((f: any) => {
-          const name = (f.name || "").toLowerCase();
-          let blockLabel = f.name;
-          
-          if (name.includes("frango") || name.includes("carne") || name.includes("peixe") || name.includes("ovo") || name.includes("whey")) {
-            blockLabel = "Proteína Principal";
-          } else if (name.includes("arroz") || name.includes("batata") || name.includes("mandioca") || name.includes("macarrão")) {
-            blockLabel = "Acompanhamento (Carbo)";
-          } else if (name.includes("salada") || name.includes("legumes") || name.includes("alface")) {
-            blockLabel = "Vegetais/Salada";
-          }
-
-          return {
-            type: "food",
-            label: blockLabel,
-            options: [
-              {
-                name: f.name,
-                portion: f.portion,
-                kcal: f.kcal || f.calories || 0,
-                protein: f.protein || 0,
-                carbs: f.carbs || 0,
-                fat: f.fat || 0,
-                substitutions: f.substitutions || [],
-                image_url: f.image_url || null
-              }
-            ]
-          };
-        });
+        newMeal.blocks = newMeal.foods.map((f: any) => ({
+          type: "food",
+          label: f.name,
+          options: [{
+            name: f.name,
+            portion: f.portion,
+            kcal: f.kcal || f.calories || 0,
+            protein: f.protein || 0,
+            carbs: f.carbs || 0,
+            fat: f.fat || 0,
+            substitutions: f.substitutions || [],
+            image_url: f.image_url || null
+          }]
+        }));
         delete newMeal.foods;
       }
 
-      // 2. Coherent Substitutions & Cleanup
       if (newMeal.blocks) {
-        newMeal.blocks = newMeal.blocks.map((block: any) => {
+        newMeal.blocks = await Promise.all(newMeal.blocks.map(async (block: any) => {
           const blockType = (block.label || "").toLowerCase();
           const isProteinBlock = blockType.includes("proteína") || blockType.includes("protein");
           const isCarbBlock = blockType.includes("carb") || blockType.includes("acompanhamento");
 
           if (block.options) {
-            const originalCount = block.options.length;
-            
-            // Filter out soup from solid meals
-            block.options = block.options.filter((opt: any) => {
-              const name = (opt.name || "").toLowerCase();
-              if (isSolidMeal && name.includes("sopa")) return false;
-              return true;
-            });
-
-            if (block.options.length < originalCount) {
-              changes.push(`Refeição ${meal.title}: Removida 'Sopa' de refeição sólida.`);
-            }
-
-            // Equivalent Substitution Check & Cleanup
-            block.options = block.options.map((opt: any) => {
+            block.options = await Promise.all(block.options.map(async (opt: any) => {
               const cleaned = { ...opt };
               delete cleaned.template_id;
-              
               const optName = (cleaned.name || "").toLowerCase();
               
-              // Verify if option matches block category (Equivalent Substitutions)
               if (isProteinBlock && !optName.includes("frango") && !optName.includes("carne") && !optName.includes("ovo") && !optName.includes("peixe") && !optName.includes("whey") && !optName.includes("tofu")) {
                  changes.push(`Atenção [${meal.title}]: Bloco de Proteína contém '${cleaned.name}', verifique equivalência.`);
               }
@@ -214,21 +181,28 @@ export default function TemplateMassReformulation() {
                  changes.push(`Refeição ${meal.title}: Substituição de Almoço contém item de Café da Manhã (${cleaned.name}).`);
               }
 
-              // Image Validation and Fallback
-              if (!cleaned.visual_library_item_id && !cleaned.image_url) {
+              const currentImageUrl = cleaned.image_url;
+              const hasNoImage = !cleaned.visual_library_item_id && !currentImageUrl;
+              let isImageValid = true;
+              if (currentImageUrl) {
+                isImageValid = await validateImageUrl(currentImageUrl);
+              }
+
+              if (hasNoImage || !isImageValid) {
                 cleaned.image_url = FALLBACK_IMAGE_URL;
-                changes.push(`Refeição ${meal.title}: Asset visual ausente em '${cleaned.name}'. Aplicado fallback automático.`);
+                const reason = hasNoImage ? "ausente" : "indisponível (HTTP Check)";
+                changes.push(`Refeição ${meal.title}: Asset visual ${reason} em '${cleaned.name}'. Aplicado fallback automático.`);
               }
               
               return cleaned;
-            });
+            }));
           }
           return block;
-        });
+        }));
       }
 
       return newMeal;
-    });
+    }));
 
     const summary = {
       removedKeysCount,
@@ -312,11 +286,24 @@ export default function TemplateMassReformulation() {
     let y = 20;
 
     doc.setFontSize(18);
-    doc.text("Relatório de Reformulação de Templates", pageWidth / 2, y, { align: "center" });
+    doc.text("Relatório de Impacto (Dry-Run)", pageWidth / 2, y, { align: "center" });
     y += 10;
     doc.setFontSize(10);
     doc.text(`Gerado em: ${new Date().toLocaleString()}`, pageWidth / 2, y, { align: "center" });
     y += 15;
+
+    // Resumo Global
+    const totalTemplates = previews.length;
+    const criticalTemplates = previews.filter(p => p.level === "critical").length;
+    const fallbacksCount = previews.reduce((acc, p) => acc + p.changes.filter(c => c.includes("fallback")).length, 0);
+
+    doc.setFontSize(12);
+    doc.text("Resumo de Impacto Estimado:", 15, y);
+    y += 7;
+    doc.setFontSize(10);
+    doc.text(`• Total de Templates: ${totalTemplates}`, 20, y); y += 5;
+    doc.text(`• Templates Críticos: ${criticalTemplates}`, 20, y); y += 5;
+    doc.text(`• Total de Fallbacks de Imagem: ${fallbacksCount}`, 20, y); y += 10;
 
     const selectedForExport = previews.filter(p => p.changes.length > 0);
 
@@ -339,12 +326,12 @@ export default function TemplateMassReformulation() {
       if (p.summary) {
         doc.setFontSize(9);
         doc.setTextColor(80, 80, 80);
-        doc.text(`Resumo do Payload: ${p.summary.totalMeals} refeições, ${p.summary.adjustedBlocksCount} blocos ajustados, ${p.summary.removedKeysCount} campos removidos (template_id).`, 15, y);
+        doc.text(`Resumo do Payload: ${p.summary.totalMeals} refeições, ${p.summary.adjustedBlocksCount} blocos ajustados, ${p.summary.removedKeysCount} campos removidos.`, 15, y);
         y += 7;
       }
 
       doc.setTextColor(200, 0, 0);
-      doc.text("Regras Quebradas / Alterações:", 15, y);
+      doc.text("Regras Quebradas / Fallbacks (Antes/Depois):", 15, y);
       y += 5;
       
       doc.setFontSize(9);
@@ -365,7 +352,7 @@ export default function TemplateMassReformulation() {
       y += 10;
     });
 
-    doc.save(`relatorio_reformulacao_${new Date().toISOString().split('T')[0]}.pdf`);
+    doc.save(`relatorio_dryrun_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const exportChecklist = () => {

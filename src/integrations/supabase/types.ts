@@ -15510,6 +15510,80 @@ export type Database = {
           },
         ]
       }
+      recipe_image_cache: {
+        Row: {
+          created_at: string | null
+          id: string
+          image_url: string
+          is_valid: boolean | null
+          last_validated: string | null
+          status_code: number | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          image_url: string
+          is_valid?: boolean | null
+          last_validated?: string | null
+          status_code?: number | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          image_url?: string
+          is_valid?: boolean | null
+          last_validated?: string | null
+          status_code?: number | null
+        }
+        Relationships: []
+      }
+      recipe_image_fallbacks: {
+        Row: {
+          created_at: string | null
+          error_message: string | null
+          fallback_url: string
+          id: string
+          meal_name: string | null
+          original_url: string | null
+          recipe_id: string | null
+          recipe_name: string
+          severity: string | null
+          template_name: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          error_message?: string | null
+          fallback_url: string
+          id?: string
+          meal_name?: string | null
+          original_url?: string | null
+          recipe_id?: string | null
+          recipe_name: string
+          severity?: string | null
+          template_name?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          error_message?: string | null
+          fallback_url?: string
+          id?: string
+          meal_name?: string | null
+          original_url?: string | null
+          recipe_id?: string | null
+          recipe_name?: string
+          severity?: string | null
+          template_name?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "recipe_image_fallbacks_recipe_id_fkey"
+            columns: ["recipe_id"]
+            isOneToOne: false
+            referencedRelation: "meal_recipes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       recipe_items: {
         Row: {
           created_at: string

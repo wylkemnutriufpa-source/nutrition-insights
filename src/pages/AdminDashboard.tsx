@@ -1111,6 +1111,38 @@ export default function AdminDashboard() {
 
             {/* ─── Admin Tools ─── */}
             <TabsContent value="admin" className="mt-4 space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/image-fallbacks")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <ImageIcon className="w-5 h-5 text-primary" />
+                      Monitor de Fallback de Imagens
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Visualize receitas com imagens ausentes ou indisponíveis e fallbacks automáticos.
+                    </p>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-primary">Acessar Painel →</Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/template-mass-reformulation")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <Zap className="w-5 h-5 text-primary" />
+                      Reformulação em Massa
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Gere relatórios de impacto (Dry-Run) e aplique correções em templates de dieta.
+                    </p>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-primary">Acessar Painel →</Button>
+                  </CardContent>
+                </Card>
+              </div>
+
               <Card className="glass shadow-card">
                 <CardHeader>
                   <CardTitle className="font-display text-lg flex items-center gap-2">
