@@ -78,6 +78,7 @@ const Appointments = lazy(() => import("./pages/Appointments"));
 const Landing = lazy(() => import("./pages/Landing"));
 const WeeklyGoals = lazy(() => import("./pages/WeeklyGoals"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const ImageFallbackAdmin = lazy(() => import("./pages/admin/ImageFallbackAdmin"));
 const AdminFeatureControl = lazy(() => import("./pages/AdminFeatureControl"));
 const AdminTestimonials = lazy(() => import("./pages/AdminTestimonials"));
 const AdminSiteEditor = lazy(() => import("./pages/AdminSiteEditor"));
