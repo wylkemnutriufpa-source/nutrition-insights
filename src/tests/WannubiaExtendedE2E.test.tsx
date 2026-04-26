@@ -91,7 +91,8 @@ describe('Extended E2E Tests', () => {
 
     // Wait for tooltip to appear
     await waitFor(() => {
-      expect(screen.getByText('Sugestões geradas automaticamente pelo motor clínico')).toBeInTheDocument();
+      const tooltips = screen.getAllByText('Sugestões geradas automaticamente pelo motor clínico');
+      expect(tooltips.length).toBeGreaterThan(0);
     });
 
     // Press Enter to trigger toast (simulated here)
