@@ -169,7 +169,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                 {item.description}
               </p>
             )}
-            <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground">
+            <div className="flex items-center gap-1.5 mt-1 text-[9px] text-muted-foreground flex-wrap">
               {item.calories_target != null && (
                 <span className="flex items-center gap-0.5">
                   <Flame className="w-2.5 h-2.5 text-orange-400" />{fmtMacro(item.calories_target)}
@@ -180,6 +180,16 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                   <Beef className="w-2.5 h-2.5 text-red-400" />{fmtMacro(item.protein_target)}g
                 </span>
               )}
+              {(() => {
+                const meta = (item as any).edit_metadata || (item as any).metadata || {};
+                const subsCount = Array.isArray(meta.substitutions_json) ? meta.substitutions_json.length : 0;
+                if (subsCount === 0) return null;
+                return (
+                  <span className="flex items-center gap-0.5 text-primary/80 font-bold">
+                    🔄 {subsCount} subs
+                  </span>
+                );
+              })()}
             {(getPortionWarning(item) || isMacroInconsistent(item.calories_target || 0, Number(item.protein_target) || 0, Number(item.carbs_target) || 0, Number(item.fat_target) || 0)) && (
                 <TooltipProvider>
                   <Tooltip>
