@@ -1,5 +1,5 @@
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,14 +18,22 @@ import {
   Undo2,
   ChevronRight,
   ClipboardCheck,
-  FileDown
+  FileDown,
+  Filter,
+  Search,
+  CheckSquare,
+  Square
 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 
 interface Template {
   id: string;
   name: string;
   meals: any[];
+  base_calories?: number;
 }
 
 interface ReformulationPreview {
@@ -33,8 +41,10 @@ interface ReformulationPreview {
   name: string;
   before: any;
   after: any;
-  status: "pending" | "applied" | "error";
+  status: "pending" | "applied" | "error" | "processing";
   changes: string[];
+  level: "critical" | "warning" | "ok";
+  selected: boolean;
 }
 
 export default function TemplateMassReformulation() {
