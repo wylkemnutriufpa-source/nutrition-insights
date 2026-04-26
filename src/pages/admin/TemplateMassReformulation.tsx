@@ -93,21 +93,35 @@ export default function TemplateMassReformulation() {
       // 1. Transform legacy to V2 blocks
       if (Array.isArray(meal.foods) && meal.foods.length > 0 && (!meal.blocks || meal.blocks.length === 0)) {
         changes.push(`Refeição ${meal.title}: Convertida de Lista para Blocos V2.`);
-        newMeal.blocks = meal.foods.map((f: any) => ({
-          type: "food",
-          label: f.name,
-          options: [
-            {
-              name: f.name,
-              portion: f.portion,
-              kcal: f.kcal || f.calories,
-              protein: f.protein,
-              carbs: f.carbs,
-              fat: f.fat,
-              substitutions: f.substitutions || []
-            }
-          ]
-        }));
+        newMeal.blocks = meal.foods.map((f: any) => {
+          const name = (f.name || "").toLowerCase();
+          let blockLabel = f.name;
+          
+          // Basic category inference for better V2 structure
+          if (name.includes("frango") || name.includes("carne") || name.includes("peixe") || name.includes("ovo") || name.includes("whey")) {
+            blockLabel = "Proteína Principal";
+          } else if (name.includes("arroz") || name.includes("batata") || name.includes("mandioca") || name.includes("macarrão")) {
+            blockLabel = "Acompanhamento (Carbo)";
+          } else if (name.includes("salada") || name.includes("legumes") || name.includes("alface")) {
+            blockLabel = "Vegetais/Salada";
+          }
+
+          return {
+            type: "food",
+            label: blockLabel,
+            options: [
+              {
+                name: f.name,
+                portion: f.portion,
+                kcal: f.kcal || f.calories,
+                protein: f.protein,
+                carbs: f.carbs,
+                fat: f.fat,
+                substitutions: f.substitutions || []
+              }
+            ]
+          };
+        });
         delete newMeal.foods;
       }
 
