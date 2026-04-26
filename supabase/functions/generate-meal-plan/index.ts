@@ -2074,7 +2074,7 @@ export async function generateWeeklyMarmitaPlan(
   let prevLunchProtein: string | null = null;
   let prevDinnerProtein: string | null = null;
 
-  for (let day = 0; day < 7; day++) {
+  for (let day = 0; day < 1; day++) {
     // 2. Garantir que SNACKS usem os mesmos macros todos os dias (Cópia do Dia 0)
     for (const baseItem of baseShadowItems) {
       items.push({ ...baseItem, day_of_week: day });
