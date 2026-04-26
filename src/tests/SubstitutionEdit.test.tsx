@@ -13,6 +13,10 @@ vi.mock('../stores/mealPlanEditorV2Store', () => ({
   useMealPlanEditorV2Store: vi.fn()
 }));
 
+vi.mock('../lib/auth', () => ({
+  useAuth: vi.fn(() => ({ user: { id: 'user-1' } }))
+}));
+
 describe('Substitution Grams Edit E2E', () => {
   const mockPrimary = {
     id: 'primary-1',
