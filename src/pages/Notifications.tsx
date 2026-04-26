@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, CheckCheck, Trash2, MessageSquare, Calendar, TrendingUp, AlertCircle, Info, ExternalLink, Users, ClipboardCheck, Target, Utensils, Compass } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, MessageSquare, Calendar, TrendingUp, AlertCircle, Info, ExternalLink, Users, ClipboardCheck, Target, Utensils, Compass, ArrowRight } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
