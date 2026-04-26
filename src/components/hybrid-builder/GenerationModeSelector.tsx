@@ -61,6 +61,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     fixedDinner: number;
     loading: boolean;
   }>({ lunch: 0, dinner: 0, fixedLunch: 0, fixedDinner: 0, loading: true });
+  const [allRecipes, setAllRecipes] = useState<any[]>([]);
 
   // Pre-flight check: count available recipes for marmita modes
   useEffect(() => {
