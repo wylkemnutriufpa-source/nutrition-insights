@@ -56,8 +56,14 @@ export default function TemplateMassReformulation() {
       return;
     }
 
-    setTemplates(data || []);
-    generatePreviews(data || []);
+    const typedTemplates = (data || []).map((t: any) => ({
+      id: t.id,
+      name: t.name,
+      meals: Array.isArray(t.meals) ? t.meals : []
+    })) as Template[];
+
+    setTemplates(typedTemplates);
+    generatePreviews(typedTemplates);
     setStep("preview");
     setLoading(false);
   };
