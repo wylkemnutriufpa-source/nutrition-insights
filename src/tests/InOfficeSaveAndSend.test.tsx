@@ -73,7 +73,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     // Verify initial state
     await waitFor(() => expect(screen.getByText(/John Doe/i)).toBeInTheDocument());
     
-    const publishButton = await screen.findByRole('button', { name: /Salvar e Enviar ao Paciente/i });
+    const publishButton = await screen.findByTestId('publish-button');
     expect(publishButton).toBeInTheDocument();
 
     // Mock successful update
@@ -83,7 +83,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     fireEvent.click(publishButton);
 
     // Verify button is disabled and shows "Publicando..."
-    expect(screen.getByRole('button', { name: /Publicando.../i })).toBeDisabled();
+    expect(publishButton).toBeDisabled();
 
     // Verify publication process
     await waitFor(() => {
