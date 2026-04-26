@@ -491,6 +491,7 @@ const App = () => (
         </Helmet>
         <Toaster />
         <Sonner />
+        <MobileAutoFixer />
         <GlobalErrorBoundary />
         <BrowserRouter basename="/">
           <AuthProvider>
