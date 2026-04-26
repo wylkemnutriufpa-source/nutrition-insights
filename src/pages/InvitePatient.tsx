@@ -30,6 +30,7 @@ export default function InvitePatient() {
   const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [signedLink, setSignedLink] = useState<string | null>(null);
+  const [invitationCode, setInvitationCode] = useState<string | null>(null);
 
   // Base URL for production
   const siteUrl = "https://www.fitjourney.com.br";
