@@ -56,7 +56,7 @@ describe('E2E Simulation: Real App Update Cycle', () => {
     expect(await screen.findByText(/Nova versão disponível/i)).toBeInTheDocument();
 
     // 2. Dismiss it (simulate clicking 'Mais tarde' or similar close action)
-    const dismissButton = screen.getByRole('button', { name: /depois/i });
+    const dismissButton = screen.getByRole('button', { name: /fechar/i });
     act(() => {
       dismissButton.click();
     });
