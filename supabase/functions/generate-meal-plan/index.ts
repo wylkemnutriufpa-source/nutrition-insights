@@ -4007,20 +4007,11 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       );
     } catch (e) {
       if (e instanceof ContractViolationError) {
-        if (isPipeline && !meal_plan_id) {
-          await safeDeletePlan(serviceClient, finalMealPlanId);
-        }
-        return new Response(
-          JSON.stringify({
-            error: "Plano gerado violou contrato crítico e foi rejeitado",
-            code: "CONTRACT_VIOLATION_PLAN_GENERATION",
-            contract: e.contractId,
-            violations: e.violations,
-          }),
-          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+        console.warn("[EMERGENCY] Contract violation ignored per user request:", e.violations);
+        // Não bloqueia mais o profissional. O plano será gerado mesmo com avisos.
+      } else {
+        throw e;
       }
-      throw e;
     }
 
     // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
