@@ -93,4 +93,22 @@ describe('Wannubia Specific Validation Test', () => {
     // UpdateItem não deve ter sido chamado
     expect(mockUpdateItem).not.toHaveBeenCalled();
   });
+
+  it('bloqueia combinações específicas de proteínas para Wannubia', async () => {
+     const { validateMealSubstitutions } = await import('../lib/mealPlanSubstitutionValidator');
+     
+     const itemWithMixedProteins = {
+       ...mockItem,
+       calories_target: 500,
+       protein_target: 30,
+       edit_metadata: {
+         substitutions_json: ["Frango e Ovo"] // Combinação proibida
+       }
+     };
+
+     const result = validateMealSubstitutions(itemWithMixedProteins as any, 4, 'Wannubia');
+     
+     expect(result.valid).toBe(false);
+     expect(result.errors[0]).toContain("Combinação bloqueada para esta paciente");
+  });
 });
