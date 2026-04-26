@@ -31,6 +31,7 @@ import { initFeatureFlags } from "@/lib/featureFlags";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { usePaymentGuard } from "@/hooks/usePaymentGuard";
 import { useOnboardingGuard, isOnboardingAllowedRoute } from "@/hooks/useOnboardingGuard";
+import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
