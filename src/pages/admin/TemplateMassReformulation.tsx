@@ -185,7 +185,8 @@ export default function TemplateMassReformulation() {
               const hasNoImage = !cleaned.visual_library_item_id && !currentImageUrl;
               let isImageValid = true;
               if (currentImageUrl) {
-                isImageValid = await validateImageUrl(currentImageUrl);
+                const result = await validateImageUrl(currentImageUrl);
+                isImageValid = result.isValid;
               }
 
               if (hasNoImage || !isImageValid) {
