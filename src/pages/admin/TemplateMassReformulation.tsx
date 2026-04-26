@@ -182,7 +182,7 @@ export default function TemplateMassReformulation() {
 
       // 2. Coherent Substitutions & Cleanup
       if (newMeal.blocks) {
-        newMeal.blocks = newMeal.blocks.map((block: any) => {
+        newMeal.blocks = await Promise.all(newMeal.blocks.map(async (block: any) => {
           const blockType = (block.label || "").toLowerCase();
           const isProteinBlock = blockType.includes("proteína") || blockType.includes("protein");
           const isCarbBlock = blockType.includes("carb") || blockType.includes("acompanhamento");
