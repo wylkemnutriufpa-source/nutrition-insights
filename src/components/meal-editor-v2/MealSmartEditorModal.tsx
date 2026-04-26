@@ -105,6 +105,14 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = async () => {
+    // Validação de macros zerados para marmitas ou refeições planejadas
+    if (adjustedMacros.calories <= 0 || adjustedMacros.protein <= 0) {
+      toast.error("Não é possível salvar uma refeição com macros zerados.", {
+        description: "Adicione alimentos ou selecione uma refeição pronta válida."
+      });
+      return;
+    }
+
     const cleanedSubs = normalizeSubstitutions(substitutions);
     const finalDescription = formatFinalDescription(description, cleanedSubs);
     
