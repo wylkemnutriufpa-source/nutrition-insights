@@ -46,7 +46,7 @@ describe('Meal Plan Sorting Performance & Determinism', () => {
     expect(secondRun).toEqual(thirdRun);
   });
 
-  it('should prioritize Primary items first, then by Calories (DESC), then by Title', () => {
+  it('should prioritize Primary items first, then by Calories (DESC), then by ID (alphabetical tie-breaker)', () => {
     const items: any[] = [
       { id: '3', title: 'B', is_primary: false, calories_target: 500 },
       { id: '1', title: 'C', is_primary: true, calories_target: 300 },
@@ -56,13 +56,13 @@ describe('Meal Plan Sorting Performance & Determinism', () => {
     
     const sorted = sortMealPlanItems(items);
     
-    // 1st: Primary + 500 cal
+    // 1st: Primary + 500 cal (ID '2')
     expect(sorted[0].id).toBe('2');
-    // 2nd: Primary + 300 cal
+    // 2nd: Primary + 300 cal (ID '1')
     expect(sorted[1].id).toBe('1');
-    // 3rd: Non-primary + 500 cal + Title A
-    expect(sorted[2].id).toBe('4');
-    // 4th: Non-primary + 500 cal + Title B
-    expect(sorted[3].id).toBe('3');
+    // 3rd: Non-primary + 500 cal + ID '3' (comes before '4')
+    expect(sorted[2].id).toBe('3');
+    // 4th: Non-primary + 500 cal + ID '4'
+    expect(sorted[3].id).toBe('4');
   });
 });
