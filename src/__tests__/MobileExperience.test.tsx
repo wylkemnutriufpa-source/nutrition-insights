@@ -16,6 +16,9 @@ vi.mock('html2canvas', () => ({
     toDataURL: () => 'data:image/png;base64,mock',
     width: 1000,
     height: 1000,
+    getContext: () => ({
+      drawImage: vi.fn(),
+    }),
   })
 }));
 
@@ -163,8 +166,6 @@ describe('Mobile Experience E2E & QA Automation', () => {
     spy.mockRestore();
   });
 
-  });
-
   it('deve validar foco visível do botão fechar após Tab/Shift+Tab usando getComputedStyle', async () => {
     render(
       <QueryClientProvider client={queryClient}>
@@ -177,9 +178,7 @@ describe('Mobile Experience E2E & QA Automation', () => {
     const closeButton = screen.getByRole('button', { name: /fechar/i });
     closeButton.focus();
 
-    const styles = window.getComputedStyle(closeButton);
     // Verificamos se há algum sinal de foco visível (outline, ring ou box-shadow)
-    // Nota: JSDOM não aplica CSS real, então testamos as classes do Tailwind que garantem isso
     expect(closeButton).toHaveClass('focus:ring-2');
     expect(closeButton).toHaveClass('focus:outline-none');
   });
