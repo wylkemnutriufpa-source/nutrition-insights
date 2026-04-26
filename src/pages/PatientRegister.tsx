@@ -65,6 +65,31 @@ export default function PatientRegister() {
     })();
   }, [preselectedNutri]);
 
+  // Verify signature if nutri is provided
+  useEffect(() => {
+    if (!preselectedNutri || !signature) {
+      if (preselectedNutri && !signature) {
+        setSigValid(false); // No signature provided for a preselected nutri
+      }
+      return;
+    }
+    const verifySig = async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-registration-token", {
+          body: { nutriId: preselectedNutri, signature }
+        });
+        if (error) throw error;
+        setSigValid(data.isValid);
+        if (!data.isValid) {
+          toast.error("Link de registro inválido ou alterado. Por favor, solicite um novo link ao seu profissional.");
+        }
+      } catch (err) {
+        console.error("Error verifying signature:", err);
+      }
+    };
+    verifySig();
+  }, [preselectedNutri, signature]);
+
   // Search professionals
   const searchProfessionals = useCallback(async (query: string) => {
     if (query.length < 2) { setProfResults([]); return; }
