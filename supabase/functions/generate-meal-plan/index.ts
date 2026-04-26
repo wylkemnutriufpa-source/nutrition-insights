@@ -1690,7 +1690,7 @@ function generatePlanFromVisualLibrary(
 
         // ──── STRICT_DB_EXCLUSIVE: Validate item has image ────
         if (!picked.image_url || picked.image_url.length < 5) {
-          throw new Error(`[STRICT] Visual library item "${picked.display_name}" (${picked.id}) has no image_url. All items MUST have images.`);
+          picked.image_url = FALLBACK_IMAGE_URL;
         }
 
         // Get macros (use defaults if library item lacks data)
