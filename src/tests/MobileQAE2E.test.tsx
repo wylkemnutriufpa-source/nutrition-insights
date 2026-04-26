@@ -4,9 +4,13 @@ import MobileQA from "@/pages/MobileQA";
 import { BrowserRouter } from "react-router-dom";
 import "@testing-library/jest-dom";
 
-// Mock DashboardLayout to avoid dependency hell
+// Mock complex components to avoid dependency hell
 vi.mock("@/components/layout/DashboardLayout", () => ({
   default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}));
+
+vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
+  default: () => <div>Mocked Strategy Advisor</div>
 }));
 
 // Mocking window.scrollX and document.documentElement.scrollWidth
