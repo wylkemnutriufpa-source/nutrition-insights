@@ -1978,7 +1978,7 @@ export async function generateWeeklyMarmitaPlan(
                   food.protein = Math.round(Number(picked.fixed_protein) || 0);
                   food.carbs = Math.round(Number(picked.fixed_carbs) || 0);
                   food.fat = Math.round(Number(picked.fixed_fat) || 0);
-                  food.portion = picked.portion || "1 marmita";
+                  (food as any).portion = "1 marmita";
 
                   if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar") || meal.title.includes("marmita")) {
                     meal.title = `🍱 ${picked.name}`;
