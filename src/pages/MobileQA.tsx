@@ -93,6 +93,37 @@ export default function MobileQA() {
     }
   };
 
+  const exportCSV = () => {
+    if (evidences.length === 0) {
+      toast.error("Nenhuma evidência para exportar");
+      return;
+    }
+
+    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "scrollX", "scrollWidth", "clientWidth", "Screenshot_Link"];
+    const rows = evidences.map(ev => [
+      ev.timestamp,
+      ev.item,
+      ev.viewport,
+      ev.context || "N/A",
+      ev.metrics?.scrollX || 0,
+      ev.metrics?.scrollWidth || 0,
+      ev.metrics?.clientWidth || 0,
+      `evidence-${ev.id}.png`
+    ]);
+
+    const csvContent = [
+      headers.join(","),
+      ...rows.map(r => r.join(","))
+    ].join("\n");
+
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `mobile-qa-evidences-${new Date().getTime()}.csv`;
+    a.click();
+  };
+
   const exportReport = () => {
     // Organize by viewport and context
     const organizedEvidences = evidences.reduce((acc: any, ev) => {
@@ -100,7 +131,10 @@ export default function MobileQA() {
       const ctx = ev.context || "Geral";
       if (!acc[vp]) acc[vp] = {};
       if (!acc[vp][ctx]) acc[vp][ctx] = [];
-      acc[vp][ctx].push(ev);
+      acc[vp][ctx].push({
+        ...ev,
+        imageName: `evidence-${ev.id}.png`
+      });
       return acc;
     }, {});
 
@@ -115,13 +149,18 @@ export default function MobileQA() {
       }
     };
     
-    const blob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `mobile-qa-report-${new Date().getTime()}.json`;
-    a.click();
-    toast.success("Relatório exportado com sucesso!");
+    // Export JSON
+    const jsonBlob = new Blob([JSON.stringify(report, null, 2)], { type: "application/json" });
+    const jsonUrl = URL.createObjectURL(jsonBlob);
+    const jsonLink = document.createElement("a");
+    jsonLink.href = jsonUrl;
+    jsonLink.download = `mobile-qa-report-${new Date().getTime()}.json`;
+    jsonLink.click();
+
+    // Export CSV as well
+    exportCSV();
+
+    toast.success("Relatórios exportados com sucesso (JSON e CSV)!");
   };
 
   return (
