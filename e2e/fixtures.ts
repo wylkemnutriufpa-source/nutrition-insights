@@ -40,6 +40,8 @@ export interface TestFixtures {
   unblockedPatientPage: Page;
   /** Cenário ativo, derivado de E2E_SCENARIO. Útil para branching opcional nos specs. */
   scenario: MedicalReviewScenario;
+  /** Page with mocked meal plan data for stable testing. */
+  stableMealPlanPage: Page;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
