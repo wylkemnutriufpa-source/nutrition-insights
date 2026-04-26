@@ -712,3 +712,8 @@ function openPremiumPrintWindow(html: string, title: string) {
   document.body.removeChild(a);
   setTimeout(() => URL.revokeObjectURL(url), 5000);
 }
+
+export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
+  const html = buildPremiumMealPlanHTML(data);
+  openPremiumPrintWindow(html, `plano-alimentar-${data.patientName.replace(/\s+/g, '-').toLowerCase()}`);
+}
