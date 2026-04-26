@@ -196,7 +196,7 @@ export function WeeklyGrid() {
           <div className="glass rounded-xl p-4 flex items-center justify-between bg-primary/5">
             <div>
               <span className="font-display text-sm font-bold text-primary tracking-wider uppercase">
-                {effectiveDay === 0 ? "PLANO ÚNICO (DIA 0)" : `DIA LEGADO — ${effectiveDayLabel.toUpperCase()}`}
+                {effectiveDay === 0 ? "TEMPLATE DE DIA PADRÃO" : `DIA LEGADO — ${effectiveDayLabel.toUpperCase()}`}
               </span>
               <p className="text-[10px] text-muted-foreground mt-0.5">
                 {effectiveDay === 0
