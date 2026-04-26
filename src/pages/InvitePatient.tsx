@@ -35,23 +35,28 @@ export default function InvitePatient() {
   // Base URL for production
   const siteUrl = "https://www.fitjourney.com.br";
 
-  // Generate signed public registration link
+  // Generate friendly invitation link
   useEffect(() => {
     if (!user?.id) return;
-    const generateSignedLink = async () => {
+    const generateInvitation = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("sign-registration-link", {
-          body: { nutriId: user.id }
+        const { data, error } = await supabase.functions.invoke("create-invitation", {
+          body: { 
+            professional_id: user.id,
+            // Assuming we might have a tenant_id in user metadata or elsewhere
+            tenant_id: (user as any).user_metadata?.tenant_id 
+          }
         });
         if (error) throw error;
-        // Use custom domain for the link
-        const link = `${siteUrl}/register-patient?nutri=${user.id}&sig=${data.signature}`;
-        setSignedLink(link);
+        if (data?.url) {
+          setSignedLink(data.url);
+          setInvitationCode(data.code);
+        }
       } catch (err) {
-        console.error("Error signing registration link:", err);
+        console.error("Error creating friendly invitation:", err);
       }
     };
-    generateSignedLink();
+    generateInvitation();
   }, [user?.id]);
 
   const onboardingLink = useMemo(
