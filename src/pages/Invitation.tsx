@@ -7,7 +7,8 @@ import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw,
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Helmet } from "react-helmet-async";
-import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { getWhatsAppInvitationMessage, getInvitationUrl } from "@/utils/invitation";
+
 
 
 export default function Invitation() {
