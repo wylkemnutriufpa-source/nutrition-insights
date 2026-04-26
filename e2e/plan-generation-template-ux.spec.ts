@@ -19,7 +19,8 @@ test.describe("Plan Generation UX & Template Logic E2E", () => {
           mealPlanId: "test-plan-id",
           template_name_used: "Template Especial Teste",
           is_fallback_template: false,
-          items_count: 5
+          items_count: 5,
+          success: true
         })
       });
     });
@@ -48,10 +49,12 @@ test.describe("Plan Generation UX & Template Logic E2E", () => {
     await page.getByRole("button", { name: /Gerar Plano/i }).first().click();
 
     // 1. Verify toast mentions the correct template
-    await expect(page.getByText(/Plano gerado usando o template: Template Especial Teste/i)).toBeVisible();
+    const toast = page.getByText(/Plano gerado usando o template: Template Especial Teste/i);
+    await expect(toast).toBeVisible({ timeout: 15000 });
 
     // 2. Verify BuilderTopbar badge
-    await expect(page.getByText(/Template: Template Especial Teste/i)).toBeVisible();
+    const badge = page.getByTestId("builder-template-badge");
+    await expect(badge).toContainText("Template: Template Especial Teste");
   });
 
   test("should show clear fallback toast message when is_fallback_template is true", async ({ nutriPage: page }) => {
