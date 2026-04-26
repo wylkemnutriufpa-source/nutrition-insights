@@ -7,6 +7,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Textarea } from "@/components/ui/textarea";
 import {
@@ -19,6 +20,7 @@ import {
   History,
   Info,
   AlertCircle,
+  SlidersHorizontal,
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
@@ -38,7 +40,7 @@ export function MealSmartEditorModal({
   onOpenChange,
   itemId,
 }: MealSmartEditorModalProps) {
-  const { items, updateItem, substitutionCount } = useMealPlanEditorV2Store();
+  const { items, updateItem, substitutionCount, patientName } = useMealPlanEditorV2Store();
   const item = items.find((i) => i.id === itemId);
 
   const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
@@ -46,6 +48,7 @@ export function MealSmartEditorModal({
   const [description, setDescription] = useState(item?.description || "");
   const [notes, setNotes] = useState((item as any)?.notes || "");
   const [substitutions, setSubstitutions] = useState<string[]>([]);
+  const [portionFactor, setPortionFactor] = useState(1.0);
 
   useEffect(() => {
     if (item && open) {
@@ -71,6 +74,7 @@ export function MealSmartEditorModal({
       }
       
       setNotes((item as any).notes || "");
+      setPortionFactor(meta.portion_factor || 1.0);
     }
   }, [item, open]);
 
@@ -81,16 +85,32 @@ export function MealSmartEditorModal({
     const finalDescription = formatFinalDescription(description, cleanedSubs);
 
     const currentMeta = (item as any).edit_metadata || (item as any).metadata || {};
+    
+    // Use base values for scaling to avoid cumulative drift
+    const kcalBase = currentMeta.kcal_base ?? item.calories_target ?? 0;
+    const protBase = currentMeta.protein_base ?? Number(item.protein_target) ?? 0;
+    const carbBase = currentMeta.carbs_base ?? Number(item.carbs_target) ?? 0;
+    const fatBase = currentMeta.fat_base ?? Number(item.fat_target) ?? 0;
 
     try {
       // Usar toast.promise ou gerenciar ID para evitar duplicatas
       const toastId = "meal-save-toast";
       updateItem(itemId, {
         description: finalDescription,
+        calories_target: Math.round(kcalBase * portionFactor),
+        protein_target: Math.round(protBase * portionFactor * 10) / 10,
+        carbs_target: Math.round(carbBase * portionFactor * 10) / 10,
+        fat_target: Math.round(fatBase * portionFactor * 10) / 10,
         edit_metadata: {
           ...currentMeta,
           notes,
-          substitutions_json: cleanedSubs
+          substitutions_json: cleanedSubs,
+          portion_factor: portionFactor,
+          // Ensure base values are preserved
+          kcal_base: kcalBase,
+          protein_base: protBase,
+          carbs_base: carbBase,
+          fat_base: fatBase
         }
       } as any);
       toast.success("Refeição atualizada com sucesso", { id: toastId });
@@ -235,7 +255,7 @@ export function MealSmartEditorModal({
             </div>
 
             <ScrollArea className="flex-1 p-4">
-              {activeTab === "isolated" ? (
+              {activeTab === "isolated" && !patientName?.toLowerCase().includes("wannubia") ? (
                 <div className="grid grid-cols-1 gap-2">
                   {FOOD_DATABASE.filter(f => 
                     f.name.toLowerCase().includes(search.toLowerCase())
@@ -257,6 +277,33 @@ export function MealSmartEditorModal({
                       </div>
                     </button>
                   ))}
+                  {FOOD_DATABASE.filter(f => 
+                    f.name.toLowerCase().includes(search.toLowerCase())
+                  ).length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-xs">
+                      Nenhum alimento encontrado na base.
+                    </div>
+                  )}
+                </div>
+              ) : activeTab === "isolated" && patientName?.toLowerCase().includes("wannubia") ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 px-4">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-foreground">Apenas Marmitas Permitidas</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Para esta paciente, utilize a aba <strong>Refeição Pronta</strong> para garantir a compatibilidade com o cardápio de marmitas.
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-xl h-8 text-[10px] border-amber-200 text-amber-700 hover:bg-amber-50"
+                    onClick={() => setActiveTab("ready")}
+                  >
+                    Ir para Refeições Prontas
+                  </Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
@@ -323,6 +370,52 @@ export function MealSmartEditorModal({
                     className="min-h-[100px] bg-secondary/20 border-none focus-visible:ring-1 ring-primary/20 rounded-2xl text-sm p-4"
                   />
                 </div>
+
+                {/* Portion Adjustment for Fixed Meals */}
+                {(item as any).edit_metadata?.is_fixed && (
+                  <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
+                    </h3>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 space-y-1.5">
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Fator de Ajuste</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            className="h-10 bg-background border-primary/20 rounded-xl"
+                            value={portionFactor}
+                            onChange={(e) => setPortionFactor(parseFloat(e.target.value) || 1.0)}
+                          />
+                          <span className="text-sm font-bold text-muted-foreground">x</span>
+                        </div>
+                      </div>
+                      <div className="flex-[2] grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 text-[10px] rounded-xl"
+                          onClick={() => setPortionFactor(prev => Math.max(0.1, Math.round((prev - 0.1) * 10) / 10))}
+                        >
+                          - 10%
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 text-[10px] rounded-xl"
+                          onClick={() => setPortionFactor(prev => Math.round((prev + 0.1) * 10) / 10)}
+                        >
+                          + 10%
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground italic">
+                      Isso recalculará proporcionalmente todos os macros desta marmita.
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
