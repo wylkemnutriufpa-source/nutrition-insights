@@ -5934,6 +5934,8 @@ export type Database = {
           id: string
           invitation_id: string | null
           ip_address: string | null
+          patient_email: string | null
+          professional_id: string | null
           user_agent: string | null
         }
         Insert: {
@@ -5944,6 +5946,8 @@ export type Database = {
           id?: string
           invitation_id?: string | null
           ip_address?: string | null
+          patient_email?: string | null
+          professional_id?: string | null
           user_agent?: string | null
         }
         Update: {
@@ -5954,6 +5958,8 @@ export type Database = {
           id?: string
           invitation_id?: string | null
           ip_address?: string | null
+          patient_email?: string | null
+          professional_id?: string | null
           user_agent?: string | null
         }
         Relationships: [

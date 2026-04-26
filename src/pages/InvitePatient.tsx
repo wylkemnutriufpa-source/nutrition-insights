@@ -13,6 +13,8 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@/utils/whatsapp";
+import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+
 
 
 
@@ -32,6 +34,9 @@ export default function InvitePatient() {
   const [sendingEmail, setSendingEmail] = useState(false);
   const [signedLink, setSignedLink] = useState<string | null>(null);
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [clinic, setClinic] = useState<any>(null);
+
 
   // Base URL for production
   const siteUrl = BASE_URL;
@@ -60,15 +65,45 @@ export default function InvitePatient() {
     generateInvitation();
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchData = async () => {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, tenant_id")
+        .eq("id", user.id)
+        .single();
+      
+      setProfile(profileData);
+
+      if (profileData?.tenant_id) {
+        const { data: clinicData } = await supabase
+          .from("tenants")
+          .select("name")
+          .eq("id", profileData.tenant_id)
+          .single();
+        setClinic(clinicData);
+      }
+    };
+    fetchData();
+  }, [user?.id]);
+
+
   const onboardingLink = useMemo(
     () => `${siteUrl}/onboarding`,
     [],
   );
   const publicRegisterLink = signedLink || `${siteUrl}/cadastro?nutri=${user?.id}`;
   const whatsappMessage = useMemo(() => {
-    const greeting = name ? `Olá ${name.split(" ")[0]}! ` : "Olá! ";
-    return `${greeting}Seu acesso ao FitJourney foi criado. Use o email *${email}* para entrar e completar seu onboarding aqui: ${onboardingLink}`;
-  }, [name, email, onboardingLink]);
+    if (!invitationCode || !profile) return "";
+    return getWhatsAppInvitationMessage({
+      patientName: name,
+      professionalName: profile.full_name || "Seu Nutricionista",
+      clinicName: clinic?.name,
+      invitationCode: invitationCode
+    });
+  }, [name, invitationCode, profile, clinic]);
+
   const whatsappUrl = useMemo(() => {
     const phoneDigits = normalizeWhatsApp(phone || "");
     const base = phoneDigits ? `https://wa.me/${phoneDigits}` : "https://wa.me/";

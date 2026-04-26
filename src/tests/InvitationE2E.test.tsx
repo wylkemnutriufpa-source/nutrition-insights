@@ -1,0 +1,153 @@
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, waitFor } from '@testing-library/react';
+import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { HelmetProvider } from 'react-helmet-async';
+
+import Invitation from '@/pages/Invitation';
+import { supabase } from '@/integrations/supabase/client';
+
+// Mock Supabase
+const mockQuery = {
+  select: vi.fn().mockReturnThis(),
+  eq: vi.fn().mockReturnThis(),
+  maybeSingle: vi.fn(),
+  order: vi.fn().mockReturnThis(),
+  insert: vi.fn().mockResolvedValue({ error: null }),
+  update: vi.fn().mockReturnThis(),
+};
+
+vi.mock('@/integrations/supabase/client', () => ({
+  supabase: {
+    from: vi.fn(() => mockQuery),
+    auth: { 
+      getUser: vi.fn().mockResolvedValue({ data: { user: null }, error: null }),
+      onAuthStateChange: vi.fn(() => ({ data: { subscription: { unsubscribe: vi.fn() } } }))
+    }
+  },
+}));
+
+vi.mock('@/lib/auth', () => ({
+  useAuth: vi.fn().mockReturnValue({ user: null, loading: false }),
+  AuthProvider: ({ children }: any) => <>{children}</>
+}));
+
+describe('Invitation E2E Simulation', () => {
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+    
+    // Mock location
+    Object.defineProperty(window, 'location', {
+      value: {
+        hostname: 'www.fitjourney.com.br',
+        href: 'https://www.fitjourney.com.br/convite/TEST12',
+        origin: 'https://www.fitjourney.com.br',
+        host: 'www.fitjourney.com.br'
+      },
+      writable: true,
+      configurable: true
+    });
+  });
+
+  it('deve exibir erro se o domínio não for oficial', async () => {
+    // Override hostname
+    Object.defineProperty(window, 'location', {
+      value: {
+        hostname: 'evil-domain.com',
+        href: 'https://evil-domain.com/convite/TEST12',
+        origin: 'https://evil-domain.com',
+        host: 'evil-domain.com'
+      },
+      writable: true,
+      configurable: true
+    });
+
+    mockQuery.maybeSingle.mockResolvedValue({
+      data: {
+        id: '1',
+        code: 'TEST12',
+        professional_id: 'prof1',
+        status: 'pending'
+      },
+      error: null
+    });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/convite/TEST12']}>
+          <Routes>
+            <Route path="/convite/:code" element={<Invitation />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
+    );
+
+
+    await waitFor(() => {
+      expect(screen.getByText(/Este link de convite veio de uma origem não autorizada/i)).toBeInTheDocument();
+    });
+  });
+
+  it('deve exibir informações do profissional e clínica corretamente', async () => {
+    mockQuery.maybeSingle.mockResolvedValue({
+      data: {
+        id: '1',
+        code: 'TEST12',
+        professional_id: 'prof1',
+        patient_name: 'João Silva',
+        status: 'pending',
+        professional: { full_name: 'Nutri Expert', avatar_url: null },
+        clinic: { name: 'Clinica Fit' }
+      },
+      error: null
+    });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/convite/TEST12']}>
+          <Routes>
+            <Route path="/convite/:code" element={<Invitation />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
+    );
+
+
+    await waitFor(() => {
+      expect(screen.getByText(/Nutri Expert/i)).toBeInTheDocument();
+      expect(screen.getByText(/Clinica Fit/i)).toBeInTheDocument();
+      expect(screen.getByText(/Olá, João/i)).toBeInTheDocument();
+    });
+  });
+
+  it('deve validar erro de convite expirado', async () => {
+    const pastDate = new Date();
+    pastDate.setFullYear(pastDate.getFullYear() - 1);
+
+    mockQuery.maybeSingle.mockResolvedValue({
+      data: {
+        id: '1',
+        code: 'EXPIRED',
+        professional_id: 'prof1',
+        status: 'pending',
+        expires_at: pastDate.toISOString()
+      },
+      error: null
+    });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/convite/EXPIRED']}>
+          <Routes>
+            <Route path="/convite/:code" element={<Invitation />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
+    );
+
+
+    await waitFor(() => {
+      expect(screen.getByText(/Este convite expirou/i)).toBeInTheDocument();
+    });
+  });
+});

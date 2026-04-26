@@ -37,22 +37,28 @@ export function unauthorizedDomainResponse() {
  */
 export async function logInvitation(
   adminClient: any, 
-  { invitation_id, event_type, details, domain_used, user_agent }: {
+  { invitation_id, event_type, details, domain_used, user_agent, professional_id, patient_email }: {
     invitation_id?: string;
     event_type: string;
     details?: any;
     domain_used?: string;
     user_agent?: string;
+    professional_id?: string;
+    patient_email?: string;
   }
 ) {
+
   try {
     await adminClient.from("invitation_logs").insert({
       invitation_id,
       event_type,
       details,
       domain_used: domain_used || BASE_URL,
-      user_agent: user_agent || null
+      user_agent: user_agent || null,
+      professional_id: professional_id || null,
+      patient_email: patient_email || null
     });
+
   } catch (err) {
     console.error("[config:logInvitation] Falha ao registrar log:", err);
   }

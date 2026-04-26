@@ -49,7 +49,12 @@ export default function InvitationStatus() {
     }
 
     fetchStatus();
+
+    // Polling leve: atualiza a cada 5 segundos
+    const interval = setInterval(fetchStatus, 5000);
+    return () => clearInterval(interval);
   }, [code]);
+
 
   if (loading) {
     return (

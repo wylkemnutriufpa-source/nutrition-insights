@@ -7,6 +7,9 @@ import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw,
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Helmet } from "react-helmet-async";
+import { getWhatsAppInvitationMessage, getInvitationUrl } from "@/utils/invitation";
+
+
 
 export default function Invitation() {
   const { code } = useParams<{ code: string }>();
@@ -71,8 +74,11 @@ export default function Invitation() {
         invitation_id: data.id,
         event_type: "viewed",
         details: { domain: currentDomain, host: window.location.host },
-        user_agent: navigator.userAgent
+        user_agent: navigator.userAgent,
+        professional_id: data.professional_id,
+        patient_email: data.patient_email
       });
+
 
       if (data.status === 'pending') {
         await supabase
@@ -145,10 +151,18 @@ export default function Invitation() {
 
   const openWhatsApp = (customMessage?: string) => {
     if (!invitation) return;
-    const message = customMessage || `Olá! Aqui está o seu convite para o FitJourney: ${window.location.href}`;
+    
+    const message = customMessage || getWhatsAppInvitationMessage({
+      patientName: invitation.patient_name || "",
+      professionalName: invitation.professional?.full_name || "Seu Nutricionista",
+      clinicName: invitation.clinic?.name,
+      invitationCode: code || ""
+    });
+
     const url = `https://api.whatsapp.com/send?text=${encodeURIComponent(message)}`;
     window.open(url, '_blank');
   };
+
 
   if (loading) {
     return (
@@ -183,12 +197,13 @@ export default function Invitation() {
                   {isProcessingAction ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                   Gerar Novo Convite
                 </Button>
-                {error === "Este convite expirou." && (
-                   <Button 
-                    variant="outline" 
-                    onClick={() => openWhatsApp(`Olá! Seu convite anterior expirou. Aqui está o novo link para o FitJourney: ${window.location.href}`)}
-                    className="w-full gap-2 h-12"
-                   >
+                 {error === "Este convite expirou." && (
+                    <Button 
+                     variant="outline" 
+                     onClick={() => openWhatsApp(`Olá! Seu convite anterior expirou. Aqui está o novo link para o FitJourney: ${getInvitationUrl(code || "")}`)}
+                     className="w-full gap-2 h-12"
+                    >
+
                     <MessageSquare className="w-5 h-5" /> Notificar Paciente (Novo Link)
                    </Button>
                 )}
@@ -222,7 +237,7 @@ export default function Invitation() {
         <meta property="og:title" content="Você foi convidado para o FitJourney!" />
         <meta property="og:description" content={`Acompanhamento com ${professional?.full_name || 'seu nutricionista'}`} />
         <meta property="og:type" content="website" />
-        <meta property="og:url" content={window.location.href} />
+        <meta property="og:url" content={getInvitationUrl(code || "")} />
         <meta property="og:image" content={professional?.avatar_url || "/og-image.png"} />
       </Helmet>
 
