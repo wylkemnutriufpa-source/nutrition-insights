@@ -86,7 +86,7 @@ export default function StrategyCard({ strategy, rank, isSelected, onSelect, onP
       </div>
 
       {/* Size variant selector */}
-      <div className="flex items-center gap-1 mb-2">
+      <div className="flex items-center gap-1 mb-2 flex-wrap">
         <span className="text-[9px] text-muted-foreground mr-1">Tamanho:</span>
         {(["small", "medium", "large"] as SizeVariant[]).map(size => {
           const variant = strategy.sizeVariants.find(v => v.size === size);
@@ -95,7 +95,7 @@ export default function StrategyCard({ strategy, rank, isSelected, onSelect, onP
             <button
               key={size}
               onClick={(e) => { e.stopPropagation(); onSizeChange(size); }}
-              className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all border ${
+              className={`px-2 py-0.5 rounded text-[9px] font-bold transition-all border whitespace-nowrap ${
                 isActive
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-muted/40 text-muted-foreground border-transparent hover:border-primary/30"
