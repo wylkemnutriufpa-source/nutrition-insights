@@ -5,6 +5,7 @@ import {
   AlertTriangle, RefreshCcw,
 } from "lucide-react";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 import { MacroEditDialog } from "./MacroEditDialog";
 import { useMealPlanEditorV2Store, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
 import { MealSmartEditorModal } from "./MealSmartEditorModal";
