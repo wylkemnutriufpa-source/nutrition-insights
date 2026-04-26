@@ -565,20 +565,45 @@ export default function Patients() {
 
   const addPatient = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!patientName.trim()) { toast.error("Informe o nome do paciente"); return; }
-    if (patientPassword.length < 6) { toast.error("Senha deve ter mínimo 6 caracteres"); return; }
+    
+    // Validations
+    if (!patientName.trim()) {
+      toast.error("Informe o nome do paciente");
+      return;
+    }
+    
+    if (!email.trim() || !email.includes("@")) {
+      toast.error("Informe um email válido");
+      return;
+    }
+
+    if (patientPassword.length < 6) {
+      toast.error("Senha deve ter no mínimo 6 caracteres");
+      return;
+    }
     
     try {
-      const patientId = await addPatientMutation.mutateAsync({ email, name: patientName, password: patientPassword });
-      setOpen(false);
-      setEmail(""); setPatientName(""); setPatientPassword("");
-      
-      // Redireciona para o perfil do paciente recém-criado
-      if (patientId) {
-        navigateToPatient(patientId);
+      const patientId = await addPatientMutation.mutateAsync({ 
+        email: email.trim().toLowerCase(), 
+        name: patientName.trim(), 
+        password: patientPassword 
+      });
+
+      if (!patientId) {
+        toast.error("Erro: Falha ao obter ID do paciente");
+        return;
       }
-    } catch (error) {
-      // O erro já é tratado pelo hook toast.error
+
+      // Success cleanup and navigation
+      setOpen(false);
+      setEmail("");
+      setPatientName("");
+      setPatientPassword("");
+      
+      navigateToPatient(patientId);
+    } catch (error: any) {
+      // Error is already handled by the mutation's onError (toast.error)
+      console.error("Error adding patient:", error);
     }
   };
 
