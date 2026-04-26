@@ -119,58 +119,129 @@ export default function MealPlanEditorV2() {
     setExportingPDF(true);
     const toastId = toast.loading("Gerando PDF...");
     try {
-      const doc = new jsPDF();
-      const patientName = store.patientName || "Paciente";
+      const doc = new jsPDF({
+        orientation: pdfOrientation,
+        unit: "mm",
+        format: "a4",
+      });
       
-      // Header
-      doc.setFontSize(20);
-      doc.setTextColor(40);
-      doc.text("Plano Alimentar", 14, 22);
+      const patientName = store.patientName || "Paciente";
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const pageHeight = doc.internal.pageSize.getHeight();
+      
+      // Theme colors
+      const primaryColor = pdfTheme === "modern" ? [34, 197, 94] : [40, 40, 40]; // Green vs Dark Gray
+      
+      // Header Background (Modern Theme)
+      if (pdfTheme === "modern") {
+        doc.setFillColor(240, 253, 244); // bg-emerald-50
+        doc.rect(0, 0, pageWidth, 50, "F");
+        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.setLineWidth(0.5);
+        doc.line(0, 50, pageWidth, 50);
+      }
+      
+      // Header Text
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(24);
+      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+      doc.text("Plano Alimentar", 14, 25);
       
       doc.setFontSize(10);
-      doc.text(`Paciente: ${patientName}`, 14, 30);
-      doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, 14, 35);
-      doc.text(`Título: ${plan.title}`, 14, 40);
+      doc.setTextColor(100);
+      doc.setFont("helvetica", "normal");
+      doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}`, 14, 32);
       
-      let y = 50;
+      // Patient Info Box
+      doc.setFillColor(255, 255, 255);
+      doc.setDrawColor(230);
+      doc.roundedRect(14, 38, pageWidth - 28, 25, 3, 3, "FD");
       
-      store.items.sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || "")).forEach((item, idx) => {
-        if (y > 250) {
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(11);
+      doc.setTextColor(40);
+      doc.text("PACIENTE:", 20, 48);
+      doc.setFont("helvetica", "normal");
+      doc.text(patientName.toUpperCase(), 45, 48);
+      
+      doc.setFont("helvetica", "bold");
+      doc.text("PLANO:", 20, 56);
+      doc.setFont("helvetica", "normal");
+      doc.text(plan.title.toUpperCase(), 45, 56);
+      
+      let y = 75;
+      
+      const sortedItems = [...store.items].sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || ""));
+      
+      sortedItems.forEach((item, idx) => {
+        // Page break check
+        if (y > pageHeight - 30) {
           doc.addPage();
           y = 20;
         }
         
-        doc.setFontSize(14);
+        // Meal Header
+        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+        doc.roundedRect(14, y, pageWidth - 28, 10, 2, 2, "F");
+        doc.setTextColor(255);
         doc.setFont("helvetica", "bold");
-        doc.text(`${item.title}`, 14, y);
-        y += 7;
+        doc.setFontSize(12);
+        doc.text(item.title.toUpperCase(), 20, y + 7);
         
-        doc.setFontSize(10);
+        // Macros Badge
+        doc.setFontSize(8);
+        const macroText = `${item.calories_target} kcal | P: ${item.protein_target}g C: ${item.carbs_target}g G: ${item.fat_target}g`;
+        const macroWidth = doc.getTextWidth(macroText);
+        doc.text(macroText, pageWidth - 20 - macroWidth, y + 7);
+        
+        y += 18;
+        
+        // Description
+        doc.setTextColor(60);
         doc.setFont("helvetica", "normal");
-        const lines = doc.splitTextToSize(item.description || "", 180);
-        doc.text(lines, 14, y);
-        y += (lines.length * 5) + 5;
+        doc.setFontSize(10);
+        const descLines = doc.splitTextToSize(item.description || "Nenhuma descrição fornecida.", pageWidth - 32);
+        doc.text(descLines, 16, y);
+        y += (descLines.length * 5) + 6;
         
+        // Substitutions
         const meta = (item as any).edit_metadata || (item as any).metadata || {};
         const substitutions = meta.substitutions_json as string[] || [];
         
         if (substitutions.length > 0) {
           doc.setFont("helvetica", "bold");
-          doc.text("Substituições:", 14, y);
+          doc.setFontSize(9);
+          doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
+          doc.text("OPÇÕES DE SUBSTITUIÇÃO:", 16, y);
           y += 5;
-          doc.setFont("helvetica", "normal");
+          
+          doc.setFont("helvetica", "italic");
+          doc.setTextColor(100);
           substitutions.forEach(sub => {
-            const subLines = doc.splitTextToSize(`• ${sub}`, 170);
+            const subLines = doc.splitTextToSize(`• ${sub}`, pageWidth - 40);
+            if (y > pageHeight - 15) {
+              doc.addPage();
+              y = 20;
+            }
             doc.text(subLines, 20, y);
             y += (subLines.length * 5);
           });
-          y += 5;
+          y += 4;
         }
         
         y += 10;
+        // Separator
+        doc.setDrawColor(240);
+        doc.line(14, y - 5, pageWidth - 14, y - 5);
       });
       
-      doc.save(`Plano_Alimentar_${patientName.replace(/\s+/g, "_")}.pdf`);
+      // Footer
+      doc.setFontSize(8);
+      doc.setTextColor(150);
+      const footerText = "Gerado via FitJourney Nutrition - O plano alimentar ideal para seus objetivos.";
+      doc.text(footerText, (pageWidth - doc.getTextWidth(footerText)) / 2, pageHeight - 10);
+      
+      doc.save(`Plano_Alimentar_${patientName.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
       toast.success("PDF gerado com sucesso!", { id: toastId });
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);
