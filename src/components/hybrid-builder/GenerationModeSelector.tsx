@@ -513,7 +513,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           fat: Number(r.fixed_fat) || 0,
           is_fixed: r.is_fixed
         }))}
-        targetKcal={store.planMetadata?.target_calories}
+        targetKcal={(store.plan?.generation_metadata as any)?.target_calories || (store.plan?.generation_metadata as any)?.final_kcal}
       />
     </div>
   );
