@@ -248,6 +248,8 @@ const PlanAudit = () => {
   const [diffViewData, setDiffViewData] = useState<{ before: any, after: any, label: string } | null>(null);
   const [executionIdFilter, setExecutionIdFilter] = useState<string>("");
   const [correlatorId, setCorrelatorId] = useState<string>("");
+  const [selectedLogsForDiff, setSelectedLogsForDiff] = useState<number[]>([]);
+
 
 
   // RLS Validation state
