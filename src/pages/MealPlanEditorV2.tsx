@@ -32,6 +32,18 @@ import type { AutoFixResult } from "@/lib/autoFixEngine";
 import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
 import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
 import { PlanReviewModal } from "@/components/meal-editor-v2/PlanReviewModal";
+import { PlanHistoryModal } from "@/components/meal-editor-v2/PlanHistoryModal";
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem
+} from "@/components/ui/dropdown-menu";
+import { FileText, History as HistoryIcon, Layout, Monitor, Smartphone, Tablet } from "lucide-react";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
