@@ -112,6 +112,93 @@ export default function MealPlanEditorV2() {
   useEffect(() => { localStorage.setItem(FULLSCREEN_KEY, String(isFullscreen)); }, [isFullscreen]);
   useEffect(() => { localStorage.setItem(EDITOR_LAYOUT_KEY, editorLayout); }, [editorLayout]);
 
+  const exportToPDF = async () => {
+    if (!plan || store.items.length === 0) return;
+    setExportingPDF(true);
+    const toastId = toast.loading("Gerando PDF...");
+    try {
+      const doc = new jsPDF();
+      const patientName = store.patientName || "Paciente";
+      
+      // Header
+      doc.setFontSize(20);
+      doc.setTextColor(40);
+      doc.text("Plano Alimentar", 14, 22);
+      
+      doc.setFontSize(10);
+      doc.text(`Paciente: ${patientName}`, 14, 30);
+      doc.text(`Data: ${new Date().toLocaleDateString("pt-BR")}`, 14, 35);
+      doc.text(`Título: ${plan.title}`, 14, 40);
+      
+      let y = 50;
+      
+      store.items.sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || "")).forEach((item, idx) => {
+        if (y > 250) {
+          doc.addPage();
+          y = 20;
+        }
+        
+        doc.setFontSize(14);
+        doc.setFont("helvetica", "bold");
+        doc.text(`${item.title}`, 14, y);
+        y += 7;
+        
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        const lines = doc.splitTextToSize(item.description || "", 180);
+        doc.text(lines, 14, y);
+        y += (lines.length * 5) + 5;
+        
+        const meta = (item as any).edit_metadata || (item as any).metadata || {};
+        const substitutions = meta.substitutions_json as string[] || [];
+        
+        if (substitutions.length > 0) {
+          doc.setFont("helvetica", "bold");
+          doc.text("Substituições:", 14, y);
+          y += 5;
+          doc.setFont("helvetica", "normal");
+          substitutions.forEach(sub => {
+            const subLines = doc.splitTextToSize(`• ${sub}`, 170);
+            doc.text(subLines, 20, y);
+            y += (subLines.length * 5);
+          });
+          y += 5;
+        }
+        
+        y += 10;
+      });
+      
+      doc.save(`Plano_Alimentar_${patientName.replace(/\s+/g, "_")}.pdf`);
+      toast.success("PDF gerado com sucesso!", { id: toastId });
+    } catch (err) {
+      console.error("Erro ao gerar PDF:", err);
+      toast.error("Erro ao gerar PDF", { id: toastId });
+    } finally {
+      setExportingPDF(false);
+    }
+  };
+
+  const handleSaveAsDefault = async () => {
+    if (!plan?.patient_id || !user?.id) return;
+    setIsDefaultSaving(true);
+    const toastId = toast.loading("Salvando como template padrão...");
+    try {
+      const { error } = await supabase
+        .from("nutritionist_patients")
+        .update({ default_meal_plan_id: plan.id } as any)
+        .eq("patient_id", plan.patient_id)
+        .eq("nutritionist_id", user.id);
+        
+      if (error) throw error;
+      toast.success("Template salvo como padrão para este paciente!", { id: toastId });
+    } catch (err) {
+      console.error("Erro ao salvar padrão:", err);
+      toast.error("Erro ao salvar padrão", { id: toastId });
+    } finally {
+      setIsDefaultSaving(false);
+    }
+  };
+
   const refreshPlanFromServer = async () => {
     if (!id || !user?.id) return;
     await store.hydrate(id, user.id);
