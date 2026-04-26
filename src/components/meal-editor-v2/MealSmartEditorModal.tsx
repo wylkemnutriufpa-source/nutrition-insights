@@ -284,7 +284,10 @@ export function MealSmartEditorModal({
                 Ajuste os alimentos, substituições e observações clínicas
               </p>
             </div>
-            <div className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10 sm:mr-0 mr-4">
+            <div 
+              data-testid="modal-macro-summary"
+              className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10 sm:mr-0 mr-4"
+            >
               <div className="flex flex-col items-center">
                 <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
                 <span className="text-xs sm:text-sm font-black text-orange-500">{totals.calories}</span>
