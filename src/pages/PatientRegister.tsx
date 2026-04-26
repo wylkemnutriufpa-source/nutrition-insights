@@ -109,6 +109,10 @@ export default function PatientRegister() {
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (preselectedNutri && sigValid === false) {
+      toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
+      return;
+    }
     if (password.length < 6) {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
