@@ -492,9 +492,13 @@ export default function DietTemplates() {
             // Detect placeholder and replace with a recipe
             const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
             if (isPlaceholder && mealRecipes.length > 0) {
-              const typeKey = mealType === "lunch" ? "almoço" : "jantar";
+              const isLunch = mealType === "lunch" || mealType === "almoco" || mealType === "almoço";
               const candidates = mealRecipes
-                .filter(r => r.meal_type === typeKey)
+                .filter(r => {
+                  const rt = r.meal_type?.toLowerCase() || "";
+                  if (isLunch) return rt === "almoço" || rt === "almoco" || rt === "lunch";
+                  return rt === "jantar" || rt === "dinner";
+                })
                 .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
               
               if (candidates.length > 0) {
