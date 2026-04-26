@@ -126,7 +126,8 @@
       "user_id",
       "weight_history_analyzed_at",
       "weight_trend_status",
-      "weight_velocity_kg_week"
+      "weight_velocity_kg_week",
+      "whatsapp"
     ],
     "nutritionist_patients": [
       "attendance_mode",
