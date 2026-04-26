@@ -73,7 +73,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     // Verify initial state
     await waitFor(() => expect(screen.getByText(/John Doe/i)).toBeInTheDocument());
     
-    const publishButton = await screen.findByRole('button', { name: /Salvar e Enviar ao Paciente/i });
+    const publishButton = await screen.findByTestId('publish-button');
     expect(publishButton).toBeInTheDocument();
 
     // Mock successful update
@@ -83,7 +83,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     fireEvent.click(publishButton);
 
     // Verify button is disabled and shows "Publicando..."
-    expect(screen.getByRole('button', { name: /Publicando.../i })).toBeDisabled();
+    expect(publishButton).toBeDisabled();
 
     // Verify publication process
     await waitFor(() => {
@@ -107,7 +107,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     const mockQuery = mockSupabase.from();
     renderComponent();
 
-    const publishButton = await screen.findByRole('button', { name: /Salvar e Enviar ao Paciente/i });
+    const publishButton = await screen.findByTestId('publish-button');
     
     // Mock failure
     mockQuery.in.mockResolvedValueOnce({ data: null, error: { message: 'Database connection failed' } });
@@ -117,14 +117,14 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     // Verify error message and retry button
     await waitFor(() => {
       expect(screen.getByText(/Falha no envio/i)).toBeInTheDocument();
-      expect(screen.getByText(/Tentar novamente/i)).toBeInTheDocument();
+      expect(screen.getByTestId('retry-publish-button')).toBeInTheDocument();
     }, { timeout: 3000 });
 
 
     // Mock success for second attempt
     mockQuery.in.mockResolvedValueOnce({ data: null, error: null });
     
-    fireEvent.click(screen.getByText(/Tentar novamente/i));
+    fireEvent.click(screen.getByTestId('retry-publish-button'));
 
     // Verify success
     await waitFor(() => {

@@ -87,14 +87,22 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
     }
     setPublishing(true);
     setPublishError(null);
-    setPublishProgress(10);
+    setPublishProgress(0);
     
     try {
-      // Step 1: Prepare (simulated for UI)
-      await new Promise(r => setTimeout(r, 600));
-      setPublishProgress(40);
+      // Step 1: Prepare
+      await new Promise(r => setTimeout(r, 400));
+      setPublishProgress(25);
 
-      // Step 2: Actual Supabase update
+      // Step 2: Optimizing
+      await new Promise(r => setTimeout(r, 400));
+      setPublishProgress(50);
+
+      // Step 3: Finalizing
+      await new Promise(r => setTimeout(r, 400));
+      setPublishProgress(75);
+
+      // Actual Supabase update
       const { error } = await supabase
         .from("meal_plans")
         .update({ 
@@ -159,6 +167,7 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-6"
+            data-testid="publish-progress-overlay"
           >
             <Card className="w-full max-w-md shadow-2xl border-primary/20">
               <CardContent className="pt-10 pb-8 px-8 flex flex-col items-center text-center space-y-6">
@@ -173,8 +182,8 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                       <p className="text-sm text-muted-foreground mt-1">Otimizando e publicando o plano para o paciente.</p>
                     </div>
                     <div className="w-full space-y-2">
-                      <Progress value={publishProgress} className="h-2" />
-                      <p className="text-[10px] text-muted-foreground font-mono">{publishProgress}% concluído</p>
+                      <Progress value={publishProgress} className="h-2" data-testid="publish-progress-bar" />
+                      <p className="text-[10px] text-muted-foreground font-mono" data-testid="publish-progress-text">{publishProgress}% concluído</p>
                     </div>
                   </>
                 ) : publishError ? (
@@ -184,14 +193,14 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                     </div>
                     <div>
                       <h3 className="text-xl font-display font-bold">Falha no envio</h3>
-                      <p className="text-sm text-destructive mt-1 font-medium">{publishError}</p>
+                      <p className="text-sm text-destructive mt-1 font-medium" data-testid="publish-error-message">{publishError}</p>
                       <p className="text-xs text-muted-foreground mt-2">Houve um problema ao salvar no banco de dados. Seus dados não foram perdidos.</p>
                     </div>
                     <div className="flex gap-3 w-full">
-                      <Button variant="outline" className="flex-1" onClick={() => setPublishError(null)}>
+                      <Button variant="outline" className="flex-1" onClick={() => setPublishError(null)} data-testid="cancel-error-button">
                         Cancelar
                       </Button>
-                      <Button className="flex-1 gap-2 bg-primary" onClick={handlePublish}>
+                      <Button className="flex-1 gap-2 bg-primary" onClick={handlePublish} data-testid="retry-publish-button">
                         <RefreshCw className="w-4 h-4" /> Tentar novamente
                       </Button>
                     </div>
@@ -260,14 +269,15 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                       <p className="text-xs text-muted-foreground">O plano ficará visível ao paciente no aplicativo.</p>
                     </div>
                   </div>
-                  <Button 
-                    onClick={handlePublish} 
-                    disabled={publishing} 
-                    className="gap-2 w-full bg-primary hover:bg-primary/90 min-h-[48px]"
-                  >
-                    {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-                    {publishing ? "Publicando..." : "Salvar e Enviar ao Paciente"}
-                  </Button>
+                    <Button 
+                      onClick={handlePublish} 
+                      disabled={publishing} 
+                      className="gap-2 w-full bg-primary hover:bg-primary/90 min-h-[48px]"
+                      data-testid="publish-button"
+                    >
+                      {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                      {publishing ? "Publicando..." : "Salvar e Enviar ao Paciente"}
+                    </Button>
                 </div>
               )}
 
@@ -277,14 +287,15 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                     <CheckCircle2 className="w-5 h-5" /> Plano Ativo e Enviado!
                   </p>
                   <p className="text-xs text-muted-foreground">O paciente recebeu uma notificação e o plano já está disponível para consulta.</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/patients/${patientId}`)}
-                    className="gap-2 w-full mt-2"
-                  >
-                    <Eye className="w-4 h-4" /> Ver perfil do paciente
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/patients/${patientId}`)}
+                      className="gap-2 w-full mt-2"
+                      data-testid="view-patient-profile-button"
+                    >
+                      <Eye className="w-4 h-4" /> Ver perfil do paciente
+                    </Button>
                 </div>
               )}
             </div>
