@@ -138,31 +138,51 @@ test.describe('Meal Editor Robustness and UX Consistency', () => {
     }
   });
 
-  test('State: Reset local state upon closing even after tab switching', async ({ nutriPage }) => {
+  test('State: Reset local state upon closing even after multiple toggles and search', async ({ nutriPage }) => {
     const trigger = nutriPage.getByTestId(/^edit-meal-/).first();
     await trigger.click();
     const modal = nutriPage.locator('div[role="dialog"]');
     
-    // 1. Altera a descrição
+    // 1. Altera a descrição e faz busca
     const textarea = modal.locator('textarea').first();
     const originalValue = await textarea.inputValue();
     await textarea.fill('Valor alterado temporariamente');
     
-    // 2. Alterna abas internas
+    const searchInput = modal.locator('input[placeholder*="buscar" i]').first();
+    if (await searchInput.isVisible()) {
+      await searchInput.fill('Pizza');
+    }
+
+    // 2. Alterna entre "Alimento" e "Refeição Pronta" várias vezes
+    const foodTab = modal.getByRole('button', { name: /Alimento/i });
     const readyTab = modal.getByRole('button', { name: /Refeição Pronta/i });
-    await readyTab.click();
+    
+    for(let i = 0; i < 3; i++) {
+      await readyTab.click();
+      await expect(readyTab).toHaveClass(/bg-primary|default/);
+      await foodTab.click();
+      await expect(foodTab).toHaveClass(/bg-primary|default/);
+    }
     
     // 3. Fecha sem salvar (via Cancelar)
     await nutriPage.getByTestId('meal-editor-cancel-button').click();
     await expect(modal).toBeHidden();
     
-    // 4. Reabre e verifica que voltou ao original
+    // 4. Reabre e verifica que TUDO foi zerado/resetado
     await trigger.click();
     await expect(modal).toBeVisible();
+    
+    // Verifica descrição resetada
     const reopenedValue = await modal.locator('textarea').first().inputValue();
     expect(reopenedValue).toBe(originalValue);
     
+    // Verifica busca zerada
+    if (await searchInput.isVisible()) {
+      const currentSearch = await searchInput.inputValue();
+      expect(currentSearch).toBe('');
+    }
+    
     // Verifica que voltou para a aba inicial ("Alimento")
-    await expect(modal.getByRole('button', { name: /Alimento/i })).toHaveClass(/bg-primary|default/);
+    await expect(foodTab).toHaveClass(/bg-primary|default/);
   });
 });
