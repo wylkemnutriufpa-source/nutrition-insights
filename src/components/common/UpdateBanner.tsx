@@ -1,8 +1,16 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2, Rocket, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   clearRuntimeCaches,
   forceHardReload,
@@ -56,7 +64,7 @@ export default function UpdateBanner() {
       // Update check — every 5min (was 30s, too aggressive and contributed to reload loops)
       const intervalId = setInterval(() => {
         registration.update().catch(() => {});
-      }, 1 * 60 * 1000); // Check every 1 minute for faster updates
+      }, 30 * 1000); // Check every 30 seconds for near real-time updates
 
       // Check on visibility change (tab becomes visible)
       const onVisibility = () => {
@@ -141,48 +149,54 @@ export default function UpdateBanner() {
   if (!showBanner || dismissed) return null;
 
   return (
-    <div className="fixed bottom-4 left-1/2 -translate-x-1/2 z-[9999] animate-in slide-in-from-bottom-4 fade-in duration-300">
-      <div className="flex items-center gap-3 rounded-xl border border-border bg-card px-5 py-3 shadow-lg">
-        {updating ? (
-          <Loader2 className="h-5 w-5 text-primary animate-spin" />
-        ) : (
-          <RefreshCw className="h-5 w-5 text-primary animate-spin" />
-        )}
-        <span className="text-sm font-medium text-foreground">
-          {updating ? "Atualizando…" : isiOSPwa ? "Nova versão pronta para reabrir" : "Nova versão disponível"}
-        </span>
-        <div className="flex items-center gap-2 ml-2">
+    <Dialog open={showBanner && !dismissed} onOpenChange={(open) => !open && handleDismiss()}>
+      <DialogContent className="sm:max-w-md border-primary/20 bg-card/95 backdrop-blur-md">
+        <DialogHeader>
+          <div className="mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+            <Rocket className="w-6 h-6 text-primary animate-bounce" />
+          </div>
+          <DialogTitle className="text-center font-display text-xl">Nova Versão Disponível! 🚀</DialogTitle>
+          <DialogDescription className="text-center pt-2">
+            {isiOSPwa 
+              ? "Uma atualização importante está pronta. Para aplicar as melhorias, o app precisa ser reiniciado."
+              : "Melhoramos sua experiência! Atualize agora para acessar os novos recursos e correções de segurança."}
+          </DialogDescription>
+        </DialogHeader>
+        
+        <div className="py-4 space-y-4">
+          <div className="p-3 rounded-lg bg-muted/50 border border-border text-xs text-muted-foreground flex items-start gap-2">
+            <RefreshCw className="w-3.5 h-3.5 mt-0.5 shrink-0" />
+            <p>Seus dados salvos não serão perdidos. O cache será atualizado para garantir o melhor desempenho.</p>
+          </div>
+        </div>
+
+        <DialogFooter className="flex flex-col sm:flex-row gap-2 sm:gap-0">
           <Button
-            size="sm"
-            onClick={handleUpdate}
-            disabled={updating}
-          >
-            {updating ? "Aguarde…" : isiOSPwa ? "Reabrir app" : "Atualizar agora"}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
+            variant="ghost"
             onClick={async () => {
               await clearRuntimeCaches();
-              toast.success("Cache limpo com sucesso!");
-              setTimeout(() => forceHardReload(), 500);
+              toast.success("Cache limpo! Recarregando...");
+              setTimeout(() => forceHardReload(), 800);
             }}
             disabled={updating}
-            className="border-primary/30"
+            className="w-full sm:w-auto text-muted-foreground"
           >
             Limpar Cache
           </Button>
-        </div>
-        {!updating && (
-          <button
-            onClick={handleDismiss}
-            className="ml-1 text-muted-foreground hover:text-foreground text-xs"
-            aria-label="Fechar"
+          <Button
+            onClick={handleUpdate}
+            disabled={updating}
+            className="w-full sm:w-auto gradient-primary shadow-glow gap-2"
           >
-            ✕
-          </button>
-        )}
-      </div>
-    </div>
+            {updating ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <RefreshCw className="h-4 w-4" />
+            )}
+            {updating ? "Atualizando..." : isiOSPwa ? "Reiniciar App" : "Atualizar Agora"}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

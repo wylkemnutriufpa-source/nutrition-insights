@@ -33,6 +33,7 @@ export default function PatientRegister() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [whatsapp, setWhatsapp] = useState("");
+  const [whatsappError, setWhatsappError] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -108,6 +109,33 @@ export default function PatientRegister() {
     return () => clearTimeout(t);
   }, [profSearch, searchProfessionals]);
 
+  const formatInternationalWhatsApp = (val: string) => {
+    // Remove non-digits
+    const digits = val.replace(/\D/g, "");
+    if (!digits) return "";
+    
+    // If it doesn't start with 55 (Brazil) or other country code and has 10-11 digits, assume 55
+    if (digits.length >= 10 && digits.length <= 11 && !val.startsWith("+")) {
+      return `+55${digits}`;
+    }
+    
+    return val.startsWith("+") ? val : `+${digits}`;
+  };
+
+  const validateWhatsApp = (val: string) => {
+    if (!val) {
+      setWhatsappError("WhatsApp é obrigatório");
+      return false;
+    }
+    const digits = val.replace(/\D/g, "");
+    if (digits.length < 10) {
+      setWhatsappError("Número inválido (mínimo 10 dígitos)");
+      return false;
+    }
+    setWhatsappError("");
+    return true;
+  };
+
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (preselectedNutri && sigValid === false) {
@@ -118,6 +146,12 @@ export default function PatientRegister() {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
     }
+    if (!validateWhatsApp(whatsapp)) {
+      toast.error("Por favor, corrija o número de WhatsApp");
+      return;
+    }
+    const formattedWhatsapp = formatInternationalWhatsApp(whatsapp);
+    
     setLoading(true);
     try {
       const nutriId = selectedProfessional?.user_id || null;
@@ -132,7 +166,8 @@ export default function PatientRegister() {
           nutritionist_id: "00000000-0000-0000-0000-000000000000",
           name,
           email: email.trim().toLowerCase(),
-          phone: phone || null,
+          phone: formattedWhatsapp, // Use formatted whatsapp as phone for leads if no specific phone
+          whatsapp: formattedWhatsapp,
           source: "self_register",
           referral_code: refCode || null,
           message: "Cadastro espontâneo sem nutricionista selecionado.",
@@ -182,7 +217,7 @@ export default function PatientRegister() {
         _full_name: name,
         _email: email.trim().toLowerCase(),
         _phone: phone || null,
-        _whatsapp: whatsapp || null,
+        _whatsapp: formattedWhatsapp,
         _nutritionist_id: nutriId,
         _source: "register",
         _metadata: { referral_code: refCode || null },
@@ -291,8 +326,23 @@ export default function PatientRegister() {
                 <Input id="email" type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="seu@email.com" required />
               </div>
               <div>
-                <Label htmlFor="whatsapp">WhatsApp (opcional)</Label>
-                <Input id="whatsapp" type="tel" value={whatsapp} onChange={(e) => setWhatsapp(e.target.value)} placeholder="(11) 99999-9999" />
+                <Label htmlFor="whatsapp" className="flex justify-between items-center">
+                  <span>WhatsApp *</span>
+                  {whatsappError && <span className="text-[10px] text-destructive animate-pulse">{whatsappError}</span>}
+                </Label>
+                <Input 
+                  id="whatsapp" 
+                  type="tel" 
+                  value={whatsapp} 
+                  onChange={(e) => {
+                    setWhatsapp(e.target.value);
+                    if (e.target.value) validateWhatsApp(e.target.value);
+                  }} 
+                  onBlur={() => validateWhatsApp(whatsapp)}
+                  placeholder="(11) 99999-9999" 
+                  required
+                  className={whatsappError ? "border-destructive" : ""}
+                />
               </div>
               <div>
                 <Label htmlFor="password">Senha</Label>

@@ -153,36 +153,68 @@ export default function NotificationBell() {
           ) : (
             notifications.map((n) => {
               const hasRoute = !!(n.target_route || n.action_url);
+              const targetPath = n.target_route || n.action_url || "";
+              
               return (
                 <div
                   key={n.id}
-                  onClick={() => handleNotificationClick(n)}
-                  className={`px-3 py-2.5 border-b border-border/50 flex items-start gap-2 text-xs transition-colors ${
-                    hasRoute ? "cursor-pointer hover:bg-muted/50" : ""
-                  } ${!n.is_read ? "bg-primary/5" : ""}`}
+                  className={`px-3 py-3 border-b border-border/50 transition-all ${
+                    !n.is_read ? "bg-primary/5" : ""
+                  }`}
                 >
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1">
-                      <p className={`font-medium truncate ${!n.is_read ? "" : "text-muted-foreground"}`}>
-                        {n.title}
-                      </p>
-                      {hasRoute && <ExternalLink className="w-3 h-3 text-muted-foreground shrink-0" />}
+                  <div className="flex items-start gap-2 mb-2">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1">
+                        <p className={`font-semibold text-xs truncate ${!n.is_read ? "text-foreground" : "text-muted-foreground"}`}>
+                          {n.title}
+                        </p>
+                      </div>
+                      <p className="text-muted-foreground text-[11px] leading-relaxed mt-0.5">{n.message}</p>
+                      <div className="flex items-center gap-2 mt-2">
+                        <span className="text-[10px] text-muted-foreground/60">
+                          {formatTime(n.created_at)}
+                          {n.entity_type && ` · ${n.entity_type}`}
+                        </span>
+                        {hasRoute && (
+                          <div className="px-1.5 py-0.5 rounded bg-muted text-[9px] text-muted-foreground font-mono truncate max-w-[120px]" title={targetPath}>
+                            {targetPath.split("/").pop() || "abrir"}
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-muted-foreground line-clamp-1 mt-0.5">{n.message}</p>
-                    <span className="text-[10px] text-muted-foreground/60 mt-0.5 block">
-                      {formatTime(n.created_at)}
-                      {n.entity_type && ` · ${n.entity_type}`}
-                    </span>
+                    {!n.is_read && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-6 w-6 flex-shrink-0"
+                        onClick={(e) => markRead(e, n.id)}
+                      >
+                        <Check className="w-3 h-3" />
+                      </Button>
+                    )}
                   </div>
-                  {!n.is_read && (
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="h-6 w-6 flex-shrink-0"
-                      onClick={(e) => markRead(e, n.id)}
-                    >
-                      <Check className="w-3 h-3" />
-                    </Button>
+                  
+                  {hasRoute && (
+                    <div className="flex gap-2 mt-2">
+                      <Button 
+                        size="sm" 
+                        variant="default" 
+                        className="h-7 text-[10px] flex-1 gap-1.5 gradient-primary"
+                        onClick={() => handleNotificationClick(n)}
+                      >
+                        {n.type === "patient_registered" ? "Ver Paciente" : "Abrir Ação"}
+                        <ExternalLink className="w-3 h-3" />
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-7 text-[10px] px-2"
+                        onClick={(e) => markRead(e, n.id)}
+                        disabled={n.is_read}
+                      >
+                        Lido
+                      </Button>
+                    </div>
                   )}
                 </div>
               );
