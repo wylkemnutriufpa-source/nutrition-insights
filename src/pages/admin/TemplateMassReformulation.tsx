@@ -126,12 +126,12 @@ export default function TemplateMassReformulation() {
     }
   };
 
-  const reformulateTemplate = (meals: any[]) => {
+  const reformulateTemplate = async (meals: any[]) => {
     const changes: string[] = [];
     let removedKeysCount = 0;
     let adjustedBlocksCount = 0;
 
-    const reformulatedMeals = (meals || []).map(meal => {
+    const reformulatedMeals = await Promise.all((meals || []).map(async (meal) => {
       let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
       
       // Safety: Recursively remove any template_id or other poisoning keys
