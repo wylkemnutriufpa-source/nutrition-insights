@@ -246,7 +246,7 @@ export function WeeklyGrid() {
                 </div>
                 <div>
                   <span className="font-display text-[13px] font-bold block text-foreground tracking-tight">{meal.label}</span>
-                  <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + Alternativas</span>
+                  <span className="text-[10px] text-muted-foreground/80 font-medium">Principal + {substitutionCount} Substs</span>
                 </div>
               </div>
             </div>
