@@ -477,6 +477,45 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30">
             <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
             <p className="text-[10px] text-destructive leading-relaxed">
+              Marmitas fixas insuficientes. Almoço fixo {recipeCounts.fixedLunch}/{minSettings.fixed_min_lunch} · Jantar fixo {recipeCounts.fixedDinner}/{minSettings.fixed_min_dinner}.
+            </p>
+          </div>
+        )}
+        
+        {!checksLoading && is19FixedMissing && (
+          <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-amber-500/10 border border-amber-500/30">
+            <AlertTriangle className="w-3.5 h-3.5 text-amber-600 shrink-0 mt-0.5" />
+            <p className="text-[10px] text-amber-700 leading-relaxed">
+              <strong>Aviso:</strong> O padrão ouro é ter 19 marmitas fixas de almoço e 19 de jantar para máxima variedade. Você tem {recipeCounts.fixedLunch} e {recipeCounts.fixedDinner}.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <MarmitaSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
+
+      <ConsistencyReportModal
+        open={consistencyOpen}
+        onOpenChange={setConsistencyOpen}
+        recipes={allRecipes.map(r => ({
+          name: r.name,
+          meal_type: r.meal_type,
+          calories: Number(r.fixed_calories) || 0,
+          protein: Number(r.fixed_protein) || 0,
+          carbs: Number(r.fixed_carbs) || 0,
+          fat: Number(r.fixed_fat) || 0,
+          is_fixed: r.is_fixed
+        }))}
+        targetKcal={store.planMetadata?.target_calories}
+      />
+    </div>
+  );
+}
+            <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
+            <p className="text-[10px] text-destructive leading-relaxed">
               Mínimo configurado: <strong>{minSettings.fixed_min_lunch} almoço(s) fixo(s)</strong> e <strong>{minSettings.fixed_min_dinner} jantar(es) fixo(s)</strong>. Cadastre marmitas com <strong>"fixos"</strong> ou ajuste o mínimo.
             </p>
           </div>
