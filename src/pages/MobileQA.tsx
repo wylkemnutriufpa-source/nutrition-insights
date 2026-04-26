@@ -52,17 +52,27 @@ export default function MobileQA() {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
   };
 
-  const registerEvidence = (item: string) => {
-    const newEvidence = {
-      id: Math.random().toString(36).substr(2, 9),
-      timestamp: new Date().toLocaleTimeString(),
-      item,
-      viewport: `${window.innerWidth}x${window.innerHeight}`,
-    };
-    setEvidences(prev => [...prev, newEvidence]);
-    toast.success("Evidência registrada!", {
-      description: `Snapshot capturado para: ${item}`,
-    });
+  const registerEvidence = async (item: string) => {
+    try {
+      const canvas = await html2canvas(document.body);
+      const screenshot = canvas.toDataURL("image/png");
+      
+      const newEvidence = {
+        id: Math.random().toString(36).substr(2, 9),
+        timestamp: new Date().toLocaleTimeString(),
+        item,
+        viewport: `${window.innerWidth}x${window.innerHeight}`,
+        screenshot, // Store the base64 screenshot
+      };
+      
+      setEvidences(prev => [...prev, newEvidence]);
+      toast.success("Evidência registrada!", {
+        description: `Snapshot capturado para: ${item}`,
+      });
+    } catch (error) {
+      console.error("Erro ao capturar snapshot:", error);
+      toast.error("Erro ao registrar evidência");
+    }
   };
 
   const exportReport = () => {
