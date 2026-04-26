@@ -31,7 +31,10 @@ import AutoFixResultsModal from "@/components/hybrid-builder/AutoFixResultsModal
 import type { AutoFixResult } from "@/lib/autoFixEngine";
 import EditorWorkspaceTabs from "@/components/meal-editor-v2/EditorWorkspaceTabs";
 import EditorCompactToolbar from "@/components/meal-editor-v2/EditorCompactToolbar";
+import { PlanReviewModal } from "@/components/meal-editor-v2/PlanReviewModal";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import { toast } from "sonner";
 import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
