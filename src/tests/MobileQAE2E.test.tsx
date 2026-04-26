@@ -61,9 +61,10 @@ describe("Mobile QA E2E Simulation", () => {
       width: 0,
       height: 0,
     };
+    const originalCreateElement = document.createElement.bind(document);
     vi.spyOn(document, 'createElement').mockImplementation((tagName) => {
       if (tagName === 'canvas') return mockCanvas as any;
-      return document.createElement.call(document, tagName);
+      return originalCreateElement(tagName);
     });
   });
 
