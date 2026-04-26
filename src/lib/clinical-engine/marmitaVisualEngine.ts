@@ -31,11 +31,9 @@ export async function validateImageUrl(url: string): Promise<{ isValid: boolean,
   }
 
   try {
-    // Tenta fetch normal (HEAD) - pode falhar por CORS
     const response = await fetch(url, { method: 'HEAD', mode: 'no-cors' });
     
-    // Note: no-cors doesn't allow reading status accurately (response.ok might be false even if 200)
-    // Se response.type for 'opaque', assumimos que pode estar ok mas CORS bloqueou a leitura
+    // Note: no-cors doesn't allow reading status accurately
     const isValid = response.type === 'opaque' || response.ok;
     
     await supabase.from('recipe_image_cache').upsert({
@@ -96,13 +94,15 @@ export async function ensureMarmitaVisualAssociation(
 
   let needsFallback = false;
   let fallbackReason = "";
+  let httpStatusCode: number | null = null;
 
   // Validar URL atual
   if (currentUrl) {
-    const isAvailable = await validateImageUrl(currentUrl);
-    if (!isAvailable) {
+    const { isValid, statusCode } = await validateImageUrl(currentUrl);
+    if (!isValid) {
       needsFallback = true;
-      fallbackReason = "URL indisponível (HTTP Error)";
+      fallbackReason = `URL indisponível (HTTP ${statusCode || 'Error'})`;
+      httpStatusCode = statusCode || 0;
     }
   } else {
     needsFallback = true;
@@ -130,11 +130,12 @@ export async function ensureMarmitaVisualAssociation(
       recipe_id: recipeId,
       recipe_name: name,
       original_url: currentUrl,
-      fallback_url: visualId, // O ID da biblioteca visual ou uma URL default
+      fallback_url: visualId,
       template_name: templateName,
       meal_name: mealName,
       severity: currentUrl ? 'critical' : 'alert',
-      error_message: fallbackReason
+      error_message: fallbackReason,
+      http_status_code: httpStatusCode
     });
   }
 }
@@ -144,5 +145,3 @@ export function validateMarmitaVisualIntegrity(marmita: { image_url?: string | n
   if (!marmita.protein_type) return false;
   return true;
 }
-
-
