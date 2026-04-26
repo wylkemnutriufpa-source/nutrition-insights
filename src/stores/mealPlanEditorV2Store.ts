@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
+import { sortMealPlanItems } from "@/lib/mealPlanSort";
 
 /**
  * Single-Day Editor Store (v3 - Pure Single Day)
@@ -264,7 +265,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       };
     });
 
-    set({ items: updatedItems });
+    set({ items: sortMealPlanItems(updatedItems) });
 
     get()._enqueue({
       key: `recalculate:${Date.now()}`,
@@ -407,7 +408,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     set({
       plan: normalizedPlan,
       patientName,
-      items,
+      items: sortMealPlanItems(items),
       substitutionCount: (normalizedPlan as any).edit_metadata?.substitution_count ?? 4,
       hydrated: true,
       hydrating: false,
@@ -448,7 +449,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
     const tIds = optimistic.map((o) => o.id);
-    set({ items: [...state.items, ...optimistic] });
+    set({ items: sortMealPlanItems([...state.items, ...optimistic]) });
 
     state._enqueue({
       key: `insert:${tIds.join(",")}`,
@@ -493,7 +494,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         // Map real IDs back using title/meal_type/etc. as a best-effort if order is not guaranteed
         // But better: since we insert ONE by ONE or in small batches, let's just use the index if lengths match
         set((s) => ({
-          items: s.items.map((item) => {
+          items: sortMealPlanItems(s.items.map((item) => {
             const tempIdx = tIds.indexOf(item.id);
             if (tempIdx >= 0) {
               // Try to find the exact match in returned rows by comparing identifying fields
@@ -505,7 +506,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
               return match || item;
             }
             return item;
-          }),
+          })),
         }));
 
         // Auto-resolve visual images silently
@@ -533,7 +534,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     
     // Atualiza estado local imediatamente (otimista)
     set((s) => ({
-      items: s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i)),
+      items: sortMealPlanItems(s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i))),
     }));
 
     // Se for item temporário, não enfileiramos update; o insert pendente já pegará o estado atualizado do store no momento do flush
@@ -568,7 +569,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   // ── Delete item ───────────────────────────────────────────
   deleteItem: (itemId) => {
     const prev = get().items;
-    set((s) => ({ items: s.items.filter((i) => i.id !== itemId) }));
+    set((s) => ({ items: sortMealPlanItems(s.items.filter((i) => i.id !== itemId)) }));
 
     // Se o item é temporário, removemos do estado local e também da fila de inserção pendente
     if (itemId.startsWith("temp-")) {
@@ -620,7 +621,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     if (toDelete.length === 0) return;
     const prev = get().items;
     const deleteIds = toDelete.map((i) => i.id);
-    set((s) => ({ items: s.items.filter((i) => !(i.day_of_week === day && i.meal_type === mealType)) }));
+    set((s) => ({ items: sortMealPlanItems(s.items.filter((i) => !(i.day_of_week === day && i.meal_type === mealType))) }));
 
     get()._enqueue({
       key: `deleteCell:${day}-${mealType}`,
@@ -766,7 +767,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       return item;
     });
 
-    set({ items: updated });
+    set({ items: sortMealPlanItems(updated) });
 
     const allAffected = [...srcItems, ...dstItems];
     const affectedIds = allAffected.map((i) => i.id);
@@ -932,7 +933,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         if (refetchError) {
           console.error("[REFETCH_ERROR]", refetchError);
         } else {
-          set({ items: (itemsData || []) as MealPlanItem[] });
+          set({ items: sortMealPlanItems((itemsData || []) as MealPlanItem[]) });
           get()._persistSnapshot();
           console.info(`[REFETCH DONE t=${Date.now()}] Items count: ${itemsData?.length || 0}`);
         }
