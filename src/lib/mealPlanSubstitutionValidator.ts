@@ -38,7 +38,7 @@ export interface ValidationResult {
   errors: string[];
 }
 
-export function validateMealSubstitutions(item: MealPlanItem): ValidationResult {
+export function validateMealSubstitutions(item: MealPlanItem, maxCount: number = 4): ValidationResult {
   const meta = (item as any).edit_metadata || (item as any).metadata || {};
   const substitutions = meta.substitutions_json as string[];
   
@@ -47,6 +47,11 @@ export function validateMealSubstitutions(item: MealPlanItem): ValidationResult 
   }
 
   const errors: string[] = [];
+
+  if (substitutions.length > maxCount) {
+    errors.push(`A refeição tem ${substitutions.length} substituições, mas o limite definido é ${maxCount}.`);
+  }
+
   const mainKcal = Number(item.calories_target) || 0;
   const mainProtein = Number(item.protein_target) || 0;
   const mainCarbs = Number(item.carbs_target) || 0;
