@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
   Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X, PenTool, Lock,
-  Bot, UserCheck, ShieldCheck, ShieldAlert,
+Bot, UserCheck, ShieldCheck, ShieldAlert,
+  BookOpen,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
