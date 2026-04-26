@@ -90,10 +90,15 @@ export function MealSmartEditorModal({
       const toastId = "meal-save-toast";
       updateItem(itemId, {
         description: finalDescription,
+        calories_target: Math.round((item.calories_target || 0) * portionFactor),
+        protein_target: Math.round((Number(item.protein_target) || 0) * portionFactor * 10) / 10,
+        carbs_target: Math.round((Number(item.carbs_target) || 0) * portionFactor * 10) / 10,
+        fat_target: Math.round((Number(item.fat_target) || 0) * portionFactor * 10) / 10,
         edit_metadata: {
           ...currentMeta,
           notes,
-          substitutions_json: cleanedSubs
+          substitutions_json: cleanedSubs,
+          portion_factor: portionFactor
         }
       } as any);
       toast.success("Refeição atualizada com sucesso", { id: toastId });
