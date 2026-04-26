@@ -192,21 +192,59 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
                   </span>
                 );
               })()}
-            {(getPortionWarning(item) || isMacroInconsistent(item.calories_target || 0, Number(item.protein_target) || 0, Number(item.carbs_target) || 0, Number(item.fat_target) || 0)) && (
+            {(() => {
+              const validation = validateMealSubstitutions(item);
+              const hasMixingError = validation.detailedErrors.some(e => e.limitError?.includes("mistura") || e.limitError?.includes("parece ser uma opção de"));
+              const hasMacroError = isMacroInconsistent(item.calories_target || 0, Number(item.protein_target) || 0, Number(item.carbs_target) || 0, Number(item.fat_target) || 0);
+              const hasPortionWarning = !!getPortionWarning(item);
+              
+              if (!hasMixingError && !hasMacroError && !hasPortionWarning && validation.valid) return null;
+
+              return (
                 <TooltipProvider>
                   <Tooltip>
                     <TooltipTrigger asChild>
-                      <span className="flex items-center">
-                        <AlertTriangle className="w-2.5 h-2.5 text-amber-500 animate-pulse" />
+                      <span className={cn(
+                        "flex items-center gap-0.5 px-1 rounded animate-pulse cursor-help",
+                        hasMixingError ? "bg-destructive/10 text-destructive" : "bg-amber-100 text-amber-600"
+                      )}>
+                        <AlertTriangle className="w-2.5 h-2.5" />
+                        {hasMixingError && <span className="text-[7px] font-bold">MISTURA</span>}
                       </span>
                     </TooltipTrigger>
-                    <TooltipContent side="bottom" className="text-[10px] max-w-[200px] p-2 bg-amber-50 text-amber-900 border-amber-200">
-                      <p className="font-semibold mb-0.5">Alerta de Plano</p>
-                      <p>{getPortionWarning(item) || "Distribuição de macros fora do padrão esperado para esta refeição."}</p>
+                    <TooltipContent side="bottom" className="text-[10px] max-w-[200px] p-2 bg-white shadow-xl border-destructive/20">
+                      <p className="font-bold mb-1 text-destructive uppercase tracking-tight">Problemas Identificados:</p>
+                      <ul className="space-y-1 text-[9px]">
+                        {hasMixingError && validation.detailedErrors.filter(e => e.limitError?.includes("mistura") || e.limitError?.includes("parece ser uma opção de")).map((e, idx) => (
+                          <li key={idx} className="flex gap-1">
+                            <span className="text-destructive font-bold shrink-0">⚠️</span>
+                            <span>{e.limitError}</span>
+                          </li>
+                        ))}
+                        {hasMacroError && (
+                          <li className="flex gap-1 text-amber-700">
+                            <span className="shrink-0">📊</span>
+                            <span>Distribuição de macros fora do padrão esperado.</span>
+                          </li>
+                        )}
+                        {hasPortionWarning && (
+                          <li className="flex gap-1 text-amber-700">
+                            <span className="shrink-0">⚖️</span>
+                            <span>{getPortionWarning(item)}</span>
+                          </li>
+                        )}
+                        {validation.errors.filter(err => !err.includes("mistura")).map((err, idx) => (
+                          <li key={idx} className="flex gap-1 text-muted-foreground">
+                            <span className="shrink-0">•</span>
+                            <span>{err}</span>
+                          </li>
+                        ))}
+                      </ul>
                     </TooltipContent>
                   </Tooltip>
                 </TooltipProvider>
-              )}
+              );
+            })()}
             </div>
             {isSyncing && (
               <span className="inline-flex items-center gap-1 mt-1 rounded-full border border-border bg-card px-1.5 py-0.5 text-[8px] font-medium text-muted-foreground">
