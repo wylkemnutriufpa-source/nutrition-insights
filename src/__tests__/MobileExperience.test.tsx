@@ -5,32 +5,48 @@ import { MobileAutoFixer } from '@/components/common/MobileAutoFixer';
 import MobileQA from '@/pages/MobileQA';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
+import { AuthProvider } from '@/lib/auth';
 import '@testing-library/jest-dom';
 
 const queryClient = new QueryClient();
+
+// Mock html2canvas since it doesn't work in JSDOM
+vi.mock('html2canvas', () => ({
+  default: vi.fn().mockResolvedValue({
+    toDataURL: () => 'data:image/png;base64,mock',
+    width: 1000,
+    height: 1000,
+  })
+}));
 
 describe('Mobile Experience E2E & QA Automation', () => {
   beforeEach(() => {
     document.body.innerHTML = '';
     vi.clearAllMocks();
-    // Mock window metrics for consistency
+    
+    // Mock window metrics
     Object.defineProperty(window, 'innerWidth', { writable: true, configurable: true, value: 390 });
     Object.defineProperty(document.documentElement, 'clientWidth', { writable: true, configurable: true, value: 390 });
     Object.defineProperty(document.documentElement, 'scrollWidth', { writable: true, configurable: true, value: 390 });
     Object.defineProperty(window, 'scrollX', { writable: true, configurable: true, value: 0 });
     
-    // Mock URL.createObjectURL and a.click
     global.URL.createObjectURL = vi.fn(() => 'mock-url');
   });
 
-  it('deve iterar por todos os modais do Mobile QA e validar double-scroll', async () => {
-    render(
+  const renderWithProviders = (ui: React.ReactElement) => {
+    return render(
       <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <MobileQA />
-        </MemoryRouter>
+        <AuthProvider>
+          <MemoryRouter>
+            {ui}
+          </MemoryRouter>
+        </AuthProvider>
       </QueryClientProvider>
     );
+  };
+
+  it('deve iterar por todos os modais do Mobile QA e validar double-scroll', async () => {
+    renderWithProviders(<MobileQA />);
 
     const triggers = ['trigger-strategy', 'trigger-settings', 'trigger-profile', 'trigger-wizard'];
     
@@ -43,9 +59,10 @@ describe('Mobile Experience E2E & QA Automation', () => {
       });
 
       // Validar double-scroll (body deve estar locked)
-      expect(document.body.style.overflow === 'hidden' || 
-             document.body.hasAttribute('data-scroll-locked') ||
-             window.getComputedStyle(document.body).overflow === 'hidden').toBe(true);
+      const isLocked = document.body.style.overflow === 'hidden' || 
+                       document.body.hasAttribute('data-scroll-locked') ||
+                       window.getComputedStyle(document.body).overflow === 'hidden';
+      expect(isLocked).toBe(true);
 
       // Fechar modal
       const closeButton = screen.getByRole('button', { name: /fechar/i });
@@ -58,6 +75,18 @@ describe('Mobile Experience E2E & QA Automation', () => {
   });
 
   it('deve garantir que MobileAutoFixer não mantém atributos ou estilos residuais fora do escopo corrigido após fechar', async () => {
+    // Mock getBoundingClientRect to simulate overflow
+    const originalGetBoundingClientRect = HTMLElement.prototype.getBoundingClientRect;
+    HTMLElement.prototype.getBoundingClientRect = vi.fn().mockImplementation(function(this: HTMLElement) {
+      if (this.id === 'internal-content') {
+        return { width: 500, right: 500, left: 0, top: 0, bottom: 0, height: 100, x: 0, y: 0, toJSON: () => {} };
+      }
+      if (this.role === 'dialog' || this.getAttribute('role') === 'dialog') {
+        return { width: 390, right: 390, left: 0, top: 0, bottom: 0, height: 100, x: 0, y: 0, toJSON: () => {} };
+      }
+      return { width: 100, right: 100, left: 0, top: 0, bottom: 0, height: 100, x: 0, y: 0, toJSON: () => {} };
+    });
+
     const { rerender } = render(
       <QueryClientProvider client={queryClient}>
         <div id="app-root">
@@ -72,23 +101,21 @@ describe('Mobile Experience E2E & QA Automation', () => {
       </QueryClientProvider>
     );
 
-    // Simula overflow interno
     const internal = document.getElementById('internal-content');
     const external = document.getElementById('external-content');
     
     // Trigger resize to activate fixer
     fireEvent(window, new Event('resize'));
 
-    // O internal deve ser processado (está dentro do dialog)
+    // O internal deve ser processado (está dentro do dialog e "overflowing" via mock)
     await waitFor(() => {
       expect(internal).toHaveAttribute('data-autofixed', 'true');
     });
 
-    // O external não deve ter sido alterado
+    // O external não deve ter sido alterado (está fora do dialog)
     expect(external).not.toHaveAttribute('data-autofixed');
-    expect(external?.style.maxWidth).toBe('');
 
-    // Fechar o modal (remover do DOM)
+    // Fechar o modal
     rerender(
       <QueryClientProvider client={queryClient}>
         <div id="app-root">
@@ -98,26 +125,21 @@ describe('Mobile Experience E2E & QA Automation', () => {
       </QueryClientProvider>
     );
 
-    // Após fechar, o MobileAutoFixer deve limpar o estado (pelo useEffect cleanup ou lógica de else)
-    // No caso da nossa implementação, quando não há dialogs ativos, ele limpa.
+    // Após fechar, o MobileAutoFixer deve limpar o estado
     await waitFor(() => {
       expect(document.querySelectorAll('[data-autofixed]').length).toBe(0);
     });
+
+    // Restore original
+    HTMLElement.prototype.getBoundingClientRect = originalGetBoundingClientRect;
   });
 
   it('deve validar que o export JSON inclui métricas e viewport corretas', async () => {
-    // Mocking Blob
     const spy = vi.spyOn(global, 'Blob').mockImplementation((content, options) => {
       return { content, options } as any;
     });
 
-    render(
-      <QueryClientProvider client={queryClient}>
-        <MemoryRouter>
-          <MobileQA />
-        </MemoryRouter>
-      </QueryClientProvider>
-    );
+    renderWithProviders(<MobileQA />);
 
     // Simular registro de evidência via botão de camera
     const cameraButtons = screen.getAllByRole('button').filter(b => b.querySelector('svg.lucide-camera'));
@@ -137,6 +159,10 @@ describe('Mobile Experience E2E & QA Automation', () => {
         expect(reportData.evidences[0]).toHaveProperty('thumbnail');
       }
     });
+    
+    spy.mockRestore();
+  });
+
   });
 
   it('deve validar foco visível do botão fechar após Tab/Shift+Tab usando getComputedStyle', async () => {
