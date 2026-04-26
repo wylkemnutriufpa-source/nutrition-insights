@@ -81,6 +81,8 @@ const USE_DB_EXCLUSIVE_V6 = true;
 // ──── VALID MEAL CATEGORIES ────
 const VALID_MEAL_CATEGORIES = new Set(["cafe_da_manha", "lanche", "almoco", "jantar", "ceia", "refeicao"]);
 
+const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
+
 // ──── INTOLERANCE KEYWORD MAPS (CLINICAL SAFETY) ────
 const INTOLERANCE_KEYWORDS: Record<string, string[]> = {
   lactose: ["leite", "queijo", "iogurte", "requeijao", "whey", "nata", "creme de leite", "manteiga", "cream cheese", "coalhada", "ricota", "mucarela", "mussarela", "parmesao", "provolone", "cottage"],
