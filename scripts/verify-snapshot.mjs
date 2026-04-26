@@ -15,7 +15,7 @@ const current = JSON.parse(currentRaw.replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, 
 const fresh = generateSnapshotData().tables;
 
 let hasDiff = false;
-const diffs = [];
+const diffResults = [];
 
 const allTables = new Set([...Object.keys(current), ...Object.keys(fresh)]);
 
@@ -28,17 +28,29 @@ for (const table of allTables) {
   
   if (missingInSnapshot.length > 0 || extraInSnapshot.length > 0) {
     hasDiff = true;
-    let msg = `Table "${table}":\n`;
-    if (missingInSnapshot.length > 0) msg += `  [+] Missing columns (exist in migrations but not in snapshot): ${missingInSnapshot.join(", ")}\n`;
-    if (extraInSnapshot.length > 0) msg += `  [-] Extra columns (exist in snapshot but not in migrations): ${extraInSnapshot.join(", ")}\n`;
-    diffs.push(msg);
+    if (missingInSnapshot.length > 0) {
+      diffResults.push({
+        tabela: table,
+        tipo: "FALTANDO NO SNAPSHOT",
+        colunas: missingInSnapshot.join(", "),
+        acao: "A migração tem colunas que o snapshot não conhece."
+      });
+    }
+    if (extraInSnapshot.length > 0) {
+      diffResults.push({
+        tabela: table,
+        tipo: "EXTRA NO SNAPSHOT",
+        colunas: extraInSnapshot.join(", "),
+        acao: "O snapshot tem colunas que não existem mais nas migrações."
+      });
+    }
   }
 }
 
 if (hasDiff) {
   console.error("\n✗ SCHEMA SNAPSHOT OUTDATED!\n");
-  diffs.forEach(d => console.error(d));
-  console.error("\nRun 'npm run schema:update' to update the snapshot.\n");
+  console.table(diffResults);
+  console.error("\nSugestão: Execute 'npm run schema:update' para sincronizar o snapshot com as migrações locais.\n");
   process.exit(1);
 } else {
   console.log("✓ Schema snapshot is up to date.");
