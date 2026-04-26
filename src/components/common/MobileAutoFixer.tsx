@@ -3,27 +3,27 @@ import { useEffect } from "react";
 export function MobileAutoFixer() {
   useEffect(() => {
     const fixOverflow = () => {
-      // Find all elements that might overflow
-      const elements = document.querySelectorAll('.dialog-content, [role="dialog"], .popover-content');
+      // Restriction: Only apply fixes inside active Dialogs or the main application container
+      // This prevents global adjustments on elements that shouldn't be touched
+      const dialogs = document.querySelectorAll('[role="dialog"], .dialog-content');
+      const mainContainer = document.querySelector('main, #root > div:not([role="dialog"])');
       
-      elements.forEach((el) => {
-        const htmlEl = el as HTMLElement;
-        const rect = htmlEl.getBoundingClientRect();
+      const applyFix = (el: HTMLElement) => {
+        const rect = el.getBoundingClientRect();
         
         if (rect.width > window.innerWidth) {
-          htmlEl.style.maxWidth = '100vw';
-          htmlEl.style.overflowX = 'hidden';
-          htmlEl.style.boxSizing = 'border-box';
+          el.style.maxWidth = '100vw';
+          el.style.overflowX = 'hidden';
+          el.style.boxSizing = 'border-box';
           
-          // If it's a dialog content, ensure it doesn't have double padding issues
-          if (htmlEl.classList.contains('p-6') || htmlEl.classList.contains('p-4')) {
-            htmlEl.style.paddingLeft = '1rem';
-            htmlEl.style.paddingRight = '1rem';
+          if (el.classList.contains('p-6') || el.classList.contains('p-4')) {
+            el.style.paddingLeft = '1rem';
+            el.style.paddingRight = '1rem';
           }
         }
         
-        // Check children for overflow
-        const children = htmlEl.querySelectorAll('*');
+        // Check children for overflow relative to parent
+        const children = el.querySelectorAll('*');
         children.forEach((child) => {
           const childEl = child as HTMLElement;
           const childRect = childEl.getBoundingClientRect();
@@ -32,7 +32,10 @@ export function MobileAutoFixer() {
             childEl.style.overflowX = 'hidden';
           }
         });
-      });
+      };
+
+      dialogs.forEach((d) => applyFix(d as HTMLElement));
+      if (mainContainer) applyFix(mainContainer as HTMLElement);
     };
 
     const observer = new MutationObserver(fixOverflow);
