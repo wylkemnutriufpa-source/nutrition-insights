@@ -113,10 +113,10 @@ export default function TemplateMassReformulation() {
       
       // Safety: Remove any recursive template_id or IDs that shouldn't be here
       delete newMeal.template_id;
-      delete newMeal.id; // Usually template meals don't need their own ID if they are part of a structure
+      delete newMeal.id; 
       
       const title = (meal.title || "").toLowerCase();
-      const isSolidMeal = title.includes("almoço") || title.includes("jantar");
+      const isSolidMeal = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
 
       // 1. Transform legacy to V2 blocks
       if (Array.isArray(newMeal.foods) && newMeal.foods.length > 0 && (!newMeal.blocks || newMeal.blocks.length === 0)) {
@@ -155,6 +155,10 @@ export default function TemplateMassReformulation() {
       // 2. Coherent Substitutions & Cleanup
       if (newMeal.blocks) {
         newMeal.blocks = newMeal.blocks.map((block: any) => {
+          const blockType = (block.label || "").toLowerCase();
+          const isProteinBlock = blockType.includes("proteína") || blockType.includes("protein");
+          const isCarbBlock = blockType.includes("carb") || blockType.includes("acompanhamento");
+
           if (block.options) {
             const originalCount = block.options.length;
             
@@ -169,15 +173,25 @@ export default function TemplateMassReformulation() {
               changes.push(`Refeição ${meal.title}: Removida 'Sopa' de refeição sólida.`);
             }
 
-            // Cleanup nested template_id or inconsistent fields in options
+            // Equivalent Substitution Check & Cleanup
             block.options = block.options.map((opt: any) => {
               const cleaned = { ...opt };
               delete cleaned.template_id;
               
+              const optName = (cleaned.name || "").toLowerCase();
+              
+              // Verify if option matches block category (Equivalent Substitutions)
+              if (isProteinBlock && !optName.includes("frango") && !optName.includes("carne") && !optName.includes("ovo") && !optName.includes("peixe") && !optName.includes("whey") && !optName.includes("tofu")) {
+                 changes.push(`Atenção [${meal.title}]: Bloco de Proteína contém '${cleaned.name}', verifique equivalência.`);
+              }
+              
+              if (isCarbBlock && (optName.includes("pão") || optName.includes("tapioca")) && isSolidMeal) {
+                 changes.push(`Refeição ${meal.title}: Substituição de Almoço contém item de Café da Manhã (${cleaned.name}).`);
+              }
+
               // Ensure images are preserved or defaulted
               if (!cleaned.visual_library_item_id && !cleaned.image_url) {
-                // If it's a known placeholder, it's ok, otherwise warning
-                if (cleaned.name && cleaned.name.toLowerCase().includes("marmita")) {
+                if (optName.includes("marmita")) {
                    changes.push(`Refeição ${meal.title}: Marmita detectada sem ID visual.`);
                 }
               }
