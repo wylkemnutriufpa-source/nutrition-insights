@@ -198,6 +198,12 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
           </div>
 
           <div className="flex items-center gap-3">
+            {totalCalories === 0 && (
+              <div className="hidden sm:flex items-center gap-2 text-destructive font-bold text-xs bg-destructive/5 px-3 py-2 rounded-lg border border-destructive/10">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Total diário zerado</span>
+              </div>
+            )}
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="text-muted-foreground">
               Voltar ao Editor
             </Button>
@@ -221,10 +227,13 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
                 });
                 onConfirm(finalItems);
               }} 
-              disabled={isSaving || items.some(item => !validateMealSubstitutions(item).valid)}
-              className="shadow-lg shadow-primary/20"
+              disabled={isSaving || totalCalories <= 0}
+              className={cn(
+                "shadow-lg",
+                totalCalories > 0 ? "shadow-primary/20" : "opacity-50"
+              )}
             >
-              {isSaving ? "Salvando..." : "Confirmar e Salvar Plano"}
+              {isSaving ? "Salvando..." : totalCalories <= 0 ? "Adicione Calorias" : "Confirmar e Salvar Plano"}
             </Button>
           </div>
         </DialogFooter>
