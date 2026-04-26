@@ -20,6 +20,8 @@ interface MealPlanPDFItem {
   day_of_week?: number;
   scheduled_time?: string;
   visual_image_url?: string;
+  is_primary?: boolean;
+  substitution_group_id?: string | null;
 }
 
 interface PremiumMealPlanPDFData {
