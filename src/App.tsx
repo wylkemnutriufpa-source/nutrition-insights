@@ -129,6 +129,7 @@ const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
 const PatientRegister = lazy(() => import("./pages/PatientRegister"));
+const Invitation = lazy(() => import("./pages/Invitation"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
