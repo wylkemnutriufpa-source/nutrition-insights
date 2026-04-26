@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
   CheckCircle2, ArrowLeft, Loader2, ClipboardList, Activity,
-  Utensils, FileText, Send, Eye, AlertTriangle, Sparkles, MagicWand01, BookOpen
+  Utensils, FileText, Send, Eye, AlertTriangle, Sparkles, Wand2, BookOpen
 } from "lucide-react";
 
 interface Props {
