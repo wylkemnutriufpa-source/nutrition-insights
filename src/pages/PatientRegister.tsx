@@ -356,9 +356,9 @@ export default function PatientRegister() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? (
-                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Criando conta...</span>
+              <Button type="submit" className="w-full" disabled={loading || (preselectedNutri && sigValid === null)}>
+                {loading || (preselectedNutri && sigValid === null) ? (
+                  <span className="flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> {sigValid === null ? "Validando link..." : "Criando conta..."}</span>
                 ) : (
                   <span className="flex items-center gap-2"><UserPlus className="w-4 h-4" /> Criar Conta</span>
                 )}
