@@ -287,7 +287,7 @@ export default function Invitation() {
             
             <Button 
               variant="outline" 
-              onClick={openWhatsApp} 
+              onClick={() => openWhatsApp()} 
               className="w-full h-12 rounded-xl gap-2"
             >
               <MessageSquare className="w-5 h-5" /> Enviar por WhatsApp
