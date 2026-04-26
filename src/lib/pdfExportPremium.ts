@@ -512,10 +512,10 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
     });
 
   // Compute global macros
-  const totalKcal = data.items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = data.items.reduce((s, i) => s + (i.protein_target || 0), 0);
-  const totalCarbs = data.items.reduce((s, i) => s + (i.carbs_target || 0), 0);
-  const totalFat = data.items.reduce((s, i) => s + (i.fat_target || 0), 0);
+  const totalKcal = data.items.filter(i => i.is_primary !== false).reduce((s, i) => s + (i.calories_target || 0), 0);
+  const totalProt = data.items.filter(i => i.is_primary !== false).reduce((s, i) => s + (i.protein_target || 0), 0);
+  const totalCarbs = data.items.filter(i => i.is_primary !== false).reduce((s, i) => s + (i.carbs_target || 0), 0);
+  const totalFat = data.items.filter(i => i.is_primary !== false).reduce((s, i) => s + (i.fat_target || 0), 0);
   const daysCount = sortedDays.length || 1;
   const avgKcal = Math.round(totalKcal / daysCount);
   const avgProt = Math.round(totalProt / daysCount);
