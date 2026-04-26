@@ -308,9 +308,17 @@ export default function PatientRegister() {
               
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-foreground">Você foi convidado!</h2>
-                <p className="text-muted-foreground">
-                  O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> quer acompanhar sua jornada.
-                </p>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">
+                    O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> quer acompanhar sua jornada.
+                  </p>
+                  {selectedProfessional.clinic_name && (
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground bg-muted/50 py-1 px-3 rounded-full w-fit mx-auto">
+                      <Building2 className="w-3 h-3" />
+                      {selectedProfessional.clinic_name}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-3">
@@ -331,6 +339,7 @@ export default function PatientRegister() {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
