@@ -1483,8 +1483,20 @@ const PlanAudit = () => {
 
                     <TableBody>
                       {diagnosticLogs.map((log, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-xs">{formatDate(log.created_at)}</TableCell>
+                        <TableRow key={i} className={selectedLogsForDiff.includes(i) ? "bg-primary/5" : ""}>
+                          <TableCell>
+                            <Checkbox 
+                              checked={selectedLogsForDiff.includes(i)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedLogsForDiff(prev => [...prev, i].slice(-2));
+                                } else {
+                                  setSelectedLogsForDiff(prev => prev.filter(idx => idx !== i));
+                                }
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="text-xs">{formatDate(log.created_at || log.updated_at)}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="text-[10px]">
                               {log.type === 'log' ? 'AUDIT LOG' : 'DB STATE'}
@@ -1498,6 +1510,7 @@ const PlanAudit = () => {
                           </TableCell>
                         </TableRow>
                       ))}
+
                     </TableBody>
                   </Table>
                 </div>
