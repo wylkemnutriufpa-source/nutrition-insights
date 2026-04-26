@@ -36,6 +36,7 @@ interface TemplateRow {
   is_global: boolean | null;
   usage_count: number | null;
   nutritionist_id: string;
+  is_recipe?: boolean;
 }
 
 interface DietTemplate {
