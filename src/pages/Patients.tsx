@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy
+  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
