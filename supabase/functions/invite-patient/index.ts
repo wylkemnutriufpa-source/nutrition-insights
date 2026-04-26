@@ -1,5 +1,6 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { BASE_URL, isValidDomain, unauthorizedDomainResponse, logInvitation } from "../_shared/config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
