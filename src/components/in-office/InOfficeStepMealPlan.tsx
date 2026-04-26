@@ -111,21 +111,93 @@ export default function InOfficeStepMealPlan({ patientId, onNext, onPrev, sessio
     }
   };
 
+  const autoGeneratePlan = async () => {
+    if (!user?.id || !tenantId) return;
+    setLoading(true);
+    try {
+      // 1. Create a blank plan first (following existing pattern)
+      const { data: plan, error: createError } = await supabase
+        .from("meal_plans")
+        .insert({
+          patient_id: patientId,
+          nutritionist_id: user.id,
+          tenant_id: tenantId,
+          title: "Plano FitJourney — " + new Date().toLocaleDateString("pt-BR"),
+          plan_status: "draft",
+          is_active: false,
+          start_date: new Date().toISOString().split("T")[0],
+        })
+        .select("id")
+        .single();
+
+      if (createError) throw createError;
+
+      // 2. Run the pipeline to populate it
+      const result = await runPlanPipeline({
+        patientId,
+        nutritionistId: user.id,
+        tenantId: tenantId,
+        existingPlanId: plan.id,
+        planTitle: "Plano FitJourney",
+        startDate: new Date().toISOString().split("T")[0],
+        generationMode: "quick",
+      });
+
+      if (!result.success) throw new Error(result.warnings?.[0] || "Falha na geração automática");
+
+      setMealPlanPlanId(plan.id);
+      await supabase.from("in_office_sessions" as any).update({ meal_plan_id: plan.id } as any).eq("id", sessionId);
+      toast.success("Plano gerado com sucesso pelo Motor FitJourney!");
+    } catch (err: any) {
+      toast.error("Erro: " + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const setMealPlanPlanId = (id: string) => {
+    setMealPlanId(id);
+  };
+
   if (loading) return <div className="flex justify-center py-12"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>;
 
   if (!mealPlanId) {
     return (
-      <Card>
-        <CardContent className="py-12 text-center space-y-4">
-          <Utensils className="w-12 h-12 mx-auto text-muted-foreground" />
-          <div>
-            <h3 className="font-display font-bold text-lg">Plano Alimentar</h3>
-            <p className="text-sm text-muted-foreground">Crie um novo plano para este atendimento presencial</p>
+      <Card className="border-primary/20 bg-primary/5">
+        <CardContent className="py-12 text-center space-y-6">
+          <div className="relative inline-block">
+            <Utensils className="w-16 h-16 mx-auto text-primary/40" />
+            <motion.div 
+              animate={{ rotate: 360 }} 
+              transition={{ duration: 10, repeat: Infinity, ease: "linear" }}
+              className="absolute -top-2 -right-2"
+            >
+              <Sparkles className="w-6 h-6 text-primary" />
+            </motion.div>
           </div>
-          <Button onClick={createNewPlan} className="gap-2">
-            <Plus className="w-4 h-4" /> Criar Plano Presencial
-          </Button>
-          {/* Navigation is handled by parent wizard */}
+          <div className="max-w-xs mx-auto">
+            <h3 className="font-display font-bold text-xl">Plano Alimentar</h3>
+            <p className="text-sm text-muted-foreground mt-2">Como deseja iniciar o plano para este atendimento?</p>
+          </div>
+          
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-md mx-auto">
+            <Button onClick={autoGeneratePlan} className="h-24 flex-col gap-2 relative overflow-hidden group shadow-lg shadow-primary/10">
+              <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary-foreground opacity-10 group-hover:opacity-20 transition-opacity" />
+              <Wand2 className="w-6 h-6" />
+              <div className="text-left">
+                <span className="block font-bold">Auto-Gerar</span>
+                <span className="block text-[10px] font-normal opacity-70">FitJourney Intelligence Engine</span>
+              </div>
+            </Button>
+
+            <Button onClick={createNewPlan} variant="outline" className="h-24 flex-col gap-2 border-primary/20 bg-background/50">
+              <Plus className="w-6 h-6 text-primary" />
+              <div className="text-left">
+                <span className="block font-bold">Manual</span>
+                <span className="block text-[10px] font-normal opacity-70">Começar do zero</span>
+              </div>
+            </Button>
+          </div>
         </CardContent>
       </Card>
     );
