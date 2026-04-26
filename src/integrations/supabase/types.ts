@@ -13982,6 +13982,7 @@ export type Database = {
           weight_history_analyzed_at: string | null
           weight_trend_status: string | null
           weight_velocity_kg_week: number | null
+          whatsapp: string | null
         }
         Insert: {
           adherence_momentum?: string | null
@@ -14029,6 +14030,7 @@ export type Database = {
           weight_history_analyzed_at?: string | null
           weight_trend_status?: string | null
           weight_velocity_kg_week?: number | null
+          whatsapp?: string | null
         }
         Update: {
           adherence_momentum?: string | null
@@ -14076,6 +14078,7 @@ export type Database = {
           weight_history_analyzed_at?: string | null
           weight_trend_status?: string | null
           weight_velocity_kg_week?: number | null
+          whatsapp?: string | null
         }
         Relationships: [
           {
