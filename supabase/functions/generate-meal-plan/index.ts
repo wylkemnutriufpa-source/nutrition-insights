@@ -3645,7 +3645,15 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id, image_url: _image_url || rest.image_url || null }; });
+        const itemsToInsert = planItems.map((item: any) => { 
+          const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, plan_type, ...rest } = item; 
+          return { 
+            ...rest, 
+            meal_plan_id: newPlan.id, 
+            image_url: _image_url || rest.image_url || null,
+            plan_type: plan_type || "normal"
+          }; 
+        });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
