@@ -711,6 +711,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       <main className="flex-1 transition-all duration-200" style={{ marginLeft: collapsed ? 72 : 260 }}>
         <div className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200" style={{ left: collapsed ? 72 : 260 }}>
           <div className="flex justify-end items-center gap-2">
+            <SyncButton />
             <SystemHealthBadge />
             <TrialCountdown />
             <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
