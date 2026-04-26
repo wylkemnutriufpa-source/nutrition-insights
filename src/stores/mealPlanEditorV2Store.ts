@@ -933,7 +933,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         if (refetchError) {
           console.error("[REFETCH_ERROR]", refetchError);
         } else {
-          set({ items: (itemsData || []) as MealPlanItem[] });
+          set({ items: sortMealPlanItems((itemsData || []) as MealPlanItem[]) });
           get()._persistSnapshot();
           console.info(`[REFETCH DONE t=${Date.now()}] Items count: ${itemsData?.length || 0}`);
         }
