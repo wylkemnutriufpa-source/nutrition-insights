@@ -358,6 +358,30 @@ export default function TemplateNutritionAudit() {
   const [diffVersion, setDiffVersion] = useState<RuleVersion | null>(null);
   const [templateSource, setTemplateSource] = useState<"nutritionist" | "official">("official");
 
+  const exportChecklist = (auditedData: AuditedTemplate[]) => {
+    const headers = ["ID", "Nome", "Status", "Itens", "Erros", "Mensagens de Erro"];
+    const rows = auditedData.map(t => [
+      t.id,
+      t.name,
+      levelStyles[t.level].label,
+      t.itemsTotal,
+      t.issues.length,
+      t.issues.map(i => i.message).join(" | ")
+    ]);
+
+    const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `checklist_templates_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Checklist exportado com sucesso!");
+  };
+
   const refreshVersions = async () => {
     setVersionsLoading(true);
     try {
