@@ -14,6 +14,7 @@ import { MealPhotoUpload } from "./MealPhotoUpload";
 import { useMealVisualItem } from "@/hooks/useMealVisualItem";
 import { useSignedStorageUrl } from "@/hooks/useSignedStorageUrl";
 import { fmtMacro, getPortionWarning, isMacroInconsistent } from "@/lib/formatMacros";
+import { validateMealSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
 import {
   Tooltip,
   TooltipContent,
