@@ -213,6 +213,8 @@ export default function MealTemplatePanel({ day }: Props) {
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
   const [customTemplates, setCustomTemplates] = useState<MealTemplate[]>([]);
   const [loading, setLoading] = useState(false);
+  const [appliedHistory, setAppliedHistory] = useState<{name: string, date: Date, nutrients: any}[]>([]);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     const fetchCustomRecipes = async () => {
