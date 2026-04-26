@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import { useMobileValidation } from "@/hooks/useMobileValidation";
 import { toast } from "sonner";
+import html2canvas from "html2canvas";
 
 export default function MobileQA() {
   const { hasOverflow, overflowingElements } = useMobileValidation();
