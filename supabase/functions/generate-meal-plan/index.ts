@@ -2270,7 +2270,7 @@ export async function buildMarmitaItem(
     _recipe_name: recipe.name,
     _is_scalable: recipe.is_scalable !== false,
     _scale_factor: 1, // Scaling is internal now
-    _image_url: visual?.image_url || null,
+    _image_url: visual?.image_url || FALLBACK_IMAGE_URL,
   };
 }
 
@@ -2330,7 +2330,7 @@ function buildFixedMarmitaItem(
     _is_fixed: true,
     _is_scalable: false,
     _scale_factor: 1, // forced — no scaling
-    _image_url: visual?.image_url || null,
+    _image_url: visual?.image_url || FALLBACK_IMAGE_URL,
   };
 }
 
