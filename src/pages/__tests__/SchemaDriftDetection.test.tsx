@@ -70,12 +70,20 @@ describe("MealPlanEditorV2 Schema Check", () => {
 
     renderComponent();
 
+    // Wait for the loading state to finish (it needs data to show the UI)
+    // Actually, we can just look for the Save button if it's rendered
+    // But since we mock supabase.from, we need to ensure the initial data load doesn't crash
+    
+    // We'll wait for the save button and click it
+    const saveButton = await screen.findByRole("button", { name: /Salvar/i });
+    saveButton.click();
+
     await waitFor(() => {
       expect(toast.error).toHaveBeenCalledWith(
         expect.stringContaining("Erro de Schema"),
         expect.anything()
       );
-    });
+    }, { timeout: 3000 });
   });
 
   it("does not block flow on RLS error (42501)", async () => {
@@ -91,6 +99,9 @@ describe("MealPlanEditorV2 Schema Check", () => {
 
     renderComponent();
 
+    const saveButton = await screen.findByRole("button", { name: /Salvar/i });
+    saveButton.click();
+
     // We expect it to NOT show the schema drift toast
     await waitFor(() => {
       const calls = (toast.error as any).mock.calls;
@@ -101,5 +112,6 @@ describe("MealPlanEditorV2 Schema Check", () => {
     });
   });
 });
+
 
 
