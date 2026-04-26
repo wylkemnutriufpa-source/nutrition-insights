@@ -741,6 +741,17 @@ export default function DietTemplates() {
           )}
         </div>
 
+        <div className="flex items-center gap-2 justify-end">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="gap-2 text-xs border-primary/20 text-primary hover:bg-primary/5"
+            onClick={fetchMarmitaRecipes}
+          >
+            <ClipboardCheck className="w-4 h-4" /> Relatório de Consistência
+          </Button>
+        </div>
+
         {/* Search + filters */}
         <div className="flex items-center gap-3 flex-wrap">
           <div className="relative flex-1 min-w-[200px]">
