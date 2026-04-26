@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { sortMealPlanItems } from "@/lib/mealPlanSort";
 import {
   Plus,
   Flame,
@@ -24,6 +25,7 @@ import MealSlotItemCard from "./MealSlotItemCard";
 import FoodSearchInline from "./FoodSearchInline";
 import SaveMealSlotDialog from "./SaveMealSlotDialog";
 import { smartSubstituteFood } from "@/lib/smartFoodSubstitution";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   day: number;
@@ -52,10 +54,9 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [loadTemplateOpen, setLoadTemplateOpen] = useState(false);
 
-  const primaryItems = items.filter((i) => (i as any).is_primary !== false);
-  const substitutionItems = items
-    .filter((i) => (i as any).is_primary === false)
-    .sort((a, b) => (b.calories_target || 0) - (a.calories_target || 0));
+  const sortedAllItems = sortMealPlanItems(items);
+  const primaryItems = sortedAllItems.filter((i) => (i as any).is_primary !== false);
+  const substitutionItems = sortedAllItems.filter((i) => (i as any).is_primary === false);
 
   const totalKcal = primaryItems.reduce((s, i) => s + (i.calories_target || 0), 0);
   const totalProt = primaryItems.reduce((s, i) => s + (i.protein_target || 0), 0);
@@ -396,9 +397,28 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
                     Substituições ({substitutionItems.length})
                   </p>
                   {substitutionItems.some(i => (i as any).item_origin === 'auto_generated_sub') && (
-                    <div className="flex items-center gap-1 text-[8px] text-amber-600 font-medium bg-amber-50 px-1 rounded animate-pulse" title="Contém sugestões automáticas">
-                      <Sparkles className="w-2.5 h-2.5" /> AUTO
-                    </div>
+                    <TooltipProvider>
+                      <Tooltip>
+                        <TooltipTrigger asChild>
+                          <div 
+                            tabIndex={0}
+                            role="status"
+                            aria-label="Sugestões automáticas disponíveis"
+                            className="flex items-center gap-1 text-[8px] text-amber-600 font-medium bg-amber-50 px-1 rounded animate-pulse cursor-help focus:ring-1 focus:ring-amber-400 outline-none"
+                            onKeyDown={(e) => {
+                              if (e.key === 'Enter' || e.key === ' ') {
+                                toast.info("Essas sugestões foram geradas automaticamente pelo motor clínico.");
+                              }
+                            }}
+                          >
+                            <Sparkles className="w-2.5 h-2.5" /> AUTO
+                          </div>
+                        </TooltipTrigger>
+                        <TooltipContent>
+                          <p className="text-[10px]">Sugestões geradas automaticamente pelo motor clínico</p>
+                        </TooltipContent>
+                      </Tooltip>
+                    </TooltipProvider>
                   )}
                 </div>
                 {substitutionItems.map((item) => (
