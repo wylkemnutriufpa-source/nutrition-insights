@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useDroppable } from "@dnd-kit/core";
 import { useMealPlanEditorV2Store, type MealType, type MealPlanItem } from "@/stores/mealPlanEditorV2Store";
+import { sortMealPlanItems } from "@/lib/mealPlanSort";
 import {
   Plus,
   Flame,
