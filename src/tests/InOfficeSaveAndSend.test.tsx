@@ -109,9 +109,10 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
 
     // Verify error message and retry button
     await waitFor(() => {
-      expect(screen.getByText(/Falha na comunicação com o servidor/i)).toBeInTheDocument();
+      expect(screen.getByText(/Falha no envio/i)).toBeInTheDocument();
       expect(screen.getByText(/Tentar novamente/i)).toBeInTheDocument();
     }, { timeout: 3000 });
+
 
     // Mock success for second attempt
     mockQuery.in.mockResolvedValueOnce({ data: null, error: null });
