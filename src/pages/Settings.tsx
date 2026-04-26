@@ -374,6 +374,34 @@ export default function Settings() {
           </CardContent>
         </Card>
 
+        {/* Cache Management */}
+        <Card className="shadow-card border-amber-500/20 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2 text-amber-600">
+              <RefreshCw className="w-5 h-5" /> Suporte e Cache
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Se você notar que as informações do seu plano demoram a atualizar, você pode limpar o cache do aplicativo para forçar a sincronização imediata.
+            </p>
+            <Button 
+              variant="outline" 
+              className="w-full gap-2 border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
+              onClick={async () => {
+                await clearRuntimeCaches();
+                toast.success("Cache limpo! Recarregando...");
+                setTimeout(() => forceHardReload(), 1000);
+              }}
+            >
+              <RefreshCw className="w-4 h-4" /> Limpar Cache e Atualizar
+            </Button>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Recomendado se o seu profissional fez alterações recentes e elas ainda não apareceram.
+            </p>
+          </CardContent>
+        </Card>
+
         {/* Ranking Privacy — PRO+ */}
         {minMode("pro") && (
         <Card className="shadow-card">
