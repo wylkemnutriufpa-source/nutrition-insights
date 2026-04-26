@@ -648,7 +648,9 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
       {/* Meal blocks grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
         {blocks.map(block => {
-          const blockCals = block.items.reduce((s, i) => s + (i.calories || 0), 0);
+          const primaryItems = block.items.filter(i => i.is_primary);
+          const blockCals = primaryItems.reduce((s, i) => s + (i.calories || 0), 0);
+          
           return (
             <Card key={block.type} className="border-border/50">
               <CardHeader className="py-3 px-4">
@@ -660,82 +662,144 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
                   <span className="text-xs font-normal text-muted-foreground">{Math.round(blockCals)} kcal</span>
                 </CardTitle>
               </CardHeader>
-              <CardContent className="px-4 pb-3 space-y-2">
+              <CardContent className="px-4 pb-3 space-y-3">
                 {block.items.length === 0 && (
                   <p className="text-xs text-muted-foreground text-center py-3">Nenhum item adicionado</p>
                 )}
-                {block.items.map(item => (
-                  <div key={item.id} className="flex items-center gap-2 p-2 rounded-lg bg-muted/50 group">
-                    <GripVertical className="w-3 h-3 text-muted-foreground/30" />
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium truncate">{item.name}</p>
-                      <p className="text-[10px] text-muted-foreground">
-                        {Math.round(item.calories)}kcal · P{Math.round(item.protein)}g · C{Math.round(item.carbs)}g · G{Math.round(item.fat)}g
-                      </p>
-                    </div>
-                    <Button
-                      variant="ghost" size="icon"
-                      className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
-                      onClick={() => item.id && removeItem(block.type, item.id)}
-                    >
-                      <Trash2 className="w-3 h-3 text-destructive" />
-                    </Button>
-                  </div>
-                ))}
-
-                {/* Add button */}
-                <Dialog open={addingTo === block.type} onOpenChange={open => { setAddingTo(open ? block.type : null); setSearchQuery(""); setFoodResults([]); }}>
-                  <DialogTrigger asChild>
-                    <Button variant="outline" size="sm" className="w-full gap-1 text-xs border-dashed">
-                      <Plus className="w-3 h-3" /> Adicionar alimento
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent className="max-w-md">
-                    <DialogHeader>
-                      <DialogTitle className="flex items-center gap-2">
-                        <span className="text-lg">{block.emoji}</span> Adicionar a {block.label}
-                      </DialogTitle>
-                    </DialogHeader>
-                    <div className="space-y-3">
-                      <div className="relative">
-                        <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
-                        <Input
-                          placeholder="Buscar alimento..."
-                          value={searchQuery}
-                          onChange={e => setSearchQuery(e.target.value)}
-                          className="pl-9"
-                          autoFocus
-                        />
-                      </div>
-                      <ScrollArea className="max-h-64">
-                        {searchLoading && <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
-                        {foodResults.map(food => (
-                          <button
-                            key={food.id}
-                            onClick={() => { addFoodToBlock(block.type, food); setAddingTo(null); }}
-                            className="w-full text-left p-3 hover:bg-muted rounded-lg transition-colors flex items-center justify-between"
+                
+                {primaryItems.map(primary => {
+                  const substitutions = block.items.filter(i => !i.is_primary && i.substitution_group_id === primary.substitution_group_id);
+                  
+                  return (
+                    <div key={primary.id} className="space-y-1">
+                      {/* Primary Item */}
+                      <div className="flex items-center gap-2 p-2 rounded-lg bg-muted/30 group border border-border/20">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold truncate text-primary">{primary.name}</p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {Math.round(primary.calories)}kcal · P{Math.round(primary.protein)}g · C{Math.round(primary.carbs)}g
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-1">
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-6 w-6 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => primary.id && removeItem(block.type, primary.id)}
                           >
-                            <div>
-                              <p className="text-sm font-medium">{food.name}</p>
-                              <p className="text-[10px] text-muted-foreground">
-                                {food.serving_size}{food.serving_unit} · {Math.round(food.calories)}kcal · P{Math.round(food.protein)}g
-                              </p>
-                            </div>
-                            <Plus className="w-4 h-4 text-primary" />
-                          </button>
-                        ))}
-                        {!searchLoading && searchQuery.length >= 2 && foodResults.length === 0 && (
-                          <p className="text-sm text-muted-foreground text-center py-4">Nenhum alimento encontrado</p>
-                        )}
-                      </ScrollArea>
+                            <Trash2 className="w-3 h-3 text-destructive" />
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Substitutions */}
+                      {substitutions.map(sub => (
+                        <div key={sub.id} className="flex items-center gap-2 p-2 ml-4 rounded-lg bg-emerald-50/50 border-l-2 border-emerald-300 group">
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-medium truncate text-emerald-800">OU: {sub.name}</p>
+                            <p className="text-[9px] text-emerald-600/70">
+                              {Math.round(sub.calories)}kcal · P{Math.round(sub.protein)}g
+                            </p>
+                          </div>
+                          <Button
+                            variant="ghost" size="icon"
+                            className="h-5 w-5 opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => sub.id && removeItem(block.type, sub.id)}
+                          >
+                            <Trash2 className="w-2.5 h-2.5 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+
+                      {/* Add Substitution Button */}
+                      <div className="ml-4 pt-1">
+                        <Button 
+                          variant="ghost" 
+                          size="sm" 
+                          className="h-6 text-[10px] text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50 gap-1 px-2"
+                          onClick={() => setAddingTo({ type: block.type, substitutionGroupId: primary.substitution_group_id } as any)}
+                        >
+                          <Plus className="w-3 h-3" /> Adicionar Substituição
+                        </Button>
+                      </div>
                     </div>
-                  </DialogContent>
-                </Dialog>
+                  );
+                })}
+
+                {/* Add Primary Item button */}
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="w-full gap-1 text-xs border-dashed"
+                  onClick={() => setAddingTo({ type: block.type, isPrimary: true } as any)}
+                >
+                  <Plus className="w-3 h-3" /> Adicionar Opção Principal
+                </Button>
               </CardContent>
             </Card>
           );
         })}
       </div>
+
+      {/* Global Add Dialog */}
+      <Dialog 
+        open={!!addingTo} 
+        onOpenChange={open => { if(!open) setAddingTo(null); setSearchQuery(""); setFoodResults([]); }}
+      >
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Search className="w-5 h-5" /> 
+              {addingTo && typeof addingTo === 'object' && (addingTo as any).substitutionGroupId 
+                ? "Adicionar Substituição" 
+                : "Buscar Alimento"}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-2.5 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder="Buscar alimento..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="pl-9"
+                autoFocus
+              />
+            </div>
+            <ScrollArea className="max-h-64">
+              {searchLoading && <div className="flex justify-center py-4"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
+              {foodResults.map(food => (
+                <button
+                  key={food.id}
+                  onClick={() => { 
+                    if (addingTo) {
+                      const config = addingTo as any;
+                      addFoodToBlock(
+                        config.type, 
+                        food, 
+                        config.isPrimary ?? !config.substitutionGroupId, 
+                        config.substitutionGroupId
+                      );
+                      setAddingTo(null);
+                    }
+                  }}
+                  className="w-full text-left p-3 hover:bg-muted rounded-lg transition-colors flex items-center justify-between"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{food.name}</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {food.serving_size}{food.serving_unit} · {Math.round(food.calories)}kcal
+                    </p>
+                  </div>
+                  <Plus className="w-4 h-4 text-primary" />
+                </button>
+              ))}
+              {!searchLoading && searchQuery.length >= 2 && foodResults.length === 0 && (
+                <p className="text-sm text-muted-foreground text-center py-4">Nenhum alimento encontrado</p>
+              )}
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
