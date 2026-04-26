@@ -111,7 +111,7 @@ export default function Invitation() {
   const handleAccept = () => {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
-    navigate(`/register-patient?nutri=${invitation.professional_id}&code=${code}`);
+    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}`);
   };
 
   const handleRegenerate = async () => {
