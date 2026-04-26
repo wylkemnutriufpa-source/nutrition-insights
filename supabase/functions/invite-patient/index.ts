@@ -184,14 +184,43 @@ Deno.serve(async (req) => {
     // Magic link opcional
     if (method === "magic_link") {
       try {
+        const redirectTo = BASE_URL;
+        if (!isValidDomain(redirectTo)) {
+          console.error(`[invite-patient] Tentativa de usar domínio inválido: ${redirectTo}`);
+          // Embora o BASE_URL seja fixo, mantemos a verificação para consistência futura
+        }
+
         await adminClient.auth.admin.generateLink({
           type: "magiclink",
           email: normalizedEmail,
-          options: { redirectTo: `https://www.fitjourney.com.br/` },
+          options: { redirectTo },
+        });
+
+        // Log da geração do convite/link
+        await logInvitation(adminClient, {
+          event_type: "generated",
+          details: { 
+            patient_id: patientId, 
+            method: "magic_link", 
+            invited_by: caller.id,
+            email: normalizedEmail 
+          },
+          domain_used: redirectTo
         });
       } catch (e) {
         console.log("[invite-patient] Magic link generation failed, patient can use forgot password:", e);
       }
+    } else {
+      // Log para método de senha também
+      await logInvitation(adminClient, {
+        event_type: "generated",
+        details: { 
+          patient_id: patientId, 
+          method: "password", 
+          invited_by: caller.id,
+          email: normalizedEmail 
+        }
+      });
     }
 
     return new Response(JSON.stringify({ success: true, patient_id: patientId }), {
