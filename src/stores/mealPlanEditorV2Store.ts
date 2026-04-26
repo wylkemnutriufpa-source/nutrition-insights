@@ -534,7 +534,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     
     // Atualiza estado local imediatamente (otimista)
     set((s) => ({
-      items: s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i)),
+      items: sortMealPlanItems(s.items.map((i) => (i.id === itemId ? { ...i, ...sanitizedPatch } as MealPlanItem : i))),
     }));
 
     // Se for item temporário, não enfileiramos update; o insert pendente já pegará o estado atualizado do store no momento do flush
