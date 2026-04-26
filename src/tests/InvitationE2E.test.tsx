@@ -24,7 +24,13 @@ vi.mock('@/integrations/supabase/client', () => ({
   },
 }));
 
+vi.mock('@/lib/auth', () => ({
+  useAuth: vi.fn().mockReturnValue({ user: null, loading: false }),
+  AuthProvider: ({ children }: any) => <>{children}</>
+}));
+
 describe('Invitation E2E Simulation', () => {
+
   beforeEach(() => {
     vi.clearAllMocks();
     
