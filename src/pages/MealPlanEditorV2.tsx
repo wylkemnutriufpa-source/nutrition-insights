@@ -350,6 +350,9 @@ export default function MealPlanEditorV2() {
   const loadDefaultTemplate = useCallback(async () => {
     if (!plan?.patient_id || !user?.id) return;
     
+    // Runtime assertion
+    if (!(await checkDefaultPlanColumn())) return;
+
     const { data: np } = await supabase
       .from("nutritionist_patients")
       .select("default_meal_plan_id")
