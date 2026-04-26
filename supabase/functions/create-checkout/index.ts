@@ -65,7 +65,7 @@ serve(async (req) => {
       if (hasActiveTrial) {
         // User already in trial — create checkout WITHOUT trial (direct subscription)
         logStep("User already in trial, skipping trial period");
-        const origin = req.headers.get("origin") || "https://fijourney.lovable.app";
+        const origin = "https://www.fitjourney.com.br";
         const session = await stripe.checkout.sessions.create({
           customer: customerId,
           line_items: [{ price: priceId, quantity: 1 }],
@@ -81,7 +81,7 @@ serve(async (req) => {
       }
     }
 
-    const origin = req.headers.get("origin") || "https://fijourney.lovable.app";
+    const origin = "https://www.fitjourney.com.br";
 
     const session = await stripe.checkout.sessions.create({
       customer: customerId,

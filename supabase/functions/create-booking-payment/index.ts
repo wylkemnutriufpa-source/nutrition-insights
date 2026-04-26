@@ -176,7 +176,7 @@ Deno.serve(async (req) => {
     }
 
     const nutName = nutProfile.full_name || "Nutricionista";
-    const origin = req.headers.get("origin") || "https://fijourney.lovable.app";
+    const origin = "https://www.fitjourney.com.br";
 
     // Create Stripe checkout session (one-off payment)
     const session = await stripe.checkout.sessions.create({

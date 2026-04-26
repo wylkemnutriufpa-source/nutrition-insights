@@ -62,10 +62,7 @@ Deno.serve(async (req) => {
       if (!link) throw new Error("Patient is not linked to this professional");
     }
 
-    const origin =
-      req.headers.get("origin") ||
-      Deno.env.get("PUBLIC_APP_URL") ||
-      "https://fijourney.lovable.app";
+    const origin = "https://www.fitjourney.com.br";
 
     // Gera magic link redirecionando direto para /onboarding (rota canônica)
     const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
