@@ -492,6 +492,10 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         )}
       </div>
 
+      <div className="text-[9px] text-muted-foreground text-center space-y-0.5">
+        <p>✅ Motor clínico calcula macros → Você escolhe o caminho → Plano gerado</p>
+      </div>
+
       <MarmitaSettingsDialog
         open={settingsOpen}
         onOpenChange={setSettingsOpen}
@@ -511,22 +515,6 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         }))}
         targetKcal={store.planMetadata?.target_calories}
       />
-    </div>
-  );
-}
-            <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
-            <p className="text-[10px] text-destructive leading-relaxed">
-              Mínimo configurado: <strong>{minSettings.fixed_min_lunch} almoço(s) fixo(s)</strong> e <strong>{minSettings.fixed_min_dinner} jantar(es) fixo(s)</strong>. Cadastre marmitas com <strong>"fixos"</strong> ou ajuste o mínimo.
-            </p>
-          </div>
-        )}
-      </div>
-      {/* Info */}
-      <div className="text-[9px] text-muted-foreground text-center space-y-0.5">
-        <p>✅ Motor clínico calcula macros → Você escolhe o caminho → Plano gerado</p>
-      </div>
-
-      <MarmitaSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
     </div>
   );
 }
