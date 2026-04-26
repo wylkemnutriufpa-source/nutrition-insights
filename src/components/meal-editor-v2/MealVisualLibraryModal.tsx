@@ -147,7 +147,7 @@ export function MealVisualLibraryModal({ open, onOpenChange, onDragStartFromLibr
         </div>
 
         {/* Results */}
-        <ScrollArea className="flex-1 px-5 py-4">
+        <div className="flex-1 px-5 py-4 overflow-y-auto scrollbar-thin">
           {loading ? (
             <div className="flex items-center justify-center py-16">
               <Loader2 className="w-5 h-5 animate-spin text-primary" />
