@@ -312,8 +312,6 @@ export default function MealPlanEditorV2() {
   const isPublished = planState.isEffective;
   const isApproved = planState.isApproved;
 
-  // Status display info
-  const statusInfo = STATUS_LABELS[planStatus] || STATUS_LABELS.draft;
 
   // ── Generate new plan (creates a new draft, never touches current plan) ──
   const handleGenerateNewPlan = async () => {
