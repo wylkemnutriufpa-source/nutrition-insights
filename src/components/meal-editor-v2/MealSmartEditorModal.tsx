@@ -226,6 +226,7 @@ export function MealSmartEditorModal({
           .map(l => l.trim());
         setSubstitutions(subLines.slice(0, substitutionCount));
       }
+      setPortionFactor(meta.portion_factor || 1.0);
     }
     onOpenChange(newOpen);
   };
