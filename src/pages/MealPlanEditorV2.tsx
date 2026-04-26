@@ -427,11 +427,10 @@ export default function MealPlanEditorV2() {
     setLastAttemptParams(params);
 
     setGeneratingNew(true);
+    setLastGenError(null);
     try {
       console.warn("[PLAN] chamando edge function via pipeline");
       const result = await runPlanPipeline(params);
-
-
 
       console.warn("[PLAN] resposta recebida", result);
       if (!result.success || !result.planId) {
@@ -448,7 +447,9 @@ export default function MealPlanEditorV2() {
       navigate(`/meal-plans/${result.planId}`, { replace: true });
     } catch (err: any) {
       console.error("[GenerateNew] Error:", err);
-      toast.error(err?.message || "Erro ao gerar novo plano");
+      const msg = err?.message || "Erro ao gerar novo plano";
+      setLastGenError(msg);
+      toast.error(msg);
     } finally {
       setGeneratingNew(false);
     }
