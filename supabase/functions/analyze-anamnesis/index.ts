@@ -129,6 +129,35 @@ serve(async (req) => {
     await serviceClient.from("patient_tips").delete().eq("user_id", anamnesis.user_id);
     if (tipsToInsert.length > 0) await serviceClient.from("patient_tips").insert(tipsToInsert);
     await serviceClient.from("patient_timeline").insert([{ patient_id: anamnesis.user_id, event_type: "achievement", title: "Motor Clínico processou Anamnese", description: `Nível de atenção: ${risk === "high" ? "Alto" : risk === "medium" ? "Médio" : "Baixo"} | Meta: ${kcal} kcal/dia`, metadata: { type: "anamnesis_completed", risk_level: risk, engine: "deterministic_v1" }, created_by: anamnesis.user_id }, { patient_id: anamnesis.user_id, event_type: "protocol", title: "Protocolo Sugerido (Motor Clínico)", description: insights.suggested_protocol, metadata: { type: "suggested_protocol_created" }, created_by: anamnesis.user_id }]);
+
+    // Notify Nutritionist in Real-time
+    try {
+      const { data: linkData } = await serviceClient
+        .from("nutritionist_patients")
+        .select("nutritionist_id")
+        .eq("patient_id", anamnesis.user_id)
+        .maybeSingle();
+
+      if (linkData?.nutritionist_id) {
+        const { data: profile } = await serviceClient
+          .from("profiles")
+          .select("full_name")
+          .eq("user_id", anamnesis.user_id)
+          .maybeSingle();
+
+        await serviceClient.from("notifications").insert({
+          user_id: linkData.nutritionist_id,
+          title: "✅ Anamnese Concluída",
+          message: `${profile?.full_name || "Um paciente"} acabou de completar a anamnese.`,
+          type: "success",
+          entity_type: "patient",
+          entity_id: anamnesis.user_id,
+          target_route: `/patients/${anamnesis.user_id}`,
+        } as any);
+      }
+    } catch (err) {
+      console.warn("Failed to notify nutritionist:", err);
+    }
     return new Response(JSON.stringify({ success: true, insight_id: insightRow.id, risk_level: insights.risk_level, tips_count: tipsToInsert.length, recommendations_count: recsWithIds.length, summary: insights.ai_summary, computed: { bmr: Math.round(bmr), tdee: Math.round(tdee), kcal, ...macros } }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (e) {
     console.error("analyze-anamnesis (deterministic) error:", e);
