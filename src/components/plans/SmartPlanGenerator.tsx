@@ -79,7 +79,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
   const [selectedMode, setSelectedMode] = useState<GenerationMode>("quick");
   const [generating, setGenerating] = useState(false);
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
-  const [activePlanName, setActivePlanName] = useState<string | null>(null);
+  const [activePlan, setActivePlan] = useState<{ id: string; title: string; template_id: string | null } | null>(null);
   const [showReplaceDialog, setShowReplaceDialog] = useState(false);
 
   // Professional override (used when patient anamnesis is missing/incomplete)
@@ -92,14 +92,14 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
     if (!patientId) return;
     supabase
       .from("meal_plans")
-      .select("id, title")
+      .select("id, title, template_id")
       .eq("patient_id", patientId)
       .eq("is_active", true)
       .in("plan_status", ["approved", "published_to_patient"])
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        setActivePlanName(data?.title || (data ? "Plano Ativo" : null));
+        setActivePlan(data || null);
       });
   }, [patientId]);
 
