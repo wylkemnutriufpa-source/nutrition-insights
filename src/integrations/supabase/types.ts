@@ -15542,11 +15542,14 @@ export type Database = {
           created_at: string | null
           error_message: string | null
           fallback_url: string
+          http_status_code: number | null
           id: string
           meal_name: string | null
           original_url: string | null
           recipe_id: string | null
           recipe_name: string
+          revalidated_at: string | null
+          revalidated_status: string | null
           severity: string | null
           template_name: string | null
         }
@@ -15554,11 +15557,14 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           fallback_url: string
+          http_status_code?: number | null
           id?: string
           meal_name?: string | null
           original_url?: string | null
           recipe_id?: string | null
           recipe_name: string
+          revalidated_at?: string | null
+          revalidated_status?: string | null
           severity?: string | null
           template_name?: string | null
         }
@@ -15566,11 +15572,14 @@ export type Database = {
           created_at?: string | null
           error_message?: string | null
           fallback_url?: string
+          http_status_code?: number | null
           id?: string
           meal_name?: string | null
           original_url?: string | null
           recipe_id?: string | null
           recipe_name?: string
+          revalidated_at?: string | null
+          revalidated_status?: string | null
           severity?: string | null
           template_name?: string | null
         }
