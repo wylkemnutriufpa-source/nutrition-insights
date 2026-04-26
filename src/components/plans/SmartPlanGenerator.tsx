@@ -218,11 +218,11 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
       </div>
 
       {/* Active plan warning banner */}
-      {activePlanName && (
+      {activePlan && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm">
           <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
           <span className="text-amber-700 dark:text-amber-400">
-            Este paciente já possui um plano ativo: <strong>{activePlanName}</strong>. 
+            Este paciente já possui um plano ativo: <strong>{activePlan.title || "Plano Ativo"}</strong>. 
             Ao gerar um novo, o anterior será substituído.
           </span>
         </div>
