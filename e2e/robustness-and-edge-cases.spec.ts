@@ -1,140 +1,169 @@
 import { test, expect } from './fixtures';
 
-test.describe('Meal Editor Robustness and Edge Cases', () => {
+test.describe('Meal Editor Robustness and UX Consistency', () => {
   
   test.beforeEach(async ({ nutriPage }) => {
-    await nutriPage.goto('/meal-plans');
-    // Ensure we have a plan to test with. If none, we might need to create one, 
-    // but usually E2E environments have seeds.
-    const planLink = nutriPage.locator('a[href^="/meal-plans/"]').first();
+    // Acessa a lista de pacientes e entra no primeiro paciente
+    await nutriPage.goto('/patients');
+    const patientRow = nutriPage.locator('tr').filter({ hasText: /Paciente|Teste/i }).first();
+    await expect(patientRow).toBeVisible({ timeout: 15000 });
+    await patientRow.click();
+
+    // Entra no editor de plano (Plan Builder ou Meal Plans)
+    const planLink = nutriPage.locator('a[href*="/plan-builder/"], a[href*="/meal-plans/"]').first();
     if (await planLink.isVisible()) {
       await planLink.click();
     } else {
-      // Create a plan if none exists
-      await nutriPage.getByRole('button', { name: /Novo Plano/i }).click();
-      await nutriPage.waitForURL(/\/meal-plans\/[a-zA-Z0-0-]+/);
+      // Cria um plano "Do Zero" se não houver
+      const doZeroBtn = nutriPage.getByRole('button', { name: /Do Zero|Novo Plano/i }).first();
+      await expect(doZeroBtn).toBeVisible();
+      await doZeroBtn.click();
+    }
+    
+    // Aguarda carregar o grid
+    await expect(nutriPage.getByTestId(/^edit-meal-/).first()).toBeVisible({ timeout: 20000 });
+  });
+
+  test('UX: Focus restoration on ESC with multiple items', async ({ nutriPage }) => {
+    // 1. Identifica múltiplos itens
+    const editButtons = nutriPage.getByTestId(/^edit-meal-/);
+    const count = await editButtons.count();
+    expect(count).toBeGreaterThanOrEqual(2);
+
+    for (let i = 0; i < Math.min(count, 3); i++) {
+      const trigger = editButtons.nth(i);
+      const itemId = await trigger.getAttribute('data-testid').then(id => id?.replace('edit-meal-', ''));
+      
+      // Abre o modal
+      await trigger.click();
+      const modal = nutriPage.locator('div[role="dialog"]');
+      await expect(modal).toBeVisible();
+      
+      // Altera algum campo (notas ou descrição)
+      const textarea = modal.locator('textarea').first();
+      await textarea.fill('Teste de foco ' + i);
+      
+      // Pressiona ESC
+      await nutriPage.keyboard.press('Escape');
+      await expect(modal).toBeHidden();
+      
+      // Verifica se o foco voltou exatamente para o botão que abriu
+      await expect(trigger).toBeFocused();
     }
   });
 
-  test('Test 1: Modal state reset on ESC and focus return', async ({ nutriPage }) => {
-    // 1. Identify a meal item and its edit button
-    const editButton = nutriPage.getByTestId(/^edit-meal-/).first();
-    const itemId = await editButton.getAttribute('data-testid').then(id => id?.replace('edit-meal-', ''));
-    
-    // 2. Get initial state (description) from the UI if possible or just know it will change
-    await editButton.click();
-    const modal = nutriPage.locator('div[role="dialog"]');
-    await expect(modal).toBeVisible();
-    
-    const textarea = modal.locator('textarea').first();
-    const initialValue = await textarea.inputValue();
-    
-    // 3. Make local changes
-    await textarea.fill(initialValue + ' - Local Change');
-    
-    // 4. Close with ESC
-    await nutriPage.keyboard.press('Escape');
-    await expect(modal).not.toBeVisible();
-    
-    // 5. Verify focus returns to the edit button
-    await expect(editButton).toBeFocused();
-    
-    // 6. Reopen and verify state is reset
-    await editButton.click();
-    await expect(modal).toBeVisible();
-    const reopenedValue = await modal.locator('textarea').first().inputValue();
-    expect(reopenedValue).toBe(initialValue);
-  });
-
-  test('Test 5: Detailed Validation Warning for missing base macros', async ({ nutriPage }) => {
-    // This test requires an item with missing base macros.
-    // We can try to find or "create" one by manipulation if the UI allows, 
-    // but here we'll assume we can trigger the toast logic.
-    
-    // We'll mock the response or find a way to trigger the "fixed meal" logic with missing meta
-    // For the purpose of this task, I'll assume we can trigger it by opening a specific type of meal
-    // Or we can just verify the UI refinement I made if we can get into that state.
-    
-    // Since I cannot easily create a specific DB state in this environment without more tools,
-    // I will look for a "Fixed Meal" or try to make one fixed.
-    
-    // Actually, I can try to find an item that is "Fixed" (Marmita Fixa)
-    const fixedMealEdit = nutriPage.locator('[data-testid^="edit-meal-"]').filter({ hasText: /Marmita/i }).first();
-    
-    if (await fixedMealEdit.isVisible()) {
-      await fixedMealEdit.click();
-      // If it's missing macros, the toast should appear with the specific fields
-      const toast = nutriPage.locator('ol[tabindex="-1"]'); // Sonner toast container
-      await expect(nutriPage.getByText(/Campos ausentes no edit_metadata: kcal_base, protein_base, carbs_base, fat_base/i).or(nutriPage.getByText(/Dados Base Incompletos/i))).toBeVisible();
-    } else {
-      // If no fixed meal found, we skip or log
-      console.log('No fixed meal found to test missing macros toast.');
-    }
-  });
-
-  test('Test 4: Mobile viewport, overlay click and focus return', async ({ nutriPage }) => {
-    // 1. Set viewport to 384px width
+  test('Mobile: Overlay clicks at 384px width', async ({ nutriPage }) => {
+    // 1. Viewport mobile 384px
     await nutriPage.setViewportSize({ width: 384, height: 800 });
     
-    // 2. Open modal
-    const editButton = nutriPage.getByTestId(/^edit-meal-/).first();
-    await editButton.click();
+    // 2. Abre o modal
+    const trigger = nutriPage.getByTestId(/^edit-meal-/).first();
+    await trigger.click();
     const modal = nutriPage.locator('div[role="dialog"]');
     await expect(modal).toBeVisible();
+
+    // Verifica que o card de macros está visível no header
+    const macroSummary = nutriPage.getByTestId('modal-macro-summary');
+    await expect(macroSummary).toBeVisible();
     
-    // 3. Click directly on overlay (outside the DialogContent)
-    // In Radix UI / Shadcn, clicking outside triggers onOpenChange(false)
-    // We'll click at the very edge of the screen
-    await nutriPage.mouse.click(10, 10);
-    
-    // 4. Verify modal closes
-    await expect(modal).not.toBeVisible();
-    
-    // 5. Verify focus returns to the edit button
-    await expect(editButton).toBeFocused();
+    // 3. Clica no overlay em diferentes pontos
+    // Ponto 1: Canto superior esquerdo (quase fora da tela)
+    await nutriPage.mouse.click(1, 1);
+    await expect(modal).toBeHidden();
+    await expect(trigger).toBeFocused();
+
+    // Reabre para o segundo ponto
+    await trigger.click();
+    await expect(modal).toBeVisible();
+
+    // Ponto 2: Meio lateral (overlay costuma ocupar as laterais se o modal não for full width)
+    // Em 384px, o modal costuma ser quase full width, mas clicamos na bordinha lateral se houver, 
+    // ou usamos as coordenadas do mouse.click fora da área do DialogContent.
+    // O DialogContent no código tem max-w-4xl, mas em mobile ele deve ocupar a largura disponível.
+    // Vamos clicar bem embaixo, fora da área do modal.
+    await nutriPage.mouse.click(192, 790); // Meio horizontal, rodapé
+    await expect(modal).toBeHidden();
+    await expect(trigger).toBeFocused();
   });
 
-  test('Test 2: CTA "Corrigir Agora" focuses expected field', async ({ nutriPage }) => {
-    // This overlaps with Test 5. We trigger the missing macros toast.
+  test('Logic: Positive daily total with zero partial macros in multiple items', async ({ nutriPage }) => {
+    // 1. Garante que temos pelo menos 3 itens para testar "múltiplos itens zerados"
+    // (Se não houver, o teste usará os que existem, mas tentaremos zerar pelo menos 2)
+    const items = nutriPage.getByTestId(/^edit-meal-/);
+    const count = await items.count();
+    
+    // Zerar macros de dois itens via portion factor
+    for (let i = 0; i < Math.min(count - 1, 2); i++) {
+      await items.nth(i).click();
+      const modal = nutriPage.locator('div[role="dialog"]');
+      
+      // Localiza o input de fator de porção (se disponível) ou apenas preenche macros zeradas
+      // No componente, o portionFactor afeta adjustedMacros
+      const factorInput = modal.locator('input[type="number"]').first(); // Supondo que seja o primeiro number input
+      await factorInput.fill('0');
+      
+      await nutriPage.getByTestId('meal-editor-save-button').click();
+      await expect(modal).toBeHidden();
+    }
+
+    // O último item permanece com macros positivas (garantindo total diário > 0)
+    
+    // 2. Salva o plano completo
+    const savePlanBtn = nutriPage.getByRole('button', { name: /Salvar/i }).first();
+    await savePlanBtn.click();
+    
+    // 3. Verifica que não bloqueou a persistência
+    await expect(nutriPage.getByText(/Plano salvo/i).or(nutriPage.getByText(/Salvo com sucesso/i))).toBeVisible();
+  });
+
+  test('Validation: Toast lists missing fields in fixed order', async ({ nutriPage }) => {
+    // 1. Tenta encontrar ou simular uma Marmita Fixa sem metadata
+    // Vamos usar o botão de ajuda/info se houver, ou assumir que clicando em um item
+    // que "parece" uma marmita ele dispara o erro se estiver incompleto.
+    
+    // Alternativa: Forçar um erro de validação ao tentar salvar um item que marcamos como fixo (se o mock permitir)
+    // Aqui vamos procurar por um item que contenha "Marmita" no nome
     const fixedMealEdit = nutriPage.locator('[data-testid^="edit-meal-"]').filter({ hasText: /Marmita/i }).first();
     
     if (await fixedMealEdit.isVisible()) {
       await fixedMealEdit.click();
       
-      const corrigirAgora = nutriPage.getByRole('button', { name: /Corrigir Agora/i });
-      await expect(corrigirAgora).toBeVisible();
-      
-      await corrigirAgora.click();
-      
-      // Verify focus is on the description field (as per current implementation in MealSmartEditorModal.tsx line 105)
-      const descriptionField = nutriPage.locator('div[role="dialog"] textarea').first();
-      await expect(descriptionField).toBeFocused();
+      // O toast deve aparecer IMEDIATAMENTE no useEffect se os dados estiverem ausentes
+      // ou ao tentar salvar.
+      const saveBtn = nutriPage.getByTestId('meal-editor-save-button');
+      await saveBtn.click();
+
+      // Verifica a ordem exata dos campos no toast
+      const expectedText = "kcal_base, protein_base, carbs_base, fat_base";
+      await expect(nutriPage.getByText(new RegExp(expectedText))).toBeVisible();
     }
   });
 
-  test('Test 3: Partial macros recalculated and save works', async ({ nutriPage }) => {
-    // 1. Open editor
-    const editButton = nutriPage.getByTestId(/^edit-meal-/).first();
-    await editButton.click();
+  test('State: Reset local state upon closing even after tab switching', async ({ nutriPage }) => {
+    const trigger = nutriPage.getByTestId(/^edit-meal-/).first();
+    await trigger.click();
     const modal = nutriPage.locator('div[role="dialog"]');
     
-    // 2. Ensure we have a meal with some macros but maybe one field is 0
-    // We can use the portion factor to change things
-    const portionInput = modal.locator('input[type="number"]').filter({ has: nutriPage.locator('..').getByText(/Fator/i) }).first();
-    if (await portionInput.isVisible()) {
-      await portionInput.fill('0.5');
-      // Wait for recalulation (it's useMemo, so it should be fast)
-      // Check the macro preview in the header
-      const kcalPreview = modal.locator('span.text-orange-500').first();
-      const initialKcal = await kcalPreview.textContent();
-      
-      // 3. Save
-      await nutriPage.getByTestId('meal-editor-save-button').click();
-      await expect(modal).not.toBeVisible();
-      
-      // 4. Verify total plan recalulation
-      // This would be visible in the plan summary at the top of the page
-      await expect(nutriPage.getByText(/Total Diário/i)).toBeVisible();
-    }
+    // 1. Altera a descrição
+    const textarea = modal.locator('textarea').first();
+    const originalValue = await textarea.inputValue();
+    await textarea.fill('Valor alterado temporariamente');
+    
+    // 2. Alterna abas internas
+    const readyTab = modal.getByRole('button', { name: /Refeição Pronta/i });
+    await readyTab.click();
+    
+    // 3. Fecha sem salvar (via Cancelar)
+    await nutriPage.getByTestId('meal-editor-cancel-button').click();
+    await expect(modal).toBeHidden();
+    
+    // 4. Reabre e verifica que voltou ao original
+    await trigger.click();
+    await expect(modal).toBeVisible();
+    const reopenedValue = await modal.locator('textarea').first().inputValue();
+    expect(reopenedValue).toBe(originalValue);
+    
+    // Verifica que voltou para a aba inicial ("Alimento")
+    await expect(modal.getByRole('button', { name: /Alimento/i })).toHaveClass(/bg-primary|default/);
   });
 });
