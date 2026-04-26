@@ -5,7 +5,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft, Loader2, AlertTriangle, Zap, Save, Send, CheckCircle2,
   Wand2, Trash2, Library, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
-  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil
+  PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil, Star
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
