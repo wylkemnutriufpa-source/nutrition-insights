@@ -88,42 +88,38 @@ test.describe("Mobile QA Extra Assertions", () => {
     await page.getByTestId(`trigger-${screen.id}`).click();
     
     // Register evidence manually using one of the checklist items camera button
-    // The first camera button in the checklist
     await page.locator('button:has(svg.lucide-camera)').first().click();
     
     // Wait for toast to ensure registration is done
     await expect(page.getByText("Evidência registrada!")).toBeVisible();
     
-    // 2. Export report
+    // 2. Export report and wait for the JSON download specifically
     const [download] = await Promise.all([
-      page.waitForEvent('download'),
+      page.waitForEvent('download', {
+        predicate: (download) => download.suggestedFilename().endsWith('.json')
+      }),
       page.getByText("Exportar Relatório").click(),
     ]);
     
     const downloadPath = path.join("/tmp", download.suggestedFilename());
     await download.saveAs(downloadPath);
     
-    // 3. Parse and verify JSON if it's the JSON file
-    // Note: The app triggers 3 downloads (PDF, JSON, CSV). 
-    // Playwright's waitForEvent('download') usually catches the first one.
-    // Based on the code, it's JSON first.
+    // 3. Parse and verify JSON
+    const fileContent = fs.readFileSync(downloadPath, 'utf8');
+    const report = JSON.parse(fileContent);
     
-    if (download.suggestedFilename().endsWith('.json')) {
-      const fileContent = fs.readFileSync(downloadPath, 'utf8');
-      const report = JSON.parse(fileContent);
-      
-      expect(report.evidences.length).toBeGreaterThan(0);
-      
-      const evidence = report.evidences[report.evidences.length - 1];
-      expect(evidence.modalId).toBe(screen.id);
-      expect(evidence.viewport).toBeDefined();
-      expect(evidence.sequence).toBe(1);
-      
-      // Check for unique keys
-      const keys = report.evidences.map((e: any) => e.id);
-      const uniqueKeys = new Set(keys);
-      expect(uniqueKeys.size).toBe(keys.length);
-    }
+    expect(report.evidences.length).toBeGreaterThan(0);
+    
+    // Find the evidence we just added
+    const evidence = report.evidences.find((e: any) => e.modalId === screen.id);
+    expect(evidence).toBeDefined();
+    expect(evidence.viewport).toMatch(/^\d+px$/);
+    expect(evidence.sequence).toBeGreaterThanOrEqual(1);
+    
+    // Check for unique keys
+    const keys = report.evidences.map((e: any) => e.id);
+    const uniqueKeys = new Set(keys);
+    expect(uniqueKeys.size).toBe(keys.length);
   });
 
   test("should capture overflow only after configured buffer window", async ({ page }) => {
