@@ -73,7 +73,7 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     // Verify initial state
     await waitFor(() => expect(screen.getByText(/John Doe/i)).toBeInTheDocument());
     
-    const publishButton = await screen.findByRole('button', { name: /Publicar Plano/i });
+    const publishButton = await screen.findByRole('button', { name: /Salvar e Enviar ao Paciente/i });
     expect(publishButton).toBeInTheDocument();
 
     // Mock successful update
