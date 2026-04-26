@@ -107,6 +107,7 @@ export default function Settings() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
+  const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
   const [savingProfile, setSavingProfile] = useState(false);
 
