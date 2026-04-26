@@ -2485,7 +2485,7 @@ function generateFixedMarmitaPlan(
       const dayItems = generateAdjustableMealsForDay(
         templates, visualLibrary, goal, remainderKcal, remainderMacros,
         restrictions, disliked, allergies, nonMarmitaMealTypes, mealTimes,
-        strategy, patientFoodDatabase, recentMeals, day,
+        strategy, patientFoodDatabase, recentMeals, day, prioritizedTemplateIds,
       );
       for (const it of dayItems) items.push(it);
     }
