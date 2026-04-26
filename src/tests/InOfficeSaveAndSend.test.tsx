@@ -21,8 +21,18 @@ vi.mock('@/integrations/supabase/client', () => {
       invoke: vi.fn(),
     },
   };
+  // Ensure chaining works by returning the mock itself for certain methods
+  mock.from.mockReturnValue(mock);
+  mock.select.mockReturnValue(mock);
+  mock.update.mockReturnValue(mock);
+  mock.eq.mockReturnValue(mock);
+  mock.in.mockReturnValue(mock);
+  mock.order.mockReturnValue(mock);
+  mock.limit.mockReturnValue(mock);
+  
   return { supabase: mock };
 });
+
 
 const queryClient = new QueryClient({
   defaultOptions: { queries: { retry: false } },
