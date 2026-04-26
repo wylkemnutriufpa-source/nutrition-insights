@@ -190,9 +190,22 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
   // Filter nutritionist templates
   const filteredTemplates = useMemo(() => {
     let list = templates;
-    if (filterType !== "all") {
+    
+    // Auto-filter by meal type if enabled
+    if (showOnlyCompatible) {
+      list = list.filter((t) => t.meal_type === targetMealType);
+    } else if (filterType !== "all") {
       list = list.filter((t) => t.meal_type === filterType);
     }
+
+    // Filter by objective tags
+    if (filterObjective !== "all") {
+      const q = filterObjective === "definition" ? "definição" : filterObjective === "gain" ? "ganho" : "manutenção";
+      list = list.filter((t) =>
+        (Array.isArray(t.goal_tags) && t.goal_tags.some((tag: string) => tag.toLowerCase().includes(q)))
+      );
+    }
+
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((t) =>
@@ -201,7 +214,7 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
       );
     }
     return list;
-  }, [templates, filterType, search]);
+  }, [templates, filterType, search, filterObjective, showOnlyCompatible, targetMealType]);
 
   // Filter diet templates
   const filteredDietTemplates = useMemo(() => {
