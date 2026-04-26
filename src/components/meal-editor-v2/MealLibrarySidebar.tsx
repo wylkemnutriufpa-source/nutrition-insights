@@ -243,6 +243,11 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
         protein_target: food.protein || null,
         carbs_target: food.carbs || null,
         fat_target: food.fat || null,
+        edit_metadata: {
+          is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
+          original_recipe_id: template.is_recipe ? template.id : null,
+          portion_base: food.portion
+        } as any,
       }));
       addItems(inserts);
     } else {
