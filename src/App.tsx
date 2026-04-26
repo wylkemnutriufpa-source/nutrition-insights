@@ -517,7 +517,9 @@ const App = () => (
               <Route path="/biquini-branco" element={<LP section="Landing"><BiquiniBrancoLanding /></LP>} />
               <Route path="/demo/:mode" element={<Suspense fallback={<PageLoader />}><PublicDemo /></Suspense>} />
               {/* Patient self-registration disabled — access is invitation-based only */}
-              <Route path="/cadastro" element={<Navigate to="/auth" replace />} />
+              <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
+              <Route path="/register" element={<LP section="Cadastro"><PatientRegister /></LP>} />
+              <Route path="/register-patient" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
