@@ -506,7 +506,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
               return match || item;
             }
             return item;
-          }),
+          })),
         }));
 
         // Auto-resolve visual images silently
