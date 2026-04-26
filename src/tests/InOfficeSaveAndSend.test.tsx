@@ -95,22 +95,32 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     await waitFor(() => expect(screen.getByText(/Plano publicado com sucesso/i)).toBeInTheDocument());
   });
 
-  it('should show retry button when publication fails', async () => {
-    // This test will fail currently as retry is not implemented
+  it('should show retry button when publication fails and allow retrying', async () => {
     const mockSupabase = supabase as any;
     renderComponent();
 
-    const publishButton = await screen.findByRole('button', { name: /Publicar Plano/i });
+    const publishButton = await screen.findByRole('button', { name: /Salvar e Enviar ao Paciente/i });
     
     // Mock failure
-    mockSupabase.update.mockResolvedValue({ data: null, error: { message: 'Database connection failed' } });
+    mockSupabase.update.mockResolvedValueOnce({ data: null, error: { message: 'Database connection failed' } });
 
     fireEvent.click(publishButton);
 
-    // Here we would expect to see a "Tentar novamente" button
-    // But since it's not implemented, we'll just check if it stays on the same state or shows error
+    // Verify error message and retry button
     await waitFor(() => {
-      expect(screen.getByText(/Erro ao publicar/i)).toBeInTheDocument();
+      expect(screen.getByText(/Falha na comunicação com o servidor/i)).toBeInTheDocument();
+      expect(screen.getByText(/Tentar novamente/i)).toBeInTheDocument();
+    });
+
+    // Mock success for second attempt
+    mockSupabase.update.mockResolvedValueOnce({ data: null, error: null });
+    
+    fireEvent.click(screen.getByText(/Tentar novamente/i));
+
+    // Verify success
+    await waitFor(() => {
+      expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument();
     });
   });
+
 });
