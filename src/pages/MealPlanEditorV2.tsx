@@ -100,6 +100,7 @@ export default function MealPlanEditorV2() {
   const [assistedOpen, setAssistedOpen] = useState(false);
   const [visualLibOpen, setVisualLibOpen] = useState(false);
   const [generatingNew, setGeneratingNew] = useState(false);
+  const [lastGenError, setLastGenError] = useState<string | null>(null);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
   const [showAutofixResults, setShowAutofixResults] = useState(false);
