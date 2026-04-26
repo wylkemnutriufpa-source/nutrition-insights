@@ -204,6 +204,8 @@ const PUBLIC_ROUTES = [
   "/biquini-branco",
   "/demo/",
   "/cadastro",
+  "/register",
+  "/register-patient",
   "/auth",
   "/reset-password",
   "/p/",
