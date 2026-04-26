@@ -6,7 +6,7 @@ import url from "node:url";
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
 const migrationsDir = path.join(projectRoot, "supabase", "migrations");
-const snapshotPath = path.join(__dirname, "schema-snapshot.json");
+const snapshotPath = path.join(projectRoot, "src", "integrations", "supabase", "schema-snapshot.json");
 
 // Tables we care about for the frontend
 export const TRACKED_TABLES = [

@@ -25,7 +25,7 @@ import url from "node:url";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
 const projectRoot = path.resolve(__dirname, "..");
-const snapshotPath = path.join(__dirname, "schema-snapshot.json");
+const snapshotPath = path.join(projectRoot, "src", "integrations", "supabase", "schema-snapshot.json");
 
 const RAW = fs.readFileSync(snapshotPath, "utf8");
 const STRIPPED = RAW.replace(/\/\*[\s\S]*?\*\/|^\s*\/\/.*$/gm, "");

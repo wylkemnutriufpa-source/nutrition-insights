@@ -92,17 +92,33 @@ export default function MealPlanEditorV2() {
 
   /** Runtime safeguard for schema transitions */
   const checkDefaultPlanColumn = async () => {
+    const table = "nutritionist_patients";
+    const column = "default_meal_plan_id";
+    
     const { error } = await supabase
-      .from("nutritionist_patients")
-      .select("default_meal_plan_id" as any)
+      .from(table)
+      .select(column as any)
       .limit(0);
     
-    if (error && (error as any).code === "42703") {
-      toast.error("Erro de Versão: A coluna 'default_meal_plan_id' ainda não está disponível no banco de dados. Por favor, aguarde a conclusão da migração.", {
-        duration: 5000,
-        id: "schema-drift-alert"
-      });
-      return false;
+    if (error) {
+      // 42703 = undefined_column
+      if ((error as any).code === "42703") {
+        toast.error(`Erro de Schema: A coluna '${column}' na tabela '${table}' falharia nesta operação.`, {
+          description: "Detectamos um schema drift. Sugestão: rode 'npm run schema:update' no terminal ou verifique as migrações.",
+          duration: 8000,
+          id: "schema-drift-alert"
+        });
+        return false;
+      }
+      
+      // Se for erro de permissão (42501) ou outros não relacionados a schema missing, não bloqueamos o fluxo
+      // a menos que seja crítico para a função. Aqui apenas avisamos no console.
+      if ((error as any).code === "42501") {
+        console.warn("Aviso de Permissão/RLS detectado, mas ignorado pelo check de schema:", error.message);
+        return true; 
+      }
+
+      console.error("Erro inesperado no check de schema:", error);
     }
     return true;
   };

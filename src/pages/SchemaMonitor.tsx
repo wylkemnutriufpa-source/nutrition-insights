@@ -5,17 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, FileJson, AlertTriangle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-// In a real app, this would come from an API or Edge Function
-// For this demo, we'll try to fetch the local snapshot if possible, or use a mock
-const MOCK_SNAPSHOT = {
-  generatedAt: "2026-03-17",
-  tables: {
-    meal_plans: ["id", "title", "patient_id", "nutritionist_id", "plan_status", "default_meal_plan_id"],
-    nutritionist_patients: ["id", "nutritionist_id", "patient_id", "default_meal_plan_id"],
-    profiles: ["id", "user_id", "full_name"]
-  }
-};
+import snapshotData from "@/integrations/supabase/schema-snapshot.json";
 
 interface Violation {
   file: string;
@@ -24,13 +14,35 @@ interface Violation {
   severity: "high" | "medium";
 }
 
+const CRITICAL_COLUMNS: Record<string, string[]> = {
+  nutritionist_patients: ["default_meal_plan_id", "patient_id", "nutritionist_id"],
+  meal_plans: ["id", "patient_id", "plan_status"],
+  profiles: ["id", "user_id"]
+};
+
 export default function SchemaMonitor() {
-  const [snapshot, setSnapshot] = useState<any>(MOCK_SNAPSHOT);
+  const [snapshot] = useState<any>(snapshotData);
   const [search, setSearch] = useState("");
-  const [violations, setViolations] = useState<Violation[]>([
-    { file: "src/pages/MealPlanEditorV2.tsx", table: "nutritionist_patients", column: "default_meal_plan_id", severity: "high" },
-    { file: "src/components/patient/PatientList.tsx", table: "profiles", column: "clinical_risk_score", severity: "medium" }
-  ]);
+  const [violations, setViolations] = useState<Violation[]>([]);
+
+  useEffect(() => {
+    // Basic integrity check for critical columns
+    const detected: Violation[] = [];
+    Object.entries(CRITICAL_COLUMNS).forEach(([table, cols]) => {
+      const existing = snapshot.tables[table] || [];
+      cols.forEach(col => {
+        if (!existing.includes(col)) {
+          detected.push({
+            file: "Critical Schema Integrity",
+            table,
+            column: col,
+            severity: "high"
+          });
+        }
+      });
+    });
+    setViolations(detected);
+  }, [snapshot]);
 
   return (
     <DashboardLayout>
