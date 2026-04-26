@@ -150,7 +150,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
 
     try {
       toast.info(`Gerando plano com receita "${recipe.name}"...`);
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId,
           nutritionistId: user.id,
@@ -166,6 +166,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           },
         },
       });
+
 
       if (error || !data?.success) {
         const msg = error
