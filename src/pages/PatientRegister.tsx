@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
-  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus
+  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 
 interface ProfessionalResult {
   user_id: string;
@@ -53,7 +54,7 @@ export default function PatientRegister() {
     (async () => {
       const { data } = await supabase
         .from("profiles")
-        .select("user_id, full_name, avatar_url, phone")
+        .select("user_id, full_name, avatar_url, phone, clinic_name")
         .eq("user_id", preselectedNutri)
         .maybeSingle();
       if (data) {
@@ -61,7 +62,7 @@ export default function PatientRegister() {
           user_id: data.user_id,
           full_name: data.full_name,
           avatar_url: data.avatar_url,
-          clinic_name: null,
+          clinic_name: data.clinic_name,
           phone: data.phone,
         });
         // Reset confirmation if nutri changes
@@ -112,60 +113,12 @@ export default function PatientRegister() {
     return () => clearTimeout(t);
   }, [profSearch, searchProfessionals]);
 
-  const formatInternationalWhatsApp = (val: string) => {
-    const digits = val.replace(/\D/g, "");
-    if (!digits) return "";
-    
-    // Check if it already has a country code (e.g., starts with +)
-    if (val.startsWith("+")) {
-      return val.replace(/\s/g, "");
-    }
-
-    // Default to Brazil if 10-11 digits and no country code
-    if (digits.length >= 10 && digits.length <= 11) {
-      return `+55${digits}`;
-    }
-
-    // If it's longer, assume it has a country code but missing the +
-    if (digits.length > 11) {
-      return `+${digits}`;
-    }
-    
-    return `+${digits}`;
-  };
-
   const validateWhatsApp = (val: string) => {
-    if (!val) {
-      setWhatsappError("WhatsApp é obrigatório");
-      return false;
-    }
-    
-    const digits = val.replace(/\D/g, "");
-    
-    // Basic length check for international numbers (min 7 digits, max 15)
-    if (digits.length < 7) {
-      setWhatsappError("Número muito curto");
-      return false;
-    }
-    
-    if (digits.length > 15) {
-      setWhatsappError("Número muito longo");
-      return false;
-    }
-
-    // Specific Brazil validation if no country code or starts with 55
-    const isBrazil = !val.startsWith("+") || val.startsWith("+55") || digits.startsWith("55");
-    if (isBrazil) {
-      const brDigits = digits.startsWith("55") ? digits.slice(2) : digits;
-      if (brDigits.length < 10 || brDigits.length > 11) {
-        setWhatsappError("Número brasileiro deve ter 10 ou 11 dígitos (com DDD)");
-        return false;
-      }
-    }
-
-    setWhatsappError("");
-    return true;
+    const { isValid, error } = sharedValidateWhatsApp(val);
+    setWhatsappError(error);
+    return isValid;
   };
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
