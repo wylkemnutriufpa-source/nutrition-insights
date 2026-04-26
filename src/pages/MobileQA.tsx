@@ -43,9 +43,9 @@ export default function MobileQA() {
   const [activeModal, setActiveModal] = useState<string | null>(null);
   const [activeModalId, setActiveModalId] = useState<string | null>(null);
   const [eventLog, setEventLog] = useState<Array<{ timestamp: string, event: string, details?: any }>>([]);
-  const [overflowBuffer, setOverflowBuffer] = useState(300); // 300ms buffer
-  const lastOverflowTime = useRef<number>(0);
-  const overflowTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const [overflowFrames, setOverflowFrames] = useState(15); // Default to 15 frames
+  const frameCountRef = useRef<number>(0);
+  const animationFrameRef = useRef<number | null>(null);
 
   const testScreens = [
     { id: "strategy", label: "Consultor de Estratégia", icon: MousePointer2, component: "StrategyAdvisor" },
