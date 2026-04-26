@@ -585,7 +585,7 @@ export default function MealPlanEditorV2() {
     const toastId = toast.loading("Salvando e publicando plano...");
     try {
     // 🛡️ Validação de Substituições - Tornada não-bloqueante para simplicidade
-    const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount);
+    const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount, store.patientName);
     if (!subValidation.valid) {
       console.warn("Substituições fora do padrão detectadas, mas prosseguindo a pedido do usuário.");
       toast.info("Atenção: Algumas substituições estão fora do padrão calórico, mas o plano será enviado mesmo assim.");
