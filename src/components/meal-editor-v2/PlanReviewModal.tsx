@@ -52,7 +52,7 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
                   <div className="space-y-2">
                     <p className="text-xs font-bold uppercase text-muted-foreground">Opção Principal</p>
                     <div className="p-2 rounded bg-background border text-sm italic">
-                      {item.content || "Nenhum conteúdo definido"}
+                      {item.description || "Nenhum conteúdo definido"}
                     </div>
                   </div>
 
