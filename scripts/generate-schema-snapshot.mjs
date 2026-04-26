@@ -9,7 +9,7 @@ const migrationsDir = path.join(projectRoot, "supabase", "migrations");
 const snapshotPath = path.join(__dirname, "schema-snapshot.json");
 
 // Tables we care about for the frontend
-const TRACKED_TABLES = [
+export const TRACKED_TABLES = [
   "meal_plans",
   "meal_plan_items",
   "profiles",
@@ -20,7 +20,7 @@ const TRACKED_TABLES = [
   "system_alerts",
 ];
 
-function generateSnapshot() {
+export function generateSnapshotData() {
   const migrations = fs.readdirSync(migrationsDir)
     .filter(f => f.endsWith(".sql"))
     .sort();
@@ -30,13 +30,12 @@ function generateSnapshot() {
   for (const file of migrations) {
     const content = fs.readFileSync(path.join(migrationsDir, file), "utf8");
     
-    // Parse CREATE TABLE (simple regex, handles standard Lovable/Supabase output)
+    // Parse CREATE TABLE
     const createTableMatches = content.matchAll(/CREATE TABLE (?:public\.)?(\w+) \(([\s\S]*?)\);/gi);
     for (const match of createTableMatches) {
       const tableName = match[1].toLowerCase();
       const body = match[2];
       
-      // Extract column names (first word of each line inside the parens, if not a constraint)
       const lines = body.split("\n").map(l => l.trim()).filter(Boolean);
       const columns = [];
       for (const line of lines) {
@@ -50,7 +49,7 @@ function generateSnapshot() {
       tables[tableName] = Array.from(new Set([...(tables[tableName] || []), ...columns]));
     }
 
-    // Parse ALTER TABLE (handle multiline ADD COLUMN)
+    // Parse ALTER TABLE
     const alterTableMatches = content.matchAll(/ALTER TABLE (?:public\.)?(\w+)\s+([\s\S]*?);/gi);
     for (const match of alterTableMatches) {
       const tableName = match[1].toLowerCase();
@@ -76,12 +75,13 @@ function generateSnapshot() {
       for (const m of renameMatches) {
         const oldCol = m[1].toLowerCase();
         const newCol = m[2].toLowerCase();
-        if (tables[tableName]) tables[tableName] = tables[tableName].map(c => c === oldCol ? newCol : c);
+        if (tables[tableName]) {
+          tables[tableName] = tables[tableName].map(c => c === oldCol ? newCol : c);
+        }
       }
     }
   }
 
-  // Filter only TRACKED_TABLES and sort columns
   const resultTables = {};
   for (const tableName of TRACKED_TABLES) {
     if (tables[tableName]) {
@@ -96,6 +96,8 @@ function generateSnapshot() {
   };
 }
 
-const newSnapshot = generateSnapshot();
-fs.writeFileSync(snapshotPath, JSON.stringify(newSnapshot, null, 2) + "\n");
-console.log(`✓ Generated ${snapshotPath} from ${fs.readdirSync(migrationsDir).length} migrations.`);
+if (process.argv[1] === url.fileURLToPath(import.meta.url)) {
+  const newSnapshot = generateSnapshotData();
+  fs.writeFileSync(snapshotPath, JSON.stringify(newSnapshot, null, 2) + "\n");
+  console.log(`✓ Generated ${snapshotPath} from ${fs.readdirSync(migrationsDir).length} migrations.`);
+}
