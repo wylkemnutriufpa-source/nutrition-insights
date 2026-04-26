@@ -394,7 +394,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
                     </ScrollArea>
                   </div>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={() => applyTemplateToDay(previewTemplate)} disabled={saving} className="flex-1 gap-1">
+                    <Button size="lg" onClick={() => applyTemplateToDay(previewTemplate)} disabled={saving} className="flex-1 gap-2 h-12 sm:h-10">
                       <ArrowRight className="w-3 h-3" /> Aplicar ao plano
                     </Button>
                   </div>
