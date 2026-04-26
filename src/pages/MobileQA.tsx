@@ -251,7 +251,7 @@ export default function MobileQA() {
       return;
     }
 
-    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "ModalID", "Sequencia", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
+    const headers = ["Timestamp", "Item", "Viewport", "Contexto", "ModalID", "Sequencia", "Agrupamento", "scrollX", "scrollWidth", "clientWidth", "Thumbnail_B64"];
     const rows = evidences.map(ev => [
       `"${ev.timestamp}"`,
       `"${ev.item}"`,
@@ -259,6 +259,7 @@ export default function MobileQA() {
       `"${ev.context || "N/A"}"`,
       `"${ev.modalId || "main"}"`,
       ev.sequence || 0,
+      `"${ev.grouping || "N/A"}"`,
       ev.metrics?.scrollX || 0,
       ev.metrics?.scrollWidth || 0,
       ev.metrics?.clientWidth || 0,
