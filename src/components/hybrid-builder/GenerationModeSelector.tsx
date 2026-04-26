@@ -291,6 +291,13 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       if (!resolvedPlanId) throw new Error("A engine retornou sem um plano válido.");
 
       await store.hydrate(resolvedPlanId, user.id);
+
+      if (data.is_fallback_template) {
+        toast.info(`Nota: Nenhum plano anterior encontrado. Usamos o template padrão "${data.template_name_used || "Base"}" como fallback.`, { duration: 6000 });
+      } else if (data.template_name_used) {
+        toast.success(`Plano gerado usando o template: ${data.template_name_used}`);
+      }
+
       toast.success(`✅ Plano com marmitas fixas gerado! ${data.items_count || 0} refeições.`);
       onGenerated();
     } catch (err: any) {
