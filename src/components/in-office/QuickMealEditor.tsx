@@ -229,10 +229,6 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
   };
 
   // Duplication and Apply to Week features removed to focus on Single Day + Substitutions as requested.
-        setSaving(false);
-      }
-    });
-  };
 
   // Save as template
   const saveAsTemplate = async () => {
