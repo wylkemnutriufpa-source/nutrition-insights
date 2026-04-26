@@ -93,6 +93,7 @@ export function MealItemCard({ item, isSyncing }: MealItemCardProps) {
       exit={{ opacity: 0, scale: 0.95 }}
       transition={{ duration: 0.15 }}
       className="bg-secondary/60 rounded-md hover:bg-secondary transition-colors group/item relative cursor-pointer overflow-hidden border border-transparent target:border-primary target:ring-2 target:ring-primary/20"
+      data-testid={`edit-meal-${item.id}`}
       onClick={() => {
         if (!inlineEdit) {
           setSmartEditorOpen(true);
