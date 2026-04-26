@@ -578,7 +578,7 @@ export default function Anamnesis() {
           return;
         }
         if (data?.tenant_id) setResolvedTenantId(data.tenant_id);
-        if (isNutritionistMode && data?.full_name) setPatientName(data.full_name);
+        if (data?.full_name) setPatientName(data.full_name);
       });
   }, [tenantId, targetUserId, isNutritionistMode]);
 
