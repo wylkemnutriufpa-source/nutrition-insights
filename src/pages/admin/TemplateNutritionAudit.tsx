@@ -90,14 +90,16 @@ type RuleKey =
   | "proteinBaseMissing"
   | "carbsBaseMissing"
   | "fatBaseMissing"
-  | "itemsBroken";
+  | "itemsBroken"
+  | "legacyStructure"
+  | "incoherentSubstitutions";
 
 type AuditConfig = Record<RuleKey, RuleSeverity>;
 
 const RULE_LABELS: Record<RuleKey, { label: string; description: string; defaultRecommend: RuleSeverity }> = {
   noItems: {
     label: "Template sem itens",
-    description: "foods_structure vazio — modal não consegue renderizar refeição.",
+    description: "Estrutura de itens vazia — modal não consegue renderizar refeição.",
     defaultRecommend: "critical",
   },
   kcalBaseMissing: {
@@ -122,8 +124,18 @@ const RULE_LABELS: Record<RuleKey, { label: string; description: string; default
   },
   itemsBroken: {
     label: "Itens com macros inválidos",
-    description: "Algum item do template tem nome vazio ou kcal/protein/carbs/fat nulo → NaN nos cards.",
+    description: "Algum item do template tem nome vazio ou macros nulos → NaN nos cards.",
     defaultRecommend: "critical",
+  },
+  legacyStructure: {
+    label: "Estrutura Legada (V1)",
+    description: "Template usando array 'foods' em vez de 'blocks' (V2). Menos prático e flexível.",
+    defaultRecommend: "warning",
+  },
+  incoherentSubstitutions: {
+    label: "Substituições Incoerentes",
+    description: "Detecta misturas indevidas (ex: sopa + proteína) ou categorias diferentes.",
+    defaultRecommend: "warning",
   },
 };
 
