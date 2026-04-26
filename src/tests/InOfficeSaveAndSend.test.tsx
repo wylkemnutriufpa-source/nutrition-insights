@@ -82,6 +82,9 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
     // Click Publish
     fireEvent.click(publishButton);
 
+    // Verify button is disabled and shows "Publicando..."
+    expect(screen.getByRole('button', { name: /Publicando.../i })).toBeDisabled();
+
     // Verify publication process
     await waitFor(() => {
       expect(mockSupabase.from).toHaveBeenCalledWith('meal_plans');
@@ -93,6 +96,10 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
 
     // Verify success message (updated UI)
     await waitFor(() => expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument(), { timeout: 3000 });
+
+    // Verify "Ver perfil do paciente" button is visible and can be clicked
+    const viewProfileButton = screen.getByRole('button', { name: /Ver perfil do paciente/i });
+    expect(viewProfileButton).toBeInTheDocument();
   });
 
   it('should show retry button when publication fails and allow retrying', async () => {
