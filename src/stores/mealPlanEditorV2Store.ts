@@ -289,6 +289,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
   plan: null,
   patientName: "",
   items: [],
+  substitutionCount: 4,
   hydrated: false,
   hydrating: false,
   syncStatus: "idle",
