@@ -535,6 +535,7 @@ const App = () => (
 
               {/* Nutritionist-only routes */}
               <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
+              <Route path="/onboarding-tracker" element={<NutritionistRoute><LP section="Onboarding"><OnboardingTracker /></LP></NutritionistRoute>} />
               <Route path="/patients/:patientId" element={<NutritionistRoute><LP section="Pacientes"><PatientDetail /></LP></NutritionistRoute>} />
               <Route path="/preview-patient/:patientId" element={<NutritionistRoute><LP section="Preview do Paciente"><PreviewPatient /></LP></NutritionistRoute>} />
               <Route path="/protocols" element={<NutritionistRoute><LP section="Protocolos"><Protocols /></LP></NutritionistRoute>} />
