@@ -20,16 +20,20 @@ describe('E2E Simulation: Real App Update Cycle', () => {
       offlineReady: [false, vi.fn()],
       updateServiceWorker: mockUpdateServiceWorker
     });
-
     
-    // Mock Service Worker registration
+    // Mock Service Worker registration with EventTarget capabilities
+    const mockSW = {
+      getRegistration: vi.fn().mockResolvedValue({
+        update: vi.fn().mockResolvedValue(true),
+        waiting: { scriptURL: '/sw.js?v=2' }
+      }),
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+      controller: { scriptURL: '/sw.js?v=1' }
+    };
+
     Object.defineProperty(window.navigator, 'serviceWorker', {
-      value: {
-        getRegistration: vi.fn().mockResolvedValue({
-          update: vi.fn().mockResolvedValue(true),
-          waiting: { scriptURL: '/sw.js?v=2' }
-        }),
-      },
+      value: mockSW,
       configurable: true
     });
   });
@@ -41,7 +45,6 @@ describe('E2E Simulation: Real App Update Cycle', () => {
       offlineReady: [false, vi.fn()],
       updateServiceWorker: mockUpdateServiceWorker
     });
-
 
     render(
       <QueryClientProvider client={queryClient}>
@@ -99,7 +102,6 @@ describe('E2E Simulation: Real App Update Cycle', () => {
     );
 
     // Verify it handles specific PWA platform logic if present
-    // (This is a simplified check for the platform-aware logic in UpdateBanner)
     expect(localStorage.getItem('fj:update-dismissed-at')).toBeNull();
   });
 });
