@@ -123,6 +123,7 @@ const ClinicalHealthDashboard = lazy(() => import("./pages/ClinicalHealthDashboa
 const Curiosidades = lazy(() => import("./pages/Curiosidades"));
 const Planner = lazy(() => import("./pages/Planner"));
 const OnboardingPipeline = lazy(() => import("./pages/OnboardingPipeline"));
+const OnboardingTracker = lazy(() => import("./pages/OnboardingTracker"));
 const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
