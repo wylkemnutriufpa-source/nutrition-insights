@@ -3061,11 +3061,17 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     let resolvedTenantId = tenantProfile?.tenant_id || null;
 
     // Load patient profile to check identity and modes (Marmita Mode)
-    const { data: patientProfile } = await serviceClient
-      .from("profiles")
-      .select("id, user_id, marmita_mode, fast_marmita_mode")
-      .or(`id.eq.${patient_id},user_id.eq.${patient_id}`)
-      .maybeSingle();
+    const [patientProfileRes, latestPlanRes] = await Promise.all([
+      serviceClient.from("profiles").select("id, user_id, marmita_mode, fast_marmita_mode")
+        .or(`id.eq.${patient_id},user_id.eq.${patient_id}`).maybeSingle(),
+      serviceClient.from("meal_plans").select("template_id, template_slug")
+        .eq("patient_id", patient_id).not("template_id", "is", null)
+        .order("created_at", { ascending: false }).limit(1).maybeSingle()
+    ]);
+
+    const patientProfile = patientProfileRes.data;
+    const lastUsedTemplateId = latestPlanRes.data?.template_id;
+    const prioritizedTemplateIds = lastUsedTemplateId ? [lastUsedTemplateId] : [];
 
     const fastMarmitaMode = !!patientProfile?.fast_marmita_mode;
 
