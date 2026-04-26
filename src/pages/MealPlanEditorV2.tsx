@@ -7,6 +7,7 @@ import {
   Wand2, Trash2, Library, Minimize2, Maximize2, Sparkles, Utensils, UtensilsCrossed,
   PanelTop, Grid3X3, RefreshCw, Lock, Info, MoreHorizontal, Bookmark, Pencil
 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useTenant } from "@/lib/tenantContext";
 import SimplifyPlanButton from "@/components/meal-simplification/SimplifyPlanButton";
