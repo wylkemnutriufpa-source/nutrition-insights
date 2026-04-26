@@ -621,7 +621,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     if (toDelete.length === 0) return;
     const prev = get().items;
     const deleteIds = toDelete.map((i) => i.id);
-    set((s) => ({ items: s.items.filter((i) => !(i.day_of_week === day && i.meal_type === mealType)) }));
+    set((s) => ({ items: sortMealPlanItems(s.items.filter((i) => !(i.day_of_week === day && i.meal_type === mealType))) }));
 
     get()._enqueue({
       key: `deleteCell:${day}-${mealType}`,
