@@ -19658,18 +19658,32 @@ export type Database = {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
       }
-      create_patient_canonical: {
-        Args: {
-          _email: string
-          _full_name: string
-          _metadata?: Json
-          _nutritionist_id?: string
-          _patient_id: string
-          _phone?: string
-          _source?: string
-        }
-        Returns: Json
-      }
+      create_patient_canonical:
+        | {
+            Args: {
+              _email: string
+              _full_name: string
+              _metadata?: Json
+              _nutritionist_id?: string
+              _patient_id: string
+              _phone?: string
+              _source?: string
+            }
+            Returns: Json
+          }
+        | {
+            Args: {
+              _email: string
+              _full_name: string
+              _metadata?: Json
+              _nutritionist_id?: string
+              _patient_id: string
+              _phone?: string
+              _source?: string
+              _whatsapp?: string
+            }
+            Returns: Json
+          }
       create_professional_account: {
         Args: {
           _email: string
