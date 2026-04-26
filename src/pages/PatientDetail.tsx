@@ -70,6 +70,8 @@ import PatientFeedbacksPanel from "@/components/patient/PatientFeedbacksPanel";
 import { deactivateMealPlan } from "@/lib/serverTransitions";
 import { finalizeGeneratedMealPlan } from "@/lib/finalizeGeneratedMealPlan";
 import { resolveLatestOnboardingPipeline, resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
+import { DeterministicAuditLog } from "@/components/patient/DeterministicAuditLog";
+
 
 export default function PatientDetail() {
   const { patientId } = useParams<{ patientId: string }>();
