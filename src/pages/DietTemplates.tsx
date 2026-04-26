@@ -527,16 +527,44 @@ export default function DietTemplates() {
         }
       } else if (legacyFoods.length > 0) {
         for (const f of legacyFoods) {
+          let finalName = f.name || "Item";
+          let finalCalories = f.calories;
+          let finalProtein = f.protein;
+          let finalCarbs = f.carbs;
+          let finalFat = f.fat;
+          let finalPortion = f.portion || null;
+
+          // Detect placeholder and replace with a recipe
+          const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
+          if (isPlaceholder && mealRecipes.length > 0) {
+            const typeKey = mealType === "lunch" ? "almoço" : "jantar";
+            const candidates = mealRecipes
+              .filter(r => r.meal_type === typeKey)
+              .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+            
+            if (candidates.length > 0) {
+              const picked = candidates[globalMarmitaCounter % candidates.length];
+              globalMarmitaCounter++;
+              finalName = `🍱 ${picked.name}`;
+              finalCalories = picked.fixed_calories;
+              finalProtein = picked.fixed_protein;
+              finalCarbs = picked.fixed_carbs;
+              finalFat = picked.fixed_fat;
+              finalPortion = "1 marmita";
+              console.log(`[DietTemplates] Replaced legacy placeholder with ${picked.name}`);
+            }
+          }
+
           items.push({
             meal_plan_id: plan.id,
             day_of_week: day,
             meal_type: mealType,
-            title: f.name || "Item",
-            description: f.portion || null,
-            calories_target: scaleNum(f.calories),
-            protein_target: scaleNum(f.protein),
-            carbs_target: scaleNum(f.carbs),
-            fat_target: scaleNum(f.fat),
+            title: finalName,
+            description: finalPortion,
+            calories_target: scaleNum(finalCalories),
+            protein_target: scaleNum(finalProtein),
+            carbs_target: scaleNum(finalCarbs),
+            fat_target: scaleNum(finalFat),
             is_primary: true,
           });
         }
