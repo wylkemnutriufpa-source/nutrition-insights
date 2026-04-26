@@ -387,7 +387,16 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
 
             {substitutionItems.length > 0 && (
               <div className="mt-2 pt-2 border-t border-border/40 space-y-1">
-                <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider px-1">Substituições</p>
+                <div className="flex items-center justify-between px-1">
+                  <p className="text-[9px] font-bold text-muted-foreground/70 uppercase tracking-wider">
+                    Substituições ({substitutionItems.length})
+                  </p>
+                  {substitutionItems.some(i => (i as any).item_origin === 'auto_generated_sub') && (
+                    <div className="flex items-center gap-1 text-[8px] text-amber-600 font-medium bg-amber-50 px-1 rounded animate-pulse" title="Contém sugestões automáticas">
+                      <Sparkles className="w-2.5 h-2.5" /> AUTO
+                    </div>
+                  )}
+                </div>
                 {substitutionItems.map((item) => (
                   <MealSlotItemCard
                     key={item.id}
