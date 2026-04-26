@@ -7,6 +7,9 @@ import { useAuth } from "@/lib/auth";
 import { usePatientsList, useAddPatient } from "@/hooks/queries/usePatientsList";
 import { toast } from "sonner";
 
+// Create a mock navigate function
+const mockNavigate = vi.fn();
+
 // Mock dependencies
 vi.mock("@/lib/auth", () => ({
   useAuth: vi.fn(),
@@ -36,7 +39,7 @@ vi.mock("react-router-dom", async () => {
   const actual = await vi.importActual("react-router-dom");
   return {
     ...actual,
-    useNavigate: () => vi.fn(),
+    useNavigate: () => mockNavigate,
   };
 });
 
@@ -66,8 +69,6 @@ const renderWithProviders = (component: React.ReactNode) => {
 };
 
 describe("Patients Registration Flow", () => {
-  const mockNavigate = vi.fn();
-
   beforeEach(() => {
     vi.clearAllMocks();
     (useAuth as any).mockReturnValue({ user: { id: "user-123" } });
@@ -81,10 +82,6 @@ describe("Patients Registration Flow", () => {
       },
       isLoading: false,
     });
-    
-    // Mock useNavigate
-    const router = require("react-router-dom");
-    vi.spyOn(router, 'useNavigate').mockReturnValue(mockNavigate);
   });
 
   it("should register a patient and redirect to their profile", async () => {
