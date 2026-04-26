@@ -1,4 +1,4 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import { render, screen, fireEvent, waitFor, act } from "@testing-library/react";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import MobileQA from "@/pages/MobileQA";
 import { BrowserRouter } from "react-router-dom";
@@ -11,6 +11,26 @@ vi.mock("@/components/layout/DashboardLayout", () => ({
 
 vi.mock("@/components/strategy-advisor/StrategyAdvisorPanel", () => ({
   default: () => <div>Mocked Strategy Advisor</div>
+}));
+
+// Mock html2canvas and jsPDF
+vi.mock("html2canvas", () => ({
+  default: vi.fn().mockResolvedValue({
+    toDataURL: () => "data:image/png;base64,mock"
+  })
+}));
+
+vi.mock("jspdf", () => ({
+  jsPDF: vi.fn().mockImplementation(() => ({
+    setFontSize: vi.fn(),
+    text: vi.fn(),
+    addPage: vi.fn(),
+    setDrawColor: vi.fn(),
+    line: vi.fn(),
+    setFont: vi.fn(),
+    addImage: vi.fn(),
+    save: vi.fn(),
+  }))
 }));
 
 // Mocking window.scrollX and document.documentElement.scrollWidth
