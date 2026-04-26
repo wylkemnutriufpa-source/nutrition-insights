@@ -1,8 +1,16 @@
 import { useRegisterSW } from "virtual:pwa-register/react";
 import { useState, useCallback, useEffect, useMemo } from "react";
-import { RefreshCw, Loader2 } from "lucide-react";
+import { RefreshCw, Loader2, Rocket, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import {
   clearRuntimeCaches,
   forceHardReload,
