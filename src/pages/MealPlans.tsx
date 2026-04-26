@@ -488,9 +488,9 @@ export default function MealPlans() {
                   <Plus className="w-4 h-4" /> Novo Plano
                 </Button>
               </DialogTrigger>
-            <DialogContent className="w-[95vw] max-w-lg max-h-[90vh] overflow-y-auto">
-              <DialogHeader>
-                <DialogTitle className="font-display">Criar Plano Alimentar</DialogTitle>
+            <DialogContent className="w-[calc(100vw-1rem)] sm:w-[95vw] max-w-2xl max-h-[92vh] overflow-y-auto overflow-x-hidden p-3 sm:p-6">
+              <DialogHeader className="pr-10">
+                <DialogTitle className="font-display text-base sm:text-lg">Criar Plano Alimentar</DialogTitle>
               </DialogHeader>
               {/* Patient selector */}
               <div className="space-y-4">
