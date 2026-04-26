@@ -767,7 +767,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       return item;
     });
 
-    set({ items: updated });
+    set({ items: sortMealPlanItems(updated) });
 
     const allAffected = [...srcItems, ...dstItems];
     const affectedIds = allAffected.map((i) => i.id);
