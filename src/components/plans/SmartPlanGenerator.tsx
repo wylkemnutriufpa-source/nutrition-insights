@@ -107,7 +107,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
     if (!user) return;
 
     // Warn if patient already has active plan
-    if (activePlanName) {
+    if (activePlan) {
       setShowReplaceDialog(true);
       return;
     }
@@ -169,6 +169,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           isPipeline: false,
           generationMode: selectedMode,
           saveAsTemplate,
+          ...(activePlan?.template_id ? { template_id: activePlan.template_id } : {}),
           ...(professionalOverride ? { professionalOverride } : {}),
         },
       });
