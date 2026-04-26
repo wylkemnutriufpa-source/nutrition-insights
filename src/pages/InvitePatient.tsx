@@ -98,6 +98,14 @@ export default function InvitePatient() {
       return;
     }
 
+    if (phone) {
+      const validation = validateWhatsApp(phone);
+      if (!validation.isValid) {
+        toast.error(validation.error);
+        return;
+      }
+    }
+
     if (method === "password" && !tempPassword) {
       toast.error("Gere uma senha temporária");
       return;
