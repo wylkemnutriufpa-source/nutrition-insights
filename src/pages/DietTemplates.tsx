@@ -417,9 +417,9 @@ export default function DietTemplates() {
         plan_status: "draft_template",
         tenant_id: tenantId || null,
         total_calories: getAdjustedCalories(template),
-        total_protein: (template as any).protein || (template as any).macro_ratio?.protein || 0,
-        total_carbs: (template as any).carbohydrates || (template as any).macro_ratio?.carbs || 0,
-        total_fat: (template as any).fat || (template as any).macro_ratio?.fat || 0,
+        total_protein: getEffectiveMacros().protein || 0,
+        total_carbs: getEffectiveMacros().carbs || 0,
+        total_fat: getEffectiveMacros().fat || 0,
       }] as any) as any)
       .select("id")
       .single();
