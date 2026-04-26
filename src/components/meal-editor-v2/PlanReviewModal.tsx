@@ -22,6 +22,10 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
   const [activeMealIndex, setActiveMealIndex] = useState(0);
   const [localAprovals, setLocalAprovals] = useState<Record<string, Record<number, boolean>>>({});
 
+  const totalCalories = useMemo(() => {
+    return items.reduce((sum, item) => sum + (Number(item.calories_target) || 0), 0);
+  }, [items]);
+
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || ""));
   }, [items]);
