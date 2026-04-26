@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
 
 function MarmitaSettingsCard() {
   const { user } = useAuth();
