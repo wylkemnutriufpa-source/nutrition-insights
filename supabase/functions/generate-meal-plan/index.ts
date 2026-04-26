@@ -4210,6 +4210,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         generation_mode: generationMode,
         db_driven: useDBDriven,
         template_id_used: lastUsedTemplateId,
+        template_name_used: templateNameUsed,
         is_fallback_template: isFallbackTemplate,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
