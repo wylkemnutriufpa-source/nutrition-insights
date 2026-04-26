@@ -26,6 +26,8 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
   const [patientName, setPatientName] = useState("");
   const [loading, setLoading] = useState(true);
   const [publishing, setPublishing] = useState(false);
+  const [publishProgress, setPublishProgress] = useState(0);
+  const [publishError, setPublishError] = useState<string | null>(null);
   const [published, setPublished] = useState(false);
   const [mealPlanId, setMealPlanId] = useState<string | null>(null);
   const [planStatus, setPlanStatus] = useState<string | null>(null);
@@ -84,7 +86,15 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
       return;
     }
     setPublishing(true);
+    setPublishError(null);
+    setPublishProgress(10);
+    
     try {
+      // Step 1: Prepare (simulated for UI)
+      await new Promise(r => setTimeout(r, 600));
+      setPublishProgress(40);
+
+      // Step 2: Actual Supabase update
       const { error } = await supabase
         .from("meal_plans")
         .update({ 
@@ -96,15 +106,20 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
 
       if (error) throw error;
 
+      setPublishProgress(100);
+      await new Promise(r => setTimeout(r, 400));
+
       setPublished(true);
       setPlanStatus("published_to_patient");
       toast.success("🎉 Plano publicado para o paciente!");
     } catch (err: any) {
+      setPublishError(err.message || "Falha na comunicação com o servidor.");
       toast.error("Erro ao publicar: " + err.message);
     } finally {
       setPublishing(false);
     }
   };
+
   
   const handleGenerateStory = async () => {
     setGeneratingStory(true);
