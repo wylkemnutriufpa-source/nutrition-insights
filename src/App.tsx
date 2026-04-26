@@ -130,6 +130,7 @@ const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
 const PatientLanding = lazy(() => import("./pages/PatientLanding"));
 const PatientRegister = lazy(() => import("./pages/PatientRegister"));
 const Invitation = lazy(() => import("./pages/Invitation"));
+const InvitationStatus = lazy(() => import("./pages/InvitationStatus"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
