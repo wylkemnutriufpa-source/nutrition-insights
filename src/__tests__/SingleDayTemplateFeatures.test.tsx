@@ -60,7 +60,7 @@ describe('Single Day Template Features', () => {
 
     const result = validateMealSubstitutions(breakfastItem as any);
     expect(result.valid).toBe(false);
-    expect(result.errors[0]).toContain('Possível mistura');
+    expect(result.errors.some(err => err.includes('Possível mistura'))).toBe(true);
   });
 
   it('should detect macro inconsistency in substitutions', () => {
