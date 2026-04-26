@@ -265,6 +265,33 @@ export function MealSmartEditorModal({
                       </div>
                     </button>
                   ))}
+                  {FOOD_DATABASE.filter(f => 
+                    f.name.toLowerCase().includes(search.toLowerCase())
+                  ).length === 0 && (
+                    <div className="text-center py-8 text-muted-foreground text-xs">
+                      Nenhum alimento encontrado na base.
+                    </div>
+                  )}
+                </div>
+              ) : activeTab === "isolated" && patientName?.toLowerCase().includes("wannubia") ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center space-y-3 px-4">
+                  <div className="w-12 h-12 rounded-full bg-amber-100 flex items-center justify-center">
+                    <AlertCircle className="w-6 h-6 text-amber-600" />
+                  </div>
+                  <div className="space-y-1">
+                    <p className="text-sm font-bold text-foreground">Apenas Marmitas Permitidas</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">
+                      Para esta paciente, utilize a aba <strong>Refeição Pronta</strong> para garantir a compatibilidade com o cardápio de marmitas.
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="rounded-xl h-8 text-[10px] border-amber-200 text-amber-700 hover:bg-amber-50"
+                    onClick={() => setActiveTab("ready")}
+                  >
+                    Ir para Refeições Prontas
+                  </Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 gap-3">
