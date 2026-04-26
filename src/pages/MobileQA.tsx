@@ -124,57 +124,59 @@ export default function MobileQA() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="modalClosesWithX" 
-                  checked={checklist.modalClosesWithX} 
-                  onCheckedChange={() => toggleCheck("modalClosesWithX")}
-                />
-                <Label htmlFor="modalClosesWithX">Modal fecha corretamente com o botão X</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="noContentCutoff" 
-                  checked={checklist.noContentCutoff} 
-                  onCheckedChange={() => toggleCheck("noContentCutoff")}
-                />
-                <Label htmlFor="noContentCutoff">Nenhum conteúdo está cortado nas bordas</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="noHorizontalScroll" 
-                  checked={checklist.noHorizontalScroll} 
-                  onCheckedChange={() => toggleCheck("noHorizontalScroll")}
-                />
-                <Label htmlFor="noHorizontalScroll">Sem scroll horizontal inesperado</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Checkbox 
-                  id="touchTargetSpacing" 
-                  checked={checklist.touchTargetSpacing} 
-                  onCheckedChange={() => toggleCheck("touchTargetSpacing")}
-                />
-                <Label htmlFor="touchTargetSpacing">Espaçamento e área de toque adequados (44px+)</Label>
-              </div>
+              {[
+                { id: "modalClosesWithX", label: "Modal fecha corretamente com o botão X" },
+                { id: "noContentCutoff", label: "Nenhum conteúdo está cortado nas bordas" },
+                { id: "noHorizontalScroll", label: "Sem scroll horizontal inesperado" },
+                { id: "touchTargetSpacing", label: "Espaçamento e área de toque adequados (44px+)" }
+              ].map((item) => (
+                <div key={item.id} className="flex items-center justify-between group">
+                  <div className="flex items-center space-x-2">
+                    <Checkbox 
+                      id={item.id} 
+                      checked={checklist[item.id as keyof typeof checklist]} 
+                      onCheckedChange={() => toggleCheck(item.id as keyof typeof checklist)}
+                    />
+                    <Label htmlFor={item.id} className="text-sm">{item.label}</Label>
+                  </div>
+                  <Button 
+                    size="icon" 
+                    variant="ghost" 
+                    className="opacity-0 group-hover:opacity-100 h-8 w-8"
+                    onClick={() => registerEvidence(item.label)}
+                    title="Registrar Evidência"
+                  >
+                    <Camera className="w-4 h-4" />
+                  </Button>
+                </div>
+              ))}
               <div className="pt-2 border-t">
                 <p className="text-xs font-semibold text-muted-foreground mb-2">RESOLUÇÕES TESTADAS:</p>
-                <div className="flex gap-4">
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="viewport390" 
-                      checked={checklist.viewport390} 
-                      onCheckedChange={() => toggleCheck("viewport390")}
-                    />
-                    <Label htmlFor="viewport390">iPhone 12/13/14 (390px)</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox 
-                      id="viewport360" 
-                      checked={checklist.viewport360} 
-                      onCheckedChange={() => toggleCheck("viewport360")}
-                    />
-                    <Label htmlFor="viewport360">Android Médio (360px)</Label>
-                  </div>
+                <div className="flex flex-col gap-2">
+                  {[
+                    { id: "viewport390", label: "iPhone 12/13/14 (390px)" },
+                    { id: "viewport360", label: "Android Médio (360px)" }
+                  ].map((vp) => (
+                    <div key={vp.id} className="flex items-center justify-between group">
+                      <div className="flex items-center space-x-2">
+                        <Checkbox 
+                          id={vp.id} 
+                          checked={checklist[vp.id as keyof typeof checklist]} 
+                          onCheckedChange={() => toggleCheck(vp.id as keyof typeof checklist)}
+                        />
+                        <Label htmlFor={vp.id} className="text-sm">{vp.label}</Label>
+                      </div>
+                      <Button 
+                        size="icon" 
+                        variant="ghost" 
+                        className="opacity-0 group-hover:opacity-100 h-8 w-8"
+                        onClick={() => registerEvidence(vp.label)}
+                        title="Registrar Evidência"
+                      >
+                        <Camera className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
                 </div>
               </div>
             </CardContent>
