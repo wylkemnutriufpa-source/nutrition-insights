@@ -143,6 +143,26 @@ export function MealSmartEditorModal({
       return;
     }
 
+    // Bloqueio para Marmita Fixa sem Macros Base
+    if (currentMeta?.is_fixed) {
+      const missing = [];
+      if (currentMeta.kcal_base === undefined || currentMeta.kcal_base === null) missing.push("kcal_base");
+      if (currentMeta.protein_base === undefined || currentMeta.protein_base === null) missing.push("protein_base");
+      if (currentMeta.carbs_base === undefined || currentMeta.carbs_base === null) missing.push("carbs_base");
+      if (currentMeta.fat_base === undefined || currentMeta.fat_base === null) missing.push("fat_base");
+
+      if (missing.length > 0) {
+        toast.error("Salvamento Bloqueado", {
+          description: `Esta marmita fixa está com dados base incompletos (${missing.join(", ")}). Preencha os campos antes de salvar.`,
+          action: {
+            label: "Corrigir Agora",
+            onClick: () => inputRef.current?.focus()
+          }
+        });
+        return;
+      }
+    }
+
     // Validação de macros relaxada: permite macros parciais zerados
     // O sistema agora bloqueia apenas na publicação final se o total do dia for zero.
     if (adjustedMacros.calories < 0) {
