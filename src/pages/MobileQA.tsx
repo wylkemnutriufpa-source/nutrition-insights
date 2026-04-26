@@ -68,37 +68,55 @@ export default function MobileQA() {
       const isOverflowing = scrollX > 0 || scrollWidth > clientWidth;
       
       if (isOverflowing) {
-        logEvent("Overflow detectado (inicial)", { scrollX, scrollWidth, clientWidth });
-        
-        // Clear previous timeout if exists
-        if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
-        
-        // Wait for buffer/debounce
-        overflowTimeoutRef.current = setTimeout(async () => {
-          // Re-verify after buffer
-          const currentScrollX = window.scrollX;
-          const currentScrollWidth = document.documentElement.scrollWidth;
-          const currentClientWidth = document.documentElement.clientWidth;
+        if (!animationFrameRef.current) {
+          logEvent("Overflow detectado (inicial)", { scrollX, scrollWidth, clientWidth });
           
-          if (currentScrollX > 0 || currentScrollWidth > currentClientWidth) {
-            const now = Date.now();
-            if (now - lastOverflowTime.current > 5000) {
-              lastOverflowTime.current = now;
-              logEvent("Overflow persistente capturado", { currentScrollX, currentScrollWidth, currentClientWidth });
-              
-              toast.error("Overflow Horizontal Persistente!", {
-                description: `Buffer de ${overflowBuffer}ms atingido. Capturando evidência...`,
-                duration: 5000,
-              });
-              
-              await registerEvidence("Overflow Detectado Automático", { 
-                scrollX: currentScrollX, 
-                scrollWidth: currentScrollWidth, 
-                clientWidth: currentClientWidth 
-              });
+          const processFrame = async () => {
+            const curScrollX = window.scrollX;
+            const curScrollWidth = document.documentElement.scrollWidth;
+            const curClientWidth = document.documentElement.clientWidth;
+            const stillOverflowing = curScrollX > 0 || curScrollWidth > curClientWidth;
+
+            if (stillOverflowing) {
+              frameCountRef.current += 1;
+              if (frameCountRef.current >= overflowFrames) {
+                frameCountRef.current = 0;
+                animationFrameRef.current = null;
+                
+                logEvent("Overflow persistente capturado (frames)", { 
+                  frames: overflowFrames,
+                  scrollX: curScrollX, 
+                  scrollWidth: curScrollWidth, 
+                  clientWidth: curClientWidth 
+                });
+                
+                toast.error("Overflow Horizontal Persistente!", {
+                  description: `${overflowFrames} frames atingidos. Capturando evidência...`,
+                  duration: 5000,
+                });
+                
+                await registerEvidence("Overflow Detectado Automático", { 
+                  scrollX: curScrollX, 
+                  scrollWidth: curScrollWidth, 
+                  clientWidth: curClientWidth 
+                });
+                return;
+              }
+              animationFrameRef.current = requestAnimationFrame(processFrame);
+            } else {
+              frameCountRef.current = 0;
+              animationFrameRef.current = null;
             }
-          }
-        }, overflowBuffer);
+          };
+          
+          animationFrameRef.current = requestAnimationFrame(processFrame);
+        }
+      } else {
+        frameCountRef.current = 0;
+        if (animationFrameRef.current) {
+          cancelAnimationFrame(animationFrameRef.current);
+          animationFrameRef.current = null;
+        }
       }
     };
 
@@ -114,14 +132,15 @@ export default function MobileQA() {
 
     window.addEventListener('scroll', handleScroll);
     window.addEventListener('resize', handleResize);
-    const interval = setInterval(checkScroll, 2000);
+    const interval = setInterval(checkScroll, 1000);
+    
     return () => {
       window.removeEventListener('scroll', handleScroll);
       window.removeEventListener('resize', handleResize);
       clearInterval(interval);
-      if (overflowTimeoutRef.current) clearTimeout(overflowTimeoutRef.current);
+      if (animationFrameRef.current) cancelAnimationFrame(animationFrameRef.current);
     };
-  }, [evidences, overflowBuffer]);
+  }, [evidences, overflowFrames]);
 
   const toggleCheck = (key: keyof typeof checklist) => {
     setChecklist(prev => ({ ...prev, [key]: !prev[key] }));
