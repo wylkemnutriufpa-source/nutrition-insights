@@ -449,7 +449,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     const optimistic = sanitizedInserts.map(buildOptimisticMealPlanItem);
 
     const tIds = optimistic.map((o) => o.id);
-    set({ items: [...state.items, ...optimistic] });
+    set({ items: sortMealPlanItems([...state.items, ...optimistic]) });
 
     state._enqueue({
       key: `insert:${tIds.join(",")}`,
