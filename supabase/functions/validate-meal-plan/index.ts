@@ -171,6 +171,24 @@ function analyzePlanSimplicity(items: any[], goal: string): { score: number; sta
                 penalty: 10,
             });
         }
+
+        // New validation: Reject plans with > 4 equivalent substitutions per meal
+        for (const item of mealItems) {
+            const meta = item.edit_metadata || item.metadata || {};
+            const substitutions = meta.substitutions_json;
+            if (Array.isArray(substitutions) && substitutions.length > 4) {
+                score -= 25;
+                issues.push({
+                    category: "critical",
+                    severity: "critical",
+                    meal_type: mealType,
+                    day: item.day_of_week ?? 0,
+                    message: `Refeição "${item.title}" excede limite de 4 substituições.`,
+                    suggested_fix: "Remover substituições extras para garantir equivalência clínica.",
+                    penalty: 25,
+                });
+            }
+        }
     }
 
     score = Math.max(0, Math.min(100, score));
