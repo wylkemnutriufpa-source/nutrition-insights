@@ -399,7 +399,7 @@ export default function SmartMealSelectorModal({ open, onClose, day, mealType, m
               })
             )}
           </div>
-        </ScrollArea>
+        </div>
 
         {/* Footer: summary + apply mode + confirm */}
         {selectedIds.size > 0 && (
