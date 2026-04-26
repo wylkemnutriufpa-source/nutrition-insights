@@ -209,6 +209,7 @@ const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
 const StoreDashboard = lazy(() => import("./pages/store/StoreDashboard"));
 const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
+const MobileQA = lazy(() => import("./pages/MobileQA"));
 const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
 
 // Install global error handlers once at module load
