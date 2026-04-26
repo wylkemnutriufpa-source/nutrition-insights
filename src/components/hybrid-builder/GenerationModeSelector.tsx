@@ -345,8 +345,8 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       >
         <ChefHat className="w-5 h-5 text-primary" />
         <div className="text-left">
-          <p className="font-bold">🍱 Usar Receita (Marmita)</p>
-          <p className="text-[10px] text-muted-foreground">Escolher receita → escalar porções → gerar plano</p>
+          <p className="font-bold">🍱 Usar Receita como Template</p>
+          <p className="text-[10px] text-muted-foreground">Escolher receita → escalar porções → gerar template de 1 dia</p>
         </div>
       </Button>
 
