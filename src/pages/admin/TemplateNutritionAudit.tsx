@@ -92,7 +92,10 @@ type RuleKey =
   | "fatBaseMissing"
   | "itemsBroken"
   | "legacyStructure"
-  | "incoherentSubstitutions";
+  | "incoherentSubstitutions"
+  | "soupAsSubstitution"
+  | "unbalancedMeal"
+  | "v2GroupingMissing";
 
 type AuditConfig = Record<RuleKey, RuleSeverity>;
 
@@ -135,6 +138,21 @@ const RULE_LABELS: Record<RuleKey, { label: string; description: string; default
   incoherentSubstitutions: {
     label: "Substituições Incoerentes",
     description: "Detecta misturas indevidas (ex: sopa + proteína) ou categorias diferentes.",
+    defaultRecommend: "warning",
+  },
+  soupAsSubstitution: {
+    label: "Sopa como Substituição",
+    description: "Identifica se 'Sopa' está sendo usada como substituição de refeição sólida (almoço/jantar).",
+    defaultRecommend: "critical",
+  },
+  unbalancedMeal: {
+    label: "Refeição Desequilibrada",
+    description: "Refeições com macros muito fora do padrão (ex: zero proteína em almoço).",
+    defaultRecommend: "warning",
+  },
+  v2GroupingMissing: {
+    label: "Agrupamento V2 Coerente",
+    description: "Identifica se a refeição ainda não está agrupada em blocos V2 (proteína, carbo, gordura).",
     defaultRecommend: "warning",
   },
 };
