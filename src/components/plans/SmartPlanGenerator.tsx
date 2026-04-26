@@ -408,7 +408,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
               Paciente já possui plano ativo
             </AlertDialogTitle>
             <AlertDialogDescription>
-              O paciente <strong>{patientName}</strong> já possui o plano <strong>"{activePlanName}"</strong> ativo. 
+              O paciente <strong>{patientName}</strong> já possui o plano <strong>"{activePlan?.title || "Plano Ativo"}"</strong> ativo. 
               Ao gerar um novo plano e publicá-lo, o plano anterior será automaticamente arquivado.
               <br /><br />
               Deseja continuar?
