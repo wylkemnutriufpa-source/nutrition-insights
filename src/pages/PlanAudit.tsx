@@ -21,6 +21,7 @@ import {
   Download,
   Calendar,
   X,
+  CheckSquare,
   Zap,
   ShieldCheck,
   Activity,
@@ -30,6 +31,8 @@ import {
   Database,
   Terminal,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Select,
   SelectContent,
