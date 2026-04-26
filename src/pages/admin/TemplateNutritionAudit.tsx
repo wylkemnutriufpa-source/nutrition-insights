@@ -56,6 +56,8 @@ import {
   Minus,
   Plus,
   Equal,
+  Sparkles,
+  FileDown,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -92,7 +94,10 @@ type RuleKey =
   | "fatBaseMissing"
   | "itemsBroken"
   | "legacyStructure"
-  | "incoherentSubstitutions";
+  | "incoherentSubstitutions"
+  | "soupAsSubstitution"
+  | "unbalancedMeal"
+  | "v2GroupingMissing";
 
 type AuditConfig = Record<RuleKey, RuleSeverity>;
 
@@ -135,6 +140,21 @@ const RULE_LABELS: Record<RuleKey, { label: string; description: string; default
   incoherentSubstitutions: {
     label: "Substituições Incoerentes",
     description: "Detecta misturas indevidas (ex: sopa + proteína) ou categorias diferentes.",
+    defaultRecommend: "warning",
+  },
+  soupAsSubstitution: {
+    label: "Sopa como Substituição",
+    description: "Identifica se 'Sopa' está sendo usada como substituição de refeição sólida (almoço/jantar).",
+    defaultRecommend: "critical",
+  },
+  unbalancedMeal: {
+    label: "Refeição Desequilibrada",
+    description: "Refeições com macros muito fora do padrão (ex: zero proteína em almoço).",
+    defaultRecommend: "warning",
+  },
+  v2GroupingMissing: {
+    label: "Agrupamento V2 Coerente",
+    description: "Identifica se a refeição ainda não está agrupada em blocos V2 (proteína, carbo, gordura).",
     defaultRecommend: "warning",
   },
 };
@@ -338,6 +358,30 @@ export default function TemplateNutritionAudit() {
   const [diffVersion, setDiffVersion] = useState<RuleVersion | null>(null);
   const [templateSource, setTemplateSource] = useState<"nutritionist" | "official">("official");
 
+  const exportChecklist = (auditedData: AuditedTemplate[]) => {
+    const headers = ["ID", "Nome", "Status", "Itens", "Erros", "Mensagens de Erro"];
+    const rows = auditedData.map(t => [
+      t.id,
+      t.name,
+      levelStyles[t.level].label,
+      t.itemsTotal,
+      t.issues.length,
+      t.issues.map(i => i.message).join(" | ")
+    ]);
+
+    const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+    const url = URL.createObjectURL(blob);
+    link.setAttribute("href", url);
+    link.setAttribute("download", `checklist_templates_${new Date().toISOString().split('T')[0]}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    toast.success("Checklist exportado com sucesso!");
+  };
+
   const refreshVersions = async () => {
     setVersionsLoading(true);
     try {
@@ -519,6 +563,14 @@ export default function TemplateNutritionAudit() {
             </p>
           </div>
           <div className="flex items-center gap-2">
+            <Button variant="outline" size="sm" onClick={() => window.open("/admin/template-mass-reformulation", "_blank")}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Reformular em Massa
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => exportChecklist(audited)}>
+              <FileDown className="w-4 h-4 mr-2" />
+              Checklist
+            </Button>
             <Sheet open={settingsOpen} onOpenChange={setSettingsOpen}>
               <SheetTrigger asChild>
                 <Button variant="outline" size="sm">
