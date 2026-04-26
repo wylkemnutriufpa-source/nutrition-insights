@@ -3519,7 +3519,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     if (generationMode === "smart") {
       const [{ data: behavProfile }, { data: prevPlans }] = await Promise.all([
         serviceClient.from("behavioral_profile").select("*").eq("patient_id", patient_id).maybeSingle(),
-        serviceClient.from("meal_plans").select("generation_metadata, template_slug")
+        serviceClient.from("meal_plans").select("id, generation_metadata, template_id, template_slug, title")
           .eq("patient_id", patient_id).order("created_at", { ascending: false }).limit(3),
       ]);
       
