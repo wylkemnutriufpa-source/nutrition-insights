@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import {
   ArrowLeft, Save, Send, Sparkles, Loader2, CheckCircle2,
   Zap, Flame, Beef, Wheat, Droplets, Bookmark, Pencil, Check, X, PenTool, Lock,
-  Bot, UserCheck, ShieldCheck, ShieldAlert,
+Bot, UserCheck, ShieldCheck, ShieldAlert,
+  BookOpen,
 } from "lucide-react";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
@@ -121,6 +122,12 @@ export default function BuilderTopbar({
               {isPublished && (
                 <Badge className="text-[10px] bg-emerald-500/15 text-emerald-600 border-emerald-500/30">
                   <CheckCircle2 className="w-3 h-3 mr-1" /> Publicado
+                </Badge>
+              )}
+              {(plan as any)?.generation_metadata?.template_name_used && (
+                <Badge variant="secondary" className="text-[10px] shrink-0 border-primary/20 bg-primary/5">
+                  <BookOpen className="w-3 h-3 mr-1 text-primary" />
+                  Template: {(plan as any).generation_metadata.template_name_used}
                 </Badge>
               )}
             </div>

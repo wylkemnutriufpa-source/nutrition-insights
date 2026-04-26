@@ -3073,8 +3073,38 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         .order("created_at", { ascending: false }).limit(1).maybeSingle()
     ]);
 
+    let templateNameUsed = "";
+    if (latestPlanRes.data?.template_id) {
+      const { data: tpl } = await serviceClient
+        .from("nutritionist_meal_templates")
+        .select("name")
+        .eq("id", latestPlanRes.data.template_id)
+        .maybeSingle();
+      if (tpl) templateNameUsed = tpl.name;
+    }
+
     const patientProfile = patientProfileRes.data;
-    const lastUsedTemplateId = latestPlanRes.data?.template_id;
+    let lastUsedTemplateId = latestPlanRes.data?.template_id;
+    let isFallbackTemplate = false;
+    
+    if (!lastUsedTemplateId) {
+      // Fallback: seleciona o template global mais utilizado como base padrão
+      const { data: defaultTemplate } = await serviceClient
+        .from("nutritionist_meal_templates")
+        .select("id, name")
+        .eq("is_global", true)
+        .order("usage_count", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      
+      if (defaultTemplate) {
+        lastUsedTemplateId = defaultTemplate.id;
+        templateNameUsed = defaultTemplate.name;
+        isFallbackTemplate = true;
+        console.log(`[generate-meal-plan] 🔄 No previous plan found. Using fallback default template: ${lastUsedTemplateId} (${templateNameUsed})`);
+      }
+    }
+
     const prioritizedTemplateIds = lastUsedTemplateId ? [lastUsedTemplateId] : [];
 
     const fastMarmitaMode = !!patientProfile?.fast_marmita_mode;
@@ -3930,6 +3960,9 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       final_validation_passed: true,
       enabled_meals: enabledMeals || "default",
       meal_times: mealTimes || null,
+      template_id_used: lastUsedTemplateId,
+      template_name_used: templateNameUsed,
+      is_fallback_template: isFallbackTemplate,
     };
 
     let finalMealPlanId = meal_plan_id;
@@ -3989,6 +4022,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           generated_by: userId,
           generation_metadata: generationMetadata,
           tenant_id: resolvedTenantId,
+          template_id: lastUsedTemplateId,
         })
         .select("id")
         .single();
@@ -4016,6 +4050,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         generation_source: genSource,
         generated_by: userId,
         generation_metadata: generationMetadata,
+        template_id: lastUsedTemplateId,
       }).eq("id", finalMealPlanId);
     }
 
@@ -4174,6 +4209,9 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         tips_count: tips.length,
         generation_mode: generationMode,
         db_driven: useDBDriven,
+        template_id_used: lastUsedTemplateId,
+        template_name_used: templateNameUsed,
+        is_fallback_template: isFallbackTemplate,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );

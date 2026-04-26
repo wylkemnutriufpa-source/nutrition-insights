@@ -308,6 +308,11 @@ export default function MealPlans() {
             : (genData?.error || "Tente novamente");
           toast.error(msg);
         } else {
+          if (genData.is_fallback_template) {
+            toast.info(`Nota: Nenhum plano anterior encontrado. Usamos o template padrão "${genData.template_name_used || "Base"}" como fallback.`, { duration: 6000 });
+          } else if (genData.template_name_used) {
+            toast.success(`Plano gerado usando o template: ${genData.template_name_used}`);
+          }
           toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
           runPostGenVisualMatch(genData.mealPlanId).catch(() => {});
           setOpen(false);
