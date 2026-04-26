@@ -63,9 +63,8 @@ describe('Wannubia Specific Validation Test', () => {
     const readyMealsButton = screen.getByText(/Ir para Refeições Prontas/i);
     fireEvent.click(readyMealsButton);
 
-    // Verifica se mudou para a aba de Refeições Prontas (pode-se verificar se os templates aparecem)
-    // No mock, MEAL_TEMPLATES são usados.
-    expect(screen.getByText(/Marmita Frango Fit/i || /Marmita/i)).toBeInTheDocument();
+    // Verifica se mudou para a aba de Refeições Prontas
+    expect(screen.getByText(/Marmita/i)).toBeInTheDocument();
   });
 
   it('bloqueia salvamento com macros zerados', async () => {
@@ -80,7 +79,8 @@ describe('Wannubia Specific Validation Test', () => {
     );
 
     // Tenta salvar com macros zerados
-    const saveButton = screen.getByText(/Salvar alterações/i || /Salvar/i);
+    // O botão pode ter o texto "Salvar alterações"
+    const saveButton = screen.getByText(/Salvar alterações/i);
     fireEvent.click(saveButton);
 
     // Verifica se o toast de erro foi chamado
