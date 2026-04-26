@@ -585,8 +585,8 @@ export function generatePremiumMealPlanPDF(data: PremiumMealPlanPDFData) {
     const dayItems = groupedByDay[dayKey];
     const dayName = dayKey === -1 ? "Todos os Dias" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
     const dayShort = dayKey === -1 ? "★" : String(dayKey === 0 ? 7 : dayKey);
-    const dayKcal = dayItems.reduce((s, i) => s + (i.calories_target || 0), 0);
-    const dayProt = dayItems.reduce((s, i) => s + (i.protein_target || 0), 0);
+    const dayKcal = dayItems.filter(i => i.is_primary !== false).reduce((s, i) => s + (i.calories_target || 0), 0);
+    const dayProt = dayItems.filter(i => i.is_primary !== false).reduce((s, i) => s + (i.protein_target || 0), 0);
 
     // Group meals by type then by substitution group
     const mealTypeGroups = mealOrder.map(mType => {
