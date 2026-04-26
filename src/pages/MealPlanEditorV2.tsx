@@ -228,7 +228,7 @@ export default function MealPlanEditorV2() {
     setSaving(true);
     
     // 🛡️ Validação de Substituições antes de salvar
-    const subValidation = validatePlanSubstitutions(store.items);
+    const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount);
     if (!subValidation.valid) {
       toast.error("⚠️ Substituições Inválidas", {
         description: subValidation.errors[0].slice(0, 150) + "...",
