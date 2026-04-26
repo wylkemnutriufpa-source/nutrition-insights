@@ -382,17 +382,18 @@ export default function MobileQA() {
               
               <div className="pt-4 border-t mt-4">
                 <Label htmlFor="buffer-range" className="text-xs font-semibold mb-2 block">
-                  Buffer de Detecção Overflow: {overflowBuffer}ms
+                  Threshold de Overflow: {overflowFrames} frames
                 </Label>
                 <input 
                   id="buffer-range"
                   type="range" 
-                  min="0" 
-                  max="1000" 
-                  step="50"
-                  value={overflowBuffer}
-                  onChange={(e) => setOverflowBuffer(Number(e.target.value))}
+                  min="2" 
+                  max="120" 
+                  step="1"
+                  value={overflowFrames}
+                  onChange={(e) => setOverflowFrames(Number(e.target.value))}
                   className="w-full h-2 bg-secondary rounded-lg appearance-none cursor-pointer"
+                  data-testid="overflow-threshold-slider"
                 />
               </div>
             </CardContent>
