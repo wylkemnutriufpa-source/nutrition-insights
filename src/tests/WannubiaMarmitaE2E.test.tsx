@@ -163,8 +163,7 @@ describe('Wannubia Marmita E2E - Validações e Mobile', () => {
 
     // O Shadcn UI adiciona o botão Close automaticamente no DialogContent.
     // Em alguns casos ele é renderizado como um botão com "Close" no aria-label ou similar.
-    // Se não encontrarmos pelo role, tentamos pela classe ou ícone.
-    const closeButton = screen.queryByRole('button', { name: /close/i }) || screen.getByTestId('dialog-close') || screen.container.querySelector('button[class*="rounded-sm opacity-70"]');
+    const closeButton = screen.queryByRole('button', { name: /close/i });
     
     if (closeButton) {
       fireEvent.click(closeButton);
