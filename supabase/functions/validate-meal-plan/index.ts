@@ -281,7 +281,11 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
             for (const c of checks) {
                 macroResults.push(c);
                 if (!c.passed && c.rule !== "sem_meta") {
-                    clinicalErrors.push({ rule: `div_${c.label}`, message: `${c.label} fora da meta`, weight: 30 });
+                    clinicalErrors.push({ 
+                        rule: `div_${c.label.toLowerCase()}`, 
+                        message: `${c.label} fora da meta: ${c.actual}${c.unit} (alvo ${c.target}${c.unit} ±${c.tolerance}%)`, 
+                        weight: 30 
+                    });
                 }
             }
         }
