@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { validateWhatsApp, normalizeWhatsApp } from "@/utils/whatsapp";
+
 
 export interface WhatsAppIntegration {
   id: string;
@@ -138,9 +140,10 @@ export async function getWhatsAppLogs(professionalId: string, limit = 50): Promi
  * Normalize Brazilian phone number: ensures DDI 55, removes masks
  */
 export function normalizePhone(phone: string): string | null {
-  const digits = phone.replace(/\D/g, "");
-  if (digits.length < 10) return null;
+  const validation = validateWhatsApp(phone);
+  if (!validation.isValid) return null;
+  
+  const digits = normalizeWhatsApp(phone);
   const withDdi = digits.startsWith("55") ? digits : `55${digits}`;
-  if (withDdi.length < 12 || withDdi.length > 13) return null;
   return withDdi;
 }

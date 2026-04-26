@@ -24,6 +24,8 @@ import {
   type WhatsAppLog,
 } from "@/services/whatsappService";
 import { supabase } from "@/integrations/supabase/client";
+import { validateWhatsApp } from "@/utils/whatsapp";
+
 
 export default function WhatsAppSettings() {
   const { profile } = useAuth();
@@ -154,9 +156,16 @@ export default function WhatsAppSettings() {
       toast.error("Informe o número do paciente");
       return;
     }
+    
+    const validation = validateWhatsApp(testPhone);
+    if (!validation.isValid) {
+      toast.error(validation.error);
+      return;
+    }
+
     const normalized = normalizePhone(testPhone);
     if (!normalized) {
-      toast.error("Número inválido. Use formato: (11) 99999-9999");
+      toast.error("Erro na normalização do número");
       return;
     }
     setSending(true);

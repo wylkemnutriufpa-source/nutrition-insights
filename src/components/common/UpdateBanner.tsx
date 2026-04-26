@@ -174,9 +174,14 @@ export default function UpdateBanner() {
           <Button
             variant="ghost"
             onClick={async () => {
-              await clearRuntimeCaches();
-              toast.success("Cache limpo! Recarregando...");
-              setTimeout(() => forceHardReload(), 800);
+              try {
+                await clearRuntimeCaches();
+                toast.success("Cache limpo! Recarregando...");
+                setTimeout(() => forceHardReload(), 800);
+              } catch (err) {
+                console.error("Erro ao limpar cache:", err);
+                toast.error("Erro ao limpar cache.");
+              }
             }}
             disabled={updating}
             className="w-full sm:w-auto text-muted-foreground"

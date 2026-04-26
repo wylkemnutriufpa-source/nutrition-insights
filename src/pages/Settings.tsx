@@ -423,9 +423,14 @@ export default function Settings() {
               variant="outline" 
               className="w-full gap-2 border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
               onClick={async () => {
-                await clearRuntimeCaches();
-                toast.success("Cache limpo! Recarregando...");
-                setTimeout(() => forceHardReload(), 1000);
+                try {
+                  await clearRuntimeCaches();
+                  toast.success("Cache limpo! Recarregando...");
+                  setTimeout(() => forceHardReload(), 1000);
+                } catch (err) {
+                  console.error("Erro ao limpar cache:", err);
+                  toast.error("Erro ao limpar cache. Tente recarregar manualmente.");
+                }
               }}
             >
               <RefreshCw className="w-4 h-4" /> Limpar Cache e Atualizar

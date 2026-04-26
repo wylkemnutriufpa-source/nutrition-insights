@@ -11,6 +11,9 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
+import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@/utils/whatsapp";
+
+
 
 export default function InvitePatient() {
   const { user } = useAuth();
@@ -56,7 +59,7 @@ export default function InvitePatient() {
     return `${greeting}Seu acesso ao FitJourney foi criado. Use o email *${email}* para entrar e completar seu onboarding aqui: ${onboardingLink}`;
   }, [name, email, onboardingLink]);
   const whatsappUrl = useMemo(() => {
-    const phoneDigits = (phone || "").replace(/\D/g, "");
+    const phoneDigits = normalizeWhatsApp(phone || "");
     const base = phoneDigits ? `https://wa.me/${phoneDigits}` : "https://wa.me/";
     return `${base}?text=${encodeURIComponent(whatsappMessage)}`;
   }, [phone, whatsappMessage]);
@@ -96,10 +99,20 @@ export default function InvitePatient() {
       return;
     }
 
+    if (phone) {
+      const validation = validateWhatsApp(phone);
+      if (!validation.isValid) {
+        toast.error(validation.error);
+        return;
+      }
+    }
+
     if (method === "password" && !tempPassword) {
       toast.error("Gere uma senha temporária");
       return;
     }
+
+    const formattedPhone = phone ? formatInternationalWhatsApp(phone) : null;
 
     setLoading(true);
     try {
@@ -107,7 +120,7 @@ export default function InvitePatient() {
         body: {
           name,
           email,
-          phone: phone || null,
+          phone: formattedPhone,
           method,
           password: method === "password" ? tempPassword : undefined,
           attendance_mode: attendanceMode,
