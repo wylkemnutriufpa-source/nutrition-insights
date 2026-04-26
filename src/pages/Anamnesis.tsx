@@ -528,10 +528,12 @@ function SliderInput({
 
 // ──── Main page ────
 export default function Anamnesis() {
-  const { user, isNutritionist } = useAuth();
+  const { user, isNutritionist, isPatient } = useAuth();
   const { tenantId } = useTenant();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
+
   const forPatientId = searchParams.get("patientId");
   const isPipelineFromUrl = searchParams.get("pipeline") === "true";
   const [hasActivePipeline, setHasActivePipeline] = useState(false);
@@ -539,6 +541,14 @@ export default function Anamnesis() {
   const [step, setStep] = useState(0);
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
+
+  // Route protection: patients must accept consent before anamnesis
+  useEffect(() => {
+    if (isPatient && !consentLoading && !hasConsent) {
+      toast.error("Você precisa aceitar o termo de consentimento antes de iniciar a anamnese.");
+      navigate("/consent", { replace: true });
+    }
+  }, [isPatient, consentLoading, hasConsent, navigate]);
   const [analyzing, setAnalyzing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
