@@ -438,6 +438,31 @@ export default function DietTemplates() {
 
     const items: any[] = [];
     const day = 0; // single day
+
+    // NEW: Fetch nutritionist's meal recipes to replace "Marmita" placeholders if present
+    let mealRecipes: any[] = [];
+    const marmitaPlaceholders = ["Marmita congelada do dia", "Marmita do dia", "Marmita Selecionada", "marmita do dia"];
+    const hasMarmitaPlaceholder = meals.some(m => 
+      Array.isArray(m.blocks) && m.blocks.some((b: any) => 
+        Array.isArray(b.options) && b.options.some((o: any) => 
+          o.name && marmitaPlaceholders.some(p => o.name.includes(p))
+        )
+      )
+    );
+
+    if (hasMarmitaPlaceholder) {
+      console.log("[DietTemplates] Marmita placeholder detected, fetching recipes...");
+      const { data: recipes } = await supabase
+        .from("meal_recipes")
+        .select("*")
+        .eq("nutritionist_id", user!.id)
+        .eq("is_active", true);
+      mealRecipes = recipes || [];
+      console.log(`[DietTemplates] Found ${mealRecipes.length} recipes for replacement`);
+    }
+
+    let globalMarmitaCounter = 0;
+
     for (const meal of meals) {
       const mealType = meal.meal_type || meal.type;
       if (!mealType) continue;
