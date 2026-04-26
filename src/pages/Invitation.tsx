@@ -191,6 +191,15 @@ export default function Invitation() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
+      <Helmet>
+        <title>Você foi convidado! | FitJourney</title>
+        <meta name="description" content="Seu acompanhamento nutricional de alta performance começa agora." />
+        <meta property="og:title" content="Você foi convidado para o FitJourney!" />
+        <meta property="og:description" content={`Acompanhamento com ${professional?.full_name || 'seu nutricionista'}`} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={window.location.href} />
+        <meta property="og:image" content={professional?.avatar_url || "/og-image.png"} />
+      </Helmet>
       <Card className="max-w-md w-full border-primary/20 bg-primary/5 shadow-2xl overflow-hidden">
         <div className="h-2 bg-gradient-to-r from-primary via-accent to-primary animate-gradient-x" />
         <CardHeader className="text-center space-y-4 pt-8">
