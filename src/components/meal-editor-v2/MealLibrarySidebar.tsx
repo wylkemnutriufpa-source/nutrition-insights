@@ -94,23 +94,69 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
   const [filterType, setFilterType] = useState<string>("all");
   const [activeTab, setActiveTab] = useState<"my" | "prebuilt">("my");
 
-  // Load nutritionist templates
+  // Load nutritionist templates & recipes (marmitas)
   useEffect(() => {
     if (!open || !user?.id) return;
     let cancelled = false;
     setLoading(true);
 
-    supabase
-      .from("nutritionist_meal_templates")
-      .select("*")
-      .or(`nutritionist_id.eq.${user.id},is_global.eq.true`)
-      .order("usage_count", { ascending: false, nullsFirst: false })
-      .then(({ data }) => {
-        if (!cancelled) {
-          setTemplates((data || []) as TemplateRow[]);
-          setLoading(false);
-        }
-      });
+    const loadAll = async () => {
+      try {
+        const [templatesRes, recipesRes] = await Promise.all([
+          supabase
+            .from("nutritionist_meal_templates")
+            .select("*")
+            .or(`nutritionist_id.eq.${user.id},is_global.eq.true`)
+            .order("usage_count", { ascending: false, nullsFirst: false }),
+          supabase
+            .from("meal_recipes")
+            .select("*")
+            .eq("nutritionist_id", user.id)
+            .eq("is_active", true)
+        ]);
+
+        if (cancelled) return;
+
+        const baseTemplates = (templatesRes.data || []) as TemplateRow[];
+        
+        // Transform recipes into TemplateRow format
+        const recipeTemplates: TemplateRow[] = (recipesRes.data || []).map(r => {
+          const mType = r.meal_type?.toLowerCase();
+          let mealType = "lunch";
+          if (mType?.includes("jantar")) mealType = "dinner";
+          
+          return {
+            id: r.id,
+            name: r.name,
+            meal_type: mealType,
+            kcal_base: r.fixed_calories || 0,
+            protein_base: r.fixed_protein || 0,
+            carbs_base: r.fixed_carbs || 0,
+            fat_base: r.fixed_fat || 0,
+            foods_structure: Array.isArray(r.foods_json) ? r.foods_json.map((f: any) => ({
+              name: f.name || f.food || "Alimento",
+              portion: f.grams ? `${f.grams}g` : (f.portion || "1 porção"),
+              calories: f.calories || 0,
+              protein: f.protein || 0,
+              carbs: f.carbs || 0,
+              fat: f.fat || 0
+            })) : [],
+            goal_tags: r.is_fixed ? ["Marmita", "Fixa"] : ["Receita"],
+            is_global: false,
+            usage_count: 0,
+            nutritionist_id: r.nutritionist_id
+          };
+        });
+
+        setTemplates([...baseTemplates, ...recipeTemplates]);
+      } catch (err) {
+        console.error("Error loading templates/recipes:", err);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    loadAll();
 
     return () => { cancelled = true; };
   }, [open, user?.id]);
