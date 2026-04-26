@@ -92,6 +92,9 @@ export default function MealPlanEditorV2() {
   const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
   const [showAutofixResults, setShowAutofixResults] = useState(false);
   const [autofixWasValid, setAutofixWasValid] = useState(false);
+  const [reviewOpen, setReviewOpen] = useState(false);
+  const [exportingPDF, setExportingPDF] = useState(false);
+  const [isDefaultSaving, setIsDefaultSaving] = useState(false);
   const [viewMode, setViewMode] = useState<ViewMode>(() => {
     const saved = localStorage.getItem(VIEW_MODE_KEY);
     return saved === "list" ? "list" : "grid";
