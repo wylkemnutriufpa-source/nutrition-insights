@@ -98,7 +98,7 @@ test.describe("Publish Plan Flow - In-Office Wizard", () => {
     await expect(overlay).not.toBeVisible();
 
     // 6. Redirect to Patient Profile
-    const viewProfileBtn = page.getByRole("button", { name: /Ver perfil do paciente/i });
+    const viewProfileBtn = page.getByTestId("view-patient-profile-button");
     await viewProfileBtn.click();
 
     // Check redirection URL
