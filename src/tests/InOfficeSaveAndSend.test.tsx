@@ -101,9 +101,10 @@ describe('InOfficeStepFinalize - Save and Send E2E', () => {
       }));
     });
 
-    // Verify success message
-    await waitFor(() => expect(screen.getByText(/Plano publicado com sucesso/i)).toBeInTheDocument());
+    // Verify success message (updated UI)
+    await waitFor(() => expect(screen.getByText(/Plano Ativo e Enviado/i)).toBeInTheDocument());
   });
+
 
   it('should show retry button when publication fails and allow retrying', async () => {
     const mockSupabase = supabase as any;
