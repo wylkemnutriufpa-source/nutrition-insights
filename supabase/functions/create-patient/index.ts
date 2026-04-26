@@ -147,7 +147,7 @@ Deno.serve(async (req) => {
         await admin.auth.admin.generateLink({
           type: "magiclink",
           email,
-          options: { redirectTo: `${req.headers.get("origin") || "https://fijourney.lovable.app"}/` },
+          options: { redirectTo: `https://www.fitjourney.com.br/` },
         });
       } catch (e) {
         console.log("[create-patient] magic link falhou:", e);
