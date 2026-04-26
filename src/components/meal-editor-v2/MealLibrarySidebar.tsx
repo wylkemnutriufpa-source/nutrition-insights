@@ -261,7 +261,11 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
         edit_metadata: {
           is_fixed: Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa"),
           original_recipe_id: template.is_recipe ? template.id : null,
-          portion_base: food.portion
+          portion_base: food.portion,
+          kcal_base: food.kcal || food.calories || null,
+          protein_base: food.protein || null,
+          carbs_base: food.carbs || null,
+          fat_base: food.fat || null,
         } as any,
       }));
       addItems(inserts);
