@@ -131,7 +131,8 @@ describe('Mobile Experience E2E & QA Automation', () => {
       expect(spy).toHaveBeenCalled();
       const lastCallArgs = spy.mock.calls.find(call => call[1]?.type === 'application/json');
       if (lastCallArgs) {
-        const reportData = JSON.parse(lastCallArgs[0][0]);
+        const contentArray = lastCallArgs[0] as any[];
+        const reportData = JSON.parse(contentArray[0] as string);
         expect(reportData.evidences[0]).toHaveProperty('viewport', '390px');
         expect(reportData.evidences[0]).toHaveProperty('thumbnail');
       }
