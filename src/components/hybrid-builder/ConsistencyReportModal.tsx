@@ -84,10 +84,10 @@ export default function ConsistencyReportModal({ open, onOpenChange, recipes, ta
             {hasIssues ? (
               <div className="flex items-center gap-1.5 text-destructive animate-pulse">
                 <AlertCircle className="w-3.5 h-3.5" />
-                <span className="text-[10px] font-bold">RECEITAS COM MACROS ZERADOS DETECTADAS!</span>
+                <span className="text-[10px] font-bold">RECEITAS COM MACROS ZERADOS!</span>
               </div>
             ) : (
-              <div className="flex items-center gap-1.5 text-green-600">
+              <div className="flex items-center gap-1.5 text-success">
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span className="text-[10px] font-bold">Todos os macros preenchidos.</span>
               </div>
