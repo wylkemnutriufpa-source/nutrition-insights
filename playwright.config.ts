@@ -14,6 +14,15 @@ export default defineConfig({
     screenshot: "only-on-failure",
     video: "retain-on-failure",
   },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixels: 100,
+      threshold: 0.2,
+    },
+    toMatchSnapshot: {
+      threshold: 0.2,
+    },
+  },
   projects: [
     {
       name: "chromium",
