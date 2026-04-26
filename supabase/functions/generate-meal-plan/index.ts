@@ -1064,8 +1064,8 @@ function injectComputedProteinServings(items: any[], foods: DBFood[]): any[] {
 
     return {
       ...item,
-      metadata: {
-        ...(item.metadata || {}),
+      edit_metadata: {
+        ...(item.edit_metadata || item.metadata || {}),
         portion_alert: combinedAlert || null,
         original_computed_grams: roundServingGrams(rawServing),
         matched_food_id: matchedFood.id,
