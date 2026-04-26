@@ -608,7 +608,8 @@ const App = () => (
               <Route path="/fitness-anamnesis" element={<ProtectedRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></ProtectedRoute>} />
 
               {/* Consent required page */}
-              <Route path="/consent-required" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
+              <Route path="/consent" element={<PatientRoute><LP section="Consentimento"><ConsentRequired /></LP></PatientRoute>} />
+              <Route path="/consent-required" element={<Navigate to="/consent" replace />} />
               <Route path="/payment-required" element={<PatientRoute><LP section="Pagamento"><PaymentRequired /></LP></PatientRoute>} />
 
               {/* Patient portal — consent guarded */}
