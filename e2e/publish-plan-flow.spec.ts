@@ -1,8 +1,7 @@
-
 import { test, expect } from "./fixtures";
 
 test.describe("Publish Plan Flow - In-Office Wizard", () => {
-  test.setTimeout(60000);
+  test.setTimeout(90000);
 
   test("verify overlay progress, retry on failure, and success redirection", async ({ nutriPage }) => {
     const page = nutriPage;
@@ -33,14 +32,29 @@ test.describe("Publish Plan Flow - In-Office Wizard", () => {
     const publishBtn = page.getByTestId("publish-button");
     await expect(publishBtn).toBeVisible({ timeout: 10000 });
 
-    // 2. Simulate Timeout/Network Failure (408/504)
+    // 2. Simulate Network Error followed by Timeout (408)
+    let attempt = 0;
     await page.route("**/rest/v1/meal_plans*", async (route, request) => {
       if (request.method() === "PATCH") {
-        await route.fulfill({
-          status: 504,
-          contentType: "application/json",
-          body: JSON.stringify({ message: "Gateway Timeout" }),
-        });
+        attempt++;
+        if (attempt === 1) {
+          // First attempt: Network Error
+          await route.abort("internetdisconnected");
+        } else if (attempt === 2) {
+          // Second attempt: 408 Timeout
+          await route.fulfill({
+            status: 408,
+            contentType: "application/json",
+            body: JSON.stringify({ message: "Request Timeout" }),
+          });
+        } else {
+          // Third attempt onwards: Success
+          await route.fulfill({
+            status: 200,
+            contentType: "application/json",
+            body: JSON.stringify({ success: true }),
+          });
+        }
       } else {
         await route.continue();
       }
@@ -57,39 +71,33 @@ test.describe("Publish Plan Flow - In-Office Wizard", () => {
     await expect(overlay).toBeVisible();
 
     // Verify progress intervals (Realistic intervals 0 -> 25 -> 50 -> 75 -> 100)
-    // Note: We might miss some if they happen too fast, so we check for their appearance
+    // We use a regex and wait for each step to ensure we capture them even with timing variations
     const progressText = page.getByTestId("publish-progress-text");
-    await expect(progressText).toHaveText(/0%/);
-    await expect(progressText).toHaveText(/25%/, { timeout: 1000 });
-    await expect(progressText).toHaveText(/50%/, { timeout: 1000 });
-    await expect(progressText).toHaveText(/75%/, { timeout: 1000 });
+    await expect(progressText).toHaveText(/0%/, { timeout: 2000 });
+    await expect(progressText).toHaveText(/25%/, { timeout: 2000 });
+    await expect(progressText).toHaveText(/50%/, { timeout: 2000 });
+    await expect(progressText).toHaveText(/75%/, { timeout: 2000 });
 
-    // 4. Verify Failure State for 504
-    await expect(page.getByText("Falha no envio")).toBeVisible({ timeout: 10000 });
-    await expect(page.getByTestId("publish-error-message")).toContainText("Gateway Timeout");
+    // 4. Verify Failure State for first attempt (Network Error)
+    await expect(page.getByText("Falha no envio")).toBeVisible({ timeout: 15000 });
     
-    const retryBtn = page.getByTestId("retry-publish-button");
+    let retryBtn = page.getByTestId("retry-publish-button");
     await expect(retryBtn).toBeVisible();
-
-    // 5. Simulate Success for the second attempt
-    await page.unroute("**/rest/v1/meal_plans*");
-    await page.route("**/rest/v1/meal_plans*", async (route, request) => {
-      if (request.method() === "PATCH") {
-        await route.fulfill({
-          status: 200,
-          contentType: "application/json",
-          body: JSON.stringify({ success: true }),
-        });
-      } else {
-        await route.continue();
-      }
-    });
-
-    // Click Retry
     await retryBtn.click();
 
-    // Check progress reaches 100% on success
-    await expect(progressText).toHaveText(/100%/, { timeout: 5000 });
+    // Verify progress again for second attempt
+    await expect(progressText).toHaveText(/0%/, { timeout: 2000 });
+    await expect(progressText).toHaveText(/75%/, { timeout: 5000 });
+
+    // 5. Verify Failure State for second attempt (408 Timeout)
+    await expect(page.getByText("Falha no envio")).toBeVisible({ timeout: 15000 });
+    await expect(page.getByTestId("publish-error-message")).toContainText("Request Timeout");
+    
+    await expect(retryBtn).toBeVisible();
+    await retryBtn.click();
+
+    // Check progress reaches 100% on success (third attempt)
+    await expect(progressText).toHaveText(/100%/, { timeout: 10000 });
 
     // Verify success indication
     await expect(page.getByText("Plano Ativo e Enviado!")).toBeVisible({ timeout: 15000 });
@@ -97,18 +105,24 @@ test.describe("Publish Plan Flow - In-Office Wizard", () => {
     // Overlay should be gone
     await expect(overlay).not.toBeVisible();
 
-    // 6. Redirect to Patient Profile
+    // 6. Redirect to Patient Profile and verify consistency
+    const currentUrl = page.url();
     const viewProfileBtn = page.getByTestId("view-patient-profile-button");
     await viewProfileBtn.click();
 
     // Check redirection URL
     await page.waitForURL(/\/patients\/[a-zA-Z0-9-]+/);
+    const newUrl = page.url();
+    expect(newUrl).not.toBe(currentUrl);
+    
+    // Verify we are on a patient profile (the patient name should be visible or the ID should be in the URL)
+    await expect(page.locator('h1, h2')).toContainText(/./);
   });
 
-  test("interaction prevention while publishing", async ({ nutriPage }) => {
+  test("interaction prevention while publishing and blocking steps", async ({ nutriPage }) => {
     const page = nutriPage;
     await page.goto("/patients");
-    const patientRow = page.locator('tr').filter({ hasText: /./ }).first();
+    const patientRow = page.locator('[data-testid="patient-card"], .patient-row, tr').filter({ hasText: /./ }).first();
     await patientRow.click();
     const startBtn = page.getByRole("button", { name: /Consultório|Iniciar Consulta/i }).first();
     await startBtn.click();
@@ -120,20 +134,34 @@ test.describe("Publish Plan Flow - In-Office Wizard", () => {
     
     // Mock a slow response to test blocking
     await page.route("**/rest/v1/meal_plans*", async (route) => {
-      await new Promise(r => setTimeout(r, 5000));
+      await new Promise(r => setTimeout(r, 6000));
       await route.fulfill({ status: 200, body: JSON.stringify({ success: true }) });
     });
 
     await publishBtn.click();
 
+    // Verify overlay is visible
+    const overlay = page.getByTestId("publish-progress-overlay");
+    await expect(overlay).toBeVisible();
+
     // Check that we can't click other steps while publishing
     const step1 = page.getByRole("button", { name: /1|Cadastro/i }).first();
-    // Attempting to click should either do nothing (because overlay is on top) or be ignored
-    // We check if the overlay is still there after the attempt
-    await step1.click({ force: true }).catch(() => {}); 
-    await expect(page.getByTestId("publish-progress-overlay")).toBeVisible();
     
-    // Check URL hasn't changed (still in the wizard)
+    // Try to click step 1 while overlay is active
+    // We expect the overlay to still be visible and the URL to remain the same
+    await step1.click({ force: true }).catch(() => {}); 
+    await expect(overlay).toBeVisible();
     expect(page.url()).toContain("/in-office/");
+    
+    // Also try clicking outside or on other buttons
+    const prevBtn = page.getByRole("button", { name: /Voltar/i }).first();
+    if (await prevBtn.isVisible()) {
+        await prevBtn.click({ force: true }).catch(() => {});
+        await expect(overlay).toBeVisible();
+    }
+
+    // Wait for completion and verify success
+    await expect(page.getByText("Plano Ativo e Enviado!")).toBeVisible({ timeout: 15000 });
+    await expect(overlay).not.toBeVisible();
   });
 });
