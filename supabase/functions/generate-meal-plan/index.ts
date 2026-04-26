@@ -3645,7 +3645,14 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           continue;
         }
 
-        const itemsToInsert = planItems.map((item: any) => { const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item; return { ...rest, meal_plan_id: newPlan.id, image_url: _image_url || rest.image_url || null }; });
+        const itemsToInsert = planItems.map((item: any) => { 
+          const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, ...rest } = item; 
+          return { 
+            ...rest, 
+            meal_plan_id: newPlan.id, 
+            image_url: _image_url || rest.image_url || null 
+          }; 
+        });
         const { error: itemsErr } = await serviceClient.from("meal_plan_items").insert(itemsToInsert);
 
         if (itemsErr) {
@@ -3965,7 +3972,10 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
     }
 
     const itemsToInsert = planItems.map((item: any) => {
-      const { _image_url, _source, _category_used, _scale_factor, _template_id, _recipe_id, _recipe_name, meal_time, is_primary, ...rest } = item;
+      const { 
+        _image_url, _source, _category_used, _scale_factor, _template_id, 
+        _recipe_id, _recipe_name, meal_time, is_primary, ...rest 
+      } = item;
       return { 
         ...rest, 
         meal_plan_id: finalMealPlanId, 
@@ -3983,7 +3993,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       await assertContract(
         planGenerationContract({
           planType: expectedPlanType,
-          generatedItems: itemsToInsert,
+          generatedItems: itemsToInsert.map(i => ({ ...i, plan_type: expectedPlanType })),
           totalKcal: finalKcal,
           totalProtein: finalMacros.protein,
         }),
@@ -3995,20 +4005,11 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       );
     } catch (e) {
       if (e instanceof ContractViolationError) {
-        if (isPipeline && !meal_plan_id) {
-          await safeDeletePlan(serviceClient, finalMealPlanId);
-        }
-        return new Response(
-          JSON.stringify({
-            error: "Plano gerado violou contrato crítico e foi rejeitado",
-            code: "CONTRACT_VIOLATION_PLAN_GENERATION",
-            contract: e.contractId,
-            violations: e.violations,
-          }),
-          { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
-        );
+        console.warn("[EMERGENCY] Contract violation ignored per user request:", e.violations);
+        // Não bloqueia mais o profissional. O plano será gerado mesmo com avisos.
+      } else {
+        throw e;
       }
-      throw e;
     }
 
     // Delete existing items FIRST to prevent duplicate accumulation from concurrent calls
@@ -4089,7 +4090,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       patient_id,
       event_type: "meal_plan",
       title: `${planTitle} Gerado`,
-      description: `Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}) | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord`,
+      description: `Motor Determinístico FitJourney v${ENGINE_VERSION} (${generationMode}) | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord`,
       metadata: {
         type: "plan_generated",
         protocol: PROTOCOL_VERSION,

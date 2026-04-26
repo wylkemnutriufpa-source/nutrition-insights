@@ -29,22 +29,29 @@ export async function extractEdgeFunctionError(
     // Try to get the response body from context (FunctionsHttpError)
     if (err.context && typeof err.context.json === "function") {
       try {
-        const body = await err.context.json();
-        if (body?.error) {
-          return {
-            error: body.error,
-            code: body.code || undefined,
-            details: body.details || undefined,
-          };
+        // Clone the response if possible to avoid "body already consumed" errors
+        const response = typeof err.context.clone === 'function' ? err.context.clone() : err.context;
+        const text = await response.text();
+        
+        if (!text || text === "undefined") {
+          return { error: "Resposta vazia do servidor" };
         }
-      } catch {
-        // JSON parsing failed, try text
+
         try {
-          const text = await err.context.text();
-          if (text) return { error: text };
+          const body = JSON.parse(text);
+          if (body?.error) {
+            return {
+              error: body.error,
+              code: body.code || undefined,
+              details: body.details || undefined,
+            };
+          }
         } catch {
-          // ignore
+          // If not JSON, return the text if it's short
+          if (text.length < 200) return { error: text };
         }
+      } catch (innerErr) {
+        console.warn("[edgeFunctionErrorHelper] Failed to extract error body:", innerErr);
       }
     }
 
