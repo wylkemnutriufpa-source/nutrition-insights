@@ -538,40 +538,59 @@ export function MealLibrarySidebar({ open, onOpenChange, targetDay, targetMealTy
 
 // ── Nutritionist Template Card ────────────────────────────────
 function TemplateCard({ template, onInsert }: { template: TemplateRow; onInsert: (t: TemplateRow) => void }) {
+  const isFixed = Array.isArray(template.goal_tags) && template.goal_tags.includes("Fixa");
+
   return (
-    <button
-      type="button"
-      onClick={() => onInsert(template)}
-      className="w-full text-left rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-accent/30 p-3 transition-all group"
-    >
-      <div className="flex items-center justify-between">
-        <span className="font-medium text-sm truncate flex-1">{template.name}</span>
-        <Plus className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-      </div>
-      <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
-        <span className="flex items-center gap-0.5">
-          {MEAL_ICONS[template.meal_type]} {MEAL_LABELS[template.meal_type] || template.meal_type}
-        </span>
-        {template.kcal_base != null && (
-          <span className="flex items-center gap-0.5">
-            <Flame className="w-2.5 h-2.5 text-orange-400" /> {fmtMacro(template.kcal_base)} kcal
-          </span>
-        )}
-        {template.protein_base != null && (
-          <span className="flex items-center gap-0.5">
-            <Beef className="w-2.5 h-2.5 text-red-400" /> {fmtMacro(template.protein_base)}g
-          </span>
-        )}
-        {template.is_global && <Badge variant="outline" className="text-[8px] h-4 px-1">Global</Badge>}
-      </div>
-      {Array.isArray(template.goal_tags) && template.goal_tags.length > 0 && (
-        <div className="flex gap-1 mt-1.5 flex-wrap">
-          {template.goal_tags.slice(0, 3).map((tag: string) => (
-            <Badge key={tag} variant="secondary" className="text-[8px] h-4 px-1.5">{tag}</Badge>
-          ))}
+    <div className="group relative">
+      <button
+        type="button"
+        onClick={() => onInsert(template)}
+        className="w-full text-left rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-accent/30 p-3 transition-all"
+      >
+        <div className="flex items-center justify-between">
+          <span className="font-medium text-sm truncate flex-1">{template.name}</span>
+          <Plus className="w-4 h-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
         </div>
+        <div className="flex items-center gap-2 mt-1.5 text-[10px] text-muted-foreground">
+          <span className="flex items-center gap-0.5">
+            {MEAL_ICONS[template.meal_type]} {MEAL_LABELS[template.meal_type] || template.meal_type}
+          </span>
+          {template.kcal_base != null && (
+            <span className="flex items-center gap-0.5">
+              <Flame className="w-2.5 h-2.5 text-orange-400" /> {fmtMacro(template.kcal_base)} kcal
+            </span>
+          )}
+          {template.protein_base != null && (
+            <span className="flex items-center gap-0.5">
+              <Beef className="w-2.5 h-2.5 text-red-400" /> {fmtMacro(template.protein_base)}g
+            </span>
+          )}
+          {template.is_global && <Badge variant="outline" className="text-[8px] h-4 px-1">Global</Badge>}
+        </div>
+        {Array.isArray(template.goal_tags) && template.goal_tags.length > 0 && (
+          <div className="flex gap-1 mt-1.5 flex-wrap">
+            {template.goal_tags.slice(0, 3).map((tag: string) => (
+              <Badge key={tag} variant="secondary" className="text-[8px] h-4 px-1.5">{tag}</Badge>
+            ))}
+          </div>
+        )}
+      </button>
+
+      {isFixed && (
+        <Button
+          size="sm"
+          variant="secondary"
+          className="absolute right-2 bottom-2 h-7 text-[9px] gap-1.5 bg-primary/10 text-primary hover:bg-primary/20 border-primary/20 opacity-0 group-hover:opacity-100 transition-opacity"
+          onClick={(e) => {
+            e.stopPropagation();
+            onInsert(template);
+          }}
+        >
+          <Zap className="w-3 h-3" />
+          Adicionar ao editor
+        </Button>
       )}
-    </button>
+    </div>
   );
 }
 
