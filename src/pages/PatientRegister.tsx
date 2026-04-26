@@ -146,6 +146,12 @@ export default function PatientRegister() {
       toast.error("A senha deve ter pelo menos 6 caracteres");
       return;
     }
+    if (!validateWhatsApp(whatsapp)) {
+      toast.error("Por favor, corrija o número de WhatsApp");
+      return;
+    }
+    const formattedWhatsapp = formatInternationalWhatsApp(whatsapp);
+    
     setLoading(true);
     try {
       const nutriId = selectedProfessional?.user_id || null;
