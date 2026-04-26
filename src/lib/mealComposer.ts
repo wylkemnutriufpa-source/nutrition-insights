@@ -8,7 +8,7 @@
 import { supabase } from "@/integrations/supabase/client";
 
 // ── Types ────────────────────────────────────────────────────
-export type FoodRole = "protein" | "carb" | "vegetable" | "fruit" | "fat" | "dairy" | "beverage" | "complement";
+export type FoodRole = "protein" | "carb" | "vegetable" | "fruit" | "fat" | "dairy" | "beverage" | "complement" | "soup";
 
 export interface ComposerFood {
   id: string;
