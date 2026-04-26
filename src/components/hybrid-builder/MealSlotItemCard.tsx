@@ -47,7 +47,7 @@ export default function MealSlotItemCard({
   onDelete,
   onReplace,
 }: Props) {
-  const isSub = item.description?.startsWith("[Substituição]");
+  const isSub = (item as any).is_primary === false || item.description?.startsWith("[Substituição]");
   const isEditing = editingId === item.id;
 
   const { attributes, listeners, setNodeRef, isDragging } = useDraggable({
