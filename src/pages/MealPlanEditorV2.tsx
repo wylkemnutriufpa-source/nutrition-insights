@@ -34,6 +34,7 @@ import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
 import { toast } from "sonner";
 import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
+import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
 import { runPlanPipeline } from "@/lib/planPipelineOrchestrator";
 import SaveMealTemplateDialog from "@/components/meals/SaveMealTemplateDialog";
 
