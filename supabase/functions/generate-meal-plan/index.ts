@@ -4090,7 +4090,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       patient_id,
       event_type: "meal_plan",
       title: `${planTitle} Gerado`,
-      description: `Protocolo FitJourney v${ENGINE_VERSION} (${generationMode}) | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord`,
+      description: `Motor Determinístico FitJourney v${ENGINE_VERSION} (${generationMode}) | Meta: ${finalKcal}kcal/dia | ${finalMacros.protein}g prot / ${finalMacros.carbs}g carb / ${finalMacros.fat}g gord`,
       metadata: {
         type: "plan_generated",
         protocol: PROTOCOL_VERSION,
