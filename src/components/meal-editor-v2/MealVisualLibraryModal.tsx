@@ -165,7 +165,7 @@ export function MealVisualLibraryModal({ open, onOpenChange, onDragStartFromLibr
               ))}
             </div>
           )}
-        </ScrollArea>
+        </div>
       </DialogContent>
     </Dialog>
   );
