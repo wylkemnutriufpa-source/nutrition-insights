@@ -224,7 +224,31 @@ export default function MobileQA() {
               <div className="p-3 bg-muted rounded-lg border border-dashed text-[10px] text-muted-foreground leading-relaxed">
                 <p className="font-bold mb-1 uppercase">Dica para Mobile:</p>
                 Ao abrir o Consultor, tente rolar até o final. O botão "X" deve permanecer acessível e o conteúdo não deve vazar para os lados.
+        </div>
+
+        {evidences.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary" />
+                Log de Evidências
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-2">
+                {evidences.map((ev) => (
+                  <div key={ev.id} className="text-xs p-2 bg-muted rounded flex justify-between items-center">
+                    <span>
+                      <span className="font-bold">[{ev.timestamp}]</span> {ev.item} 
+                      <span className="text-muted-foreground ml-2">({ev.viewport})</span>
+                    </span>
+                    <CheckCircle2 className="w-3 h-3 text-green-500" />
+                  </div>
+                ))}
               </div>
+            </CardContent>
+          </Card>
+        )}
             </CardContent>
           </Card>
         </div>
