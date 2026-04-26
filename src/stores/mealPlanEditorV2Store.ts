@@ -285,6 +285,22 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
     });
   },
 
+  setSubstitutionCount: (count: number) => {
+    const { planId, plan } = get();
+    set({ substitutionCount: count });
+    
+    // Persist to plan metadata
+    if (planId && plan) {
+      const currentMeta = (plan as any).edit_metadata || {};
+      get().updatePlan({
+        edit_metadata: {
+          ...currentMeta,
+          substitution_count: count
+        }
+      } as any);
+    }
+  },
+
   planId: null,
   plan: null,
   patientName: "",
