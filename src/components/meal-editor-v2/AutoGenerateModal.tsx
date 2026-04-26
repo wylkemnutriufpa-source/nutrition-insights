@@ -268,7 +268,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
           </DialogDescription>
         </DialogHeader>
 
-        <ScrollArea className="flex-1 px-5 py-4">
+        <div className="flex-1 px-5 py-4 overflow-y-auto scrollbar-thin">
           {step === "config" && (
             <div className="space-y-4">
               {/* Load from anamnesis */}
