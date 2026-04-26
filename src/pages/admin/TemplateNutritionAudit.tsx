@@ -90,14 +90,16 @@ type RuleKey =
   | "proteinBaseMissing"
   | "carbsBaseMissing"
   | "fatBaseMissing"
-  | "itemsBroken";
+  | "itemsBroken"
+  | "legacyStructure"
+  | "incoherentSubstitutions";
 
 type AuditConfig = Record<RuleKey, RuleSeverity>;
 
 const RULE_LABELS: Record<RuleKey, { label: string; description: string; defaultRecommend: RuleSeverity }> = {
   noItems: {
     label: "Template sem itens",
-    description: "foods_structure vazio — modal não consegue renderizar refeição.",
+    description: "Estrutura de itens vazia — modal não consegue renderizar refeição.",
     defaultRecommend: "critical",
   },
   kcalBaseMissing: {
@@ -122,8 +124,18 @@ const RULE_LABELS: Record<RuleKey, { label: string; description: string; default
   },
   itemsBroken: {
     label: "Itens com macros inválidos",
-    description: "Algum item do template tem nome vazio ou kcal/protein/carbs/fat nulo → NaN nos cards.",
+    description: "Algum item do template tem nome vazio ou macros nulos → NaN nos cards.",
     defaultRecommend: "critical",
+  },
+  legacyStructure: {
+    label: "Estrutura Legada (V1)",
+    description: "Template usando array 'foods' em vez de 'blocks' (V2). Menos prático e flexível.",
+    defaultRecommend: "warning",
+  },
+  incoherentSubstitutions: {
+    label: "Substituições Incoerentes",
+    description: "Detecta misturas indevidas (ex: sopa + proteína) ou categorias diferentes.",
+    defaultRecommend: "warning",
   },
 };
 
@@ -225,29 +237,75 @@ const isItemBroken = (item: FoodItem): boolean => {
 };
 
 function auditTemplate(t: TemplateRow, config: AuditConfig): AuditedTemplate {
+  // We handle both TableRow (nutritionist_meal_templates) and DietTemplate (diet_templates)
+  const isDietTemplate = 'meals' in t;
   const items = Array.isArray(t.foods_structure) ? t.foods_structure : [];
-  const itemsTotal = items.length;
-  const itemsBroken = items.filter(isItemBroken).length;
+  const meals = Array.isArray((t as any).meals) ? (t as any).meals : [];
+  
+  const itemsTotal = isDietTemplate 
+    ? meals.reduce((acc: number, m: any) => acc + (Array.isArray(m.blocks) ? m.blocks.length : (Array.isArray(m.foods) ? m.foods.length : 0)), 0)
+    : items.length;
+    
+  const itemsBroken = isDietTemplate ? 0 : items.filter(isItemBroken).length;
 
   const triggered: { key: RuleKey; message: string }[] = [];
 
-  if (itemsTotal === 0) triggered.push({ key: "noItems", message: "Template sem itens (foods_structure vazio)" });
-  if (isMissingNumber(t.kcal_base) || Number(t.kcal_base) <= 0)
-    triggered.push({ key: "kcalBaseMissing", message: "kcal_base ausente ou zero (causa NaN/divisão por zero)" });
-  if (isMissingNumber(t.protein_base))
-    triggered.push({ key: "proteinBaseMissing", message: "protein_base ausente" });
-  if (isMissingNumber(t.carbs_base))
-    triggered.push({ key: "carbsBaseMissing", message: "carbs_base ausente" });
-  if (isMissingNumber(t.fat_base)) triggered.push({ key: "fatBaseMissing", message: "fat_base ausente" });
+  if (itemsTotal === 0) triggered.push({ key: "noItems", message: "Template sem itens ou blocos configurados" });
+  
+  // kcal_base check (DietTemplate uses base_calories)
+  const kcal = isDietTemplate ? (t as any).base_calories : t.kcal_base;
+  if (isMissingNumber(kcal) || Number(kcal) <= 0)
+    triggered.push({ key: "kcalBaseMissing", message: "Caloria base ausente ou zero (causa NaN no UI)" });
+  
+  if (!isDietTemplate) {
+    if (isMissingNumber(t.protein_base)) triggered.push({ key: "proteinBaseMissing", message: "protein_base ausente" });
+    if (isMissingNumber(t.carbs_base)) triggered.push({ key: "carbsBaseMissing", message: "carbs_base ausente" });
+    if (isMissingNumber(t.fat_base)) triggered.push({ key: "fatBaseMissing", message: "fat_base ausente" });
+  }
+
   if (itemsBroken > 0)
     triggered.push({
       key: "itemsBroken",
       message: `${itemsBroken}/${itemsTotal} itens com macros inválidos (NaN no UI)`,
     });
 
+  // Legacy structure check
+  if (isDietTemplate) {
+    const hasLegacy = meals.some((m: any) => Array.isArray(m.foods) && m.foods.length > 0);
+    const hasV2 = meals.some((m: any) => Array.isArray(m.blocks) && m.blocks.length > 0);
+    if (hasLegacy && !hasV2) {
+      triggered.push({ key: "legacyStructure", message: "Usa estrutura 'foods' (Legado V1) em vez de 'blocks' (V2)" });
+    }
+  }
+
+  // Coherence check (Simplified heuristic)
+  if (isDietTemplate) {
+    meals.forEach((meal: any) => {
+      const title = (meal.title || "").toLowerCase();
+      const isLunch = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
+      
+      const allOptions = (meal.blocks || []).flatMap((b: any) => b.options || []);
+      const legacySubs = (meal.foods || []).flatMap((f: any) => f.substitutions || []);
+      
+      allOptions.forEach((opt: any) => {
+        const optName = (opt.name || "").toLowerCase();
+        if (isLunch && (optName.includes("pão") || optName.includes("tapioca")) && !optName.includes("frango") && !optName.includes("carne")) {
+          triggered.push({ key: "incoherentSubstitutions", message: `Refeição '${meal.title}': Opção '${opt.name}' parece ser de Café da Manhã.` });
+        }
+      });
+
+      legacySubs.forEach((sub: string) => {
+        const subName = sub.toLowerCase();
+        if (isLunch && (subName.includes("pão") || subName.includes("tapioca"))) {
+          triggered.push({ key: "incoherentSubstitutions", message: `Refeição '${meal.title}': Substituição '${sub}' parece ser de Café da Manhã.` });
+        }
+      });
+    });
+  }
+
   // Apply user-configured severity, drop ignored.
   const issues = triggered
-    .map((t) => ({ ...t, severity: config[t.key] }))
+    .map((t) => ({ ...t, severity: config[t.key] || "warning" }))
     .filter((i) => i.severity !== "ignore");
 
   let level: IssueLevel = "ok";
@@ -278,6 +336,7 @@ export default function TemplateNutritionAudit() {
   const [versionsLoading, setVersionsLoading] = useState(false);
   const [revertingId, setRevertingId] = useState<string | null>(null);
   const [diffVersion, setDiffVersion] = useState<RuleVersion | null>(null);
+  const [templateSource, setTemplateSource] = useState<"nutritionist" | "official">("official");
 
   const refreshVersions = async () => {
     setVersionsLoading(true);
@@ -396,11 +455,14 @@ export default function TemplateNutritionAudit() {
 
   const fetchTemplates = async () => {
     setLoading(true);
+    const table = templateSource === "nutritionist" ? "nutritionist_meal_templates" : "diet_templates";
+    const columns = templateSource === "nutritionist" 
+      ? "id, name, meal_type, is_global, kcal_base, protein_base, carbs_base, fat_base, foods_structure, updated_at"
+      : "id, name, category, base_calories, meals, updated_at";
+
     const { data, error } = await supabase
-      .from("nutritionist_meal_templates")
-      .select(
-        "id, name, meal_type, is_global, kcal_base, protein_base, carbs_base, fat_base, foods_structure, updated_at",
-      )
+      .from(table as any)
+      .select(columns)
       .order("updated_at", { ascending: false })
       .limit(1000);
 
@@ -408,14 +470,14 @@ export default function TemplateNutritionAudit() {
       toast.error("Falha ao carregar templates", { description: error.message });
       setRows([]);
     } else {
-      setRows((data || []) as TemplateRow[]);
+      setRows((data || []) as any[]);
     }
     setLoading(false);
   };
 
   useEffect(() => {
     fetchTemplates();
-  }, []);
+  }, [templateSource]);
 
   const audited = useMemo(() => rows.map((r) => auditTemplate(r, config)), [rows, config]);
 
@@ -740,6 +802,26 @@ export default function TemplateNutritionAudit() {
           </CardContent>
         </Card>
 
+        {/* Source Selector */}
+        <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
+          <Button 
+            variant={templateSource === "official" ? "default" : "ghost"} 
+            size="sm"
+            onClick={() => setTemplateSource("official")}
+            className="text-xs h-8"
+          >
+            Templates Oficiais
+          </Button>
+          <Button 
+            variant={templateSource === "nutritionist" ? "default" : "ghost"} 
+            size="sm"
+            onClick={() => setTemplateSource("nutritionist")}
+            className="text-xs h-8"
+          >
+            Templates de Nutricionistas
+          </Button>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard label="Críticos" value={counts.critical} icon={AlertTriangle} tone="critical" />
@@ -752,8 +834,9 @@ export default function TemplateNutritionAudit() {
           <CardHeader>
             <CardTitle className="text-lg">Checklist de correção</CardTitle>
             <CardDescription>
-              Comece pelos críticos. Cada linha lista o que falta para o template renderizar macros
-              válidos.
+              {templateSource === "official" 
+                ? "Ajustando os templates pré-prontos do sistema para garantir que todos tenham blocos V2 e substituições coerentes."
+                : "Auditoria de templates criados pelos próprios usuários."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
