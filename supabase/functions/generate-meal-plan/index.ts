@@ -3825,7 +3825,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       templateHitsCount = rawPlanItems.filter((i: any) => i._source === "meal_recipe").length;
       visualFallbacksCount = rawPlanItems.length - templateHitsCount;
     } else if (hasTemplates) {
-      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals);
+      const result = generatePlanWithTemplates(mealTemplates, visualLibrary, goal, finalKcal, finalMacros, restrictions, disliked, allergies, planOptionIndex, enabledMeals, mealTimes, resolvedStrategy.strategyId, patientFoodDatabase, recentMeals, prioritizedTemplateIds);
       rawPlanItems = result.items;
       templateHitsCount = result.templateHits;
       visualFallbacksCount = result.visualFallbacks;
