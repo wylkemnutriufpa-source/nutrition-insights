@@ -629,7 +629,7 @@ const App = () => (
               <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia"><UserGuide /></LP></ProtectedRoute>} />
               <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
               <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação"><SystemPresentation /></LP></ProtectedRoute>} />
-              <Route path="/mobile-qa" element={<ProfessionalRoute><LP section="Mobile QA"><Suspense fallback={<PageLoader />}><MobileQA /></LP></ProfessionalRoute>} />
+              <Route path="/mobile-qa" element={<ProfessionalRoute><LP section="Mobile QA"><Suspense fallback={<PageLoader />}><MobileQA /></Suspense></LP></ProfessionalRoute>} />
               <Route path="/onboarding-profissional" element={<ProtectedRoute><LP section="Onboarding"><OnboardingProfissional /></LP></ProtectedRoute>} />
               <Route path="/onboarding-paciente" element={<ProtectedRoute><LP section="Onboarding Paciente"><OnboardingPaciente /></LP></ProtectedRoute>} />
               <Route path="/my-story" element={<PaymentGuardedPatientRoute><LP section="Minha História"><MagicJourneyStory /></LP></PaymentGuardedPatientRoute>} />
