@@ -467,64 +467,93 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
   type MealTypeEnum = "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack";
 
   const nested = await Promise.all(
-    slots.map(async (slot) => {
+    slots.map(async (slot: any) => {
       const mealType = slot.mealType as MealTypeEnum;
       const storageDay = normalizeGeneratedDayForStorage(slot.day);
-      let foodNames = Array.isArray(slot.libraryItem.foods) ? slot.libraryItem.foods.map(f => f.name || "") : [];
+      const groupId = crypto.randomUUID();
       
-      // Enforce breakfast protein rule globally
-      if (mealType === "breakfast") {
-        foodNames = ensureBreakfastProtein(foodNames);
-      }
-      
-      const foods = foodNames.map(name => {
-        const original = (slot.libraryItem.foods || []).find(f => f.name === name);
-        return original || { name, portion: name };
-      });
+      const primaryItemsInput = {
+        meal_plan_id: planId,
+        title: await getClosestValidatedFood(slot.libraryItem.title) || slot.libraryItem.title,
+        meal_type: mealType,
+        day_of_week: storageDay,
+        calories_target: slot.targetKcal,
+        protein_target: Math.round(slot.libraryItem.protein * slot.scaleFactor),
+        carbs_target: Math.round(slot.libraryItem.carbs * slot.scaleFactor),
+        fat_target: Math.round(slot.libraryItem.fat * slot.scaleFactor),
+        item_origin: "auto_generated",
+        is_primary: true,
+        substitution_group_id: slot.substitutions?.length > 0 ? groupId : null,
+        library_item: slot.libraryItem,
+        sf: slot.scaleFactor
+      };
 
-      const scaledProtein = Math.round(slot.libraryItem.protein * slot.scaleFactor);
-      const scaledCarbs = Math.round(slot.libraryItem.carbs * slot.scaleFactor);
-      const scaledFat = Math.round(slot.libraryItem.fat * slot.scaleFactor);
+      const buildItem = async (input: any) => {
+        let foodNames = Array.isArray(input.library_item.foods) ? input.library_item.foods.map((f: any) => f.name || "") : [];
+        if (input.meal_type === "breakfast") {
+          foodNames = ensureBreakfastProtein(foodNames);
+        }
+        const foods = foodNames.map((name: string) => {
+          const original = (input.library_item.foods || []).find((f: any) => f.name === name);
+          return original || { name, portion: name };
+        });
 
-      const scaledFoods = foods.map((food) => {
-        const portion = food.portion
-          ? slot.scaleFactor !== 1
-            ? `${food.portion} (×${slot.scaleFactor.toFixed(1)})`
-            : food.portion
-          : undefined;
+        const scaledFoods = foods.map((food: any) => {
+          const portion = food.portion
+            ? input.sf !== 1
+              ? `${food.portion} (×${input.sf.toFixed(1)})`
+              : food.portion
+            : undefined;
+          return { name: food.name, portion };
+        });
 
+        const description = scaledFoods.length > 0
+          ? scaledFoods.map((food: any) => (food.portion ? `• ${food.name} — ${food.portion}` : `• ${food.name}`)).join("\n")
+          : null;
+
+        const visualLibraryItemId = await autoMatchSingle(input.title, description || undefined);
         return {
-          name: food.name,
-          portion,
-        };
-      });
-
-      const description = scaledFoods.length > 0
-        ? scaledFoods
-            .map((food) => (food.portion ? `• ${food.name} — ${food.portion}` : `• ${food.name}`))
-            .join("\n")
-        : null;
-
-      const resolvedTitle = await getClosestValidatedFood(slot.libraryItem.title) || slot.libraryItem.title;
-      const visualLibraryItemId = await autoMatchSingle(resolvedTitle, description || undefined);
-
-      const { items } = buildMealItems([
-        {
-          meal_plan_id: planId,
-          title: resolvedTitle,
+          meal_plan_id: input.meal_plan_id,
+          title: input.title,
           description,
-          meal_type: mealType,
-          day_of_week: storageDay,
-          calories_target: slot.targetKcal,
-          protein_target: scaledProtein,
-          carbs_target: scaledCarbs,
-          fat_target: scaledFat,
+          meal_type: input.meal_type,
+          day_of_week: input.day_of_week,
+          calories_target: input.calories_target,
+          protein_target: input.protein_target,
+          carbs_target: input.carbs_target,
+          fat_target: input.fat_target,
           visual_library_item_id: visualLibraryItemId,
-          item_origin: "auto_generated",
-          foods: scaledFoods.map((food) => (food.portion ? `${food.name} — ${food.portion}` : food.name)),
-        },
-      ]);
+          item_origin: input.item_origin,
+          is_primary: input.is_primary,
+          substitution_group_id: input.substitution_group_id,
+          foods: scaledFoods.map((food: any) => (food.portion ? `${food.name} — ${food.portion}` : food.name)),
+        };
+      };
 
+      const itemsToBuild = [primaryItemsInput];
+
+      if (slot.substitutions && Array.isArray(slot.substitutions)) {
+        for (const sub of slot.substitutions) {
+          itemsToBuild.push({
+            meal_plan_id: planId,
+            title: await getClosestValidatedFood(sub.libraryItem.title) || sub.libraryItem.title,
+            meal_type: mealType,
+            day_of_week: storageDay,
+            calories_target: sub.targetKcal,
+            protein_target: Math.round(sub.libraryItem.protein * sub.scaleFactor),
+            carbs_target: Math.round(sub.libraryItem.carbs * sub.scaleFactor),
+            fat_target: Math.round(sub.libraryItem.fat * sub.scaleFactor),
+            item_origin: "auto_generated_sub",
+            is_primary: false,
+            substitution_group_id: groupId,
+            library_item: sub.libraryItem,
+            sf: sub.scaleFactor
+          });
+        }
+      }
+
+      const built = await Promise.all(itemsToBuild.map(buildItem));
+      const { items } = buildMealItems(built as any);
       return items;
     })
   );
