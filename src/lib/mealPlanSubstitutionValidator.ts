@@ -93,11 +93,11 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
   };
 }
 
-export function validatePlanSubstitutions(items: MealPlanItem[]): ValidationResult {
+export function validatePlanSubstitutions(items: MealPlanItem[], maxCount: number = 4): ValidationResult {
   const allErrors: string[] = [];
   
   items.forEach(item => {
-    const result = validateMealSubstitutions(item);
+    const result = validateMealSubstitutions(item, maxCount);
     if (!result.valid) {
       allErrors.push(`[${item.title}] ${result.errors.join(" | ")}`);
     }
