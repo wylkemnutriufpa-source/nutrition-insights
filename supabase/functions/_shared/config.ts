@@ -54,8 +54,11 @@ export async function logInvitation(
       event_type,
       details,
       domain_used: domain_used || BASE_URL,
-      user_agent: user_agent || null
+      user_agent: user_agent || null,
+      professional_id: professional_id || null,
+      patient_email: patient_email || null
     });
+
   } catch (err) {
     console.error("[config:logInvitation] Falha ao registrar log:", err);
   }
