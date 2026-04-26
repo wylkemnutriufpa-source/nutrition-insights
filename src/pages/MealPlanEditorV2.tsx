@@ -883,17 +883,55 @@ export default function MealPlanEditorV2() {
               <span className="hidden sm:inline">♻️ Novo Plano</span>
             </Button>
 
-            {/* PDF Export */}
+            {/* History */}
             <Button
               variant="outline"
               size="sm"
-              onClick={exportToPDF}
-              disabled={exportingPDF || store.items.length === 0}
+              onClick={() => setHistoryOpen(true)}
               className="gap-1.5"
             >
-              {exportingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              <span className="hidden sm:inline">Exportar PDF</span>
+              <HistoryIcon className="w-4 h-4" />
+              <span className="hidden sm:inline">Histórico</span>
             </Button>
+
+            {/* PDF Export Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  disabled={exportingPDF || store.items.length === 0}
+                  className="gap-1.5"
+                >
+                  {exportingPDF ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  <span className="hidden sm:inline">Exportar PDF</span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Configurações do PDF</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuLabel className="text-[10px] font-normal text-muted-foreground uppercase tracking-wider">Orientação</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={pdfOrientation} onValueChange={(v: any) => setPdfOrientation(v)}>
+                  <DropdownMenuRadioItem value="p">Retrato (Vertical)</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="l">Paisagem (Horizontal)</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuLabel className="text-[10px] font-normal text-muted-foreground uppercase tracking-wider">Tema Visual</DropdownMenuLabel>
+                <DropdownMenuRadioGroup value={pdfTheme} onValueChange={(v: any) => setPdfTheme(v)}>
+                  <DropdownMenuRadioItem value="modern">Moderno (FitJourney)</DropdownMenuRadioItem>
+                  <DropdownMenuRadioItem value="classic">Clássico (Minimalista)</DropdownMenuRadioItem>
+                </DropdownMenuRadioGroup>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuItem onClick={exportToPDF} className="bg-primary text-primary-foreground focus:bg-primary/90 focus:text-primary-foreground font-bold justify-center mt-1">
+                  Gerar PDF Agora
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
 
             {/* Mode Selector */}
             {!isImmutable && (
