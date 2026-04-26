@@ -202,7 +202,7 @@ export default function TemplateMassReformulation() {
             }
 
             // Equivalent Substitution Check & Cleanup
-            block.options = block.options.map((opt: any) => {
+            block.options = await Promise.all(block.options.map(async (opt: any) => {
               const cleaned = { ...opt };
               delete cleaned.template_id;
               
