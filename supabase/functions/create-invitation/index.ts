@@ -124,8 +124,11 @@ Deno.serve(async (req) => {
         host: host
       },
       domain_used: BASE_URL,
-      user_agent: userAgent
+      user_agent: userAgent,
+      professional_id: caller.id,
+      patient_email: email || null
     });
+
 
     return new Response(JSON.stringify({ 
       success: true, 
