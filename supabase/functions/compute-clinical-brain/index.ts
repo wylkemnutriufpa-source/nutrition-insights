@@ -22,7 +22,7 @@ export async function handler(req: Request, maybeSupabaseClient?: any) {
 
   try {
     const { data: body, response: errorResponse } = await validateBody(req, ClinicalBrainSchema);
-    if (errorResponse) return errorResponse;
+    if (errorResponse || !body) return errorResponse || new Response(JSON.stringify({ error: "Missing body" }), { status: 400, headers: corsHeaders });
 
     const targetPatientId = body.patient_id;
     const pipelineRunId = body.pipeline_run_id;
