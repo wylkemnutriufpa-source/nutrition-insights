@@ -106,9 +106,24 @@ export default function TemplateMassReformulation() {
     setPreviews(newPreviews);
   };
 
+  const deepRemoveKey = (obj: any, keyToRemove: string) => {
+    if (Array.isArray(obj)) {
+      obj.forEach(item => deepRemoveKey(item, keyToRemove));
+    } else if (obj && typeof obj === 'object') {
+      delete obj[keyToRemove];
+      Object.values(obj).forEach(value => deepRemoveKey(value, keyToRemove));
+    }
+  };
+
   const reformulateTemplate = (meals: any[]) => {
     const changes: string[] = [];
     const reformulatedMeals = (meals || []).map(meal => {
+      let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
+      
+      // Safety: Recursively remove any template_id or other poisoning keys
+      deepRemoveKey(newMeal, "template_id");
+      delete newMeal.id; 
+
       let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
       
       // Safety: Remove any recursive template_id or IDs that shouldn't be here
