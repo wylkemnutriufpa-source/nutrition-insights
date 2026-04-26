@@ -1,32 +1,26 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
 import UpdateBanner from '../components/common/UpdateBanner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
-
-// Mock registerSW from virtual:pwa-register/react (we mock it as a regular import)
-vi.mock('virtual:pwa-register/react', () => ({
-  useRegisterSW: vi.fn()
-}));
+import * as pwa from 'virtual:pwa-register/react';
 
 const queryClient = new QueryClient();
 
 describe('E2E Simulation: Real App Update Cycle', () => {
-  let mockNeedRefresh = false;
   let mockUpdateServiceWorker = vi.fn();
-  let mockOfflineReady = false;
 
   beforeEach(() => {
     vi.clearAllMocks();
     localStorage.clear();
     
     // Default mock behavior
-    const { useRegisterSW } = require('virtual:pwa-register/react');
-    useRegisterSW.mockReturnValue({
-      needRefresh: [mockNeedRefresh, (val: boolean) => { mockNeedRefresh = val; }],
-      offlineReady: [mockOfflineReady, (val: boolean) => { mockOfflineReady = val; }],
+    (pwa.useRegisterSW as any).mockReturnValue({
+      needRefresh: [false, vi.fn()],
+      offlineReady: [false, vi.fn()],
       updateServiceWorker: mockUpdateServiceWorker
     });
+
     
     // Mock Service Worker registration
     Object.defineProperty(window.navigator, 'serviceWorker', {
