@@ -327,9 +327,9 @@ export function MealSmartEditorModal({
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2" data-testid="substitutions-header">
-                      🔄 Substituições ({substitutions.length}/4)
+                      🔄 Substituições ({substitutions.length}/{substitutionCount})
                     </h3>
-                    {substitutions.length < 4 && !isOverLimit && (
+                    {substitutions.length < substitutionCount && !isOverLimit && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
