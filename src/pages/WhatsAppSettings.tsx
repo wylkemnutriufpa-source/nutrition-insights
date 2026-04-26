@@ -24,6 +24,8 @@ import {
   type WhatsAppLog,
 } from "@/services/whatsappService";
 import { supabase } from "@/integrations/supabase/client";
+import { validateWhatsApp } from "@/utils/whatsapp";
+
 
 export default function WhatsAppSettings() {
   const { profile } = useAuth();
