@@ -111,13 +111,15 @@ export default function InvitePatient() {
       return;
     }
 
+    const formattedPhone = phone ? formatInternationalWhatsApp(phone) : null;
+
     setLoading(true);
     try {
       const { data, error } = await supabase.functions.invoke("invite-patient", {
         body: {
           name,
           email,
-          phone: phone || null,
+          phone: formattedPhone,
           method,
           password: method === "password" ? tempPassword : undefined,
           attendance_mode: attendanceMode,
