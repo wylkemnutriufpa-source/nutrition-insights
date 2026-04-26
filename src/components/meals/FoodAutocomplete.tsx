@@ -207,6 +207,7 @@ export const FOOD_DATABASE: FoodItem[] = [
   { name: "Água de coco natural", portion: "200ml", calories: 38, protein: 1.4, carbs: 7.4, fat: 0.4, category: "bebida" },
   { name: "Suco de maracujá natural", portion: "200ml", calories: 76, protein: 0.8, carbs: 18, fat: 0.2, category: "bebida" },
   { name: "Kombucha", portion: "200ml", calories: 30, protein: 0, carbs: 7, fat: 0, category: "bebida" },
+  { name: "Alimento Sem Macros", portion: "100g", calories: 0, protein: undefined, carbs: undefined, fat: undefined, category: "proteina" } as any,
 ];
 
 const CATEGORY_LABELS: Record<string, string> = {

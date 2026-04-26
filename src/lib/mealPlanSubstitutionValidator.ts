@@ -118,7 +118,7 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
         if (foodMatch.fat === undefined || foodMatch.fat === null) missingFields.push("gorduras");
 
         if (missingFields.length > 0) {
-          const msg = `Alimento "${foodMatch.name}" não possui valores de ${missingFields.join(", ")} no banco de dados.`;
+          const msg = `Alimento "${foodMatch.name}" sem ${missingFields.join(", ")} no banco.`;
           errors.push(msg);
           detailedErrors.push({
             mealId: item.id,
@@ -126,9 +126,9 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
             substitutionIndex: idx,
             foodName: foodMatch.name,
             macros: {},
-            limitError: msg // Using limitError for missing macro message to highlight it differently
+            limitError: msg
           });
-          return; // Skip further macro checks for this food
+          return;
         }
 
         if (kcalDiff > SUB_TOLERANCE.kcalPct) {
