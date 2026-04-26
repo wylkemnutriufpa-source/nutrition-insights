@@ -244,7 +244,11 @@ export default function PatientRegister() {
           await supabase.from("invitation_logs").insert({
             invitation_id: (await supabase.from("invitations").select("id").eq("code", invitationCode).single()).data?.id,
             event_type: "completed",
-            details: { patient_id: signUpData.user.id },
+            details: { 
+              patient_id: signUpData.user.id,
+              domain: window.location.hostname,
+              host: window.location.host
+            },
             user_agent: navigator.userAgent
           });
         }
