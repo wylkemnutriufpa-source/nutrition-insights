@@ -100,6 +100,7 @@ export default function MealPlanEditorV2() {
   const [assistedOpen, setAssistedOpen] = useState(false);
   const [visualLibOpen, setVisualLibOpen] = useState(false);
   const [generatingNew, setGeneratingNew] = useState(false);
+  const [lastGenError, setLastGenError] = useState<string | null>(null);
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [autofixResult, setAutofixResult] = useState<AutoFixResult | null>(null);
   const [showAutofixResults, setShowAutofixResults] = useState(false);
@@ -426,11 +427,10 @@ export default function MealPlanEditorV2() {
     setLastAttemptParams(params);
 
     setGeneratingNew(true);
+    setLastGenError(null);
     try {
       console.warn("[PLAN] chamando edge function via pipeline");
       const result = await runPlanPipeline(params);
-
-
 
       console.warn("[PLAN] resposta recebida", result);
       if (!result.success || !result.planId) {
@@ -447,7 +447,9 @@ export default function MealPlanEditorV2() {
       navigate(`/meal-plans/${result.planId}`, { replace: true });
     } catch (err: any) {
       console.error("[GenerateNew] Error:", err);
-      toast.error(err?.message || "Erro ao gerar novo plano");
+      const msg = err?.message || "Erro ao gerar novo plano";
+      setLastGenError(msg);
+      toast.error(msg);
     } finally {
       setGeneratingNew(false);
     }
@@ -742,6 +744,40 @@ export default function MealPlanEditorV2() {
       <EditorSyncBadge status={store.syncStatus} />
 
       <div className="space-y-4">
+        {/* ── Generation Error Banner ───────────────────────────── */}
+        {lastGenError && (
+          <div className="flex items-center gap-3 p-4 rounded-xl bg-destructive/10 border border-destructive/30 text-destructive-foreground">
+            <AlertTriangle className="w-5 h-5 shrink-0 text-destructive" />
+            <div className="flex-1">
+              <p className="text-sm font-semibold">Falha na geração automática</p>
+              <p className="text-xs opacity-90 mt-0.5">
+                Ocorreu um erro após todas as tentativas automáticas. O editor permanece aberto e seus dados foram preservados.
+              </p>
+              <p className="text-[10px] mt-1 font-mono opacity-70 italic">{lastGenError}</p>
+            </div>
+            <div className="flex gap-2 shrink-0">
+              <Button
+                size="sm"
+                variant="destructive"
+                onClick={handleGenerateNewPlan}
+                disabled={generatingNew}
+                className="shrink-0 gap-1.5"
+              >
+                {generatingNew ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                Tentar novamente agora
+              </Button>
+              <Button
+                size="sm"
+                variant="ghost"
+                onClick={() => setLastGenError(null)}
+                className="text-destructive hover:bg-destructive/10"
+              >
+                Dispensar
+              </Button>
+            </div>
+          </div>
+        )}
+
         {/* ── Immutable Plan Banner ─────────────────────────────── */}
         {isImmutable && (
           <div className="flex items-center gap-3 p-4 rounded-xl bg-amber-500/10 border border-amber-500/30 text-amber-800 dark:text-amber-200">
