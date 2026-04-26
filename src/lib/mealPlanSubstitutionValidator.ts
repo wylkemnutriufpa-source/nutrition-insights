@@ -33,9 +33,23 @@ function parseFoodNutrition(text: string) {
   return bestMatch;
 }
 
+export interface SubstitutionError {
+  mealTitle: string;
+  substitutionIndex: number;
+  foodName: string;
+  macros: {
+    kcal?: { value: number; target: number; diff: number; tolerance: number };
+    protein?: { value: number; target: number; diff: number; tolerance: number };
+    carbs?: { value: number; target: number; diff: number; tolerance: number };
+    fat?: { value: number; target: number; diff: number; tolerance: number };
+  };
+  limitError?: string;
+}
+
 export interface ValidationResult {
   valid: boolean;
   errors: string[];
+  detailedErrors: SubstitutionError[];
 }
 
 export function validateMealSubstitutions(item: MealPlanItem, maxCount: number = 4): ValidationResult {
@@ -43,13 +57,24 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
   const substitutions = meta.substitutions_json as string[];
   
   if (!substitutions || !Array.isArray(substitutions) || substitutions.length === 0) {
-    return { valid: true, errors: [] };
+    return { valid: true, errors: [], detailedErrors: [] };
   }
 
   const errors: string[] = [];
+  const detailedErrors: SubstitutionError[] = [];
 
+  // 1. Validate Limit FIRST (Requirement 3)
   if (substitutions.length > maxCount) {
-    errors.push(`A refeição tem ${substitutions.length} substituições, mas o limite definido é ${maxCount}.`);
+    const errorMsg = `A refeição "${item.title}" tem ${substitutions.length} substituições, mas o limite definido é ${maxCount}.`;
+    errors.push(errorMsg);
+    detailedErrors.push({
+      mealTitle: item.title || "Sem título",
+      substitutionIndex: -1,
+      foodName: "Limite Excedido",
+      macros: {},
+      limitError: errorMsg
+    });
+    // We continue validation of macros even if limit is exceeded to show all errors
   }
 
   const mainKcal = Number(item.calories_target) || 0;
@@ -57,31 +82,61 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
   const mainCarbs = Number(item.carbs_target) || 0;
   const mainFat = Number(item.fat_target) || 0;
 
-  // We only validate if main meal has macros defined
-  if (mainKcal === 0) return { valid: true, errors: [] };
+  // We only validate macros if main meal has macros defined
+  if (mainKcal === 0) return { valid: errors.length === 0, errors, detailedErrors };
 
   substitutions.forEach((sub, idx) => {
-    // Extract part after arrow if present
-    const parts = sub.split("→");
-    const subContent = parts[1] || parts[0] || "";
+    // 2. Improved Robust Parsing (Requirement 4)
+    // Handle "•", "→", "-", "Item 1, Item 2"
+    // Extract part after arrow or bullet if present, or take the whole thing
+    const cleanedSub = sub.replace(/^[•\-\*→\s]+/, "").trim();
+    const parts = cleanedSub.split(/[→]/);
+    const subContent = parts[parts.length - 1] || cleanedSub;
     
-    // Check if there are multiple comma-separated foods in one line
-    const individualFoods = subContent.split(",").map(f => f.trim());
+    // Split by commas or " e " (and) to handle multiple items in one line
+    const individualFoods = subContent.split(/[,]| e /i).map(f => f.trim().replace(/^[\s•\-\*]+/, ""));
 
     individualFoods.forEach(foodText => {
+      if (!foodText) return;
       const foodMatch = parseFoodNutrition(foodText);
       
       if (foodMatch) {
         const kcalDiff = Math.abs(foodMatch.calories - mainKcal) / mainKcal;
         const protDiff = mainProtein > 2 ? Math.abs(foodMatch.protein - mainProtein) / mainProtein : 0;
         const carbDiff = mainCarbs > 2 ? Math.abs(foodMatch.carbs - mainCarbs) / mainCarbs : 0;
+        const fatDiff = mainFat > 1 ? Math.abs(foodMatch.fat - mainFat) / mainFat : 0;
 
+        const macroErrors: SubstitutionError["macros"] = {};
+
+        // 3. Macro Validation with all fields (Requirement 1)
         if (kcalDiff > SUB_TOLERANCE.kcalPct) {
-          errors.push(`Substituição ${idx + 1}: "${foodMatch.name}" (${foodMatch.calories} kcal) está fora da tolerância de ±12% em relação à principal (${mainKcal} kcal).`);
-        } else if (protDiff > SUB_TOLERANCE.proteinPct) {
-          errors.push(`Substituição ${idx + 1}: "${foodMatch.name}" (${foodMatch.protein}g P) está fora da tolerância de ±20% de proteína (${mainProtein}g P).`);
-        } else if (carbDiff > SUB_TOLERANCE.carbsPct) {
-          errors.push(`Substituição ${idx + 1}: "${foodMatch.name}" (${foodMatch.carbs}g C) está fora da tolerância de ±20% de carboidratos (${mainCarbs}g C).`);
+          macroErrors.kcal = { value: foodMatch.calories, target: mainKcal, diff: kcalDiff, tolerance: SUB_TOLERANCE.kcalPct };
+        }
+        if (protDiff > SUB_TOLERANCE.proteinPct) {
+          macroErrors.protein = { value: foodMatch.protein, target: mainProtein, diff: protDiff, tolerance: SUB_TOLERANCE.proteinPct };
+        }
+        if (carbDiff > SUB_TOLERANCE.carbsPct) {
+          macroErrors.carbs = { value: foodMatch.carbs, target: mainCarbs, diff: carbDiff, tolerance: SUB_TOLERANCE.carbsPct };
+        }
+        if (fatDiff > SUB_TOLERANCE.fatPct) {
+          macroErrors.fat = { value: foodMatch.fat, target: mainFat, diff: fatDiff, tolerance: SUB_TOLERANCE.fatPct };
+        }
+
+        if (Object.keys(macroErrors).length > 0) {
+          const errorParts: string[] = [];
+          if (macroErrors.kcal) errorParts.push(`${foodMatch.calories}kcal (±12%)`);
+          if (macroErrors.protein) errorParts.push(`${foodMatch.protein}g P (±20%)`);
+          if (macroErrors.carbs) errorParts.push(`${foodMatch.carbs}g C (±20%)`);
+          if (macroErrors.fat) errorParts.push(`${foodMatch.fat}g G (±25%)`);
+
+          const msg = `Substituição ${idx + 1}: "${foodMatch.name}" está fora da tolerância em: ${errorParts.join(", ")}.`;
+          errors.push(msg);
+          detailedErrors.push({
+            mealTitle: item.title || "Sem título",
+            substitutionIndex: idx,
+            foodName: foodMatch.name,
+            macros: macroErrors
+          });
         }
       }
     });
@@ -89,22 +144,26 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
 
   return {
     valid: errors.length === 0,
-    errors
+    errors,
+    detailedErrors
   };
 }
 
 export function validatePlanSubstitutions(items: MealPlanItem[], maxCount: number = 4): ValidationResult {
   const allErrors: string[] = [];
+  const allDetailedErrors: SubstitutionError[] = [];
   
   items.forEach(item => {
     const result = validateMealSubstitutions(item, maxCount);
     if (!result.valid) {
-      allErrors.push(`[${item.title}] ${result.errors.join(" | ")}`);
+      result.errors.forEach(err => allErrors.push(`[${item.title}] ${err}`));
+      allDetailedErrors.push(...result.detailedErrors);
     }
   });
 
   return {
     valid: allErrors.length === 0,
-    errors: allErrors
+    errors: allErrors,
+    detailedErrors: allDetailedErrors
   };
 }
