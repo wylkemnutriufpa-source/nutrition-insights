@@ -386,7 +386,9 @@ export default function MealPlanEditorV2() {
               ))}
             </div>
           ),
-          duration: 8000
+          duration: 8000,
+          onDismiss: () => editorRef.current?.focus(),
+          onAutoClose: () => editorRef.current?.focus()
         });
         setSavingAndPublishing(false);
         return;
