@@ -220,7 +220,7 @@ export default function MealTemplatePanel({ day }: Props) {
     // Generate automatic substitutions for the main ingredients (Phase 3 update)
     const subLines: string[] = [];
     template.foods.forEach(f => {
-      const alts = getSubstitutionsFor(f.name).slice(0, 4); // Max 4 subs as requested
+      const alts = getSubstitutionsFor(f.name).slice(0, substitutionCount); // Respect user choice (0-4)
       if (alts.length > 0) {
         subLines.push(`• ${f.name} → ${alts.join(", ")}`);
       }
