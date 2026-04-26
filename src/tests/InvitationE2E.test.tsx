@@ -35,7 +35,9 @@ describe('Invitation E2E Simulation', () => {
     // Override hostname
     window.location.hostname = 'evil-domain.com';
 
-    (supabase.maybeSingle as any).mockResolvedValue({
+    const fromMock = supabase.from as any;
+    fromMock().select().eq().maybeSingle.mockResolvedValue({
+
       data: {
         id: '1',
         code: 'TEST12',
