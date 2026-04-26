@@ -93,6 +93,82 @@ export const test = base.extend<TestFixtures>({
     await use(page);
     await ctx.close();
   },
+
+  stableMealPlanPage: async ({ page }, use) => {
+    // Setup standard mock data
+    const MOCK_PLAN_ID = "00000000-0000-0000-0000-000000000000";
+    const MOCK_USER_ID = "11111111-1111-1111-1111-111111111111";
+
+    await page.route("**/rest/v1/meal_plans?**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([{
+          id: MOCK_PLAN_ID,
+          patient_id: MOCK_USER_ID,
+          plan_status: "published",
+          is_active: true,
+          edit_metadata: { substitution_count: 4 },
+          created_at: new Date().toISOString(),
+        }]),
+      });
+    });
+
+    await page.route("**/rest/v1/meal_plan_items?**", async (route) => {
+      // Return a stable set of items
+      const items = [
+        // Breakfast - Monday (0)
+        {
+          id: "item-1",
+          meal_plan_id: MOCK_PLAN_ID,
+          title: "Ovo Cozido",
+          description: "2 unidades 100g",
+          day_of_week: 0,
+          meal_type: "breakfast",
+          is_primary: true,
+          calories_target: 150,
+          protein_target: 12,
+          carbs_target: 1,
+          fat_target: 10,
+          created_at: "2024-01-01T10:00:00Z"
+        },
+        {
+          id: "item-2",
+          meal_plan_id: MOCK_PLAN_ID,
+          title: "Omelete",
+          description: "2 ovos 100g",
+          day_of_week: 0,
+          meal_type: "breakfast",
+          is_primary: false,
+          calories_target: 160,
+          protein_target: 13,
+          carbs_target: 2,
+          fat_target: 11,
+          item_origin: "auto_generated_sub",
+          created_at: "2024-01-01T10:01:00Z"
+        }
+      ];
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify(items),
+      });
+    });
+
+    await page.route("**/rest/v1/profiles?**", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify([{ full_name: "Stable Test Patient" }]),
+      });
+    });
+
+    // Actually we don't need a real login if we mock the auth check too, 
+    // but the app might check it. For now let's just use it after login.
+    await login(page, TEST_EMAIL, TEST_PASSWORD);
+    await page.goto(`/meal-plan-editor-v2/${MOCK_PLAN_ID}`);
+    await use(page);
+  },
 });
 
 export { expect };
