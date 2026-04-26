@@ -2,9 +2,11 @@ import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake, AlertTriangle, Settings2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeWithRetry } from "@/lib/api/edgeFunctions";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import MealRecipeSelector from "./MealRecipeSelector";
@@ -98,7 +100,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
 
     try {
       toast.info(`Gerando plano com estratégia "${strategy.name}"...`);
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId,
           nutritionistId: user.id,
@@ -117,6 +119,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           },
         },
       });
+
 
       if (error || !data?.success) {
         const msg = error
@@ -147,7 +150,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
 
     try {
       toast.info(`Gerando plano com receita "${recipe.name}"...`);
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId,
           nutritionistId: user.id,
@@ -163,6 +166,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           },
         },
       });
+
 
       if (error || !data?.success) {
         const msg = error
@@ -196,7 +200,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
 
     try {
       toast.info("Gerando cardápio semanal de marmitas (7 dias)...");
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId,
           nutritionistId: user.id,
@@ -207,6 +211,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           useFixedSeed: useFixedSeed,
         },
       });
+
 
       if (error || !data?.success) {
         const msg = error
@@ -240,7 +245,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
 
     try {
       toast.info("Gerando plano com marmitas fixas (congeladas)...");
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId,
           nutritionistId: user.id,
@@ -251,6 +256,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           useFixedSeed: useFixedSeed,
         },
       });
+
 
       if (error || !data?.success) {
         const msg = error

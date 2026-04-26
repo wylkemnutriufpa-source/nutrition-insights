@@ -21,6 +21,7 @@ import {
   Download,
   Calendar,
   X,
+  CheckSquare,
   Zap,
   ShieldCheck,
   Activity,
@@ -30,6 +31,8 @@ import {
   Database,
   Terminal,
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+
 import {
   Select,
   SelectContent,
@@ -248,6 +251,8 @@ const PlanAudit = () => {
   const [diffViewData, setDiffViewData] = useState<{ before: any, after: any, label: string } | null>(null);
   const [executionIdFilter, setExecutionIdFilter] = useState<string>("");
   const [correlatorId, setCorrelatorId] = useState<string>("");
+  const [selectedLogsForDiff, setSelectedLogsForDiff] = useState<number[]>([]);
+
 
 
   // RLS Validation state
@@ -1440,23 +1445,61 @@ const PlanAudit = () => {
 
             {diagnosticLogs.length > 0 ? (
               <div className="space-y-3">
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <Activity className="w-4 h-4" /> Timeline de Eventos e Estados
-                </h3>
+                <div className="flex items-center justify-between">
+                  <h3 className="font-semibold text-sm flex items-center gap-2">
+                    <Activity className="w-4 h-4" /> Timeline de Eventos e Estados
+                  </h3>
+                  {selectedLogsForDiff.length === 2 && (
+                    <Button 
+                      size="sm" 
+                      variant="outline" 
+                      className="h-7 text-[10px] gap-1.5 border-primary/40 text-primary bg-primary/5"
+                      onClick={() => {
+                        const l1 = diagnosticLogs[selectedLogsForDiff[0]];
+                        const l2 = diagnosticLogs[selectedLogsForDiff[1]];
+                        // Ensure l1 is the "before" (older) and l2 is "after" (newer)
+                        const d1 = new Date(l1.created_at || l1.updated_at).getTime();
+                        const d2 = new Date(l2.created_at || l2.updated_at).getTime();
+                        const [before, after] = d1 < d2 ? [l1, l2] : [l2, l1];
+                        setDiffViewData({ 
+                          before: before.metadata || before, 
+                          after: after.metadata || after, 
+                          label: `Comparação: ${before.action || before.plan_status} vs ${after.action || after.plan_status}` 
+                        });
+                      }}
+                    >
+                      <Sparkles className="w-3.5 h-3.5" /> Comparar Selecionados
+                    </Button>
+                  )}
+                </div>
                 <div className="border rounded-md overflow-hidden">
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead className="w-10"></TableHead>
                         <TableHead>Data</TableHead>
                         <TableHead>Tipo</TableHead>
                         <TableHead>Evento / Status</TableHead>
                         <TableHead>Detalhes</TableHead>
                       </TableRow>
                     </TableHeader>
+
                     <TableBody>
                       {diagnosticLogs.map((log, i) => (
-                        <TableRow key={i}>
-                          <TableCell className="text-xs">{formatDate(log.created_at)}</TableCell>
+                        <TableRow key={i} className={selectedLogsForDiff.includes(i) ? "bg-primary/5" : ""}>
+                          <TableCell>
+                            <Checkbox 
+                              checked={selectedLogsForDiff.includes(i)}
+                              onCheckedChange={(checked) => {
+                                if (checked) {
+                                  setSelectedLogsForDiff(prev => [...prev, i].slice(-2));
+                                } else {
+                                  setSelectedLogsForDiff(prev => prev.filter(idx => idx !== i));
+                                }
+                              }}
+                            />
+                          </TableCell>
+                          <TableCell className="text-xs">{formatDate(log.created_at || log.updated_at)}</TableCell>
                           <TableCell>
                             <Badge variant="outline" className="text-[10px]">
                               {log.type === 'log' ? 'AUDIT LOG' : 'DB STATE'}
@@ -1470,6 +1513,7 @@ const PlanAudit = () => {
                           </TableCell>
                         </TableRow>
                       ))}
+
                     </TableBody>
                   </Table>
                 </div>

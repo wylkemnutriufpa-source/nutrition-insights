@@ -8,7 +8,9 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
+import { invokeWithRetry } from "@/lib/api/edgeFunctions";
 import { toast } from "sonner";
+
 import { useAuth } from "@/lib/auth";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
 
@@ -160,7 +162,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           : `⚡ Gerando ${MODES.find(m => m.key === selectedMode)?.label}...`
       );
 
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId,
           nutritionistId: user.id,
@@ -170,6 +172,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           ...(professionalOverride ? { professionalOverride } : {}),
         },
       });
+
 
       if (error || !data?.success) {
         // Edge function returned a structured error code we can recover from
