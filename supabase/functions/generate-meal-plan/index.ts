@@ -4038,6 +4038,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         generation_source: genSource,
         generated_by: userId,
         generation_metadata: generationMetadata,
+        template_id: lastUsedTemplateId,
       }).eq("id", finalMealPlanId);
     }
 
