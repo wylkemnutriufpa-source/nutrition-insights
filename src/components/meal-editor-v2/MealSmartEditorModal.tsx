@@ -67,7 +67,7 @@ export function MealSmartEditorModal({
         const subLines = subsPart.split("\n")
           .filter(l => l.trim().length > 0)
           .map(l => l.trim());
-        setSubstitutions(subLines.slice(0, 4));
+        setSubstitutions(subLines.slice(0, substitutionCount));
       }
       
       setNotes((item as any).notes || "");
