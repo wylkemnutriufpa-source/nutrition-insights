@@ -21,82 +21,10 @@ import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 
 function MarmitaSettingsCard() {
-  const { user } = useAuth();
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [settings, setSettings] = useState({
-    default_practical_instructions: "",
-    default_fast_instructions: "",
-  });
-
-  useEffect(() => {
-    if (!user) return;
-    supabase.from("marmita_generation_settings").select("*").eq("nutritionist_id", user.id).maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          setSettings({
-            default_practical_instructions: data.default_practical_instructions || "",
-            default_fast_instructions: data.default_fast_instructions || "",
-          });
-        }
-        setLoading(false);
-      });
-  }, [user]);
-
-  const handleSave = async () => {
-    if (!user) return;
-    setSaving(true);
-    const { error } = await supabase
-      .from("marmita_generation_settings")
-      .upsert({ 
-        nutritionist_id: user.id,
-        ...settings,
-        updated_at: new Date().toISOString()
-      }, { onConflict: 'nutritionist_id' });
-    
-    setSaving(false);
-    if (error) {
-      toast.error("Erro ao salvar configurações: " + error.message);
-    } else {
-      toast.success("Configurações de marmitas atualizadas!");
-    }
-  };
-
-  if (loading) return null;
-
-  return (
-    <Card className="shadow-card border-primary/20">
-      <CardHeader>
-        <CardTitle className="font-display flex items-center gap-2 text-base">
-          <UtensilsCrossed className="w-5 h-5 text-primary" /> Configurações de Marmitas
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label className="text-xs">Instruções Práticas Padrão</Label>
-          <Input 
-            value={settings.default_practical_instructions} 
-            onChange={e => setSettings({ ...settings, default_practical_instructions: e.target.value })}
-            placeholder="Ex: ⏱️ Prática: Aqueça por 3-5 min no micro-ondas."
-          />
-        </div>
-        <div className="space-y-2">
-          <Label className="text-xs">Instruções Modo Rápido</Label>
-          <Input 
-            value={settings.default_fast_instructions} 
-            onChange={e => setSettings({ ...settings, default_fast_instructions: e.target.value })}
-            placeholder="Ex: ⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min."
-          />
-        </div>
-        <Button onClick={handleSave} disabled={saving} className="w-full gap-2 gradient-primary">
-          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-          Salvar Configurações
-        </Button>
-      </CardContent>
-    </Card>
-  );
+// ... keep existing code
 }
 
 export default function Settings() {
@@ -111,35 +39,16 @@ export default function Settings() {
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || "");
   const [whatsappError, setWhatsappError] = useState("");
 
-  const formatInternationalWhatsApp = (val: string) => {
-    const digits = val.replace(/\D/g, "");
-    if (!digits) return "";
-    if (val.startsWith("+")) return val.replace(/\s/g, "");
-    if (digits.length >= 10 && digits.length <= 11) return `+55${digits}`;
-    return `+${digits}`;
-  };
-
   const validateWhatsApp = (val: string) => {
     if (!val) {
       setWhatsappError(""); // Optional in settings
       return true;
     }
-    const digits = val.replace(/\D/g, "");
-    if (digits.length < 7 || digits.length > 15) {
-      setWhatsappError("Número inválido");
-      return false;
-    }
-    const isBrazil = !val.startsWith("+") || val.startsWith("+55") || digits.startsWith("55");
-    if (isBrazil) {
-      const brDigits = digits.startsWith("55") ? digits.slice(2) : digits;
-      if (brDigits.length < 10 || brDigits.length > 11) {
-        setWhatsappError("Número brasileiro deve ter 10 ou 11 dígitos");
-        return false;
-      }
-    }
-    setWhatsappError("");
-    return true;
+    const { isValid, error } = sharedValidateWhatsApp(val);
+    setWhatsappError(error);
+    return isValid;
   };
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
   const [savingProfile, setSavingProfile] = useState(false);
 
