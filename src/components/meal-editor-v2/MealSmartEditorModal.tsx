@@ -48,6 +48,7 @@ export function MealSmartEditorModal({
   const [description, setDescription] = useState(item?.description || "");
   const [notes, setNotes] = useState((item as any)?.notes || "");
   const [substitutions, setSubstitutions] = useState<string[]>([]);
+  const [portionFactor, setPortionFactor] = useState(1.0);
 
   useEffect(() => {
     if (item && open) {
