@@ -802,6 +802,26 @@ export default function TemplateNutritionAudit() {
           </CardContent>
         </Card>
 
+        {/* Source Selector */}
+        <div className="flex items-center gap-2 p-1 bg-muted rounded-lg w-fit">
+          <Button 
+            variant={templateSource === "official" ? "default" : "ghost"} 
+            size="sm"
+            onClick={() => setTemplateSource("official")}
+            className="text-xs h-8"
+          >
+            Templates Oficiais
+          </Button>
+          <Button 
+            variant={templateSource === "nutritionist" ? "default" : "ghost"} 
+            size="sm"
+            onClick={() => setTemplateSource("nutritionist")}
+            className="text-xs h-8"
+          >
+            Templates de Nutricionistas
+          </Button>
+        </div>
+
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
           <StatCard label="Críticos" value={counts.critical} icon={AlertTriangle} tone="critical" />
@@ -814,8 +834,9 @@ export default function TemplateNutritionAudit() {
           <CardHeader>
             <CardTitle className="text-lg">Checklist de correção</CardTitle>
             <CardDescription>
-              Comece pelos críticos. Cada linha lista o que falta para o template renderizar macros
-              válidos.
+              {templateSource === "official" 
+                ? "Ajustando os templates pré-prontos do sistema para garantir que todos tenham blocos V2 e substituições coerentes."
+                : "Auditoria de templates criados pelos próprios usuários."}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
