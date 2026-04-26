@@ -146,7 +146,7 @@ export function MealSmartEditorModal({
         const subLines = subsPart.split("\n")
           .filter(l => l.trim().length > 0)
           .map(l => l.trim());
-        setSubstitutions(subLines.slice(0, 4));
+        setSubstitutions(subLines.slice(0, substitutionCount));
       }
     }
     onOpenChange(newOpen);
@@ -160,7 +160,7 @@ export function MealSmartEditorModal({
     substitutions
       .map(s => String(s).trim().replace(/\s+/g, ' '))
       .filter(s => s.length > 0)
-  )).length > 4;
+  )).length > substitutionCount;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
