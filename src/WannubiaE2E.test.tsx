@@ -71,8 +71,8 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     // Verifica se o aviso aparece
     expect(screen.getByText(/Combinação inválida para Wannubia/i)).toBeInTheDocument();
 
-    // Tenta salvar
-    const saveButton = screen.getByText(/Salvar/i);
+    // Tenta salvar usando data-testid
+    const saveButton = screen.getByTestId('meal-editor-save-button');
     fireEvent.click(saveButton);
 
     // Verifica se o erro do toast foi chamado
@@ -83,6 +83,8 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
 
   it('deve fechar o modal pelo X e retornar o foco (Simulado via trigger)', async () => {
     const onOpenChange = vi.fn();
+    
+    // Simula um botão que abriu o editor
     const trigger = document.createElement('button');
     trigger.id = 'trigger-btn';
     document.body.appendChild(trigger);
@@ -96,15 +98,12 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
       </QueryClientProvider>
     );
 
-    // O Dialog do radix/shadcn adiciona um botão de fechar com texto "Close" (acessível via seletor de botão ou ícone X)
-    // Procuramos pelo botão que tem o ícone X ou classe que injetamos
-    const closeButtons = screen.getAllByRole('button');
-    const xButton = closeButtons.find(b => b.querySelector('svg')); 
+    // Procura o botão de fechar (X)
+    // No shadcn/radix UI, ele costuma ter um aria-label "Close" ou ser o botão absoluto no topo
+    const closeButton = screen.getByRole('button', { name: /close/i });
+    fireEvent.click(closeButton);
     
-    if (xButton) {
-      fireEvent.click(xButton);
-      expect(onOpenChange).toHaveBeenCalledWith(false);
-    }
+    expect(onOpenChange).toHaveBeenCalledWith(false);
   });
 
   it('deve permitir macros parciais zerados se kcal total > 0', async () => {
@@ -124,7 +123,7 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
       </QueryClientProvider>
     );
 
-    const saveButton = screen.getByText(/Salvar/i);
+    const saveButton = screen.getByTestId('meal-editor-save-button');
     fireEvent.click(saveButton);
 
     // Não deve mostrar erro de macros zerados (agora permitidos se kcal > 0)
