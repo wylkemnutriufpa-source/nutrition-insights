@@ -45,6 +45,7 @@ export default function PatientRegister() {
   const [profResults, setProfResults] = useState<ProfessionalResult[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalResult | null>(null);
+  const [isProfConfirmed, setIsProfConfirmed] = useState(false);
 
   // Pre-select professional from URL
   useEffect(() => {
@@ -63,6 +64,8 @@ export default function PatientRegister() {
           clinic_name: null,
           phone: data.phone,
         });
+        // Reset confirmation if nutri changes
+        setIsProfConfirmed(false);
       }
     })();
   }, [preselectedNutri]);
@@ -110,16 +113,25 @@ export default function PatientRegister() {
   }, [profSearch, searchProfessionals]);
 
   const formatInternationalWhatsApp = (val: string) => {
-    // Remove non-digits
     const digits = val.replace(/\D/g, "");
     if (!digits) return "";
     
-    // If it doesn't start with 55 (Brazil) or other country code and has 10-11 digits, assume 55
-    if (digits.length >= 10 && digits.length <= 11 && !val.startsWith("+")) {
+    // Check if it already has a country code (e.g., starts with +)
+    if (val.startsWith("+")) {
+      return val.replace(/\s/g, "");
+    }
+
+    // Default to Brazil if 10-11 digits and no country code
+    if (digits.length >= 10 && digits.length <= 11) {
       return `+55${digits}`;
     }
+
+    // If it's longer, assume it has a country code but missing the +
+    if (digits.length > 11) {
+      return `+${digits}`;
+    }
     
-    return val.startsWith("+") ? val : `+${digits}`;
+    return `+${digits}`;
   };
 
   const validateWhatsApp = (val: string) => {
@@ -127,11 +139,30 @@ export default function PatientRegister() {
       setWhatsappError("WhatsApp é obrigatório");
       return false;
     }
+    
     const digits = val.replace(/\D/g, "");
-    if (digits.length < 10) {
-      setWhatsappError("Número inválido (mínimo 10 dígitos)");
+    
+    // Basic length check for international numbers (min 7 digits, max 15)
+    if (digits.length < 7) {
+      setWhatsappError("Número muito curto");
       return false;
     }
+    
+    if (digits.length > 15) {
+      setWhatsappError("Número muito longo");
+      return false;
+    }
+
+    // Specific Brazil validation if no country code or starts with 55
+    const isBrazil = !val.startsWith("+") || val.startsWith("+55") || digits.startsWith("55");
+    if (isBrazil) {
+      const brDigits = digits.startsWith("55") ? digits.slice(2) : digits;
+      if (brDigits.length < 10 || brDigits.length > 11) {
+        setWhatsappError("Número brasileiro deve ter 10 ou 11 dígitos (com DDD)");
+        return false;
+      }
+    }
+
     setWhatsappError("");
     return true;
   };
@@ -142,14 +173,22 @@ export default function PatientRegister() {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
       return;
     }
-    if (password.length < 6) {
-      toast.error("A senha deve ter pelo menos 6 caracteres");
+    
+    if (whatsappError) {
+      toast.error("Por favor, corrija o número de WhatsApp antes de continuar.");
       return;
     }
+
     if (!validateWhatsApp(whatsapp)) {
       toast.error("Por favor, corrija o número de WhatsApp");
       return;
     }
+
+    if (password.length < 6) {
+      toast.error("A senha deve ter pelo menos 6 caracteres");
+      return;
+    }
+
     const formattedWhatsapp = formatInternationalWhatsApp(whatsapp);
     
     setLoading(true);
