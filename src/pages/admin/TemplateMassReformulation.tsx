@@ -300,7 +300,7 @@ export default function TemplateMassReformulation() {
     const selectedForExport = previews.filter(p => p.changes.length > 0);
 
     selectedForExport.forEach((p, index) => {
-      if (y > 250) {
+      if (y > 230) {
         doc.addPage();
         y = 20;
       }
@@ -313,7 +313,14 @@ export default function TemplateMassReformulation() {
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
       doc.text(`Status: ${p.level.toUpperCase()}`, 15, y);
-      y += 7;
+      y += 5;
+
+      if (p.summary) {
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        doc.text(`Resumo do Payload: ${p.summary.totalMeals} refeições, ${p.summary.adjustedBlocksCount} blocos ajustados, ${p.summary.removedKeysCount} campos removidos (template_id).`, 15, y);
+        y += 7;
+      }
 
       doc.setTextColor(200, 0, 0);
       doc.text("Regras Quebradas / Alterações:", 15, y);
@@ -323,6 +330,10 @@ export default function TemplateMassReformulation() {
       doc.setTextColor(50, 50, 50);
       p.changes.forEach(change => {
         const lines = doc.splitTextToSize(`• ${change}`, pageWidth - 30);
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
         doc.text(lines, 20, y);
         y += (lines.length * 5);
       });
