@@ -151,100 +151,161 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
   const alreadyPublished = planStatus === "published_to_patient" || planStatus === "approved";
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-base">
-          <FileText className="w-4 h-4 text-primary" />
-          Resumo da Sessão — {patientName}
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-3">
-          {checks.map(c => {
-            const Icon = c.icon;
-            return (
-              <div key={c.label} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${c.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-muted/30"}`}>
-                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${c.done ? "bg-emerald-500/20" : "bg-muted"}`}>
-                  {c.done ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Icon className="w-4 h-4 text-muted-foreground" />}
-                </div>
-                <span className={`text-sm font-medium ${c.done ? "text-foreground" : "text-muted-foreground"}`}>{c.label}</span>
-              </div>
-            );
-          })}
-        </div>
-
-        {/* AI Section */}
-        <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 space-y-3">
-          <div className="flex items-start gap-2">
-            <Sparkles className="w-4 h-4 text-indigo-500 mt-0.5" />
-            <div>
-              <p className="text-sm font-medium">Inteligência Narrativa</p>
-              <p className="text-xs text-muted-foreground">Crie uma história personalizada sobre a jornada do paciente para aumentar o engajamento.</p>
-            </div>
-          </div>
-          <Button 
-            onClick={handleGenerateStory} 
-            disabled={generatingStory || hasStory} 
-            className={`gap-2 w-full transition-all ${hasStory ? "bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20 shadow-lg text-white"}`}
-            variant={hasStory ? "outline" : "default"}
+    <div className="space-y-6">
+      <AnimatePresence>
+        {(publishing || publishError) && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-background/80 backdrop-blur-md p-6"
           >
-            {generatingStory ? <Loader2 className="w-4 h-4 animate-spin" /> : hasStory ? <CheckCircle2 className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
-            {generatingStory ? "Tecendo narrativa..." : hasStory ? "Jornada Gerada!" : "Gerar Jornada Mágica"}
-          </Button>
-          {hasStory && (
-            <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">
-               Disponível para o paciente no app <BookOpen className="w-2 h-2" />
-            </p>
-          )}
-        </div>
+            <Card className="w-full max-w-md shadow-2xl border-primary/20">
+              <CardContent className="pt-10 pb-8 px-8 flex flex-col items-center text-center space-y-6">
+                {publishing ? (
+                  <>
+                    <div className="relative">
+                      <div className="w-20 h-20 border-4 border-primary/20 border-t-primary rounded-full animate-spin" />
+                      <Send className="w-8 h-8 text-primary absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-display font-bold">Enviando plano...</h3>
+                      <p className="text-sm text-muted-foreground mt-1">Otimizando e publicando o plano para o paciente.</p>
+                    </div>
+                    <div className="w-full space-y-2">
+                      <Progress value={publishProgress} className="h-2" />
+                      <p className="text-[10px] text-muted-foreground font-mono">{publishProgress}% concluído</p>
+                    </div>
+                  </>
+                ) : publishError ? (
+                  <>
+                    <div className="w-20 h-20 bg-destructive/10 rounded-full flex items-center justify-center">
+                      <XCircle className="w-10 h-10 text-destructive" />
+                    </div>
+                    <div>
+                      <h3 className="text-xl font-display font-bold">Falha no envio</h3>
+                      <p className="text-sm text-destructive mt-1 font-medium">{publishError}</p>
+                      <p className="text-xs text-muted-foreground mt-2">Houve um problema ao salvar no banco de dados. Seus dados não foram perdidos.</p>
+                    </div>
+                    <div className="flex gap-3 w-full">
+                      <Button variant="outline" className="flex-1" onClick={() => setPublishError(null)}>
+                        Cancelar
+                      </Button>
+                      <Button className="flex-1 gap-2 bg-primary" onClick={handlePublish}>
+                        <RefreshCw className="w-4 h-4" /> Tentar novamente
+                      </Button>
+                    </div>
+                  </>
+                ) : null}
+              </CardContent>
+            </Card>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-        {/* Publish section */}
-        {canPublish && (
-          <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3">
-            <div className="flex items-start gap-2">
-              <AlertTriangle className="w-4 h-4 text-primary mt-0.5" />
-              <div>
-                <p className="text-sm font-medium">Publicar plano alimentar</p>
-                <p className="text-xs text-muted-foreground">Após publicar, o plano ficará imutável e visível ao paciente.</p>
+      <Card className="border-none shadow-none sm:border sm:shadow-sm">
+        <CardHeader className="px-4 sm:px-6">
+          <CardTitle className="flex items-center gap-2 text-base">
+            <FileText className="w-4 h-4 text-primary" />
+            Resumo da Sessão — {patientName}
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-6 px-4 sm:px-6 pb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {checks.map(c => {
+              const Icon = c.icon;
+              return (
+                <div key={c.label} className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${c.done ? "border-emerald-500/30 bg-emerald-500/5" : "border-border bg-muted/30"}`}>
+                  <div className={`w-8 h-8 rounded-full flex items-center justify-center shrink-0 ${c.done ? "bg-emerald-500/20" : "bg-muted"}`}>
+                    {c.done ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Icon className="w-4 h-4 text-muted-foreground" />}
+                  </div>
+                  <span className={`text-xs sm:text-sm font-medium ${c.done ? "text-foreground" : "text-muted-foreground"}`}>{c.label}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* AI Section */}
+            <div className="bg-indigo-500/5 border border-indigo-500/20 rounded-xl p-4 space-y-3 flex flex-col justify-between">
+              <div className="space-y-2">
+                <div className="flex items-start gap-2">
+                  <Sparkles className="w-4 h-4 text-indigo-500 mt-0.5" />
+                  <div>
+                    <p className="text-sm font-medium">Inteligência Narrativa</p>
+                    <p className="text-xs text-muted-foreground">Crie uma história personalizada sobre a jornada do paciente.</p>
+                  </div>
+                </div>
               </div>
+              <Button 
+                onClick={handleGenerateStory} 
+                disabled={generatingStory || hasStory} 
+                size="sm"
+                className={`gap-2 w-full transition-all min-h-[44px] sm:min-h-[auto] ${hasStory ? "bg-indigo-500/20 text-indigo-600 hover:bg-indigo-500/30" : "bg-indigo-600 hover:bg-indigo-700 shadow-indigo-500/20 shadow-lg text-white"}`}
+                variant={hasStory ? "outline" : "default"}
+              >
+                {generatingStory ? <Loader2 className="w-4 h-4 animate-spin" /> : hasStory ? <CheckCircle2 className="w-4 h-4" /> : <Sparkles className="w-4 h-4" />}
+                {generatingStory ? "Tecendo narrativa..." : hasStory ? "Jornada Gerada!" : "Gerar Jornada Mágica"}
+              </Button>
             </div>
-            <Button onClick={handlePublish} disabled={publishing} className="gap-2 w-full bg-primary hover:bg-primary/90">
-              {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              {publishing ? "Publicando..." : "Publicar Plano"}
-            </Button>
-          </div>
-        )}
 
-        {alreadyPublished && (
-          <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 space-y-3">
-            <p className="text-sm text-emerald-700 dark:text-emerald-400 font-medium flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4" /> Plano publicado com sucesso!
-            </p>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate(`/patients/${patientId}`)}
-              className="gap-2"
-            >
-              <Eye className="w-4 h-4" /> Ver perfil do paciente
-            </Button>
-          </div>
-        )}
+            {/* Publish section */}
+            <div className="flex flex-col gap-4">
+              {canPublish && (
+                <div className="bg-primary/5 border border-primary/20 rounded-xl p-4 space-y-3 flex-1 flex flex-col justify-between">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="w-4 h-4 text-primary mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium">Publicar plano alimentar</p>
+                      <p className="text-xs text-muted-foreground">O plano ficará visível ao paciente no aplicativo.</p>
+                    </div>
+                  </div>
+                  <Button 
+                    onClick={handlePublish} 
+                    disabled={publishing} 
+                    className="gap-2 w-full bg-primary hover:bg-primary/90 min-h-[48px]"
+                  >
+                    {publishing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                    {publishing ? "Publicando..." : "Salvar e Enviar ao Paciente"}
+                  </Button>
+                </div>
+              )}
 
-        {!mealPlanId && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-700 dark:text-amber-400">
-            ⚠️ Nenhum plano alimentar foi criado nesta sessão. Volte ao passo 4 para criar um.
+              {alreadyPublished && (
+                <div className="bg-emerald-500/5 border border-emerald-500/20 rounded-xl p-4 space-y-3">
+                  <p className="text-sm text-emerald-700 dark:text-emerald-400 font-bold flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5" /> Plano Ativo e Enviado!
+                  </p>
+                  <p className="text-xs text-muted-foreground">O paciente recebeu uma notificação e o plano já está disponível para consulta.</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => navigate(`/patients/${patientId}`)}
+                    className="gap-2 w-full mt-2"
+                  >
+                    <Eye className="w-4 h-4" /> Ver perfil do paciente
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
-        )}
 
-        {!allDone && mealPlanId && (
-          <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-700 dark:text-amber-400">
-            ⚠️ Algumas etapas não foram concluídas. Você pode voltar e completá-las ou finalizar parcialmente.
-          </div>
-        )}
+          {!mealPlanId && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>Nenhum plano alimentar foi criado nesta sessão. Volte ao passo 4 para criar um.</span>
+            </div>
+          )}
 
-        {/* Navigation is handled by parent wizard */}
-      </CardContent>
-    </Card>
+          {!allDone && mealPlanId && !published && (
+            <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 text-sm text-amber-700 dark:text-amber-400 flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4 shrink-0" />
+              <span>Algumas etapas não foram concluídas. Você pode finalizar mesmo assim.</span>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+    </div>
   );
 }
+
