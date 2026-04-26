@@ -82,6 +82,34 @@ const IMMUTABLE_STATUSES: string[] = ["archived"];
 /** Plans that can still be published (approved but not yet delivered to patient) */
 const PUBLISHABLE_STATUSES = ["approved"];
 
+/** Helper to verify a column exists in a table before querying it.
+ * This is a safeguard for schema migrations. */
+async function verifyColumnExists(tableName: string, columnName: string): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('check_column_exists', { 
+      p_table_name: tableName, 
+      p_column_name: columnName 
+    });
+    
+    // If RPC doesn't exist, we fall back to a metadata query
+    if (error && error.message.includes('function "check_column_exists" does not exist')) {
+      const { data: cols, error: colError } = await supabase
+        .from('information_schema.columns' as any)
+        .select('column_name')
+        .eq('table_name', tableName)
+        .eq('column_name', columnName)
+        .eq('table_schema', 'public');
+      
+      if (colError) return true; // Fail safe
+      return (cols as any[])?.length > 0;
+    }
+    
+    return !!data;
+  } catch (err) {
+    return true; // Fail safe
+  }
+}
+
 export default function MealPlanEditorV2() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
