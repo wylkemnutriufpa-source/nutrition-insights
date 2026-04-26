@@ -170,52 +170,139 @@ export default function TemplateMassReformulation() {
   };
 
   const applyReformulation = async () => {
-    setProcessing(true);
-    let successCount = 0;
-    
-    for (let i = 0; i < previews.length; i++) {
-      const preview = previews[i];
-      const { error } = await supabase
-        .from("diet_templates")
-        .update({ meals: preview.after })
-        .eq("id", preview.templateId);
-
-      if (!error) {
-        successCount++;
-        setPreviews(prev => {
-          const next = [...prev];
-          next[i].status = "applied";
-          return next;
-        });
-      } else {
-        setPreviews(prev => {
-          const next = [...prev];
-          next[i].status = "error";
-          return next;
-        });
-      }
+    const selectedPreviews = previews.filter(p => p.selected && p.status === "pending");
+    if (selectedPreviews.length === 0) {
+      toast.info("Selecione ao menos um template pendente para aplicar.");
+      return;
     }
 
+    setProcessing(true);
+    setProgress(0);
+    let successCount = 0;
+    const CONCURRENCY_LIMIT = 5;
+    const total = selectedPreviews.length;
+    
+    // Batch processing with concurrency limit
+    const processBatch = async (batch: ReformulationPreview[]) => {
+      await Promise.all(batch.map(async (preview) => {
+        setPreviews(prev => prev.map(p => p.templateId === preview.templateId ? { ...p, status: "processing" } : p));
+        
+        const { error } = await supabase
+          .from("diet_templates")
+          .update({ meals: preview.after })
+          .eq("id", preview.templateId);
+
+        if (!error) {
+          successCount++;
+          setPreviews(prev => prev.map(p => p.templateId === preview.templateId ? { ...p, status: "applied" } : p));
+        } else {
+          console.error(`Error updating template ${preview.templateId}:`, error);
+          setPreviews(prev => prev.map(p => p.templateId === preview.templateId ? { ...p, status: "error" } : p));
+        }
+        
+        setProgress(prev => prev + (100 / total));
+      }));
+    };
+
+    for (let i = 0; i < selectedPreviews.length; i += CONCURRENCY_LIMIT) {
+      const batch = selectedPreviews.slice(i, i + CONCURRENCY_LIMIT);
+      await processBatch(batch);
+    }
+
+    setProgress(100);
     toast.success(`${successCount} templates reformulados com sucesso!`);
     setProcessing(false);
     setStep("done");
+  };
+
+  const exportPDF = () => {
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.getWidth();
+    let y = 20;
+
+    doc.setFontSize(18);
+    doc.text("Relatório de Reformulação de Templates", pageWidth / 2, y, { align: "center" });
+    y += 10;
+    doc.setFontSize(10);
+    doc.text(`Gerado em: ${new Date().toLocaleString()}`, pageWidth / 2, y, { align: "center" });
+    y += 15;
+
+    const selectedForExport = previews.filter(p => p.changes.length > 0);
+
+    selectedForExport.forEach((p, index) => {
+      if (y > 250) {
+        doc.addPage();
+        y = 20;
+      }
+
+      doc.setFontSize(14);
+      doc.setTextColor(0, 0, 0);
+      doc.text(`${index + 1}. ${p.name}`, 15, y);
+      y += 7;
+
+      doc.setFontSize(10);
+      doc.setTextColor(100, 100, 100);
+      doc.text(`Status: ${p.level.toUpperCase()}`, 15, y);
+      y += 7;
+
+      doc.setTextColor(200, 0, 0);
+      doc.text("Regras Quebradas / Alterações:", 15, y);
+      y += 5;
+      
+      doc.setFontSize(9);
+      doc.setTextColor(50, 50, 50);
+      p.changes.forEach(change => {
+        const lines = doc.splitTextToSize(`• ${change}`, pageWidth - 30);
+        doc.text(lines, 20, y);
+        y += (lines.length * 5);
+      });
+      
+      y += 5;
+      doc.setDrawColor(200, 200, 200);
+      doc.line(15, y, pageWidth - 15, y);
+      y += 10;
+    });
+
+    doc.save(`relatorio_reformulacao_${new Date().toISOString().split('T')[0]}.pdf`);
   };
 
   const exportChecklist = () => {
     const headers = ["Template", "Status", "Erros", "Alterações Sugeridas"];
     const rows = previews.map(p => [
       p.name,
-      p.changes.length > 0 ? (p.changes.some(c => c.includes("Crítico")) ? "CRÍTICO" : "ALERTA") : "OK",
+      p.level.toUpperCase(),
       p.changes.length,
       p.changes.join("; ")
     ]);
 
-    const csvContent = [headers, ...rows].map(e => e.join(",")).join("\n");
+    const csvContent = "\uFEFF" + [headers, ...rows].map(e => e.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(",")).join("\n");
     const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
     link.download = `checklist_reformulacao_${new Date().toISOString().split('T')[0]}.csv`;
     link.click();
+  };
+
+  const filteredPreviews = useMemo(() => {
+    return previews.filter(p => {
+      const matchesFilter = filter === "all" || p.level === filter;
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      return matchesFilter && matchesSearch;
+    });
+  }, [previews, filter, searchQuery]);
+
+  const toggleSelectAll = () => {
+    const allSelected = filteredPreviews.every(p => p.selected);
+    setPreviews(prev => prev.map(p => {
+      if (filteredPreviews.some(fp => fp.templateId === p.templateId)) {
+        return { ...p, selected: !allSelected };
+      }
+      return p;
+    }));
+  };
+
+  const toggleSelect = (id: string) => {
+    setPreviews(prev => prev.map(p => p.templateId === id ? { ...p, selected: !p.selected } : p));
   };
 
   return (
