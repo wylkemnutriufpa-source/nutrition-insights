@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Tables, TablesInsert } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { autoMatchSingle } from "@/lib/mealVisualAssociation";
+import { sortMealPlanItems } from "@/lib/mealPlanSort";
 
 /**
  * Single-Day Editor Store (v3 - Pure Single Day)
