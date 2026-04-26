@@ -24,8 +24,82 @@ import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 
 function MarmitaSettingsCard() {
-// ... keep existing code
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [settings, setSettings] = useState({
+    default_practical_instructions: "",
+    default_fast_instructions: "",
+  });
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("marmita_generation_settings").select("*").eq("nutritionist_id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          setSettings({
+            default_practical_instructions: data.default_practical_instructions || "",
+            default_fast_instructions: data.default_fast_instructions || "",
+          });
+        }
+        setLoading(false);
+      });
+  }, [user]);
+
+  const handleSave = async () => {
+    if (!user) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("marmita_generation_settings")
+      .upsert({ 
+        nutritionist_id: user.id,
+        ...settings,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'nutritionist_id' });
+    
+    setSaving(false);
+    if (error) {
+      toast.error("Erro ao salvar configurações: " + error.message);
+    } else {
+      toast.success("Configurações de marmitas atualizadas!");
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <Card className="shadow-card border-primary/20">
+      <CardHeader>
+        <CardTitle className="font-display flex items-center gap-2 text-base">
+          <UtensilsCrossed className="w-5 h-5 text-primary" /> Configurações de Marmitas
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-4">
+        <div className="space-y-2">
+          <Label className="text-xs">Instruções Práticas Padrão</Label>
+          <Input 
+            value={settings.default_practical_instructions} 
+            onChange={e => setSettings({ ...settings, default_practical_instructions: e.target.value })}
+            placeholder="Ex: ⏱️ Prática: Aqueça por 3-5 min no micro-ondas."
+          />
+        </div>
+        <div className="space-y-2">
+          <Label className="text-xs">Instruções Modo Rápido</Label>
+          <Input 
+            value={settings.default_fast_instructions} 
+            onChange={e => setSettings({ ...settings, default_fast_instructions: e.target.value })}
+            placeholder="Ex: ⚡ MODO RÁPIDO: Aqueça por apenas 2-3 min."
+          />
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="w-full gap-2 gradient-primary">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+          Salvar Configurações
+        </Button>
+      </CardContent>
+    </Card>
+  );
 }
+
 
 export default function Settings() {
   const { t } = useTranslation();
