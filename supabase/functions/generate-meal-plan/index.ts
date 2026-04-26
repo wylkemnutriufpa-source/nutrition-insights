@@ -1658,97 +1658,85 @@ function generatePlanFromVisualLibrary(
         candidates.push(...catItems);
       }
 
-      // ──── NO_FALLBACK: Throw error instead of improvising ────
       if (candidates.length === 0) {
         throw new Error(`[STRICT] No visual library items found for meal type "${mealType}" on day ${day}. No fallback allowed.`);
       }
 
-      // Anti-repetition tracking
-      if (!usedPerMealType.has(mealType)) usedPerMealType.set(mealType, new Set());
-      const usedSet = usedPerMealType.get(mealType)!;
-      if (usedSet.size >= candidates.length) usedSet.clear();
-
       // Seeded shuffle for variety
       const seed = generationSeed(String(planOptionIndex), day * 7 + defaultMeals.indexOf(mealType));
       const shuffled = seededShuffle(candidates, seed);
-
-      // Pick first unused item
-      let picked: VisualLibraryItem | null = null;
-      for (const c of shuffled) {
-        if (!usedSet.has(c.id)) { picked = c; break; }
-      }
-      if (!picked) picked = shuffled[0];
-      usedSet.add(picked.id);
-
-      // ──── STRICT_DB_EXCLUSIVE: Validate item has image ────
-      if (!picked.image_url || picked.image_url.length < 5) {
-        throw new Error(`[STRICT] Visual library item "${picked.display_name}" (${picked.id}) has no image_url. All items MUST have images.`);
-      }
-
-      // Get macros (use defaults if library item lacks data)
-      const catDefaults = CATEGORY_DEFAULT_MACROS[picked.category] || CATEGORY_DEFAULT_MACROS.refeicao;
-      const baseCal = picked.default_calories || catDefaults.cal;
-      const baseP = picked.default_protein || catDefaults.p;
-      const baseC = picked.default_carbs || catDefaults.c;
-      const baseF = picked.default_fat || catDefaults.f;
-
-      // ──── MACRO_SCALING_ONLY: Scale 0.5x–2.5x, no composition changes ────
-      const scaleFactor = baseCal > 0 ? currentKcalTarget / baseCal : 1;
-      const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
-
-      // Build description from library item — ALWAYS with gram quantities
-      let description = "";
-      if (picked.base_recipe && typeof picked.base_recipe === "object") {
-        const recipe = picked.base_recipe as any;
-        if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
-          description = recipe.ingredients.map((ing: string) => `• ${ing}`).join("\n");
-          description = scaleDescriptionQuantities(description, clampedScale) || description;
-        }
-      }
       
-      // Fallback: use default_portion or build portion from macros
-      if (!description || description.trim().length === 0) {
-        if (picked.default_portion && picked.default_portion.trim().length > 0) {
-          // default_portion has text like "150g arroz + 120g frango" or "4 col. arroz + concha feijão + 120g frango"
-          const portionText = picked.default_portion.trim();
-          // Scale the quantities in the portion text
-          const scaledPortion = scaleDescriptionQuantities(portionText, clampedScale) || portionText;
-          // Split on " + " to create separate lines
-          const portionParts = scaledPortion.split(/\s*\+\s*/);
-          description = portionParts.map((part: any) => `• ${part.trim()}`).join("\n");
-        } else {
-          // Last resort: build from display_name with calculated gram portion
-          const scaledCalories = Math.round(baseCal * clampedScale);
-          const scaledProtein = Math.round(baseP * clampedScale);
-          // Estimate portion in grams from calories (rough: 1g protein ≈ 4kcal, mixed food ≈ 1.2-1.5 kcal/g)
-          const estimatedGrams = Math.round(scaledCalories / 1.3);
-          const portionGrams = Math.max(50, Math.min(500, Math.round(estimatedGrams / 5) * 5));
-          description = `• ${picked.display_name} — ${portionGrams}g`;
+      // No modelo de template diário, pegamos as 5 melhores opções (1 principal + 4 subs)
+      const topCandidates = shuffled.slice(0, 5);
+      const subGroupId = crypto.randomUUID();
+
+      for (let i = 0; i < topCandidates.length; i++) {
+        const picked = topCandidates[i];
+        const isPrimary = i === 0;
+
+        // ──── STRICT_DB_EXCLUSIVE: Validate item has image ────
+        if (!picked.image_url || picked.image_url.length < 5) {
+          throw new Error(`[STRICT] Visual library item "${picked.display_name}" (${picked.id}) has no image_url. All items MUST have images.`);
         }
+
+        // Get macros (use defaults if library item lacks data)
+        const catDefaults = CATEGORY_DEFAULT_MACROS[picked.category] || CATEGORY_DEFAULT_MACROS.refeicao;
+        const baseCal = picked.default_calories || catDefaults.cal;
+        const baseP = picked.default_protein || catDefaults.p;
+        const baseC = picked.default_carbs || catDefaults.c;
+        const baseF = picked.default_fat || catDefaults.f;
+
+        // ──── MACRO_SCALING_ONLY: Scale 0.5x–2.5x, no composition changes ────
+        const scaleFactor = baseCal > 0 ? currentKcalTarget / baseCal : 1;
+        const clampedScale = Math.max(0.5, Math.min(2.5, scaleFactor));
+
+        // Build description from library item — ALWAYS with gram quantities
+        let description = "";
+        if (picked.base_recipe && typeof picked.base_recipe === "object") {
+          const recipe = picked.base_recipe as any;
+          if (recipe.ingredients && Array.isArray(recipe.ingredients)) {
+            description = recipe.ingredients.map((ing: string) => `• ${ing}`).join("\n");
+            description = scaleDescriptionQuantities(description, clampedScale) || description;
+          }
+        }
+        
+        // Fallback: use default_portion or build portion from macros
+        if (!description || description.trim().length === 0) {
+          if (picked.default_portion && picked.default_portion.trim().length > 0) {
+            const portionText = picked.default_portion.trim();
+            const scaledPortion = scaleDescriptionQuantities(portionText, clampedScale) || portionText;
+            const portionParts = scaledPortion.split(/\s*\+\s*/);
+            description = portionParts.map((part: any) => `• ${part.trim()}`).join("\n");
+          } else {
+            const scaledCalories = Math.round(baseCal * clampedScale);
+            const estimatedGrams = Math.round(scaledCalories / 1.3);
+            const portionGrams = Math.max(50, Math.min(500, Math.round(estimatedGrams / 5) * 5));
+            description = `• ${picked.display_name} — ${portionGrams}g`;
+          }
+        }
+
+        const finalDescription = finalizeMealDescription(description, mealType, goal);
+        const mealTime = mealTimes?.[mealType] || null;
+
+        items.push({
+          title: picked.display_name,
+          description: finalDescription,
+          meal_type: mealType,
+          day_of_week: 0,
+          is_primary: isPrimary,
+          substitution_group_id: subGroupId,
+          calories_target: Math.round(baseCal * clampedScale),
+          protein_target: Math.round(baseP * clampedScale),
+          carbs_target: Math.round(baseC * clampedScale),
+          fat_target: Math.round(baseF * clampedScale),
+          visual_library_item_id: picked.id,
+          meal_time: mealTime,
+          _source: "visual_library",
+          _category_used: picked.category,
+          _scale_factor: clampedScale,
+          _image_url: picked.image_url, 
+        });
       }
-
-      const finalDescription = finalizeMealDescription(description, mealType, goal);
-
-      // ──── MEAL_TIME_SUPPORT ────
-      const mealTime = mealTimes?.[mealType] || null;
-
-      items.push({
-        title: picked.display_name,
-        description: finalDescription,
-        meal_type: mealType,
-        day_of_week: day,
-        calories_target: Math.round(baseCal * clampedScale),
-        protein_target: Math.round(baseP * clampedScale),
-        carbs_target: Math.round(baseC * clampedScale),
-        fat_target: Math.round(baseF * clampedScale),
-        visual_library_item_id: picked.id,
-        meal_time: mealTime,
-        // ──── STRUCTURED_LOGGING ────
-        _source: "visual_library",
-        _category_used: picked.category,
-        _scale_factor: clampedScale,
-        _image_url: picked.image_url, // transient — for logging only
-      });
     }
   }
 
@@ -2074,7 +2062,7 @@ export async function generateWeeklyMarmitaPlan(
   let prevLunchProtein: string | null = null;
   let prevDinnerProtein: string | null = null;
 
-  for (let day = 0; day < 7; day++) {
+  for (let day = 0; day < 1; day++) {
     // 2. Garantir que SNACKS usem os mesmos macros todos os dias (Cópia do Dia 0)
     for (const baseItem of baseShadowItems) {
       items.push({ ...baseItem, day_of_week: day });
@@ -2355,7 +2343,7 @@ function generateFixedMarmitaPlan(
   const isHypertrophy = goal === "gain_muscle" || goal === "gain_weight";
   const portionMultiplier = isHypertrophy ? 1.5 : 1.0;
 
-  for (let day = 0; day < 7; day++) {
+  for (let day = 0; day < 1; day++) {
     let dayMarmitaCal = 0;
     let dayMarmitaP = 0;
     let dayMarmitaC = 0;
@@ -3638,6 +3626,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
             end_date: endDate.toISOString().split("T")[0],
             is_active: false,
             plan_status: "draft_auto_generated",
+            plan_mode: "single_day",
             generation_source: "protocol_fitjourney_v4",
             generated_by: userId,
             generation_metadata: genMeta,

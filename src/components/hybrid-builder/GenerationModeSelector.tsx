@@ -329,8 +329,8 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           <>
             <Compass className="w-5 h-5" />
             <div className="text-left">
-              <p className="font-bold">🧠 Motor Automático (Estratégia)</p>
-              <p className="text-[10px] opacity-80">Analisar paciente → 3 protocolos → escolher → gerar</p>
+              <p className="font-bold">🧠 Gerar Template de 1 Dia (Estratégia)</p>
+              <p className="text-[10px] opacity-80">Gera um plano de 1 dia com todas as substituições automáticas</p>
             </div>
           </>
         )}
@@ -345,8 +345,8 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       >
         <ChefHat className="w-5 h-5 text-primary" />
         <div className="text-left">
-          <p className="font-bold">🍱 Usar Receita (Marmita)</p>
-          <p className="text-[10px] text-muted-foreground">Escolher receita → escalar porções → gerar plano</p>
+          <p className="font-bold">🍱 Usar Receita como Template</p>
+          <p className="text-[10px] text-muted-foreground">Escolher receita → escalar porções → gerar template de 1 dia</p>
         </div>
       </Button>
 
@@ -391,15 +391,15 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
             <>
               <CalendarDays className="w-5 h-5 text-primary" />
               <div className="text-left flex-1">
-                <p className="font-bold">📅 Cardápio Semanal de Marmitas</p>
+                <p className="font-bold">📅 Template Diário de Marmitas</p>
                 <p className="text-[10px] text-muted-foreground">
                   {checksLoading
                     ? "verificando…"
-                    : `Almoço ${recipeCounts.lunch}/${minSettings.weekly_min_lunch} · Jantar ${recipeCounts.dinner}/${minSettings.weekly_min_dinner}`}
+                    : `Gera 1 dia padrão com substituições a partir de suas receitas.`}
                 </p>
                 {!checksLoading && (
                   <p className={`text-[9px] mt-0.5 ${MODE_HINTS.weekly.className}`}>
-                    ℹ️ {MODE_HINTS.weekly.text}
+                    ℹ️ Modelo de dia único + substituições inteligentes
                   </p>
                 )}
               </div>
