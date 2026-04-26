@@ -5976,8 +5976,10 @@ export type Database = {
           patient_email: string | null
           patient_name: string | null
           professional_id: string
+          status: string | null
           tenant_id: string | null
           updated_at: string
+          used_at: string | null
         }
         Insert: {
           code: string
@@ -5988,8 +5990,10 @@ export type Database = {
           patient_email?: string | null
           patient_name?: string | null
           professional_id: string
+          status?: string | null
           tenant_id?: string | null
           updated_at?: string
+          used_at?: string | null
         }
         Update: {
           code?: string
@@ -6000,8 +6004,10 @@ export type Database = {
           patient_email?: string | null
           patient_name?: string | null
           professional_id?: string
+          status?: string | null
           tenant_id?: string | null
           updated_at?: string
+          used_at?: string | null
         }
         Relationships: [
           {
