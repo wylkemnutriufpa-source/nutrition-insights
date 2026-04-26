@@ -26,25 +26,25 @@ export default function PatientProfileSummary({ profile }: Props) {
         <p className="text-xs text-foreground leading-relaxed">{profile.summary}</p>
       </div>
 
-      <div className="grid grid-cols-4 gap-2">
-        <div className="bg-background rounded-lg p-2 text-center">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+        <div className="bg-background rounded-lg p-2 text-center min-w-0">
           <Scale className="w-3 h-3 mx-auto text-muted-foreground mb-1" />
           <p className={`text-sm font-bold ${bmiColor}`}>{profile.bmi}</p>
           <p className="text-[9px] text-muted-foreground">IMC</p>
         </div>
-        <div className="bg-background rounded-lg p-2 text-center">
+        <div className="bg-background rounded-lg p-2 text-center min-w-0">
           <Flame className="w-3 h-3 mx-auto text-muted-foreground mb-1" />
           <p className="text-sm font-bold">{profile.tmb}</p>
           <p className="text-[9px] text-muted-foreground">TMB</p>
         </div>
-        <div className="bg-background rounded-lg p-2 text-center">
+        <div className="bg-background rounded-lg p-2 text-center min-w-0">
           <Activity className="w-3 h-3 mx-auto text-muted-foreground mb-1" />
           <p className="text-sm font-bold">{profile.tdee}</p>
           <p className="text-[9px] text-muted-foreground">TDEE</p>
         </div>
-        <div className="bg-background rounded-lg p-2 text-center">
-          <Badge variant="outline" className="text-[8px] px-1 py-0">{profile.bmiCategory}</Badge>
-          <p className="text-[9px] text-muted-foreground mt-1">{profile.metabolicType}</p>
+        <div className="bg-background rounded-lg p-2 text-center min-w-0 flex flex-col items-center justify-center">
+          <Badge variant="outline" className="text-[8px] px-1 py-0 truncate max-w-full">{profile.bmiCategory}</Badge>
+          <p className="text-[9px] text-muted-foreground mt-1 truncate max-w-full">{profile.metabolicType}</p>
         </div>
       </div>
     </div>
