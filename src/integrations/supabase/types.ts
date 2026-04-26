@@ -5925,6 +5925,94 @@ export type Database = {
           },
         ]
       }
+      invitation_logs: {
+        Row: {
+          created_at: string
+          details: Json | null
+          domain_used: string | null
+          event_type: string
+          id: string
+          invitation_id: string | null
+          ip_address: string | null
+          user_agent: string | null
+        }
+        Insert: {
+          created_at?: string
+          details?: Json | null
+          domain_used?: string | null
+          event_type: string
+          id?: string
+          invitation_id?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Update: {
+          created_at?: string
+          details?: Json | null
+          domain_used?: string | null
+          event_type?: string
+          id?: string
+          invitation_id?: string | null
+          ip_address?: string | null
+          user_agent?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitation_logs_invitation_id_fkey"
+            columns: ["invitation_id"]
+            isOneToOne: false
+            referencedRelation: "invitations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      invitations: {
+        Row: {
+          code: string
+          created_at: string
+          expires_at: string | null
+          id: string
+          metadata: Json | null
+          patient_email: string | null
+          patient_name: string | null
+          professional_id: string
+          tenant_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          patient_email?: string | null
+          patient_name?: string | null
+          professional_id: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          expires_at?: string | null
+          id?: string
+          metadata?: Json | null
+          patient_email?: string | null
+          patient_name?: string | null
+          professional_id?: string
+          tenant_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invitations_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lab_marker_rules: {
         Row: {
           category: string

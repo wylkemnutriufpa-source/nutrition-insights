@@ -3,6 +3,7 @@
 // Único caminho oficial do fluxo: paciente loga e cai direto na pipeline de onboarding.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.4";
 import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
+import { BASE_URL, isValidDomain, logInvitation } from "../_shared/config.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -62,15 +63,31 @@ Deno.serve(async (req) => {
       if (!link) throw new Error("Patient is not linked to this professional");
     }
 
-    const origin = "https://www.fitjourney.com.br";
+    const origin = BASE_URL;
+    const redirectTo = `${origin}/onboarding`;
+
+    if (!isValidDomain(redirectTo)) {
+      throw new Error(`Domínio de redirecionamento inválido: ${redirectTo}`);
+    }
 
     // Gera magic link redirecionando direto para /onboarding (rota canônica)
     const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
       type: "magiclink",
       email,
-      options: { redirectTo: `${origin}/onboarding` },
+      options: { redirectTo },
     });
     if (linkErr) throw linkErr;
+
+    // Log do envio do link
+    await logInvitation(adminClient, {
+      event_type: "generated",
+      details: { 
+        patient_id: patientId, 
+        action: "send-onboarding-link",
+        email 
+      },
+      domain_used: origin
+    });
 
     const actionLink: string | null =
       (linkData as any)?.properties?.action_link || null;

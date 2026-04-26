@@ -2,6 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { BASE_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -30,27 +31,33 @@ export default function InvitePatient() {
   const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
   const [signedLink, setSignedLink] = useState<string | null>(null);
+  const [invitationCode, setInvitationCode] = useState<string | null>(null);
 
   // Base URL for production
-  const siteUrl = "https://www.fitjourney.com.br";
+  const siteUrl = BASE_URL;
 
-  // Generate signed public registration link
+  // Generate friendly invitation link
   useEffect(() => {
     if (!user?.id) return;
-    const generateSignedLink = async () => {
+    const generateInvitation = async () => {
       try {
-        const { data, error } = await supabase.functions.invoke("sign-registration-link", {
-          body: { nutriId: user.id }
+        const { data, error } = await supabase.functions.invoke("create-invitation", {
+          body: { 
+            professional_id: user.id,
+            // Assuming we might have a tenant_id in user metadata or elsewhere
+            tenant_id: (user as any).user_metadata?.tenant_id 
+          }
         });
         if (error) throw error;
-        // Use custom domain for the link
-        const link = `${siteUrl}/register-patient?nutri=${user.id}&sig=${data.signature}`;
-        setSignedLink(link);
+        if (data?.url) {
+          setSignedLink(data.url);
+          setInvitationCode(data.code);
+        }
       } catch (err) {
-        console.error("Error signing registration link:", err);
+        console.error("Error creating friendly invitation:", err);
       }
     };
-    generateSignedLink();
+    generateInvitation();
   }, [user?.id]);
 
   const onboardingLink = useMemo(
