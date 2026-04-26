@@ -174,17 +174,36 @@ export default function Invitation() {
           <CardContent className="flex flex-col gap-3">
             {canRegenerate ? (
               <>
-                <Button onClick={handleRegenerate} className="w-full gap-2 h-12 text-lg">
-                  <RefreshCw className="w-5 h-5" /> Gerar Novo Convite
+                <Button 
+                  onClick={handleRegenerate} 
+                  disabled={isProcessingAction}
+                  className="w-full gap-2 h-12 text-lg"
+                >
+                  {isProcessingAction ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
+                  Gerar Novo Convite
                 </Button>
-                <Button variant="outline" onClick={() => navigate(`/convite/${code}/status`)} className="w-full gap-2">
-                  <Activity className="w-4 h-4" /> Ver Status Detalhado
+                {error === "Este convite expirou." && (
+                   <Button 
+                    variant="outline" 
+                    onClick={() => openWhatsApp(`Olá! Seu convite anterior expirou. Aqui está o novo link para o FitJourney: ${window.location.href}`)}
+                    className="w-full gap-2 h-12"
+                   >
+                    <MessageSquare className="w-5 h-5" /> Notificar Paciente (Novo Link)
+                   </Button>
+                )}
+                <Button variant="ghost" onClick={() => fetchInvitation()} className="w-full gap-2">
+                  <RefreshCw className="w-4 h-4" /> Tentar Novamente
                 </Button>
               </>
             ) : (
-              <Button onClick={() => navigate("/auth")} className="w-full h-12 text-lg">
-                Ir para Login
-              </Button>
+              <>
+                <Button onClick={() => fetchInvitation()} className="w-full h-12 text-lg gap-2">
+                  <RefreshCw className="w-5 h-5" /> Tentar Novamente
+                </Button>
+                <Button variant="outline" onClick={() => navigate("/auth")} className="w-full h-12 text-lg">
+                  Ir para Login
+                </Button>
+              </>
             )}
           </CardContent>
         </Card>
