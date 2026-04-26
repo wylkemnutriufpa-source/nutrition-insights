@@ -2523,7 +2523,7 @@ function generateAdjustableMealsForDay(
     const r = generatePlanWithTemplates(
       templates, visualLibrary, goal, remainderKcal, remainderMacros,
       restrictions, disliked, allergies, targetDay, mealTypes, mealTimes,
-      strategy, patientFoodDatabase, recentMeals,
+      strategy, patientFoodDatabase, recentMeals, prioritizedTemplateIds,
     );
     result = r.items;
   } else {
