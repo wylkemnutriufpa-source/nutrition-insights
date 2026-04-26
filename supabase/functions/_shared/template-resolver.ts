@@ -190,6 +190,13 @@ export function resolveMealTemplates(
       score += 40;
     }
 
+    // Prioritized match (HIGH PRIORITY: +150)
+    if (prioritizedTemplateIds && prioritizedTemplateIds.length > 0) {
+      if (prioritizedTemplateIds.includes(t.id)) {
+        score += 150;
+      }
+    }
+
     // Satiety score bonus (+20 max)
     if (t.satiety_score > 0) {
       score += Math.min(20, t.satiety_score * 2);
