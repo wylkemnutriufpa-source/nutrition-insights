@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import {
   Dialog,
   DialogContent,
@@ -21,6 +21,9 @@ import {
   Info,
   AlertCircle,
   SlidersHorizontal,
+  X,
+  ClipboardCheck,
+  AlertTriangle
 } from "lucide-react";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import { toast } from "sonner";
@@ -42,6 +45,7 @@ export function MealSmartEditorModal({
 }: MealSmartEditorModalProps) {
   const { items, updateItem, substitutionCount, patientName } = useMealPlanEditorV2Store();
   const item = items.find((i) => i.id === itemId);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const [activeTab, setActiveTab] = useState<"isolated" | "ready">("isolated");
   const [search, setSearch] = useState("");
@@ -49,6 +53,7 @@ export function MealSmartEditorModal({
   const [notes, setNotes] = useState((item as any)?.notes || "");
   const [substitutions, setSubstitutions] = useState<string[]>([]);
   const [portionFactor, setPortionFactor] = useState(1.0);
+  const [showConsistencyReport, setShowConsistencyReport] = useState(false);
 
   const currentMeta = React.useMemo(() => (item as any)?.edit_metadata || (item as any)?.metadata || {}, [item]);
   
@@ -63,6 +68,18 @@ export function MealSmartEditorModal({
     carbs: Math.round(carbBase * portionFactor * 10) / 10,
     fat: Math.round(fatBase * portionFactor * 10) / 10,
   }), [kcalBase, protBase, carbBase, fatBase, portionFactor]);
+
+  const isWannubia = patientName?.toLowerCase().includes("wannubia");
+
+  const isBlockedForWannubia = useCallback((sub: string) => {
+    if (!isWannubia) return false;
+    const forbiddenKeywords = ["ultraprocessado", "fritura", "doce", "açúcar", "refrigerante"];
+    return forbiddenKeywords.some(keyword => sub.toLowerCase().includes(keyword));
+  }, [isWannubia]);
+
+  const hasBlockedSubs = useMemo(() => {
+    return substitutions.some(sub => isBlockedForWannubia(sub));
+  }, [substitutions, isBlockedForWannubia]);
 
   useEffect(() => {
     if (item && open) {
@@ -105,11 +122,18 @@ export function MealSmartEditorModal({
   if (!item) return null;
 
   const handleSave = async () => {
-    // Validação de macros zerados para marmitas ou refeições planejadas
-    if (adjustedMacros.calories <= 0 || adjustedMacros.protein <= 0) {
-      toast.error("Não é possível salvar uma refeição com macros zerados.", {
-        description: "Adicione alimentos ou selecione uma refeição pronta válida."
+    // Bloqueio específico para Wannubia
+    if (hasBlockedSubs) {
+      toast.error("Combinação proibida detectada", {
+        description: "Esta paciente possui restrições severas. Remova itens como ultraprocessados ou frituras das substituições."
       });
+      return;
+    }
+
+    // Validação de macros relaxada: permite macros parciais zerados
+    // O sistema agora bloqueia apenas na publicação final se o total do dia for zero.
+    if (adjustedMacros.calories < 0) {
+      toast.error("Erro: Calorias não podem ser negativas.");
       return;
     }
 
@@ -216,30 +240,30 @@ export function MealSmartEditorModal({
           handleOpenChange(false);
         }}
       >
-        <DialogHeader className="px-6 py-4 pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
+        <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 pr-12 sm:pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b relative">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="min-w-0 flex-1">
-              <DialogTitle className="text-xl font-bold font-display tracking-tight">
+              <DialogTitle className="text-lg sm:text-xl font-bold font-display tracking-tight">
                 Editar {item.title}
               </DialogTitle>
-              <p className="text-xs text-muted-foreground mt-1">
+              <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5 sm:mt-1">
                 Ajuste os alimentos, substituições e observações clínicas
               </p>
             </div>
-            <div className="flex items-center gap-4 bg-secondary/50 px-4 py-2 rounded-2xl border border-primary/10 shrink-0">
+            <div className="flex items-center gap-2 sm:gap-4 bg-secondary/50 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl border border-primary/10 shrink-0 self-start sm:self-center z-10">
               <div className="flex flex-col items-center">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
-                <span className="text-sm font-black text-orange-500">{totals.calories}</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Kcal</span>
+                <span className="text-xs sm:text-sm font-black text-orange-500">{totals.calories}</span>
               </div>
-              <Separator orientation="vertical" className="h-6" />
+              <div className="h-6 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Prot</span>
-                <span className="text-sm font-black text-red-500">{totals.protein}g</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Prot</span>
+                <span className="text-xs sm:text-sm font-black text-red-500">{totals.protein}g</span>
               </div>
-              <Separator orientation="vertical" className="h-6" />
+              <div className="h-6 w-px bg-border/50" />
               <div className="flex flex-col items-center">
-                <span className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Carb</span>
-                <span className="text-sm font-black text-amber-500">{totals.carbs}g</span>
+                <span className="text-[8px] sm:text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Carb</span>
+                <span className="text-xs sm:text-sm font-black text-amber-500">{totals.carbs}g</span>
               </div>
             </div>
           </div>
@@ -467,32 +491,53 @@ export function MealSmartEditorModal({
                   </div>
                   
                   <div className="space-y-2">
-                    {substitutions.map((sub, idx) => (
-                      <div key={idx} className="flex gap-2 group/sub">
-                        <Input
-                          value={sub}
-                          onChange={(e) => {
-                            // Normalização em tempo real: colapso de espaços repetidos
-                            const val = String(e.target.value).replace(/\s+/g, ' ');
-                            const next = [...substitutions];
-                            next[idx] = val;
-                            setSubstitutions(next);
-                          }}
-                          className="h-9 bg-secondary/10 border-none focus-visible:ring-1 ring-primary/20 rounded-xl text-xs"
-                          placeholder="Ex: • Pão integral → Tapioca (40g)"
-                          data-testid={`substitution-input-${idx}`}
-                        />
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-9 w-9 rounded-xl opacity-0 group-hover/sub:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-                          onClick={() => setSubstitutions(substitutions.filter((_, i) => i !== idx))}
-                          data-testid={`remove-substitution-button-${idx}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    ))}
+                    {substitutions.map((sub, idx) => {
+                      const isBlocked = isBlockedForWannubia(sub);
+                      return (
+                        <div key={idx} className="space-y-1">
+                          <div className="flex gap-2 group/sub">
+                            <Input
+                              value={sub}
+                              ref={idx === 0 ? inputRef : null}
+                              onChange={(e) => {
+                                const val = String(e.target.value).replace(/\s+/g, ' ');
+                                const next = [...substitutions];
+                                next[idx] = val;
+                                setSubstitutions(next);
+                              }}
+                              className={cn(
+                                "h-9 bg-secondary/10 border-none focus-visible:ring-1 ring-primary/20 rounded-xl text-xs transition-all",
+                                isBlocked && "bg-destructive/10 ring-destructive/50 text-destructive border-destructive/30"
+                              )}
+                              placeholder="Ex: • Pão integral → Tapioca (40g)"
+                              data-testid={`substitution-input-${idx}`}
+                            />
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-9 w-9 rounded-xl opacity-0 group-hover/sub:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+                              onClick={() => setSubstitutions(substitutions.filter((_, i) => i !== idx))}
+                              data-testid={`remove-substitution-button-${idx}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          {isBlocked && (
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-destructive/5 text-[9px] text-destructive font-bold rounded-lg animate-in fade-in slide-in-from-top-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>Combinação inválida para Wannubia. Remova itens proibidos.</span>
+                              <Button 
+                                variant="link" 
+                                className="h-auto p-0 text-[9px] ml-auto text-destructive underline"
+                                onClick={() => inputRef.current?.focus()}
+                              >
+                                Corrigir agora
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                     {substitutions.length === 0 && (
                       <p className="text-[10px] text-muted-foreground italic bg-secondary/5 p-3 rounded-xl border border-dashed text-center">
                         Nenhuma substituição adicionada.

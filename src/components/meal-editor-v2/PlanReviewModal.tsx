@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, AlertCircle, Info, ChevronRight, ChevronLeft, Navigation } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, Info, ChevronRight, ChevronLeft, Navigation, AlertTriangle } from "lucide-react";
 import { validateMealSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
@@ -21,6 +21,10 @@ interface PlanReviewModalProps {
 export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving }: PlanReviewModalProps) {
   const [activeMealIndex, setActiveMealIndex] = useState(0);
   const [localAprovals, setLocalAprovals] = useState<Record<string, Record<number, boolean>>>({});
+
+  const totalCalories = useMemo(() => {
+    return items.reduce((sum, item) => sum + (Number(item.calories_target) || 0), 0);
+  }, [items]);
 
   const sortedItems = useMemo(() => {
     return [...items].sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || ""));
@@ -194,6 +198,12 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
           </div>
 
           <div className="flex items-center gap-3">
+            {totalCalories === 0 && (
+              <div className="hidden sm:flex items-center gap-2 text-destructive font-bold text-xs bg-destructive/5 px-3 py-2 rounded-lg border border-destructive/10">
+                <AlertTriangle className="w-4 h-4" />
+                <span>Total diário zerado</span>
+              </div>
+            )}
             <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)} className="text-muted-foreground">
               Voltar ao Editor
             </Button>
@@ -217,10 +227,13 @@ export function PlanReviewModal({ open, onOpenChange, items, onConfirm, isSaving
                 });
                 onConfirm(finalItems);
               }} 
-              disabled={isSaving || items.some(item => !validateMealSubstitutions(item).valid)}
-              className="shadow-lg shadow-primary/20"
+              disabled={isSaving || totalCalories <= 0}
+              className={cn(
+                "shadow-lg",
+                totalCalories > 0 ? "shadow-primary/20" : "opacity-50"
+              )}
             >
-              {isSaving ? "Salvando..." : "Confirmar e Salvar Plano"}
+              {isSaving ? "Salvando..." : totalCalories <= 0 ? "Adicione Calorias" : "Confirmar e Salvar Plano"}
             </Button>
           </div>
         </DialogFooter>

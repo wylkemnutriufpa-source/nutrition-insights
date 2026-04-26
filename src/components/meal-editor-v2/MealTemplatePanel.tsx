@@ -13,9 +13,11 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Coffee, Apple, Utensils, Cookie, Moon, Sun,
   Flame, Beef, Wheat, Droplets, Check, Sparkles,
-  ChefHat, Loader2,
+  ChefHat, Loader2, ClipboardCheck, Info, X
 } from "lucide-react";
 import { toast } from "sonner";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
 
 interface TemplateFood {
   name: string;
@@ -211,6 +213,8 @@ export default function MealTemplatePanel({ day }: Props) {
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
   const [customTemplates, setCustomTemplates] = useState<MealTemplate[]>([]);
   const [loading, setLoading] = useState(false);
+  const [appliedHistory, setAppliedHistory] = useState<{name: string, date: Date, nutrients: any}[]>([]);
+  const [showReport, setShowReport] = useState(false);
 
   useEffect(() => {
     const fetchCustomRecipes = async () => {
@@ -330,6 +334,11 @@ export default function MealTemplatePanel({ day }: Props) {
     });
 
     setRecentlyApplied(prev => new Set(prev).add(template.id));
+    setAppliedHistory(prev => [...prev, { 
+      name: template.title, 
+      date: new Date(), 
+      nutrients: { kcal: template.totalCalories, protein: template.totalProtein } 
+    }]);
     toast.success(`✅ ${template.title} adicionado!`);
     setTimeout(() => {
       setRecentlyApplied(prev => {
@@ -371,11 +380,63 @@ export default function MealTemplatePanel({ day }: Props) {
         })}
       </div>
 
-      <div className="flex items-center gap-2 mb-3 px-1">
-        <Sparkles className="w-4 h-4 text-primary" />
-        <p className="text-xs text-muted-foreground">
-          Clique em um template para adicionar a refeição completa ao <strong>{config.label}</strong>
-        </p>
+      <div className="flex items-center justify-between gap-2 mb-3 px-1">
+        <div className="flex items-center gap-2">
+          <Sparkles className="w-4 h-4 text-primary" />
+          <p className="text-xs text-muted-foreground">
+            Clique em um template para adicionar a refeição completa
+          </p>
+        </div>
+        
+        <Dialog open={showReport} onOpenChange={setShowReport}>
+          <DialogTrigger asChild>
+            <Button variant="outline" size="sm" className="h-7 text-[10px] gap-1 px-2 border-primary/20 text-primary hover:bg-primary/5">
+              <ClipboardCheck className="w-3.5 h-3.5" /> Relatório
+            </Button>
+          </DialogTrigger>
+          <DialogContent className="max-w-md">
+            <DialogHeader>
+              <DialogTitle className="flex items-center gap-2">
+                <ClipboardCheck className="w-5 h-5 text-primary" /> Relatório de Consistência
+              </DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="p-3 rounded-xl bg-primary/5 border border-primary/10">
+                <p className="text-xs font-medium text-primary flex items-center gap-2">
+                  <Info className="w-4 h-4" /> Resumo das marmitas fixas inseridas nesta sessão
+                </p>
+              </div>
+              
+              <ScrollArea className="max-h-[300px] pr-4">
+                {appliedHistory.length === 0 ? (
+                  <p className="text-sm text-muted-foreground text-center py-8">Nenhuma marmita inserida ainda.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {appliedHistory.map((item, idx) => (
+                      <div key={idx} className="p-3 rounded-xl border bg-card space-y-2">
+                        <div className="flex justify-between items-center">
+                          <p className="text-sm font-bold">{item.name}</p>
+                          <span className="text-[10px] text-muted-foreground">{item.date.toLocaleTimeString()}</span>
+                        </div>
+                        <div className="flex gap-4 text-[11px]">
+                          <span className="text-orange-600 font-bold">{item.nutrients.kcal} kcal</span>
+                          <span className="text-red-600 font-bold">{item.nutrients.protein}g proteína</span>
+                          <span className="text-green-600 ml-auto flex items-center gap-1">
+                            <Check className="w-3 h-3" /> Recalculado
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </ScrollArea>
+              
+              <Button className="w-full h-11 rounded-xl font-bold" onClick={() => setShowReport(false)}>
+                Entendido
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
 
       <ScrollArea className="flex-1">
