@@ -87,14 +87,22 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
     }
     setPublishing(true);
     setPublishError(null);
-    setPublishProgress(10);
+    setPublishProgress(0);
     
     try {
-      // Step 1: Prepare (simulated for UI)
-      await new Promise(r => setTimeout(r, 600));
-      setPublishProgress(40);
+      // Step 1: Prepare
+      await new Promise(r => setTimeout(r, 400));
+      setPublishProgress(25);
 
-      // Step 2: Actual Supabase update
+      // Step 2: Optimizing
+      await new Promise(r => setTimeout(r, 400));
+      setPublishProgress(50);
+
+      // Step 3: Finalizing
+      await new Promise(r => setTimeout(r, 400));
+      setPublishProgress(75);
+
+      // Actual Supabase update
       const { error } = await supabase
         .from("meal_plans")
         .update({ 
