@@ -225,12 +225,8 @@ export default function HybridPlanBuilder() {
   };
 
   const handlePublish = async () => {
-    const vs = (plan as any).overall_validation_status;
-    if (lockedValidationMode !== "MANUAL_EDIT" && vs !== "aprovado" && vs !== "sugestoes_melhoria") {
-      toast.error("Valide o plano antes de publicar.");
-      return;
-    }
     setPublishing(true);
+
     try {
       await store._flushQueue();
       await publishMealPlan(plan.id, user!.id);
