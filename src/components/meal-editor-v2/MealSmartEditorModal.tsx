@@ -347,22 +347,8 @@ export function MealSmartEditorModal({
                             step="0.1"
                             min="0.1"
                             className="h-10 bg-background border-primary/20 rounded-xl"
-                            defaultValue="1.0"
-                            onChange={(e) => {
-                              const factor = parseFloat(e.target.value);
-                              if (isNaN(factor) || factor <= 0) return;
-                              
-                              // Recalculate macros based on factor
-                              const meta = (item as any).edit_metadata || {};
-                              const baseKcal = item.calories_target || 0;
-                              const baseProt = Number(item.protein_target) || 0;
-                              const baseCarb = Number(item.carbs_target) || 0;
-                              const baseFat = Number(item.fat_target) || 0;
-                              
-                              // We don't want to lose the original base values, so maybe we should keep them in metadata
-                              // For now, let's just apply to current values (assuming they were the base)
-                              // Better: use a local state for the factor and apply it on save or preview
-                            }}
+                            value={portionFactor}
+                            onChange={(e) => setPortionFactor(parseFloat(e.target.value) || 1.0)}
                           />
                           <span className="text-sm font-bold text-muted-foreground">x</span>
                         </div>
@@ -372,9 +358,7 @@ export function MealSmartEditorModal({
                           variant="outline" 
                           size="sm" 
                           className="h-9 text-[10px] rounded-xl"
-                          onClick={() => {
-                            // Logic to scale up/down
-                          }}
+                          onClick={() => setPortionFactor(prev => Math.max(0.1, Math.round((prev - 0.1) * 10) / 10))}
                         >
                           - 10%
                         </Button>
@@ -382,9 +366,7 @@ export function MealSmartEditorModal({
                           variant="outline" 
                           size="sm" 
                           className="h-9 text-[10px] rounded-xl"
-                          onClick={() => {
-                            // Logic to scale up/down
-                          }}
+                          onClick={() => setPortionFactor(prev => Math.round((prev + 0.1) * 10) / 10)}
                         >
                           + 10%
                         </Button>
