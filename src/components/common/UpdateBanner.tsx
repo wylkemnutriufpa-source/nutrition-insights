@@ -2,6 +2,7 @@ import { useRegisterSW } from "virtual:pwa-register/react";
 import { useState, useCallback, useEffect, useMemo } from "react";
 import { RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import {
   clearRuntimeCaches,
   forceHardReload,
@@ -55,7 +56,7 @@ export default function UpdateBanner() {
       // Update check — every 5min (was 30s, too aggressive and contributed to reload loops)
       const intervalId = setInterval(() => {
         registration.update().catch(() => {});
-      }, 5 * 60 * 1000);
+      }, 1 * 60 * 1000); // Check every 1 minute for faster updates
 
       // Check on visibility change (tab becomes visible)
       const onVisibility = () => {
@@ -150,14 +151,28 @@ export default function UpdateBanner() {
         <span className="text-sm font-medium text-foreground">
           {updating ? "Atualizando…" : isiOSPwa ? "Nova versão pronta para reabrir" : "Nova versão disponível"}
         </span>
-        <Button
-          size="sm"
-          onClick={handleUpdate}
-          disabled={updating}
-          className="ml-2"
-        >
-          {updating ? "Aguarde…" : isiOSPwa ? "Reabrir app" : "Atualizar agora"}
-        </Button>
+        <div className="flex items-center gap-2 ml-2">
+          <Button
+            size="sm"
+            onClick={handleUpdate}
+            disabled={updating}
+          >
+            {updating ? "Aguarde…" : isiOSPwa ? "Reabrir app" : "Atualizar agora"}
+          </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              await clearRuntimeCaches();
+              toast.success("Cache limpo com sucesso!");
+              setTimeout(() => forceHardReload(), 500);
+            }}
+            disabled={updating}
+            className="border-primary/30"
+          >
+            Limpar Cache
+          </Button>
+        </div>
         {!updating && (
           <button
             onClick={handleDismiss}

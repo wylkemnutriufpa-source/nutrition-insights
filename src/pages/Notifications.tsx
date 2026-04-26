@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bell, Check, CheckCheck, Trash2, MessageSquare, Calendar, TrendingUp, AlertCircle, Info, ExternalLink, Users, ClipboardCheck, Target, Utensils, Compass } from "lucide-react";
+import { Bell, Check, CheckCheck, Trash2, MessageSquare, Calendar, TrendingUp, AlertCircle, Info, ExternalLink, Users, ClipboardCheck, Target, Utensils, Compass, ArrowRight } from "lucide-react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 
@@ -178,6 +178,17 @@ export default function Notifications() {
                         <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{n.message}</p>
                         {n.entity_type && (
                           <span className="text-[10px] text-muted-foreground/60 mt-0.5 block">{n.entity_type}</span>
+                        )}
+                        {hasRoute && (
+                          <div className="mt-3">
+                            <Button size="sm" variant="outline" className="h-8 text-[11px] gap-2 border-primary/20 text-primary hover:bg-primary/5">
+                              {n.type === 'plan_published' ? 'Ver meu plano' : 
+                               n.type === 'message' ? 'Responder agora' :
+                               n.type === 'appointment' ? 'Ver agendamento' :
+                               'Acessar agora'}
+                              <ArrowRight className="w-3 h-3" />
+                            </Button>
+                          </div>
                         )}
                       </div>
                       <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>

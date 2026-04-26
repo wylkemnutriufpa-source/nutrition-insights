@@ -13,6 +13,7 @@ interface Profile {
   full_name: string;
   avatar_url: string | null;
   phone: string | null;
+  whatsapp?: string | null;
   marmita_mode?: boolean;
   experience_mode?: string;
   experience_mode_locked?: boolean;

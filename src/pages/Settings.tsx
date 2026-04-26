@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed, Globe, Calendar, Copy, Link2, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed, Globe, Calendar, Copy, Link2, CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
@@ -20,6 +20,7 @@ import { useTranslation } from "react-i18next";
 import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
+import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
 
 function MarmitaSettingsCard() {
   const { user } = useAuth();
@@ -107,6 +108,7 @@ export default function Settings() {
   const [portalLoading, setPortalLoading] = useState(false);
   const [fullName, setFullName] = useState(profile?.full_name || "");
   const [phone, setPhone] = useState(profile?.phone || "");
+  const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || "");
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
   const [savingProfile, setSavingProfile] = useState(false);
 
@@ -141,7 +143,7 @@ export default function Settings() {
     setSavingProfile(true);
     const { error } = await supabase
       .from("profiles")
-      .update({ full_name: fullName, phone: phone || null })
+      .update({ full_name: fullName, phone: phone || null, whatsapp: whatsapp || null })
       .eq("user_id", user.id);
     setSavingProfile(false);
     if (error) {
@@ -356,11 +358,47 @@ export default function Settings() {
                   placeholder="(11) 99999-9999"
                 />
               </div>
+              <div>
+                <Label>WhatsApp</Label>
+                <Input
+                  value={whatsapp}
+                  onChange={(e) => setWhatsapp(e.target.value)}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
               <Button type="submit" className="gradient-primary gap-2" disabled={savingProfile}>
                 <Save className="w-4 h-4" />
                 {savingProfile ? t("common.saving") : t("settings.saveProfile")}
               </Button>
             </form>
+          </CardContent>
+        </Card>
+
+        {/* Cache Management */}
+        <Card className="shadow-card border-amber-500/20 bg-amber-500/5">
+          <CardHeader>
+            <CardTitle className="font-display flex items-center gap-2 text-amber-600">
+              <RefreshCw className="w-5 h-5" /> Suporte e Cache
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <p className="text-sm text-muted-foreground">
+              Se você notar que as informações do seu plano demoram a atualizar, você pode limpar o cache do aplicativo para forçar a sincronização imediata.
+            </p>
+            <Button 
+              variant="outline" 
+              className="w-full gap-2 border-amber-500/30 text-amber-700 hover:bg-amber-500/10"
+              onClick={async () => {
+                await clearRuntimeCaches();
+                toast.success("Cache limpo! Recarregando...");
+                setTimeout(() => forceHardReload(), 1000);
+              }}
+            >
+              <RefreshCw className="w-4 h-4" /> Limpar Cache e Atualizar
+            </Button>
+            <p className="text-[10px] text-muted-foreground text-center">
+              Recomendado se o seu profissional fez alterações recentes e elas ainda não apareceram.
+            </p>
           </CardContent>
         </Card>
 

@@ -18,7 +18,7 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List, Crown, Settings2, ShieldAlert
+  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
@@ -476,7 +476,7 @@ function PatientsListSkeleton() {
 }
 
 export default function Patients() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const { minMode, isBasic } = useExperienceMode();
   const nav = useNavigate();
   const navigateToPatient = useCallback((patientId: string) => {
@@ -765,24 +765,56 @@ export default function Patients() {
                     <DialogHeader>
                       <DialogTitle className="font-display">Adicionar Paciente</DialogTitle>
                     </DialogHeader>
-                    <form onSubmit={addPatient} className="space-y-4">
-                      <div>
-                        <Label>Nome do paciente</Label>
-                        <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} placeholder="Nome completo" required />
-                      </div>
-                      <div>
-                        <Label>Email do paciente</Label>
-                        <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="paciente@email.com" required />
-                      </div>
-                      <div>
-                        <Label>Senha inicial</Label>
-                        <Input type="password" value={patientPassword} onChange={(e) => setPatientPassword(e.target.value)} placeholder="Ex: Fit@2026!" minLength={6} required />
-                        <p className="text-xs text-muted-foreground mt-1">Senha forte obrigatória (ex: Fit@2026!). O paciente poderá alterar depois em Configurações.</p>
-                      </div>
-                      <Button type="submit" className="w-full gradient-primary" disabled={addPatientMutation.isPending}>
-                        {addPatientMutation.isPending ? "Criando conta..." : "Cadastrar Paciente"}
-                      </Button>
-                    </form>
+                    <Tabs defaultValue="manual" className="w-full">
+                      <TabsList className="grid w-full grid-cols-2 mb-4">
+                        <TabsTrigger value="manual">Manual</TabsTrigger>
+                        <TabsTrigger value="link">Link de Convite</TabsTrigger>
+                      </TabsList>
+                      <TabsContent value="manual">
+                        <form onSubmit={addPatient} className="space-y-4">
+                          <div>
+                            <Label>Nome do paciente</Label>
+                            <Input value={patientName} onChange={(e) => setPatientName(e.target.value)} placeholder="Nome completo" required />
+                          </div>
+                          <div>
+                            <Label>Email do paciente</Label>
+                            <Input type="email" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="paciente@email.com" required />
+                          </div>
+                          <div>
+                            <Label>Senha inicial</Label>
+                            <Input type="password" value={patientPassword} onChange={(e) => setPatientPassword(e.target.value)} placeholder="Ex: Fit@2026!" minLength={6} required />
+                            <p className="text-xs text-muted-foreground mt-1">Senha forte obrigatória (ex: Fit@2026!). O paciente poderá alterar depois em Configurações.</p>
+                          </div>
+                          <Button type="submit" className="w-full gradient-primary" disabled={addPatientMutation.isPending}>
+                            {addPatientMutation.isPending ? "Criando conta..." : "Cadastrar Paciente"}
+                          </Button>
+                        </form>
+                      </TabsContent>
+                      <TabsContent value="link" className="space-y-4">
+                        <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                          <h4 className="font-medium text-sm flex items-center gap-2 mb-2 text-primary">
+                            <Plus className="w-4 h-4" /> Convite via Perfil Público
+                          </h4>
+                          <p className="text-xs text-muted-foreground mb-4">
+                            Envie o link do seu perfil público para o paciente. Ele poderá realizar o cadastro sozinho e será vinculado automaticamente ao seu perfil.
+                          </p>
+                          <Button 
+                            variant="outline" 
+                            className="w-full gap-2"
+                            onClick={() => {
+                              const link = `${window.location.origin}/profile/${profile?.id}`;
+                              navigator.clipboard.writeText(link);
+                              toast.success("Link copiado para a área de transferência!");
+                            }}
+                          >
+                            <Copy className="w-4 h-4" /> Copiar Link do Perfil
+                          </Button>
+                        </div>
+                        <div className="text-center text-xs text-muted-foreground italic">
+                          O paciente segue o fluxo de cadastro e você recebe uma notificação assim que ele entrar.
+                        </div>
+                      </TabsContent>
+                    </Tabs>
                   </DialogContent>
                 </Dialog>
               </div>
