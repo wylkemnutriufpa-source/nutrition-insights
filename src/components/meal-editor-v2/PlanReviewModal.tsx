@@ -14,7 +14,7 @@ interface PlanReviewModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   items: MealPlanItem[];
-  onConfirm: () => void;
+  onConfirm: (updatedItems: MealPlanItem[]) => void;
   isSaving?: boolean;
 }
 
