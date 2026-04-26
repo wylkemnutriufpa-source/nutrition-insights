@@ -265,7 +265,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
       };
     });
 
-    set({ items: updatedItems });
+    set({ items: sortMealPlanItems(updatedItems) });
 
     get()._enqueue({
       key: `recalculate:${Date.now()}`,
