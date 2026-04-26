@@ -494,7 +494,7 @@ export const useMealPlanEditorV2Store = create<EditorV2State>((set, get) => ({
         // Map real IDs back using title/meal_type/etc. as a best-effort if order is not guaranteed
         // But better: since we insert ONE by ONE or in small batches, let's just use the index if lengths match
         set((s) => ({
-          items: s.items.map((item) => {
+          items: sortMealPlanItems(s.items.map((item) => {
             const tempIdx = tIds.indexOf(item.id);
             if (tempIdx >= 0) {
               // Try to find the exact match in returned rows by comparing identifying fields
