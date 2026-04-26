@@ -63,15 +63,31 @@ Deno.serve(async (req) => {
       if (!link) throw new Error("Patient is not linked to this professional");
     }
 
-    const origin = "https://www.fitjourney.com.br";
+    const origin = BASE_URL;
+    const redirectTo = `${origin}/onboarding`;
+
+    if (!isValidDomain(redirectTo)) {
+      throw new Error(`Domínio de redirecionamento inválido: ${redirectTo}`);
+    }
 
     // Gera magic link redirecionando direto para /onboarding (rota canônica)
     const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
       type: "magiclink",
       email,
-      options: { redirectTo: `${origin}/onboarding` },
+      options: { redirectTo },
     });
     if (linkErr) throw linkErr;
+
+    // Log do envio do link
+    await logInvitation(adminClient, {
+      event_type: "generated",
+      details: { 
+        patient_id: patientId, 
+        action: "send-onboarding-link",
+        email 
+      },
+      domain_used: origin
+    });
 
     const actionLink: string | null =
       (linkData as any)?.properties?.action_link || null;
