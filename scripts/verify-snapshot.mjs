@@ -5,7 +5,7 @@ import url from "node:url";
 import { generateSnapshotData } from "./generate-schema-snapshot.mjs";
 
 const __dirname = path.dirname(url.fileURLToPath(import.meta.url));
-const snapshotPath = path.join(__dirname, "schema-snapshot.json");
+const snapshotPath = path.join(__dirname, "..", "src", "integrations", "supabase", "schema-snapshot.json");
 
 console.log("Checking if schema-snapshot.json is up to date with migrations...");
 
