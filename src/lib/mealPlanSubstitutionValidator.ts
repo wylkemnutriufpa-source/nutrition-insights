@@ -34,6 +34,7 @@ function parseFoodNutrition(text: string) {
 }
 
 export interface SubstitutionError {
+  mealId: string;
   mealTitle: string;
   substitutionIndex: number;
   foodName: string;
@@ -68,6 +69,7 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
     const errorMsg = `A refeição "${item.title}" tem ${substitutions.length} substituições, mas o limite definido é ${maxCount}.`;
     errors.push(errorMsg);
     detailedErrors.push({
+      mealId: item.id,
       mealTitle: item.title || "Sem título",
       substitutionIndex: -1,
       foodName: "Limite Excedido",
