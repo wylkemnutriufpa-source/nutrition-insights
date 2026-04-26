@@ -77,7 +77,7 @@ const CATEGORY_ROLE_MAP: Record<string, FoodRole> = {
   lanche: "complement",
   acompanhamento: "complement",
   prato_composto: "protein",
-  sopa: "complement",
+  sopa: "soup",
   sobremesa: "fruit",
 };
 
