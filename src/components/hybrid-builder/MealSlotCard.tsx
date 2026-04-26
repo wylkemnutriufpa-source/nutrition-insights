@@ -24,6 +24,7 @@ import MealSlotItemCard from "./MealSlotItemCard";
 import FoodSearchInline from "./FoodSearchInline";
 import SaveMealSlotDialog from "./SaveMealSlotDialog";
 import { smartSubstituteFood } from "@/lib/smartFoodSubstitution";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface Props {
   day: number;
