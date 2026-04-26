@@ -181,15 +181,28 @@ export default function Notifications() {
                         )}
                         {hasRoute && (
                           <div className="mt-3">
-                            <Button size="sm" variant="outline" className="h-8 text-[11px] gap-2 border-primary/20 text-primary hover:bg-primary/5">
-                              {n.type === 'plan_published' ? 'Ver meu plano' : 
-                               n.type === 'message' ? 'Responder agora' :
+                            <Button size="sm" variant="outline" className={`h-8 text-[11px] gap-2 border-primary/20 text-primary hover:bg-primary/5 ${!n.target_route && !n.action_url ? "opacity-50 grayscale cursor-not-allowed" : ""}`}>
+                              {n.type === 'plan_published' ? 'Abrir plano' : 
+                               n.type === 'message' ? 'Responder solicitação' :
                                n.type === 'appointment' ? 'Ver agendamento' :
+                               n.type === 'patient_registered' ? 'Ver paciente' :
+                               n.type === 'onboarding_released' ? 'Iniciar onboarding' :
                                'Acessar agora'}
-                              <ArrowRight className="w-3 h-3" />
+                              {(!n.target_route && !n.action_url) ? (
+                                <AlertCircle className="w-3 h-3 text-destructive" />
+                              ) : (
+                                <ArrowRight className="w-3 h-3" />
+                              )}
                             </Button>
+                            {(!n.target_route && !n.action_url) && (
+                              <p className="text-[9px] text-destructive mt-1 flex items-center gap-1">
+                                <Info className="w-2.5 h-2.5" />
+                                Destino original indisponível. Usando fallback.
+                              </p>
+                            )}
                           </div>
                         )}
+
                       </div>
                       <div className="flex gap-1 flex-shrink-0" onClick={e => e.stopPropagation()}>
                         {!n.is_read && (

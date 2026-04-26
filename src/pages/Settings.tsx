@@ -21,6 +21,7 @@ import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { clearRuntimeCaches, forceHardReload } from "@/lib/pwaUpdate";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 
 function MarmitaSettingsCard() {
   const { user } = useAuth();
@@ -99,6 +100,7 @@ function MarmitaSettingsCard() {
   );
 }
 
+
 export default function Settings() {
   const { t } = useTranslation();
   const { minMode } = useExperienceMode();
@@ -111,35 +113,16 @@ export default function Settings() {
   const [whatsapp, setWhatsapp] = useState(profile?.whatsapp || "");
   const [whatsappError, setWhatsappError] = useState("");
 
-  const formatInternationalWhatsApp = (val: string) => {
-    const digits = val.replace(/\D/g, "");
-    if (!digits) return "";
-    if (val.startsWith("+")) return val.replace(/\s/g, "");
-    if (digits.length >= 10 && digits.length <= 11) return `+55${digits}`;
-    return `+${digits}`;
-  };
-
   const validateWhatsApp = (val: string) => {
     if (!val) {
       setWhatsappError(""); // Optional in settings
       return true;
     }
-    const digits = val.replace(/\D/g, "");
-    if (digits.length < 7 || digits.length > 15) {
-      setWhatsappError("Número inválido");
-      return false;
-    }
-    const isBrazil = !val.startsWith("+") || val.startsWith("+55") || digits.startsWith("55");
-    if (isBrazil) {
-      const brDigits = digits.startsWith("55") ? digits.slice(2) : digits;
-      if (brDigits.length < 10 || brDigits.length > 11) {
-        setWhatsappError("Número brasileiro deve ter 10 ou 11 dígitos");
-        return false;
-      }
-    }
-    setWhatsappError("");
-    return true;
+    const { isValid, error } = sharedValidateWhatsApp(val);
+    setWhatsappError(error);
+    return isValid;
   };
+
   const [avatarUrl, setAvatarUrl] = useState<string | null>(profile?.avatar_url || null);
   const [savingProfile, setSavingProfile] = useState(false);
 

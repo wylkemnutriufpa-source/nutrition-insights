@@ -8,9 +8,10 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
-  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus
+  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 
 interface ProfessionalResult {
   user_id: string;
@@ -51,24 +52,32 @@ export default function PatientRegister() {
   useEffect(() => {
     if (!preselectedNutri) return;
     (async () => {
-      const { data } = await supabase
+      const { data: profileData } = await supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url, phone")
         .eq("user_id", preselectedNutri)
         .maybeSingle();
-      if (data) {
+      
+      const { data: profData } = await supabase
+        .from("professional_profiles")
+        .select("clinic_name")
+        .eq("user_id", preselectedNutri)
+        .maybeSingle();
+
+      if (profileData) {
         setSelectedProfessional({
-          user_id: data.user_id,
-          full_name: data.full_name,
-          avatar_url: data.avatar_url,
-          clinic_name: null,
-          phone: data.phone,
+          user_id: profileData.user_id,
+          full_name: profileData.full_name,
+          avatar_url: profileData.avatar_url,
+          clinic_name: (profData as any)?.clinic_name || null,
+          phone: profileData.phone,
         });
         // Reset confirmation if nutri changes
         setIsProfConfirmed(false);
       }
     })();
   }, [preselectedNutri]);
+
 
   // Verify signature if nutri is provided
   useEffect(() => {
@@ -112,60 +121,12 @@ export default function PatientRegister() {
     return () => clearTimeout(t);
   }, [profSearch, searchProfessionals]);
 
-  const formatInternationalWhatsApp = (val: string) => {
-    const digits = val.replace(/\D/g, "");
-    if (!digits) return "";
-    
-    // Check if it already has a country code (e.g., starts with +)
-    if (val.startsWith("+")) {
-      return val.replace(/\s/g, "");
-    }
-
-    // Default to Brazil if 10-11 digits and no country code
-    if (digits.length >= 10 && digits.length <= 11) {
-      return `+55${digits}`;
-    }
-
-    // If it's longer, assume it has a country code but missing the +
-    if (digits.length > 11) {
-      return `+${digits}`;
-    }
-    
-    return `+${digits}`;
-  };
-
   const validateWhatsApp = (val: string) => {
-    if (!val) {
-      setWhatsappError("WhatsApp é obrigatório");
-      return false;
-    }
-    
-    const digits = val.replace(/\D/g, "");
-    
-    // Basic length check for international numbers (min 7 digits, max 15)
-    if (digits.length < 7) {
-      setWhatsappError("Número muito curto");
-      return false;
-    }
-    
-    if (digits.length > 15) {
-      setWhatsappError("Número muito longo");
-      return false;
-    }
-
-    // Specific Brazil validation if no country code or starts with 55
-    const isBrazil = !val.startsWith("+") || val.startsWith("+55") || digits.startsWith("55");
-    if (isBrazil) {
-      const brDigits = digits.startsWith("55") ? digits.slice(2) : digits;
-      if (brDigits.length < 10 || brDigits.length > 11) {
-        setWhatsappError("Número brasileiro deve ter 10 ou 11 dígitos (com DDD)");
-        return false;
-      }
-    }
-
-    setWhatsappError("");
-    return true;
+    const { isValid, error } = sharedValidateWhatsApp(val);
+    setWhatsappError(error);
+    return isValid;
   };
+
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -347,9 +308,17 @@ export default function PatientRegister() {
               
               <div className="space-y-2">
                 <h2 className="text-2xl font-bold text-foreground">Você foi convidado!</h2>
-                <p className="text-muted-foreground">
-                  O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> quer acompanhar sua jornada.
-                </p>
+                <div className="space-y-1">
+                  <p className="text-muted-foreground">
+                    O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> quer acompanhar sua jornada.
+                  </p>
+                  {selectedProfessional.clinic_name && (
+                    <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground bg-muted/50 py-1 px-3 rounded-full w-fit mx-auto">
+                      <Building2 className="w-3 h-3" />
+                      {selectedProfessional.clinic_name}
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="grid gap-3">
@@ -370,6 +339,7 @@ export default function PatientRegister() {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
@@ -399,15 +369,24 @@ export default function PatientRegister() {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">Profissional Vinculado</p>
-                    <p className="font-medium text-sm text-foreground truncate">{selectedProfessional.full_name}</p>
+                    <p className="text-[10px] text-muted-foreground leading-tight">Profissional Vinculado</p>
+                    <p className="font-medium text-xs text-foreground truncate">{selectedProfessional.full_name}</p>
+                    {selectedProfessional.clinic_name && (
+                      <p className="text-[9px] text-muted-foreground truncate">{selectedProfessional.clinic_name}</p>
+                    )}
                   </div>
-                  {!preselectedNutri && (
+                  {preselectedNutri ? (
+                    <button type="button" onClick={() => setIsProfConfirmed(false)}
+                      className="text-[10px] text-primary hover:underline shrink-0 flex items-center gap-1">
+                      <ArrowLeft className="w-2.5 h-2.5" /> Voltar
+                    </button>
+                  ) : (
                     <button type="button" onClick={() => { setSelectedProfessional(null); setShowProfSearch(true); setIsProfConfirmed(false); }}
                       className="text-xs text-primary hover:underline shrink-0">Trocar</button>
                   )}
                 </div>
               )}
+
 
               <div>
                 <Label htmlFor="name">Nome completo</Label>
