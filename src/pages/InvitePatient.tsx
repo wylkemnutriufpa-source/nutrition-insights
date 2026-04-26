@@ -11,6 +11,8 @@ import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
+import { validateWhatsApp, normalizeWhatsApp } from "@/utils/whatsapp";
+
 
 export default function InvitePatient() {
   const { user } = useAuth();
