@@ -1464,8 +1464,16 @@ function generatePlanWithTemplates(
                   const picked = candidates[seed % candidates.length];
                   console.log(`[template-marmita-fix] Replacing "${food.name}" with "${picked.name}" in template "${tpl.name}"`);
                   food.name = picked.name;
+                  
+                  // CRITICAL: Update macros and portion from the picked recipe
+                  food.calories = Math.round(Number(picked.fixed_calories) || 0);
+                  food.protein = Math.round(Number(picked.fixed_protein) || 0);
+                  food.carbs = Math.round(Number(picked.fixed_carbs) || 0);
+                  food.fat = Math.round(Number(picked.fixed_fat) || 0);
+                  food.portion = picked.portion || "1 marmita";
+
                   // Also update title if it's generic
-                  if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar")) {
+                  if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar") || meal.title.includes("marmita")) {
                     meal.title = `🍱 ${picked.name}`;
                   }
                 } else {
