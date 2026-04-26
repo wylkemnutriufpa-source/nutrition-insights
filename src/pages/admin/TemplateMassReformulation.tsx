@@ -31,6 +31,8 @@ import { Input } from "@/components/ui/input";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
+const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
+
 interface Template {
   id: string;
   name: string;
