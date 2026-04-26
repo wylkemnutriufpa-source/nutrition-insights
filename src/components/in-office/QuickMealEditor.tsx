@@ -664,6 +664,82 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
           </div>
         </DialogContent>
       </Dialog>
+      {/* Decisions Dialog */}
+      <Dialog open={showDecisions} onOpenChange={setShowDecisions}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-hidden flex flex-col">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <ShieldCheck className="w-5 h-5 text-primary" /> 
+              Decisões do Motor FitJourney v{CURRENT_ENGINE_VERSION}
+            </DialogTitle>
+          </DialogHeader>
+          <ScrollArea className="flex-1 pr-4">
+            <div className="space-y-4 py-4">
+              <div className="bg-primary/5 p-4 rounded-xl border border-primary/10">
+                <h4 className="text-sm font-bold flex items-center gap-2 mb-2">
+                  <ClipboardCheck className="w-4 h-4" /> Trilha de Regras Aplicadas
+                </h4>
+                <ul className="text-xs space-y-2 text-muted-foreground">
+                  <li className="flex gap-2">
+                    <Check className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
+                    <span><strong>MEAL_KCAL_SPLIT:</strong> Distribuição calórica otimizada por horário (Café 20%, Almoço 30%, Jantar 22%).</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
+                    <span><strong>BLOQUEIO DE ALIMENTOS:</strong> Exclusão de alimentos ultraprocessados ou fora do perfil clínico.</span>
+                  </li>
+                  <li className="flex gap-2">
+                    <Check className="w-3 h-3 text-success flex-shrink-0 mt-0.5" />
+                    <span><strong>SUBSTITUIÇÕES EQUIVALENTES:</strong> Cálculo de equivalência calórica em todas as variações geradas.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="space-y-3">
+                <h4 className="text-sm font-bold">Histórico de Execuções Recentes</h4>
+                {auditLogs.length === 0 ? (
+                  <p className="text-xs text-muted-foreground italic">Nenhuma execução registrada recentemente.</p>
+                ) : (
+                  auditLogs.map((log: any) => (
+                    <div key={log.id} className="border border-border rounded-lg p-3 space-y-2">
+                      <div className="flex justify-between items-center text-[10px]">
+                        <span className="font-bold text-primary uppercase">{log.step_name}</span>
+                        <span className="text-muted-foreground">{new Date(log.created_at).toLocaleString("pt-BR")}</span>
+                      </div>
+                      <p className="text-xs">{log.message}</p>
+                      {log.metadata && (
+                        <pre className="text-[10px] bg-muted p-2 rounded overflow-x-auto">
+                          {JSON.stringify(log.metadata, null, 2)}
+                        </pre>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Guardrail Alerts */}
+      {guardrailAlerts.length > 0 && (
+        <div className="mt-4 p-4 rounded-xl border border-warning/30 bg-warning/5 space-y-2">
+          <h4 className="text-sm font-bold flex items-center gap-2 text-warning">
+            <AlertTriangle className="w-4 h-4" /> Alertas de Guardrails Clínica
+          </h4>
+          <ul className="text-xs space-y-1 text-muted-foreground">
+            {guardrailAlerts.map((alert, idx) => (
+              <li key={idx} className="flex gap-2">
+                <span className="text-warning">•</span>
+                {alert}
+              </li>
+            ))}
+          </ul>
+          <p className="text-[10px] text-muted-foreground italic mt-2">
+            * Estes alertas são informativos para auxílio na decisão clínica. O profissional mantém controle total sobre o plano.
+          </p>
+        </div>
+      )}
     </div>
   );
 }
