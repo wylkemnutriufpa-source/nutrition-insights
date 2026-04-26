@@ -50,12 +50,36 @@ export function MealSmartEditorModal({
   const [substitutions, setSubstitutions] = useState<string[]>([]);
   const [portionFactor, setPortionFactor] = useState(1.0);
 
+  const currentMeta = React.useMemo(() => (item as any)?.edit_metadata || (item as any)?.metadata || {}, [item]);
+  
+  const kcalBase = currentMeta.kcal_base ?? item?.calories_target ?? 0;
+  const protBase = currentMeta.protein_base ?? Number(item?.protein_target) ?? 0;
+  const carbBase = currentMeta.carbs_base ?? Number(item?.carbs_target) ?? 0;
+  const fatBase = currentMeta.fat_base ?? Number(item?.fat_target) ?? 0;
+
+  const adjustedMacros = React.useMemo(() => ({
+    calories: Math.round(kcalBase * portionFactor),
+    protein: Math.round(protBase * portionFactor * 10) / 10,
+    carbs: Math.round(carbBase * portionFactor * 10) / 10,
+    fat: Math.round(fatBase * portionFactor * 10) / 10,
+  }), [kcalBase, protBase, carbBase, fatBase, portionFactor]);
+
   useEffect(() => {
     if (item && open) {
       setDescription(item.description || "");
       
       const meta = (item as any).edit_metadata || (item as any).metadata || {};
       
+      // Validação de macros base para marmitas fixas
+      if (meta.is_fixed) {
+        if (meta.kcal_base === undefined || meta.protein_base === undefined) {
+          toast.warning("Aviso: Macros base não encontrados nesta marmita. O fator de ajuste pode ser impreciso.", {
+            description: "Certifique-se de que esta marmita foi cadastrada corretamente.",
+            duration: 6000
+          });
+        }
+      }
+
       // Validação robusta com fallback para substitutions_json
       const hasValidJson = Array.isArray(meta.substitutions_json) && 
                           meta.substitutions_json.every((s: any) => typeof s === "string");
@@ -76,7 +100,7 @@ export function MealSmartEditorModal({
       setNotes((item as any).notes || "");
       setPortionFactor(meta.portion_factor || 1.0);
     }
-  }, [item, open]);
+  }, [item, open, substitutionCount]);
 
   if (!item) return null;
 
