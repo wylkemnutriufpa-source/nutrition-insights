@@ -9,7 +9,7 @@ import { Progress } from "@/components/ui/progress";
 import { Button } from "@/components/ui/button";
 import { 
   ClipboardCheck, Shield, Scale, Utensils, Sparkles, ThumbsUp, 
-  Search, Filter, Clock, User, CheckCircle2, AlertCircle, ArrowRight
+  Search, Filter, Clock, User, CheckCircle2, AlertCircle, ArrowRight, Rocket
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { useNavigate } from "react-router-dom";
