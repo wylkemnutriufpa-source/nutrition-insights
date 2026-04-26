@@ -35,6 +35,11 @@ vi.mock("sonner", () => ({
   }
 }));
 
+// Mock DashboardLayout to simplify test
+vi.mock("@/components/layout/DashboardLayout", () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div>{children}</div>
+}));
+
 // Mock hooks to avoid heavy lifting
 vi.mock("@/lib/auth", () => ({ useAuth: () => ({ user: { id: "123" } }) }));
 vi.mock("@/lib/tenantContext", () => ({ useTenant: () => ({ tenantId: "tenant-123" }) }));
@@ -96,4 +101,5 @@ describe("MealPlanEditorV2 Schema Check", () => {
     });
   });
 });
+
 
