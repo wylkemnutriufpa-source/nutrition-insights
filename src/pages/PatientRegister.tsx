@@ -229,8 +229,25 @@ export default function PatientRegister() {
         // Não bloqueia: usuário foi criado, profissional será notificado para reconciliar
       }
 
-      // Notifica o profissional
+      // Notifica o profissional e atualiza status do convite
       try {
+        if (invitationCode) {
+          await supabase
+            .from("invitations")
+            .update({ 
+              status: 'completed', 
+              used_at: new Date().toISOString() 
+            } as any)
+            .eq("code", invitationCode);
+            
+          await supabase.from("invitation_logs").insert({
+            invitation_id: (await supabase.from("invitations").select("id").eq("code", invitationCode).single()).data?.id,
+            event_type: "completed",
+            details: { patient_id: signUpData.user.id },
+            user_agent: navigator.userAgent
+          });
+        }
+
         await supabase.from("notifications").insert({
           user_id: nutriId,
           title: "Novo paciente cadastrado",
@@ -240,7 +257,9 @@ export default function PatientRegister() {
           entity_id: signUpData.user.id,
           target_route: `/patients/${signUpData.user.id}`,
         } as any);
-      } catch (_) {}
+      } catch (err) {
+        console.error("Error updating notification/invitation:", err);
+      }
 
       if (signUpData.session) {
         toast.success("Conta criada! Redirecionando para o onboarding...");
