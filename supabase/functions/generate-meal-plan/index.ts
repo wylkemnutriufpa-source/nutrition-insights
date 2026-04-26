@@ -3091,7 +3091,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       // Fallback: seleciona o template global mais utilizado como base padrão
       const { data: defaultTemplate } = await serviceClient
         .from("nutritionist_meal_templates")
-        .select("id")
+        .select("id, name")
         .eq("is_global", true)
         .order("usage_count", { ascending: false })
         .limit(1)
@@ -3099,8 +3099,9 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       
       if (defaultTemplate) {
         lastUsedTemplateId = defaultTemplate.id;
+        templateNameUsed = defaultTemplate.name;
         isFallbackTemplate = true;
-        console.log(`[generate-meal-plan] 🔄 No previous plan found. Using fallback default template: ${lastUsedTemplateId}`);
+        console.log(`[generate-meal-plan] 🔄 No previous plan found. Using fallback default template: ${lastUsedTemplateId} (${templateNameUsed})`);
       }
     }
 
