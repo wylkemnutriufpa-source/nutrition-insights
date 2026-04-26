@@ -3817,6 +3817,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
         fixedRecipes, mealTemplates, visualLibrary, goal, finalKcal, finalMacros,
         restrictions, disliked, allergies, enabledMeals, mealTimes,
         resolvedStrategy.strategyId, patientFoodDatabase, recentMeals,
+        prioritizedTemplateIds,
       );
       rawPlanItems = result.items;
       marmitasUsedList = result.marmitasUsed;
