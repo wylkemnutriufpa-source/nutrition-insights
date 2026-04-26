@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed, Globe, Calendar, Copy, Link2, CheckCircle2, AlertTriangle, ShieldCheck } from "lucide-react";
+import { User, Lock, Save, Bell, BellOff, Trophy, Eye, Camera, Database, Download, Loader2, CreditCard, Crown, ExternalLink, Settings as SettingsIcon, UtensilsCrossed, Globe, Calendar, Copy, Link2, CheckCircle2, AlertTriangle, ShieldCheck, RefreshCw } from "lucide-react";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import AvatarPicker from "@/components/profile/AvatarPicker";
 import ProtocolFitJourneyToggle from "@/components/admin/ProtocolFitJourneyToggle";
