@@ -234,6 +234,8 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
         carbs_target: item.carbs_target,
         fat_target: item.fat_target,
         item_origin: (item as any).item_origin || "manual",
+        is_primary: (item as any).is_primary ?? true,
+        substitution_group_id: (item as any).substitution_group_id,
       });
     });
 
