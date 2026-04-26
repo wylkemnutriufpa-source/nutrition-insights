@@ -63,7 +63,9 @@ describe('Invitation E2E Simulation', () => {
   it('deve exibir informações do profissional e clínica corretamente', async () => {
     window.location.hostname = 'www.fitjourney.com.br';
 
-    (supabase.maybeSingle as any).mockResolvedValue({
+    const fromMock = supabase.from as any;
+    fromMock().select().eq().maybeSingle.mockResolvedValue({
+
       data: {
         id: '1',
         code: 'TEST12',
