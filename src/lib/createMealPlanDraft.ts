@@ -29,6 +29,7 @@ export async function createMealPlanDraft({
       plan_status: "draft",
       is_active: false,
       editor_version: "v2",
+      plan_mode: "single_day",
       generation_source: "assisted_engine_v2",
       ...getTenantIdForInsert(tenantId),
     } as any)
