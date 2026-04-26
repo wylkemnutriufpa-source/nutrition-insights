@@ -125,6 +125,16 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     }
   }, [mealPlanId]);
 
+  const fetchAuditLogs = useCallback(async () => {
+    const { data } = await supabase
+      .from("clinical_engine_audit_logs" as any)
+      .select("*")
+      .eq("patient_id", patientId)
+      .order("created_at", { ascending: false })
+      .limit(20);
+    setAuditLogs(data || []);
+  }, [patientId]);
+
   // Load existing items for current day
   useEffect(() => {
     fetchData();
