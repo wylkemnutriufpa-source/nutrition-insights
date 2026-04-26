@@ -52,8 +52,11 @@ export default function MealSlotCard({ day, mealType, label, icon, items, patien
   const [saveTemplateOpen, setSaveTemplateOpen] = useState(false);
   const [loadTemplateOpen, setLoadTemplateOpen] = useState(false);
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProt = items.reduce((s, i) => s + (i.protein_target || 0), 0);
+  const primaryItems = items.filter((i) => (i as any).is_primary !== false);
+  const substitutionItems = items.filter((i) => (i as any).is_primary === false);
+
+  const totalKcal = primaryItems.reduce((s, i) => s + (i.calories_target || 0), 0);
+  const totalProt = primaryItems.reduce((s, i) => s + (i.protein_target || 0), 0);
   const hasItems = items.length > 0;
 
   const handleDelete = (itemId: string) => {
