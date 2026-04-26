@@ -235,7 +235,7 @@ export default function TemplateMassReformulation() {
                       <div key={p.templateId} className="p-4 border rounded-lg space-y-3 bg-muted/30">
                         <div className="flex items-center justify-between">
                           <h3 className="font-bold">{p.name}</h3>
-                          <Badge variant={p.changes.length > 0 ? "warning" : "success"}>
+                          <Badge variant={p.changes.length > 0 ? "secondary" : "outline"}>
                             {p.changes.length > 0 ? `${p.changes.length} alterações` : "Sem alterações necessárias"}
                           </Badge>
                         </div>
