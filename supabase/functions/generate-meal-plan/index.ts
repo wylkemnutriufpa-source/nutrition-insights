@@ -3949,6 +3949,8 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       final_validation_passed: true,
       enabled_meals: enabledMeals || "default",
       meal_times: mealTimes || null,
+      template_id_used: lastUsedTemplateId,
+      is_fallback_template: isFallbackTemplate,
     };
 
     let finalMealPlanId = meal_plan_id;
