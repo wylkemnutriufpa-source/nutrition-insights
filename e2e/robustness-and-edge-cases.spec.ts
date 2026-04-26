@@ -119,26 +119,22 @@ test.describe('Meal Editor Robustness and UX Consistency', () => {
     await expect(nutriPage.getByText(/Plano salvo/i).or(nutriPage.getByText(/Salvo com sucesso/i))).toBeVisible();
   });
 
-  test('Validation: Toast lists missing fields in fixed order', async ({ nutriPage }) => {
-    // 1. Tenta encontrar ou simular uma Marmita Fixa sem metadata
-    // Vamos usar o botão de ajuda/info se houver, ou assumir que clicando em um item
-    // que "parece" uma marmita ele dispara o erro se estiver incompleto.
-    
-    // Alternativa: Forçar um erro de validação ao tentar salvar um item que marcamos como fixo (se o mock permitir)
-    // Aqui vamos procurar por um item que contenha "Marmita" no nome
+  test('Validation: Toast lists exactly the missing fields in order', async ({ nutriPage }) => {
+    // Procuramos por um item que contenha "Marmita" no nome para disparar a validação de metadata ausente
     const fixedMealEdit = nutriPage.locator('[data-testid^="edit-meal-"]').filter({ hasText: /Marmita/i }).first();
     
     if (await fixedMealEdit.isVisible()) {
       await fixedMealEdit.click();
       
-      // O toast deve aparecer IMEDIATAMENTE no useEffect se os dados estiverem ausentes
-      // ou ao tentar salvar.
       const saveBtn = nutriPage.getByTestId('meal-editor-save-button');
       await saveBtn.click();
 
-      // Verifica a ordem exata dos campos no toast
+      // Verifica a string exata dos campos ausentes conforme requisitado
       const expectedText = "kcal_base, protein_base, carbs_base, fat_base";
-      await expect(nutriPage.getByText(new RegExp(expectedText))).toBeVisible();
+      // Usamos uma asserção que garante que o texto está presente exatamente nessa ordem
+      await expect(nutriPage.locator('div[role="status"], [class*="toast"]')).toContainText(expectedText);
+    } else {
+      test.skip(); // Ignora se não houver marmita fixa no estado atual
     }
   });
 
