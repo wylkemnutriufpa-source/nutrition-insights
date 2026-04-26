@@ -1942,6 +1942,8 @@ export async function generateWeeklyMarmitaPlan(
   fastMarmitaMode: boolean = false,
   seed: number = 0,
 ): Promise<{ items: any[]; marmitasUsed: string[] }> {
+  console.log(`[weekly_marmita] Engine started. Input targets: ${targetKcal}kcal, P:${targetMacros.protein}g, C:${targetMacros.carbs}g, F:${targetMacros.fat}g`);
+
   const kcalTarget = targetKcal;
   const macros = targetMacros;
 
@@ -1954,10 +1956,10 @@ export async function generateWeeklyMarmitaPlan(
         for (const meal of (tpl as any).meals) {
           if (meal.foods) {
             for (const food of meal.foods) {
-              const needsReplacement = food.name && marmitaPlaceholders.some(p => food.name.includes(p));
+              const needsReplacement = food.name && marmitaPlaceholders.some(p => food.name.toLowerCase().includes(p.toLowerCase()));
               if (needsReplacement) {
                 const typeKey = meal.meal_type === "lunch" ? "almoço" : "jantar";
-                const candidates = (recipes || [])
+                let candidates = (recipes || [])
                   .filter(r => r.meal_type === typeKey)
                   .sort((a, b) => {
                     const dateA = a.created_at ? new Date(a.created_at).getTime() : 0;
@@ -1965,8 +1967,14 @@ export async function generateWeeklyMarmitaPlan(
                     return dateB - dateA;
                   });
 
+                // FALLBACK: Se não houver candidatos para o tipo específico, pega qualquer um
+                if (candidates.length === 0 && recipes.length > 0) {
+                  console.warn(`[template-marmita-fix] No candidates for ${typeKey}. Falling back to any available recipe.`);
+                  candidates = recipes;
+                }
+
                 if (candidates.length > 0) {
-                  // Rotation: Use a counter to cycle through the 19 recipes
+                  // Rotation: Use a counter to cycle through the recipes
                   const picked = candidates[globalMarmitaCounter % candidates.length];
                   globalMarmitaCounter++;
 
@@ -1980,9 +1988,15 @@ export async function generateWeeklyMarmitaPlan(
                   food.fat = Math.round(Number(picked.fixed_fat) || 0);
                   (food as any).portion = "1 marmita";
 
-                  if (meal.title.includes("Marmita") || meal.title.includes("Almoço") || meal.title.includes("Jantar") || meal.title.includes("marmita")) {
+                  if (food.calories === 0) {
+                    console.warn(`[telemetry] Zero calories detected for picked recipe: ${picked.name}. Check fixed_calories field.`);
+                  }
+
+                  if (meal.title.toLowerCase().includes("marmita") || meal.title.toLowerCase().includes("almoço") || meal.title.toLowerCase().includes("jantar")) {
                     meal.title = `🍱 ${picked.name}`;
                   }
+                } else {
+                  console.error(`[template-marmita-fix] CRITICAL: Placeholder "${food.name}" found but NO recipes available in database!`);
                 }
               }
             }
@@ -2223,6 +2237,17 @@ export async function buildMarmitaItem(
   const description = finalized + "\n\n" + customTip;
   const visual = findVisualForRecipe(recipe, visualLibrary);
   console.log(`[buildMarmitaItem] ${recipe.name} | protein: ${recipe.protein_type || 'auto'} | visual: ${visual?.id || 'none'} | url: ${visual?.image_url || 'none'}`);
+
+  if (scaled.totals.cal === 0 || scaled.totals.p === 0) {
+    console.warn(`[telemetry] Macro output for "${recipe.name}" is ZERO. Reason check:`, {
+      recipe_id: recipe.id,
+      foods_json_empty: !recipe.foods_json || recipe.foods_json.length === 0,
+      macro_target_missing: !macroTarget,
+      is_scalable: recipe.is_scalable !== false,
+      calculated_cal: scaled.totals.cal,
+      calculated_protein: scaled.totals.p
+    });
+  }
 
   return {
     title: `🍱 ${recipe.name}`,

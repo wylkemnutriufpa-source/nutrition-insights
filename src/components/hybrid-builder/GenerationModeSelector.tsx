@@ -1,6 +1,6 @@
 import { useState, useCallback, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake, AlertTriangle, Settings2 } from "lucide-react";
+import { Loader2, Compass, ShieldCheck, ChefHat, CalendarDays, Snowflake, AlertTriangle, Settings2, ClipboardCheck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { invokeWithRetry } from "@/lib/api/edgeFunctions";
 import { useAuth } from "@/lib/auth";
@@ -11,6 +11,7 @@ import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
 import StrategyAdvisorPanel from "@/components/strategy-advisor/StrategyAdvisorPanel";
 import MealRecipeSelector from "./MealRecipeSelector";
 import MarmitaSettingsDialog from "./MarmitaSettingsDialog";
+import ConsistencyReportModal from "./ConsistencyReportModal";
 import { useMarmitaSettings } from "@/hooks/useMarmitaSettings";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -49,6 +50,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const [generating, setGenerating] = useState(false);
   const [view, setView] = useState<View>("menu");
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [consistencyOpen, setConsistencyOpen] = useState(false);
   const [useFixedSeed, setUseFixedSeed] = useState(true);
 
   const { settings: minSettings, loading: settingsLoading } = useMarmitaSettings();
@@ -59,6 +61,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     fixedDinner: number;
     loading: boolean;
   }>({ lunch: 0, dinner: 0, fixedLunch: 0, fixedDinner: 0, loading: true });
+  const [allRecipes, setAllRecipes] = useState<any[]>([]);
 
   // Pre-flight check: count available recipes for marmita modes
   useEffect(() => {
@@ -67,7 +70,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
     (async () => {
       const { data, error } = await supabase
         .from("meal_recipes")
-        .select("meal_type, is_fixed")
+        .select("id, name, meal_type, is_fixed, fixed_calories, fixed_protein, fixed_carbs, fixed_fat")
         .eq("nutritionist_id", user.id)
         .eq("is_active", true);
       if (cancelled) return;
@@ -80,6 +83,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
       const fixedLunch = (data || []).filter((r: any) => r.meal_type === "lunch" && r.is_fixed).length;
       const fixedDinner = (data || []).filter((r: any) => r.meal_type === "dinner" && r.is_fixed).length;
       setRecipeCounts({ lunch, dinner, fixedLunch, fixedDinner, loading: false });
+      setAllRecipes(data || []);
     })();
     return () => { cancelled = true; };
   }, [user]);
@@ -90,6 +94,9 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
   const fixedReady =
     recipeCounts.fixedLunch >= minSettings.fixed_min_lunch &&
     recipeCounts.fixedDinner >= minSettings.fixed_min_dinner;
+  
+  const is19FixedMissing = recipeCounts.fixedLunch < 19 || recipeCounts.fixedDinner < 19;
+  
   const checksLoading = recipeCounts.loading || settingsLoading;
 
   // Strategy Advisor confirmed → generate plan with strategy context
@@ -308,16 +315,28 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
             Gere um plano pelo <strong>motor automático</strong> ou use uma <strong>receita de marmita</strong> como base.
           </p>
         </div>
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setSettingsOpen(true)}
-          className="shrink-0 h-7 px-2 gap-1 text-[10px]"
-          title="Configurar mínimo de receitas por modo"
-        >
-          <Settings2 className="w-3.5 h-3.5" />
-          Mínimos
-        </Button>
+        <div className="flex flex-col gap-1 shrink-0">
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setSettingsOpen(true)}
+            className="h-7 px-2 gap-1 text-[10px]"
+            title="Configurar mínimo de receitas por modo"
+          >
+            <Settings2 className="w-3.5 h-3.5" />
+            Mínimos
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setConsistencyOpen(true)}
+            className="h-7 px-2 gap-1 text-[10px] text-primary"
+            title="Checar consistência de receitas e macros"
+          >
+            <ClipboardCheck className="w-3.5 h-3.5" />
+            Auditoria
+          </Button>
+        </div>
       </div>
 
       {/* Option 1: Strategy Advisor */}
@@ -458,17 +477,44 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-destructive/10 border border-destructive/30">
             <AlertTriangle className="w-3.5 h-3.5 text-destructive shrink-0 mt-0.5" />
             <p className="text-[10px] text-destructive leading-relaxed">
-              Mínimo configurado: <strong>{minSettings.fixed_min_lunch} almoço(s) fixo(s)</strong> e <strong>{minSettings.fixed_min_dinner} jantar(es) fixo(s)</strong>. Cadastre marmitas com <strong>"fixos"</strong> ou ajuste o mínimo.
+              Marmitas fixas insuficientes. Almoço fixo {recipeCounts.fixedLunch}/{minSettings.fixed_min_lunch} · Jantar fixo {recipeCounts.fixedDinner}/{minSettings.fixed_min_dinner}.
+            </p>
+          </div>
+        )}
+        
+        {!checksLoading && is19FixedMissing && (
+          <div className="flex items-start gap-2 px-3 py-2 rounded-md bg-warning/10 border border-warning/30">
+            <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0 mt-0.5" />
+            <p className="text-[10px] text-warning-foreground leading-relaxed font-medium">
+              <strong>Aviso:</strong> O padrão ouro é ter 19 marmitas fixas de almoço e 19 de jantar para máxima variedade. Você tem {recipeCounts.fixedLunch} e {recipeCounts.fixedDinner}.
             </p>
           </div>
         )}
       </div>
-      {/* Info */}
+
       <div className="text-[9px] text-muted-foreground text-center space-y-0.5">
         <p>✅ Motor clínico calcula macros → Você escolhe o caminho → Plano gerado</p>
       </div>
 
-      <MarmitaSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} />
+      <MarmitaSettingsDialog
+        open={settingsOpen}
+        onOpenChange={setSettingsOpen}
+      />
+
+      <ConsistencyReportModal
+        open={consistencyOpen}
+        onOpenChange={setConsistencyOpen}
+        recipes={allRecipes.map(r => ({
+          name: r.name,
+          meal_type: r.meal_type,
+          calories: Number(r.fixed_calories) || 0,
+          protein: Number(r.fixed_protein) || 0,
+          carbs: Number(r.fixed_carbs) || 0,
+          fat: Number(r.fixed_fat) || 0,
+          is_fixed: r.is_fixed
+        }))}
+        targetKcal={(store.plan?.generation_metadata as any)?.target_calories || (store.plan?.generation_metadata as any)?.final_kcal}
+      />
     </div>
   );
 }
