@@ -5,17 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, FileJson, AlertTriangle, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
-
-// In a real app, this would come from an API or Edge Function
-// For this demo, we'll try to fetch the local snapshot if possible, or use a mock
-const MOCK_SNAPSHOT = {
-  generatedAt: "2026-03-17",
-  tables: {
-    meal_plans: ["id", "title", "patient_id", "nutritionist_id", "plan_status", "default_meal_plan_id"],
-    nutritionist_patients: ["id", "nutritionist_id", "patient_id", "default_meal_plan_id"],
-    profiles: ["id", "user_id", "full_name"]
-  }
-};
+import snapshotData from "../../scripts/schema-snapshot.json";
 
 interface Violation {
   file: string;
@@ -25,12 +15,9 @@ interface Violation {
 }
 
 export default function SchemaMonitor() {
-  const [snapshot, setSnapshot] = useState<any>(MOCK_SNAPSHOT);
+  const [snapshot] = useState<any>(snapshotData);
   const [search, setSearch] = useState("");
-  const [violations, setViolations] = useState<Violation[]>([
-    { file: "src/pages/MealPlanEditorV2.tsx", table: "nutritionist_patients", column: "default_meal_plan_id", severity: "high" },
-    { file: "src/components/patient/PatientList.tsx", table: "profiles", column: "clinical_risk_score", severity: "medium" }
-  ]);
+  const [violations] = useState<Violation[]>([]); // Mocked violations removed as requested
 
   return (
     <DashboardLayout>
