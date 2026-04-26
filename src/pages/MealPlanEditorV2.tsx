@@ -357,7 +357,9 @@ export default function MealPlanEditorV2() {
                         const el = document.getElementById(`meal-item-${err.mealId}`);
                         if (el) {
                           el.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                          window.location.hash = `meal-item-${err.mealId}`;
+                          el.classList.add('ring-2', 'ring-primary', 'ring-offset-2');
+                          setTimeout(() => el.classList.remove('ring-2', 'ring-primary', 'ring-offset-2'), 3000);
+                          (el as HTMLElement).focus();
                         }
                       }}
                       className="text-[10px] text-primary hover:underline shrink-0"
