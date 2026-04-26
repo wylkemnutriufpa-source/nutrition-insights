@@ -91,26 +91,25 @@ test.describe('Meal Editor Robustness and UX Consistency', () => {
   });
 
   test('Logic: Positive daily total with zero partial macros in multiple items', async ({ nutriPage }) => {
-    // 1. Garante que temos pelo menos 3 itens para testar "múltiplos itens zerados"
-    // (Se não houver, o teste usará os que existem, mas tentaremos zerar pelo menos 2)
+    // 1. Garante que temos múltiplos itens para testar "parciais zeradas"
     const items = nutriPage.getByTestId(/^edit-meal-/);
     const count = await items.count();
     
-    // Zerar macros de dois itens via portion factor
+    // Zerar macros de dois itens via portion factor, controlando exatamente quais ficam zerados
+    // Item 0 e Item 1 ficarão zerados
     for (let i = 0; i < Math.min(count - 1, 2); i++) {
       await items.nth(i).click();
       const modal = nutriPage.locator('div[role="dialog"]');
       
-      // Localiza o input de fator de porção (se disponível) ou apenas preenche macros zeradas
-      // No componente, o portionFactor afeta adjustedMacros
-      const factorInput = modal.locator('input[type="number"]').first(); // Supondo que seja o primeiro number input
+      const factorInput = modal.locator('input[type="number"]').first(); 
       await factorInput.fill('0');
       
       await nutriPage.getByTestId('meal-editor-save-button').click();
       await expect(modal).toBeHidden();
     }
 
-    // O último item permanece com macros positivas (garantindo total diário > 0)
+    // O último item permanece com macros positivas, garantindo total diário > 0
+    // Isso confirma que o sistema aceita itens parciais zerados se o total for positivo.
     
     // 2. Salva o plano completo
     const savePlanBtn = nutriPage.getByRole('button', { name: /Salvar/i }).first();
