@@ -163,14 +163,34 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
         }
       }
     });
-    // 4. Mixing validation (Requirement: Prevent mixing substitutions from different meals/templates)
+    // 4. Mixing and Coherence validation (Requirement: Prevent mixing substitutions from different meals/templates)
     const mealType = (item.meal_type as string || "").toLowerCase();
+    const mainDesc = normalize(item.description || "");
+    
     individualFoods.forEach(foodText => {
       const ft = normalize(foodText);
+      
       // Heuristic: check if food contains keywords of other meals that are incompatible
       const lunchKeywords = ["arroz", "feijao", "carne", "frango", "peixe", "salada", "legumes"];
       const breakfastKeywords = ["pao", "ovo", "cafe", "leite", "fruta", "iogurte", "aveia", "tapioca"];
       
+      // Coherence Check: Prevent Soup + Protein combination (User Request)
+      const isSoup = ft.includes("sopa") || ft.includes("caldo");
+      const hasMainProtein = mainDesc.includes("peixe") || mainDesc.includes("frango") || mainDesc.includes("carne") || mainDesc.includes("bife");
+      
+      if (isSoup && hasMainProtein) {
+        const msg = `Incoerência: "${foodText}" deve ser uma substituição da refeição completa, não um acompanhamento da proteína.`;
+        errors.push(msg);
+        detailedErrors.push({
+          mealId: item.id,
+          mealTitle: item.title || "Sem título",
+          substitutionIndex: idx,
+          foodName: foodText,
+          macros: {},
+          limitError: msg
+        });
+      }
+
       if (mealType.includes("breakfast") || mealType.includes("desjejum") || mealType.includes("cafe")) {
         if (lunchKeywords.some(k => ft.includes(k) && !ft.includes("ovo") && !ft.includes("fruta"))) {
            const msg = `Possível mistura: "${foodText}" parece ser uma opção de Almoço/Jantar em uma refeição de Café da Manhã.`;
