@@ -513,6 +513,15 @@ export default function MealPlanEditorV2() {
       toast.error("🔒 Plano imutável. Crie uma nova versão para editar.");
       return;
     }
+
+    const totalKcal = store.items.reduce((s, i) => s + (Number(i.calories_target) || 0), 0);
+    if (totalKcal <= 0 && store.items.length > 0) {
+      toast.error("O plano não pode ter totais zerados.", {
+        description: "Adicione refeições com valores calóricos antes de salvar."
+      });
+      return;
+    }
+
     setReviewOpen(true);
   };
 
