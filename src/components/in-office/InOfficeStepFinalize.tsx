@@ -287,14 +287,15 @@ export default function InOfficeStepFinalize({ patientId, onPrev, onComplete, se
                     <CheckCircle2 className="w-5 h-5" /> Plano Ativo e Enviado!
                   </p>
                   <p className="text-xs text-muted-foreground">O paciente recebeu uma notificação e o plano já está disponível para consulta.</p>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => navigate(`/patients/${patientId}`)}
-                    className="gap-2 w-full mt-2"
-                  >
-                    <Eye className="w-4 h-4" /> Ver perfil do paciente
-                  </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => navigate(`/patients/${patientId}`)}
+                      className="gap-2 w-full mt-2"
+                      data-testid="view-patient-profile-button"
+                    >
+                      <Eye className="w-4 h-4" /> Ver perfil do paciente
+                    </Button>
                 </div>
               )}
             </div>
