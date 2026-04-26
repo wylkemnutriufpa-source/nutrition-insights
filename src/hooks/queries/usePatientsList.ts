@@ -480,8 +480,11 @@ export function useAddPatient() {
       if (error) throw error;
       if (data?.error) throw new Error(data.error);
 
-      const patientId = data?.patient_id;
-      if (!patientId) throw new Error("Erro ao criar conta do paciente");
+      const patientId = data?.patient_id || data?.user_id;
+      if (!patientId) {
+        console.error("Mutation addPatient failed: missing patient_id in response", data);
+        throw new Error("Erro crítico: Conta criada mas ID não retornado pelo servidor.");
+      }
 
       logAudit("create_patient", "patient", patientId as string, { email: normalizedEmail, name: trimmedName });
       return patientId;
