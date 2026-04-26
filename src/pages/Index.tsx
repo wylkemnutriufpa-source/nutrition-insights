@@ -329,10 +329,10 @@ function NutritionistDashboardContent() {
   useEffect(() => { fetchDashboard(); }, [user?.id, evolutionPeriod]);
 
   const quickActions = [
-    { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-primary/10 text-primary hover:bg-primary/20" },
-    { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-info/10 text-info hover:bg-info/20" },
-    { label: "Criar Programa", icon: Rocket, to: "/programs", color: "bg-accent/10 text-accent hover:bg-accent/20" },
-    { label: "Criar Protocolo", icon: FileText, to: "/protocols", color: "bg-warning/10 text-warning hover:bg-warning/20" },
+    { label: "Modo Consultório", icon: Stethoscope, to: "/in-office", color: "bg-primary/20 text-primary hover:bg-primary/30 shadow-md shadow-primary/5 border border-primary/20" },
+    { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary" },
+    { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-muted/50 text-muted-foreground hover:bg-info/10 hover:text-info" },
+    { label: "Criar Programa", icon: Rocket, to: "/programs", color: "bg-muted/50 text-muted-foreground hover:bg-accent/10 hover:text-accent" },
   ];
 
   const timelineEventIcons: Record<string, { icon: any; color: string }> = {
