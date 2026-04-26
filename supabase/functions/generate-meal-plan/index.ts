@@ -3993,7 +3993,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
       await assertContract(
         planGenerationContract({
           planType: expectedPlanType,
-          generatedItems: itemsToInsert,
+          generatedItems: itemsToInsert.map(i => ({ ...i, plan_type: expectedPlanType })),
           totalKcal: finalKcal,
           totalProtein: finalMacros.protein,
         }),
