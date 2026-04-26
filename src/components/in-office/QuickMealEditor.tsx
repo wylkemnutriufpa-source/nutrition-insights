@@ -503,7 +503,7 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
   // Totals
   const totalMacros = useMemo(() => {
-    const all = blocks.flatMap(b => b.items);
+    const all = blocks.flatMap(b => b.items.filter(i => i.is_primary));
     return {
       calories: all.reduce((s, i) => s + (i.calories || 0), 0),
       protein: all.reduce((s, i) => s + (i.protein || 0), 0),
