@@ -482,19 +482,44 @@ export default function DietTemplates() {
               : `grp_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
 
           opts.forEach((opt: any, idx: number) => {
-            // Apply patient-specific macro adjustment to EVERY option (substitution).
-            // This guarantees that all swap candidates honor the calorie/macro target,
-            // not just the primary item.
+            let finalName = opt?.name || b.label || "Item";
+            let finalCalories = opt?.calories;
+            let finalProtein = opt?.protein;
+            let finalCarbs = opt?.carbs;
+            let finalFat = opt?.fat;
+            let finalPortion = opt?.portion || b.base_quantity || null;
+
+            // Detect placeholder and replace with a recipe
+            const isPlaceholder = finalName && marmitaPlaceholders.some(p => finalName.includes(p));
+            if (isPlaceholder && mealRecipes.length > 0) {
+              const typeKey = mealType === "lunch" ? "almoço" : "jantar";
+              const candidates = mealRecipes
+                .filter(r => r.meal_type === typeKey)
+                .sort((a, b) => new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime());
+              
+              if (candidates.length > 0) {
+                const picked = candidates[globalMarmitaCounter % candidates.length];
+                globalMarmitaCounter++;
+                finalName = `🍱 ${picked.name}`;
+                finalCalories = picked.fixed_calories;
+                finalProtein = picked.fixed_protein;
+                finalCarbs = picked.fixed_carbs;
+                finalFat = picked.fixed_fat;
+                finalPortion = "1 marmita";
+                console.log(`[DietTemplates] Replaced placeholder with ${picked.name}`);
+              }
+            }
+
             items.push({
               meal_plan_id: plan.id,
               day_of_week: day,
               meal_type: mealType,
-              title: opt?.name || b.label || "Item",
-              description: opt?.portion || b.base_quantity || null,
-              calories_target: scaleNum(opt?.calories),
-              protein_target: scaleNum(opt?.protein),
-              carbs_target: scaleNum(opt?.carbs),
-              fat_target: scaleNum(opt?.fat),
+              title: finalName,
+              description: finalPortion,
+              calories_target: scaleNum(finalCalories),
+              protein_target: scaleNum(finalProtein),
+              carbs_target: scaleNum(finalCarbs),
+              fat_target: scaleNum(finalFat),
               substitution_group_id: groupId,
               is_primary: idx === 0,
             });
