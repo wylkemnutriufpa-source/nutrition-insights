@@ -115,44 +115,60 @@ export const test = base.extend<TestFixtures>({
     });
 
     await page.route("**/rest/v1/meal_plan_items?**", async (route) => {
-      // Return a stable set of items
       const items = [
-        // Breakfast - Monday (0)
+        // Monday (0) - Breakfast
         {
-          id: "item-1",
+          id: "m-b-1",
           meal_plan_id: MOCK_PLAN_ID,
           title: "Ovo Cozido",
-          description: "2 unidades 100g",
+          description: "100g",
           day_of_week: 0,
           meal_type: "breakfast",
           is_primary: true,
           calories_target: 150,
           protein_target: 12,
-          carbs_target: 1,
-          fat_target: 10,
           created_at: "2024-01-01T10:00:00Z"
         },
         {
-          id: "item-2",
+          id: "m-b-s1",
           meal_plan_id: MOCK_PLAN_ID,
           title: "Omelete",
-          description: "2 ovos 100g",
+          description: "100g",
           day_of_week: 0,
           meal_type: "breakfast",
           is_primary: false,
           calories_target: 160,
-          protein_target: 13,
-          carbs_target: 2,
-          fat_target: 11,
           item_origin: "auto_generated_sub",
           created_at: "2024-01-01T10:01:00Z"
+        },
+        // Monday (0) - Lunch
+        {
+          id: "m-l-1",
+          meal_plan_id: MOCK_PLAN_ID,
+          title: "Frango Grelhado",
+          description: "150g",
+          day_of_week: 0,
+          meal_type: "lunch",
+          is_primary: true,
+          calories_target: 250,
+          protein_target: 45,
+          created_at: "2024-01-01T12:00:00Z"
+        },
+        // Tuesday (1) - Breakfast (for tab switching test)
+        {
+          id: "t-b-1",
+          meal_plan_id: MOCK_PLAN_ID,
+          title: "Iogurte",
+          description: "200ml",
+          day_of_week: 1,
+          meal_type: "breakfast",
+          is_primary: true,
+          calories_target: 120,
+          protein_target: 10,
+          created_at: "2024-01-01T10:00:00Z"
         }
       ];
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify(items),
-      });
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify(items) });
     });
 
     await page.route("**/rest/v1/profiles?**", async (route) => {
