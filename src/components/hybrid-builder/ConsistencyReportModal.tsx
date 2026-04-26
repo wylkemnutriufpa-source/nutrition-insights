@@ -62,13 +62,13 @@ export default function ConsistencyReportModal({ open, onOpenChange, recipes, ta
               </div>
               <div className="flex justify-between text-[11px] pt-1 border-t">
                 <span>Almoço Fixo:</span>
-                <span className={fixedLunchCount >= 19 ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>
+                <span className={fixedLunchCount >= 19 ? "text-success font-bold" : "text-warning font-bold"}>
                   {fixedLunchCount}/19
                 </span>
               </div>
               <div className="flex justify-between text-[11px]">
                 <span>Jantar Fixo:</span>
-                <span className={fixedDinnerCount >= 19 ? "text-green-600 font-bold" : "text-amber-600 font-bold"}>
+                <span className={fixedDinnerCount >= 19 ? "text-success font-bold" : "text-warning font-bold"}>
                   {fixedDinnerCount}/19
                 </span>
               </div>
