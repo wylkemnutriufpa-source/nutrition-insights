@@ -35,6 +35,14 @@ describe('Mobile Experience E2E & QA Automation', () => {
     Object.defineProperty(window, 'scrollX', { writable: true, configurable: true, value: 0 });
     
     global.URL.createObjectURL = vi.fn(() => 'mock-url');
+    window.scrollTo = vi.fn();
+
+    // Mock Canvas
+    HTMLCanvasElement.prototype.getContext = vi.fn().mockReturnValue({
+      drawImage: vi.fn(),
+      fillRect: vi.fn(),
+    });
+    HTMLCanvasElement.prototype.toDataURL = vi.fn().mockReturnValue('data:image/png;base64,mock');
   });
 
   const renderWithProviders = (ui: React.ReactElement) => {
