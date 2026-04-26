@@ -40,10 +40,10 @@ describe("SchemaMonitor", () => {
   it("renders the list of all monitored tables and columns", () => {
     render(<SchemaMonitor />);
 
-    // Tables from our mock
-    expect(screen.getByText("nutritionist_patients")).toBeInTheDocument();
-    expect(screen.getByText("meal_plans")).toBeInTheDocument();
-    expect(screen.getByText("profiles")).toBeInTheDocument();
+    // Tables from our mock (using getAllByText because they appear in multiple cards/tables)
+    expect(screen.getAllByText("nutritionist_patients").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("meal_plans").length).toBeGreaterThan(0);
+    expect(screen.getAllByText("profiles").length).toBeGreaterThan(0);
 
     // Specific columns
     expect(screen.getByText("plan_status")).toBeInTheDocument();
