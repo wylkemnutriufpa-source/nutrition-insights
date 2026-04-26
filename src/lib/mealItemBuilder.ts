@@ -93,7 +93,9 @@ export function buildMealItems(inputs: MealItemInput[]): BuildResult {
       is_manually_edited: input.is_manually_edited || false,
       is_locked: input.is_locked || false,
       was_auto_corrected: input.was_auto_corrected || false,
-    });
+      is_primary: input.is_primary ?? true,
+      substitution_group_id: input.substitution_group_id ?? null,
+    } as any);
   }
 
   return { items, warnings };
