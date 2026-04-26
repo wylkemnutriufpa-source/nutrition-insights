@@ -14,6 +14,7 @@ const mockStore = {
   ],
   plan: { id: 'plan-456', title: 'Plano Teste', plan_status: 'draft', patient_id: 'pat-123', start_date: '2023-01-01' },
   planId: 'plan-456',
+  syncingMap: {},
   patientName: 'Paciente Teste',
   hydrated: true,
   hydrating: false,
