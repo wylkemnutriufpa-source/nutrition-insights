@@ -182,6 +182,7 @@ export default function PatientRegister() {
         _full_name: name,
         _email: email.trim().toLowerCase(),
         _phone: phone || null,
+        _whatsapp: whatsapp || null,
         _nutritionist_id: nutriId,
         _source: "register",
         _metadata: { referral_code: refCode || null },
