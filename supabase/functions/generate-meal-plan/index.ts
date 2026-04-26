@@ -2347,6 +2347,7 @@ function generateFixedMarmitaPlan(
   strategy?: string,
   patientFoodDatabase?: any[],
   recentMeals?: RecentMealItem[],
+  prioritizedTemplateIds?: string[],
 ): { items: any[]; marmitasUsed: string[]; warning?: string } {
   console.log(`[fixed_marmita] Starting generation for ${goal}. Total recipes: ${fixedRecipes.length}`);
 
