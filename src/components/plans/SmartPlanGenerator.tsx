@@ -79,7 +79,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
   const [selectedMode, setSelectedMode] = useState<GenerationMode>("quick");
   const [generating, setGenerating] = useState(false);
   const [saveAsTemplate, setSaveAsTemplate] = useState(false);
-  const [activePlanName, setActivePlanName] = useState<string | null>(null);
+  const [activePlan, setActivePlan] = useState<{ id: string; title: string; template_id: string | null } | null>(null);
   const [showReplaceDialog, setShowReplaceDialog] = useState(false);
 
   // Professional override (used when patient anamnesis is missing/incomplete)
@@ -92,14 +92,14 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
     if (!patientId) return;
     supabase
       .from("meal_plans")
-      .select("id, title")
+      .select("id, title, template_id")
       .eq("patient_id", patientId)
       .eq("is_active", true)
       .in("plan_status", ["approved", "published_to_patient"])
       .limit(1)
       .maybeSingle()
       .then(({ data }) => {
-        setActivePlanName(data?.title || (data ? "Plano Ativo" : null));
+        setActivePlan(data || null);
       });
   }, [patientId]);
 
@@ -107,7 +107,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
     if (!user) return;
 
     // Warn if patient already has active plan
-    if (activePlanName) {
+    if (activePlan) {
       setShowReplaceDialog(true);
       return;
     }
@@ -169,6 +169,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
           isPipeline: false,
           generationMode: selectedMode,
           saveAsTemplate,
+          ...(activePlan?.template_id ? { template_id: activePlan.template_id } : {}),
           ...(professionalOverride ? { professionalOverride } : {}),
         },
       });
@@ -217,11 +218,11 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
       </div>
 
       {/* Active plan warning banner */}
-      {activePlanName && (
+      {activePlan && (
         <div className="flex items-center gap-2 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30 text-sm">
           <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0" />
           <span className="text-amber-700 dark:text-amber-400">
-            Este paciente já possui um plano ativo: <strong>{activePlanName}</strong>. 
+            Este paciente já possui um plano ativo: <strong>{activePlan.title || "Plano Ativo"}</strong>. 
             Ao gerar um novo, o anterior será substituído.
           </span>
         </div>
@@ -407,7 +408,7 @@ export default function SmartPlanGenerator({ patientId, patientName, onGenerated
               Paciente já possui plano ativo
             </AlertDialogTitle>
             <AlertDialogDescription>
-              O paciente <strong>{patientName}</strong> já possui o plano <strong>"{activePlanName}"</strong> ativo. 
+              O paciente <strong>{patientName}</strong> já possui o plano <strong>"{activePlan?.title || "Plano Ativo"}"</strong> ativo. 
               Ao gerar um novo plano e publicá-lo, o plano anterior será automaticamente arquivado.
               <br /><br />
               Deseja continuar?

@@ -293,6 +293,14 @@ export default function MealPlans() {
     setSubmitting(true);
     try {
       if (form.autoGenerate) {
+        // Fetch active plan to get template_id if available
+        const { data: activePlan } = await supabase
+          .from("meal_plans")
+          .select("template_id")
+          .eq("patient_id", form.patient_id)
+          .eq("is_active", true)
+          .maybeSingle();
+
         // Use the generate-meal-plan edge function
         toast.info("Gerando plano automaticamente...");
         const { data: genData, error: genError } = await supabase.functions.invoke("generate-meal-plan", {
@@ -300,6 +308,7 @@ export default function MealPlans() {
             patientId: form.patient_id,
             nutritionistId: user.id,
             isPipeline: false,
+            template_id: activePlan?.template_id || undefined,
           },
         });
         if (genError || !genData?.success) {

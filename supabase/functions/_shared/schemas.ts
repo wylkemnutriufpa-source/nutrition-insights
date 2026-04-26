@@ -14,6 +14,7 @@ export const GenerateMealPlanSchema = z.object({
   is_pipeline: z.boolean().optional().default(false),
   requested_nutritionist_id: z.string().uuid().optional(),
   tenant_id: z.string().uuid().optional(),
+  template_id: z.string().uuid().optional(),
 });
 
 // validate-meal-plan input schema
