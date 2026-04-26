@@ -136,12 +136,15 @@ describe('Invitation E2E Simulation', () => {
     });
 
     render(
-      <MemoryRouter initialEntries={['/convite/EXPIRED']}>
-        <Routes>
-          <Route path="/convite/:code" element={<Invitation />} />
-        </Routes>
-      </MemoryRouter>
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/convite/EXPIRED']}>
+          <Routes>
+            <Route path="/convite/:code" element={<Invitation />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>
     );
+
 
     await waitFor(() => {
       expect(screen.getByText(/Este convite expirou/i)).toBeInTheDocument();
