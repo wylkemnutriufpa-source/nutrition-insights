@@ -345,6 +345,32 @@ export default function ClientDashboard() {
           </motion.div>
         )}
 
+        {/* WhatsApp Reminder Banner */}
+        {isPatient && !profile?.whatsapp && (
+          <motion.div variants={item}>
+            <div className="bg-primary/10 border border-primary/20 rounded-xl p-4 flex items-center justify-between gap-4">
+              <div className="flex items-start gap-3">
+                <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center shrink-0">
+                  <MessageSquare className="w-5 h-5 text-primary" />
+                </div>
+                <div>
+                  <p className="text-sm font-semibold text-primary">Adicione seu WhatsApp!</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    Receba atualizações importantes e facilite o contato com seu profissional.
+                  </p>
+                </div>
+              </div>
+              <Button 
+                size="sm" 
+                className="gradient-primary gap-2"
+                onClick={() => navigate("/settings")}
+              >
+                Adicionar Agora
+              </Button>
+            </div>
+          </motion.div>
+        )}
+
         {/* Premium Header */}
         <motion.div variants={item}>
           <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
