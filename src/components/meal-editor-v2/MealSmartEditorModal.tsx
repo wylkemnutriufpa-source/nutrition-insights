@@ -491,32 +491,53 @@ export function MealSmartEditorModal({
                   </div>
                   
                   <div className="space-y-2">
-                    {substitutions.map((sub, idx) => (
-                      <div key={idx} className="flex gap-2 group/sub">
-                        <Input
-                          value={sub}
-                          onChange={(e) => {
-                            // Normalização em tempo real: colapso de espaços repetidos
-                            const val = String(e.target.value).replace(/\s+/g, ' ');
-                            const next = [...substitutions];
-                            next[idx] = val;
-                            setSubstitutions(next);
-                          }}
-                          className="h-9 bg-secondary/10 border-none focus-visible:ring-1 ring-primary/20 rounded-xl text-xs"
-                          placeholder="Ex: • Pão integral → Tapioca (40g)"
-                          data-testid={`substitution-input-${idx}`}
-                        />
-                        <Button 
-                          variant="ghost" 
-                          size="icon" 
-                          className="h-9 w-9 rounded-xl opacity-0 group-hover/sub:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
-                          onClick={() => setSubstitutions(substitutions.filter((_, i) => i !== idx))}
-                          data-testid={`remove-substitution-button-${idx}`}
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </Button>
-                      </div>
-                    ))}
+                    {substitutions.map((sub, idx) => {
+                      const isBlocked = isBlockedForWannubia(sub);
+                      return (
+                        <div key={idx} className="space-y-1">
+                          <div className="flex gap-2 group/sub">
+                            <Input
+                              value={sub}
+                              ref={idx === 0 ? inputRef : null}
+                              onChange={(e) => {
+                                const val = String(e.target.value).replace(/\s+/g, ' ');
+                                const next = [...substitutions];
+                                next[idx] = val;
+                                setSubstitutions(next);
+                              }}
+                              className={cn(
+                                "h-9 bg-secondary/10 border-none focus-visible:ring-1 ring-primary/20 rounded-xl text-xs transition-all",
+                                isBlocked && "bg-destructive/10 ring-destructive/50 text-destructive border-destructive/30"
+                              )}
+                              placeholder="Ex: • Pão integral → Tapioca (40g)"
+                              data-testid={`substitution-input-${idx}`}
+                            />
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-9 w-9 rounded-xl opacity-0 group-hover/sub:opacity-100 transition-opacity text-destructive hover:bg-destructive/10"
+                              onClick={() => setSubstitutions(substitutions.filter((_, i) => i !== idx))}
+                              data-testid={`remove-substitution-button-${idx}`}
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </div>
+                          {isBlocked && (
+                            <div className="flex items-center gap-1.5 px-3 py-1 bg-destructive/5 text-[9px] text-destructive font-bold rounded-lg animate-in fade-in slide-in-from-top-1">
+                              <AlertTriangle className="w-3 h-3" />
+                              <span>Combinação inválida para Wannubia. Remova itens proibidos.</span>
+                              <Button 
+                                variant="link" 
+                                className="h-auto p-0 text-[9px] ml-auto text-destructive underline"
+                                onClick={() => inputRef.current?.focus()}
+                              >
+                                Corrigir agora
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
                     {substitutions.length === 0 && (
                       <p className="text-[10px] text-muted-foreground italic bg-secondary/5 p-3 rounded-xl border border-dashed text-center">
                         Nenhuma substituição adicionada.
