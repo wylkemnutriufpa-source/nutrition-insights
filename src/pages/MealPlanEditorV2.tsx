@@ -412,13 +412,21 @@ export default function MealPlanEditorV2() {
     // No blocking confirm here, just generate
     console.warn("[PLAN] botão clicado");
     console.warn("[PLAN] função iniciou");
+    
+    const params = {
+      patientId: plan.patient_id,
+      nutritionistId: user.id,
+      tenantId: tenantId || "",
+    };
+    
+    localStorage.setItem(`last_gen_params_${id}`, JSON.stringify(params));
+    setLastAttemptParams(params);
+
     setGeneratingNew(true);
     try {
       console.warn("[PLAN] chamando edge function via pipeline");
-      const result = await runPlanPipeline({
-        patientId: plan.patient_id,
-        nutritionistId: user.id,
-        tenantId: tenantId || "",
+      const result = await runPlanPipeline(params);
+
         planTitle: `${plan.title} (Revisão)`,
         startDate: new Date().toISOString().split("T")[0],
         generationMode: "smart",
