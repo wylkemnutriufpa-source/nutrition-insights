@@ -4010,6 +4010,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           generated_by: userId,
           generation_metadata: generationMetadata,
           tenant_id: resolvedTenantId,
+          template_id: lastUsedTemplateId,
         })
         .select("id")
         .single();
