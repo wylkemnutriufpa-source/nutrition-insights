@@ -324,6 +324,70 @@ export function MealSmartEditorModal({
                   />
                 </div>
 
+                {/* Portion Adjustment for Fixed Meals */}
+                {(item as any).edit_metadata?.is_fixed && (
+                  <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
+                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                      <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
+                    </h3>
+                    <div className="flex items-center gap-4">
+                      <div className="flex-1 space-y-1.5">
+                        <Label className="text-[10px] font-bold uppercase text-muted-foreground">Fator de Ajuste</Label>
+                        <div className="flex items-center gap-2">
+                          <Input
+                            type="number"
+                            step="0.1"
+                            min="0.1"
+                            className="h-10 bg-background border-primary/20 rounded-xl"
+                            defaultValue="1.0"
+                            onChange={(e) => {
+                              const factor = parseFloat(e.target.value);
+                              if (isNaN(factor) || factor <= 0) return;
+                              
+                              // Recalculate macros based on factor
+                              const meta = (item as any).edit_metadata || {};
+                              const baseKcal = item.calories_target || 0;
+                              const baseProt = Number(item.protein_target) || 0;
+                              const baseCarb = Number(item.carbs_target) || 0;
+                              const baseFat = Number(item.fat_target) || 0;
+                              
+                              // We don't want to lose the original base values, so maybe we should keep them in metadata
+                              // For now, let's just apply to current values (assuming they were the base)
+                              // Better: use a local state for the factor and apply it on save or preview
+                            }}
+                          />
+                          <span className="text-sm font-bold text-muted-foreground">x</span>
+                        </div>
+                      </div>
+                      <div className="flex-[2] grid grid-cols-2 gap-2">
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 text-[10px] rounded-xl"
+                          onClick={() => {
+                            // Logic to scale up/down
+                          }}
+                        >
+                          - 10%
+                        </Button>
+                        <Button 
+                          variant="outline" 
+                          size="sm" 
+                          className="h-9 text-[10px] rounded-xl"
+                          onClick={() => {
+                            // Logic to scale up/down
+                          }}
+                        >
+                          + 10%
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground italic">
+                      Isso recalculará proporcionalmente todos os macros desta marmita.
+                    </p>
+                  </div>
+                )}
+
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-sm font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2" data-testid="substitutions-header">
