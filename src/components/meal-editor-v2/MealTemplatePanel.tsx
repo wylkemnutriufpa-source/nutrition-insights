@@ -374,7 +374,12 @@ export default function MealTemplatePanel({ day }: Props) {
       </div>
 
       <ScrollArea className="flex-1">
-        {filteredTemplates.length === 0 ? (
+        {loading ? (
+          <div className="flex flex-col items-center justify-center py-12 text-muted-foreground gap-2">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+            <p className="text-sm">Carregando suas marmitas...</p>
+          </div>
+        ) : filteredTemplates.length === 0 ? (
           <div className="text-center py-12 text-sm text-muted-foreground">
             <Utensils className="w-8 h-8 mx-auto mb-2 opacity-30" />
             <p>Nenhum template para esta refeição</p>
