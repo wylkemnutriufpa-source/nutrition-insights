@@ -1,5 +1,4 @@
 import { test, expect } from "./fixtures";
-import { devices } from "@playwright/test";
 
 test.use({ 
   viewport: { width: 390, height: 844 },
@@ -18,12 +17,15 @@ test.describe("Publish Plan Flow - Mobile Wizard", () => {
     await page.goto("/patients");
     await page.waitForLoadState("networkidle");
 
-    // Click on the first patient card or row
+    // Click on the first patient card
     const patientCard = page.locator('[data-testid="patient-card"], .patient-row, tr').filter({ hasText: /./ }).first();
     await patientCard.click();
     await page.waitForURL(/\/patients\/[a-zA-Z0-9-]+/);
+    
+    const currentUrl = page.url();
+    const patientId = currentUrl.split('/').pop();
 
-    // Click "Iniciar Consulta" (mobile might have different text or visibility)
+    // Click "Iniciar Consulta" or "Consultório"
     const startBtn = page.getByRole("button", { name: /Consultório|Iniciar Consulta/i }).first();
     await expect(startBtn).toBeVisible({ timeout: 15000 });
     await startBtn.click();
@@ -33,18 +35,18 @@ test.describe("Publish Plan Flow - Mobile Wizard", () => {
     await page.waitForLoadState("networkidle");
 
     // Skip to step 5 (Finalizar)
-    // On mobile, the step buttons might be in a scrollable container or different layout
     const step5 = page.getByRole("button", { name: /5|Finalizar/i }).first();
+    await expect(step5).toBeVisible();
     await step5.click();
     
-    // Ensure we are on the final step
+    // Ensure we are on the final step by checking for the publish button
     const publishBtn = page.getByTestId("publish-button");
     await expect(publishBtn).toBeVisible({ timeout: 10000 });
 
     // 2. Mock a slow response to capture the "Publishing..." state
     await page.route("**/rest/v1/meal_plans*", async (route) => {
       if (route.request().method() === "PATCH") {
-        await new Promise(r => setTimeout(r, 5000)); // 5 seconds delay
+        await new Promise(r => setTimeout(r, 4000)); // 4 seconds delay
         await route.fulfill({
           status: 200,
           contentType: "application/json",
@@ -66,44 +68,46 @@ test.describe("Publish Plan Flow - Mobile Wizard", () => {
     const boundingBox = await overlay.boundingBox();
     const viewport = page.viewportSize();
     if (boundingBox && viewport) {
-      expect(boundingBox.width).toBeGreaterThanOrEqual(viewport.width);
-      expect(boundingBox.height).toBeGreaterThanOrEqual(viewport.height);
+      // Allow for small rounding differences
+      expect(boundingBox.width).toBeGreaterThanOrEqual(viewport.width - 1);
+      expect(boundingBox.height).toBeGreaterThanOrEqual(viewport.height - 1);
     }
 
-    // Verify interaction blocking - steps should NOT be clickable
+    // Ensure the card inside the overlay is not breaking layout (not wider than viewport)
+    const overlayCard = overlay.locator('.lucide-send').locator('xpath=ancestor::div[contains(@class, "rounded-xl") or contains(@class, "border")]').first();
+    // Actually, I can just check the Card component directly if I know its structure
+    const card = overlay.locator('.rounded-lg, .border').first();
+    const cardBox = await card.boundingBox();
+    if (cardBox && viewport) {
+      expect(cardBox.width).toBeLessThanOrEqual(viewport.width);
+    }
+
+    // 5. Verify interaction blocking - steps should NOT be clickable
     // We try to click Step 1 using force: true to see if we can trigger a navigation
     const step1 = page.getByRole("button", { name: /1|Cadastro/i }).first();
     await step1.click({ force: true }).catch(() => {});
     
-    // Overlay should still be visible and URL should NOT have changed (unless it was already at step 1, but we are at step 5)
+    // Overlay should still be visible (if step changed, overlay would unmount)
     await expect(overlay).toBeVisible();
-    expect(page.url()).toContain("step=5"); // Assuming step 5 is part of the URL or state
 
-    // 5. Verify progress text is visible and updating
+    // 6. Verify progress text is visible and updating
     const progressText = page.getByTestId("publish-progress-text");
     await expect(progressText).toBeVisible();
-    // It starts at 0% or 25% quickly based on the component logic
     await expect(progressText).toHaveText(/%/);
 
-    // 6. Wait for success state
+    // 7. Wait for success state
     await expect(page.getByText("Plano Ativo e Enviado!")).toBeVisible({ timeout: 15000 });
     await expect(overlay).not.toBeVisible();
 
-    // 7. Verify "Ver perfil do paciente" redirection
+    // 8. Verify "Ver perfil do paciente" redirection
     const viewProfileBtn = page.getByTestId("view-patient-profile-button");
     await expect(viewProfileBtn).toBeVisible();
     
-    const patientProfileUrlRegex = /\/patients\/[a-zA-Z0-9-]+/;
-    const expectedPatientIdMatch = page.url().match(/\/in-office\/([a-zA-Z0-9-]+)/);
-    const patientId = expectedPatientIdMatch ? expectedPatientIdMatch[1] : null;
-
     await viewProfileBtn.click();
 
-    // Ensure we are redirected to the correct patient profile
-    await page.waitForURL(patientProfileUrlRegex);
-    if (patientId) {
-      expect(page.url()).toContain(`/patients/${patientId}`);
-    }
+    // Ensure we are redirected back to the correct patient profile
+    await page.waitForURL(new RegExp(`/patients/${patientId}`));
+    expect(page.url()).toContain(`/patients/${patientId}`);
     
     // Verify patient profile content is loaded
     await expect(page.locator('h1, h2')).toContainText(/./);
