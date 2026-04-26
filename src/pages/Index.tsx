@@ -74,6 +74,8 @@ function NutritionistDashboardContent() {
   const [appointmentsToday, setAppointmentsToday] = useState(0);
   const [pendingCheckins, setPendingCheckins] = useState(0);
   const [unreadChats, setUnreadChats] = useState(0);
+  const [activeSessions, setActiveSessions] = useState<any[]>([]);
+  const [sessionProfiles, setSessionProfiles] = useState<Record<string, string>>({});
 
   // Pending approvals modal
   const pendingApprovalsCount = usePendingApprovals();
