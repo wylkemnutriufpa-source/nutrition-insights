@@ -10,11 +10,13 @@ import { toast } from "sonner";
 import {
   Plus, Trash2, Copy, Save, Search,
   Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets,
-  Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle
+  Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle, Info, ShieldCheck
 } from "lucide-react";
 import { withRetry } from "@/lib/retry";
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
+import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
+import { CURRENT_ENGINE_VERSION } from "@/lib/engineVersionGovernance";
 
 type MealType = Database["public"]["Enums"]["meal_type"];
 
