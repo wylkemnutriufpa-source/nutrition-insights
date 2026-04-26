@@ -535,6 +535,16 @@ export default function MealPlanEditorV2() {
     setSaving(true);
     const toastId = toast.loading("Salvando e aprovando plano...");
     try {
+      // 🛡️ Validação de Substituições antes de salvar
+      const subValidation = validatePlanSubstitutions(store.items, store.substitutionCount, store.patientName);
+      if (!subValidation.valid && subValidation.errors.some(err => err.includes("Combinação bloqueada"))) {
+        toast.error("Erro de Validação", {
+          description: "Existem combinações de substituições bloqueadas para esta paciente. Corrija antes de salvar."
+        });
+        setSaving(false);
+        return;
+      }
+
       await store._flushQueue();
       await calculatePlanTotals(plan.id);
       
