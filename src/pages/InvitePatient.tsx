@@ -65,6 +65,30 @@ export default function InvitePatient() {
     generateInvitation();
   }, [user?.id]);
 
+  useEffect(() => {
+    if (!user?.id) return;
+    const fetchData = async () => {
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("full_name, tenant_id")
+        .eq("id", user.id)
+        .single();
+      
+      setProfile(profileData);
+
+      if (profileData?.tenant_id) {
+        const { data: clinicData } = await supabase
+          .from("tenants")
+          .select("name")
+          .eq("id", profileData.tenant_id)
+          .single();
+        setClinic(clinicData);
+      }
+    };
+    fetchData();
+  }, [user?.id]);
+
+
   const onboardingLink = useMemo(
     () => `${siteUrl}/onboarding`,
     [],
