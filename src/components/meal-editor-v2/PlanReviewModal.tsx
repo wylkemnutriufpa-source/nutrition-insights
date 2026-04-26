@@ -1,7 +1,7 @@
 import { useState, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, XCircle, AlertCircle, Info, ChevronRight, ChevronLeft, Navigation } from "lucide-react";
+import { CheckCircle2, XCircle, AlertCircle, Info, ChevronRight, ChevronLeft, Navigation, AlertTriangle } from "lucide-react";
 import { validateMealSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
 import { cn } from "@/lib/utils";
 import type { Tables } from "@/integrations/supabase/types";
