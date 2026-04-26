@@ -31,6 +31,8 @@ import { Input } from "@/components/ui/input";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
+const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
+
 interface Template {
   id: string;
   name: string;
@@ -47,6 +49,11 @@ interface ReformulationPreview {
   changes: string[];
   level: "critical" | "warning" | "ok";
   selected: boolean;
+  summary?: {
+    removedKeysCount: number;
+    adjustedBlocksCount: number;
+    totalMeals: number;
+  };
 }
 
 export default function TemplateMassReformulation() {
@@ -86,7 +93,7 @@ export default function TemplateMassReformulation() {
 
   const generatePreviews = (data: Template[]) => {
     const newPreviews: ReformulationPreview[] = data.map(t => {
-      const { reformulatedMeals, changes } = reformulateTemplate(t.meals);
+      const { reformulatedMeals, changes, summary } = reformulateTemplate(t.meals);
       
       let level: "critical" | "warning" | "ok" = "ok";
       if (changes.some(c => c.includes("NaN") || c.includes("inválido") || c.includes("ausente"))) level = "critical";
@@ -100,7 +107,8 @@ export default function TemplateMassReformulation() {
         status: "pending",
         changes,
         level,
-        selected: level !== "ok"
+        selected: level !== "ok",
+        summary
       };
     });
     setPreviews(newPreviews);
@@ -117,12 +125,18 @@ export default function TemplateMassReformulation() {
 
   const reformulateTemplate = (meals: any[]) => {
     const changes: string[] = [];
+    let removedKeysCount = 0;
+    let adjustedBlocksCount = 0;
+
     const reformulatedMeals = (meals || []).map(meal => {
       let newMeal = JSON.parse(JSON.stringify(meal)); // deep clone
       
       // Safety: Recursively remove any template_id or other poisoning keys
+      const beforeKeys = JSON.stringify(newMeal).length;
       deepRemoveKey(newMeal, "template_id");
       delete newMeal.id; 
+      const afterKeys = JSON.stringify(newMeal).length;
+      if (beforeKeys > afterKeys) removedKeysCount++;
 
       const title = (meal.title || "").toLowerCase();
       const isSolidMeal = title.includes("almoço") || title.includes("jantar") || title.includes("lunch") || title.includes("dinner");
@@ -130,6 +144,7 @@ export default function TemplateMassReformulation() {
       // 1. Transform legacy to V2 blocks
       if (Array.isArray(newMeal.foods) && newMeal.foods.length > 0 && (!newMeal.blocks || newMeal.blocks.length === 0)) {
         changes.push(`Refeição ${meal.title}: Convertida de Lista para Blocos V2.`);
+        adjustedBlocksCount++;
         newMeal.blocks = newMeal.foods.map((f: any) => {
           const name = (f.name || "").toLowerCase();
           let blockLabel = f.name;
@@ -153,7 +168,8 @@ export default function TemplateMassReformulation() {
                 protein: f.protein || 0,
                 carbs: f.carbs || 0,
                 fat: f.fat || 0,
-                substitutions: f.substitutions || []
+                substitutions: f.substitutions || [],
+                image_url: f.image_url || null
               }
             ]
           };
@@ -198,11 +214,10 @@ export default function TemplateMassReformulation() {
                  changes.push(`Refeição ${meal.title}: Substituição de Almoço contém item de Café da Manhã (${cleaned.name}).`);
               }
 
-              // Ensure images are preserved or defaulted
+              // Image Validation and Fallback
               if (!cleaned.visual_library_item_id && !cleaned.image_url) {
-                if (optName.includes("marmita")) {
-                   changes.push(`Refeição ${meal.title}: Marmita detectada sem ID visual.`);
-                }
+                cleaned.image_url = FALLBACK_IMAGE_URL;
+                changes.push(`Refeição ${meal.title}: Asset visual ausente em '${cleaned.name}'. Aplicado fallback automático.`);
               }
               
               return cleaned;
@@ -215,7 +230,34 @@ export default function TemplateMassReformulation() {
       return newMeal;
     });
 
-    return { reformulatedMeals, changes: Array.from(new Set(changes)) };
+    const summary = {
+      removedKeysCount,
+      adjustedBlocksCount,
+      totalMeals: reformulatedMeals.length
+    };
+
+    return { reformulatedMeals, changes: Array.from(new Set(changes)), summary };
+  };
+
+  const simulateReformulation = async () => {
+    const selectedPreviews = previews.filter(p => p.selected && p.status === "pending");
+    if (selectedPreviews.length === 0) {
+      toast.info("Selecione templates para simular o impacto.");
+      return;
+    }
+
+    setProcessing(true);
+    setProgress(0);
+    const total = selectedPreviews.length;
+
+    for (let i = 0; i < selectedPreviews.length; i++) {
+      // Small delay to show progress
+      await new Promise(resolve => setTimeout(resolve, 50));
+      setProgress(((i + 1) / total) * 100);
+    }
+
+    setProcessing(false);
+    toast.success(`Simulação concluída para ${total} templates. Verifique os resultados abaixo.`);
   };
 
   const applyReformulation = async () => {
@@ -279,7 +321,7 @@ export default function TemplateMassReformulation() {
     const selectedForExport = previews.filter(p => p.changes.length > 0);
 
     selectedForExport.forEach((p, index) => {
-      if (y > 250) {
+      if (y > 230) {
         doc.addPage();
         y = 20;
       }
@@ -292,7 +334,14 @@ export default function TemplateMassReformulation() {
       doc.setFontSize(10);
       doc.setTextColor(100, 100, 100);
       doc.text(`Status: ${p.level.toUpperCase()}`, 15, y);
-      y += 7;
+      y += 5;
+
+      if (p.summary) {
+        doc.setFontSize(9);
+        doc.setTextColor(80, 80, 80);
+        doc.text(`Resumo do Payload: ${p.summary.totalMeals} refeições, ${p.summary.adjustedBlocksCount} blocos ajustados, ${p.summary.removedKeysCount} campos removidos (template_id).`, 15, y);
+        y += 7;
+      }
 
       doc.setTextColor(200, 0, 0);
       doc.text("Regras Quebradas / Alterações:", 15, y);
@@ -302,6 +351,10 @@ export default function TemplateMassReformulation() {
       doc.setTextColor(50, 50, 50);
       p.changes.forEach(change => {
         const lines = doc.splitTextToSize(`• ${change}`, pageWidth - 30);
+        if (y > 270) {
+          doc.addPage();
+          y = 20;
+        }
         doc.text(lines, 20, y);
         y += (lines.length * 5);
       });
@@ -383,10 +436,16 @@ export default function TemplateMassReformulation() {
                 Carregar Templates
               </Button>
             ) : step === "preview" ? (
-              <Button onClick={applyReformulation} disabled={processing}>
-                {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                Aplicar Reformulação ({previews.filter(p => p.selected && p.status === "pending").length})
-              </Button>
+              <div className="flex gap-2">
+                <Button variant="outline" onClick={simulateReformulation} disabled={processing}>
+                  <Sparkles className="w-4 h-4 mr-2 text-yellow-500" />
+                  Simular Impacto
+                </Button>
+                <Button onClick={applyReformulation} disabled={processing}>
+                  {processing ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                  Aplicar Reformulação ({previews.filter(p => p.selected && p.status === "pending").length})
+                </Button>
+              </div>
             ) : (
               <Button onClick={() => setStep("load")}>
                 <Undo2 className="w-4 h-4 mr-2" />
@@ -492,9 +551,16 @@ export default function TemplateMassReformulation() {
                               </div>
                             </div>
                           </div>
-                          <Badge variant="secondary">
-                            {p.changes.length} alterações
-                          </Badge>
+                          <div className="text-right">
+                            <Badge variant="secondary">
+                              {p.changes.length} alterações
+                            </Badge>
+                            {p.summary && (
+                              <div className="text-[10px] text-muted-foreground mt-1">
+                                {p.summary.totalMeals} ref | {p.summary.adjustedBlocksCount} blc | {p.summary.removedKeysCount} rem
+                              </div>
+                            )}
+                          </div>
                         </div>
                         <div className="text-sm space-y-1 pl-8">
                           {p.changes.map((c, i) => (

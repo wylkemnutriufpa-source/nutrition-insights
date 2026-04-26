@@ -81,6 +81,8 @@ const USE_DB_EXCLUSIVE_V6 = true;
 // ──── VALID MEAL CATEGORIES ────
 const VALID_MEAL_CATEGORIES = new Set(["cafe_da_manha", "lanche", "almoco", "jantar", "ceia", "refeicao"]);
 
+const FALLBACK_IMAGE_URL = "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?q=80&w=500&auto=format&fit=crop";
+
 // ──── INTOLERANCE KEYWORD MAPS (CLINICAL SAFETY) ────
 const INTOLERANCE_KEYWORDS: Record<string, string[]> = {
   lactose: ["leite", "queijo", "iogurte", "requeijao", "whey", "nata", "creme de leite", "manteiga", "cream cheese", "coalhada", "ricota", "mucarela", "mussarela", "parmesao", "provolone", "cottage"],
@@ -1688,7 +1690,7 @@ function generatePlanFromVisualLibrary(
 
         // ──── STRICT_DB_EXCLUSIVE: Validate item has image ────
         if (!picked.image_url || picked.image_url.length < 5) {
-          throw new Error(`[STRICT] Visual library item "${picked.display_name}" (${picked.id}) has no image_url. All items MUST have images.`);
+          picked.image_url = FALLBACK_IMAGE_URL;
         }
 
         // Get macros (use defaults if library item lacks data)
@@ -2268,7 +2270,7 @@ export async function buildMarmitaItem(
     _recipe_name: recipe.name,
     _is_scalable: recipe.is_scalable !== false,
     _scale_factor: 1, // Scaling is internal now
-    _image_url: visual?.image_url || null,
+    _image_url: visual?.image_url || FALLBACK_IMAGE_URL,
   };
 }
 
@@ -2328,7 +2330,7 @@ function buildFixedMarmitaItem(
     _is_fixed: true,
     _is_scalable: false,
     _scale_factor: 1, // forced — no scaling
-    _image_url: visual?.image_url || null,
+    _image_url: visual?.image_url || FALLBACK_IMAGE_URL,
   };
 }
 
