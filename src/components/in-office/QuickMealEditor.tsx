@@ -67,11 +67,9 @@ interface Props {
 export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tenantId }: Props) {
   const { user } = useAuth();
   const [blocks, setBlocks] = useState<MealBlock[]>(MEAL_TYPES.map(m => ({ ...m, items: [] })));
-  const [currentDay, setCurrentDay] = useState(0);
-  const [totalDays, setTotalDays] = useState(0);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [addingTo, setAddingTo] = useState<MealType | null>(null);
+  const [addingTo, setAddingTo] = useState<MealType | { type: MealType; isPrimary?: boolean; substitutionGroupId?: string | null } | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [foodResults, setFoodResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
