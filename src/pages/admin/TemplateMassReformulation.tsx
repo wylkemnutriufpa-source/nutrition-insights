@@ -52,13 +52,16 @@ export default function TemplateMassReformulation() {
   const [templates, setTemplates] = useState<Template[]>([]);
   const [previews, setPreviews] = useState<ReformulationPreview[]>([]);
   const [processing, setProcessing] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [step, setStep] = useState<"load" | "preview" | "done">("load");
+  const [filter, setFilter] = useState<"all" | "critical" | "warning" | "ok">("all");
+  const [searchQuery, setSearchQuery] = useState("");
 
   const loadTemplates = async () => {
     setLoading(true);
     const { data, error } = await supabase
       .from("diet_templates")
-      .select("id, name, meals");
+      .select("id, name, meals, base_calories");
     
     if (error) {
       toast.error("Erro ao carregar templates");
@@ -69,7 +72,8 @@ export default function TemplateMassReformulation() {
     const typedTemplates = (data || []).map((t: any) => ({
       id: t.id,
       name: t.name,
-      meals: Array.isArray(t.meals) ? t.meals : []
+      meals: Array.isArray(t.meals) ? t.meals : [],
+      base_calories: t.base_calories
     })) as Template[];
 
     setTemplates(typedTemplates);
@@ -81,13 +85,20 @@ export default function TemplateMassReformulation() {
   const generatePreviews = (data: Template[]) => {
     const newPreviews: ReformulationPreview[] = data.map(t => {
       const { reformulatedMeals, changes } = reformulateTemplate(t.meals);
+      
+      let level: "critical" | "warning" | "ok" = "ok";
+      if (changes.some(c => c.includes("NaN") || c.includes("inválido") || c.includes("ausente"))) level = "critical";
+      else if (changes.length > 0) level = "warning";
+
       return {
         templateId: t.id,
         name: t.name,
         before: t.meals,
         after: reformulatedMeals,
         status: "pending",
-        changes
+        changes,
+        level,
+        selected: level !== "ok"
       };
     });
     setPreviews(newPreviews);
