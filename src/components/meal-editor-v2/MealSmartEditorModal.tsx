@@ -386,10 +386,21 @@ export function MealSmartEditorModal({
 
                 {/* Portion Adjustment for Fixed Meals */}
                 {(item as any).edit_metadata?.is_fixed && (
+                {currentMeta?.is_fixed && (
                   <div className="space-y-4 p-4 rounded-2xl border bg-primary/5 border-primary/10">
-                    <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
-                      <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
-                    </h3>
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-sm font-black uppercase tracking-widest text-primary flex items-center gap-2">
+                        <SlidersHorizontal className="w-4 h-4" /> Ajuste de Porção (Marmita Fixa)
+                      </h3>
+                      <div className="flex items-center gap-2 px-3 py-1 bg-white rounded-full border border-primary/10 shadow-sm">
+                        <span className="text-[10px] font-bold text-orange-600">{adjustedMacros.calories} kcal</span>
+                        <Separator orientation="vertical" className="h-3 mx-1" />
+                        <span className="text-[10px] font-bold text-red-600">{adjustedMacros.protein}g P</span>
+                        <Separator orientation="vertical" className="h-3 mx-1" />
+                        <span className="text-[10px] font-bold text-amber-600">{adjustedMacros.carbs}g C</span>
+                      </div>
+                    </div>
+
                     <div className="flex items-center gap-4">
                       <div className="flex-1 space-y-1.5">
                         <Label className="text-[10px] font-bold uppercase text-muted-foreground">Fator de Ajuste</Label>
@@ -425,9 +436,10 @@ export function MealSmartEditorModal({
                       </div>
                     </div>
                     <p className="text-[10px] text-muted-foreground italic">
-                      Isso recalculará proporcionalmente todos os macros desta marmita.
+                      Isso recalculará proporcionalmente todos os macros desta marmita em tempo real.
                     </p>
                   </div>
+                )}
                 )}
 
                 <div className="space-y-4">
