@@ -470,7 +470,7 @@ export async function slotsToInserts(slots: GeneratedMealSlot[], planId: string)
     slots.map(async (slot: any) => {
       const mealType = slot.mealType as MealTypeEnum;
       const storageDay = normalizeGeneratedDayForStorage(slot.day);
-      const groupId = crypto.randomUUID();
+      const groupId = typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).substring(2);
       
       const primaryItemsInput = {
         meal_plan_id: planId,
