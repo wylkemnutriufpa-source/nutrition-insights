@@ -162,7 +162,7 @@ export default function PatientRegister() {
             if (onboarding.patient_email) setEmail(onboarding.patient_email);
             if (onboarding.patient_name) setName(onboarding.patient_name);
             
-            setIsProfConfirmed(true);
+            setIsProfConfirmed(false);
             setSigValid(true);
             return;
           }
