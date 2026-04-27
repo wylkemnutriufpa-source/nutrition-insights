@@ -46,11 +46,11 @@ export function useExperienceUI() {
 
     // ── Text helpers ──
     /** Dashboard title by mode */
-    dashboardTitle: isBasic ? "Meu Painel" : isPro ? "Dashboard Clínico" : "Centro de Comando Clínico",
+    dashboardTitle: isBasic ? "Meu Painel" : isPro ? "Dashboard Pro" : "Comando Avançado",
     dashboardSubtitle: isBasic
       ? "Sua jornada diária simplificada"
       : isPro
-      ? "Inteligência clínica ao seu alcance"
-      : "Controle total · Automação · Inteligência IFJ",
+      ? "Acompanhamento clínico e macros"
+      : "Dados completos · Projeções · Performance",
   }), [mode, minMode, isBasic, isPro, isAdvanced]);
 }
