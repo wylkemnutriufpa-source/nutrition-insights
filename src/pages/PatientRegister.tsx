@@ -212,8 +212,8 @@ export default function PatientRegister() {
           phone: profileData.phone,
         });
         setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
-        // Se for link direto (?nutri=ID), confirma automaticamente para pular a tela de boas-vindas
-        setIsProfConfirmed(true);
+        // REMOVIDO: Confirmação automática removida para garantir que a foto do profissional apareça.
+        setIsProfConfirmed(false);
         setSigValid(true);
       } else {
         addLog(`AVISO: Profissional ${preselectedNutri} não encontrado no banco.`);
