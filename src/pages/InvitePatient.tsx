@@ -63,22 +63,25 @@ export default function InvitePatient() {
   useEffect(() => {
     if (!user?.id) return;
     const fetchData = async () => {
+      // First try to get professional profile which has the display name
+      const { data: profProfileData } = await supabase
+        .from("professional_profiles")
+        .select("display_name, clinic_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
       const { data: profileData } = await supabase
         .from("profiles")
         .select("full_name, tenant_id")
         .eq("id", user.id)
         .single();
       
-      setProfile(profileData);
-
-      if (profileData?.tenant_id) {
-        const { data: clinicData } = await supabase
-          .from("tenants")
-          .select("name")
-          .eq("id", profileData.tenant_id)
-          .single();
-        setClinic(clinicData);
-      }
+      // Use display_name from professional profile if available, otherwise full_name
+      setProfile({
+        ...profileData,
+        display_name: profProfileData?.display_name || profileData?.full_name
+      });
+      setClinic({ name: profProfileData?.clinic_name });
 
       const { data: publicProfileData } = await supabase
         .from("public_profile_settings")
@@ -104,7 +107,7 @@ export default function InvitePatient() {
     if (!invitationCode || !profile) return "";
     return getWhatsAppInvitationMessage({
       patientName: name,
-      professionalName: profile.full_name || "Seu Nutricionista",
+      professionalName: profile.display_name || profile.full_name || "Seu Nutricionista",
       clinicName: clinic?.name,
       invitationCode: invitationCode,
       templateType: 'patient_onboarding',
@@ -287,7 +290,7 @@ export default function InvitePatient() {
               <a 
                 href={`https://wa.me/?text=${encodeURIComponent(getWhatsAppInvitationMessage({
                   patientName: "",
-                  professionalName: profile?.full_name || "Seu Nutri",
+                  professionalName: profile?.display_name || profile?.full_name || "Seu Nutri",
                   clinicName: clinic?.name,
                   invitationCode: user?.id || "",
                   templateType: 'quick_link',

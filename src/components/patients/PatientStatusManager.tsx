@@ -62,14 +62,20 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
 
   useMemo(() => {
     if (!user?.id) return;
-    supabase.from("profiles").select("full_name").eq("id", user.id).single()
-      .then(({ data }) => {
-        if (data?.full_name) setProfName(data.full_name);
-      });
     
-    supabase.from("professional_profiles").select("clinic_name").eq("user_id", user.id).maybeSingle()
-      .then(({ data }) => {
-        if (data?.clinic_name) setClinicName(data.clinic_name);
+    // Get professional profile for display_name and clinic_name
+    supabase.from("professional_profiles").select("display_name, clinic_name").eq("user_id", user.id).maybeSingle()
+      .then(({ data: profData }) => {
+        if (profData?.display_name) {
+          setProfName(profData.display_name);
+        } else {
+          // Fallback to profile full_name if display_name is missing
+          supabase.from("profiles").select("full_name").eq("id", user.id).single()
+            .then(({ data }) => {
+              if (data?.full_name) setProfName(data.full_name);
+            });
+        }
+        if (profData?.clinic_name) setClinicName(profData.clinic_name);
       });
   }, [user?.id]);
 
