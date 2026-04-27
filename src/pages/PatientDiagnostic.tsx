@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,18 +8,41 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   CheckCircle2, XCircle, AlertCircle, Loader2, 
-  ShieldCheck, UserCheck, CreditCard, Link2 
+  ShieldCheck, UserCheck, CreditCard, Link2,
+  Copy, Download, FileJson, Info
 } from "lucide-react";
 
 export default function PatientDiagnostic() {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [results, setResults] = useState<{
-    invite: { status: 'ok' | 'error' | 'warning', message: string },
-    professional: { status: 'ok' | 'error' | 'warning', message: string },
-    subscription: { status: 'ok' | 'error' | 'warning', message: string },
-    rls: { status: 'ok' | 'error' | 'warning', message: string }
+    invite: { status: 'ok' | 'error' | 'warning', message: string, reason?: string },
+    professional: { status: 'ok' | 'error' | 'warning', message: string, reason?: string },
+    subscription: { status: 'ok' | 'error' | 'warning', message: string, reason?: string },
+    rls: { status: 'ok' | 'error' | 'warning', message: string, reason?: string }
   } | null>(null);
+
+  const addLog = useCallback((msg: string) => {
+    const timestamp = new Date().toISOString();
+    setDebugLogs(prev => [...prev, `[${timestamp}] ${msg}`]);
+  }, []);
+
+  const copyLogs = () => {
+    const logText = debugLogs.join("\n") + "\n\nResults:\n" + JSON.stringify(results, null, 2);
+    navigator.clipboard.writeText(logText);
+    toast.success("Logs copiados!");
+  };
+
+  const exportLogs = () => {
+    const blob = new Blob([debugLogs.join("\n") + "\n\n" + JSON.stringify(results, null, 2)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `diagnostic_${user?.id}_${new Date().getTime()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const runDiagnostic = async () => {
     setLoading(true);
