@@ -582,6 +582,31 @@ export default function PatientRegister() {
     );
   }
 
+  if (registrationDisplay.isLinkValidationPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl opacity-50" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl opacity-50" />
+        </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md text-center space-y-4">
+          <div className="flex justify-center mb-4"><FitJourneyLogo size="lg" /></div>
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm shadow-xl">
+            <CardContent className="pt-12 pb-12 flex flex-col items-center gap-5">
+              <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              <div className="space-y-2">
+                <p className="font-bold text-xl text-foreground">Validando convite...</p>
+                <p className="text-sm text-muted-foreground max-w-[240px] mx-auto">
+                  Estamos conectando você ao seu profissional. Por favor, aguarde.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   if (registrationDisplay.shouldShowInvitationWelcome && selectedProfessional) {
     const cadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
     return (
@@ -653,9 +678,6 @@ export default function PatientRegister() {
 
 
   // GUARD: Cadastro de paciente é EXCLUSIVAMENTE via link do profissional.
-  // Sem `code` (convite) e sem `nutri` (link rápido), bloqueia e instrui o
-  // paciente a procurar o nutricionista. Sem este guard, qualquer pessoa
-  // poderia cair em /cadastro pela home e criar conta órfã (sem vínculo).
   if (registrationDisplay.shouldShowNoContextGuard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
@@ -698,31 +720,6 @@ export default function PatientRegister() {
               <Button asChild variant="outline" className="w-full h-12">
                 <Link to="/auth">Já tenho conta — Entrar</Link>
               </Button>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
-  }
-
-  if (registrationDisplay.isLinkValidationPending) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
-        <div className="absolute inset-0 overflow-hidden pointer-events-none">
-          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl opacity-50" />
-          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl opacity-50" />
-        </div>
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md text-center space-y-4">
-          <div className="flex justify-center mb-4"><FitJourneyLogo size="lg" /></div>
-          <Card className="border-border/50 bg-card/80 backdrop-blur-sm shadow-xl">
-            <CardContent className="pt-12 pb-12 flex flex-col items-center gap-5">
-              <Loader2 className="w-12 h-12 animate-spin text-primary" />
-              <div className="space-y-2">
-                <p className="font-bold text-xl text-foreground">Validando convite...</p>
-                <p className="text-sm text-muted-foreground max-w-[240px] mx-auto">
-                  Estamos conectando você ao seu profissional. Por favor, aguarde.
-                </p>
-              </div>
             </CardContent>
           </Card>
         </motion.div>
@@ -833,14 +830,6 @@ export default function PatientRegister() {
                 </div>
               </div>
 
-              {/*
-                * REMOVIDO: bloco "Vincular a um profissional".
-                * Cadastro de paciente é SEMPRE via link do profissional (?code=…
-                * ou ?nutri=…). Não existe vínculo manual nesta tela — se o
-                * paciente chega aqui sem contexto, mostramos a tela de bloqueio
-                * abaixo (vide guard de "useNoContextGuard").
-                */}
-
               {refCode && (
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
                   <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
@@ -886,33 +875,8 @@ export default function PatientRegister() {
                 <div key={i} className="text-muted-foreground border-l border-primary/30 pl-2 py-0.5">{log}</div>
               ))}
             </div>
-            {sigValid === false && (
-              <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded flex items-start gap-2 text-destructive">
-                <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-bold uppercase tracking-tight text-[9px]">Vínculo do Profissional Não Validado</p>
-                  <p className="text-[9px] leading-tight">
-                    {invitationCode 
-                      ? "O código de convite pode estar expirado, já ter sido usado ou ser inválido." 
-                      : signature 
-                        ? "A assinatura de segurança do link é inválida ou expirou." 
-                        : "Não conseguimos encontrar o nutricionista indicado pelo link."}
-                  </p>
-                  <p className="text-[9px] mt-1 font-semibold">O que fazer?</p>
-                  <ul className="text-[8px] list-disc list-inside opacity-80">
-                    <li>Peça um novo link de convite ao seu profissional</li>
-                    <li>Verifique se você copiou o link inteiro</li>
-                    <li>Se continuar, o vínculo automático não será aplicado</li>
-                  </ul>
-                </div>
-              </div>
-            )}
           </div>
         )}
-
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          Ao criar sua conta, você concorda com os termos de uso.
-        </p>
       </motion.div>
     </div>
   );
