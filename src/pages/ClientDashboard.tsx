@@ -133,7 +133,7 @@ export default function ClientDashboard() {
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
-  const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -278,9 +278,17 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Only allow dashboard if journey status is active or onboarding is ready
-  if (!journeyLoading && !canAccessOnboarding && journeyStatus) {
-    return <OnboardingGateScreen status={journeyStatus} />;
+  // Fluid flow: If patient just joined via link or is awaiting consent,
+  // we allow them into the dashboard where OnboardingProgressModal 
+  // will guide them to /consent and /onboarding automatically.
+  const isNewlyJoined = journeyStatus === "lead_created" || journeyStatus === "awaiting_consent";
+  
+  if (!journeyLoading && journeyStatus && !isNewlyJoined && journeyStatus !== "active") {
+    // Only block if it's a "real" block state like awaiting_payment
+    const blockingStates = ["awaiting_payment", "awaiting_onboarding_release"];
+    if (blockingStates.includes(journeyStatus)) {
+      return <OnboardingGateScreen status={journeyStatus} />;
+    }
   }
 
   if (loading || journeyLoading) {
