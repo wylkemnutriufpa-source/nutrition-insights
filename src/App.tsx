@@ -8,6 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { TenantProvider } from "@/lib/tenantContext";
+import { supabase } from "@/integrations/supabase/client";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
@@ -420,11 +421,44 @@ function CanonicalPublicRedirect({ to }: { to: "/convite" | "/cadastro" | "/auth
 
 function InvitationCodeRedirect() {
   const location = useLocation();
-  const { code } = useParams<{ code: string }>();
+  const { "*": rest } = useParams(); // Catch everything after /convite/
   const search = new URLSearchParams(location.search);
-  if (code) search.set("code", code);
+  if (rest) {
+    const code = rest.split("/")[0]; // Get the first segment as the code
+    if (code) search.set("code", code);
+  }
   const query = search.toString();
   return <Navigate to={`/cadastro${query ? `?${query}` : ""}${location.hash}`} replace />;
+}
+
+function PublicProfileRegistrationRedirect() {
+  const { slug } = useParams<{ slug: string }>();
+  const [targetId, setTargetId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!slug) return;
+    const fetchProfile = async () => {
+      try {
+        const { data } = await supabase
+          .from("public_profile_settings")
+          .select("nutritionist_id")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (data) setTargetId(data.nutritionist_id);
+      } catch (err) {
+        console.error("Error fetching public profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, [slug]);
+
+  if (loading) return <PageLoader />;
+  if (!targetId) return <Navigate to="/404" replace />;
+  
+  return <Navigate to={`/cadastro?nutri=${targetId}`} replace />;
 }
 
 function DarkModeInit() {
@@ -558,11 +592,15 @@ const App = () => (
               <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register-patient" element={<LP section="Cadastro"><PatientRegister /></LP>} />
-               <Route path="/vincular/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
-               <Route path="/q/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
-               <Route path="/convite" element={<Navigate to="/cadastro" replace />} />
-              <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
-              <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
+               <Route path="/vincular/:nutriId" element={<Navigate to="/cadastro?nutri=:nutriId" replace />} />
+               <Route path="/q/:nutriId" element={<Navigate to="/cadastro?nutri=:nutriId" replace />} />
+                <Route path="/convite" element={<Navigate to="/cadastro" replace />} />
+               <Route path="/convite/*" element={<InvitationCodeRedirect />} />
+               <Route path="/p/:slug/paciente" element={<PublicProfileRegistrationRedirect />} />
+               <Route path="/p/:slug/profissional" element={<PublicProfileRegistrationRedirect />} />
+               <Route path="/p/:slug/agenda" element={<LP section="Agenda"><PublicBooking /></LP>} />
+               <Route path="/p/:slug" element={<LP section="Perfil Público"><PublicProfile /></LP>} />
+               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
                <Route path="/auth/confirm" element={<LP section="Confirmação"><AuthConfirm /></LP>} />
                <Route path="/politica-de-privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
