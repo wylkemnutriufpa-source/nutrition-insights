@@ -5925,6 +5925,48 @@ export type Database = {
           },
         ]
       }
+      invitation_audits: {
+        Row: {
+          code: string
+          correlation_id: string | null
+          created_at: string | null
+          error_type: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          professional_id: string | null
+          stage: string
+          status_code: number | null
+          user_agent: string | null
+        }
+        Insert: {
+          code: string
+          correlation_id?: string | null
+          created_at?: string | null
+          error_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          professional_id?: string | null
+          stage: string
+          status_code?: number | null
+          user_agent?: string | null
+        }
+        Update: {
+          code?: string
+          correlation_id?: string | null
+          created_at?: string | null
+          error_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          professional_id?: string | null
+          stage?: string
+          status_code?: number | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       invitation_diagnostics: {
         Row: {
           code: string | null
