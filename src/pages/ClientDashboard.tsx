@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
 import { BrainLoaderCard } from "@/components/common/BrainLoader";
