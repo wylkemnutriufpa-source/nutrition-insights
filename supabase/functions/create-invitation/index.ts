@@ -109,9 +109,10 @@ Deno.serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    const host = req.headers.get("host") || "unknown";
-    const userAgent = req.headers.get("user-agent") || "unknown";
-    const friendlyUrl = `${BASE_URL}/convite/${code}`;
+    const host = req.headers.get("host") || "www.fitjourney.com.br";
+    const protocol = host.includes("localhost") ? "http" : "https";
+    const origin = `${protocol}://${host}`;
+    const friendlyUrl = `${origin}/convite/${code}`;
 
     // Log da criação
     await logInvitation(adminClient, {

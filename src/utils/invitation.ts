@@ -37,7 +37,7 @@ export const getWhatsAppInvitationMessage = (params: {
   const { patientName, professionalName, clinicName, invitationCode } = params;
   const greeting = patientName ? `Olá ${patientName.split(" ")[0]}! ` : "Olá! ";
   const clinicPart = clinicName ? ` da clínica *${clinicName}*` : "";
-  const url = `${BASE_URL}/convite/${invitationCode}`;
+  const url = getInvitationUrl(invitationCode);
 
   return `${greeting}Sou o(a) nutricionista *${professionalName}*${clinicPart}. Seu acesso ao FitJourney foi criado! 🚀\n\nClique no link abaixo para aceitar seu convite e começar seu acompanhamento:\n\n${url}`;
 };

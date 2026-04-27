@@ -520,6 +520,7 @@ const App = () => (
               <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register-patient" element={<LP section="Cadastro"><PatientRegister /></LP>} />
+              <Route path="/convite" element={<Navigate to="/" replace />} />
               <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
