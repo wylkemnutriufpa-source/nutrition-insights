@@ -15,6 +15,13 @@ import { test, expect } from "@playwright/test";
  * exige Supabase auth real (validado em ambientes staging).
  */
 const TEST_CODE = "E2ECODE";
+const TEST_NUTRI_ID = "67f47696-a778-4ada-9ff9-9615fb7a7c48";
+
+const mockInvitationLogs = async (page: import("@playwright/test").Page) => {
+  await page.route("**/rest/v1/invitation_logs**", async (route) => {
+    await route.fulfill({ status: 201, contentType: "application/json", body: "[]" });
+  });
+};
 
 test.describe("Fluxo do convite preserva vínculo do profissional", () => {
   test("/cadastro?code=CODE carrega e preserva o code no estado da página", async ({
@@ -66,5 +73,69 @@ test.describe("Fluxo do convite preserva vínculo do profissional", () => {
       name: /Página não encontrada/i,
     });
     await expect(notFoundHeading).toHaveCount(0);
+  });
+
+  test("/cadastro?code=CODE mostra 'Você foi convidado!' com profissional já vinculado", async ({
+    page,
+  }) => {
+    await mockInvitationLogs(page);
+    await page.route("**/functions/v1/validate-invitation", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          invitation: {
+            id: "invite-e2e",
+            code: TEST_CODE,
+            status: "pending",
+            professional_id: TEST_NUTRI_ID,
+            patient_email: "paciente-e2e@fitjourney.app",
+            patient_name: "Paciente E2E",
+            metadata: { clinic_name: "Clínica E2E" },
+            professional: { full_name: "Nutri E2E", avatar_url: null, phone: "11999999999" },
+          },
+        }),
+      });
+    });
+
+    await page.goto(`/cadastro?code=${TEST_CODE}&utm_source=whatsapp#onboarding`);
+    await expect(page.getByRole("heading", { name: /Você foi convidado!/i })).toBeVisible();
+    await expect(page.getByText(/Nutri E2E/i)).toBeVisible();
+    await expect(page.getByText(/Clínica E2E/i)).toBeVisible();
+
+    await page.getByRole("button", { name: /Aceitar Convite e Continuar/i }).click();
+    await expect(page.getByText(/Profissional Vinculado/i)).toBeVisible();
+    await expect(page.getByText(/Nutri E2E/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Concluir Cadastro/i })).toBeEnabled();
+
+    const codeFromUrl = await page.evaluate(() => new URLSearchParams(window.location.search).get("code"));
+    expect(codeFromUrl).toBe(TEST_CODE);
+  });
+
+  test("/cadastro?code inválido ou expirado não trava e orienta cadastro sem vínculo automático", async ({
+    page,
+  }) => {
+    await mockInvitationLogs(page);
+    await page.route("**/functions/v1/validate-invitation", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: false,
+          error_code: "EXPIRED",
+          message: "Este convite expirou. Solicite um novo link ao seu profissional.",
+        }),
+      });
+    });
+    await page.route("**/rest/v1/rpc/validate_onboarding_token", async (route) => {
+      await route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ valid: false }) });
+    });
+
+    await page.goto("/cadastro?code=EXPIRADO123");
+    await expect(page.getByText(/Link sem vínculo automático/i)).toBeVisible();
+    await expect(page.getByText(/Solicite um novo link/i)).toBeVisible();
+    await expect(page.getByRole("button", { name: /Concluir Cadastro/i })).toBeEnabled();
+    await expect(page.getByText(/Página não encontrada/i)).toHaveCount(0);
   });
 });
