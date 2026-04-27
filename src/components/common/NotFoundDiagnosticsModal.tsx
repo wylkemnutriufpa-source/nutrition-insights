@@ -48,7 +48,7 @@ export default function NotFoundDiagnosticsModal({
       <DialogContent className="max-w-lg">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
-            <ShieldAlert className="w-5 h-5 text-amber-500" />
+            <ShieldAlert className="w-5 h-5 text-warning" />
             Diagnóstico da página
           </DialogTitle>
           <DialogDescription>
@@ -164,7 +164,7 @@ function DiagRow({
         <span className={`flex items-center gap-1.5 ${mono ? "font-mono text-xs" : "text-sm font-medium"}`}>
           {tone && (
             <Icon
-              className={`w-3.5 h-3.5 ${tone === "warn" ? "text-amber-500" : "text-emerald-500"}`}
+              className={`w-3.5 h-3.5 ${tone === "warn" ? "text-warning" : "text-success"}`}
             />
           )}
           {value}
