@@ -19996,32 +19996,19 @@ export type Database = {
         Args: { _email: string; _full_name: string; _password: string }
         Returns: string
       }
-      create_patient_canonical:
-        | {
-            Args: {
-              _email: string
-              _full_name: string
-              _metadata?: Json
-              _nutritionist_id?: string
-              _patient_id: string
-              _phone?: string
-              _source?: string
-            }
-            Returns: Json
-          }
-        | {
-            Args: {
-              _email: string
-              _full_name: string
-              _metadata?: Json
-              _nutritionist_id?: string
-              _patient_id: string
-              _phone?: string
-              _source?: string
-              _whatsapp?: string
-            }
-            Returns: Json
-          }
+      create_patient_canonical: {
+        Args: {
+          _email: string
+          _full_name: string
+          _metadata?: Json
+          _nutritionist_id: string
+          _patient_id: string
+          _phone: string
+          _source: string
+          _whatsapp?: string
+        }
+        Returns: Json
+      }
       create_professional_account: {
         Args: {
           _email: string
@@ -20071,6 +20058,7 @@ export type Database = {
       }
       find_patient_by_email: { Args: { _email: string }; Returns: string }
       fix_all_null_tokens: { Args: never; Returns: undefined }
+      fix_orphaned_patient_links: { Args: never; Returns: undefined }
       fix_patient_integrity: { Args: { _patient_id: string }; Returns: Json }
       fix_patient_integrity_v2: { Args: { _patient_id: string }; Returns: Json }
       fix_user_null_tokens: { Args: { _user_id: string }; Returns: undefined }
