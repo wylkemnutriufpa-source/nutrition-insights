@@ -20001,10 +20001,10 @@ export type Database = {
           _email: string
           _full_name: string
           _metadata?: Json
-          _nutritionist_id: string
+          _nutritionist_id?: string
           _patient_id: string
-          _phone: string
-          _source: string
+          _phone?: string
+          _source?: string
           _whatsapp?: string
         }
         Returns: Json
