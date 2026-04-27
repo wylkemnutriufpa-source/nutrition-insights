@@ -2,10 +2,9 @@
  * Hook that checks if a patient must complete onboarding before accessing the system.
  * Returns whether the patient should be redirected to /onboarding.
  */
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/lib/auth";
-import { resolvePatientIdentity } from "@/lib/onboardingPlanResolver";
+import { useMemo } from "react";
+import { useLocation } from "react-router-dom";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading";
 
@@ -21,14 +20,14 @@ export function useOnboardingGuard() {
   const location = useLocation();
 
   const requirement: OnboardingRequirement = useMemo(() => {
-    if (loading) return \"loading\";
+    if (loading) return "loading";
     
     // Se o estado for 'awaiting_consent' ou 'lead_created', o paciente PRECISA aceitar o consentimento primeiro
-    if (journeyStatus === \"awaiting_consent\" || journeyStatus === \"lead_created\") {
-      return \"must_complete\";
+    if (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created") {
+      return "must_complete";
     }
 
-    return \"none\";
+    return "none";
   }, [journeyStatus, loading]);
 
   return { requirement };
