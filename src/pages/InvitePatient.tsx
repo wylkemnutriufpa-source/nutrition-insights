@@ -41,6 +41,15 @@ export default function InvitePatient() {
   // Generate friendly invitation link
   useEffect(() => {
     if (!user?.id) return;
+    const cacheKey = `invitation_code_${user.id}`;
+    
+    // Reuso de cache em sessão para evitar 429 (rate limit) em re-renders
+    const cached = sessionStorage.getItem(cacheKey);
+    if (cached) {
+      setInvitationCode(cached);
+      return;
+    }
+    
     const generateInvitation = async () => {
       try {
         const { data, error } = await supabase.functions.invoke("create-invitation", {
@@ -49,9 +58,17 @@ export default function InvitePatient() {
             tenant_id: (user as any).user_metadata?.tenant_id 
           }
         });
-        if (error) throw error;
+        if (error) {
+          // Se deu rate limit, não trava a tela — usa fallback com nutri ID
+          if (String(error.message || "").includes("429")) {
+            console.warn("[invitation] Rate limited, usando fallback com nutri ID");
+            return;
+          }
+          throw error;
+        }
         if (data?.code) {
           setInvitationCode(data.code);
+          sessionStorage.setItem(cacheKey, data.code);
         }
       } catch (err) {
         console.error("Error creating friendly invitation:", err);
