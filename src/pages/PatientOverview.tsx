@@ -44,7 +44,7 @@ export default function PatientOverview() {
 
       const checklistRes: any = await supabase.from("checklist_tasks" as any).select("id, completed").eq("patient_id", user.id).eq("date", today);
       const aptRes: any = await supabase.from("patient_appointments" as any).select("title, appointment_date").eq("patient_id", user.id).gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1);
-      const mealRes: any = await supabase.from("meal_plans" as any).select("id").eq("patient_id", user.id).eq("status", "active").limit(1);
+      const mealRes: any = await supabase.from("meal_plans" as any).select("id").eq("patient_id", user.id).eq("is_active", true).limit(1);
       const checkinRes: any = await supabase.from("patient_checkins" as any).select("id").eq("patient_id", user.id).gte("created_at", weekAgo);
       const notifRes: any = await supabase.from("notifications" as any).select("id").eq("user_id", user.id).eq("is_read", false);
       const achieveRes: any = await supabase.from("user_achievements" as any).select("id").eq("user_id", user.id);
