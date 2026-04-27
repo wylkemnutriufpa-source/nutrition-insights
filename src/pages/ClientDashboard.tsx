@@ -299,15 +299,6 @@ export default function ClientDashboard() {
     }
   }, [journeyStatus, journeyLoading, canAccessOnboarding, user?.id]);
 
-  // Mandatory block states only - using centralized logic
-  const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
-  
-  // REDIRECT logic for non-fluid onboarding states
-  if (isPatient && !journeyLoading && journeyStatus && !isFluid) {
-    console.log(`[Dashboard:Gate] Blocking dashboard for status: ${journeyStatus}`);
-    return <OnboardingGateScreen status={journeyStatus} />;
-  }
-
   // AUTOMATIC REDIRECT: Ensure early onboarding states land on /consent immediately
   // FIXED: Only redirect if actually on the dashboard to avoid infinite loops on /consent
   useEffect(() => {
@@ -324,6 +315,15 @@ export default function ClientDashboard() {
        }
     }
   }, [journeyStatus, journeyLoading, isLoading, navigate]);
+
+  // Mandatory block states only - using centralized logic
+  const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
+  
+  // REDIRECT logic for non-fluid onboarding states
+  if (isPatient && !journeyLoading && journeyStatus && !isFluid) {
+    console.log(`[Dashboard:Gate] Blocking dashboard for status: ${journeyStatus}`);
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
 
   // Telemetry extraction helper for diagnostics
   const getTelemetryLogs = () => {
