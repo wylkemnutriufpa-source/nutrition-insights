@@ -579,6 +579,59 @@ export default function PatientRegister() {
   }
 
 
+  // GUARD: Cadastro de paciente é EXCLUSIVAMENTE via link do profissional.
+  // Sem `code` (convite) e sem `nutri` (link rápido), bloqueia e instrui o
+  // paciente a procurar o nutricionista. Sem este guard, qualquer pessoa
+  // poderia cair em /cadastro pela home e criar conta órfã (sem vínculo).
+  if (!preselectedNutri && !invitationCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md relative z-10"
+        >
+          <div className="flex flex-col items-center mb-6">
+            <FitJourneyLogo size="lg" />
+          </div>
+
+          <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardContent className="pt-8 pb-8 space-y-5 text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Stethoscope className="w-8 h-8 text-primary" />
+              </div>
+
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-foreground">Acesso por convite</h1>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  O cadastro de paciente no FitJourney é feito através do link do
+                  seu nutricionista ou personal. Peça o link e abra-o para
+                  começar.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-left text-xs text-muted-foreground space-y-1">
+                <p className="font-semibold text-foreground">Como pegar o link?</p>
+                <p>1. Fale com seu profissional pelo WhatsApp.</p>
+                <p>2. Peça o link de cadastro do FitJourney.</p>
+                <p>3. Toque no link e o cadastro abre já vinculado.</p>
+              </div>
+
+              <Button asChild variant="outline" className="w-full h-12">
+                <Link to="/auth">Já tenho conta — Entrar</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
