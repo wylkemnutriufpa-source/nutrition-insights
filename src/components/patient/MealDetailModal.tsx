@@ -1387,6 +1387,18 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 </div>
               )}
 
+              {(meal.title.toLowerCase().includes("marmita") || (meal.metadata as any)?.is_fixed) && (
+                <div className="flex items-center gap-2 mb-4 p-3 bg-primary/5 rounded-xl border border-primary/10 shadow-sm">
+                  <div className="p-2 bg-primary/10 rounded-full text-primary">
+                    <ChefHat className="w-5 h-5" />
+                  </div>
+                  <div className="text-xs">
+                    <span className="font-bold text-primary block text-[10px] uppercase tracking-wider">Marmita Fixa Sugerida</span>
+                    <span className="text-muted-foreground">Você escolheu / Hoje: <span className="font-bold text-foreground text-sm">{meal.title}</span></span>
+                  </div>
+                </div>
+              )}
+
               <ul className="space-y-1.5">
                 {foodLines.map((line, idx) => {
                   if (removedLines.has(idx)) return null;
