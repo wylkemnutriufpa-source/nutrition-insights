@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth";
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
