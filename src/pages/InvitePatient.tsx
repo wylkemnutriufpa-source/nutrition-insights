@@ -263,7 +263,7 @@ export default function InvitePatient() {
               mas o onboarding completo fica pendente até que você autorize.
             </CardDescription>
           </CardHeader>
-          <CardContent>
+          <CardContent className="space-y-3">
             <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
               <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
               <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
@@ -276,6 +276,20 @@ export default function InvitePatient() {
                 {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
               </Button>
             </div>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="w-full gap-2 border-[#25D366]/30 hover:bg-[#25D366]/10 text-[#128C7E]"
+            >
+              <a 
+                href={`https://wa.me/?text=${encodeURIComponent(`Olá! Sou o(a) nutricionista *${profile?.full_name || "Seu Nutri"}* e convido você a começar seu acompanhamento comigo através deste link rápido: ${quickLink}`)}`} 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                <MessageCircle className="w-3.5 h-3.5" /> Compartilhar Link Rápido
+              </a>
+            </Button>
           </CardContent>
         </Card>
 
