@@ -290,9 +290,17 @@ export default function InvitePatient() {
               variant="outline"
               size="sm"
               className="w-full gap-2 border-[#25D366]/30 hover:bg-[#25D366]/10 text-[#128C7E]"
+              onClick={() => logInvitation({ patientName: "Lead Link Rápido", invitationType: "quick_link" })}
             >
               <a 
-                href={`https://wa.me/?text=${encodeURIComponent(`Olá! Sou o(a) nutricionista *${profile?.full_name || "Seu Nutri"}* e convido você a começar seu acompanhamento comigo através deste link rápido: ${quickLink}`)}`} 
+                href={`https://wa.me/?text=${encodeURIComponent(getWhatsAppInvitationMessage({
+                  patientName: "",
+                  professionalName: profile?.full_name || "Seu Nutri",
+                  clinicName: clinic?.name,
+                  invitationCode: user?.id || "",
+                  templateType: 'quick_link',
+                  customTemplate: templates['quick_link']
+                }))}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
               >
