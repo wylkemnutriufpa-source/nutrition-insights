@@ -184,26 +184,52 @@ export default function Invitation() {
     window.open(url, '_blank');
   };
 
-  const InvitationDebug = () => (
-    <div className="mt-8 p-4 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs space-y-2 border border-slate-700 shadow-2xl max-w-md w-full animate-in fade-in slide-in-from-bottom-4">
-      <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-2">
-        <span className="flex items-center gap-2 text-primary font-bold"><Terminal className="w-4 h-4" /> DEBUG PREVIEW</span>
-        <button onClick={() => setShowDebug(false)} className="text-slate-400 hover:text-white">✕</button>
+  const InvitationDebug = () => {
+    const [testResult, setTestResult] = useState<string | null>(null);
+
+    const runSelfTest = () => {
+      const gUrl = getInvitationUrl(code || "TEST-CODE");
+      const msg = getWhatsAppInvitationMessage({
+        patientName: "Teste",
+        professionalName: "Nutri Teste",
+        invitationCode: code || "TEST-CODE"
+      });
+      
+      const pass = msg.includes(gUrl) && (isPreview ? gUrl.includes(window.location.hostname) : gUrl.includes(OFFICIAL_DOMAIN));
+      setTestResult(pass ? "✅ TESTE PASSOU: URL e WhatsApp estão sincronizados!" : "❌ TESTE FALHOU: URL inconsistente.");
+      
+      console.log("[Self-Test]", { gUrl, msg, pass });
+    };
+
+    return (
+      <div className="mt-8 p-4 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs space-y-2 border border-slate-700 shadow-2xl max-w-md w-full animate-in fade-in slide-in-from-bottom-4">
+        <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-2">
+          <span className="flex items-center gap-2 text-primary font-bold"><Terminal className="w-4 h-4" /> DIAGNÓSTICO DE AMBIENTE</span>
+          <button onClick={() => setShowDebug(false)} className="text-slate-400 hover:text-white">✕</button>
+        </div>
+        <p><span className="text-slate-400">Ambiente Atual:</span> {isPreview ? "PREVIEW (Lovable/Local)" : "PRODUÇÃO"}</p>
+        <p><span className="text-slate-400">Hostname:</span> {window.location.hostname}</p>
+        <p><span className="text-slate-400">URL Gerada:</span> {getInvitationUrl(code || "")}</p>
+        <p><span className="text-slate-400">BASE_URL (Config):</span> {BASE_URL}</p>
+        
+        <div className="pt-2 border-t border-slate-700 mt-2">
+          <Button size="sm" variant="secondary" onClick={runSelfTest} className="w-full h-8 text-[10px] bg-slate-800 hover:bg-slate-700 text-white">
+            Executar Teste de Lógica de Link
+          </Button>
+          {testResult && (
+            <p className={`mt-2 p-2 rounded ${testResult.includes("✅") ? "bg-emerald-950 text-emerald-400" : "bg-red-950 text-red-400"}`}>
+              {testResult}
+            </p>
+          )}
+        </div>
+        
+        <div className="pt-2 border-t border-slate-700 text-[10px] text-slate-500">
+          * Este painel só é visível em ambientes de teste/preview.
+        </div>
       </div>
-      <p><span className="text-slate-400">Hostname:</span> {window.location.hostname}</p>
-      <p><span className="text-slate-400">Origin:</span> {window.location.origin}</p>
-      <p><span className="text-slate-400">BASE_URL:</span> {BASE_URL}</p>
-      <p><span className="text-slate-400">OFFICIAL_DOMAIN:</span> {OFFICIAL_DOMAIN}</p>
-      <p><span className="text-slate-400">Invite Code:</span> {code}</p>
-      <p><span className="text-slate-400">Generated URL:</span> {getInvitationUrl(code || "")}</p>
-      <p><span className="text-slate-400">Status:</span> {invitation?.status || 'N/A'}</p>
-      <div className="pt-2 border-t border-slate-700">
-        <p className="text-amber-400 font-bold">Validação de Ambiente:</p>
-        <p>• Preview: {isPreview ? "SIM ✅" : "NÃO ❌"}</p>
-        <p>• Oficial: {[OFFICIAL_DOMAIN, "fitjourney.com.br"].some(d => window.location.hostname.includes(d)) ? "SIM ✅" : "NÃO ❌"}</p>
-      </div>
-    </div>
-  );
+    );
+  };
+
 
   if (loading) {
     return (
