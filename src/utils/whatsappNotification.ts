@@ -31,6 +31,13 @@ export const getWhatsAppTemplate = (type: WhatsAppTemplateType, params: WhatsApp
   }
 };
 
+/**
+ * Backward compatibility helper for MealPlanEditorV2
+ */
+export const getMealPlanReadyMessage = (patientName: string, professionalName: string, appUrl: string) => {
+  return getWhatsAppTemplate("meal_plan_ready", { patientName, professionalName, appUrl });
+};
+
 export const sendWhatsAppNotification = async (params: {
   patientId: string;
   message: string;
