@@ -123,11 +123,23 @@ export const getWhatsAppInvitationMessage = (params: {
 };
 
 /**
- * Normaliza o nome para exibição profissional, removendo excessos se necessário,
- * mas mantendo o título se presente.
+ * Normaliza o nome para exibição profissional, removendo excessos (como nome completo)
+ * para manter apenas o nome social/profissional (ex: Dr. Wylkem Raiol).
  */
 export const formatProfessionalName = (name: string) => {
   if (!name) return "";
-  // Se o nome já começa com Dr, Dra, Nutri, etc, mantemos.
-  return name.trim();
+  const trimmed = name.trim();
+  
+  // Se já tiver títulos comuns, provavelmente é o nome profissional desejado
+  if (/^(Dr|Dra|Nutri|Prof|Coach)\.?\s/i.test(trimmed)) {
+    return trimmed;
+  }
+
+  // Se for um nome muito longo (ex: Wylkem Raiol da Silva Junior), pegamos apenas os dois primeiros
+  const parts = trimmed.split(/\s+/);
+  if (parts.length > 2) {
+    return `${parts[0]} ${parts[1]}`;
+  }
+
+  return trimmed;
 };
