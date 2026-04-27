@@ -492,7 +492,8 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
           <PatientRow key={p.id} p={p} idx={idx} navigate={navigate}
             toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
             setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-            onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} />
+            onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} 
+            setExpiryTarget={setExpiryTarget} />
         ))}
       </div>
     );
@@ -505,7 +506,8 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
           setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
           onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans}
-          isOnline={onlineSet?.has(p.patient_id)} />
+          isOnline={onlineSet?.has(p.patient_id)} 
+          setExpiryTarget={setExpiryTarget} />
       ))}
     </div>
   );
