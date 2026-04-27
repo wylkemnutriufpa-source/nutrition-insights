@@ -3,20 +3,14 @@ import { Clock, CreditCard, Stethoscope, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import type { JourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { type JourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 
 interface Props {
   status: JourneyStatus;
 }
 
-/** 
- * Centralized rule for allowed (non-blocking) states.
- * States like lead_created and awaiting_consent are FLUID - they should not block the dashboard
- * because components like OnboardingProgressModal will take over to guide the user.
- */
-export const IS_FLUID_STATE = (status: JourneyStatus) => 
-  status === "lead_created" || status === "awaiting_consent" || status === "active" || status === "onboarding_active";
+export { IS_FLUID_STATE };
 
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; title: string; description: string; action?: { label: string; route: string } }> = {
   lead_created: {
