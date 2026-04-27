@@ -417,6 +417,24 @@ export default function Programs() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={!!alertConfig} onOpenChange={(open) => !open && setAlertConfig(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertConfig?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{alertConfig?.desc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              alertConfig?.action();
+              setAlertConfig(null);
+            }}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
