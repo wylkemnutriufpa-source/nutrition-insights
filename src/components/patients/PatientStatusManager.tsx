@@ -52,7 +52,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [sendingLinkId, setSendingLinkId] = useState<string | null>(null);
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
-  const onboardingLink = `${window.location.origin}/onboarding`;
+  const onboardingLink = `${window.location.origin}/cadastro?nutri=${user?.id}`;
 
   const copyOnboardingLink = async () => {
     try {
