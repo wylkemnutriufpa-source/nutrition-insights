@@ -579,6 +579,59 @@ export default function PatientRegister() {
   }
 
 
+  // GUARD: Cadastro de paciente é EXCLUSIVAMENTE via link do profissional.
+  // Sem `code` (convite) e sem `nutri` (link rápido), bloqueia e instrui o
+  // paciente a procurar o nutricionista. Sem este guard, qualquer pessoa
+  // poderia cair em /cadastro pela home e criar conta órfã (sem vínculo).
+  if (!preselectedNutri && !invitationCode) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
+        </div>
+
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="w-full max-w-md relative z-10"
+        >
+          <div className="flex flex-col items-center mb-6">
+            <FitJourneyLogo size="lg" />
+          </div>
+
+          <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
+            <CardContent className="pt-8 pb-8 space-y-5 text-center">
+              <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                <Stethoscope className="w-8 h-8 text-primary" />
+              </div>
+
+              <div className="space-y-2">
+                <h1 className="text-2xl font-bold text-foreground">Acesso por convite</h1>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  O cadastro de paciente no FitJourney é feito através do link do
+                  seu nutricionista ou personal. Peça o link e abra-o para
+                  começar.
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-left text-xs text-muted-foreground space-y-1">
+                <p className="font-semibold text-foreground">Como pegar o link?</p>
+                <p>1. Fale com seu profissional pelo WhatsApp.</p>
+                <p>2. Peça o link de cadastro do FitJourney.</p>
+                <p>3. Toque no link e o cadastro abre já vinculado.</p>
+              </div>
+
+              <Button asChild variant="outline" className="w-full h-12">
+                <Link to="/auth">Já tenho conta — Entrar</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -670,48 +723,13 @@ export default function PatientRegister() {
                 </div>
               </div>
 
-              {/* Optional: Link to professional */}
-              {!selectedProfessional && !preselectedNutri && (
-                <>
-                  {!showProfSearch ? (
-                    <button type="button" onClick={() => setShowProfSearch(true)}
-                      className="w-full flex items-center justify-center gap-2 text-sm text-primary hover:underline py-1">
-                      <Stethoscope className="w-3.5 h-3.5" /> Vincular a um profissional
-                    </button>
-                  ) : (
-                    <div className="space-y-2 p-3 rounded-lg border border-border bg-muted/30">
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs font-medium text-foreground">Buscar profissional</span>
-                        <button type="button" onClick={() => { setShowProfSearch(false); setProfSearch(""); setProfResults([]); }}
-                          className="text-xs text-muted-foreground hover:text-foreground">Pular</button>
-                      </div>
-                      <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
-                        <Input value={profSearch} onChange={(e) => setProfSearch(e.target.value)}
-                          placeholder="Nome do profissional" className="pl-9 h-9 text-sm" />
-                      </div>
-                      {searchLoading && <Loader2 className="w-4 h-4 animate-spin text-muted-foreground mx-auto" />}
-                      {profResults.length > 0 && (
-                        <div className="space-y-1 max-h-36 overflow-y-auto">
-                          {profResults.map(prof => (
-                            <button key={prof.user_id} type="button"
-                              onClick={() => { setSelectedProfessional(prof); setShowProfSearch(false); setIsProfConfirmed(true); }}
-                              className="w-full flex items-center gap-2 p-2 rounded-lg text-left hover:bg-primary/10 transition-all text-sm">
-                              <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                <span className="text-xs font-bold text-primary">{prof.full_name?.[0]?.toUpperCase()}</span>
-                              </div>
-                              <span className="truncate text-foreground">{prof.full_name}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      {profSearch.length >= 2 && !searchLoading && profResults.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-1">Nenhum encontrado</p>
-                      )}
-                    </div>
-                  )}
-                </>
-              )}
+              {/*
+                * REMOVIDO: bloco "Vincular a um profissional".
+                * Cadastro de paciente é SEMPRE via link do profissional (?code=…
+                * ou ?nutri=…). Não existe vínculo manual nesta tela — se o
+                * paciente chega aqui sem contexto, mostramos a tela de bloqueio
+                * abaixo (vide guard de "useNoContextGuard").
+                */}
 
               {refCode && (
                 <div className="flex items-center gap-2 p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
