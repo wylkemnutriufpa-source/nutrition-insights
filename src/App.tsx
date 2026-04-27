@@ -221,7 +221,7 @@ const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 const PatientDiagnostic = lazy(() => import("./pages/PatientDiagnostic"));
 const MobileQA = lazy(() => import("./pages/MobileQA"));
-const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
+const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
@@ -584,7 +584,7 @@ const App = () => (
                <Route path="/~oauth/auth/confirm" element={<CanonicalPublicRedirect to="/auth/confirm" />} />
 
                {/* Public landing pages */}
-               <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />
+               <Route path="/diagnostic-status" element={<ProtectedRoute><LP section="Status"><DiagnosticStatus /></LP></ProtectedRoute>} />
               <Route path="/landing-paciente" element={<LP section="Landing"><PatientLanding /></LP>} />
               <Route path="/landing-personal" element={<LP section="Landing"><PersonalLanding /></LP>} />
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
