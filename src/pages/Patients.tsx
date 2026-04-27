@@ -439,6 +439,15 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       </div>
       <ScoreRing score={score} />
       <div className="flex items-center gap-1">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpiryTarget({ id: p.id, name: displayName, current: p.expires_at });
+          }}
+          className="text-muted-foreground hover:text-primary p-0.5" title="Definir vencimento"
+        >
+          <CalendarDays className="w-3.5 h-3.5" />
+        </button>
         <button onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
           className="text-muted-foreground hover:text-primary p-1" title="Adicionar a programa">
           <Target className="w-4 h-4" />
