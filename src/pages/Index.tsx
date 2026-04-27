@@ -44,7 +44,7 @@ import {
   UtensilsCrossed, Users, TrendingUp, Target, Plus,
   CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
   Calendar, ArrowRight, ClipboardList, Heart, Brain,
-  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles
+  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
