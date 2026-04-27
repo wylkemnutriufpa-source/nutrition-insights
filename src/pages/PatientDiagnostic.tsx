@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,24 +8,51 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   CheckCircle2, XCircle, AlertCircle, Loader2, 
-  ShieldCheck, UserCheck, CreditCard, Link2 
+  ShieldCheck, UserCheck, CreditCard, Link2,
+  Copy, Download, FileJson, Info
 } from "lucide-react";
 
 export default function PatientDiagnostic() {
   const { user, profile } = useAuth();
   const [loading, setLoading] = useState(false);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
   const [results, setResults] = useState<{
-    invite: { status: 'ok' | 'error' | 'warning', message: string },
-    professional: { status: 'ok' | 'error' | 'warning', message: string },
-    subscription: { status: 'ok' | 'error' | 'warning', message: string },
-    rls: { status: 'ok' | 'error' | 'warning', message: string }
+    invite: { status: 'ok' | 'error' | 'warning', message: string, reason?: string },
+    professional: { status: 'ok' | 'error' | 'warning', message: string, reason?: string },
+    subscription: { status: 'ok' | 'error' | 'warning', message: string, reason?: string },
+    rls: { status: 'ok' | 'error' | 'warning', message: string, reason?: string }
   } | null>(null);
+
+  const addLog = useCallback((msg: string) => {
+    const timestamp = new Date().toISOString();
+    setDebugLogs(prev => [...prev, `[${timestamp}] ${msg}`]);
+  }, []);
+
+  const copyLogs = () => {
+    const logText = debugLogs.join("\n") + "\n\nResults:\n" + JSON.stringify(results, null, 2);
+    navigator.clipboard.writeText(logText);
+    toast.success("Logs copiados!");
+  };
+
+  const exportLogs = () => {
+    const blob = new Blob([debugLogs.join("\n") + "\n\n" + JSON.stringify(results, null, 2)], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `diagnostic_${user?.id}_${new Date().getTime()}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   const runDiagnostic = async () => {
     setLoading(true);
     setResults(null);
+    setDebugLogs([]);
+    addLog("Iniciando diagnóstico completo...");
+    
     try {
       // 1. Check Invite
+      addLog(`Buscando convites para: ${user?.email}`);
       const { data: invite, error: inviteErr } = await (supabase as any)
         .from("invitations")
         .select("*")
@@ -34,26 +61,47 @@ export default function PatientDiagnostic() {
         .limit(1)
         .maybeSingle();
 
-      const inviteResult: any = inviteErr 
-        ? { status: 'error', message: `Erro ao buscar convite: ${inviteErr.message}` }
-        : invite 
-          ? { status: 'ok', message: `Convite encontrado (${invite.status}).` }
-          : { status: 'warning', message: "Nenhum convite específico encontrado para este e-mail." };
+      let inviteResult: any;
+      if (inviteErr) {
+        addLog(`Erro ao buscar convite: ${inviteErr.message}`);
+        inviteResult = { status: 'error', message: "Falha na comunicação com o servidor.", reason: inviteErr.message };
+      } else if (invite) {
+        addLog(`Convite encontrado: ${invite.id} (Status: ${invite.status})`);
+        const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
+        if (isExpired) {
+          inviteResult = { status: 'error', message: "Link expirado.", reason: "expirado" };
+        } else if (invite.status === 'revoked') {
+          inviteResult = { status: 'error', message: "Link revogado.", reason: "revogado" };
+        } else {
+          inviteResult = { status: 'ok', message: `Convite ${invite.status}.`, reason: invite.status };
+        }
+      } else {
+        addLog("Nenhum convite específico encontrado.");
+        inviteResult = { status: 'warning', message: "Sem convite direto.", reason: "not_found" };
+      }
 
       // 2. Check Professional Link
+      addLog("Verificando vínculo profissional ativo...");
       const { data: profLink, error: profErr } = await (supabase as any)
         .from("patient_professional_links")
         .select("professional_id, link_status")
         .eq("patient_id", user?.id)
         .maybeSingle();
       
-      const profResult: any = profErr
-        ? { status: 'error', message: `Erro ao verificar vínculo: ${profErr.message}` }
-        : profLink
-          ? { status: 'ok', message: `Vínculo ativo (${profLink.link_status}).` }
-          : { status: 'error', message: "Nenhum profissional vinculado a esta conta." };
+      let profResult: any;
+      if (profErr) {
+        addLog(`Erro de permissão ou RLS no vínculo: ${profErr.message}`);
+        profResult = { status: 'error', message: "Erro de permissão de acesso.", reason: "permission_denied" };
+      } else if (profLink) {
+        addLog(`Vínculo encontrado com: ${profLink.professional_id}`);
+        profResult = { status: 'ok', message: `Vínculo ativo: ${profLink.link_status}.`, reason: profLink.link_status };
+      } else {
+        addLog("Nenhum profissional vinculado via patient_professional_links.");
+        profResult = { status: 'error', message: "Vínculo inexistente.", reason: "no_link" };
+      }
 
       // 3. Check Program Enrollment
+      addLog("Verificando matrículas em programas...");
       const { data: enrollData, error: enrollErr } = await (supabase as any)
         .from("program_enrollments")
         .select("status")
@@ -62,20 +110,21 @@ export default function PatientDiagnostic() {
         .maybeSingle();
 
       const enrollResult: any = enrollErr
-        ? { status: 'error', message: `Erro ao verificar programa: ${enrollErr.message}` }
+        ? { status: 'error', message: "Erro ao verificar programas.", reason: enrollErr.message }
         : enrollData
-          ? { status: 'ok', message: `Matrícula em programa: ${enrollData.status}.` }
-          : { status: 'warning', message: "Nenhum programa ativo detectado." };
+          ? { status: 'ok', message: `Programa: ${enrollData.status}.` }
+          : { status: 'warning', message: "Nenhum programa ativo." };
 
       // 4. Check RLS (Access to profile settings)
+      addLog("Testando acesso às configurações (RLS Test)...");
       const { error: rlsErr } = await supabase
         .from("public_profile_settings")
         .select("id")
         .limit(1);
       
       const rlsResult: any = rlsErr
-        ? { status: 'error', message: `Erro de permissão (RLS): ${rlsErr.message}` }
-        : { status: 'ok', message: "Permissões de banco de dados (RLS) OK." };
+        ? { status: 'error', message: "Falha de RLS detectada.", reason: rlsErr.message }
+        : { status: 'ok', message: "Permissões de banco OK." };
 
       setResults({
         invite: inviteResult,
@@ -83,8 +132,10 @@ export default function PatientDiagnostic() {
         subscription: enrollResult,
         rls: rlsResult
       });
+      addLog("Diagnóstico concluído.");
       toast.success("Diagnóstico concluído.");
     } catch (err: any) {
+      addLog(`Falha fatal no diagnóstico: ${err.message}`);
       toast.error("Falha ao executar diagnóstico.");
     } finally {
       setLoading(false);
@@ -185,12 +236,49 @@ export default function PatientDiagnostic() {
                 </div>
 
                 {Object.values(results).some(r => r.status === 'error') && (
-                  <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex gap-3">
-                    <AlertCircle className="w-5 h-5 shrink-0" />
-                    <p>
-                      <strong>Detectamos um problema:</strong> Alguns vínculos ou permissões não estão corretos. 
-                      Sugerimos que você limpe o cache do navegador ou entre em contato com seu profissional para receber um novo convite.
-                    </p>
+                  <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex flex-col gap-3">
+                    <div className="flex gap-3">
+                      <AlertCircle className="w-5 h-5 shrink-0" />
+                      <div>
+                        <strong>Detectamos um problema:</strong>
+                        <div className="mt-1 space-y-1">
+                          {results.professional.reason === 'no_link' && <p>Você não possui um vínculo ativo com um profissional. Peça para seu nutricionista reenviar o convite.</p>}
+                          {results.invite.reason === 'expirado' && <p>Seu link de convite expirou. Links costumam durar 7 dias por segurança.</p>}
+                          {results.invite.reason === 'revogado' && <p>Este convite foi cancelado pelo profissional.</p>}
+                          {results.rls.status === 'error' && <p>Há uma falha de sincronização de dados (RLS). Tente sair e entrar novamente.</p>}
+                          {!['no_link', 'expirado', 'revogado'].includes(results.professional.reason || '') && results.rls.status === 'ok' && (
+                            <p>Alguns vínculos não estão corretos. Sugerimos que você limpe o cache do navegador ou entre em contato com o suporte.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-destructive/20">
+                      <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">Ações de diagnóstico:</span>
+                      <Button variant="outline" size="sm" onClick={copyLogs} className="h-7 text-[10px] gap-1.5 border-destructive/30 hover:bg-destructive/10">
+                        <Copy className="w-3 h-3" /> Copiar Logs
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={exportLogs} className="h-7 text-[10px] gap-1.5 border-destructive/30 hover:bg-destructive/10">
+                        <Download className="w-3 h-3" /> Baixar TXT
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {debugLogs.length > 0 && (
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Info className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-semibold">Rastro de Auditoria Local</span>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px]">{debugLogs.length} eventos</Badge>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 font-mono text-[10px] text-muted-foreground">
+                      {debugLogs.map((log, i) => (
+                        <div key={i} className="border-l-2 border-primary/20 pl-2">{log}</div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>

@@ -8,7 +8,8 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
-  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2
+  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
+  Download, Copy, FileJson, AlertTriangle
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
@@ -31,11 +32,27 @@ export default function PatientRegister() {
   const [sigValid, setSigValid] = useState<boolean | null>(null);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
-  const addLog = (msg: string) => {
-    const timestamp = new Date().toLocaleTimeString();
+  const addLog = useCallback((msg: string) => {
+    const timestamp = new Date().toISOString();
     const newLog = `[${timestamp}] ${msg}`;
     console.log(newLog);
     setDebugLogs(prev => [...prev, newLog]);
+  }, []);
+
+  const copyLogs = () => {
+    const logText = debugLogs.join("\n");
+    navigator.clipboard.writeText(logText);
+    toast.success("Logs copiados para a área de transferência!");
+  };
+
+  const exportLogsAsJson = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(debugLogs));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `diagnostic_logs_${new Date().getTime()}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
   };
 
   // Form
@@ -91,8 +108,8 @@ export default function PatientRegister() {
 
   // Robust invitation code validation
   useEffect(() => {
-    if (!invitationCode) {
-      addLog("Nenhum código de convite detectado na URL.");
+    if (!invitationCode || sigValid !== null) {
+      if (!invitationCode) addLog("Nenhum código de convite detectado na URL.");
       return;
     }
 
@@ -107,31 +124,52 @@ export default function PatientRegister() {
 
         if (error) {
           addLog(`Erro Supabase ao buscar convite: ${error.message}`);
+          await supabase.from("invitation_logs").insert({
+            event_type: "error",
+            details: { error: error.message, stage: "fetch_invitation", code: invitationCode }
+          });
           throw error;
         }
 
         if (!invite) {
-          addLog("Código de convite não encontrado no banco de dados.");
+          addLog("Código de convite não encontrado (profissional inexistente ou link incorreto).");
           setSigValid(false);
-          toast.error("Código de convite inválido ou expirado.");
+          toast.error("Vínculo de profissional inválido. Verifique se o link está correto.");
+          await supabase.from("invitation_logs").insert({
+            event_type: "invalid_code",
+            details: { stage: "validation", reason: "not_found", code: invitationCode }
+          });
           return;
         }
 
         addLog(`Convite encontrado. Status: ${invite.status}. Profissional: ${invite.professional_id}`);
 
-        // Permite 'completed' para lidar com recarregamentos, desde que não tenha expirado
         const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
         if (isExpired) {
           addLog("O convite está expirado.");
           setSigValid(false);
-          toast.error("Este convite expirou.");
+          toast.error("Este link de convite expirou. Solicite um novo ao seu profissional.");
+          await supabase.from("invitation_logs").insert({
+            invitation_id: invite.id,
+            professional_id: invite.professional_id,
+            patient_email: invite.patient_email,
+            event_type: "expired",
+            details: { expires_at: invite.expires_at, code: invitationCode }
+          });
           return;
         }
 
         if (invite.status === 'revoked') {
           addLog("O convite foi revogado pelo profissional.");
           setSigValid(false);
-          toast.error("Este convite não é mais válido.");
+          toast.error("Este convite foi revogado ou cancelado.");
+          await supabase.from("invitation_logs").insert({
+            invitation_id: invite.id,
+            professional_id: invite.professional_id,
+            patient_email: invite.patient_email,
+            event_type: "revoked",
+            details: { code: invitationCode }
+          });
           return;
         }
 
@@ -148,7 +186,18 @@ export default function PatientRegister() {
         setSigValid(true);
         addLog("Vínculo profissional validado com sucesso.");
 
-        // Pre-fill email and name if available in invite
+        await supabase.from("invitation_logs").insert({
+          invitation_id: invite.id,
+          professional_id: invite.professional_id,
+          patient_email: invite.patient_email || email,
+          event_type: "validated",
+          details: { 
+            professional_id: invite.professional_id,
+            patient_email_match: invite.patient_email === email,
+            code: invitationCode
+          }
+        });
+
         if (invite.patient_email && !email) setEmail(invite.patient_email);
         if (invite.patient_name && !name) setName(invite.patient_name);
 
@@ -159,7 +208,7 @@ export default function PatientRegister() {
     };
 
     validateInvite();
-  }, [invitationCode]);
+  }, [invitationCode, sigValid, email]);
 
   // Legacy signature verification (if no invitationCode)
   useEffect(() => {
@@ -332,10 +381,12 @@ export default function PatientRegister() {
             } as any)
             .eq("code", invitationCode);
             
-          const { data: inviteData } = await supabase.from("invitations").select("id").eq("code", invitationCode).maybeSingle();
+          const { data: inviteData } = await supabase.from("invitations").select("id, professional_id, patient_email").eq("code", invitationCode).maybeSingle();
           if (inviteData) {
             await supabase.from("invitation_logs").insert({
               invitation_id: inviteData.id,
+              professional_id: inviteData.professional_id,
+              patient_email: inviteData.patient_email || email,
               event_type: "completed",
               details: { 
                 patient_id: signUpData.user.id,
@@ -623,13 +674,29 @@ export default function PatientRegister() {
           <div className="mt-6 p-3 rounded-lg bg-black/5 dark:bg-white/5 border border-border text-[10px] font-mono overflow-hidden">
             <div className="flex justify-between items-center mb-2">
               <span className="text-muted-foreground uppercase tracking-wider font-bold">Logs de Diagnóstico</span>
-              <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">UID: {currentUserId || 'Pending'}</span>
+              <div className="flex gap-2">
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={copyLogs} title="Copiar logs">
+                  <Copy className="h-3 w-3" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-6 w-6" onClick={exportLogsAsJson} title="Exportar JSON">
+                  <FileJson className="h-3 w-3" />
+                </Button>
+              </div>
             </div>
-            <div className="max-h-32 overflow-y-auto space-y-1">
+            <div className="max-h-32 overflow-y-auto space-y-1 mb-2">
               {debugLogs.map((log, i) => (
                 <div key={i} className="text-muted-foreground border-l border-primary/30 pl-2 py-0.5">{log}</div>
               ))}
             </div>
+            {sigValid === false && (
+              <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded flex items-start gap-2 text-destructive">
+                <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-bold uppercase tracking-tight text-[9px]">Erro de Vínculo Detectado</p>
+                  <p className="text-[9px] leading-tight">O link pode estar expirado ou revogado. Se você acredita que isso é um erro, copie os logs acima e envie para o suporte.</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
 

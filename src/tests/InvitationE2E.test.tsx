@@ -2,8 +2,10 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { HelmetProvider } from 'react-helmet-async';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 
 import Invitation from '@/pages/Invitation';
+import PatientRegister from '@/pages/PatientRegister';
 import { supabase } from '@/integrations/supabase/client';
 
 // Mock Supabase
@@ -148,6 +150,103 @@ describe('Invitation E2E Simulation', () => {
 
     await waitFor(() => {
       expect(screen.getByText(/Este convite expirou/i)).toBeInTheDocument();
+    });
+  });
+});
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
+describe('PatientRegister Invitation Flow', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('deve carregar informações do convite na tela de registro e não mostrar erro ao recarregar', async () => {
+    mockQuery.maybeSingle.mockResolvedValue({
+      data: {
+        id: 'inv-123',
+        code: 'REG123',
+        professional_id: 'prof1',
+        status: 'pending',
+        patient_email: 'paciente@teste.com',
+        patient_name: 'Paciente Teste',
+        profiles: { full_name: 'Nutri Alvo', avatar_url: null, phone: '999' },
+        metadata: { clinic_name: 'Clinica Alvo' }
+      },
+      error: null
+    });
+
+    const { rerender } = render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/register?code=REG123']}>
+          <Routes>
+            <Route path="/register" element={<PatientRegister />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    // Deve mostrar o profissional
+    await waitFor(() => {
+      expect(screen.getByText(/Nutri Alvo/i)).toBeInTheDocument();
+    });
+
+    // Simula recarregamento
+    rerender(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/register?code=REG123']}>
+          <Routes>
+            <Route path="/register" element={<PatientRegister />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    // Verifica se o profissional ainda está lá e se não houve erro de "vínculo inválido"
+    // (O erro de vínculo inválido no toast foi mockado em sonner, mas aqui verificamos a permanência do UI state)
+    await waitFor(() => {
+      expect(screen.getByText(/Nutri Alvo/i)).toBeInTheDocument();
+    });
+    
+    // Verifica se os campos estão preenchidos
+    const emailInput = screen.getByPlaceholderText(/seu@email.com/i) as HTMLInputElement;
+    expect(emailInput.value).toBe('paciente@teste.com');
+  });
+
+  it('deve mostrar erro específico se o convite foi revogado', async () => {
+    mockQuery.maybeSingle.mockResolvedValue({
+      data: {
+        id: 'inv-revoked',
+        code: 'REVOKED',
+        professional_id: 'prof1',
+        status: 'revoked',
+        profiles: { full_name: 'Nutri Revog' }
+      },
+      error: null
+    });
+
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter initialEntries={['/register?code=REVOKED']}>
+          <Routes>
+            <Route path="/register" element={<PatientRegister />} />
+          </Routes>
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    // O toast.error será chamado, mas como é mockado, podemos verificar se a UI reflete a falha
+    // Na implementação, setSigValid(false) esconde o formulário ou mostra erro
+    await waitFor(() => {
+      // Verifica se o estado de validação falhou (botão desabilitado ou mensagem de erro)
+      const submitButton = screen.getByRole('button', { name: /Concluir Cadastro/i });
+      expect(submitButton).toBeDisabled();
     });
   });
 });
