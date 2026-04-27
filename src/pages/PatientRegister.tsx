@@ -367,6 +367,7 @@ export default function PatientRegister() {
             addLog("Assinatura legada inválida.");
           } else {
             addLog("Assinatura legada validada com sucesso.");
+            setLinkSource("nutri");
           }
         } catch (err: any) {
           addLog(`Erro na verificação de assinatura: ${err.message}`);
@@ -392,6 +393,7 @@ export default function PatientRegister() {
         return;
       }
       addLog("Profissional confirmado via link direto. Liberando cadastro.");
+      setLinkSource("nutri");
       setSigValid(true);
     })();
   }, [preselectedNutri, signature, invitationCode, addLog, correlationId]);
@@ -423,7 +425,7 @@ export default function PatientRegister() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    if ((preselectedNutri || invitationCode) && sigValid === false) {
+    if ((preselectedNutri || invitationCode) && sigValid === false && selectedProfessional) {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
       return;
     }
@@ -452,7 +454,7 @@ export default function PatientRegister() {
       addLog(`ID do Profissional selecionado: ${nutriId || "Nenhum"}`);
 
       if (!nutriId) {
-        addLog("Nenhum profissional selecionado. Criando apenas lead...");
+        addLog("Nenhum profissional selecionado. Continuando cadastro sem vínculo automático...");
         const { error: leadErr } = await supabase.from("lead_requests").insert({
           nutritionist_id: "00000000-0000-0000-0000-000000000000",
           name,
