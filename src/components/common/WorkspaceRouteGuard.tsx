@@ -203,6 +203,7 @@ const PUBLIC_ROUTES = [
   "/landing-afiliado",
   "/biquini-branco",
   "/demo/",
+  "/convite",
   "/cadastro",
   "/register",
   "/register-patient",
