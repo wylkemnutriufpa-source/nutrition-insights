@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
   User, Loader2, Copy, CheckCircle2, QrCode, ArrowLeft,
-  Smartphone, Crown, Star, Sparkles, Award, Briefcase
+  Smartphone, Crown, Star, Sparkles, Award, Briefcase, CreditCard
 } from "lucide-react";
 
 interface PixConfig {
@@ -129,24 +129,35 @@ export default function PublicPlans({ planType }: { planType: "patient_prestige"
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto text-center"
           >
-            <Button
-              variant="ghost"
-              size="sm"
-              className="mb-4 gap-2"
-              onClick={() => navigate(`/p/${slug}`)}
-            >
-              <ArrowLeft className="w-4 h-4" /> Voltar ao perfil
-            </Button>
+            <div className="flex flex-col items-center gap-4 mb-6">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="gap-2"
+                onClick={() => navigate(`/p/${slug}`)}
+              >
+                <ArrowLeft className="w-4 h-4" /> Voltar ao perfil
+              </Button>
+              
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-2 border-primary/30 text-primary hover:bg-primary/5"
+                onClick={() => navigate('/pricing')}
+              >
+                <CreditCard className="w-4 h-4" /> Ver Preços da Plataforma
+              </Button>
+            </div>
 
-            <div className="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 border-2 border-primary/30">
+            <div className="w-20 h-20 rounded-full bg-primary/20 flex items-center justify-center mx-auto mb-4 border-4 border-background shadow-lg">
               {profileData?.avatar_url ? (
                 <img src={profileData.avatar_url} alt={profName} className="w-full h-full rounded-full object-cover" />
               ) : (
-                <User className="w-8 h-8 text-primary" />
+                <User className="w-10 h-10 text-primary" />
               )}
             </div>
 
-            <h1 className="font-display text-2xl md:text-3xl font-bold mb-2">{title}</h1>
+            <h1 className="font-display text-2xl md:text-4xl font-bold mb-2 tracking-tight">{title}</h1>
             <p className="text-muted-foreground text-sm max-w-md mx-auto">{subtitle}</p>
           </motion.div>
         </div>
