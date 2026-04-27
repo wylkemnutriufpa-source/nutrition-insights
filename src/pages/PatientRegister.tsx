@@ -214,7 +214,7 @@ export default function PatientRegister() {
           clinic_name: (invite.metadata as any)?.clinic_name || null,
           phone: prof?.phone || null,
         });
-        setIsProfConfirmed(true);
+        setIsProfConfirmed(false);
         setSigValid(true);
         addLog("Vínculo profissional validado via convite com sucesso.");
 
