@@ -42,10 +42,10 @@ export default function SaveMealTemplateDialog({
   const [complexity, setComplexity] = useState("medium");
   const [saving, setSaving] = useState(false);
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProtein = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-  const totalCarbs = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-  const totalFat = items.reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
+  const totalKcal = (items || []).reduce((s, i) => s + (i.calories_target || 0), 0);
+  const totalProtein = (items || []).reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+  const totalCarbs = (items || []).reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
+  const totalFat = (items || []).reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
