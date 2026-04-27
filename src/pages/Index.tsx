@@ -46,6 +46,7 @@ import {
   Calendar, ArrowRight, ClipboardList, Heart, Brain,
   BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus,
   Link2
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
