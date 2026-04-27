@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import {
   Search, CreditCard, Play, FileCheck, ArrowLeft,
   Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck,
-  ClipboardList, KeyRound, Send, UserCog, Mail, Copy
+  ClipboardList, KeyRound, Send, UserCog, Mail, Copy, MessageCircle
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
@@ -50,9 +50,18 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [confirmedPayments, setConfirmedPayments] = useState<Set<string>>(new Set());
   const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
   const [sendingLinkId, setSendingLinkId] = useState<string | null>(null);
+  const [profName, setProfName] = useState("seu nutricionista");
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
   const onboardingLink = `${window.location.origin}/cadastro?nutri=${user?.id}`;
+
+  useMemo(() => {
+    if (!user?.id) return;
+    supabase.from("profiles").select("full_name").eq("id", user.id).single()
+      .then(({ data }) => {
+        if (data?.full_name) setProfName(data.full_name);
+      });
+  }, [user?.id]);
 
   const copyOnboardingLink = async () => {
     try {
@@ -383,13 +392,34 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                               size="sm"
                               variant="ghost"
                               className="h-7 w-7 p-0"
+                              onClick={() => {
+                                const patientFirstName = p.profile?.full_name?.split(" ")[0] || "Paciente";
+                                const waMsg = `*Olá ${patientFirstName}!* Tudo bem?\n\nSou o(a) nutricionista *${profName}* e estou muito feliz em te acompanhar! 🚀\n\nSeu acesso à plataforma *FitJourney* já está pronto. Clique no link abaixo para começar:\n\n👉 ${onboardingLink}\n\nVamos juntos! 💪`;
+                                window.open(`https://wa.me/?text=${encodeURIComponent(waMsg)}`, "_blank");
+                              }}
+                            >
+                              <MessageCircle className="w-3.5 h-3.5 text-[#25D366]" />
+                            </Button>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>Convidar via WhatsApp</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      )}
+                      {!completed && (
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <Button
+                              size="sm"
+                              variant="ghost"
+                              className="h-7 w-7 p-0"
                               onClick={copyOnboardingLink}
                             >
                               <Copy className="w-3.5 h-3.5 text-muted-foreground" />
                             </Button>
                           </TooltipTrigger>
                           <TooltipContent>
-                            <p>Copiar link de onboarding (WhatsApp)</p>
+                            <p>Copiar link de onboarding</p>
                           </TooltipContent>
                         </Tooltip>
                       )}
