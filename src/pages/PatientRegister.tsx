@@ -22,6 +22,63 @@ interface ProfessionalResult {
   phone: string | null;
 }
 
+type InvitationIssue = {
+  reason: "invalid" | "expired" | "revoked";
+  message: string;
+} | null;
+
+type RegistrationLinkSource = "none" | "nutri" | "invitation" | "onboarding_token" | "nutri_fallback";
+
+const buildCadastroPath = (params: {
+  preselectedNutri: string;
+  invitationCode: string;
+  selectedProfessional: ProfessionalResult | null;
+}) => {
+  const next = new URLSearchParams();
+  const professionalId = params.preselectedNutri || params.selectedProfessional?.user_id || "";
+  if (professionalId) next.set("nutri", professionalId);
+  if (params.invitationCode) next.set("code", params.invitationCode);
+  const query = next.toString();
+  return `/cadastro${query ? `?${query}` : ""}`;
+};
+
+const resolveRegistrationDisplay = (params: {
+  preselectedNutri: string;
+  invitationCode: string;
+  selectedProfessional: ProfessionalResult | null;
+  isProfConfirmed: boolean;
+  sigValid: boolean | null;
+}) => {
+  const hasNutriParam = Boolean(params.preselectedNutri);
+  const hasCodeParam = Boolean(params.invitationCode);
+  const hasAnyLinkContext = hasNutriParam || hasCodeParam;
+  const hasSelectedProfessional = Boolean(params.selectedProfessional?.user_id);
+  const shouldShowInvitationWelcome = Boolean(
+    hasAnyLinkContext && hasSelectedProfessional && !params.isProfConfirmed,
+  );
+  const shouldShowInvalidCodeOnly = Boolean(
+    hasCodeParam && params.sigValid === false && !hasSelectedProfessional && !hasNutriParam,
+  );
+  const routeDecision = !hasAnyLinkContext
+    ? "no_link_context"
+    : shouldShowInvalidCodeOnly
+      ? "invalid_code_only"
+      : shouldShowInvitationWelcome
+        ? "invitation_welcome"
+        : hasSelectedProfessional
+          ? "registration_linked"
+          : "registration_pending";
+
+  return {
+    hasAnyLinkContext,
+    shouldShowInvitationWelcome,
+    shouldShowInvalidCodeOnly,
+    shouldShowNoContextGuard: !hasAnyLinkContext,
+    isLinkValidationPending: hasAnyLinkContext && params.sigValid === null,
+    routeDecision,
+  };
+};
+
 export default function PatientRegister() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -76,6 +133,39 @@ export default function PatientRegister() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalResult | null>(null);
   const [isProfConfirmed, setIsProfConfirmed] = useState(false);
+  const [linkSource, setLinkSource] = useState<RegistrationLinkSource>(preselectedNutri ? "nutri" : invitationCode ? "invitation" : "none");
+  const [invitationIssue, setInvitationIssue] = useState<InvitationIssue>(null);
+
+  const registrationDisplay = resolveRegistrationDisplay({
+    preselectedNutri,
+    invitationCode,
+    selectedProfessional,
+    isProfConfirmed,
+    sigValid,
+  });
+  const currentCadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
+
+  useEffect(() => {
+    const state = {
+      decision: registrationDisplay.routeDecision,
+      invitationCode: Boolean(invitationCode),
+      preselectedNutri: Boolean(preselectedNutri),
+      selectedProfessional: selectedProfessional?.user_id || null,
+      isProfConfirmed,
+      sigValid,
+      linkSource,
+    };
+    addLog(`Decisão PatientRegister: ${JSON.stringify(state)}`);
+  }, [
+    registrationDisplay.routeDecision,
+    invitationCode,
+    preselectedNutri,
+    selectedProfessional?.user_id,
+    isProfConfirmed,
+    sigValid,
+    linkSource,
+    addLog,
+  ]);
 
   // Pre-select professional from URL
   useEffect(() => {
@@ -103,6 +193,7 @@ export default function PatientRegister() {
           clinic_name: (profData as any)?.clinic_name || null,
           phone: profileData.phone,
         });
+        setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
         // Reset confirmation if nutri changes
         setIsProfConfirmed(false);
       } else {
@@ -122,14 +213,12 @@ export default function PatientRegister() {
     const validateInvite = async () => {
       addLog(`Validando código de convite: ${invitationCode}...`);
       try {
-        const { data: invite, error } = await supabase
-          .from("invitations")
-          .select("*, profiles!invitations_professional_id_fkey(full_name, avatar_url, phone)")
-          .eq("code", invitationCode)
-          .maybeSingle();
+        const { data: validation, error } = await supabase.functions.invoke("validate-invitation", {
+          body: { code: invitationCode, correlationId },
+        });
 
         if (error) {
-          addLog(`Erro Supabase ao buscar convite: ${error.message}`);
+          addLog(`Erro ao validar convite pela função segura: ${error.message}`);
           await supabase.from("invitation_logs").insert({
             event_type: "error",
             correlation_id: correlationId,
@@ -138,9 +227,8 @@ export default function PatientRegister() {
           throw error;
         }
 
-        if (!invite) {
-          addLog("Código não encontrado em convites. Tentando onboarding_tokens...");
-          // Fallback to onboarding_tokens
+        if (!validation?.success) {
+          addLog(`Convite não validado (${validation?.error_code || "INVALID_CODE"}). Tentando onboarding_tokens...`);
           const { data: onboarding, error: onboardingError } = await supabase.rpc("validate_onboarding_token" as any, { _token: invitationCode });
           
           if (!onboardingError && onboarding?.valid) {
@@ -162,51 +250,28 @@ export default function PatientRegister() {
             if (onboarding.patient_email) setEmail(onboarding.patient_email);
             if (onboarding.patient_name) setName(onboarding.patient_name);
             
+            setLinkSource("onboarding_token");
+            setInvitationIssue(null);
             setIsProfConfirmed(false);
             setSigValid(true);
             return;
           }
 
-          addLog("Código de convite/onboarding não encontrado.");
+          addLog("Código de convite/onboarding não encontrado ou não utilizável.");
+          const reason = validation?.error_code === "EXPIRED" ? "expired" : validation?.error_code === "REVOKED" ? "revoked" : "invalid";
+          setInvitationIssue({
+            reason,
+            message: validation?.message || "Este código não foi encontrado. Você pode continuar o cadastro, mas o vínculo automático não será aplicado.",
+          });
           setSigValid(false);
-          // Don't toast immediately if it's just an invalid code, maybe they want to search?
-          // But usually code is specific.
           return;
         }
 
+        const invite = validation.invitation;
         addLog(`Convite encontrado. Status: ${invite.status}. Profissional: ${invite.professional_id}`);
 
-        const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
-        if (isExpired) {
-          addLog("O convite está expirado.");
-          setSigValid(false);
-          await supabase.from("invitation_logs").insert({
-            invitation_id: invite.id,
-            professional_id: invite.professional_id,
-            patient_email: invite.patient_email,
-            event_type: "expired",
-            correlation_id: correlationId,
-            details: { expires_at: invite.expires_at, code: invitationCode, correlationId }
-          });
-          return;
-        }
-
-        if (invite.status === 'revoked') {
-          addLog("O convite foi revogado pelo profissional.");
-          setSigValid(false);
-          await supabase.from("invitation_logs").insert({
-            invitation_id: invite.id,
-            professional_id: invite.professional_id,
-            patient_email: invite.patient_email,
-            event_type: "revoked",
-            correlation_id: correlationId,
-            details: { code: invitationCode, correlationId }
-          });
-          return;
-        }
-
         // Set professional automatically
-        const prof = invite.profiles as any;
+        const prof = invite.professional || invite.profiles;
         setSelectedProfessional({
           user_id: invite.professional_id,
           full_name: prof?.full_name || "Profissional",
@@ -214,6 +279,8 @@ export default function PatientRegister() {
           clinic_name: (invite.metadata as any)?.clinic_name || null,
           phone: prof?.phone || null,
         });
+        setLinkSource("invitation");
+        setInvitationIssue(null);
         setIsProfConfirmed(false);
         setSigValid(true);
         addLog("Vínculo profissional validado via convite com sucesso.");
@@ -263,6 +330,7 @@ export default function PatientRegister() {
             addLog("Assinatura legada inválida.");
           } else {
             addLog("Assinatura legada validada com sucesso.");
+            setLinkSource("nutri");
           }
         } catch (err: any) {
           addLog(`Erro na verificação de assinatura: ${err.message}`);
@@ -288,6 +356,7 @@ export default function PatientRegister() {
         return;
       }
       addLog("Profissional confirmado via link direto. Liberando cadastro.");
+      setLinkSource("nutri");
       setSigValid(true);
     })();
   }, [preselectedNutri, signature, invitationCode, addLog, correlationId]);
@@ -319,7 +388,7 @@ export default function PatientRegister() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    if ((preselectedNutri || invitationCode) && sigValid === false) {
+    if ((preselectedNutri || invitationCode) && sigValid === false && selectedProfessional) {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
       return;
     }
@@ -348,7 +417,7 @@ export default function PatientRegister() {
       addLog(`ID do Profissional selecionado: ${nutriId || "Nenhum"}`);
 
       if (!nutriId) {
-        addLog("Nenhum profissional selecionado. Criando apenas lead...");
+        addLog("Nenhum profissional selecionado. Continuando cadastro sem vínculo automático...");
         const { error: leadErr } = await supabase.from("lead_requests").insert({
           nutritionist_id: "00000000-0000-0000-0000-000000000000",
           name,
@@ -513,7 +582,8 @@ export default function PatientRegister() {
     );
   }
 
-  if (selectedProfessional && !isProfConfirmed && (preselectedNutri || invitationCode)) {
+  if (registrationDisplay.shouldShowInvitationWelcome && selectedProfessional) {
+    const cadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -560,10 +630,13 @@ export default function PatientRegister() {
               </div>
 
               <div className="grid gap-3">
-                <Button onClick={() => setIsProfConfirmed(true)} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
+                <Button onClick={() => {
+                  addLog(`Convite aceito; preservando contexto ${cadastroPath}`);
+                  setIsProfConfirmed(true);
+                }} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
                   Aceitar Convite e Continuar <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
-                <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(`/cadastro?nutri=${preselectedNutri}&code=${invitationCode}`)}`)} className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(cadastroPath)}`)} className="text-muted-foreground hover:text-foreground">
                   Já tenho uma conta
                 </Button>
               </div>
@@ -583,7 +656,7 @@ export default function PatientRegister() {
   // Sem `code` (convite) e sem `nutri` (link rápido), bloqueia e instrui o
   // paciente a procurar o nutricionista. Sem este guard, qualquer pessoa
   // poderia cair em /cadastro pela home e criar conta órfã (sem vínculo).
-  if (!preselectedNutri && !invitationCode) {
+  if (registrationDisplay.shouldShowNoContextGuard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -649,6 +722,18 @@ export default function PatientRegister() {
           <CardContent className="pt-6 pb-6">
             <form onSubmit={handleRegister} className="space-y-4">
 
+              {registrationDisplay.shouldShowInvalidCodeOnly && (
+                <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold">Link sem vínculo automático</p>
+                    <p className="text-xs leading-relaxed">
+                      {invitationIssue?.message || "Não conseguimos validar este código. Peça um novo link ao seu profissional para garantir o vínculo automático."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Selected professional badge */}
               {selectedProfessional && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
@@ -671,7 +756,7 @@ export default function PatientRegister() {
                       <p className="text-[9px] text-muted-foreground truncate">{selectedProfessional.clinic_name}</p>
                     )}
                   </div>
-                  {preselectedNutri ? (
+                  {preselectedNutri || invitationCode ? (
                     <button type="button" onClick={() => setIsProfConfirmed(false)}
                       className="text-[10px] text-primary hover:underline shrink-0 flex items-center gap-1">
                       <ArrowLeft className="w-2.5 h-2.5" /> Voltar
@@ -751,7 +836,7 @@ export default function PatientRegister() {
 
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">
-                  Já tem conta? <Link to={`/auth?next=${encodeURIComponent(`/cadastro?nutri=${preselectedNutri}&code=${invitationCode}`)}`} className="text-primary hover:underline font-medium">Entrar agora</Link>
+                  Já tem conta? <Link to={`/auth?next=${encodeURIComponent(currentCadastroPath)}`} className="text-primary hover:underline font-medium">Entrar agora</Link>
                 </p>
               </div>
             </form>
@@ -792,7 +877,7 @@ export default function PatientRegister() {
                   <ul className="text-[8px] list-disc list-inside opacity-80">
                     <li>Peça um novo link de convite ao seu profissional</li>
                     <li>Verifique se você copiou o link inteiro</li>
-                    <li>Tente buscar o profissional manualmente acima</li>
+                    <li>Se continuar, o vínculo automático não será aplicado</li>
                   </ul>
                 </div>
               </div>
