@@ -619,7 +619,8 @@ export default function PatientRegister() {
     );
   }
 
-  if (selectedProfessional && !isProfConfirmed && (preselectedNutri || invitationCode)) {
+  if (registrationDisplay.shouldShowInvitationWelcome) {
+    const cadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -666,10 +667,13 @@ export default function PatientRegister() {
               </div>
 
               <div className="grid gap-3">
-                <Button onClick={() => setIsProfConfirmed(true)} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
+                <Button onClick={() => {
+                  addLog(`Convite aceito; preservando contexto ${cadastroPath}`);
+                  setIsProfConfirmed(true);
+                }} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
                   Aceitar Convite e Continuar <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
-                <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(`/cadastro?nutri=${preselectedNutri}&code=${invitationCode}`)}`)} className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(cadastroPath)}`)} className="text-muted-foreground hover:text-foreground">
                   Já tenho uma conta
                 </Button>
               </div>
@@ -689,7 +693,7 @@ export default function PatientRegister() {
   // Sem `code` (convite) e sem `nutri` (link rápido), bloqueia e instrui o
   // paciente a procurar o nutricionista. Sem este guard, qualquer pessoa
   // poderia cair em /cadastro pela home e criar conta órfã (sem vínculo).
-  if (!preselectedNutri && !invitationCode) {
+  if (registrationDisplay.shouldShowNoContextGuard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
