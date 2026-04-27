@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { 
   AlertCircle, CheckCircle2, RefreshCw, 
-  ArrowRight, Search, ChefHat, Info
+  ArrowRight, Search, ChefHat, Info, Utensils
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
