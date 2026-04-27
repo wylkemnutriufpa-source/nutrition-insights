@@ -739,9 +739,14 @@ export default function Patients() {
     if (isBiquini) {
       setDeleteTarget({ id: `${patientId}:${programId}`, name: `paciente do programa "${programTitle}"` });
     } else {
-      if (!confirm(`Remover paciente do programa "${programTitle}"?`)) return;
-      removeFromProgramMutation.mutate({ patientId, programId }, {
-        onSuccess: () => toast.success(`Paciente removido de "${programTitle}"`),
+      setAlertConfig({
+        title: "Remover do Programa",
+        desc: `Tem certeza que deseja remover este paciente do programa "${programTitle}"?`,
+        action: () => {
+          removeFromProgramMutation.mutate({ patientId, programId }, {
+            onSuccess: () => toast.success(`Paciente removido de "${programTitle}"`),
+          });
+        }
       });
     }
   };
