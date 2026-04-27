@@ -991,7 +991,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
               </Badge>
             )}
-            {source === "library" && (
+            {showTechnicalDetails && source === "library" && (
               <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
                 Banco FitJourney
               </Badge>
