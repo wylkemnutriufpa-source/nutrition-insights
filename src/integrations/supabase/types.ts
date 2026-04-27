@@ -15318,6 +15318,33 @@ export type Database = {
         }
         Relationships: []
       }
+      public_route_audits: {
+        Row: {
+          checked_at: string
+          id: string
+          notes: string | null
+          ok: boolean
+          pathname: string
+          status_code: number
+        }
+        Insert: {
+          checked_at?: string
+          id?: string
+          notes?: string | null
+          ok: boolean
+          pathname: string
+          status_code: number
+        }
+        Update: {
+          checked_at?: string
+          id?: string
+          notes?: string | null
+          ok?: boolean
+          pathname?: string
+          status_code?: number
+        }
+        Relationships: []
+      }
       push_subscriptions: {
         Row: {
           auth: string
@@ -15935,6 +15962,57 @@ export type Database = {
           note_type?: string | null
           patient_id?: string
           professional_id?: string
+        }
+        Relationships: []
+      }
+      route_404_telemetry: {
+        Row: {
+          build_hash: string | null
+          created_at: string
+          full_url: string | null
+          has_service_worker: boolean
+          id: string
+          is_ios: boolean
+          is_safari: boolean
+          is_standalone: boolean
+          metadata: Json
+          pathname: string
+          referrer: string | null
+          session_id: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          build_hash?: string | null
+          created_at?: string
+          full_url?: string | null
+          has_service_worker?: boolean
+          id?: string
+          is_ios?: boolean
+          is_safari?: boolean
+          is_standalone?: boolean
+          metadata?: Json
+          pathname: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          build_hash?: string | null
+          created_at?: string
+          full_url?: string | null
+          has_service_worker?: boolean
+          id?: string
+          is_ios?: boolean
+          is_safari?: boolean
+          is_standalone?: boolean
+          metadata?: Json
+          pathname?: string
+          referrer?: string | null
+          session_id?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

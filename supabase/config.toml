@@ -1,5 +1,12 @@
 project_id = "vkrcobprntictsxqmjjl"
 
+# Public telemetry / health endpoints — must accept anonymous calls
+[functions.log-route-404]
+verify_jwt = false
+
+[functions.audit-public-routes]
+verify_jwt = false
+
 # ═══════════════════════════════════════════
 # CORE DETERMINÍSTICO (Motor de Regras)
 # ═══════════════════════════════════════════

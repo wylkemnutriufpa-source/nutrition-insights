@@ -1,8 +1,9 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft } from "lucide-react";
-import { useEffect } from "react";
+import { Home, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { hardResetPwaCaches, logRoute404 } from "@/lib/route404Telemetry";
 
 function getSafeHomePath(pathname: string) {
   if (pathname.startsWith("/~oauth/convite/")) return pathname;
@@ -14,13 +15,30 @@ function getSafeHomePath(pathname: string) {
   return "/";
 }
 
+function detectIosSafari() {
+  if (typeof navigator === "undefined") return false;
+  const ua = navigator.userAgent || "";
+  const isIos = /iPhone|iPad|iPod/i.test(ua);
+  const isSafari = /Safari/i.test(ua) && !/CriOS|FxiOS|EdgiOS|Chrome/i.test(ua);
+  return isIos && isSafari;
+}
+
 export default function NotFound() {
   const location = useLocation();
   const safeHomePath = getSafeHomePath(location.pathname);
+  const isIosSafari = useMemo(detectIosSafari, []);
+  const [resetting, setResetting] = useState(false);
 
   useEffect(() => {
     console.error(`[Router] 404 Not Found: ${location.pathname}`);
+    logRoute404({ source: "spa-notfound" });
   }, [location.pathname]);
+
+  const handleHardReset = async () => {
+    if (resetting) return;
+    setResetting(true);
+    await hardResetPwaCaches();
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
@@ -47,6 +65,36 @@ export default function NotFound() {
               <Home className="w-4 h-4" /> Ir ao Início
             </Button>
           </Link>
+        </div>
+
+        <div className="mt-8 pt-6 border-t border-border/50">
+          <p className="text-xs text-muted-foreground mb-3">
+            Caso o problema persista, é provável que seu navegador esteja com uma versão antiga em cache.
+          </p>
+          <Button
+            variant="ghost"
+            onClick={handleHardReset}
+            disabled={resetting}
+            className="gap-2 text-xs"
+          >
+            {resetting ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <RefreshCw className="w-3.5 h-3.5" />
+            )}
+            {resetting ? "Limpando..." : "Limpar cache e recarregar"}
+          </Button>
+
+          {isIosSafari && (
+            <div className="mt-4 text-left text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-3 leading-relaxed">
+              <p className="font-semibold text-foreground mb-1">No Safari (iPhone), se ainda falhar:</p>
+              <ol className="list-decimal pl-4 space-y-1">
+                <li>Toque em <strong>aA</strong> na barra de endereço</li>
+                <li>Selecione <strong>“Recarregar sem conteúdo”</strong> ou abra em <strong>aba privada</strong></li>
+                <li>Se mantiver o erro, abra <strong>Ajustes &gt; Safari &gt; Avançado &gt; Dados de sites</strong> e remova “fitjourney.com.br”</li>
+              </ol>
+            </div>
+          )}
         </div>
       </motion.div>
     </div>
