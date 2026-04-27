@@ -1,22 +1,11 @@
-/**
- * FitJourney — PatientReadyGuard v1.0.0
- *
- * Wrapper que bloqueia a renderização de telas críticas do paciente
- * até `ensure_patient_ready` validar/corrigir o estado.
- *
- * Estados:
- *   loading → "Preparando seu acesso..."
- *   fixed   → "Corrigindo seu acesso automaticamente..." (transitório, libera em ~300ms)
- *   ok      → renderiza children
- *   error   → fallback amigável + retry
- */
-
 import { ReactNode, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
 import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import OnboardingGateScreen, { IS_FLUID_STATE } from "@/components/patient/OnboardingGateScreen";
 
 interface Props {
   children: ReactNode;
@@ -28,6 +17,7 @@ interface Props {
 
 export default function PatientReadyGuard({ children, context, patientId }: Props) {
   const { user, isPatient, loading: authLoading } = useAuth();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const targetId = patientId ?? user?.id ?? null;
 
   const result = useEnsurePatientReady(targetId, {
@@ -35,6 +25,11 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     // Só roda para pacientes autenticados (ou quando o profissional passou um id explícito)
     enabled: !authLoading && !!targetId && (isPatient || !!patientId),
   });
+
+  // Block dashboard/critical screens if not in a fluid state
+  if (isPatient && !journeyLoading && journeyStatus && !IS_FLUID_STATE(journeyStatus)) {
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
 
   // Permite "fixed" passar para "ok" quase instantaneamente
   const [graceDone, setGraceDone] = useState(false);
