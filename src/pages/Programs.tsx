@@ -173,8 +173,11 @@ export default function Programs() {
     if (isBiquini) {
       setDeleteTarget({ id, name: prog?.title || "Programa" });
     } else {
-      if (!confirm("Remover este programa?")) return;
-      executeDelete(id);
+      setAlertConfig({
+        title: "Remover Programa",
+        desc: `Tem certeza que deseja excluir o programa "${prog?.title}"? Esta ação não pode ser desfeita.`,
+        action: () => executeDelete(id)
+      });
     }
   };
 
