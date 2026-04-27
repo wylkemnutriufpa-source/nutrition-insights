@@ -52,6 +52,9 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
   const [sendingLinkId, setSendingLinkId] = useState<string | null>(null);
   const [profName, setProfName] = useState("seu nutricionista");
+  const [clinicName, setClinicName] = useState<string | undefined>();
+  const { templates } = useWhatsAppTemplates();
+  const { logInvitation } = useWhatsAppLogs();
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
   const onboardingLink = `${window.location.origin}/cadastro?nutri=${user?.id}`;
