@@ -21,7 +21,7 @@ interface ChecklistStep {
 }
 
 const STEPS: ChecklistStep[] = [
-  { id: "open_invite", label: "Abrir link /~oauth/convite/<code> no Safari", hint: "Use o link copiado da plataforma" },
+  { id: "open_invite", label: "Abrir link /cadastro?code=<code> no Safari", hint: "Use o link copiado da plataforma" },
   { id: "no_404", label: "Página NÃO mostra erro 404" },
   { id: "params_kept", label: "Parâmetros nutri/code permanecem na URL após redirect" },
   { id: "register", label: "Concluir cadastro do paciente" },
