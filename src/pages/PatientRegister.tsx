@@ -745,7 +745,51 @@ export default function PatientRegister() {
 
 
 
+  if (registrationDisplay.routeDecision === "invalid_code_only") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-destructive/5 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
+        </div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md relative z-10 text-center">
+          <div className="mb-8 flex justify-center"><FitJourneyLogo size="lg" /></div>
+          <Card className="shadow-2xl border-destructive/20 bg-card/90 backdrop-blur-md">
+            <CardContent className="pt-8 pb-8 space-y-6">
+              <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-foreground">Convite Inválido ou Expirado</h2>
+                <p className="text-muted-foreground text-sm">
+                  {invitationIssue?.message || INVITATION_TEXTS.INVALID_LINK_NOTICE}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-left text-xs text-muted-foreground space-y-1">
+                <p className="font-semibold text-foreground">{INVITATION_TEXTS.HOW_TO_GET_LINK.TITLE}</p>
+                <p>O link que você usou não é mais válido ou nunca existiu. Por favor, peça um novo convite ao seu profissional.</p>
+              </div>
+
+              <div className="grid gap-3">
+                <Button asChild variant="outline" className="w-full h-12">
+                  <Link to="/auth">{INVITATION_TEXTS.ALREADY_HAS_ACCOUNT}</Link>
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/")} className="text-xs text-muted-foreground">
+                  Voltar para o Início
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   // GUARD: Cadastro de paciente é EXCLUSIVAMENTE via link do profissional.
+
   if (registrationDisplay.shouldShowNoContextGuard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
