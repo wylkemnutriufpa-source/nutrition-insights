@@ -32,21 +32,19 @@ const DialogContent = React.forwardRef<
   React.ComponentPropsWithoutRef<typeof DialogPrimitive.Content>
 >(({ className, children, ...props }, ref) => (
   <DialogPortal>
-    <DialogOverlay />
+    <DialogOverlay className="z-[100]" />
     <DialogPrimitive.Content
       ref={ref}
       className={cn(
-        "fixed left-[50%] top-[50%] z-50 grid w-[calc(100vw-1rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg max-h-[92vh] overflow-hidden",
+        "fixed left-[50%] top-[50%] z-[101] grid w-[calc(100vw-1rem)] max-w-lg translate-x-[-50%] translate-y-[-50%] gap-4 border bg-background shadow-lg duration-200 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[state=closed]:slide-out-to-left-1/2 data-[state=closed]:slide-out-to-top-[48%] data-[state=open]:slide-in-from-left-1/2 data-[state=open]:slide-in-from-top-[48%] rounded-lg max-h-[92vh] focus:outline-none",
         className,
       )}
       {...props}
     >
-      <div className="overflow-y-auto overflow-x-hidden p-4 sm:p-6 flex-1 h-full">
-        {children}
-      </div>
+      {children}
       <DialogPrimitive.Close
         aria-label="Fechar"
-        className="absolute right-2 top-2 z-[60] flex h-12 w-12 items-center justify-center rounded-full bg-background/95 border border-border shadow-md ring-offset-background transition-all hover:bg-accent hover:scale-105 active:scale-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none touch-manipulation"
+        className="absolute right-3 top-3 z-[110] flex h-10 w-10 items-center justify-center rounded-full bg-background/95 border border-border shadow-md ring-offset-background transition-all hover:bg-accent hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground bg-white/90 backdrop-blur-md cursor-pointer pointer-events-auto"
       >
         <X className="h-5 w-5" />
         <span className="sr-only">Fechar</span>
