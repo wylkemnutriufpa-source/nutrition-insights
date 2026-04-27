@@ -1,6 +1,6 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "generatedAt": "2026-04-26",
+  "generatedAt": "2026-04-27",
   "tables": {
     "meal_plans": [
       "adherence_score",
@@ -90,6 +90,7 @@
       "clinical_risk_level",
       "clinical_risk_score",
       "created_at",
+      "current_weight",
       "engagement_index",
       "engagement_level",
       "experience_mode",
