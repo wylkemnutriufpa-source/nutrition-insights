@@ -127,7 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchProfile(session.user.id),
             fetchRoles(session.user.id),
           ]);
+          
           if (mounted) {
+            // Safety: if after first fetch we still have no roles, don't flip loading=false yet
+            // if we are in the initial session load, because triggers might be slow.
+            // However, we don't want to block forever. initializeAuth is called once.
             setLoading(false);
             checkSubscription();
           }
