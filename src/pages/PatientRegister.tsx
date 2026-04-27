@@ -705,6 +705,31 @@ export default function PatientRegister() {
     );
   }
 
+  if (registrationDisplay.isLinkValidationPending) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-primary/5 blur-3xl opacity-50" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl opacity-50" />
+        </div>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="w-full max-w-md text-center space-y-4">
+          <div className="flex justify-center mb-4"><FitJourneyLogo size="lg" /></div>
+          <Card className="border-border/50 bg-card/80 backdrop-blur-sm shadow-xl">
+            <CardContent className="pt-12 pb-12 flex flex-col items-center gap-5">
+              <Loader2 className="w-12 h-12 animate-spin text-primary" />
+              <div className="space-y-2">
+                <p className="font-bold text-xl text-foreground">Validando convite...</p>
+                <p className="text-sm text-muted-foreground max-w-[240px] mx-auto">
+                  Estamos conectando você ao seu profissional. Por favor, aguarde.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
