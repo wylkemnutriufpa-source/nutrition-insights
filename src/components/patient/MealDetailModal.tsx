@@ -972,7 +972,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         )}
 
         {/* Tags row */}
-        {(goalTag || clinicalTags.length > 0 || prepTime || source === "library") && (
+        {(goalTag || (showTechnicalDetails && (clinicalTags.length > 0 || source === "library")) || prepTime) && (
           <div className="flex flex-wrap gap-1.5 px-6 pt-3">
             {goalTag && GOAL_LABELS[goalTag] && (
               <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>
