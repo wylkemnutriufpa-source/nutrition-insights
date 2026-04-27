@@ -16,6 +16,13 @@ export function useExperienceUI() {
     minMode,
 
     // ── UI visibility helpers ──
+    /** Show meal macros (calories, protein, carbs, fat) */
+    showMacros: minMode("pro"),
+    /** Show full plan structure and adjustments */
+    showPlanStructure: minMode("pro"),
+    /** Show advanced technical details (engine version, metadata, full logs) */
+    showTechnicalDetails: minMode("advanced"),
+
     /** Show clinical intelligence panels (alerts, insights, AI briefing) */
     showClinicalIntelligence: minMode("pro"),
     /** Show advanced metrics, charts, dense analytics */
@@ -41,7 +48,7 @@ export function useExperienceUI() {
     /** Dashboard title by mode */
     dashboardTitle: isBasic ? "Meu Painel" : isPro ? "Dashboard Clínico" : "Centro de Comando Clínico",
     dashboardSubtitle: isBasic
-      ? "Visão geral dos seus pacientes"
+      ? "Sua jornada diária simplificada"
       : isPro
       ? "Inteligência clínica ao seu alcance"
       : "Controle total · Automação · Inteligência IFJ",
