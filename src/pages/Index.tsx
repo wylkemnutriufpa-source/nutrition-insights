@@ -44,8 +44,8 @@ import {
   UtensilsCrossed, Users, TrendingUp, Target, Plus,
   CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
   Calendar, ArrowRight, ClipboardList, Heart, Brain,
-  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus
-} from "lucide-react";
+  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus,
+  Link2
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate } from "react-router-dom";
