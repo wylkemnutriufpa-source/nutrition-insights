@@ -123,6 +123,7 @@ Deno.serve(async (req) => {
     }
     const friendlyUrl = `${origin}/convite/${code}`;
     const userAgent = req.headers.get("user-agent") || "unknown";
+    const host = req.headers.get("host") || "unknown";
 
     // Log da criação
     await logInvitation(adminClient, {
@@ -132,7 +133,7 @@ Deno.serve(async (req) => {
         name, 
         email, 
         tenant_id,
-        host: host
+        host
       },
       domain_used: origin,
       user_agent: userAgent,
