@@ -218,7 +218,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       .maybeSingle();
 
                     if (!existingLink) {
-                      await supabase.from("nutritionist_patients").insert({
+                      const { error: insertError } = await (supabase.from("nutritionist_patients") as any).insert({
                         nutritionist_id: targetNutriId,
                         patient_id: session.user.id,
                         tenant_id: targetTenantId,
@@ -226,7 +226,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                         journey_status: "awaiting_consent",
                         attendance_mode: "online"
                       });
-                      console.log("[Auth] Link created in nutritionist_patients");
+                      
+                      if (insertError) {
+                        console.error("[Auth] Failed to insert nutritionist_patients:", insertError);
+                      } else {
+                        console.log("[Auth] Link created in nutritionist_patients");
+                      }
                     }
                   }
                 }
