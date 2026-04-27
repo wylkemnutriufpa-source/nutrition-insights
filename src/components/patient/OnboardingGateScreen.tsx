@@ -36,6 +36,17 @@ export default function OnboardingGateScreen({ status }: Props) {
   const config = STATUS_CONFIG[status || "lead_created"] || STATUS_CONFIG.lead_created;
   const Icon = config.icon;
 
+  // Auto-redirect lead_created to onboarding
+  useEffect(() => {
+    if (status === "lead_created") {
+      const timer = setTimeout(() => {
+        console.log("[OnboardingGate:Redirect] Directing lead_created to /onboarding");
+        navigate("/onboarding", { replace: true });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, navigate]);
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <motion.div
