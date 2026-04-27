@@ -480,7 +480,13 @@ export default function PatientRegister() {
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: { data: { full_name: name } },
+        options: { 
+          data: { 
+            full_name: name,
+            nutritionist_id: nutriId,
+            role: 'patient'
+          } 
+        },
       });
 
       if (signUpErr) {
