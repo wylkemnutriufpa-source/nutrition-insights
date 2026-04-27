@@ -106,12 +106,12 @@ export default function InvitePatient() {
   }, [publicProfile]);
 
   const whatsappMessage = useMemo(() => {
-    if (!invitationCode || !profile) return "";
+    if (!profile) return "";
     return getWhatsAppInvitationMessage({
       patientName: name,
       professionalName: profile.display_name || profile.full_name || "Seu Nutricionista",
       clinicName: clinic?.name,
-      invitationCode: invitationCode,
+      invitationCode: invitationCode || undefined, // Fallback safe
       templateType: 'patient_onboarding',
       professionalId: user?.id,
       customTemplate: templates['patient_onboarding']
