@@ -236,12 +236,49 @@ export default function PatientDiagnostic() {
                 </div>
 
                 {Object.values(results).some(r => r.status === 'error') && (
-                  <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex gap-3">
-                    <AlertCircle className="w-5 h-5 shrink-0" />
-                    <p>
-                      <strong>Detectamos um problema:</strong> Alguns vínculos ou permissões não estão corretos. 
-                      Sugerimos que você limpe o cache do navegador ou entre em contato com seu profissional para receber um novo convite.
-                    </p>
+                  <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20 text-destructive text-sm flex flex-col gap-3">
+                    <div className="flex gap-3">
+                      <AlertCircle className="w-5 h-5 shrink-0" />
+                      <div>
+                        <strong>Detectamos um problema:</strong>
+                        <div className="mt-1 space-y-1">
+                          {results.professional.reason === 'no_link' && <p>Você não possui um vínculo ativo com um profissional. Peça para seu nutricionista reenviar o convite.</p>}
+                          {results.invite.reason === 'expirado' && <p>Seu link de convite expirou. Links costumam durar 7 dias por segurança.</p>}
+                          {results.invite.reason === 'revogado' && <p>Este convite foi cancelado pelo profissional.</p>}
+                          {results.rls.status === 'error' && <p>Há uma falha de sincronização de dados (RLS). Tente sair e entrar novamente.</p>}
+                          {!['no_link', 'expirado', 'revogado'].includes(results.professional.reason || '') && results.rls.status === 'ok' && (
+                            <p>Alguns vínculos não estão corretos. Sugerimos que você limpe o cache do navegador ou entre em contato com o suporte.</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-wrap items-center gap-2 mt-2 pt-3 border-t border-destructive/20">
+                      <span className="text-[10px] font-bold uppercase tracking-wider opacity-70">Ações de diagnóstico:</span>
+                      <Button variant="outline" size="sm" onClick={copyLogs} className="h-7 text-[10px] gap-1.5 border-destructive/30 hover:bg-destructive/10">
+                        <Copy className="w-3 h-3" /> Copiar Logs
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={exportLogs} className="h-7 text-[10px] gap-1.5 border-destructive/30 hover:bg-destructive/10">
+                        <Download className="w-3 h-3" /> Baixar TXT
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                {debugLogs.length > 0 && (
+                  <div className="p-4 rounded-lg bg-muted/30 border border-border">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center gap-2">
+                        <Info className="w-4 h-4 text-muted-foreground" />
+                        <span className="text-sm font-semibold">Rastro de Auditoria Local</span>
+                      </div>
+                      <Badge variant="secondary" className="text-[10px]">{debugLogs.length} eventos</Badge>
+                    </div>
+                    <div className="max-h-40 overflow-y-auto space-y-1.5 font-mono text-[10px] text-muted-foreground">
+                      {debugLogs.map((log, i) => (
+                        <div key={i} className="border-l-2 border-primary/20 pl-2">{log}</div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
