@@ -4,8 +4,16 @@ import { Button } from "@/components/ui/button";
 import { Home, ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
 
+function getSafeHomePath(pathname: string) {
+  if (pathname.startsWith("/convite/")) return pathname;
+  if (pathname.startsWith("/intake/")) return pathname;
+  if (pathname.startsWith("/cadastro")) return `${pathname}${window.location.search}`;
+  return "/";
+}
+
 export default function NotFound() {
   const location = useLocation();
+  const safeHomePath = getSafeHomePath(location.pathname);
 
   useEffect(() => {
     console.error(`[Router] 404 Not Found: ${location.pathname}`);
@@ -31,7 +39,7 @@ export default function NotFound() {
           <Button variant="outline" onClick={() => window.history.back()} className="gap-2">
             <ArrowLeft className="w-4 h-4" /> Voltar
           </Button>
-          <Link to="/">
+          <Link to={safeHomePath}>
             <Button className="gradient-primary gap-2">
               <Home className="w-4 h-4" /> Ir ao Início
             </Button>

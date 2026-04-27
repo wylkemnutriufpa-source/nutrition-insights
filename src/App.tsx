@@ -512,8 +512,12 @@ const App = () => (
             <IFJPatientCoach />
             <CommandPaletteProvider>
               <Routes>
-               {/* Root entry point */}
+               {/* Root and legacy entry points */}
                <Route path="/" element={<RootRoute />} />
+               <Route path="/index" element={<RootRoute />} />
+               <Route path="/inicio" element={<RootRoute />} />
+               <Route path="/dashboard" element={<RootRoute />} />
+               <Route path="/patient-dashboard" element={<Navigate to="/client/dashboard" replace />} />
 
                {/* Public landing pages */}
                <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />

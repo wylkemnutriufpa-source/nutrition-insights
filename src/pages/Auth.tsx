@@ -31,6 +31,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const [socialLoading, setSocialLoading] = useState<string | null>(null);
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<SelectedRole>(null);
+  const nextPath = searchParams.get("next") || searchParams.get("redirect") || "/";
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
@@ -75,7 +76,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           _metadata: {},
         });
       }
-      navigate("/");
+      navigate(nextPath.startsWith("/") ? nextPath : "/");
     }
   };
 
