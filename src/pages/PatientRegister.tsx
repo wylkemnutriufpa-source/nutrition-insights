@@ -578,7 +578,7 @@ export default function PatientRegister() {
         setTimeout(() => {
           setLoading(false);
           addLog("Redirecionando para consentimento...");
-          navigate("/consent", { replace: true });
+          navigate("/client/dashboard", { replace: true });
         }, 1500);
         return;
       }
