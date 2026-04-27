@@ -472,10 +472,6 @@ export default function InvitePatient() {
                       {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     </Button>
                   </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    {/* Botão de produção redundante removido */}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                   <Button
