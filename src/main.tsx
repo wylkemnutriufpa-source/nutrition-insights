@@ -4,9 +4,19 @@ import App from "./App.tsx";
 import "./index.css";
 import { stampBuildIdentity } from "./lib/buildInfo";
 
+// Diagnóstico de inicialização para depuração de ambiente (Preview vs Prod)
+console.log("[FitJourney:Boot] Iniciando sistema...", {
+  hostname: window.location.hostname,
+  origin: window.location.origin,
+  timestamp: new Date().toISOString(),
+  env: import.meta.env.MODE,
+  isDev: import.meta.env.DEV
+});
+
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
 // Crítico para confirmar que a versão publicada é a que está rodando.
 stampBuildIdentity();
+
 
 /**
  * Preview / iframe detection — used to prevent SW registration in dev.
