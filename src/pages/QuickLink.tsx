@@ -137,7 +137,7 @@ export default function QuickLink() {
       
       // If auto-logged in, we can redirect. Otherwise, wait for email confirm.
       if (authData.session) {
-        setTimeout(() => navigate("/anamnese"), 1500);
+        setTimeout(() => navigate("/consent"), 1500);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao realizar cadastro.");
