@@ -362,11 +362,13 @@ export default function PatientRegister() {
 
       addLog("Registro concluído com sucesso.");
       if (signUpData.session) {
+        setCurrentUserId(signUpData.user.id);
         toast.success("Conta criada! Redirecionando...");
         navigate("/consent", { replace: true });
         return;
       }
 
+      setCurrentUserId(signUpData.user.id);
       toast.success("Conta criada! Verifique seu e-mail.");
       setDone(true);
     } catch (err: any) {
