@@ -48,6 +48,7 @@ export default function PatientRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Professional (optional)
   const [showProfSearch, setShowProfSearch] = useState(!!preselectedNutri);
@@ -620,7 +621,7 @@ export default function PatientRegister() {
           <div className="mt-6 p-3 rounded-lg bg-black/5 dark:bg-white/5 border border-border text-[10px] font-mono overflow-hidden">
             <div className="flex justify-between items-center mb-2">
               <span className="text-muted-foreground uppercase tracking-wider font-bold">Logs de Diagnóstico</span>
-              <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">PatientID: {supabase.auth.getSession().then(({data}) => data.session?.user.id || 'N/A')}</span>
+              <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">UID: {currentUserId || 'Pending'}</span>
             </div>
             <div className="max-h-32 overflow-y-auto space-y-1">
               {debugLogs.map((log, i) => (
