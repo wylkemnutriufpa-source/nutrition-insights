@@ -619,7 +619,7 @@ export default function PatientRegister() {
     );
   }
 
-  if (registrationDisplay.shouldShowInvitationWelcome) {
+  if (registrationDisplay.shouldShowInvitationWelcome && selectedProfessional) {
     const cadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
@@ -781,7 +781,7 @@ export default function PatientRegister() {
                       <p className="text-[9px] text-muted-foreground truncate">{selectedProfessional.clinic_name}</p>
                     )}
                   </div>
-                  {preselectedNutri ? (
+                  {preselectedNutri || invitationCode ? (
                     <button type="button" onClick={() => setIsProfConfirmed(false)}
                       className="text-[10px] text-primary hover:underline shrink-0 flex items-center gap-1">
                       <ArrowLeft className="w-2.5 h-2.5" /> Voltar
