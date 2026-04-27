@@ -10,22 +10,30 @@ interface Props {
   status: JourneyStatus;
 }
 
+/** 
+ * Centralized rule for allowed (non-blocking) states.
+ * States like lead_created and awaiting_consent are FLUID - they should not block the dashboard
+ * because components like OnboardingProgressModal will take over to guide the user.
+ */
+export const IS_FLUID_STATE = (status: JourneyStatus) => 
+  status === "lead_created" || status === "awaiting_consent" || status === "active" || status === "onboarding_active";
+
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; title: string; description: string; action?: { label: string; route: string } }> = {
   lead_created: {
     icon: Clock,
-    title: "Cadastro recebido",
-    description: "Seu cadastro foi recebido com sucesso. Aguarde a confirmação do seu profissional para iniciar sua jornada.",
+    title: "Iniciando sua jornada",
+    description: "Prepare-se para transformar sua saúde. Você será redirecionado para o onboarding em instantes.",
   },
   awaiting_payment: {
     icon: CreditCard,
     title: "Aguardando pagamento",
-    description: "Seu acesso será liberado assim que o pagamento for confirmado pelo seu profissional. Entre em contato caso já tenha efetuado o pagamento.",
+    description: "Seu acesso completo será liberado assim que o pagamento for confirmado pelo seu profissional.",
     action: { label: "Aguardando confirmação", route: "/payment-required" },
   },
   awaiting_onboarding_release: {
     icon: Stethoscope,
-    title: "Aguardando liberação do profissional",
-    description: "Seu profissional está revisando seus dados e preparando sua jornada personalizada. Em breve você receberá uma notificação.",
+    title: "Preparando seu acesso",
+    description: "Seu profissional está configurando os detalhes finais do seu perfil clínico. Em breve você poderá começar.",
   },
 };
 

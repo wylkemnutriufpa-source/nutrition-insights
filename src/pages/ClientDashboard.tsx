@@ -37,6 +37,7 @@ import PhaseTransitionModal from "@/components/biquini/PhaseTransitionModal";
 import OnboardingProgressModal from "@/components/patient/OnboardingProgressModal";
 import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
+import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
 import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
@@ -44,7 +45,7 @@ import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
+import OnboardingGateScreen, { IS_FLUID_STATE } from "@/components/patient/OnboardingGateScreen";
 import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
 import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
 import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar";
@@ -133,7 +134,7 @@ export default function ClientDashboard() {
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
-  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
   const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
@@ -278,20 +279,23 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Fluid flow: If patient just joined via link or is awaiting consent,
-  // we allow them into the dashboard where OnboardingProgressModal 
-  // will guide them to /consent and /onboarding automatically.
-  const isNewlyJoined = journeyStatus === "lead_created" || journeyStatus === "awaiting_consent";
-  
-  if (!journeyLoading && journeyStatus && !isNewlyJoined && journeyStatus !== "active") {
-    // Only block if it's a "real" block state like awaiting_payment
-    const blockingStates = ["awaiting_payment", "awaiting_onboarding_release"];
-    if (blockingStates.includes(journeyStatus)) {
-      return <OnboardingGateScreen status={journeyStatus} />;
+  // Telemetry: Log journey state to detect divergence
+  useEffect(() => {
+    if (journeyStatus && !journeyLoading) {
+      console.log(`[Dashboard:Telemetry] Journey Status: ${journeyStatus} | canAccess: ${canAccessOnboarding}`);
     }
+  }, [journeyStatus, journeyLoading, canAccessOnboarding]);
+
+  // Mandatory block states only - using centralized logic
+  const isFluid = IS_FLUID_STATE(journeyStatus!);
+  
+  if (!journeyLoading && journeyStatus && !isFluid) {
+    return <OnboardingGateScreen status={journeyStatus} />;
   }
 
-  if (loading || journeyLoading) {
+  // Fluid flow: If journey status allows onboarding, proceed to dashboard
+  // Components like OnboardingProgressModal will take over if data is missing.
+  if (journeyLoading) {
     return (
       <DashboardLayout>
         <BrainLoaderCard text="Carregando seu painel clínico…" />
@@ -301,10 +305,17 @@ export default function ClientDashboard() {
 
     return (
     <DashboardLayout>
+      {/* Telemetry Debug View (Only in Preview/Dev) */}
+      {(window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) && (
+        <div className="hidden">
+           {/* Silently keeping telemetry active in console via useEffect above */}
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <ExperienceModeSwitcher />
       </div>
       <OnboardingProgressModal />
+      <OnboardingExitGuard enabled={journeyStatus !== null && !IS_FLUID_STATE(journeyStatus)} />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Experience Mode Status Banner */}
         <motion.div variants={item}>
@@ -560,11 +571,13 @@ export default function ClientDashboard() {
           <PixPaymentSection />
         </motion.div>
 
-        {/* Action Buttons */}
-        <motion.div variants={item} className="flex flex-wrap gap-2">
-          <PlanRequestButton />
-          <WorkoutRequestButton />
-        </motion.div>
+        {/* Action Buttons — Hidden during early onboarding for fluid flow */}
+        {journeyStatus !== "lead_created" && journeyStatus !== "awaiting_consent" && (
+          <motion.div variants={item} className="flex flex-wrap gap-2">
+            <PlanRequestButton />
+            <WorkoutRequestButton />
+          </motion.div>
+        )}
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
         <PhaseTransitionModal />
 
