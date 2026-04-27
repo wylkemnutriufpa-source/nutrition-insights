@@ -221,7 +221,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   if (targetTenantId) {
                     // IDEMPOTENCY: Use maybeSingle check before insert
                     const { data: existingLink } = await (supabase.from("nutritionist_patients") as any)
-                      .select("id")
+                      .select("id, journey_status")
                       .eq("patient_id", session.user.id)
                       .eq("nutritionist_id", targetNutriId)
                       .maybeSingle();
@@ -240,11 +240,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       if (insertError) {
                         console.error(`[Auth:${linkageId}] Failed to insert link:`, insertError);
                       } else {
-                        console.log(`[Auth:${linkageId}] Link created successfully`);
+                        console.log(`%c[Auth:${linkageId}] Link created successfully`, "color: #10b981");
                       }
                     } else {
-                      console.log(`[Auth:${linkageId}] Link already exists, skipping insert (idempotent).`);
+                      console.log(`[Auth:${linkageId}] Link already exists with status: ${existingLink.journey_status}. Skipping insert (idempotent).`);
                     }
+                  } else {
+                    console.warn(`[Auth:${linkageId}] Could not resolve tenant for nutritionist:`, targetNutriId);
                   }
                 }
 
@@ -273,13 +275,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   }
                 }
 
-                // Cleanup
+                // Cleanup only AFTER successful processing
                 localStorage.removeItem("fitjourney_ref");
                 localStorage.removeItem("fitjourney_ref_at");
                 localStorage.removeItem("fitjourney_invite_code");
                 localStorage.removeItem("fitjourney_nutri_id");
               } catch (e) {
-                console.error("[Auth] Error in linkage flow:", e);
+                console.error(`[Auth:${linkageId}] Error in linkage flow:`, e);
               }
             })();
           }
