@@ -57,6 +57,7 @@ import NextMealWidget from "@/components/patient/NextMealWidget";
 import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidget";
 import { PatientIntelligenceBanner } from "@/components/premium/PremiumBanners";
 import MyTeamTab from "@/components/patient/MyTeamTab";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -345,7 +346,9 @@ export default function ClientDashboard() {
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Experience Mode Status Banner */}
         <motion.div variants={item}>
-          <ExperienceModeStatusSection />
+          <ErrorBoundary section="Status de Experiência">
+            <ExperienceModeStatusSection />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Schema Inconsistency Alert */}
