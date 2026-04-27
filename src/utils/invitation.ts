@@ -80,7 +80,7 @@ export const getWhatsAppInvitationMessage = (params: {
   patientName: string;
   professionalName: string;
   clinicName?: string;
-  invitationCode: string;
+  invitationCode?: string;
   professionalId?: string;
   templateType?: WhatsAppTemplateType;
   customTemplate?: string;
@@ -106,7 +106,7 @@ export const getWhatsAppInvitationMessage = (params: {
     return customTemplate
       .replace(/{{patientName}}/g, safePatientName)
       .replace(/{{professionalName}}/g, safeProfName)
-      .replace(/{{clinicName}}/g, clinicName?.trim() || "")
+      .replace(/{{clinicName}}/g, clinicName?.trim() || "FitJourney")
       .replace(/{{url}}/g, url);
   }
 
@@ -119,6 +119,15 @@ export const getWhatsAppInvitationMessage = (params: {
     return `*Olá!* Sou o(a) nutricionista *${safeProfName}*${safeClinicPart} e convido você a começar seu acompanhamento através deste link rápido: ${url}\n\nVamos juntos! 💪🍎`;
   }
 
-  // Padrão: patient_onboarding
   return `*Olá ${safePatientName}!* Tudo bem?\n\nSou o(a) nutricionista *${safeProfName}*${safeClinicPart} e estou muito feliz em te acompanhar na sua jornada! 🚀\n\nSeu acesso exclusivo à plataforma *FitJourney* já está pronto. Lá você terá seu plano alimentar, orientações e toda a sua evolução na palma da mão. ✨\n\n*Clique no link abaixo para começar:* \n👉 ${url}\n\nVamos juntos buscar sua melhor versão! 💪🍎`;
+};
+
+/**
+ * Normaliza o nome para exibição profissional, removendo excessos se necessário,
+ * mas mantendo o título se presente.
+ */
+export const formatProfessionalName = (name: string) => {
+  if (!name) return "";
+  // Se o nome já começa com Dr, Dra, Nutri, etc, mantemos.
+  return name.trim();
 };
