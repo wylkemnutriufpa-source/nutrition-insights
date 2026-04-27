@@ -18,6 +18,7 @@ interface AuditRow {
 }
 
 const OAUTH_PATHS = [
+  "/cadastro?code=HEALTHCHECK",
   "/~oauth/cadastro",
   "/~oauth/convite/HEALTHCHECK",
   "/~oauth/intake/healthcheck-token",

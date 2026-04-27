@@ -14,6 +14,7 @@ const PATHS = [
   "/landing",
   "/landing-paciente",
   "/cadastro",
+  "/cadastro?code=HEALTHCHECK",
   "/intake/healthcheck-token",
   "/convite/HEALTHCHECK",
   "/~oauth/cadastro",
