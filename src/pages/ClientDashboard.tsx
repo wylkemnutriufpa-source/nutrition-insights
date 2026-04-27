@@ -320,10 +320,7 @@ export default function ClientDashboard() {
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
   
   // REDIRECT logic for non-fluid onboarding states
-  if (isPatient && !journeyLoading && journeyStatus && !isFluid) {
-    console.log(`[Dashboard:Gate] Blocking dashboard for status: ${journeyStatus}`);
-    return <OnboardingGateScreen status={journeyStatus} />;
-  }
+  const shouldBlock = isPatient && !journeyLoading && journeyStatus && !isFluid;
 
   // Telemetry extraction helper for diagnostics
   const getTelemetryLogs = () => {
@@ -341,7 +338,13 @@ export default function ClientDashboard() {
 
     return (
     <DashboardLayout>
-      {/* Telemetry Debug View (Only in Preview/Dev) */}
+      {shouldBlock ? (
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <OnboardingGateScreen status={journeyStatus!} />
+        </div>
+      ) : (
+        <>
+          {/* Telemetry Debug View (Only in Preview/Dev) */}
       {(window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) && (
         <div className="hidden" data-testid="journey-telemetry">
            {JSON.stringify(getTelemetryLogs())}
@@ -974,6 +977,8 @@ export default function ClientDashboard() {
           </motion.div>
         </div>
       </motion.div>
+        </>
+      )}
     </DashboardLayout>
   );
 }
