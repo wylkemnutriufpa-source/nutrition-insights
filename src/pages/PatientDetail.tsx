@@ -1710,7 +1710,7 @@ export default function PatientDetail() {
                               if (error) throw error;
                               const result = data as any;
                               if (result?.success && result?.token) {
-                                const link = `${window.location.origin}/intake/${result.token}`;
+                                const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${result.token}`;
                                 await navigator.clipboard.writeText(link);
                                 toast.success("Onboarding resetado! Link copiado para a área de transferência 📋");
                               } else {
