@@ -92,11 +92,30 @@ export default function OnboardingGateScreen({ status }: Props) {
               <p className="text-muted-foreground text-sm leading-relaxed">{config.description}</p>
             </div>
 
-            {/* Animated pulse indicator */}
-            <div className="flex items-center justify-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-              <span className="text-xs text-muted-foreground">Aguardando...</span>
-            </div>
+            {!showRetry ? (
+              <div className="flex items-center justify-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-primary animate-pulse" />
+                <span className="text-xs text-muted-foreground">Sincronizando...</span>
+              </div>
+            ) : (
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="space-y-4"
+              >
+                <div className="flex items-center justify-center gap-2 text-amber-500 bg-amber-500/10 p-2 rounded-lg">
+                  <AlertCircle className="w-4 h-4" />
+                  <span className="text-xs font-medium">A sincronização está demorando mais que o esperado.</span>
+                </div>
+                <Button 
+                  onClick={handleRetry} 
+                  variant="outline" 
+                  className="w-full gap-2 border-primary/20 hover:bg-primary/5"
+                >
+                  <RefreshCw className="w-4 h-4" /> Tentar novamente
+                </Button>
+              </motion.div>
+            )}
 
             {config.action && (
               <Button onClick={() => navigate(config.action!.route)} className="w-full gap-2">
