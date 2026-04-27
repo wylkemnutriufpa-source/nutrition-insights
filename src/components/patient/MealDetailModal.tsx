@@ -1781,6 +1781,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             </div>
           )}
         </div>
+        <DialogClose />
       </DialogContent>
     </Dialog>
 
