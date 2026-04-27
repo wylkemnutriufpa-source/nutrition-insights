@@ -55,7 +55,6 @@ Deno.serve(async (req) => {
         });
       } catch (logErr) { console.error("Error logging failure:", logErr); }
 
-      await logInvitation(adminClient, {
       return new Response(JSON.stringify({ 
         success: false, 
         error_code: "INVALID_CODE",
