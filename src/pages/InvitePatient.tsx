@@ -331,7 +331,7 @@ export default function InvitePatient() {
                   patientName: "",
                   professionalName: profile?.display_name || profile?.full_name || "Seu Nutri",
                   clinicName: clinic?.name,
-                  invitationCode: user?.id || "",
+                  invitationCode: invitationCode || "",
                   templateType: 'quick_link',
                   customTemplate: templates['quick_link']
                 }))}`} 
