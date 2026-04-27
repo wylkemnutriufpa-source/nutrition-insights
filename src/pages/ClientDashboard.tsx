@@ -155,27 +155,31 @@ export default function ClientDashboard() {
       const [programsRes, appointmentsRes, notificationsRes, checklistRes] = await Promise.all([
         supabase
           .from("program_patients")
-          .select("program_id, current_phase, status, programs(id, title, tag, start_date)")
+          .select("program_id, current_phase, status, enrolled_at, joined_at, programs(id, title, tag, start_date)")
           .eq("patient_id", userId)
-          .eq("status", "active"),
+          .eq("status", "active")
+          .catch(e => { handleSupabaseError(e, "programas"); return { data: null }; }),
         supabase
           .from("patient_appointments")
-          .select("id, title, appointment_date, status, appointment_type")
+          .select("id, title, appointment_date, status, appointment_type, created_at")
           .eq("patient_id", userId)
           .gte("appointment_date", new Date().toISOString())
           .order("appointment_date", { ascending: true })
-          .limit(5),
+          .limit(5)
+          .catch(e => { handleSupabaseError(e, "agendamentos"); return { data: null }; }),
         supabase
           .from("notifications")
           .select("id, title, message, created_at, is_read, type")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(8),
+          .limit(8)
+          .catch(e => { handleSupabaseError(e, "notificações"); return { data: null }; }),
         supabase
           .from("checklist_tasks")
-          .select("id, completed")
+          .select("id, completed, date, created_at")
           .eq("patient_id", userId)
-          .eq("date", today),
+          .eq("date", today)
+          .catch(e => { handleSupabaseError(e, "checklist"); return { data: null }; }),
       ]);
 
       const programs = (programsRes.data || []).map((p: any) => ({
