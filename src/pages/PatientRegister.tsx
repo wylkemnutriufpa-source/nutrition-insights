@@ -466,21 +466,19 @@ export default function PatientRegister() {
           addLog(`Erro ao criar lead: ${leadErr.message}`);
           toast.error("Selecione um profissional para concluir o cadastro.");
           setShowProfSearch(true);
-          setLoading(false);
           return;
         }
 
         addLog("Lead criado com sucesso.");
         toast.success("Recebemos seu interesse!");
         setDone(true);
-        setLoading(false);
         return;
       }
 
       // ─── FLUXO B: COM NUTRICIONISTA ───
       addLog("Criando usuário no Auth...");
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: { data: { full_name: name } },
       });
@@ -490,14 +488,12 @@ export default function PatientRegister() {
         toast.error(signUpErr.message === "User already registered"
           ? "Este e-mail já está cadastrado. Faça login."
           : signUpErr.message);
-        setLoading(false);
         return;
       }
 
       if (!signUpData.user) {
         addLog("Auth SignUp retornou sucesso mas sem usuário.");
         toast.error("Falha ao criar conta.");
-        setLoading(false);
         return;
       }
 
@@ -570,10 +566,18 @@ export default function PatientRegister() {
       }
 
       addLog("Registro concluído com sucesso.");
+      
+      // Se tiver sessão, redireciona explicitamente limpando estados de loading
       if (signUpData.session) {
         setCurrentUserId(signUpData.user.id);
+        addLog("Sessão detectada. Redirecionando para /consent...");
         toast.success("Conta criada! Redirecionando...");
-        navigate("/consent", { replace: true });
+        
+        // Pequeno delay para garantir que o toast seja visto e o estado de loading não pisque
+        setTimeout(() => {
+          setLoading(false);
+          navigate("/consent", { replace: true });
+        }, 800);
         return;
       }
 
@@ -595,9 +599,11 @@ export default function PatientRegister() {
     } catch (err: any) {
       addLog(`Erro inesperado: ${err.message}`);
       toast.error("Erro ao criar conta. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
 
   // ─── Done Screen ───
   if (done) {
