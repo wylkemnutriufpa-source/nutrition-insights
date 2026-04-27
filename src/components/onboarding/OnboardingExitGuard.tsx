@@ -1,35 +1,42 @@
-/**
- * Modal that warns patients when they try to leave onboarding before completing it.
- * Uses beforeunload for browser close/refresh protection.
- * NOTE: In-app navigation blocking via useBlocker requires a data router (createBrowserRouter).
- * Since the app uses BrowserRouter, we only guard browser-level navigation here.
- */
 import { useEffect } from "react";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { IS_FLUID_STATE } from "@/components/patient/OnboardingGateScreen";
 
 interface OnboardingExitGuardProps {
-  /** Whether the guard should be active (incomplete onboarding) */
-  enabled: boolean;
-  /** Whether user has started filling (to distinguish first access vs returning) */
-  hasStartedFilling?: boolean;
+  /** 
+   * If provided, overrides the default journey-based logic. 
+   * Useful when we want to force enable/disable from props.
+   */
+  enabled?: boolean;
 }
 
-export default function OnboardingExitGuard({
-  enabled,
-}: OnboardingExitGuardProps) {
-  // Browser close / tab close / refresh guard
+/**
+ * OnboardingExitGuard v2.0.0
+ * Prevents patients from accidentally leaving the onboarding flow.
+ * Uses centralized IS_FLUID_STATE to maintain consistency with other guards.
+ */
+export default function OnboardingExitGuard({ enabled }: OnboardingExitGuardProps) {
+  const { status: journeyStatus, loading } = usePatientJourneyStatus();
+
+  // If enabled prop is not provided, we use the journey-based logic:
+  // We only guard if the state is "fluid" (early onboarding), but not yet "active" (finished).
+  // Once active, the user is free to move around.
+  const isEarlyOnboarding = journeyStatus !== null && 
+    (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent" || journeyStatus === "onboarding_active");
+    
+  const isActiveGuard = enabled ?? (isEarlyOnboarding && !loading);
+
   useEffect(() => {
-    if (!enabled) return;
+    if (!isActiveGuard) return;
+
     const handler = (e: BeforeUnloadEvent) => {
       e.preventDefault();
-      e.returnValue = "";
+      e.returnValue = ""; // Standard way to show "Are you sure?" browser dialog
     };
+
     window.addEventListener("beforeunload", handler);
     return () => window.removeEventListener("beforeunload", handler);
-  }, [enabled]);
-
-  // In-app navigation is already guarded by PaymentGuardedPatientRoute
-  // which redirects back to /onboarding if onboarding is incomplete.
-  // No modal needed here — the route guard handles it.
+  }, [isActiveGuard]);
 
   return null;
 }
