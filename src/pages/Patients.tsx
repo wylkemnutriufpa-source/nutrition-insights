@@ -555,6 +555,7 @@ export default function Patients() {
   const [expiryTarget, setExpiryTarget] = useState<{ id: string, name: string, current: string | null } | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
+  const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
 
   // Build params for server-side query
   const queryParams: PatientsListParams = {
