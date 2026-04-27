@@ -70,13 +70,18 @@ Deno.serve(async (req) => {
       throw new Error(`Domínio de redirecionamento inválido: ${redirectTo}`);
     }
 
-    // Gera magic link redirecionando direto para /onboarding (rota canônica)
-    const { data: linkData, error: linkErr } = await adminClient.auth.admin.generateLink({
-      type: "magiclink",
-      email,
-      options: { redirectTo },
+    // Envia magic link real por email. `generateLink` apenas gera a URL e não entrega email.
+    const emailClient = createClient(supabaseUrl, anonKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
     });
-    if (linkErr) throw linkErr;
+    const { error: otpErr } = await emailClient.auth.signInWithOtp({
+      email,
+      options: {
+        emailRedirectTo: redirectTo,
+        shouldCreateUser: false,
+      },
+    });
+    if (otpErr) throw otpErr;
 
     // Log do envio do link
     await logInvitation(adminClient, {
@@ -88,9 +93,6 @@ Deno.serve(async (req) => {
       },
       domain_used: origin
     });
-
-    const actionLink: string | null =
-      (linkData as any)?.properties?.action_link || null;
 
     // Notificação in-app caso o paciente já tenha conta
     if (patientId) {
@@ -107,7 +109,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        action_link: actionLink,
+        action_link: null,
+        email_sent: true,
         delivered_to: email,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" } },
