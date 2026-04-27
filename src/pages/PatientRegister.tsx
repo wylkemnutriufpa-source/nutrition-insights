@@ -31,11 +31,27 @@ export default function PatientRegister() {
   const [sigValid, setSigValid] = useState<boolean | null>(null);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
-  const addLog = (msg: string) => {
-    const timestamp = new Date().toLocaleTimeString();
+  const addLog = useCallback((msg: string) => {
+    const timestamp = new Date().toISOString();
     const newLog = `[${timestamp}] ${msg}`;
     console.log(newLog);
     setDebugLogs(prev => [...prev, newLog]);
+  }, []);
+
+  const copyLogs = () => {
+    const logText = debugLogs.join("\n");
+    navigator.clipboard.writeText(logText);
+    toast.success("Logs copiados para a área de transferência!");
+  };
+
+  const exportLogsAsJson = () => {
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(debugLogs));
+    const downloadAnchorNode = document.createElement('a');
+    downloadAnchorNode.setAttribute("href", dataStr);
+    downloadAnchorNode.setAttribute("download", `diagnostic_logs_${new Date().getTime()}.json`);
+    document.body.appendChild(downloadAnchorNode);
+    downloadAnchorNode.click();
+    downloadAnchorNode.remove();
   };
 
   // Form
