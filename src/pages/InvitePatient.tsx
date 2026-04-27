@@ -313,7 +313,7 @@ export default function InvitePatient() {
                 variant="outline"
                 size="sm"
                 className="w-full gap-2 border-accent/20 hover:bg-accent/5 text-accent text-xs h-9"
-                onClick={() => copyToClipboard(user?.id ? getQuickLinkUrl(user.id, true) : "", "quick_link_prod", "Link rápido oficial (Produção)")}
+                onClick={() => copyToClipboard(user?.id ? getQuickLinkUrl(user.id, true) : "", "quick_link_prod", "Vínculo Rápido Oficial")}
               >
                 {copied === "quick_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
                 Copiar Link Oficial (Produção)
