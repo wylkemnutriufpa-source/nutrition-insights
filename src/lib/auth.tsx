@@ -183,7 +183,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 
                 // 1. Direct Link via invitation code or nutritionist ID
                 let targetNutriId = nutriId;
-                let targetTenantId = null;
+                let targetTenantId: string | null = null;
 
                 if (inviteCode && !targetNutriId) {
                   const { data: invite } = await supabase
@@ -198,32 +198,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 }
 
                 if (targetNutriId) {
-                  // Ensure nutritionist_patients link exists
-                  const { data: existingLink } = await supabase
-                    .from("nutritionist_patients")
-                    .select("id")
-                    .eq("patient_id", session.user.id)
-                    .eq("nutritionist_id", targetNutriId)
-                    .maybeSingle();
+                  // Ensure we have a tenant_id
+                  if (!targetTenantId) {
+                    const { data: tenant } = await supabase
+                      .from("tenants")
+                      .select("id")
+                      .eq("owner_id", targetNutriId)
+                      .maybeSingle();
+                    targetTenantId = tenant?.id || null;
+                  }
 
-                  if (!existingLink) {
-                    // Get tenant_id if not known
-                    if (!targetTenantId) {
-                      const { data: profile } = await supabase
-                        .from("profiles")
-                        .select("id")
-                        .eq("user_id", targetNutriId)
-                        .maybeSingle();
-                      // Assume patient needs to be linked to this nutritionist's tenant
+                  if (targetTenantId) {
+                    // Ensure nutritionist_patients link exists
+                    const { data: existingLink } = await supabase
+                      .from("nutritionist_patients")
+                      .select("id")
+                      .eq("patient_id", session.user.id)
+                      .eq("nutritionist_id", targetNutriId)
+                      .maybeSingle();
+
+                    if (!existingLink) {
+                      await supabase.from("nutritionist_patients").insert({
+                        nutritionist_id: targetNutriId,
+                        patient_id: session.user.id,
+                        tenant_id: targetTenantId,
+                        status: "active",
+                        journey_status: "awaiting_consent",
+                        attendance_mode: "online"
+                      });
+                      console.log("[Auth] Link created in nutritionist_patients");
                     }
-
-                    await supabase.from("nutritionist_patients").insert({
-                      nutritionist_id: targetNutriId,
-                      patient_id: session.user.id,
-                      status: "active",
-                      journey_status: "awaiting_consent"
-                    });
-                    console.log("[Auth] Link created in nutritionist_patients");
                   }
                 }
 
