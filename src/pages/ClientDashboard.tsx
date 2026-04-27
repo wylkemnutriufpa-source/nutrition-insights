@@ -331,7 +331,9 @@ export default function ClientDashboard() {
   if (loading || journeyLoading || isLoading) {
     return (
       <DashboardLayout>
-        <BrainLoaderCard text="Carregando seu painel clínico…" />
+        <div className="p-6">
+          <BrainLoaderCard text="Carregando seu painel clínico…" />
+        </div>
       </DashboardLayout>
     );
   }
