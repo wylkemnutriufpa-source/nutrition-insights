@@ -97,7 +97,7 @@ export const getWhatsAppInvitationMessage = (params: {
 
   // Fallbacks para dados ausentes para evitar campos vazios na mensagem
   const safePatientName = patientName?.trim() ? patientName.split(" ")[0] : "Paciente";
-  const safeProfName = formatProfessionalName(professionalName?.trim() || "Seu Nutricionista");
+  const safeProfName = formatProfessionalName(professionalName?.trim() || "Dr. Wylkem Raiol");
   const safeClinicPart = clinicName?.trim() ? ` da clínica *${clinicName}*` : "";
   const url = getInvitationUrl(invitationCode || undefined, professionalId, true);
 
