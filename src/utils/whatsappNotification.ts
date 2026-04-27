@@ -16,16 +16,17 @@ export interface WhatsAppTemplateParams {
 export const getWhatsAppTemplate = (type: WhatsAppTemplateType, params: WhatsAppTemplateParams) => {
   const firstName = params.patientName ? params.patientName.split(" ")[0] : "Paciente";
   const clinicPart = params.clinicName ? ` da clínica *${params.clinicName}*` : "";
+  const link = params.appUrl || "https://app.fitjourney.com.br";
 
   switch (type) {
     case "meal_plan_ready":
-      return `Olá ${firstName}! Aqui é o(a) nutricionista ${params.professionalName}. Seu plano alimentar está pronto! 🎉\n\nVocê pode acessá-lo agora pelo link: ${params.appUrl}\n\nQualquer dúvida, estou à disposição!`;
+      return `Olá ${firstName}! Aqui é o(a) nutricionista ${params.professionalName}. Seu plano alimentar está pronto! 🎉\n\nVocê pode acessá-lo agora pelo link: ${link}\n\nQualquer dúvida, estou à disposição!`;
     case "protocol_activated":
-      return `Olá ${firstName}! Seu novo protocolo foi ativado por ${params.professionalName}${clinicPart}. 🚀\n\nAcesse agora para conferir as novidades: ${params.appUrl}`;
+      return `Olá ${firstName}! Seu novo protocolo foi ativado por ${params.professionalName}${clinicPart}. 🚀\n\nAcesse agora para conferir as novidades: ${link}`;
     case "registration_updated":
-      return `Olá ${firstName}! Seu cadastro foi atualizado com sucesso no sistema do(a) ${params.professionalName}. ✅\n\nAcesse seu painel: ${params.appUrl}`;
+      return `Olá ${firstName}! Seu cadastro foi atualizado com sucesso no sistema do(a) ${params.professionalName}. ✅\n\nAcesse seu painel: ${link}`;
     case "invitation":
-      return `Olá ${firstName}! Sou o(a) nutricionista *${params.professionalName}*${clinicPart}. Seu acesso ao FitJourney foi criado! 🚀\n\nClique no link abaixo para aceitar seu convite e começar seu acompanhamento:\n\n${params.appUrl}`;
+      return `Olá ${firstName}! Sou o(a) nutricionista *${params.professionalName}*${clinicPart}. Seu acesso ao FitJourney foi criado! 🚀\n\nClique no link abaixo para aceitar seu convite e começar seu acompanhamento:\n\n${link}`;
     default:
       return "";
   }
@@ -36,6 +37,12 @@ export const getWhatsAppTemplate = (type: WhatsAppTemplateType, params: WhatsApp
  */
 export const getMealPlanReadyMessage = (patientName: string, professionalName: string, appUrl: string) => {
   return getWhatsAppTemplate("meal_plan_ready", { patientName, professionalName, appUrl });
+};
+
+export const buildWhatsAppUrl = (phone: string, message: string) => {
+  const formattedPhone = formatInternationalWhatsApp(phone);
+  const cleanPhone = formattedPhone.replace(/\+/g, "");
+  return `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(message)}`;
 };
 
 export const sendWhatsAppNotification = async (params: {
@@ -59,10 +66,7 @@ export const sendWhatsAppNotification = async (params: {
     targetPhone = profile.phone;
   }
 
-  const formattedPhone = formatInternationalWhatsApp(targetPhone);
-  const cleanPhone = formattedPhone.replace(/\+/g, "");
-  const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(params.message)}`;
-  
+  const url = buildWhatsAppUrl(targetPhone, params.message);
   window.open(url, "_blank");
 };
 
