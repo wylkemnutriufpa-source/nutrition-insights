@@ -242,6 +242,34 @@ export default function InvitePatient() {
           </CardContent>
         </Card>
 
+        <Card className="border-accent/20 bg-accent/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2 text-accent">
+              <LinkIcon className="w-4 h-4" />
+              <CardTitle className="text-sm">Link Rápido (Sem Onboarding)</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Mande esse link para novos interessados (prospecção). 
+              O paciente cria a conta em segundos e já fica vinculado a você, 
+              mas o onboarding completo fica pendente até que você autorize.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+              <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+              <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 gap-1"
+                onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido")}
+              >
+                {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
         {!created ? (
           <Card>
             <CardHeader>
