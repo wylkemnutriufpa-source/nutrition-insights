@@ -170,7 +170,11 @@ export function MealSmartEditorModal({
       return;
     }
 
-    const cleanedSubs = normalizeSubstitutions(substitutions);
+    const cleanedSubs = Array.from(new Set(
+      substitutions
+        .map(s => String(s).trim().replace(/\s+/g, ' '))
+        .filter(s => s.length > 0)
+    )).slice(0, substitutionCount);
     const finalDescription = formatFinalDescription(description, cleanedSubs);
     
     try {

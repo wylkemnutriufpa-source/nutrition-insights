@@ -1,9 +1,9 @@
-export const normalizeSubstitutions = (subs: string[]): string[] => {
+export const normalizeSubstitutions = (subs: string[], limit: number = 4): string[] => {
   return Array.from(new Set(
     subs
       .map(s => String(s).trim().replace(/\s+/g, ' '))
       .filter(s => s.length > 0)
-  )).sort().slice(0, 4);
+  )).slice(0, limit);
 };
 
 export const formatFinalDescription = (description: string, cleanedSubs: string[]): string => {

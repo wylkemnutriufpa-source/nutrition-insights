@@ -208,7 +208,7 @@ interface Props {
 
 export default function MealTemplatePanel({ day }: Props) {
   const { user } = useAuth();
-  const { planId, addItem, substitutionCount } = useMealPlanEditorV2Store();
+  const { planId, addItem, substitutionCount, patientName } = useMealPlanEditorV2Store();
   const [activeMealType, setActiveMealType] = useState<MealType>("breakfast");
   const [recentlyApplied, setRecentlyApplied] = useState<Set<string>>(new Set());
   const [customTemplates, setCustomTemplates] = useState<MealTemplate[]>([]);
@@ -304,8 +304,19 @@ export default function MealTemplatePanel({ day }: Props) {
     
     // Generate automatic substitutions for the main ingredients (Phase 3 update)
     const subLines: string[] = [];
+    const isWannubia = patientName?.toLowerCase().includes("wannubia");
+
     template.foods.forEach(f => {
-      const alts = getSubstitutionsFor(f.name).slice(0, substitutionCount); // Respect user choice (0-4)
+      let alts = getSubstitutionsFor(f.name);
+      
+      // Aplicar filtros específicos do modelo Wannubia (sem ultraprocessados, etc)
+      if (isWannubia) {
+        const forbiddenKeywords = ["ultraprocessado", "fritura", "doce", "açúcar", "refrigerante"];
+        alts = alts.filter(alt => !forbiddenKeywords.some(key => alt.toLowerCase().includes(key)));
+      }
+
+      alts = alts.slice(0, substitutionCount);
+      
       if (alts.length > 0) {
         subLines.push(`• ${f.name} → ${alts.join(", ")}`);
       }
