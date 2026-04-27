@@ -131,4 +131,45 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     const errorCalls = (toast.error as any).mock.calls.map((c: any) => c[0]);
     expect(errorCalls).not.toContain("Não é possível salvar uma refeição com macros zerados.");
   });
+
+  it('deve aplicar template Wannubia e validar ordem das substituições', async () => {
+    const { addItem } = useMealPlanEditorV2Store();
+    
+    render(
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <MealSmartEditorModal open={true} onOpenChange={vi.fn()} itemId="item-1" />
+        </MemoryRouter>
+      </QueryClientProvider>
+    );
+
+    // Simula clique em "Refeição Pronta"
+    const readyMealsTab = screen.getByText(/Refeição Pronta/i);
+    fireEvent.click(readyMealsTab);
+
+    // Seleciona um template (ex: Frango + Arroz + Salada)
+    const templateButton = screen.getByText(/Frango \+ Arroz \+ Salada/i);
+    fireEvent.click(templateButton);
+
+    // Verifica se addItem foi chamado com a estrutura correta para Wannubia
+    await waitFor(() => {
+      expect(addItem).toHaveBeenCalledWith(expect.objectContaining({
+        edit_metadata: expect.objectContaining({
+          substitutions_json: expect.arrayContaining([
+            expect.stringMatching(/• Peito de frango/i),
+            expect.stringMatching(/• Arroz branco/i),
+            expect.stringMatching(/• Feijão carioca/i)
+          ])
+        })
+      }));
+    });
+
+    // Valida que a ordem no metadata respeita Proteína (idx 0), Carboidrato (idx 1), Legume (idx 2)
+    const lastCall = (addItem as any).mock.calls[(addItem as any).mock.calls.length - 1][0];
+    const subs = lastCall.edit_metadata.substitutions_json;
+    
+    expect(subs[0]).toContain("Peito de frango");
+    expect(subs[1]).toContain("Arroz branco");
+    expect(subs[2]).toContain("Feijão carioca");
+  });
 });
