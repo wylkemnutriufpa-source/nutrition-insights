@@ -22,6 +22,63 @@ interface ProfessionalResult {
   phone: string | null;
 }
 
+type InvitationIssue = {
+  reason: "invalid" | "expired" | "revoked";
+  message: string;
+} | null;
+
+type RegistrationLinkSource = "none" | "nutri" | "invitation" | "onboarding_token" | "nutri_fallback";
+
+const buildCadastroPath = (params: {
+  preselectedNutri: string;
+  invitationCode: string;
+  selectedProfessional: ProfessionalResult | null;
+}) => {
+  const next = new URLSearchParams();
+  const professionalId = params.preselectedNutri || params.selectedProfessional?.user_id || "";
+  if (professionalId) next.set("nutri", professionalId);
+  if (params.invitationCode) next.set("code", params.invitationCode);
+  const query = next.toString();
+  return `/cadastro${query ? `?${query}` : ""}`;
+};
+
+const resolveRegistrationDisplay = (params: {
+  preselectedNutri: string;
+  invitationCode: string;
+  selectedProfessional: ProfessionalResult | null;
+  isProfConfirmed: boolean;
+  sigValid: boolean | null;
+}) => {
+  const hasNutriParam = Boolean(params.preselectedNutri);
+  const hasCodeParam = Boolean(params.invitationCode);
+  const hasAnyLinkContext = hasNutriParam || hasCodeParam;
+  const hasSelectedProfessional = Boolean(params.selectedProfessional?.user_id);
+  const shouldShowInvitationWelcome = Boolean(
+    hasAnyLinkContext && hasSelectedProfessional && !params.isProfConfirmed,
+  );
+  const shouldShowInvalidCodeOnly = Boolean(
+    hasCodeParam && params.sigValid === false && !hasSelectedProfessional && !hasNutriParam,
+  );
+  const routeDecision = !hasAnyLinkContext
+    ? "no_link_context"
+    : shouldShowInvalidCodeOnly
+      ? "invalid_code_only"
+      : shouldShowInvitationWelcome
+        ? "invitation_welcome"
+        : hasSelectedProfessional
+          ? "registration_linked"
+          : "registration_pending";
+
+  return {
+    hasAnyLinkContext,
+    shouldShowInvitationWelcome,
+    shouldShowInvalidCodeOnly,
+    shouldShowNoContextGuard: !hasAnyLinkContext,
+    isLinkValidationPending: hasAnyLinkContext && params.sigValid === null,
+    routeDecision,
+  };
+};
+
 export default function PatientRegister() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
