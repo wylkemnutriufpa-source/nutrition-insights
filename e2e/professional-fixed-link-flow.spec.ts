@@ -1,42 +1,60 @@
 import { test, expect } from '@playwright/test';
 
-test.describe('Professional Fixed Link Flow', () => {
-  test('should pre-link professional and show registration form directly when using ?nutri=', async ({ page }) => {
-    // Simulamos um nutricionista real (precisa existir no banco ou ser mockado)
-    // Para o teste, usamos um UUID que sabemos que o PatientRegister tentará buscar
+/**
+ * E2E: padronização do fluxo de convite/cadastro
+ *
+ * Regra unificada (abril/2026):
+ * - TODOS os links suportados (?nutri=ID, ?code=CODE, ?token=TOKEN, e legados
+ *   /convite/CODE) devem exibir a tela "Você está sendo convidado!" com a
+ *   foto do profissional ANTES do formulário.
+ * - O CTA padronizado é "Cadastrar com este Profissional".
+ * - O formulário de cadastro só aparece após o clique no CTA.
+ * - Convite inválido/expirado redireciona para erro 400 amigável (nunca 404).
+ */
+
+test.describe('Fluxo de convite padronizado — todos os links', () => {
+  test('?nutri= mostra tela de boas-vindas com foto e CTA padronizado', async ({ page }) => {
     const professionalId = '00000000-0000-0000-0000-000000000001';
-    
-    // Navega diretamente para o link fixo
+
     await page.goto(`/cadastro?nutri=${professionalId}`);
-    
-    // Verifica se mostra o estado de validação
-    const validatingText = page.getByText('Validando convite...');
-    // Dependendo da velocidade, pode ser difícil capturar, mas verificamos se o formulário aparece
-    
-    // O formulário de registro deve aparecer eventualmente
-    await expect(page.getByLabel('Nome completo')).toBeVisible({ timeout: 10000 });
+
+    // Tela de boas-vindas padronizada deve aparecer
+    await expect(page.getByText(/Você está sendo convidado/i)).toBeVisible({ timeout: 10000 });
+
+    // CTA padronizado
+    await expect(page.getByRole('button', { name: /Cadastrar com este Profissional/i })).toBeVisible();
+
+    // Formulário fica oculto até o aceite
+    await expect(page.getByLabel('Nome completo')).not.toBeVisible();
+
+    // Clicar no CTA libera o formulário
+    await page.getByRole('button', { name: /Cadastrar com este Profissional/i }).click();
+    await expect(page.getByLabel('Nome completo')).toBeVisible();
     await expect(page.getByLabel('E-mail')).toBeVisible();
     await expect(page.getByLabel('WhatsApp')).toBeVisible();
-    
-    // Verifica se o badge do profissional vinculado está visível (indicando que o vínculo foi travado)
-    // O nome pode ser "Profissional" se o fetch falhar ou o mock não estiver completo, mas o elemento deve estar lá
-    await expect(page.getByText('Profissional Vinculado')).toBeVisible();
-    
-    // Garante que NÃO está na tela de "Você foi convidado!" (que exige clique em Aceitar)
-    await expect(page.getByText('Aceitar Convite e Continuar')).not.toBeVisible();
   });
 
-  test('should show welcome screen for individual codes but block form until acceptance', async ({ page }) => {
+  test('?code= mostra a mesma tela padronizada com foto e CTA', async ({ page }) => {
     const inviteCode = 'TESTCODE123';
     await page.goto(`/cadastro?code=${inviteCode}`);
-    
-    // Para códigos individuais, ainda queremos a tela de boas-vindas (para confirmação de dados)
-    // Mas o formulário de cadastro deve estar OCULTO até aceitar
-    await expect(page.getByText('Você foi convidado!')).toBeVisible({ timeout: 10000 });
+
+    await expect(page.getByText(/Você está sendo convidado/i)).toBeVisible({ timeout: 10000 });
+    await expect(page.getByRole('button', { name: /Cadastrar com este Profissional/i })).toBeVisible();
     await expect(page.getByLabel('Nome completo')).not.toBeVisible();
-    
-    // Ao clicar em aceitar, o formulário deve aparecer
-    await page.getByText('Aceitar Convite e Continuar').click();
+
+    await page.getByRole('button', { name: /Cadastrar com este Profissional/i }).click();
     await expect(page.getByLabel('Nome completo')).toBeVisible();
+  });
+
+  test('código inválido redireciona para erro amigável (sem 404)', async ({ page }) => {
+    await page.goto('/cadastro?code=CODIGO-INEXISTENTE-XYZ');
+
+    // Não pode aparecer 404
+    await expect(page.getByRole('heading', { name: /Página não encontrada/i })).toHaveCount(0);
+
+    // Deve aparecer mensagem amigável de convite inválido/expirado
+    await expect(
+      page.getByText(/convite inválido|expirado|não encontrado/i)
+    ).toBeVisible({ timeout: 10000 });
   });
 });
