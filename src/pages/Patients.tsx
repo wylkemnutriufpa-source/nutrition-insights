@@ -582,6 +582,8 @@ export default function Patients() {
   const [statusManagerSearch, setStatusManagerSearch] = useState("");
   const [statusManagerMode, setStatusManagerMode] = useState(false);
   const { onlineUsers } = useOnlinePatients();
+  const { templates } = useWhatsAppTemplates();
+  const { logInvitation } = useWhatsAppLogs();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
 
   // Debounced search: proper cleanup with useEffect
