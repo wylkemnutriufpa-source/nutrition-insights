@@ -1,5 +1,5 @@
 import { assertEquals } from "https://deno.land/std@0.177.0/testing/asserts.ts";
-import { getWhatsAppInvitationMessage } from "../src/utils/invitation.ts";
+import { getWhatsAppInvitationMessage } from "../functions/_shared/invitation-logic.ts";
 
 Deno.test("WhatsApp Invitation Message - Basic Formatting", () => {
   const message = getWhatsAppInvitationMessage({
