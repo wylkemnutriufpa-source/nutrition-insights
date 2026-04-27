@@ -92,6 +92,7 @@ async function runEnsureOnce(
     );
 
     if (error) {
+      console.error(`[EnsurePatientReady:RPCError] Patient: ${patientId}`, error);
       return {
         status: "error",
         issues: ["rpc_failed"],
@@ -104,6 +105,8 @@ async function runEnsureOnce(
     const status = (payload.status as EnsureStatus) ?? "error";
     const issues = (payload.issues as string[]) ?? [];
     const actions = (payload.actions as unknown[]) ?? [];
+
+    console.log(`[EnsurePatientReady:Result] Patient: ${patientId} Status: ${status} Issues:`, issues);
 
     return { status, issues, actions };
   } catch (err: any) {
