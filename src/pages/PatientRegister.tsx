@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
+import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
 
 interface ProfessionalResult {
   user_id: string;
