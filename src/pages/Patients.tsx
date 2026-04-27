@@ -850,7 +850,14 @@ export default function Patients() {
                           const inviteLink = `${BASE_URL}/cadastro?nutri=${user?.id}`;
                           const proName = profile?.full_name || "seu nutricionista";
                           const clinicName = (profile as any)?.professional_profiles?.[0]?.clinic_name;
-                          const waMsg = `*Olá!* Tudo bem?\n\nSou o(a) nutricionista *${proName}*${clinicName ? ` da clínica *${clinicName}*` : ""} e convido você a começar sua jornada no *FitJourney*! 🚀\n\nClique no link abaixo para fazer seu cadastro e ter acesso ao seu plano alimentar:\n\n👉 ${inviteLink}\n\nVamos juntos! 💪`;
+                          const waMsg = getWhatsAppInvitationMessage({
+                            patientName: "",
+                            professionalName: proName,
+                            clinicName: clinicName,
+                            invitationCode: user?.id || "",
+                            templateType: 'patient_invite',
+                            customTemplate: templates?.['patient_invite']
+                          });
                           const waUrl = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
 
                           return (
