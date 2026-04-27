@@ -37,6 +37,7 @@ export default function Invitation() {
     
     try {
       const currentDomain = window.location.hostname;
+      const normalizedCode = code.trim().toUpperCase();
       
       // Permitir domínios oficiais, previews do Lovable e o domínio configurado no momento
       const isOfficial = [OFFICIAL_DOMAIN, "fitjourney.com.br", "www.fitjourney.com.br"].some(d => currentDomain.includes(d));
@@ -50,7 +51,7 @@ export default function Invitation() {
           professional:profiles!professional_id(full_name, avatar_url),
           clinic:tenants(name)
         `)
-        .eq("code", code)
+        .eq("code", normalizedCode)
         .maybeSingle();
 
       if (fetchError) {
