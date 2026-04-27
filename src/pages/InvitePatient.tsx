@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon, Zap } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon, Zap, Globe } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -36,6 +36,7 @@ export default function InvitePatient() {
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [clinic, setClinic] = useState<any>(null);
+  const [publicProfile, setPublicProfile] = useState<any>(null);
 
 
   // Base URL for production
@@ -84,6 +85,14 @@ export default function InvitePatient() {
           .single();
         setClinic(clinicData);
       }
+
+      const { data: publicProfileData } = await supabase
+        .from("public_profile_settings")
+        .select("slug, is_public")
+        .eq("nutritionist_id", user.id)
+        .maybeSingle();
+      
+      setPublicProfile(publicProfileData);
     };
     fetchData();
   }, [user?.id]);
@@ -91,9 +100,11 @@ export default function InvitePatient() {
 
   const onboardingLink = useMemo(
     () => `${siteUrl}/onboarding`,
-    [],
+    [siteUrl],
   );
   const publicRegisterLink = signedLink || `${siteUrl}/cadastro?nutri=${user?.id}`;
+  const quickLink = useMemo(() => `${siteUrl}/vincular/${user?.id}`, [siteUrl, user?.id]);
+  const publicProfileLink = useMemo(() => publicProfile?.slug ? `${siteUrl}/p/${publicProfile.slug}` : null, [siteUrl, publicProfile]);
   const whatsappMessage = useMemo(() => {
     if (!invitationCode || !profile) return "";
     return getWhatsAppInvitationMessage({
@@ -240,6 +251,63 @@ export default function InvitePatient() {
             </div>
           </CardContent>
         </Card>
+
+        <Card className="border-accent/20 bg-accent/5">
+          <CardHeader className="pb-3">
+            <div className="flex items-center gap-2 text-accent">
+              <LinkIcon className="w-4 h-4" />
+              <CardTitle className="text-sm">Link Rápido (Sem Onboarding)</CardTitle>
+            </div>
+            <CardDescription className="text-xs">
+              Mande esse link para novos interessados (prospecção). 
+              O paciente cria a conta em segundos e já fica vinculado a você, 
+              mas o onboarding completo fica pendente até que você autorize.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+              <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+              <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+              <Button
+                size="sm"
+                variant="ghost"
+                className="h-7 px-2 gap-1"
+                onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido")}
+              >
+                {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {publicProfileLink && publicProfile?.is_public && (
+          <Card className="border-info/20 bg-info/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2 text-info">
+                <Globe className="w-4 h-4" />
+                <CardTitle className="text-sm">Seu Perfil Público (Marketing)</CardTitle>
+              </div>
+              <CardDescription className="text-xs">
+                Mande esse link em suas redes sociais. O paciente pode conhecer seu trabalho 
+                e solicitar um agendamento ou se cadastrar diretamente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+                <Globe className="w-3.5 h-3.5 text-info shrink-0" />
+                <code className="text-[10px] md:text-xs flex-1 truncate">{publicProfileLink}</code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1"
+                  onClick={() => copyToClipboard(publicProfileLink, "public_profile", "Link do perfil")}
+                >
+                  {copied === "public_profile" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         {!created ? (
           <Card>
