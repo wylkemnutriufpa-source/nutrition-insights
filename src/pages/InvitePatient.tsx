@@ -270,15 +270,7 @@ export default function InvitePatient() {
                   {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
               </div>
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
-                onClick={() => copyToClipboard(getInvitationUrl(undefined, user?.id, true), "public_link_prod", "Convite Oficial")}
-              >
-                {copied === "public_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
-                Copiar Link Oficial (Produção)
-              </Button>
+              {/* Botão de produção removido para evitar duplicidade, pois o link acima já é o oficial */}
             </div>
           </CardContent>
         </Card>
