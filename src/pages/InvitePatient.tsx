@@ -460,7 +460,12 @@ export default function InvitePatient() {
                     size="lg"
                     className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-lg shadow-emerald-500/20"
                   >
-                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                    <a 
+                      href={whatsappUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      onClick={() => logInvitation({ patientName: name, patientPhone: phone, invitationType: 'patient_onboarding' })}
+                    >
                       <MessageCircle className="w-4 h-4" /> Enviar via WhatsApp
                     </a>
                   </Button>
