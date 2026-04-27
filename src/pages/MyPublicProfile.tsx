@@ -12,8 +12,9 @@ import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
 import {
   Globe, Eye, Save, Loader2, Link2, Copy, ExternalLink,
-  Users, MessageSquare, TrendingUp
+  Users, MessageSquare, TrendingUp, Palette
 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 export default function MyPublicProfile() {
   const { user } = useAuth();
