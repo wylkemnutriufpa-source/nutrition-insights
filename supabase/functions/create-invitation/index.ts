@@ -113,6 +113,7 @@ Deno.serve(async (req) => {
     const protocol = host.includes("localhost") ? "http" : "https";
     const origin = `${protocol}://${host}`;
     const friendlyUrl = `${origin}/convite/${code}`;
+    const userAgent = req.headers.get("user-agent") || "unknown";
 
     // Log da criação
     await logInvitation(adminClient, {
@@ -124,7 +125,7 @@ Deno.serve(async (req) => {
         tenant_id,
         host: host
       },
-      domain_used: BASE_URL,
+      domain_used: origin,
       user_agent: userAgent,
       professional_id: caller.id,
       patient_email: email || null
