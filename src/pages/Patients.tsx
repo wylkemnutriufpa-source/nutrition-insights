@@ -730,15 +730,34 @@ export default function Patients() {
   const removeFromProgram = (patientId: string, programId: string, programTitle: string) => {
     const isBiquini = programTitle.toLowerCase().includes("biqu");
     if (isBiquini) {
-      const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para remover:");
-      if (!pwd) return;
-      if (pwd !== "Wylk3mkl3yton") { toast.error("Senha incorreta. Remoção cancelada."); return; }
+      setDeleteTarget({ id: `${patientId}:${programId}`, name: `paciente do programa "${programTitle}"` });
     } else {
       if (!confirm(`Remover paciente do programa "${programTitle}"?`)) return;
+      removeFromProgramMutation.mutate({ patientId, programId }, {
+        onSuccess: () => toast.success(`Paciente removido de "${programTitle}"`),
+      });
     }
-    removeFromProgramMutation.mutate({ patientId, programId }, {
-      onSuccess: () => toast.success(`Paciente removido de "${programTitle}"`),
-    });
+  };
+
+  const confirmDeleteAction = () => {
+    if (!deleteTarget) return;
+    const isProgramRemoval = deleteTarget.id.includes(":");
+    
+    if (deleteTarget.name.includes("programa")) {
+      // It's a protected program removal
+      if (deletePassword !== "Wylk3mkl3yton") {
+        toast.error("Senha incorreta. Remoção cancelada.");
+        return;
+      }
+      const [patientId, programId] = deleteTarget.id.split(":");
+      removeFromProgramMutation.mutate({ patientId, programId }, {
+        onSuccess: () => {
+          toast.success(`Paciente removido com sucesso`);
+          setDeleteTarget(null);
+          setDeletePassword("");
+        },
+      });
+    }
   };
 
   const updateExpiry = (id: string, date: string | null) => {
