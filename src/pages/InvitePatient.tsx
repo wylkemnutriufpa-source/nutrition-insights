@@ -115,9 +115,11 @@ export default function InvitePatient() {
       patientName: name,
       professionalName: profile.full_name || "Seu Nutricionista",
       clinicName: clinic?.name,
-      invitationCode: invitationCode
+      invitationCode: invitationCode,
+      templateType: 'patient_onboarding',
+      customTemplate: templates['patient_onboarding']
     });
-  }, [name, invitationCode, profile, clinic]);
+  }, [name, invitationCode, profile, clinic, templates]);
 
   const whatsappUrl = useMemo(() => {
     const phoneDigits = normalizeWhatsApp(phone || "");
