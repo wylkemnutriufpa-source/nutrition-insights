@@ -5925,6 +5925,36 @@ export type Database = {
           },
         ]
       }
+      invitation_diagnostics: {
+        Row: {
+          code: string | null
+          created_at: string | null
+          error_type: string | null
+          id: string
+          ip_address: string | null
+          metadata: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          code?: string | null
+          created_at?: string | null
+          error_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          code?: string | null
+          created_at?: string | null
+          error_type?: string | null
+          id?: string
+          ip_address?: string | null
+          metadata?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       invitation_logs: {
         Row: {
           correlation_id: string | null
