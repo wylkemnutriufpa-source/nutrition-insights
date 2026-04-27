@@ -63,6 +63,8 @@ export default function Programs() {
     end_date: "", max_patients: "", protocol_id: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
 
   const fetchPrograms = async () => {
     if (!user) return;
