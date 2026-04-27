@@ -9,11 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
-  Download, Copy, FileJson, AlertTriangle, User
+  Download, Copy, FileJson, AlertTriangle, User, RefreshCw
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
+import { INVITATION_TEXTS } from "@/config/invitation-texts";
 
 interface ProfessionalResult {
   user_id: string;
@@ -22,6 +23,7 @@ interface ProfessionalResult {
   clinic_name: string | null;
   phone: string | null;
 }
+
 
 type InvitationIssue = {
   reason: "invalid" | "expired" | "revoked";
@@ -464,21 +466,19 @@ export default function PatientRegister() {
           addLog(`Erro ao criar lead: ${leadErr.message}`);
           toast.error("Selecione um profissional para concluir o cadastro.");
           setShowProfSearch(true);
-          setLoading(false);
           return;
         }
 
         addLog("Lead criado com sucesso.");
         toast.success("Recebemos seu interesse!");
         setDone(true);
-        setLoading(false);
         return;
       }
 
       // ─── FLUXO B: COM NUTRICIONISTA ───
       addLog("Criando usuário no Auth...");
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
-        email,
+        email: email.trim().toLowerCase(),
         password,
         options: { data: { full_name: name } },
       });
@@ -488,14 +488,12 @@ export default function PatientRegister() {
         toast.error(signUpErr.message === "User already registered"
           ? "Este e-mail já está cadastrado. Faça login."
           : signUpErr.message);
-        setLoading(false);
         return;
       }
 
       if (!signUpData.user) {
         addLog("Auth SignUp retornou sucesso mas sem usuário.");
         toast.error("Falha ao criar conta.");
-        setLoading(false);
         return;
       }
 
@@ -568,10 +566,18 @@ export default function PatientRegister() {
       }
 
       addLog("Registro concluído com sucesso.");
+      
+      // Se tiver sessão, redireciona explicitamente limpando estados de loading
       if (signUpData.session) {
         setCurrentUserId(signUpData.user.id);
+        addLog("Sessão detectada. Redirecionando para /consent...");
         toast.success("Conta criada! Redirecionando...");
-        navigate("/consent", { replace: true });
+        
+        // Pequeno delay para garantir que o toast seja visto e o estado de loading não pisque
+        setTimeout(() => {
+          setLoading(false);
+          navigate("/consent", { replace: true });
+        }, 800);
         return;
       }
 
@@ -593,9 +599,11 @@ export default function PatientRegister() {
     } catch (err: any) {
       addLog(`Erro inesperado: ${err.message}`);
       toast.error("Erro ao criar conta. Tente novamente.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
+
 
   // ─── Done Screen ───
   if (done) {
@@ -642,12 +650,26 @@ export default function PatientRegister() {
                   Estamos conectando você ao seu profissional. Por favor, aguarde.
                 </p>
               </div>
+              
+              {/* Fallback para evitar ficar preso se a função demorar demais */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-4 text-xs opacity-50 hover:opacity-100"
+                onClick={() => {
+                  addLog("Usuário optou por ignorar validação (fallback manual).");
+                  setSigValid(false);
+                }}
+              >
+                <RefreshCw className="w-3 h-3 mr-1" /> Problemas ao carregar? Clique aqui
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
       </div>
     );
   }
+
 
   if (registrationDisplay.shouldShowInvitationWelcome && selectedProfessional) {
     const cadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
@@ -670,19 +692,22 @@ export default function PatientRegister() {
                       src={selectedProfessional.avatar_url} 
                       alt={selectedProfessional.full_name} 
                       className="w-full h-full object-cover"
+                      data-testid="professional-avatar-img"
                       onError={() => {
                         addLog("Erro ao carregar avatar do nutricionista. Usando fallback.");
                         setAvatarError(true);
                       }}
                     />
                   ) : (
-                    <User className="w-10 h-10 text-primary" />
+                    <div className="w-full h-full flex items-center justify-center bg-primary/5" data-testid="professional-avatar-fallback">
+                      <User className="w-10 h-10 text-primary" />
+                    </div>
                   )}
                 </div>
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground">Você está sendo convidado!</h2>
+                <h2 className="text-2xl font-bold text-foreground">{INVITATION_TEXTS.WELCOME_TITLE}</h2>
                 <div className="space-y-1">
                   <p className="text-muted-foreground">
                     O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> está pronto para acompanhar você.
@@ -701,15 +726,15 @@ export default function PatientRegister() {
                   addLog(`Convite aceito; preservando contexto ${cadastroPath}`);
                   setIsProfConfirmed(true);
                 }} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
-                  Cadastrar com este Profissional <ArrowRight className="w-5 h-5 ml-2" />
+                  {INVITATION_TEXTS.CTA_REGISTER} <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(cadastroPath)}`)} className="text-muted-foreground hover:text-foreground">
-                  Já tenho uma conta
+                  {INVITATION_TEXTS.ALREADY_HAS_ACCOUNT}
                 </Button>
               </div>
               
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
-                Vínculo profissional automático ao concluir
+                {INVITATION_TEXTS.AUTOMATIC_LINK_NOTICE}
               </p>
             </CardContent>
           </Card>
@@ -719,7 +744,52 @@ export default function PatientRegister() {
   }
 
 
+
+  if (registrationDisplay.routeDecision === "invalid_code_only") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute -top-40 -right-40 w-80 h-80 rounded-full bg-destructive/5 blur-3xl" />
+          <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
+        </div>
+
+        <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="w-full max-w-md relative z-10 text-center">
+          <div className="mb-8 flex justify-center"><FitJourneyLogo size="lg" /></div>
+          <Card className="shadow-2xl border-destructive/20 bg-card/90 backdrop-blur-md">
+            <CardContent className="pt-8 pb-8 space-y-6">
+              <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
+              </div>
+
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-foreground">Convite Inválido ou Expirado</h2>
+                <p className="text-muted-foreground text-sm">
+                  {invitationIssue?.message || INVITATION_TEXTS.INVALID_LINK_NOTICE}
+                </p>
+              </div>
+
+              <div className="rounded-lg border border-border bg-muted/30 p-3 text-left text-xs text-muted-foreground space-y-1">
+                <p className="font-semibold text-foreground">{INVITATION_TEXTS.HOW_TO_GET_LINK.TITLE}</p>
+                <p>O link que você usou não é mais válido ou nunca existiu. Por favor, peça um novo convite ao seu profissional.</p>
+              </div>
+
+              <div className="grid gap-3">
+                <Button asChild variant="outline" className="w-full h-12">
+                  <Link to="/auth">{INVITATION_TEXTS.ALREADY_HAS_ACCOUNT}</Link>
+                </Button>
+                <Button variant="ghost" onClick={() => navigate("/")} className="text-xs text-muted-foreground">
+                  Voltar para o Início
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   // GUARD: Cadastro de paciente é EXCLUSIVAMENTE via link do profissional.
+
   if (registrationDisplay.shouldShowNoContextGuard) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
@@ -744,23 +814,21 @@ export default function PatientRegister() {
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-foreground">Acesso por convite</h1>
+                <h1 className="text-2xl font-bold text-foreground">{INVITATION_TEXTS.ERROR_TITLE}</h1>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  O cadastro de paciente no FitJourney é feito através do link do
-                  seu nutricionista ou personal. Peça o link e abra-o para
-                  começar.
+                  {INVITATION_TEXTS.ERROR_DESCRIPTION}
                 </p>
               </div>
 
               <div className="rounded-lg border border-border bg-muted/30 p-3 text-left text-xs text-muted-foreground space-y-1">
-                <p className="font-semibold text-foreground">Como pegar o link?</p>
-                <p>1. Fale com seu profissional pelo WhatsApp.</p>
-                <p>2. Peça o link de cadastro do FitJourney.</p>
-                <p>3. Toque no link e o cadastro abre já vinculado.</p>
+                <p className="font-semibold text-foreground">{INVITATION_TEXTS.HOW_TO_GET_LINK.TITLE}</p>
+                <p>{INVITATION_TEXTS.HOW_TO_GET_LINK.STEP1}</p>
+                <p>{INVITATION_TEXTS.HOW_TO_GET_LINK.STEP2}</p>
+                <p>{INVITATION_TEXTS.HOW_TO_GET_LINK.STEP3}</p>
               </div>
 
               <Button asChild variant="outline" className="w-full h-12">
-                <Link to="/auth">Já tenho conta — Entrar</Link>
+                <Link to="/auth">{INVITATION_TEXTS.ALREADY_HAS_ACCOUNT} — Entrar</Link>
               </Button>
             </CardContent>
           </Card>
@@ -768,6 +836,7 @@ export default function PatientRegister() {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
