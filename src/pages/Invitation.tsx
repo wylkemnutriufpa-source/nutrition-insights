@@ -37,6 +37,7 @@ export default function Invitation() {
     
     try {
       const currentDomain = window.location.hostname;
+      const normalizedCode = code.trim().toUpperCase();
       
       // Permitir domínios oficiais, previews do Lovable e o domínio configurado no momento
       const isOfficial = [OFFICIAL_DOMAIN, "fitjourney.com.br", "www.fitjourney.com.br"].some(d => currentDomain.includes(d));
@@ -50,12 +51,18 @@ export default function Invitation() {
           professional:profiles!professional_id(full_name, avatar_url),
           clinic:tenants(name)
         `)
-        .eq("code", code)
+        .eq("code", normalizedCode)
         .maybeSingle();
 
       if (fetchError) {
-        console.error("[Invitation] Supabase error:", fetchError);
-        throw fetchError;
+        console.error("[Invitation] Supabase select error:", fetchError);
+        // Se for um erro de RLS ou permissão, damos um feedback genérico
+        if (fetchError.code === '42501') {
+          setError("Este convite existe, mas você não tem permissão para visualizá-lo neste momento. Tente novamente.");
+        } else {
+          setError(`Erro ao carregar convite: ${fetchError.message}`);
+        }
+        return;
       }
       
       if (!data) {
