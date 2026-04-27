@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizeWeightInput } from "@/lib/normalizeInputs";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -234,7 +235,7 @@ export default function Checkin() {
       const { error } = await supabase.from("patient_checkins").insert({
         patient_id: user.id,
         nutritionist_id: nutritionistId,
-        weight: weight ? parseFloat(weight) : null,
+        weight: weight ? normalizeWeightInput(weight).value : null,
         feedback: feedback.trim() || null,
         difficulty,
         photo_front_url: frontUrl,

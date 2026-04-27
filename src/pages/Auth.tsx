@@ -43,12 +43,21 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
     }
   }, [searchParams]);
 
-  // Capture affiliate ref code from URL and persist to localStorage
+  // Capture referral data from URL and persist to localStorage
   useEffect(() => {
     const refCode = searchParams.get("ref");
+    const invitationCode = searchParams.get("code");
+    const nutriId = searchParams.get("nutri");
+    
     if (refCode) {
       localStorage.setItem("fitjourney_ref", refCode);
       localStorage.setItem("fitjourney_ref_at", new Date().toISOString());
+    }
+    if (invitationCode) {
+      localStorage.setItem("fitjourney_invite_code", invitationCode);
+    }
+    if (nutriId) {
+      localStorage.setItem("fitjourney_nutri_id", nutriId);
     }
   }, [searchParams]);
 

@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, CreditCard, Stethoscope, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,17 @@ export default function OnboardingGateScreen({ status }: Props) {
   const navigate = useNavigate();
   const config = STATUS_CONFIG[status || "lead_created"] || STATUS_CONFIG.lead_created;
   const Icon = config.icon;
+
+  // Auto-redirect lead_created to onboarding
+  useEffect(() => {
+    if (status === "lead_created") {
+      const timer = setTimeout(() => {
+        console.log("[OnboardingGate:Redirect] Directing lead_created to /onboarding");
+        navigate("/onboarding", { replace: true });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [status, navigate]);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">

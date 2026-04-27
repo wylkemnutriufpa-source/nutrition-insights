@@ -127,7 +127,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             fetchProfile(session.user.id),
             fetchRoles(session.user.id),
           ]);
+          
           if (mounted) {
+            // Safety: if after first fetch we still have no roles, don't flip loading=false yet
+            // if we are in the initial session load, because triggers might be slow.
+            // However, we don't want to block forever. initializeAuth is called once.
             setLoading(false);
             checkSubscription();
           }
@@ -171,39 +175,100 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === "SIGNED_IN" && session?.user) {
           logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
           
-          // Check for affiliate ref code and create referral
+          // Check for referral/linkage codes and create associations
           const refCode = localStorage.getItem("fitjourney_ref");
-          if (refCode && session.user.email) {
-            // Create referral in background (don't block auth flow)
+          const inviteCode = localStorage.getItem("fitjourney_invite_code");
+          const nutriId = localStorage.getItem("fitjourney_nutri_id");
+
+          if ((refCode || inviteCode || nutriId) && session.user.email) {
             (async () => {
               try {
-                const { data: affiliate } = await supabase.rpc("lookup_affiliate_by_code", { _code: refCode });
-                if (affiliate && affiliate.length > 0) {
-                  const aff = affiliate[0];
-                  // Anti-fraud: block self-referral
-                  if (aff.affiliate_id !== session.user.id) {
-                    // Check if referral already exists
-                    const { data: existing } = await supabase
-                      .from("affiliate_referrals")
-                      .select("id")
-                      .eq("referred_email", session.user.email!.toLowerCase())
-                      .limit(1);
-                    if (!existing || existing.length === 0) {
-                      await supabase.from("affiliate_referrals").insert({
-                        affiliate_id: aff.affiliate_id,
-                        referred_email: session.user.email!.toLowerCase(),
-                        referral_code_used: refCode,
-                        referred_user_id: session.user.id,
-                        referred_type: "patient",
-                        status: "registered",
-                      });
-                    }
-                    localStorage.removeItem("fitjourney_ref");
-                    localStorage.removeItem("fitjourney_ref_at");
+                console.log("[Auth] Processing linkage with:", { refCode, inviteCode, nutriId });
+                
+                // 1. Direct Link via invitation code or nutritionist ID
+                let targetNutriId = nutriId;
+                let targetTenantId: string | null = null;
+
+                if (inviteCode && !targetNutriId) {
+                  const { data: invite } = await (supabase.from("invitations") as any)
+                    .select("professional_id, tenant_id")
+                    .eq("code", inviteCode)
+                    .maybeSingle();
+                  if (invite) {
+                    targetNutriId = invite.professional_id;
+                    targetTenantId = invite.tenant_id;
                   }
                 }
+
+                if (targetNutriId) {
+                  // Ensure we have a tenant_id
+                  if (!targetTenantId) {
+                    const { data: tenant } = await (supabase.from("tenants") as any)
+                      .select("id")
+                      .eq("owner_id", targetNutriId)
+                      .maybeSingle();
+                    targetTenantId = tenant?.id || null;
+                  }
+
+                  if (targetTenantId) {
+                    // Ensure nutritionist_patients link exists
+                    const { data: existingLink } = await (supabase.from("nutritionist_patients") as any)
+                      .select("id")
+                      .eq("patient_id", session.user.id)
+                      .eq("nutritionist_id", targetNutriId)
+                      .maybeSingle();
+
+                    if (!existingLink) {
+                      const { error: insertError } = await (supabase.from("nutritionist_patients") as any).insert({
+                        nutritionist_id: targetNutriId,
+                        patient_id: session.user.id,
+                        tenant_id: targetTenantId,
+                        status: "active",
+                        journey_status: "awaiting_consent",
+                        attendance_mode: "online"
+                      });
+                      
+                      if (insertError) {
+                        console.error("[Auth] Failed to insert nutritionist_patients:", insertError);
+                      } else {
+                        console.log("[Auth] Link created in nutritionist_patients");
+                      }
+                    }
+                  }
+                }
+
+                // 2. Affiliate Referral (Legacy/Commission)
+                if (refCode) {
+                  const { data: affiliate } = await supabase.rpc("lookup_affiliate_by_code", { _code: refCode });
+                  if (affiliate && affiliate.length > 0) {
+                    const aff = affiliate[0];
+                    if (aff.affiliate_id !== session.user.id) {
+                      const { data: existing } = await supabase
+                        .from("affiliate_referrals")
+                        .select("id")
+                        .eq("referred_email", session.user.email!.toLowerCase())
+                        .limit(1);
+                      if (!existing || existing.length === 0) {
+                        await supabase.from("affiliate_referrals").insert({
+                          affiliate_id: aff.affiliate_id,
+                          referred_email: session.user.email!.toLowerCase(),
+                          referral_code_used: refCode,
+                          referred_user_id: session.user.id,
+                          referred_type: "patient",
+                          status: "registered",
+                        });
+                      }
+                    }
+                  }
+                }
+
+                // Cleanup
+                localStorage.removeItem("fitjourney_ref");
+                localStorage.removeItem("fitjourney_ref_at");
+                localStorage.removeItem("fitjourney_invite_code");
+                localStorage.removeItem("fitjourney_nutri_id");
               } catch (e) {
-                console.error("Error creating affiliate referral:", e);
+                console.error("[Auth] Error in linkage flow:", e);
               }
             })();
           }
@@ -218,70 +283,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Use setTimeout to avoid deadlock with Supabase auth internals
         setTimeout(async () => {
-            if (!mounted) return;
-            try {
-              const [, rolesResult] = await Promise.all([
-                fetchProfile(session.user.id),
-                supabase.from("user_roles").select("role").eq("user_id", session.user.id),
-              ]);
-              const userRoles = rolesResult.data?.map((r) => r.role) || [];
-              setRoles(userRoles);
-
-              // If user has no roles yet, wait up to 4s with retries (triggers may be slow)
-              if (event === "SIGNED_IN" && userRoles.length === 0) {
-                console.warn("[Auth] User has no roles yet, starting aggressive retry for:", session.user.email);
+          if (!mounted) return;
+          try {
+            // Aggressive fetch of profile and roles
+            const [profileResult, rolesResult] = await Promise.all([
+              supabase.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle(),
+              supabase.from("user_roles").select("role").eq("user_id", session.user.id),
+            ]);
+            
+            if (profileResult.data) setProfile(profileResult.data);
+            
+            const userRoles = rolesResult.data?.map((r) => r.role) || [];
+            
+            // If user has no roles yet, wait up to 4s with retries (triggers may be slow)
+            if (event === "SIGNED_IN" && userRoles.length === 0) {
+              console.warn("[Auth] User has no roles yet, starting aggressive retry for:", session.user.email);
+              
+              const maxRetries = 4;
+              let currentRetry = 0;
+              
+              const retryFetch = async () => {
+                currentRetry++;
+                console.log(`[Auth] Retry ${currentRetry}/${maxRetries} to fetch roles...`);
                 
-                const maxRetries = 3;
-                let currentRetry = 0;
-                
-                const retryFetch = async () => {
-                  currentRetry++;
-                  console.log(`[Auth] Retry ${currentRetry}/${maxRetries} to fetch roles...`);
+                try {
+                  const { data: retryRoles } = await (supabase.from("user_roles") as any).select("role").eq("user_id", session.user.id);
+                  const retried = retryRoles?.map((r: any) => r.role) || [];
                   
-                  try {
-                    const { data: retryRoles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
-                    const retried = retryRoles?.map((r) => r.role) || [];
-                    
-                    if (mounted && retried.length > 0) {
-                      setRoles(retried);
-                      setLoading(false);
-                      checkSubscription();
-                      console.log("[Auth] Roles found on retry:", retried);
-                      return;
-                    }
-                    
-                    if (currentRetry < maxRetries) {
-                      setTimeout(retryFetch, 1000);
-                    } else {
-                      console.warn("[Auth] All role retries exhausted.");
-                      if (mounted) setLoading(false);
-                    }
-                  } catch (err) {
-                    console.error("[Auth] Role retry failed:", err);
-                    if (mounted && currentRetry >= maxRetries) setLoading(false);
+                  if (mounted && retried.length > 0) {
+                    setRoles(retried);
+                    setLoading(false);
+                    checkSubscription();
+                    console.log("[Auth] Roles found on retry:", retried);
+                    return;
                   }
-                };
-                
-                setTimeout(retryFetch, 1000);
-                return;
-              }
-
-              if (mounted) {
-                setLoading(false);
-                checkSubscription();
-              }
-            } catch (e) {
-              console.error("Error fetching user data on auth change:", e);
-              if (mounted) setLoading(false);
+                  
+                  if (currentRetry < maxRetries) {
+                    setTimeout(retryFetch, 1000);
+                  } else {
+                    console.warn("[Auth] All role retries exhausted.");
+                    setRoles([]);
+                    if (mounted) setLoading(false);
+                  }
+                } catch (err) {
+                  console.error("[Auth] Role retry failed:", err);
+                  if (mounted && currentRetry >= maxRetries) setLoading(false);
+                }
+              };
+              
+              setTimeout(retryFetch, 500);
+              return;
             }
-          }, 50); // Small initial delay to avoid session race
-        } else {
-          setProfile(null);
-          setRoles([]);
-          setLoading(false);
-        }
+
+            // Roles found or not, but fetch completed
+            setRoles(userRoles);
+            if (mounted) {
+              setLoading(false);
+              checkSubscription();
+            }
+          } catch (e) {
+            console.error("Error fetching user data on auth change:", e);
+            if (mounted) setLoading(false);
+          }
+        }, 50); // Small initial delay to avoid session race
+      } else {
+        setProfile(null);
+        setRoles([]);
+        setLoading(false);
       }
-    );
+    }
+  );
 
     return () => {
       mounted = false;
