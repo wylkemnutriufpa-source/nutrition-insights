@@ -128,61 +128,71 @@ async function ensureWithRetry(
       actions: [],
     };
 
-    for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-      try {
-        const r = await runEnsureOnce(patientId, context);
-        last = { ...r, attempts: attempt };
+    const timeoutPromise = new Promise<EnsureResult>((_, reject) =>
+      setTimeout(() => reject(new Error("Timeout: A validação de acesso demorou demais.")), 15000)
+    );
 
-        if (r.status === "ok" || r.status === "fixed") {
-          if (r.status === "fixed") {
-            logRegression({
-              affected_flow: `runtime_guard:${context}`,
-              detected_issue: `auto-fixed: ${r.issues.join(",")}`,
-              severity: "low",
-              source_layer: "database",
-              auto_fallback_applied: true,
-              metadata: { issues: r.issues, actions: r.actions, attempt },
-            });
+    const mainPromise = (async (): Promise<EnsureResult> => {
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+        try {
+          const r = await runEnsureOnce(patientId, context);
+          last = { ...r, attempts: attempt };
+
+          if (r.status === "ok" || r.status === "fixed") {
+            if (r.status === "fixed") {
+              logRegression({
+                affected_flow: `runtime_guard:${context}`,
+                detected_issue: `auto-fixed: ${r.issues.join(",")}`,
+                severity: "low",
+                source_layer: "database",
+                auto_fallback_applied: true,
+                metadata: { issues: r.issues, actions: r.actions, attempt },
+              });
+            }
+            recentSuccess.set(patientId, { result: last, at: Date.now() });
+            return last;
           }
-          recentSuccess.set(patientId, { result: last, at: Date.now() });
-          return last;
+
+          // erro → log + retry
+          await logRuntimeError(
+            patientId,
+            context,
+            attempt,
+            r.errorMessage ?? `status=${r.status}`,
+            { issues: r.issues, actions: r.actions }
+          );
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : String(err);
+          last = {
+            status: "error",
+            issues: ["exception"],
+            actions: [],
+            errorMessage: msg,
+            attempts: attempt,
+          };
+          await logRuntimeError(patientId, context, attempt, msg, null);
         }
 
-        // erro → log + retry
-        await logRuntimeError(
-          patientId,
-          context,
-          attempt,
-          r.errorMessage ?? `status=${r.status}`,
-          { issues: r.issues, actions: r.actions }
-        );
-      } catch (err) {
-        const msg = err instanceof Error ? err.message : String(err);
-        last = {
-          status: "error",
-          issues: ["exception"],
-          actions: [],
-          errorMessage: msg,
-          attempts: attempt,
-        };
-        await logRuntimeError(patientId, context, attempt, msg, null);
+        if (attempt < MAX_ATTEMPTS) {
+          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
+        }
       }
+      return last;
+    })();
 
-      if (attempt < MAX_ATTEMPTS) {
-        await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-      }
+    try {
+      return await Promise.race([mainPromise, timeoutPromise]);
+    } catch (err: any) {
+      logRegression({
+        affected_flow: `runtime_guard:${context}`,
+        detected_issue: `unrecoverable/timeout: ${err.message}`,
+        severity: "critical",
+        source_layer: "database",
+        auto_fallback_applied: false,
+        metadata: { issues: last.issues, actions: last.actions },
+      });
+      return { ...last, status: "error", errorMessage: err.message };
     }
-
-    logRegression({
-      affected_flow: `runtime_guard:${context}`,
-      detected_issue: `unrecoverable after ${MAX_ATTEMPTS} attempts: ${last.issues.join(",")}`,
-      severity: "critical",
-      source_layer: "database",
-      auto_fallback_applied: false,
-      metadata: { issues: last.issues, actions: last.actions },
-    });
-
-    return last;
   })();
 
   inflightLocks.set(patientId, promise);
