@@ -9,6 +9,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
 import { BrainLoaderCard } from "@/components/common/BrainLoader";
@@ -122,6 +123,13 @@ interface BiquiniEnrollment {
 
 export default function ClientDashboard() {
   const { user, profile, isPatient } = useAuth();
+  
+  const handleSupabaseError = (error: any, context: string) => {
+    console.error(`[Dashboard Error] ${context}:`, error);
+    if (error.code === 'PGRST116' || error.message?.includes('Permission denied')) {
+      toast.error(`Acesso negado ao carregar ${context}. Verifique seu vínculo profissional.`);
+    }
+  };
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
@@ -144,30 +152,41 @@ export default function ClientDashboard() {
       const userId = user!.id;
       const today = format(new Date(), "yyyy-MM-dd");
 
+      const fetchSafe = async (query: any, context: string) => {
+        try {
+          const { data, error } = await query;
+          if (error) throw error;
+          return { data };
+        } catch (e) {
+          handleSupabaseError(e, context);
+          return { data: null };
+        }
+      };
+
       const [programsRes, appointmentsRes, notificationsRes, checklistRes] = await Promise.all([
-        supabase
+        fetchSafe(supabase
           .from("program_patients")
-          .select("program_id, current_phase, status, programs(id, title, tag, start_date)")
+          .select("program_id, current_phase, status, enrolled_at, joined_at, programs(id, title, tag, start_date)")
           .eq("patient_id", userId)
-          .eq("status", "active"),
-        supabase
+          .eq("status", "active"), "programas"),
+        fetchSafe(supabase
           .from("patient_appointments")
-          .select("id, title, appointment_date, status, appointment_type")
+          .select("id, title, appointment_date, status, appointment_type, created_at")
           .eq("patient_id", userId)
           .gte("appointment_date", new Date().toISOString())
           .order("appointment_date", { ascending: true })
-          .limit(5),
-        supabase
+          .limit(5), "agendamentos"),
+        fetchSafe(supabase
           .from("notifications")
           .select("id, title, message, created_at, is_read, type")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(8),
-        supabase
+          .limit(8), "notificações"),
+        fetchSafe(supabase
           .from("checklist_tasks")
-          .select("id, completed")
+          .select("id, completed, date, created_at")
           .eq("patient_id", userId)
-          .eq("date", today),
+          .eq("date", today), "checklist"),
       ]);
 
       const programs = (programsRes.data || []).map((p: any) => ({

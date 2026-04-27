@@ -212,6 +212,7 @@ const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
 const StoreDashboard = lazy(() => import("./pages/store/StoreDashboard"));
 const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
+const PatientDiagnostic = lazy(() => import("./pages/PatientDiagnostic"));
 const MobileQA = lazy(() => import("./pages/MobileQA"));
 const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
 
@@ -619,7 +620,7 @@ const App = () => (
               <Route path="/my-workouts" element={<PaymentGuardedPatientRoute><LP section="Treinos"><PatientReadyGuard context="workouts"><PatientWorkouts /></PatientReadyGuard></LP></PaymentGuardedPatientRoute>} />
               <Route path="/patient-intelligence" element={<PaymentGuardedPatientRoute><LP section="Inteligência FitJourney"><PatientIntelligence /></LP></PaymentGuardedPatientRoute>} />
 
-              {/* Patient-only routes — consent guarded */}
+              <Route path="/patient-diagnostic" element={<PatientRoute><LP section="Diagnóstico"><PatientDiagnostic /></LP></PatientRoute>} />
               <Route path="/meals" element={<PaymentGuardedPatientRoute><LP section="Refeições"><Meals /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/achievements" element={<PaymentGuardedPatientRoute><LP section="Conquistas"><Achievements /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/challenges" element={<PaymentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></PaymentGuardedPatientRoute>} />

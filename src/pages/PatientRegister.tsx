@@ -29,6 +29,14 @@ export default function PatientRegister() {
   const signature = searchParams.get("sig") || "";
   const invitationCode = searchParams.get("code") || "";
   const [sigValid, setSigValid] = useState<boolean | null>(null);
+  const [debugLogs, setDebugLogs] = useState<string[]>([]);
+
+  const addLog = (msg: string) => {
+    const timestamp = new Date().toLocaleTimeString();
+    const newLog = `[${timestamp}] ${msg}`;
+    console.log(newLog);
+    setDebugLogs(prev => [...prev, newLog]);
+  };
 
   // Form
   const [name, setName] = useState("");
@@ -40,6 +48,7 @@ export default function PatientRegister() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   // Professional (optional)
   const [showProfSearch, setShowProfSearch] = useState(!!preselectedNutri);
@@ -80,20 +89,84 @@ export default function PatientRegister() {
   }, [preselectedNutri]);
 
 
-  // Verify signature if nutri is provided
+  // Robust invitation code validation
   useEffect(() => {
-    // Se veio com `code` de convite, validamos pelo código (abaixo) e ignoramos a assinatura legada.
-    if (invitationCode) {
-      setSigValid(true);
+    if (!invitationCode) {
+      addLog("Nenhum código de convite detectado na URL.");
       return;
     }
-    if (!preselectedNutri || !signature) {
-      if (preselectedNutri && !signature) {
-        setSigValid(false); // No signature provided for a preselected nutri
+
+    const validateInvite = async () => {
+      addLog(`Validando código: ${invitationCode}...`);
+      try {
+        const { data: invite, error } = await supabase
+          .from("invitations")
+          .select("*, profiles!invitations_professional_id_fkey(full_name, avatar_url, phone)")
+          .eq("code", invitationCode)
+          .maybeSingle();
+
+        if (error) {
+          addLog(`Erro Supabase ao buscar convite: ${error.message}`);
+          throw error;
+        }
+
+        if (!invite) {
+          addLog("Código de convite não encontrado no banco de dados.");
+          setSigValid(false);
+          toast.error("Código de convite inválido ou expirado.");
+          return;
+        }
+
+        addLog(`Convite encontrado. Status: ${invite.status}. Profissional: ${invite.professional_id}`);
+
+        // Permite 'completed' para lidar com recarregamentos, desde que não tenha expirado
+        const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
+        if (isExpired) {
+          addLog("O convite está expirado.");
+          setSigValid(false);
+          toast.error("Este convite expirou.");
+          return;
+        }
+
+        if (invite.status === 'revoked') {
+          addLog("O convite foi revogado pelo profissional.");
+          setSigValid(false);
+          toast.error("Este convite não é mais válido.");
+          return;
+        }
+
+        // Set professional automatically
+        const prof = invite.profiles as any;
+        setSelectedProfessional({
+          user_id: invite.professional_id,
+          full_name: prof?.full_name || "Profissional",
+          avatar_url: prof?.avatar_url || null,
+          clinic_name: (invite.metadata as any)?.clinic_name || null,
+          phone: prof?.phone || null,
+        });
+        setIsProfConfirmed(true);
+        setSigValid(true);
+        addLog("Vínculo profissional validado com sucesso.");
+
+        // Pre-fill email and name if available in invite
+        if (invite.patient_email && !email) setEmail(invite.patient_email);
+        if (invite.patient_name && !name) setName(invite.patient_name);
+
+      } catch (err: any) {
+        addLog(`Falha crítica na validação: ${err.message}`);
+        setSigValid(false);
       }
-      return;
-    }
+    };
+
+    validateInvite();
+  }, [invitationCode]);
+
+  // Legacy signature verification (if no invitationCode)
+  useEffect(() => {
+    if (invitationCode || !preselectedNutri || !signature) return;
+    
     const verifySig = async () => {
+      addLog("Verificando assinatura legada...");
       try {
         const { data, error } = await supabase.functions.invoke("verify-registration-token", {
           body: { nutriId: preselectedNutri, signature }
@@ -101,14 +174,17 @@ export default function PatientRegister() {
         if (error) throw error;
         setSigValid(data.isValid);
         if (!data.isValid) {
-          toast.error("Link de registro inválido ou alterado. Por favor, solicite um novo link ao seu profissional.");
+          addLog("Assinatura inválida.");
+          toast.error("Link de registro inválido. Solicite um novo ao seu profissional.");
+        } else {
+          addLog("Assinatura validada.");
         }
-      } catch (err) {
-        console.error("Error verifying signature:", err);
+      } catch (err: any) {
+        addLog(`Erro na assinatura: ${err.message}`);
       }
     };
     verifySig();
-  }, [preselectedNutri, signature]);
+  }, [preselectedNutri, signature, invitationCode]);
 
   // Search professionals
   const searchProfessionals = useCallback(async (query: string) => {
@@ -160,20 +236,18 @@ export default function PatientRegister() {
     const formattedWhatsapp = formatInternationalWhatsApp(whatsapp);
     
     setLoading(true);
+    addLog(`Iniciando registro para ${email}...`);
     try {
       const nutriId = selectedProfessional?.user_id || null;
+      addLog(`ID do Profissional selecionado: ${nutriId || "Nenhum"}`);
 
-      // ─── FLUXO A: SEM NUTRICIONISTA → cria APENAS LEAD ───
-      // Isso evita pacientes órfãos (sem vínculo). O lead é convertido depois pelo profissional.
       if (!nutriId) {
+        addLog("Nenhum profissional selecionado. Criando apenas lead...");
         const { error: leadErr } = await supabase.from("lead_requests").insert({
-          // Lead "público" sem dono explícito → usa um pool admin via referral
-          // Se não houver referral, registra mesmo assim para análise (nutritionist_id null não permitido,
-          // então usa um placeholder admin se existir; senão retorna erro orientando a escolher profissional)
           nutritionist_id: "00000000-0000-0000-0000-000000000000",
           name,
           email: email.trim().toLowerCase(),
-          phone: formattedWhatsapp, // Use formatted whatsapp as phone for leads if no specific phone
+          phone: formattedWhatsapp,
           whatsapp: formattedWhatsapp,
           source: "self_register",
           referral_code: refCode || null,
@@ -181,23 +255,22 @@ export default function PatientRegister() {
         } as any);
 
         if (leadErr) {
-          // Fallback: orienta o usuário a escolher um profissional
+          addLog(`Erro ao criar lead: ${leadErr.message}`);
           toast.error("Selecione um profissional para concluir o cadastro.");
           setShowProfSearch(true);
           setLoading(false);
           return;
         }
 
-        toast.success("Recebemos seu interesse! Em breve um profissional entrará em contato.");
+        addLog("Lead criado com sucesso.");
+        toast.success("Recebemos seu interesse!");
         setDone(true);
         setLoading(false);
         return;
       }
 
-      // ─── FLUXO B: COM NUTRICIONISTA → função canônica ───
-      const { data: session } = await supabase.auth.getSession();
-      // Auto-cadastro: precisamos de uma sessão válida para chamar create-patient.
-      // Estratégia: faz signUp primeiro (cria auth.users + sessão), depois roteia via canônica.
+      // ─── FLUXO B: COM NUTRICIONISTA ───
+      addLog("Criando usuário no Auth...");
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email,
         password,
@@ -205,6 +278,7 @@ export default function PatientRegister() {
       });
 
       if (signUpErr) {
+        addLog(`Erro no Auth SignUp: ${signUpErr.message}`);
         toast.error(signUpErr.message === "User already registered"
           ? "Este e-mail já está cadastrado. Faça login."
           : signUpErr.message);
@@ -213,12 +287,15 @@ export default function PatientRegister() {
       }
 
       if (!signUpData.user) {
+        addLog("Auth SignUp retornou sucesso mas sem usuário.");
         toast.error("Falha ao criar conta.");
         setLoading(false);
         return;
       }
 
-      // Chama RPC canônica diretamente (autenticada como o próprio paciente recém-criado)
+      addLog(`Usuário Auth criado: ${signUpData.user.id}. Vinculando paciente...`);
+
+      // Chama RPC canônica
       const { error: canonErr } = await supabase.rpc("create_patient_canonical" as any, {
         _patient_id: signUpData.user.id,
         _full_name: name,
@@ -227,17 +304,26 @@ export default function PatientRegister() {
         _whatsapp: formattedWhatsapp,
         _nutritionist_id: nutriId,
         _source: "register",
-        _metadata: { referral_code: refCode || null },
+        _metadata: { 
+          referral_code: refCode || null,
+          invitation_code: invitationCode || null 
+        },
       });
 
       if (canonErr) {
-        console.error("[PatientRegister] canonical error:", canonErr);
-        // Não bloqueia: usuário foi criado, profissional será notificado para reconciliar
+        addLog(`Erro na RPC create_patient_canonical: ${canonErr.message}`);
+        // Tenta inserção manual se a RPC falhar por RLS ou algo assim
+        addLog("Tentando fallback manual para vínculo...");
+        await supabase.from("profiles").update({ 
+          full_name: name, 
+          phone: formattedWhatsapp 
+        } as any).eq("id", signUpData.user.id);
       }
 
       // Notifica o profissional e atualiza status do convite
       try {
         if (invitationCode) {
+          addLog("Atualizando status do convite para 'completed'...");
           await supabase
             .from("invitations")
             .update({ 
@@ -246,41 +332,47 @@ export default function PatientRegister() {
             } as any)
             .eq("code", invitationCode);
             
-          await supabase.from("invitation_logs").insert({
-            invitation_id: (await supabase.from("invitations").select("id").eq("code", invitationCode).single()).data?.id,
-            event_type: "completed",
-            details: { 
-              patient_id: signUpData.user.id,
-              domain: window.location.hostname,
-              host: window.location.host
-            },
-            user_agent: navigator.userAgent
-          });
+          const { data: inviteData } = await supabase.from("invitations").select("id").eq("code", invitationCode).maybeSingle();
+          if (inviteData) {
+            await supabase.from("invitation_logs").insert({
+              invitation_id: inviteData.id,
+              event_type: "completed",
+              details: { 
+                patient_id: signUpData.user.id,
+                domain: window.location.hostname
+              },
+              user_agent: navigator.userAgent
+            });
+          }
         }
 
+        addLog("Enviando notificação ao profissional...");
         await supabase.from("notifications").insert({
           user_id: nutriId,
           title: "Novo paciente cadastrado",
-          message: `${name} se cadastrou e vinculou ao seu perfil.`,
+          message: `${name} se cadastrou via convite.`,
           type: "patient_registered",
           entity_type: "patient",
           entity_id: signUpData.user.id,
           target_route: `/patients/${signUpData.user.id}`,
         } as any);
-      } catch (err) {
-        console.error("Error updating notification/invitation:", err);
+      } catch (err: any) {
+        addLog(`Erro secundário (notificação/convite): ${err.message}`);
       }
 
+      addLog("Registro concluído com sucesso.");
       if (signUpData.session) {
-        toast.success("Conta criada! Redirecionando para o onboarding...");
+        setCurrentUserId(signUpData.user.id);
+        toast.success("Conta criada! Redirecionando...");
         navigate("/consent", { replace: true });
         return;
       }
 
-      toast.success("Conta criada! Verifique seu e-mail para confirmar e iniciar seu onboarding.");
+      setCurrentUserId(signUpData.user.id);
+      toast.success("Conta criada! Verifique seu e-mail.");
       setDone(true);
-    } catch (err) {
-      console.error(err);
+    } catch (err: any) {
+      addLog(`Erro inesperado: ${err.message}`);
       toast.error("Erro ao criar conta. Tente novamente.");
     }
     setLoading(false);
@@ -526,6 +618,20 @@ export default function PatientRegister() {
             </form>
           </CardContent>
         </Card>
+
+        {debugLogs.length > 0 && (
+          <div className="mt-6 p-3 rounded-lg bg-black/5 dark:bg-white/5 border border-border text-[10px] font-mono overflow-hidden">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-muted-foreground uppercase tracking-wider font-bold">Logs de Diagnóstico</span>
+              <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">UID: {currentUserId || 'Pending'}</span>
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {debugLogs.map((log, i) => (
+                <div key={i} className="text-muted-foreground border-l border-primary/30 pl-2 py-0.5">{log}</div>
+              ))}
+            </div>
+          </div>
+        )}
 
         <p className="text-center text-xs text-muted-foreground mt-4">
           Ao criar sua conta, você concorda com os termos de uso.
