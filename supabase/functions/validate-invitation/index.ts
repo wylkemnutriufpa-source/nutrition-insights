@@ -76,10 +76,11 @@ Deno.serve(async (req) => {
       await logInvitation(adminClient, {
         invitation_id: invitation.id,
         event_type: "validation_failed",
-        details: { code: normalizedCode, reason: "EXPIRED", expires_at: invitation.expires_at, origin },
+        details: { code: normalizedCode, reason: "EXPIRED", expires_at: invitation.expires_at, origin, cid },
         user_agent: userAgent,
         professional_id: invitation.professional_id,
-        patient_email: invitation.patient_email
+        patient_email: invitation.patient_email,
+        correlation_id: cid
       });
       return new Response(JSON.stringify({ 
         success: false, 
