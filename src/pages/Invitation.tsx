@@ -184,11 +184,34 @@ export default function Invitation() {
     window.open(url, '_blank');
   };
 
+  const InvitationDebug = () => (
+    <div className="mt-8 p-4 bg-slate-900 text-slate-100 rounded-lg font-mono text-xs space-y-2 border border-slate-700 shadow-2xl max-w-md w-full animate-in fade-in slide-in-from-bottom-4">
+      <div className="flex items-center justify-between border-b border-slate-700 pb-2 mb-2">
+        <span className="flex items-center gap-2 text-primary font-bold"><Terminal className="w-4 h-4" /> DEBUG PREVIEW</span>
+        <button onClick={() => setShowDebug(false)} className="text-slate-400 hover:text-white">✕</button>
+      </div>
+      <p><span className="text-slate-400">Hostname:</span> {window.location.hostname}</p>
+      <p><span className="text-slate-400">Origin:</span> {window.location.origin}</p>
+      <p><span className="text-slate-400">BASE_URL:</span> {BASE_URL}</p>
+      <p><span className="text-slate-400">OFFICIAL_DOMAIN:</span> {OFFICIAL_DOMAIN}</p>
+      <p><span className="text-slate-400">Invite Code:</span> {code}</p>
+      <p><span className="text-slate-400">Generated URL:</span> {getInvitationUrl(code || "")}</p>
+      <p><span className="text-slate-400">Status:</span> {invitation?.status || 'N/A'}</p>
+      <div className="pt-2 border-t border-slate-700">
+        <p className="text-amber-400 font-bold">Validação de Ambiente:</p>
+        <p>• Preview: {isPreview ? "SIM ✅" : "NÃO ❌"}</p>
+        <p>• Oficial: {[OFFICIAL_DOMAIN, "fitjourney.com.br"].some(d => window.location.hostname.includes(d)) ? "SIM ✅" : "NÃO ❌"}</p>
+      </div>
+    </div>
+  );
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary" />
+          <p className="text-muted-foreground animate-pulse font-medium">Validando seu convite...</p>
+        </div>
       </div>
     );
   }
@@ -198,52 +221,76 @@ export default function Invitation() {
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="max-w-md w-full border-destructive/20 shadow-xl">
-          <CardHeader className="text-center space-y-2">
-            <div className="w-16 h-16 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-2">
-              <AlertCircle className="w-8 h-8 text-destructive" />
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
+        <Card className="max-w-md w-full border-destructive/20 shadow-2xl bg-destructive/5 overflow-hidden">
+          <div className="h-1.5 bg-destructive w-full" />
+          <CardHeader className="text-center space-y-4 pt-8">
+            <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-2 border-4 border-background shadow-sm">
+              <AlertCircle className="w-10 h-10 text-destructive" />
             </div>
-            <CardTitle className="text-2xl font-display font-bold text-foreground">Convite Indisponível</CardTitle>
-            <CardDescription className="text-base">{error}</CardDescription>
+            <div>
+              <CardTitle className="text-2xl font-display font-bold text-foreground tracking-tight">Convite Indisponível</CardTitle>
+              <CardDescription className="text-base mt-2 leading-relaxed">
+                {error}
+              </CardDescription>
+            </div>
           </CardHeader>
-          <CardContent className="flex flex-col gap-3">
+          <CardContent className="flex flex-col gap-4 pb-8">
             {canRegenerate ? (
               <>
+                <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm mb-2">
+                  <p className="font-bold flex items-center gap-2 mb-1">
+                    <ShieldCheck className="w-4 h-4" /> Admin Nutricionista
+                  </p>
+                  Você é o dono deste convite. Você pode gerar um novo código para o paciente agora mesmo.
+                </div>
                 <Button 
                   onClick={handleRegenerate} 
                   disabled={isProcessingAction}
-                  className="w-full gap-2 h-12 text-lg"
+                  className="w-full gap-2 h-14 text-lg font-bold shadow-lg shadow-primary/20"
                 >
                   {isProcessingAction ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
                   Gerar Novo Convite
                 </Button>
-                 {error === "Este convite expirou." && (
+                 {error.includes("expirou") && (
                     <Button 
                      variant="outline" 
-                     onClick={() => openWhatsApp(`Olá! Seu convite anterior expirou. Aqui está o novo link para o FitJourney: ${getInvitationUrl(code || "")}`)}
+                     onClick={() => openWhatsApp(`Olá! Seu convite anterior para o FitJourney expirou. Aqui está o novo link atualizado para você começar seu acompanhamento: ${getInvitationUrl(code || "")}`)}
                      className="w-full gap-2 h-12"
                     >
-
-                    <MessageSquare className="w-5 h-5" /> Notificar Paciente (Novo Link)
-                   </Button>
+                     <MessageSquare className="w-5 h-5" /> Notificar Paciente via WhatsApp
+                    </Button>
                 )}
-                <Button variant="ghost" onClick={() => fetchInvitation()} className="w-full gap-2">
-                  <RefreshCw className="w-4 h-4" /> Tentar Novamente
-                </Button>
               </>
             ) : (
               <>
-                <Button onClick={() => fetchInvitation()} className="w-full h-12 text-lg gap-2">
-                  <RefreshCw className="w-5 h-5" /> Tentar Novamente
+                <Button onClick={() => fetchInvitation()} className="w-full h-14 text-lg gap-2 font-bold shadow-lg shadow-primary/10">
+                  <RefreshCw className="w-5 h-5" /> Tentar Validar Novamente
                 </Button>
-                <Button variant="outline" onClick={() => navigate("/auth")} className="w-full h-12 text-lg">
-                  Ir para Login
-                </Button>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button variant="outline" onClick={() => navigate("/auth")} className="h-12 text-sm font-medium">
+                    Ir para Login
+                  </Button>
+                  <Button variant="ghost" onClick={() => navigate("/")} className="h-12 text-sm">
+                    Ir para o Início
+                  </Button>
+                </div>
               </>
             )}
+            
+            <p className="text-[10px] text-center text-muted-foreground mt-4 italic">
+              Se você acredita que isso é um erro, entre em contato com seu nutricionista ou com o suporte do FitJourney.
+            </p>
           </CardContent>
         </Card>
+        
+        {isPreview && !showDebug && (
+          <Button variant="ghost" size="sm" onClick={() => setShowDebug(true)} className="mt-8 text-muted-foreground/40 hover:text-muted-foreground">
+            <Terminal className="w-4 h-4 mr-2" /> Debug Preview
+          </Button>
+        )}
+        
+        {showDebug && <InvitationDebug />}
       </div>
     );
   }
@@ -251,7 +298,7 @@ export default function Invitation() {
   const { professional, clinic, patient_name } = invitation;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4 relative">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 relative">
       <Helmet>
         <title>Você foi convidado! | FitJourney</title>
         <meta name="description" content="Seu acompanhamento nutricional de alta performance começa agora." />
@@ -264,33 +311,33 @@ export default function Invitation() {
 
       {isOwner && (
         <div className="absolute top-4 right-4 flex gap-2">
-          <Button variant="outline" size="sm" onClick={() => navigate(`/convite/${code}/status`)} className="gap-2 bg-background/80 backdrop-blur-sm">
-            <Activity className="w-4 h-4" /> Status
+          <Button variant="outline" size="sm" onClick={() => navigate(`/convite/${code}/status`)} className="gap-2 bg-background/80 backdrop-blur-sm hover:bg-background">
+            <Activity className="w-4 h-4" /> Painel de Status
           </Button>
         </div>
       )}
 
-      <Card className="max-w-md w-full border-primary/20 bg-primary/5 shadow-2xl overflow-hidden">
+      <Card className="max-w-md w-full border-primary/20 bg-primary/5 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
         <div className="h-2 bg-primary animate-pulse" />
-        <CardHeader className="text-center space-y-4 pt-8">
-          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center border-4 border-background shadow-lg relative">
-            <UserPlus className="w-12 h-12 text-primary" />
+        <CardHeader className="text-center space-y-4 pt-8 pb-4">
+          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center border-4 border-background shadow-xl relative group">
+            <UserPlus className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
             <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-background rounded-full border border-primary/20 flex items-center justify-center shadow-sm">
               <CheckCircle2 className="w-5 h-5 text-primary" />
             </div>
           </div>
           <div>
             <CardTitle className="text-3xl font-display font-bold text-foreground tracking-tight">Você foi convidado!</CardTitle>
-            <CardDescription className="text-lg mt-2 font-medium">
+            <CardDescription className="text-lg mt-2 font-medium text-muted-foreground/80">
               {patient_name ? `Olá, ${patient_name.split(' ')[0]}! ` : ""}
               Seu acompanhamento nutricional começa agora.
             </CardDescription>
           </div>
         </CardHeader>
-        <CardContent className="space-y-8 pb-10">
-          <div className="space-y-4">
-            <div className="group flex items-center gap-4 p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm">
-              <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center">
+        <CardContent className="space-y-6 pb-10">
+          <div className="space-y-3">
+            <div className="group flex items-center gap-4 p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
+              <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                 <User className="w-7 h-7 text-primary" />
               </div>
               <div className="flex-1">
@@ -300,8 +347,8 @@ export default function Invitation() {
             </div>
 
             {clinic && (
-              <div className="group flex items-center gap-4 p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm">
-                <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center">
+              <div className="group flex items-center gap-4 p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
+                <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
                   <Building2 className="w-7 h-7 text-primary" />
                 </div>
                 <div className="flex-1">
@@ -312,11 +359,11 @@ export default function Invitation() {
             )}
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-4 pt-2">
             <Button 
               onClick={handleAccept} 
               size="lg" 
-              className="w-full gap-3 text-xl h-16 rounded-2xl shadow-xl shadow-primary/20"
+              className="w-full gap-3 text-xl h-16 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
               Aceitar Convite
               <ArrowRight className="w-6 h-6" />
@@ -325,17 +372,28 @@ export default function Invitation() {
             <Button 
               variant="outline" 
               onClick={() => openWhatsApp()} 
-              className="w-full h-12 rounded-xl gap-2"
+              className="w-full h-12 rounded-xl gap-2 font-semibold border-primary/20 text-primary hover:bg-primary/5"
             >
               <MessageSquare className="w-5 h-5" /> Enviar por WhatsApp
             </Button>
             
-            <p className="text-[11px] text-center text-muted-foreground px-6 leading-relaxed">
-              Ao aceitar, você concorda com nossos termos e será redirecionado para o cadastro seguro.
-            </p>
+            <div className="flex flex-col gap-1">
+              <p className="text-[11px] text-center text-muted-foreground px-6 leading-relaxed">
+                Ao aceitar, você concorda com nossos termos e será redirecionado para o cadastro seguro.
+              </p>
+              {isPreview && (
+                <div className="mt-4 flex justify-center">
+                   <Button variant="ghost" size="sm" onClick={() => setShowDebug(!showDebug)} className="text-[10px] text-muted-foreground/30 hover:text-muted-foreground uppercase tracking-widest">
+                    {showDebug ? "Ocultar Debug" : "Ver Debug (Preview)"}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </CardContent>
       </Card>
+      
+      {showDebug && <InvitationDebug />}
     </div>
   );
 }
