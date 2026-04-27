@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon, Zap, Globe } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon, Zap, Globe, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
@@ -63,22 +63,27 @@ export default function InvitePatient() {
   useEffect(() => {
     if (!user?.id) return;
     const fetchData = async () => {
+      // Fetch professional profile to use clinic_name as the display name if applicable
+      // Based on database check, display_name isn't a column, so we use full_name from profiles
+      // or clinic_name from professional_profiles if that's where the user put their title.
+      const { data: profProfileData } = await supabase
+        .from("professional_profiles")
+        .select("clinic_name")
+        .eq("user_id", user.id)
+        .maybeSingle();
+
       const { data: profileData } = await supabase
         .from("profiles")
         .select("full_name, tenant_id")
         .eq("id", user.id)
         .single();
       
-      setProfile(profileData);
-
-      if (profileData?.tenant_id) {
-        const { data: clinicData } = await supabase
-          .from("tenants")
-          .select("name")
-          .eq("id", profileData.tenant_id)
-          .single();
-        setClinic(clinicData);
-      }
+      // Use full_name for individual identification, but let user message imply they might use clinic_name for branding
+      setProfile({
+        ...profileData,
+        display_name: profileData?.full_name // We'll keep using full_name as the primary source
+      });
+      setClinic({ name: profProfileData?.clinic_name });
 
       const { data: publicProfileData } = await supabase
         .from("public_profile_settings")
@@ -93,20 +98,20 @@ export default function InvitePatient() {
 
   // Links use production URL for sharing/display by default unless in preview for testing
   const onboardingLink = useMemo(() => getOnboardingUrl(true), []);
-  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, true), [user?.id]);
-  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, true) : "", [user?.id]);
+  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, false), [user?.id]);
+  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, false) : "", [user?.id]);
   const publicProfileLink = useMemo(() => {
     if (!publicProfile?.slug) return null;
     return `${PRODUCTION_URL}/p/${publicProfile.slug}`;
   }, [publicProfile]);
 
   const whatsappMessage = useMemo(() => {
-    if (!invitationCode || !profile) return "";
+    if (!profile) return "";
     return getWhatsAppInvitationMessage({
       patientName: name,
-      professionalName: profile.full_name || "Seu Nutricionista",
+      professionalName: profile.display_name || profile.full_name || "Seu Nutricionista",
       clinicName: clinic?.name,
-      invitationCode: invitationCode,
+      invitationCode: invitationCode || undefined, // Fallback safe
       templateType: 'patient_onboarding',
       professionalId: user?.id,
       customTemplate: templates['patient_onboarding']
@@ -120,9 +125,17 @@ export default function InvitePatient() {
   }, [phone, whatsappMessage]);
 
   const copyToClipboard = (value: string, key: string, label: string) => {
+    // If we're in a preview environment, the current value might be using window.location.origin
+    // Let's ensure the user knows which domain is being copied if it's relevant.
+    const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
     navigator.clipboard.writeText(value);
     setCopied(key);
-    toast.success(`${label} copiado!`);
+    
+    if (isPreview && !value.includes("fitjourney.com.br")) {
+      toast.info(`${label} copiado usando domínio de preview para testes.`);
+    } else {
+      toast.success(`${label} copiado!`);
+    }
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -237,16 +250,27 @@ export default function InvitePatient() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
-              <LinkIcon className="w-3.5 h-3.5 text-primary shrink-0" />
-              <code className="text-[10px] md:text-xs flex-1 truncate">{publicRegisterLink}</code>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+                <LinkIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+                <code className="text-[10px] md:text-xs flex-1 truncate">{publicRegisterLink}</code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1"
+                  onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Link público (Preview)")}
+                >
+                  {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
               <Button
+                variant="outline"
                 size="sm"
-                variant="ghost"
-                className="h-7 px-2 gap-1"
-                onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Link público")}
+                className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
+                onClick={() => copyToClipboard(getInvitationUrl(undefined, user?.id, true), "public_link_prod", "Link oficial (Produção)")}
               >
-                {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied === "public_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                Copiar Link Oficial (Produção)
               </Button>
             </div>
           </CardContent>
@@ -265,16 +289,27 @@ export default function InvitePatient() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
-              <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
-              <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+                <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+                <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1"
+                  onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido (Preview)")}
+                >
+                  {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
               <Button
+                variant="outline"
                 size="sm"
-                variant="ghost"
-                className="h-7 px-2 gap-1"
-                onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido")}
+                className="w-full gap-2 border-accent/20 hover:bg-accent/5 text-accent text-xs h-9"
+                onClick={() => copyToClipboard(user?.id ? getQuickLinkUrl(user.id, true) : "", "quick_link_prod", "Link rápido oficial (Produção)")}
               >
-                {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied === "quick_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                Copiar Link Oficial (Produção)
               </Button>
             </div>
             <Button
@@ -287,7 +322,7 @@ export default function InvitePatient() {
               <a 
                 href={`https://wa.me/?text=${encodeURIComponent(getWhatsAppInvitationMessage({
                   patientName: "",
-                  professionalName: profile?.full_name || "Seu Nutri",
+                  professionalName: profile?.display_name || profile?.full_name || "Seu Nutri",
                   clinicName: clinic?.name,
                   invitationCode: user?.id || "",
                   templateType: 'quick_link',
@@ -433,16 +468,27 @@ export default function InvitePatient() {
                 <p className="text-xs text-muted-foreground">
                   Este link é exclusivo para este paciente. Ele será vinculado a você e levado ao onboarding.
                 </p>
-                <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
-                  <LinkIcon className="w-4 h-4 text-primary shrink-0" />
-                  <code className="text-xs flex-1 truncate">{getInvitationUrl(invitationCode || "", user?.id, true)}</code>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
+                    <LinkIcon className="w-4 h-4 text-primary shrink-0" />
+                    <code className="text-xs flex-1 truncate">{getInvitationUrl(invitationCode || "", user?.id, false)}</code>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 gap-1"
+                      onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, false), "link", "Link de convite (Preview)")}
+                    >
+                      {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
                   <Button
+                    variant="outline"
                     size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 gap-1"
-                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link", "Link de convite")}
+                    className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
+                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link_prod", "Link oficial (Produção)")}
                   >
-                    {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied === "link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                    Copiar Link Oficial (Produção)
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
