@@ -528,10 +528,18 @@ export default function PatientRegister() {
               <div className="relative mx-auto w-24 h-24">
                 <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping opacity-25" />
                 <div className="relative w-24 h-24 rounded-full bg-primary/10 border-2 border-primary/30 flex items-center justify-center overflow-hidden">
-                  {selectedProfessional.avatar_url ? (
-                    <img src={selectedProfessional.avatar_url} alt={selectedProfessional.full_name} className="w-full h-full object-cover" />
+                  {selectedProfessional.avatar_url && !avatarError ? (
+                    <img 
+                      src={selectedProfessional.avatar_url} 
+                      alt={selectedProfessional.full_name} 
+                      className="w-full h-full object-cover"
+                      onError={() => {
+                        addLog("Erro ao carregar avatar do nutricionista. Usando fallback.");
+                        setAvatarError(true);
+                      }}
+                    />
                   ) : (
-                    <UserPlus className="w-10 h-10 text-primary" />
+                    <User className="w-10 h-10 text-primary" />
                   )}
                 </div>
               </div>
