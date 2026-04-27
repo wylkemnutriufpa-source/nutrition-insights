@@ -1,4 +1,5 @@
 import React, { memo, useMemo } from "react";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import MealFeedbackButton from "@/components/patient/MealFeedbackButton";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
