@@ -280,6 +280,35 @@ export default function InvitePatient() {
           </CardContent>
         </Card>
 
+        {publicProfileLink && publicProfile?.is_public && (
+          <Card className="border-info/20 bg-info/5">
+            <CardHeader className="pb-3">
+              <div className="flex items-center gap-2 text-info">
+                <Globe className="w-4 h-4" />
+                <CardTitle className="text-sm">Seu Perfil Público (Marketing)</CardTitle>
+              </div>
+              <CardDescription className="text-xs">
+                Mande esse link em suas redes sociais. O paciente pode conhecer seu trabalho 
+                e solicitar um agendamento ou se cadastrar diretamente.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+                <Globe className="w-3.5 h-3.5 text-info shrink-0" />
+                <code className="text-[10px] md:text-xs flex-1 truncate">{publicProfileLink}</code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1"
+                  onClick={() => copyToClipboard(publicProfileLink, "public_profile", "Link do perfil")}
+                >
+                  {copied === "public_profile" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {!created ? (
           <Card>
             <CardHeader>
