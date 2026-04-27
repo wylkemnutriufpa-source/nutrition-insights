@@ -206,16 +206,27 @@ export function useEnsurePatientReady(
   const lastCheckedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    if (!enabled || !patientId) return;
+    if (!enabled || !patientId) {
+      if (!patientId && enabled) {
+        setResult({ status: "loading", issues: [], actions: [] });
+      }
+      return;
+    }
+    
     const key = `${patientId}:${context}`;
+    // Force re-check if it's the first time for this patient in this session
     if (lastCheckedRef.current === key) return;
     lastCheckedRef.current = key;
 
     let cancelled = false;
     setResult({ status: "loading", issues: [], actions: [] });
 
+    console.log(`[EnsurePatientReady] Starting check for ${patientId} context: ${context}`);
     ensureWithRetry(patientId, context).then((r) => {
-      if (!cancelled) setResult(r);
+      if (!cancelled) {
+        console.log(`[EnsurePatientReady] Result for ${patientId}: ${r.status}`, r.issues);
+        setResult(r);
+      }
     });
 
     return () => {

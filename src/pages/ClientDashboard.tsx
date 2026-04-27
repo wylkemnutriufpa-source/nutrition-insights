@@ -308,11 +308,12 @@ export default function ClientDashboard() {
   // AUTOMATIC REDIRECT: Ensure lead_created and awaiting_consent land on /consent immediately
   // avoiding any dashboard render in-between.
   useEffect(() => {
-    if (!journeyLoading && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent")) {
-      console.log("[Dashboard:AutoRedirect] Directing early onboarding state to /consent");
-      navigate("/consent", { replace: true });
+    if (!journeyLoading && journeyStatus && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent")) {
+      console.log(`[Dashboard:AutoRedirect] Directing early onboarding state (${journeyStatus}) to /consent`);
+      // Use window.location to force a clean break and avoid any potential React state zombie issues
+      window.location.href = "/consent";
     }
-  }, [journeyStatus, journeyLoading, navigate]);
+  }, [journeyStatus, journeyLoading]);
 
   // Telemetry extraction helper for diagnostics
   const getTelemetryLogs = () => {
