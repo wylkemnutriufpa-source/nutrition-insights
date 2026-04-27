@@ -13,6 +13,7 @@ export default function InvitationStatus() {
   const navigate = useNavigate();
   const [invitation, setInvitation] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
+  const [whatsappLogs, setWhatsappLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
