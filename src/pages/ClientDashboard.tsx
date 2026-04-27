@@ -278,20 +278,23 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Fluid flow: If patient just joined via link or is awaiting consent,
-  // we allow them into the dashboard where OnboardingProgressModal 
-  // will guide them to /consent and /onboarding automatically.
-  const isNewlyJoined = journeyStatus === "lead_created" || journeyStatus === "awaiting_consent";
-  
-  if (!journeyLoading && journeyStatus && !isNewlyJoined && journeyStatus !== "active") {
-    // Only block if it's a "real" block state like awaiting_payment
-    const blockingStates = ["awaiting_payment", "awaiting_onboarding_release"];
-    if (blockingStates.includes(journeyStatus)) {
-      return <OnboardingGateScreen status={journeyStatus} />;
+  // Telemetry: Log journey state to detect divergence
+  useEffect(() => {
+    if (journeyStatus && !journeyLoading) {
+      console.log(`[Dashboard:Telemetry] Journey Status: ${journeyStatus} | canAccess: ${canAccessOnboarding}`);
     }
+  }, [journeyStatus, journeyLoading, canAccessOnboarding]);
+
+  // Mandatory block states only
+  const isBlockedState = journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release";
+  
+  if (!journeyLoading && isBlockedState) {
+    return <OnboardingGateScreen status={journeyStatus!} />;
   }
 
-  if (loading || journeyLoading) {
+  // Fluid flow: If journey status allows onboarding, proceed to dashboard
+  // Components like OnboardingProgressModal will take over if data is missing.
+  if (journeyLoading) {
     return (
       <DashboardLayout>
         <BrainLoaderCard text="Carregando seu painel clínico…" />
