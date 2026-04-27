@@ -21,14 +21,14 @@ export const getInvitationUrl = (code: string) => {
     OFFICIAL_DOMAIN
   });
 
-  // Para o WhatsApp, se não for produção e não for preview, usamos o BASE_URL (produção)
-  // Mas se for preview, usamos o origin atual para o desenvolvedor testar.
+  // Link oficial e simples: usa a mesma rota de cadastro/vínculo que já funciona,
+  // mantendo o código apenas como parâmetro para preservar rastreio e vínculo.
   if (isPreview) {
-    return `${window.location.origin}/~oauth/convite/${code}`;
+    return `${window.location.origin}/cadastro?code=${encodeURIComponent(code)}`;
   }
 
   // Fallback padrão: Produção
-  return `${BASE_URL}/~oauth/convite/${code}`;
+  return `${BASE_URL}/cadastro?code=${encodeURIComponent(code)}`;
 };
 
 
