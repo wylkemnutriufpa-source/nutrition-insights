@@ -108,6 +108,7 @@
       "goal",
       "historical_loss_rate",
       "id",
+      "is_orphan",
       "marmita_mode",
       "metabolic_confidence_score",
       "metabolic_last_evaluated_at",
