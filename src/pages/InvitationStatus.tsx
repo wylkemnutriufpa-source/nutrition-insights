@@ -223,6 +223,35 @@ export default function InvitationStatus() {
                 )}
               </div>
             </CardContent>
+          <Card className="md:col-span-3">
+            <CardHeader>
+              <CardTitle className="text-sm flex items-center gap-2">
+                <MessageSquare className="w-4 h-4 text-[#25D366]" /> Histórico de WhatsApp
+              </CardTitle>
+              <CardDescription>Convites e links compartilhados via WhatsApp para este paciente</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {whatsappLogs.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {whatsappLogs.map((log) => (
+                    <div key={log.id} className="p-3 rounded-lg border border-border bg-accent/5 flex items-start gap-3">
+                      <div className="w-8 h-8 rounded-full bg-[#25D366]/10 flex items-center justify-center shrink-0">
+                        <MessageSquare className="w-4 h-4 text-[#25D366]" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-bold capitalize">{log.invitation_type.replace('_', ' ')}</p>
+                        <p className="text-[10px] text-muted-foreground">{format(new Date(log.sent_at), "dd/MM/yy 'às' HH:mm", { locale: ptBR })}</p>
+                        {log.patient_phone && <p className="text-[9px] text-muted-foreground mt-1">📱 {log.patient_phone}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-6 bg-muted/20 rounded-lg border border-dashed">
+                  <p className="text-xs text-muted-foreground">Nenhum envio via WhatsApp registrado para este paciente.</p>
+                </div>
+              )}
+            </CardContent>
           </Card>
         </div>
       </div>
