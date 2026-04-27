@@ -80,7 +80,7 @@ export default function PatientDiagnostic() {
       setResults({
         invite: inviteResult,
         professional: profResult,
-        subscription: subResult,
+        subscription: enrollResult,
         rls: rlsResult
       });
       toast.success("Diagnóstico concluído.");
@@ -124,7 +124,7 @@ export default function PatientDiagnostic() {
                   <p className="font-medium">Identificador do Usuário</p>
                   <p className="text-xs font-mono text-muted-foreground">{user?.id}</p>
                 </div>
-                <Badge variant="outline">{profile?.role || 'Paciente'}</Badge>
+                <Badge variant="outline">{(profile as any)?.role || 'Paciente'}</Badge>
               </div>
               <Button 
                 onClick={runDiagnostic} 
