@@ -765,22 +765,57 @@ export default function PatientRegister() {
         <div className="absolute -bottom-40 -left-40 w-80 h-80 rounded-full bg-accent/5 blur-3xl" />
       </div>
 
-      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10">
-        <div className="flex flex-col items-center mb-6">
+      <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md relative z-10 space-y-4">
+        <div className="flex justify-center mb-6">
           <FitJourneyLogo size="lg" />
-          <p className="text-muted-foreground mt-2 text-sm">Crie sua conta em segundos</p>
         </div>
+        
+        <Card className="shadow-2xl border-primary/10 bg-card/95 backdrop-blur-md">
+          <CardContent className="pt-8 pb-8 space-y-6">
+            {selectedProfessional && (
+              <div className="flex flex-col items-center gap-4 border-b border-border pb-6 mb-2">
+                <div className="relative w-20 h-20">
+                  <div className="absolute inset-0 bg-primary/10 rounded-full animate-pulse opacity-50" />
+                  <div className="relative w-20 h-20 rounded-full bg-primary/5 border border-primary/20 flex items-center justify-center overflow-hidden shadow-lg">
+                    {selectedProfessional.avatar_url && !avatarError ? (
+                      <img 
+                        src={selectedProfessional.avatar_url} 
+                        alt={selectedProfessional.full_name} 
+                        className="w-full h-full object-cover"
+                        onError={() => setAvatarError(true)}
+                      />
+                    ) : (
+                      <User className="w-8 h-8 text-primary/60" />
+                    )}
+                  </div>
+                </div>
+                <div className="text-center">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-primary mb-1">Iniciando cadastro com</p>
+                  <h3 className="text-lg font-bold text-foreground leading-tight tracking-tight">{selectedProfessional.full_name}</h3>
+                  {selectedProfessional.clinic_name && (
+                    <p className="text-xs text-muted-foreground flex items-center justify-center gap-1 mt-1 font-medium">
+                      <Building2 className="w-3 h-3" /> {selectedProfessional.clinic_name}
+                    </p>
+                  )}
+                </div>
+              </div>
+            )}
 
-        <Card className="shadow-card border-border/50 bg-card/80 backdrop-blur-sm">
-          <CardContent className="pt-6 pb-6">
+            {!selectedProfessional && (
+              <div className="text-center space-y-2 pb-4">
+                <h1 className="text-2xl font-bold text-foreground">Finalizar Cadastro</h1>
+                <p className="text-sm text-muted-foreground">Preencha seus dados para começar.</p>
+              </div>
+            )}
+
             <form onSubmit={handleRegister} className="space-y-4">
 
               {registrationDisplay.shouldShowInvalidCodeOnly && (
-                <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                <div className="flex items-start gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-sm text-destructive">
                   <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
                   <div className="space-y-1">
-                    <p className="font-semibold">Link sem vínculo automático</p>
-                    <p className="text-xs leading-relaxed">
+                    <p className="font-bold">Aviso de Vínculo</p>
+                    <p className="text-xs leading-relaxed opacity-90">
                       {invitationIssue?.message || "Não conseguimos validar este código. Peça um novo link ao seu profissional para garantir o vínculo automático."}
                     </p>
                   </div>
