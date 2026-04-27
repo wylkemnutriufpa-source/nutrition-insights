@@ -499,7 +499,8 @@ export default function PatientRegister() {
 
       addLog(`Usuário Auth criado: ${signUpData.user.id}. Vinculando paciente...`);
 
-      // Chama RPC canônica — AGUARDA COMPLETAMENTE antes de prosseguir
+      // 5. Vincular paciente via RPC canônica — AGUARDA COMPLETAMENTE antes de prosseguir
+      addLog(`Chamando create_patient_canonical com nutriId: ${nutriId}`);
       const { data: canonData, error: canonErr } = await supabase.rpc("create_patient_canonical" as any, {
         _patient_id: signUpData.user.id,
         _full_name: name,
@@ -507,20 +508,29 @@ export default function PatientRegister() {
         _phone: formattedWhatsapp,
         _whatsapp: formattedWhatsapp,
         _nutritionist_id: nutriId,
-        _source: "register",
+        _source: invitationCode ? "invite" : "register",
         _metadata: { 
           referral_code: refCode || null,
-          invitation_code: invitationCode || null 
+          invitation_code: invitationCode || null,
+          registration_url: window.location.href,
+          correlation_id: correlationId
         },
       });
 
       if (canonErr) {
-        addLog(`Erro na RPC create_patient_canonical: ${canonErr.message}`);
-        addLog("Tentando fallback manual para vínculo...");
-        await supabase.from("profiles").update({ 
-          full_name: name, 
-          phone: formattedWhatsapp 
-        } as any).eq("id", signUpData.user.id);
+        addLog(`ERRO CRÍTICO na RPC create_patient_canonical: ${canonErr.message}`);
+        // Se a RPC falhou, registramos o erro para auditoria mas tentamos um fallback mínimo 
+        // para que o paciente não fique totalmente perdido, embora o vínculo possa falhar.
+        await supabase.from("onboarding_runtime_errors" as any).insert({
+          patient_id: signUpData.user.id,
+          context: "registration_rpc_failure",
+          error_message: canonErr.message,
+          error_payload: { nutriId, invitationCode, email, correlationId }
+        } as any).catch(() => {});
+        
+        toast.error("Ocorreu um erro ao vincular seu perfil. Nossa equipe foi notificada.");
+      } else {
+        addLog("RPC create_patient_canonical executada com sucesso.");
       }
 
       // Notifica o profissional e atualiza status do convite
