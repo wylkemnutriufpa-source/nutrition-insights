@@ -221,6 +221,7 @@ const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 const PatientDiagnostic = lazy(() => import("./pages/PatientDiagnostic"));
 const MobileQA = lazy(() => import("./pages/MobileQA"));
+const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
 const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
 
 // Install global error handlers once at module load
@@ -584,7 +585,7 @@ const App = () => (
                <Route path="/~oauth/auth/confirm" element={<CanonicalPublicRedirect to="/auth/confirm" />} />
 
                {/* Public landing pages */}
-               <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />
+               <Route path="/diagnostic-status" element={<ProtectedRoute><LP section="Status"><DiagnosticStatus /></LP></ProtectedRoute>} />
               <Route path="/landing-paciente" element={<LP section="Landing"><PatientLanding /></LP>} />
               <Route path="/landing-personal" element={<LP section="Landing"><PersonalLanding /></LP>} />
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
@@ -728,7 +729,7 @@ const App = () => (
               {/* Admin routes */}
               <Route path="/admin" element={<AdminRoute><LP section="Admin"><AdminDashboard /></LP></AdminRoute>} />
               <Route path="/admin/image-fallbacks" element={<AdminRoute><LP section="Monitor de Fallback"><ImageFallbackAdmin /></LP></AdminRoute>} />
-              <Route path="/admin/schema" element={<AdminRoute><LP section="Admin"><SchemaMonitor /></LP></AdminRoute>} />
+              <Route path="/admin/schema" element={<AdminRoute><LP section="Admin"><Suspense fallback={<PageLoader />}><SchemaMonitor /></Suspense></LP></AdminRoute>} />
               <Route path="/admin/features" element={<AdminRoute><LP section="Admin"><AdminFeatureControl /></LP></AdminRoute>} />
               <Route path="/admin/testimonials" element={<AdminRoute><LP section="Admin"><AdminTestimonials /></LP></AdminRoute>} />
               <Route path="/admin/site-editor" element={<AdminRoute><LP section="Admin"><AdminSiteEditor /></LP></AdminRoute>} />

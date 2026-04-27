@@ -20,8 +20,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardCheck, Scale, Camera, Clock, Utensils, Sparkles,
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  ChefHat, Heart, Zap, ThumbsUp, Shield
+  ChefHat, Heart, Zap, ThumbsUp, Shield, RefreshCw
 } from "lucide-react";
+
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import SmartNumericInput from "@/components/ui/SmartNumericInput";
 import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@/lib/normalizeInputs";
@@ -583,12 +584,22 @@ export default function OnboardingPipeline() {
   if (!pipeline) {
     return (
       <DashboardLayout>
-        <div className="max-w-2xl mx-auto py-12 text-center space-y-4">
-          <AlertCircle className="w-16 h-16 text-muted-foreground mx-auto" />
+        <div className="max-w-2xl mx-auto py-12 text-center space-y-6">
+          <div className="w-16 h-16 mx-auto rounded-full bg-amber-500/10 flex items-center justify-center">
+            <AlertCircle className="w-10 h-10 text-amber-500" />
+          </div>
           <h2 className="text-2xl font-bold">Nenhum onboarding ativo</h2>
           <p className="text-muted-foreground">
-            Seu profissional ainda não ativou o fluxo automático de onboarding.
+            Seu profissional ainda não ativou o fluxo automático de onboarding ou seu vínculo ainda está sendo processado.
           </p>
+          <div className="flex flex-col gap-2 pt-4 max-w-xs mx-auto">
+            <Button asChild variant="outline">
+              <Link to="/diagnostic-status">Verificar status do meu cadastro</Link>
+            </Button>
+            <Button onClick={() => window.location.reload()} variant="ghost" size="sm">
+              <RefreshCw className="w-3 h-3 mr-2" /> Tentar novamente
+            </Button>
+          </div>
         </div>
       </DashboardLayout>
     );
