@@ -55,6 +55,14 @@ export default function InvitationStatus() {
           
           if (logsError) console.error("[InvitationStatus] Error fetching logs:", logsError);
           setLogs(logsData || []);
+
+          // Buscar logs de WhatsApp baseados no nome do paciente ou phone se disponível
+          const { data: waLogs } = await supabase
+            .from("whatsapp_invitation_logs")
+            .select("*")
+            .eq("patient_name", data.patient_name)
+            .order("sent_at", { ascending: false });
+          setWhatsappLogs(waLogs || []);
         }
       } catch (err: any) {
         console.error("[InvitationStatus] Fatal error:", err);
