@@ -563,11 +563,13 @@ export default function ClientDashboard() {
           <PixPaymentSection />
         </motion.div>
 
-        {/* Action Buttons */}
-        <motion.div variants={item} className="flex flex-wrap gap-2">
-          <PlanRequestButton />
-          <WorkoutRequestButton />
-        </motion.div>
+        {/* Action Buttons — Hidden during early onboarding for fluid flow */}
+        {journeyStatus !== "lead_created" && journeyStatus !== "awaiting_consent" && (
+          <motion.div variants={item} className="flex flex-wrap gap-2">
+            <PlanRequestButton />
+            <WorkoutRequestButton />
+          </motion.div>
+        )}
         <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />
         <PhaseTransitionModal />
 
