@@ -44,8 +44,8 @@ import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFe
 import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
-import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-import OnboardingGateScreen, { IS_FLUID_STATE } from "@/components/patient/OnboardingGateScreen";
+import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
+import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
 import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
 import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar";
