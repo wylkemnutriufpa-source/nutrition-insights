@@ -8,11 +8,21 @@ import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading";
 
-// Routes the patient is allowed to visit regardless of state
-const ONBOARDING_ALLOWED_ROUTES = ["*"];
+// Routes the patient is allowed to visit even when onboarding is mandatory
+const ONBOARDING_ALLOWED_ROUTES = [
+  "/onboarding",
+  "/onboarding-pipeline",
+  "/consent",
+  "/auth",
+  "/reset-password",
+  "/settings",
+  "/privacy-policy",
+  "/termos-de-uso",
+  "/support"
+];
 
-export function isOnboardingAllowedRoute(_pathname: string): boolean {
-  return true;
+export function isOnboardingAllowedRoute(pathname: string): boolean {
+  return ONBOARDING_ALLOWED_ROUTES.some(route => pathname.startsWith(route));
 }
 
 export function useOnboardingGuard() {
