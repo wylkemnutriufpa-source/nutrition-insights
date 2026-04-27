@@ -38,18 +38,38 @@ export function usePatientJourneyStatus() {
 
     let cancelled = false;
     const fetchStatus = async () => {
-      const { data } = await supabase
-        .from("nutritionist_patients")
-        .select("journey_status")
-        .eq("patient_id", user.id)
-        .eq("status", "active")
-        .order("created_at", { ascending: false })
-        .limit(1)
-        .maybeSingle();
+      try {
+        console.log(`[usePatientJourneyStatus] Fetching status for ${user.id}...`);
+        const { data, error } = await supabase
+          .from("nutritionist_patients")
+          .select("journey_status")
+          .eq("patient_id", user.id)
+          .eq("status", "active")
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle();
 
-      if (!cancelled) {
-        setStatus((data as any)?.journey_status || "active");
-        setLoading(false);
+        if (error) {
+          console.error("[usePatientJourneyStatus] Fetch error:", error);
+          if (!cancelled) {
+            setStatus("active"); // Fallback
+            setLoading(false);
+          }
+          return;
+        }
+
+        if (!cancelled) {
+          const finalStatus = (data as any)?.journey_status || "active";
+          console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
+          setStatus(finalStatus);
+          setLoading(false);
+        }
+      } catch (err) {
+        console.error("[usePatientJourneyStatus] Unexpected error:", err);
+        if (!cancelled) {
+          setStatus("active");
+          setLoading(false);
+        }
       }
     };
 
