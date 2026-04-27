@@ -279,23 +279,42 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Telemetry: Log journey state to detect divergence
+  // Telemetry: Log journey state to detect divergence and persist for debugging
   useEffect(() => {
-    if (journeyStatus && !journeyLoading) {
-      console.log(`[Dashboard:Telemetry] Journey Status: ${journeyStatus} | canAccess: ${canAccessOnboarding}`);
+    if (journeyStatus && !journeyLoading && user?.id) {
+      const msg = `[Dashboard:Telemetry] Journey Status: ${journeyStatus} | canAccess: ${canAccessOnboarding}`;
+      console.log(msg);
+      
+      // Persist telemetry in localized state for rapid debugging
+      try {
+        const key = `fj_journey_telemetry_${user.id}`;
+        const history = JSON.parse(localStorage.getItem(key) || "[]");
+        const entry = { status: journeyStatus, canAccess: canAccessOnboarding, at: new Date().toISOString() };
+        // Keep last 10 events
+        const newHistory = [entry, ...history].slice(0, 10);
+        localStorage.setItem(key, JSON.stringify(newHistory));
+      } catch (e) { /* ignore storage errors */ }
     }
-  }, [journeyStatus, journeyLoading, canAccessOnboarding]);
+  }, [journeyStatus, journeyLoading, canAccessOnboarding, user?.id]);
 
   // Mandatory block states only - using centralized logic
   const isFluid = IS_FLUID_STATE(journeyStatus!);
   
+  // REDIRECT logic for non-fluid onboarding states (at-rest states that need gating)
   if (!journeyLoading && journeyStatus && !isFluid) {
     return <OnboardingGateScreen status={journeyStatus} />;
   }
 
-  // Fluid flow: If journey status allows onboarding, proceed to dashboard
-  // Components like OnboardingProgressModal will take over if data is missing.
-  if (journeyLoading) {
+  // AUTOMATIC REDIRECT: Ensure lead_created and awaiting_consent land on /consent immediately
+  // avoiding any dashboard render in-between.
+  useEffect(() => {
+    if (!journeyLoading && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent")) {
+      console.log("[Dashboard:AutoRedirect] Directing early onboarding state to /consent");
+      navigate("/consent", { replace: true });
+    }
+  }, [journeyStatus, journeyLoading, navigate]);
+
+  if (loading || journeyLoading) {
     return (
       <DashboardLayout>
         <BrainLoaderCard text="Carregando seu painel clínico…" />
