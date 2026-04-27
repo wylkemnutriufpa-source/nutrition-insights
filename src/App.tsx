@@ -525,6 +525,10 @@ const App = () => (
                <Route path="/inicio" element={<RootRoute />} />
                <Route path="/dashboard" element={<RootRoute />} />
                <Route path="/patient-dashboard" element={<Navigate to="/client/dashboard" replace />} />
+               <Route path="/~oauth/cadastro" element={<CanonicalPublicRedirect to="/cadastro" />} />
+               <Route path="/~oauth/convite/:code" element={<CanonicalPublicRedirect to="/convite" />} />
+               <Route path="/~oauth/intake/:token" element={<CanonicalPublicRedirect to="/intake" />} />
+               <Route path="/~oauth/auth/confirm" element={<CanonicalPublicRedirect to="/auth/confirm" />} />
 
                {/* Public landing pages */}
                <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />
