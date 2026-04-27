@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
 import { BrainLoaderCard } from "@/components/common/BrainLoader";
 import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
+import ExperienceModeStatusSection from "@/components/dashboard/ExperienceModeStatusSection";
 import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
@@ -322,7 +323,7 @@ export default function ClientDashboard() {
     catch { return []; }
   };
 
-  if (loading || journeyLoading) {
+  if (loading || journeyLoading || isLoading) {
     return (
       <DashboardLayout>
         <BrainLoaderCard text="Carregando seu painel clínico…" />
@@ -346,48 +347,7 @@ export default function ClientDashboard() {
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Experience Mode Status Banner */}
         <motion.div variants={item}>
-          <div className="flex flex-col gap-3">
-            {isLoading && (
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-3 flex items-center gap-3 animate-pulse">
-                <RefreshCw className="w-4 h-4 text-primary animate-spin" />
-                <span className="text-xs font-medium text-primary">Salvando suas preferências de experiência...</span>
-              </div>
-            )}
-            
-            {failedMode && (
-              <div className="bg-destructive/10 border border-destructive/20 rounded-xl p-3 flex items-center justify-between gap-3">
-                <div className="flex items-center gap-3 text-destructive">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-xs font-medium">Não foi possível aplicar o modo {failedMode === 'pro' ? 'Completo' : failedMode === 'advanced' ? 'Avançado' : 'Simples'}</span>
-                </div>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  onClick={retryLastMode}
-                  className="h-8 text-[11px] border-destructive/30 hover:bg-destructive/10"
-                >
-                  Tentar Novamente
-                </Button>
-              </div>
-            )}
-
-            {profile?.experience_mode_locked && profile?.experience_mode === 'basic' && (
-              <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 flex items-start gap-3">
-                <Zap className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
-                <div>
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-semibold text-amber-700">Modo Restrito</p>
-                    <span className="text-[10px] font-bold uppercase bg-amber-500/20 text-amber-700 px-1.5 py-0.5 rounded">
-                      Básico
-                    </span>
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-0.5">
-                    Sua conta está em modo de segurança. {profile?.unlock_date ? `A liberação do acesso completo está prevista para ${new Date(profile.unlock_date as string).toLocaleDateString()}.` : "Complete as atualizações pendentes para liberar outros modos."}
-                  </p>
-                </div>
-              </div>
-            )}
-          </div>
+          <ExperienceModeStatusSection />
         </motion.div>
 
         {/* Schema Inconsistency Alert */}

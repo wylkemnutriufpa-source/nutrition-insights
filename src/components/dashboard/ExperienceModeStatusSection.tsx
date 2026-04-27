@@ -63,6 +63,11 @@ export default function ExperienceModeStatusSection() {
   const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode } =
     useExperienceMode();
 
+  // If no change is in progress and everything is normal, hide the section
+  if (!isLoading && !failedMode && !isOffline && pendingQueueSize === 0) {
+    return null;
+  }
+
   // Saving in-flight
   if (isLoading) {
     return (
@@ -188,20 +193,5 @@ export default function ExperienceModeStatusSection() {
     );
   }
 
-  // Success / steady state
-  const modeLabel = mode === "basic" ? "Básico" : mode === "pro" ? "Profissional" : "Avançado";
-  return (
-    <div
-      data-testid="emode-status"
-      data-state="success"
-      data-mode={mode}
-      className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 px-4 py-2.5 flex items-center gap-2.5"
-    >
-      <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-      <p className="text-xs text-muted-foreground">
-        Modo ativo:{" "}
-        <span className="font-semibold text-foreground" data-testid="emode-active-label">{modeLabel}</span>
-      </p>
-    </div>
-  );
+  return null;
 }

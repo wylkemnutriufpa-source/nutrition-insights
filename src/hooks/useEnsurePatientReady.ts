@@ -206,15 +206,15 @@ export function useEnsurePatientReady(
   const lastCheckedRef = useRef<string | null>(null);
 
   useEffect(() => {
+    // If not enabled or no patientId, reset to loading but don't check
     if (!enabled || !patientId) {
-      if (!patientId && enabled) {
-        setResult({ status: "loading", issues: [], actions: [] });
-      }
+      setResult({ status: "loading", issues: [], actions: [] });
+      lastCheckedRef.current = null;
       return;
     }
     
     const key = `${patientId}:${context}`;
-    // Force re-check if it's the first time for this patient in this session
+    // Skip if already checked for this key in this component instance
     if (lastCheckedRef.current === key) return;
     lastCheckedRef.current = key;
 
