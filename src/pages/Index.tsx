@@ -44,7 +44,8 @@ import {
   UtensilsCrossed, Users, TrendingUp, Target, Plus,
   CheckCircle2, AlertTriangle, Activity, FileText, Rocket,
   Calendar, ArrowRight, ClipboardList, Heart, Brain,
-  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus
+  BarChart3, Shield, ChefHat, MessageSquare, Bot, Pill, Stethoscope, Sparkles, UserPlus,
+  Link2
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -342,10 +343,10 @@ function NutritionistDashboardContent() {
 
   const quickActions = [
     { label: "Modo Consultório", icon: Stethoscope, to: "/in-office", color: "bg-primary/20 text-primary hover:bg-primary/30 shadow-md shadow-primary/5 border border-primary/20" },
+    { label: "Link Rápido", icon: Link2, to: "/settings", color: "bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500/20 border border-emerald-500/20" },
     { label: "Convidar Paciente", icon: UserPlus, to: "/invite-patient", color: "bg-amber-500/10 text-amber-600 hover:bg-amber-500/20 border border-amber-500/20" },
     { label: "Novo Paciente", icon: Users, to: "/patients", color: "bg-muted/50 text-muted-foreground hover:bg-primary/10 hover:text-primary" },
     { label: "Nova Consulta", icon: Calendar, to: "/appointments", color: "bg-muted/50 text-muted-foreground hover:bg-info/10 hover:text-info" },
-    { label: "Criar Programa", icon: Rocket, to: "/programs", color: "bg-muted/50 text-muted-foreground hover:bg-accent/10 hover:text-accent" },
   ];
 
   const timelineEventIcons: Record<string, { icon: any; color: string }> = {

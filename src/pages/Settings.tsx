@@ -346,6 +346,58 @@ export default function Settings() {
         {/* Agenda Pública */}
         {(isNutritionist || isPersonal) && <PublicAgendaCard />}
 
+        {/* Link Rápido de Cadastro */}
+        {(isNutritionist || isPersonal) && (
+          <Card className="shadow-card border-primary/20 overflow-hidden relative">
+            <div className="absolute top-0 right-0 p-4 opacity-5 pointer-events-none">
+              <Link2 className="w-24 h-24 rotate-12" />
+            </div>
+            <CardHeader>
+              <CardTitle className="font-display flex items-center gap-2">
+                <Link2 className="w-5 h-5 text-primary" /> Link Rápido de Cadastro
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Este é seu link permanente. Envie para seus pacientes para que eles se cadastrem e iniciem a anamnese imediatamente, sem necessidade de convites individuais.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="flex-1 bg-muted/50 rounded-xl px-4 py-3 border border-border/50 flex items-center justify-between group">
+                  <code className="text-xs font-mono break-all text-primary/80">
+                    {window.location.origin}/q/{user?.id}
+                  </code>
+                  <Button 
+                    variant="ghost" 
+                    size="icon" 
+                    className="h-8 w-8 shrink-0 hover:bg-primary/10 hover:text-primary"
+                    onClick={() => {
+                      const url = `${window.location.origin}/q/${user?.id}`;
+                      navigator.clipboard.writeText(url);
+                      toast.success("Link copiado!");
+                    }}
+                  >
+                    <Copy className="w-4 h-4" />
+                  </Button>
+                </div>
+                <Button 
+                  className="gradient-primary gap-2"
+                  onClick={() => window.open(`${window.location.origin}/q/${user?.id}`, '_blank')}
+                >
+                  <ExternalLink className="w-4 h-4" /> Testar Link
+                </Button>
+              </div>
+
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-3 flex gap-3">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                <p className="text-[11px] text-amber-600 leading-relaxed">
+                  <strong>Importante:</strong> Qualquer pessoa com este link poderá se cadastrar como seu paciente. Use para agilizar o onboarding de novos alunos que já fecharam com você.
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
         {/* Profile */}
         <Card className="shadow-card">
           <CardHeader>

@@ -133,6 +133,7 @@ const Invitation = lazy(() => import("./pages/Invitation"));
 const InvitationStatus = lazy(() => import("./pages/InvitationStatus"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const QuickLink = lazy(() => import("./pages/QuickLink"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
 const AccountDeletion = lazy(() => import("./pages/AccountDeletion"));
@@ -521,7 +522,9 @@ const App = () => (
               <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register-patient" element={<LP section="Cadastro"><PatientRegister /></LP>} />
-              <Route path="/convite" element={<Navigate to="/" replace />} />
+               <Route path="/vincular/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
+               <Route path="/q/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
+               <Route path="/convite" element={<Navigate to="/" replace />} />
               <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
