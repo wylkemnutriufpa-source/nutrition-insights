@@ -164,25 +164,37 @@ export default function Programs() {
     fetchPrograms();
   };
 
-  const deleteProgram = async (id: string) => {
-    // Check if it's a Biquíni Branco program (protected)
+  const deleteProgram = (id: string) => {
     const prog = programs.find(p => p.id === id);
     const isBiquini = prog?.title?.toLowerCase().includes("biqu") || prog?.tag === "biquini";
 
     if (isBiquini) {
-      const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para excluir:");
-      if (!pwd) return;
-      if (pwd !== "Wylk3mkl3yton") {
-        toast.error("Senha incorreta. Exclusão cancelada.");
-        return;
-      }
+      setDeleteTarget({ id, name: prog?.title || "Programa" });
     } else {
       if (!confirm("Remover este programa?")) return;
+      executeDelete(id);
     }
+  };
 
-    await supabase.from("programs").delete().eq("id", id);
-    fetchPrograms();
-    toast.success("Programa removido");
+  const executeDelete = async (id: string) => {
+    const { error } = await supabase.from("programs").delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao remover: " + error.message);
+    } else {
+      fetchPrograms();
+      toast.success("Programa removido");
+    }
+  };
+
+  const confirmDeleteAction = async () => {
+    if (!deleteTarget) return;
+    if (deletePassword !== "Wylk3mkl3yton") {
+      toast.error("Senha incorreta. Exclusão cancelada.");
+      return;
+    }
+    await executeDelete(deleteTarget.id);
+    setDeleteTarget(null);
+    setDeletePassword("");
   };
 
   // Calculate days progress
