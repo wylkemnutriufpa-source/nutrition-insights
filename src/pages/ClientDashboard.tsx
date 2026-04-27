@@ -278,13 +278,17 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Fluid flow: If patient just joined via link (lead_created) or is awaiting consent,
-  // we treat it as active to allow them into the dashboard where OnboardingProgressModal 
-  // or PatientReadyGuard will guide them to /consent and /onboarding automatically.
+  // Fluid flow: If patient just joined via link or is awaiting consent,
+  // we allow them into the dashboard where OnboardingProgressModal 
+  // will guide them to /consent and /onboarding automatically.
   const isNewlyJoined = journeyStatus === "lead_created" || journeyStatus === "awaiting_consent";
   
-  if (!journeyLoading && !canAccessOnboarding && journeyStatus && !isNewlyJoined) {
-    return <OnboardingGateScreen status={journeyStatus} />;
+  if (!journeyLoading && journeyStatus && !isNewlyJoined && journeyStatus !== "active") {
+    // Only block if it's a "real" block state like awaiting_payment
+    const blockingStates = ["awaiting_payment", "awaiting_onboarding_release"];
+    if (blockingStates.includes(journeyStatus)) {
+      return <OnboardingGateScreen status={journeyStatus} />;
+    }
   }
 
   if (loading || journeyLoading) {
