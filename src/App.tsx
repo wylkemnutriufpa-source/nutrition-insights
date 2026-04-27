@@ -36,6 +36,7 @@ import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
 import Auth from "./pages/Auth";
+import AuthConfirm from "./pages/AuthConfirm";
 import NotFound from "./pages/NotFound";
 
 // ── Lazy-loaded pages ───────────────────────────────────────
@@ -528,11 +529,11 @@ const App = () => (
               <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
+               <Route path="/auth/confirm" element={<LP section="Confirmação"><AuthConfirm /></LP>} />
                <Route path="/politica-de-privacidade" element={<Suspense fallback={<PageLoader />}><PrivacyPolicy /></Suspense>} />
                <Route path="/termos-de-uso" element={<Suspense fallback={<PageLoader />}><TermsOfUse /></Suspense>} />
                <Route path="/exclusao-de-conta" element={<Suspense fallback={<PageLoader />}><AccountDeletion /></Suspense>} />
               <Route path="/reset-password" element={<LP section="Auth"><ResetPassword /></LP>} />
-               <Route path="/" element={<LP section="Home"><RootRoute /></LP>} />
 
               {/* Shared routes */}
               <Route path="/chat" element={<ProtectedRoute><LP section="Chat"><Chat /></LP></ProtectedRoute>} />

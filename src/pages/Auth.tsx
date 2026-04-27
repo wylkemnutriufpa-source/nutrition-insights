@@ -110,7 +110,7 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
     setLoading(true);
     const normalizedEmail = email.trim().toLowerCase();
     const { error } = await supabase.auth.resetPasswordForEmail(normalizedEmail, {
-      redirectTo: `${window.location.origin}/reset-password`,
+      redirectTo: `${window.location.origin}/auth/confirm?type=recovery&next=/reset-password`,
     });
     setLoading(false);
     if (error) { toast.error(error.message); }

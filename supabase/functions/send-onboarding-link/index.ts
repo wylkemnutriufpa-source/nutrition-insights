@@ -64,7 +64,7 @@ Deno.serve(async (req) => {
     }
 
     const origin = BASE_URL;
-    const redirectTo = `${origin}/onboarding`;
+    const redirectTo = `${origin}/auth/confirm?type=magiclink&next=/onboarding`;
 
     if (!isValidDomain(redirectTo)) {
       throw new Error(`Domínio de redirecionamento inválido: ${redirectTo}`);
