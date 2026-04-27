@@ -14,7 +14,7 @@ interface AuditRow {
   status_code: number;
   ok: boolean;
   notes: string | null;
-  created_at: string;
+  checked_at: string;
 }
 
 const OAUTH_PATHS = [
@@ -35,9 +35,9 @@ export default function StatusPage() {
     const since = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
     const { data, error } = await supabase
       .from("public_route_audits")
-      .select("id, pathname, status_code, ok, notes, created_at")
-      .gte("created_at", since)
-      .order("created_at", { ascending: false })
+      .select("id, pathname, status_code, ok, notes, checked_at")
+      .gte("checked_at", since)
+      .order("checked_at", { ascending: false })
       .limit(500);
     if (error) {
       toast.error(`Erro ao carregar status: ${error.message}`);
@@ -63,7 +63,7 @@ export default function StatusPage() {
 
   const oauthLatest = OAUTH_PATHS.map((p) => ({ path: p, row: latestByPath.get(p) }));
   const allOauthOk = oauthLatest.every((x) => x.row?.ok);
-  const lastRun = rows[0]?.created_at;
+  const lastRun = rows[0]?.checked_at;
 
   const runAudit = async () => {
     setRunning(true);
