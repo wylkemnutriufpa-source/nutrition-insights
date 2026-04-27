@@ -167,8 +167,8 @@ export default function BiquiniOnboardingWizard({ programId, enrollmentId, onCom
       await (supabase as any).from("program_enrollments").update({
         status: "protocol_1_active",
         current_phase: 1,
-        initial_weight: parseFloat(weight),
-        initial_height: parseFloat(height),
+        initial_weight: normalizeWeightInput(weight).value || 0,
+        initial_height: normalizeHeightInput(height).value || 0,
         initial_bmi: results.bmi,
         initial_tmb: results.tmb,
         initial_get: results.get,
