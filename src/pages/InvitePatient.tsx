@@ -39,6 +39,8 @@ export default function InvitePatient() {
   const [profile, setProfile] = useState<any>(null);
   const [clinic, setClinic] = useState<any>(null);
   const [publicProfile, setPublicProfile] = useState<any>(null);
+  const { templates } = useWhatsAppTemplates();
+  const { logInvitation } = useWhatsAppLogs();
 
 
   // Base URL for production
