@@ -582,7 +582,6 @@ export default function PatientRegister() {
         }, 1500);
         return;
       }
-      }
 
       setCurrentUserId(signUpData.user.id);
       toast.success("Conta criada! Verifique seu e-mail.");
