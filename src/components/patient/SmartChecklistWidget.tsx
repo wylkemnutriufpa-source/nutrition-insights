@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { CheckCircle2, Circle, Sparkles, Droplets, UtensilsCrossed, Brain, Dumbbell, Sun, Heart } from "lucide-react";
 import { toast } from "sonner";
+import { safeNum } from "@/lib/formatMacros";
 
 const CATEGORY_ICONS: Record<string, any> = {
   hydration: Droplets,
@@ -77,8 +78,8 @@ export default function SmartChecklistWidget() {
 
   const todayTasks = tasks.filter(t => !t.is_completed).slice(0, 8);
   const completedToday = tasks.filter(t => t.is_completed).length;
-  const totalToday = tasks.length;
-  const progressPercent = totalToday > 0 ? Math.round((completedToday / totalToday) * 100) : 0;
+  const totalToday = safeNum(tasks?.length);
+  const progressPercent = totalToday > 0 ? Math.round((safeNum(completedToday) / totalToday) * 100) : 0;
 
   if (totalToday === 0) return null;
 

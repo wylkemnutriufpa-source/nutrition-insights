@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { getTherapeuticMomentum } from "@/lib/therapeuticPriorityEngine";
 import { Flame, AlertTriangle, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { safeNum } from "@/lib/formatMacros";
 
 const MOMENTUM_CONFIG: Record<string, { icon: any; bg: string; text: string }> = {
   green: { icon: TrendingUp, bg: "bg-green-500/10 border-green-500/30", text: "text-green-600" },
@@ -42,7 +43,7 @@ export default function TherapeuticMomentumBar() {
                 momentum.color === "green" ? "bg-green-500" :
                 momentum.color === "orange" ? "bg-orange-500" : "bg-red-500"
               }`}
-              style={{ width: `${momentum.score}%` }}
+              style={{ width: `${safeNum(momentum?.score)}%` }}
             />
           </div>
           <span className={`text-xs font-bold ${config.text}`}>{momentum.label}</span>
