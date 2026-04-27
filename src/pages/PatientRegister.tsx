@@ -650,12 +650,26 @@ export default function PatientRegister() {
                   Estamos conectando você ao seu profissional. Por favor, aguarde.
                 </p>
               </div>
+              
+              {/* Fallback para evitar ficar preso se a função demorar demais */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="mt-4 text-xs opacity-50 hover:opacity-100"
+                onClick={() => {
+                  addLog("Usuário optou por ignorar validação (fallback manual).");
+                  setSigValid(false);
+                }}
+              >
+                <RefreshCw className="w-3 h-3 mr-1" /> Problemas ao carregar? Clique aqui
+              </Button>
             </CardContent>
           </Card>
         </motion.div>
       </div>
     );
   }
+
 
   if (registrationDisplay.shouldShowInvitationWelcome && selectedProfessional) {
     const cadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
