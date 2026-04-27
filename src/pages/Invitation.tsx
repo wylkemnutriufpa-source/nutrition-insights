@@ -95,19 +95,21 @@ export default function Invitation() {
     }
   }, [code]);
 
-  // Redirecionamento automático quando o convite é válido
-  useEffect(() => {
-    if (invitation && !error && !isProcessingAction) {
-      console.log("[Invitation] Convite válido detectado. Redirecionando automaticamente para cadastro...");
-      handleAccept();
-    }
-  }, [invitation, error]);
-
-  const handleAccept = () => {
+  const handleAccept = useCallback(() => {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
     navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
-  };
+  }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
+
+  // Redirecionamento automático quando o convite é válido
+  useEffect(() => {
+    if (invitation && !error && !isProcessingAction) {
+      const timer = setTimeout(() => {
+        handleAccept();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [invitation, error, handleAccept]);
 
   const handleSafeRegisterFallback = () => {
     const professionalId = invitation?.professional_id;
