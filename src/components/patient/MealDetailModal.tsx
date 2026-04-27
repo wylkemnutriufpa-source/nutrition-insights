@@ -865,11 +865,8 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
   return (
     <>
       <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl backdrop-blur-sm fixed top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]">
-        <DialogClose className="absolute right-4 top-4 rounded-full opacity-70 ring-offset-background transition-opacity hover:opacity-100 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none data-[state=open]:bg-accent data-[state=open]:text-muted-foreground z-50 bg-black/20 backdrop-blur-md p-1">
-          <X className="h-4 w-4 text-white" />
-          <span className="sr-only">Close</span>
-        </DialogClose>
+      <DialogContent className="max-w-lg max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl backdrop-blur-sm">
+
         {/* Hero Photo */}
         {imageUrl && (
           <div className="relative w-full h-48 overflow-hidden">
