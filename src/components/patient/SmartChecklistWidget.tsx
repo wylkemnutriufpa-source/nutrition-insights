@@ -100,8 +100,8 @@ export default function SmartChecklistWidget() {
       {/* Horizontal scroll for tasks */}
       <div className="flex gap-3 overflow-x-auto pb-2 -mx-1 px-1 snap-x">
         <AnimatePresence>
-          {todayTasks.map((task) => {
-            const emoji = CATEGORY_EMOJI[task.task_category] || "✅";
+          {(todayTasks || []).map((task) => {
+            const emoji = (task?.task_category && CATEGORY_EMOJI[task.task_category]) || "✅";
             return (
               <motion.div
                 key={task.id}
@@ -114,8 +114,8 @@ export default function SmartChecklistWidget() {
                   <div className="flex items-start gap-2">
                     <span className="text-lg">{emoji}</span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-xs leading-tight">{task.task_title}</p>
-                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{task.task_description}</p>
+                      <p className="font-medium text-xs leading-tight">{task?.task_title || "Tarefa"}</p>
+                      <p className="text-[10px] text-muted-foreground mt-0.5 line-clamp-2">{task?.task_description || ""}</p>
                     </div>
                   </div>
                   <Button
