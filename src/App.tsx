@@ -191,6 +191,7 @@ const AdminExperienceModeAudit = lazy(() => import("./pages/admin/AdminExperienc
 const AdminExperienceModeReconcile = lazy(() => import("./pages/admin/AdminExperienceModeReconcile"));
 const InvitationAudit = lazy(() => import("./pages/InvitationAudit"));
 const AdminPlanLoadingDiagnostics = lazy(() => import("./pages/admin/AdminPlanLoadingDiagnostics"));
+const MarmitaAudit = lazy(() => import("./pages/admin/MarmitaAudit"));
 const CoachBodybuilder = lazy(() => import("./pages/CoachBodybuilder"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
