@@ -82,6 +82,11 @@ export default function ClinicalWorkspace() {
                 className="pl-9 w-64 h-9 text-sm"
               />
             </div>
+            <Link to="/invite-patient">
+              <Button size="sm" variant="outline" className="gap-1.5 border-amber-500/30 text-amber-600 hover:bg-amber-500/5">
+                <UserPlus className="w-4 h-4" /> Convidar
+              </Button>
+            </Link>
             <Button size="sm" className="gap-1.5">
               <Plus className="w-4 h-4" /> Criar Plano
             </Button>
