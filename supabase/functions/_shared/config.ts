@@ -3,7 +3,12 @@
  */
 
 export const BASE_URL = "https://www.fitjourney.com.br";
-export const ALLOWED_DOMAINS = ["www.fitjourney.com.br", "fitjourney.com.br"];
+export const ALLOWED_DOMAINS = [
+  "www.fitjourney.com.br", 
+  "fitjourney.com.br", 
+  "fijourney.lovable.app", 
+  "fitjourney-dev.lovable.app"
+];
 
 /**
  * Verifica se uma URL redireciona para o domínio oficial.
