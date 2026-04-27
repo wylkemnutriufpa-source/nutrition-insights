@@ -1,8 +1,38 @@
 import { useState, useEffect, useCallback, useMemo } from "react";
-...
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
+import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent } from "@/components/ui/card";
+import { toast } from "sonner";
+import {
+  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
+  Download, Copy, FileJson, AlertTriangle, User
+} from "lucide-react";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
+
+interface ProfessionalResult {
+  user_id: string;
+  full_name: string;
+  avatar_url: string | null;
+  clinic_name: string | null;
+  phone: string | null;
+}
+
+export default function PatientRegister() {
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const refCode = searchParams.get("ref") || "";
+  const preselectedNutri = searchParams.get("nutri") || "";
+  const signature = searchParams.get("sig") || "";
+  const invitationCode = searchParams.get("code") || "";
   const [sigValid, setSigValid] = useState<boolean | null>(null);
   const correlationId = useMemo(() => crypto.randomUUID(), []);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
+  const [avatarError, setAvatarError] = useState(false);
 
   const addLog = useCallback((msg: string) => {
     const timestamp = new Date().toISOString();
@@ -51,6 +81,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
   useEffect(() => {
     if (!preselectedNutri) return;
     (async () => {
+      addLog(`Buscando dados do profissional ${preselectedNutri}...`);
       const { data: profileData } = await supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url, phone")
@@ -64,6 +95,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
         .maybeSingle();
 
       if (profileData) {
+        addLog(`Profissional encontrado: ${profileData.full_name}`);
         setSelectedProfessional({
           user_id: profileData.user_id,
           full_name: profileData.full_name,
@@ -73,9 +105,11 @@ import { useState, useEffect, useCallback, useMemo } from "react";
         });
         // Reset confirmation if nutri changes
         setIsProfConfirmed(false);
+      } else {
+        addLog(`AVISO: Profissional ${preselectedNutri} não encontrado no banco.`);
       }
     })();
-  }, [preselectedNutri]);
+  }, [preselectedNutri, addLog]);
 
 
   // Robust invitation code validation
@@ -86,7 +120,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
     }
 
     const validateInvite = async () => {
-      addLog(`Validando código: ${invitationCode}...`);
+      addLog(`Validando código de convite: ${invitationCode}...`);
       try {
         const { data: invite, error } = await supabase
           .from("invitations")
@@ -98,7 +132,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
           addLog(`Erro Supabase ao buscar convite: ${error.message}`);
           await supabase.from("invitation_logs").insert({
             event_type: "error",
-            details: { error: error.message, stage: "fetch_invitation", code: invitationCode }
+            correlation_id: correlationId,
+            details: { error: error.message, stage: "fetch_invitation", code: invitationCode, correlationId }
           });
           throw error;
         }
@@ -134,7 +169,8 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 
           addLog("Código de convite/onboarding não encontrado.");
           setSigValid(false);
-          toast.error("Vínculo de profissional inválido. Verifique se o link está correto.");
+          // Don't toast immediately if it's just an invalid code, maybe they want to search?
+          // But usually code is specific.
           return;
         }
 
@@ -144,13 +180,13 @@ import { useState, useEffect, useCallback, useMemo } from "react";
         if (isExpired) {
           addLog("O convite está expirado.");
           setSigValid(false);
-          toast.error("Este link de convite expirou. Solicite um novo ao seu profissional.");
           await supabase.from("invitation_logs").insert({
             invitation_id: invite.id,
             professional_id: invite.professional_id,
             patient_email: invite.patient_email,
             event_type: "expired",
-            details: { expires_at: invite.expires_at, code: invitationCode }
+            correlation_id: correlationId,
+            details: { expires_at: invite.expires_at, code: invitationCode, correlationId }
           });
           return;
         }
@@ -158,13 +194,13 @@ import { useState, useEffect, useCallback, useMemo } from "react";
         if (invite.status === 'revoked') {
           addLog("O convite foi revogado pelo profissional.");
           setSigValid(false);
-          toast.error("Este convite foi revogado ou cancelado.");
           await supabase.from("invitation_logs").insert({
             invitation_id: invite.id,
             professional_id: invite.professional_id,
             patient_email: invite.patient_email,
             event_type: "revoked",
-            details: { code: invitationCode }
+            correlation_id: correlationId,
+            details: { code: invitationCode, correlationId }
           });
           return;
         }
@@ -180,17 +216,19 @@ import { useState, useEffect, useCallback, useMemo } from "react";
         });
         setIsProfConfirmed(true);
         setSigValid(true);
-        addLog("Vínculo profissional validado com sucesso.");
+        addLog("Vínculo profissional validado via convite com sucesso.");
 
         await supabase.from("invitation_logs").insert({
           invitation_id: invite.id,
           professional_id: invite.professional_id,
           patient_email: invite.patient_email || email,
           event_type: "validated",
+          correlation_id: correlationId,
           details: { 
             professional_id: invite.professional_id,
             patient_email_match: invite.patient_email === email,
-            code: invitationCode
+            code: invitationCode,
+            correlationId
           }
         });
 
@@ -198,13 +236,13 @@ import { useState, useEffect, useCallback, useMemo } from "react";
         if (invite.patient_name && !name) setName(invite.patient_name);
 
       } catch (err: any) {
-        addLog(`Falha crítica na validação: ${err.message}`);
+        addLog(`Falha crítica na validação do convite: ${err.message}`);
         setSigValid(false);
       }
     };
 
     validateInvite();
-  }, [invitationCode, sigValid, email]);
+  }, [invitationCode, sigValid, email, correlationId, addLog]);
 
   // Legacy signature verification (if no invitationCode)
   useEffect(() => {
@@ -214,21 +252,20 @@ import { useState, useEffect, useCallback, useMemo } from "react";
     // Caso 1: Link com assinatura legada (?nutri=ID&sig=...)
     if (signature) {
       const verifySig = async () => {
-        addLog("Verificando assinatura legada...");
+        addLog(`Verificando assinatura legada para nutri ${preselectedNutri}...`);
         try {
           const { data, error } = await supabase.functions.invoke("verify-registration-token", {
-            body: { nutriId: preselectedNutri, signature }
+            body: { nutriId: preselectedNutri, signature, correlationId }
           });
           if (error) throw error;
           setSigValid(data.isValid);
           if (!data.isValid) {
-            addLog("Assinatura inválida.");
-            toast.error("Link de registro inválido. Solicite um novo ao seu profissional.");
+            addLog("Assinatura legada inválida.");
           } else {
-            addLog("Assinatura validada.");
+            addLog("Assinatura legada validada com sucesso.");
           }
         } catch (err: any) {
-          addLog(`Erro na assinatura: ${err.message}`);
+          addLog(`Erro na verificação de assinatura: ${err.message}`);
           setSigValid(false);
         }
       };
@@ -237,7 +274,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
     }
 
     // Caso 2: Link direto sem assinatura (?nutri=ID) — valida só se o profissional existe
-    addLog("Link direto sem assinatura. Validando existência do profissional...");
+    addLog("Link direto sem assinatura (?nutri=ID). Validando existência do profissional...");
     (async () => {
       const { data: prof, error } = await supabase
         .from("profiles")
@@ -246,15 +283,14 @@ import { useState, useEffect, useCallback, useMemo } from "react";
         .maybeSingle();
 
       if (error || !prof) {
-        addLog(`Profissional ${preselectedNutri} não encontrado.`);
+        addLog(`Profissional ${preselectedNutri} não encontrado no banco.`);
         setSigValid(false);
-        toast.error("Vínculo de profissional inválido. Verifique se o link está correto.");
         return;
       }
-      addLog("Profissional confirmado. Liberando cadastro.");
+      addLog("Profissional confirmado via link direto. Liberando cadastro.");
       setSigValid(true);
     })();
-  }, [preselectedNutri, signature, invitationCode, addLog]);
+  }, [preselectedNutri, signature, invitationCode, addLog, correlationId]);
 
   // Search professionals
   const searchProfessionals = useCallback(async (query: string) => {
