@@ -171,39 +171,94 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === "SIGNED_IN" && session?.user) {
           logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
           
-          // Check for affiliate ref code and create referral
+          // Check for referral/linkage codes and create associations
           const refCode = localStorage.getItem("fitjourney_ref");
-          if (refCode && session.user.email) {
-            // Create referral in background (don't block auth flow)
+          const inviteCode = localStorage.getItem("fitjourney_invite_code");
+          const nutriId = localStorage.getItem("fitjourney_nutri_id");
+
+          if ((refCode || inviteCode || nutriId) && session.user.email) {
             (async () => {
               try {
-                const { data: affiliate } = await supabase.rpc("lookup_affiliate_by_code", { _code: refCode });
-                if (affiliate && affiliate.length > 0) {
-                  const aff = affiliate[0];
-                  // Anti-fraud: block self-referral
-                  if (aff.affiliate_id !== session.user.id) {
-                    // Check if referral already exists
-                    const { data: existing } = await supabase
-                      .from("affiliate_referrals")
-                      .select("id")
-                      .eq("referred_email", session.user.email!.toLowerCase())
-                      .limit(1);
-                    if (!existing || existing.length === 0) {
-                      await supabase.from("affiliate_referrals").insert({
-                        affiliate_id: aff.affiliate_id,
-                        referred_email: session.user.email!.toLowerCase(),
-                        referral_code_used: refCode,
-                        referred_user_id: session.user.id,
-                        referred_type: "patient",
-                        status: "registered",
-                      });
-                    }
-                    localStorage.removeItem("fitjourney_ref");
-                    localStorage.removeItem("fitjourney_ref_at");
+                console.log("[Auth] Processing linkage with:", { refCode, inviteCode, nutriId });
+                
+                // 1. Direct Link via invitation code or nutritionist ID
+                let targetNutriId = nutriId;
+                let targetTenantId = null;
+
+                if (inviteCode && !targetNutriId) {
+                  const { data: invite } = await supabase
+                    .from("invitations")
+                    .select("professional_id, tenant_id")
+                    .eq("code", inviteCode)
+                    .maybeSingle();
+                  if (invite) {
+                    targetNutriId = invite.professional_id;
+                    targetTenantId = invite.tenant_id;
                   }
                 }
+
+                if (targetNutriId) {
+                  // Ensure nutritionist_patients link exists
+                  const { data: existingLink } = await supabase
+                    .from("nutritionist_patients")
+                    .select("id")
+                    .eq("patient_id", session.user.id)
+                    .eq("nutritionist_id", targetNutriId)
+                    .maybeSingle();
+
+                  if (!existingLink) {
+                    // Get tenant_id if not known
+                    if (!targetTenantId) {
+                      const { data: profile } = await supabase
+                        .from("profiles")
+                        .select("id")
+                        .eq("user_id", targetNutriId)
+                        .maybeSingle();
+                      // Assume patient needs to be linked to this nutritionist's tenant
+                    }
+
+                    await supabase.from("nutritionist_patients").insert({
+                      nutritionist_id: targetNutriId,
+                      patient_id: session.user.id,
+                      status: "active",
+                      journey_status: "awaiting_consent"
+                    });
+                    console.log("[Auth] Link created in nutritionist_patients");
+                  }
+                }
+
+                // 2. Affiliate Referral (Legacy/Commission)
+                if (refCode) {
+                  const { data: affiliate } = await supabase.rpc("lookup_affiliate_by_code", { _code: refCode });
+                  if (affiliate && affiliate.length > 0) {
+                    const aff = affiliate[0];
+                    if (aff.affiliate_id !== session.user.id) {
+                      const { data: existing } = await supabase
+                        .from("affiliate_referrals")
+                        .select("id")
+                        .eq("referred_email", session.user.email!.toLowerCase())
+                        .limit(1);
+                      if (!existing || existing.length === 0) {
+                        await supabase.from("affiliate_referrals").insert({
+                          affiliate_id: aff.affiliate_id,
+                          referred_email: session.user.email!.toLowerCase(),
+                          referral_code_used: refCode,
+                          referred_user_id: session.user.id,
+                          referred_type: "patient",
+                          status: "registered",
+                        });
+                      }
+                    }
+                  }
+                }
+
+                // Cleanup
+                localStorage.removeItem("fitjourney_ref");
+                localStorage.removeItem("fitjourney_ref_at");
+                localStorage.removeItem("fitjourney_invite_code");
+                localStorage.removeItem("fitjourney_nutri_id");
               } catch (e) {
-                console.error("Error creating affiliate referral:", e);
+                console.error("[Auth] Error in linkage flow:", e);
               }
             })();
           }
