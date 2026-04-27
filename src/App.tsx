@@ -182,6 +182,8 @@ const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard"));
 const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard"));
 const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin"));
 const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit"));
+const StatusPage = lazy(() => import("./pages/StatusPage"));
+const QAChecklistPage = lazy(() => import("./pages/QAChecklistPage"));
 const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit"));
 const TemplateMassReformulation = lazy(() => import("./pages/admin/TemplateMassReformulation"));
 const AdminExperienceModeAudit = lazy(() => import("./pages/admin/AdminExperienceModeAudit"));
