@@ -218,16 +218,19 @@ export default function InvitePatient() {
   return (
     <SubscriptionGuard featureName="Convite de Pacientes">
       <div className="max-w-lg mx-auto space-y-4">
-        <div className="flex items-center gap-3">
-          <Link to="/patients">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl font-display font-bold">Convidar Paciente</h1>
-            <p className="text-xs text-muted-foreground">Cadastre e envie acesso ao seu paciente</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link to="/patients">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-xl font-display font-bold">Convidar Paciente</h1>
+              <p className="text-xs text-muted-foreground">Cadastre e envie acesso ao seu paciente</p>
+            </div>
           </div>
+          <WhatsAppTemplateEditor />
         </div>
 
         <Card className="border-primary/20 bg-primary/5">
