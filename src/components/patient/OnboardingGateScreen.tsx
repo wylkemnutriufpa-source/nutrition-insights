@@ -34,19 +34,35 @@ const STATUS_CONFIG: Record<string, { icon: React.ElementType; title: string; de
 
 export default function OnboardingGateScreen({ status }: Props) {
   const navigate = useNavigate();
+  const [showRetry, setShowRetry] = useState(false);
   const config = STATUS_CONFIG[status || "lead_created"] || STATUS_CONFIG.lead_created;
   const Icon = config.icon;
 
   // Auto-redirect lead_created to onboarding
   useEffect(() => {
+    console.log(`[OnboardingGateScreen] Current status: ${status}`);
+    
+    // Mostre o botão de tentar novamente após 8 segundos se não houver redirecionamento
+    const retryTimer = setTimeout(() => setShowRetry(true), 8000);
+
     if (status === "lead_created") {
       const timer = setTimeout(() => {
         console.log("[OnboardingGate:Redirect] Directing lead_created to /onboarding");
         navigate("/onboarding", { replace: true });
       }, 2000);
-      return () => clearTimeout(timer);
+      return () => {
+        clearTimeout(timer);
+        clearTimeout(retryTimer);
+      };
     }
+
+    return () => clearTimeout(retryTimer);
   }, [status, navigate]);
+
+  const handleRetry = () => {
+    console.log("[OnboardingGate:Retry] Forcing refresh...");
+    window.location.reload();
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
