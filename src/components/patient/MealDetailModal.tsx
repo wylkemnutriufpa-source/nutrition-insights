@@ -191,6 +191,7 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
 }
 
 export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
+  const { showMacros, showTechnicalDetails } = useExperienceUI();
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageSearch, setImageSearch] = useState("");
