@@ -133,6 +133,7 @@ const Invitation = lazy(() => import("./pages/Invitation"));
 const InvitationStatus = lazy(() => import("./pages/InvitationStatus"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const QuickLink = lazy(() => import("./pages/QuickLink"));
 const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
 const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
 const AccountDeletion = lazy(() => import("./pages/AccountDeletion"));
