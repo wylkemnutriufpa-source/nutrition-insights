@@ -59,7 +59,7 @@ export const getQuickLinkUrl = (nutriId: string, forceProduction = true) => {
 /**
  * Gera a URL de onboarding genérica para o paciente.
  */
-export const getOnboardingUrl = (forceProduction = false) => {
+export const getOnboardingUrl = (forceProduction = true) => {
   const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
   const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
   const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
