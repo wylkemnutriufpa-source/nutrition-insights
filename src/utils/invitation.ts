@@ -62,7 +62,12 @@ export const getInvitationUrl = (code: string, nutriId?: string) => {
 
 
 /**
- * Gera a mensagem padrão de WhatsApp para convites.
+ * Tipos de convites suportados
+ */
+export type WhatsAppTemplateType = 'patient_invite' | 'patient_onboarding' | 'quick_link';
+
+/**
+ * Gera a mensagem padrão de WhatsApp para convites com fallbacks seguros.
  */
 export const getWhatsAppInvitationMessage = (params: {
   patientName: string;
@@ -70,11 +75,43 @@ export const getWhatsAppInvitationMessage = (params: {
   clinicName?: string;
   invitationCode: string;
   professionalId?: string;
+  templateType?: WhatsAppTemplateType;
+  customTemplate?: string;
 }) => {
-  const { patientName, professionalName, clinicName, invitationCode, professionalId } = params;
-  const greeting = patientName ? `Olá ${patientName.split(" ")[0]}!` : "Olá!";
-  const clinicPart = clinicName ? ` da clínica *${clinicName}*` : "";
+  const { 
+    patientName, 
+    professionalName, 
+    clinicName, 
+    invitationCode, 
+    professionalId, 
+    templateType = 'patient_onboarding',
+    customTemplate 
+  } = params;
+
+  // Fallbacks para dados ausentes para evitar campos vazios na mensagem
+  const safePatientName = patientName?.trim() ? patientName.split(" ")[0] : "Paciente";
+  const safeProfName = professionalName?.trim() || "Seu Nutricionista";
+  const safeClinicPart = clinicName?.trim() ? ` da clínica *${clinicName}*` : "";
   const url = getInvitationUrl(invitationCode, professionalId);
 
-  return `*${greeting}* Tudo bem?\n\nSou o(a) nutricionista *${professionalName}*${clinicPart} e estou muito feliz em te acompanhar na sua jornada! 🚀\n\nSeu acesso exclusivo à plataforma *FitJourney* já está pronto. Lá você terá seu plano alimentar, orientações e toda a sua evolução na palma da mão. ✨\n\n*Clique no link abaixo para começar:* \n👉 ${url}\n\nVamos juntos buscar sua melhor versão! 💪🍎`;
+  // Se houver um template customizado (do banco de dados), processamos as variáveis
+  if (customTemplate) {
+    return customTemplate
+      .replace(/{{patientName}}/g, safePatientName)
+      .replace(/{{professionalName}}/g, safeProfName)
+      .replace(/{{clinicName}}/g, clinicName?.trim() || "")
+      .replace(/{{url}}/g, url);
+  }
+
+  // Templates padrão com fallback
+  if (templateType === 'patient_invite') {
+    return `*Olá ${safePatientName}!* Tudo bem?\n\nSou o(a) nutricionista *${safeProfName}*${safeClinicPart}. Convido você a começar seu acompanhamento nutricional na plataforma *FitJourney*! 🚀\n\nClique no link abaixo para se cadastrar:\n\n👉 ${url}\n\nVamos juntos buscar sua melhor versão! 💪`;
+  }
+
+  if (templateType === 'quick_link') {
+    return `*Olá!* Sou o(a) nutricionista *${safeProfName}*${safeClinicPart} e convido você a começar seu acompanhamento através deste link rápido: ${url}\n\nVamos juntos! 💪🍎`;
+  }
+
+  // Padrão: patient_onboarding
+  return `*Olá ${safePatientName}!* Tudo bem?\n\nSou o(a) nutricionista *${safeProfName}*${safeClinicPart} e estou muito feliz em te acompanhar na sua jornada! 🚀\n\nSeu acesso exclusivo à plataforma *FitJourney* já está pronto. Lá você terá seu plano alimentar, orientações e toda a sua evolução na palma da mão. ✨\n\n*Clique no link abaixo para começar:* \n👉 ${url}\n\nVamos juntos buscar sua melhor versão! 💪🍎`;
 };
