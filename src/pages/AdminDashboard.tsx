@@ -1143,6 +1143,35 @@ export default function AdminDashboard() {
                     <Button variant="link" className="p-0 h-auto mt-2 text-primary">Acessar Painel →</Button>
                   </CardContent>
                 </Card>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/invitation-audit")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      Auditoria de Convites
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Monitore em tempo real o status de convites, erros de vínculo e falhas de redirecionamento.
+                    </p>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-primary">Acessar Auditoria →</Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/qa-checklist")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <ClipboardCheck className="w-5 h-5 text-primary" />
+                      Checklist QA (Convites)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Valide manualmente o fluxo de convite → cadastro para garantir que não existam regressões.
+                    </p>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-primary">Abrir Checklist →</Button>
+                  </CardContent>
+                </Card>
               </div>
 
               <Card className="glass shadow-card">
