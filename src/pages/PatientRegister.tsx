@@ -1,43 +1,15 @@
-import { useState, useEffect, useCallback } from "react";
-import { useSearchParams, Link, useNavigate } from "react-router-dom";
-import { motion } from "framer-motion";
-import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
-import { toast } from "sonner";
-import {
-  Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
-  Download, Copy, FileJson, AlertTriangle
-} from "lucide-react";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
-import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
-
-interface ProfessionalResult {
-  user_id: string;
-  full_name: string;
-  avatar_url: string | null;
-  clinic_name: string | null;
-  phone: string | null;
-}
-
-export default function PatientRegister() {
-  const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const refCode = searchParams.get("ref") || "";
-  const preselectedNutri = searchParams.get("nutri") || "";
-  const signature = searchParams.get("sig") || "";
-  const invitationCode = searchParams.get("code") || "";
+import { useState, useEffect, useCallback, useMemo } from "react";
+...
   const [sigValid, setSigValid] = useState<boolean | null>(null);
+  const correlationId = useMemo(() => crypto.randomUUID(), []);
   const [debugLogs, setDebugLogs] = useState<string[]>([]);
 
   const addLog = useCallback((msg: string) => {
     const timestamp = new Date().toISOString();
-    const newLog = `[${timestamp}] ${msg}`;
+    const newLog = `[${timestamp}] [CID:${correlationId}] ${msg}`;
     console.log(newLog);
     setDebugLogs(prev => [...prev, newLog]);
-  }, []);
+  }, [correlationId]);
 
   const copyLogs = () => {
     const logText = debugLogs.join("\n");
