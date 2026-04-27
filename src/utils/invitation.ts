@@ -1,12 +1,9 @@
-import { BASE_URL, OFFICIAL_DOMAIN } from "@/lib/config";
+import { BASE_URL, OFFICIAL_DOMAIN, PRODUCTION_URL } from "@/lib/config";
 
 /**
  * Guard de integridade: garante que NENHUM link de convite emitido pelo app
  * use as rotas legadas /convite/ ou /~oauth/convite/ — elas só existem como
  * rotas de redirecionamento. O canal oficial é /cadastro?code=...
- *
- * Em DEV/Preview, joga um erro para falhar testes. Em produção, sanitiza e
- * loga (não derruba o usuário em runtime).
  */
 const enforceCanonicalInvitePath = (url: string, code: string): string => {
   const lower = url.toLowerCase();
@@ -15,49 +12,59 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
 
   const message = `[invitation:guard] URL não-canônica detectada (${url}). Forçando /cadastro?code=...`;
   if (import.meta.env.DEV) {
-    // Falha alto durante desenvolvimento/testes
     throw new Error(message);
   }
   console.error(message);
-  const origin =
-    typeof window !== "undefined" && window.location?.origin
-      ? window.location.origin
-      : BASE_URL;
+  
+  const isPreview = typeof window !== "undefined" && 
+    (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
+  
+  const origin = isPreview ? window.location.origin : PRODUCTION_URL;
   return `${origin}/cadastro?code=${encodeURIComponent(code)}`;
 };
 
 /**
  * Gera a URL oficial do convite.
  * @param code O código do convite.
- * @param nutriId O ID do nutricionista (opcional, mas recomendado para robustez).
+ * @param nutriId O ID do nutricionista.
+ * @param forceProduction Se true, sempre usa o domínio de produção (bom para compartilhamento real).
  * @returns A URL completa.
  */
-export const getInvitationUrl = (code: string, nutriId?: string) => {
-  const currentHost = window.location.hostname;
-
-  // Se estivermos em produção ou em um domínio oficial, usamos o hostname atual.
-  const isProduction = currentHost === OFFICIAL_DOMAIN || currentHost === "fitjourney.com.br";
+export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = false) => {
+  const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
   const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
 
-  // Log para depuração solicitado pelo usuário
-  console.log("[getInvitationUrl] Config:", {
-    currentHost,
-    isProduction,
-    isPreview,
-    BASE_URL,
-    OFFICIAL_DOMAIN,
-    nutriId
-  });
-
+  // Se o usuário pedir explicitamente produção ou se não estivermos em preview, usamos PRODUCTION_URL.
+  const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
+  
   const params = new URLSearchParams();
   if (code) params.set("code", code);
   if (nutriId) params.set("nutri", nutriId);
   
   const query = params.toString();
-  const path = `/cadastro${query ? `?${query}` : ""}`;
+  return `${origin}/cadastro${query ? `?${query}` : ""}`;
+};
 
-  const origin = isPreview ? window.location.origin : BASE_URL;
-  return `${origin}${path}`;
+/**
+ * Gera a URL de vínculo rápido.
+ */
+export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
+  const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
+  const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
+  const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
+  
+  return `${origin}/vincular/${nutriId}`;
+};
+
+/**
+ * Gera a URL de onboarding genérica para o paciente.
+ */
+export const getOnboardingUrl = (forceProduction = false) => {
+  const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
+  const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
+  const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
+  
+  return `${origin}/onboarding`;
 };
 
 
@@ -92,7 +99,7 @@ export const getWhatsAppInvitationMessage = (params: {
   const safePatientName = patientName?.trim() ? patientName.split(" ")[0] : "Paciente";
   const safeProfName = professionalName?.trim() || "Seu Nutricionista";
   const safeClinicPart = clinicName?.trim() ? ` da clínica *${clinicName}*` : "";
-  const url = getInvitationUrl(invitationCode, professionalId);
+  const url = getInvitationUrl(invitationCode, professionalId, true);
 
   // Se houver um template customizado (do banco de dados), processamos as variáveis
   if (customTemplate) {
