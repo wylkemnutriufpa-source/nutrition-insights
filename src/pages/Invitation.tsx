@@ -371,10 +371,15 @@ export default function Invitation() {
         <div className="h-2 bg-primary animate-pulse" />
         <CardHeader className="text-center space-y-4 pt-8 pb-4">
           <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 overflow-hidden flex items-center justify-center border-4 border-background shadow-xl relative group">
-            {professional?.avatar_url ? (
-              <img src={professional.avatar_url} alt={professional.full_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            {professional?.avatar_url && !avatarError ? (
+              <img 
+                src={professional.avatar_url} 
+                alt={professional.full_name} 
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                onError={() => setAvatarError(true)}
+              />
             ) : (
-              <UserPlus className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
+              <User className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
             )}
             <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-background rounded-full border border-primary/20 flex items-center justify-center shadow-sm">
               <CheckCircle2 className="w-5 h-5 text-primary" />
