@@ -686,7 +686,7 @@ export default function PatientRegister() {
                   addLog(`Convite aceito; preservando contexto ${cadastroPath}`);
                   setIsProfConfirmed(true);
                 }} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
-                  Aceitar Convite e Continuar <ArrowRight className="w-5 h-5 ml-2" />
+                  Cadastrar com este Profissional <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(cadastroPath)}`)} className="text-muted-foreground hover:text-foreground">
                   Já tenho uma conta
