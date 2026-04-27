@@ -359,8 +359,12 @@ export default function Invitation() {
         <CardContent className="space-y-6 pb-10">
           <div className="space-y-3">
             <div className="group flex items-center gap-4 p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
-              <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                <User className="w-7 h-7 text-primary" />
+              <div className="w-14 h-14 rounded-full bg-secondary overflow-hidden flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                {professional?.avatar_url ? (
+                  <img src={professional.avatar_url} alt={professional.full_name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-7 h-7 text-primary" />
+                )}
               </div>
               <div className="flex-1">
                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Nutricionista</p>
