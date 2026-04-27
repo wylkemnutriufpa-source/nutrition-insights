@@ -34,6 +34,7 @@ interface MealPlanItem {
   metadata?: Record<string, any> | null;
   image_url?: string | null;
   visual_library_item_id?: string | null;
+  is_primary?: boolean;
 }
 
 interface MealCompletion {
