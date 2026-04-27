@@ -311,11 +311,19 @@ export default function ClientDashboard() {
   // AUTOMATIC REDIRECT: Ensure early onboarding states land on /consent immediately
   // FIXED: Only redirect if actually on the dashboard to avoid infinite loops on /consent
   useEffect(() => {
-    if (!journeyLoading && journeyStatus && (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created")) {
-       console.log(`[Dashboard:AutoRedirect] Directing early onboarding state (${journeyStatus}) to /consent`);
-       navigate("/consent", { replace: true });
+    const correlationId = `onboarding-redirect-${Date.now()}`;
+    const targetRoute = "/consent";
+    
+    // Prevent redirect loop: check if NOT on target route and if status warrants it
+    if (!journeyLoading && !isLoading && journeyStatus && (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created")) {
+       if (window.location.pathname !== targetRoute) {
+         console.log(`[Dashboard:${correlationId}] Redirecting early onboarding state (${journeyStatus}) to ${targetRoute}`);
+         navigate(targetRoute, { replace: true });
+       } else {
+         console.log(`[Dashboard:${correlationId}] Already on ${targetRoute}, skipping redirect loop.`);
+       }
     }
-  }, [journeyStatus, journeyLoading, navigate]);
+  }, [journeyStatus, journeyLoading, isLoading, navigate]);
 
   // Telemetry extraction helper for diagnostics
   const getTelemetryLogs = () => {

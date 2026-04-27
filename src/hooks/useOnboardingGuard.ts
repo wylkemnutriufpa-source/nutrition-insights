@@ -26,19 +26,26 @@ export function isOnboardingAllowedRoute(pathname: string): boolean {
 }
 
 export function useOnboardingGuard() {
-  const { status: journeyStatus, loading } = usePatientJourneyStatus();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const { loading: authLoading } = useAuth();
   const location = useLocation();
 
   const requirement: OnboardingRequirement = useMemo(() => {
-    if (loading) return "loading";
+    // Wait for BOTH auth (roles) and journey status to load
+    if (journeyLoading || authLoading) return "loading";
     
+    // REDIRECT PROTECTION: Do not suggest completion if we are already on an allowed route
+    if (isOnboardingAllowedRoute(location.pathname)) {
+      return "none";
+    }
+
     // Se o estado for 'awaiting_consent' ou 'lead_created', o paciente PRECISA aceitar o consentimento primeiro
     if (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created") {
       return "must_complete";
     }
 
     return "none";
-  }, [journeyStatus, loading]);
+  }, [journeyStatus, journeyLoading, authLoading, location.pathname]);
 
   return { requirement };
 }
