@@ -6020,6 +6020,13 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "invitations_professional_id_fkey"
+            columns: ["professional_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+          {
             foreignKeyName: "invitations_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false

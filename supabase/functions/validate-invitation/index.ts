@@ -31,16 +31,16 @@ Deno.serve(async (req) => {
     const origin = req.headers.get("origin") || req.headers.get("referer") || "unknown";
 
     // 1. Busca o convite usando service_role (bypassing RLS)
+    // Agora com a FK correta, podemos fazer o join direto com profiles e tenants
     const { data: invitation, error: fetchError } = await adminClient
       .from("invitations")
-      .select(`*`)
-      .eq("code", normalizedCode)
+      .select(`
+        *,
+        professional:profiles!professional_id(user_id, full_name, avatar_url, phone),
+        clinic:tenants(name)
+      `)
+      .ilike("code", normalizedCode) // ilike para ser case-insensitive por segurança
       .maybeSingle();
-
-    if (fetchError) {
-      console.error(`[validate-invitation] [CID:${cid}] Database error:`, fetchError);
-      throw new Error("ERRO_BANCO_DADOS");
-    }
 
     if (!invitation) {
       // LOG FAILURE: Invalid code
@@ -58,15 +58,6 @@ Deno.serve(async (req) => {
         headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
-
-    // 2. Busca dados do profissional e clínica em paralelo
-    const [profileRes, clinicRes] = await Promise.all([
-      adminClient.from("profiles").select("full_name, avatar_url").eq("user_id", invitation.professional_id).maybeSingle(),
-      invitation.tenant_id ? adminClient.from("tenants").select("name").eq("id", invitation.tenant_id).maybeSingle() : Promise.resolve({ data: null })
-    ]);
-
-    invitation.professional = profileRes.data;
-    invitation.clinic = clinicRes.data;
 
     // 3. Valida expiração
     const now = new Date();
