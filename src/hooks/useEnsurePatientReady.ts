@@ -106,7 +106,11 @@ async function runEnsureOnce(
     const issues = (payload.issues as string[]) ?? [];
     const actions = (payload.actions as unknown[]) ?? [];
 
-    console.log(`[EnsurePatientReady:Result] Patient: ${patientId} Status: ${status} Issues:`, issues);
+    console.log(`%c[EnsurePatientReady:Result] Patient: ${patientId} Status: ${status}`, "color: #8b5cf6; font-weight: bold", {
+      issues,
+      actions,
+      payload
+    });
 
     return { status, issues, actions };
   } catch (err: any) {
@@ -245,7 +249,7 @@ export function useEnsurePatientReady(
     let cancelled = false;
     setResult({ status: "loading", issues: [], actions: [] });
 
-    console.log(`[EnsurePatientReady] Starting check for ${patientId} context: ${context}`);
+    console.log(`%c[EnsurePatientReady] Starting check | Patient: ${patientId} | Context: ${context}`, "color: #3b82f6");
     ensureWithRetry(patientId, context).then((r) => {
       if (!cancelled) {
         console.log(`[EnsurePatientReady] Result for ${patientId}: ${r.status}`, r.issues);
