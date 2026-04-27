@@ -15,7 +15,7 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
   Plus, Rocket, Users, Calendar, Tag, Trash2, UserPlus,
-  ToggleLeft, ToggleRight, Target, Sparkles
+  ToggleLeft, ToggleRight, Target, Sparkles, ShieldAlert
 } from "lucide-react";
 
 interface Program {
