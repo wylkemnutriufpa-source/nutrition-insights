@@ -335,15 +335,16 @@ export default function PatientDetail() {
       invalidate();
       
       // Prompt for WhatsApp notification
-      toast.info("Deseja notificar o paciente sobre a atualização?", {
-        action: {
-          label: "Via WhatsApp",
-          onClick: () => sendWhatsAppNotification({
-            patientId: patientId!,
-            message: `Olá ${profile?.full_name?.split(' ')[0]}! Seu cadastro foi atualizado no sistema FitJourney. Acesse para conferir!`
-          })
-        }
+      import("@/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
+        promptWhatsAppNotification({
+          patientId: patientId!,
+          patientName: profile?.full_name || "Paciente",
+          professionalName: (window as any).PROFESSIONAL_NAME || "Seu Nutricionista",
+          type: "registration_updated",
+          appUrl: `${window.location.origin}/auth`
+        });
       });
+
     } catch (e: any) {
       toast.error(e.message || "Erro ao atualizar cadastro");
     }
