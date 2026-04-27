@@ -378,6 +378,40 @@ export default function Programs() {
           </div>
         )}
       </div>
+
+      {/* Protected Action Password Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-destructive" /> Programa Protegido
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Para excluir <strong>{deleteTarget?.name}</strong>, digite a senha de administrador.
+            </p>
+            <div className="space-y-2">
+              <Label>Senha de Administrador</Label>
+              <Input 
+                type="password" 
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Digite a senha..."
+                autoFocus
+              />
+            </div>
+            <Button 
+              variant="destructive"
+              className="w-full"
+              onClick={confirmDeleteAction}
+              disabled={!deletePassword}
+            >
+              Confirmar Exclusão
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
