@@ -51,4 +51,39 @@ if (isPreviewHost() || isInIframe()) {
   }
 }
 
+/**
+ * Anti-cache rescue path: when a stale Service Worker (very common on iOS Safari)
+ * intercepts navigation and returns an old shell, we expose `/~oauth/<canonical>`
+ * shortcuts that:
+ *   1) bypass `navigateFallback` via `navigateFallbackDenylist` in vite.config.ts
+ *   2) on boot, force-unregister any existing SW and clear caches
+ *   3) rewrite the URL back to the canonical path (e.g. /convite/CODE)
+ *
+ * This guarantees that a patient who clicks an invitation link from a phone
+ * that has the old PWA cached will land on the fresh build.
+ */
+(function rescueFromStaleServiceWorker() {
+  try {
+    const path = window.location.pathname;
+    if (!path.startsWith("/~oauth/")) return;
+
+    // Tag this rescue boot so the React app can react if needed.
+    sessionStorage.setItem("fj:rescue-boot", String(Date.now()));
+
+    // Force-clear stale SW + caches synchronously-as-possible.
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then((regs) => {
+        regs.forEach((r) => r.unregister().catch(() => {}));
+      }).catch(() => {});
+    }
+    if ("caches" in window) {
+      caches.keys().then((keys) => keys.forEach((k) => caches.delete(k).catch(() => {}))).catch(() => {});
+    }
+    // The CanonicalPublicRedirect route in App.tsx will rewrite the URL back to
+    // its canonical form once React mounts, preserving the original query/hash.
+  } catch {
+    // best-effort
+  }
+})();
+
 createRoot(document.getElementById("root")!).render(<App />);
