@@ -543,6 +543,9 @@ export default function Patients() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [expiryTarget, setExpiryTarget] = useState<{ id: string, name: string, current: string | null } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
 
   // Build params for server-side query
   const queryParams: PatientsListParams = {
