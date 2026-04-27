@@ -770,23 +770,21 @@ export default function PatientRegister() {
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-2xl font-bold text-foreground">Acesso por convite</h1>
+                <h1 className="text-2xl font-bold text-foreground">{INVITATION_TEXTS.ERROR_TITLE}</h1>
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  O cadastro de paciente no FitJourney é feito através do link do
-                  seu nutricionista ou personal. Peça o link e abra-o para
-                  começar.
+                  {INVITATION_TEXTS.ERROR_DESCRIPTION}
                 </p>
               </div>
 
               <div className="rounded-lg border border-border bg-muted/30 p-3 text-left text-xs text-muted-foreground space-y-1">
-                <p className="font-semibold text-foreground">Como pegar o link?</p>
-                <p>1. Fale com seu profissional pelo WhatsApp.</p>
-                <p>2. Peça o link de cadastro do FitJourney.</p>
-                <p>3. Toque no link e o cadastro abre já vinculado.</p>
+                <p className="font-semibold text-foreground">{INVITATION_TEXTS.HOW_TO_GET_LINK.TITLE}</p>
+                <p>{INVITATION_TEXTS.HOW_TO_GET_LINK.STEP1}</p>
+                <p>{INVITATION_TEXTS.HOW_TO_GET_LINK.STEP2}</p>
+                <p>{INVITATION_TEXTS.HOW_TO_GET_LINK.STEP3}</p>
               </div>
 
               <Button asChild variant="outline" className="w-full h-12">
-                <Link to="/auth">Já tenho conta — Entrar</Link>
+                <Link to="/auth">{INVITATION_TEXTS.ALREADY_HAS_ACCOUNT} — Entrar</Link>
               </Button>
             </CardContent>
           </Card>
@@ -794,6 +792,7 @@ export default function PatientRegister() {
       </div>
     );
   }
+
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
