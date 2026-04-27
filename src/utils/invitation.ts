@@ -29,9 +29,10 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
 /**
  * Gera a URL oficial do convite.
  * @param code O código do convite.
+ * @param nutriId O ID do nutricionista (opcional, mas recomendado para robustez).
  * @returns A URL completa.
  */
-export const getInvitationUrl = (code: string) => {
+export const getInvitationUrl = (code: string, nutriId?: string) => {
   const currentHost = window.location.hostname;
 
   // Se estivermos em produção ou em um domínio oficial, usamos o hostname atual.
@@ -44,16 +45,19 @@ export const getInvitationUrl = (code: string) => {
     isProduction,
     isPreview,
     BASE_URL,
-    OFFICIAL_DOMAIN
+    OFFICIAL_DOMAIN,
+    nutriId
   });
 
-  // Link oficial e simples: usa a mesma rota de cadastro/vínculo que já funciona,
-  // mantendo o código apenas como parâmetro para preservar rastreio e vínculo.
-  const url = isPreview
-    ? `${window.location.origin}/cadastro?code=${encodeURIComponent(code)}`
-    : `${BASE_URL}/cadastro?code=${encodeURIComponent(code)}`;
+  const params = new URLSearchParams();
+  if (code) params.set("code", code);
+  if (nutriId) params.set("nutri", nutriId);
+  
+  const query = params.toString();
+  const path = `/cadastro${query ? `?${query}` : ""}`;
 
-  return enforceCanonicalInvitePath(url, code);
+  const origin = isPreview ? window.location.origin : BASE_URL;
+  return `${origin}${path}`;
 };
 
 

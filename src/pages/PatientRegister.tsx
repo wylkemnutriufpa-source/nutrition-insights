@@ -153,14 +153,19 @@ export default function PatientRegister() {
   });
   const currentCadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
 
-  // Pular tela de boas-vindas se o profissional já estiver resolvido (seja via ?nutri ou via convite)
-  // O usuário odeia a "trava" de ter que clicar em "Aceitar Convite"
+  // Mostramos o profissional resolvido de forma clara.
+  // Se for convite, pedimos confirmação visual. Se for link direto, já confirmamos.
   useEffect(() => {
     if (selectedProfessional && !isProfConfirmed) {
-      addLog(`Profissional resolvido (${selectedProfessional.full_name}). Pulando tela de boas-vindas.`);
-      setIsProfConfirmed(true);
+      if (linkSource === "nutri") {
+        addLog(`Link direto (?nutri=). Confirmando automaticamente.`);
+        setIsProfConfirmed(true);
+      } else {
+        addLog(`Convite detectado. Aguardando confirmação ou interação.`);
+        // Mantemos isProfConfirmed como false para mostrar o card de "Você foi convidado!"
+      }
     }
-  }, [selectedProfessional, isProfConfirmed, addLog]);
+  }, [selectedProfessional, isProfConfirmed, addLog, linkSource]);
 
   useEffect(() => {
     const state = {
