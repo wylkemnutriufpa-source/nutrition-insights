@@ -733,7 +733,7 @@ export default function PatientRegister() {
 
               <div className="text-center">
                 <p className="text-xs text-muted-foreground">
-                  Já tem conta? <Link to="/auth" className="text-primary hover:underline font-medium">Entrar agora</Link>
+                  Já tem conta? <Link to={`/auth?next=${encodeURIComponent(`/cadastro?nutri=${preselectedNutri}&code=${invitationCode}`)}`} className="text-primary hover:underline font-medium">Entrar agora</Link>
                 </p>
               </div>
             </form>
