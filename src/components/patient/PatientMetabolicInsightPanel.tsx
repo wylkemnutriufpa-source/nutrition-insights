@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Activity, Droplets, Apple, Moon, TrendingUp, Shield, Zap } from "lucide-react";
+import { safeNum } from "@/lib/formatMacros";
 
 interface MetabolicData {
   score: number;
@@ -40,17 +41,17 @@ export default function PatientMetabolicInsightPanel() {
 
   if (!data) return null;
 
-  const classification = getClassification(data.score);
+  const classification = getClassification(safeNum(data?.score));
   const dailySuggestion = SUGGESTIONS[new Date().getDate() % SUGGESTIONS.length];
 
   const circumference = 2 * Math.PI * 42;
   const offset = circumference - (data.score / 100) * circumference;
 
   const categories = [
-    { label: "Hidratação", value: data.hydration, icon: Droplets, color: "text-info" },
-    { label: "Nutrição", value: data.nutrition, icon: Apple, color: "text-success" },
-    { label: "Sono", value: data.sleep, icon: Moon, color: "text-accent" },
-    { label: "Consistência", value: data.consistency, icon: TrendingUp, color: "text-primary" },
+    { label: "Hidratação", value: safeNum(data?.hydration), icon: Droplets, color: "text-info" },
+    { label: "Nutrição", value: safeNum(data?.nutrition), icon: Apple, color: "text-success" },
+    { label: "Sono", value: safeNum(data?.sleep), icon: Moon, color: "text-accent" },
+    { label: "Consistência", value: safeNum(data?.consistency), icon: TrendingUp, color: "text-primary" },
   ];
 
   return (
