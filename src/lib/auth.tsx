@@ -183,108 +183,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log(`%c[Auth] User SIGNED_IN: ${session.user.email} (${session.user.id})`, "color: #10b981; font-weight: bold");
           logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
           
-          // Check for referral/linkage codes and create associations
-          const refCode = localStorage.getItem("fitjourney_ref");
-          const inviteCode = localStorage.getItem("fitjourney_invite_code");
-          const nutriId = localStorage.getItem("fitjourney_nutri_id");
-
-          if ((refCode || inviteCode || nutriId) && session.user.email) {
-            (async () => {
-              const linkageId = `link-${Date.now()}-${Math.random().toString(36).substring(7)}`;
-              try {
-                console.log(`[Auth:${linkageId}] Processing linkage for ${session.user.email} with:`, { refCode, inviteCode, nutriId });
-                
-                let targetNutriId = nutriId;
-                let targetTenantId: string | null = null;
-
-                if (inviteCode && !targetNutriId) {
-                  const { data: invite } = await (supabase.from("invitations") as any)
-                    .select("professional_id, tenant_id")
-                    .eq("code", inviteCode)
-                    .maybeSingle();
-                  if (invite) {
-                    targetNutriId = invite.professional_id;
-                    targetTenantId = invite.tenant_id;
-                    console.log(`[Auth:${linkageId}] Resolved nutritionist from invite code:`, targetNutriId);
-                  }
-                }
-
-                if (targetNutriId) {
-                  if (!targetTenantId) {
-                    const { data: tenant } = await (supabase.from("tenants") as any)
-                      .select("id")
-                      .eq("owner_id", targetNutriId)
-                      .maybeSingle();
-                    targetTenantId = tenant?.id || null;
-                  }
-
-                  if (targetTenantId) {
-                    // IDEMPOTENCY: Use maybeSingle check before insert
-                    const { data: existingLink } = await (supabase.from("nutritionist_patients") as any)
-                      .select("id, journey_status")
-                      .eq("patient_id", session.user.id)
-                      .eq("nutritionist_id", targetNutriId)
-                      .maybeSingle();
-
-                    if (!existingLink) {
-                      console.log(`[Auth:${linkageId}] Creating link in nutritionist_patients...`);
-                      const { error: insertError } = await (supabase.from("nutritionist_patients") as any).insert({
-                        nutritionist_id: targetNutriId,
-                        patient_id: session.user.id,
-                        tenant_id: targetTenantId,
-                        status: "active",
-                        journey_status: "awaiting_consent",
-                        attendance_mode: "online"
-                      });
-                      
-                      if (insertError) {
-                        console.error(`[Auth:${linkageId}] Failed to insert link:`, insertError);
-                      } else {
-                        console.log(`%c[Auth:${linkageId}] Link created successfully`, "color: #10b981");
-                      }
-                    } else {
-                      console.log(`[Auth:${linkageId}] Link already exists with status: ${existingLink.journey_status}. Skipping insert (idempotent).`);
-                    }
-                  } else {
-                    console.warn(`[Auth:${linkageId}] Could not resolve tenant for nutritionist:`, targetNutriId);
-                  }
-                }
-
-                // 2. Affiliate Referral (Legacy/Commission)
-                if (refCode) {
-                  const { data: affiliate } = await supabase.rpc("lookup_affiliate_by_code", { _code: refCode });
-                  if (affiliate && affiliate.length > 0) {
-                    const aff = affiliate[0];
-                    if (aff.affiliate_id !== session.user.id) {
-                      const { data: existing } = await supabase
-                        .from("affiliate_referrals")
-                        .select("id")
-                        .eq("referred_email", session.user.email!.toLowerCase())
-                        .limit(1);
-                      if (!existing || existing.length === 0) {
-                        await supabase.from("affiliate_referrals").insert({
-                          affiliate_id: aff.affiliate_id,
-                          referred_email: session.user.email!.toLowerCase(),
-                          referral_code_used: refCode,
-                          referred_user_id: session.user.id,
-                          referred_type: "patient",
-                          status: "registered",
-                        });
-                      }
-                    }
-                  }
-                }
-
-                // Cleanup only AFTER successful processing
-                localStorage.removeItem("fitjourney_ref");
-                localStorage.removeItem("fitjourney_ref_at");
-                localStorage.removeItem("fitjourney_invite_code");
-                localStorage.removeItem("fitjourney_nutri_id");
-              } catch (e) {
-                console.error(`[Auth:${linkageId}] Error in linkage flow:`, e);
-              }
-            })();
-          }
+          // Linkage logic moved to DB trigger handle_new_user. 
+          // We only clean up local storage here to avoid redundant processing.
+          localStorage.removeItem("fitjourney_ref");
+          localStorage.removeItem("fitjourney_ref_at");
+          localStorage.removeItem("fitjourney_invite_code");
+          localStorage.removeItem("fitjourney_nutri_id");
         }
         if (event === "SIGNED_OUT") {
           console.log("%c[Auth] User SIGNED_OUT", "color: #f59e0b; font-weight: bold");
