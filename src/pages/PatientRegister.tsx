@@ -213,14 +213,12 @@ export default function PatientRegister() {
     const validateInvite = async () => {
       addLog(`Validando código de convite: ${invitationCode}...`);
       try {
-        const { data: invite, error } = await supabase
-          .from("invitations")
-          .select("*, profiles!invitations_professional_id_fkey(full_name, avatar_url, phone)")
-          .eq("code", invitationCode)
-          .maybeSingle();
+        const { data: validation, error } = await supabase.functions.invoke("validate-invitation", {
+          body: { code: invitationCode, correlationId },
+        });
 
         if (error) {
-          addLog(`Erro Supabase ao buscar convite: ${error.message}`);
+          addLog(`Erro ao validar convite pela função segura: ${error.message}`);
           await supabase.from("invitation_logs").insert({
             event_type: "error",
             correlation_id: correlationId,
@@ -229,9 +227,8 @@ export default function PatientRegister() {
           throw error;
         }
 
-        if (!invite) {
-          addLog("Código não encontrado em convites. Tentando onboarding_tokens...");
-          // Fallback to onboarding_tokens
+        if (!validation?.success) {
+          addLog(`Convite não validado (${validation?.error_code || "INVALID_CODE"}). Tentando onboarding_tokens...`);
           const { data: onboarding, error: onboardingError } = await supabase.rpc("validate_onboarding_token" as any, { _token: invitationCode });
           
           if (!onboardingError && onboarding?.valid) {
@@ -260,56 +257,21 @@ export default function PatientRegister() {
             return;
           }
 
-          addLog("Código de convite/onboarding não encontrado.");
+          addLog("Código de convite/onboarding não encontrado ou não utilizável.");
+          const reason = validation?.error_code === "EXPIRED" ? "expired" : validation?.error_code === "REVOKED" ? "revoked" : "invalid";
           setInvitationIssue({
-            reason: "invalid",
-            message: "Este código não foi encontrado. Você pode continuar o cadastro, mas o vínculo automático não será aplicado.",
+            reason,
+            message: validation?.message || "Este código não foi encontrado. Você pode continuar o cadastro, mas o vínculo automático não será aplicado.",
           });
           setSigValid(false);
           return;
         }
 
+        const invite = validation.invitation;
         addLog(`Convite encontrado. Status: ${invite.status}. Profissional: ${invite.professional_id}`);
 
-        const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
-        if (isExpired) {
-          addLog("O convite está expirado.");
-          setInvitationIssue({
-            reason: "expired",
-            message: "Este convite expirou. Você pode continuar o cadastro, mas precisa pedir um novo link para o vínculo automático.",
-          });
-          setSigValid(false);
-          await supabase.from("invitation_logs").insert({
-            invitation_id: invite.id,
-            professional_id: invite.professional_id,
-            patient_email: invite.patient_email,
-            event_type: "expired",
-            correlation_id: correlationId,
-            details: { expires_at: invite.expires_at, code: invitationCode, correlationId }
-          });
-          return;
-        }
-
-        if (invite.status === 'revoked') {
-          addLog("O convite foi revogado pelo profissional.");
-          setInvitationIssue({
-            reason: "revoked",
-            message: "Este convite foi revogado. Você pode continuar o cadastro, mas precisa pedir um novo link para o vínculo automático.",
-          });
-          setSigValid(false);
-          await supabase.from("invitation_logs").insert({
-            invitation_id: invite.id,
-            professional_id: invite.professional_id,
-            patient_email: invite.patient_email,
-            event_type: "revoked",
-            correlation_id: correlationId,
-            details: { code: invitationCode, correlationId }
-          });
-          return;
-        }
-
         // Set professional automatically
-        const prof = invite.profiles as any;
+        const prof = invite.professional || invite.profiles;
         setSelectedProfessional({
           user_id: invite.professional_id,
           full_name: prof?.full_name || "Profissional",
