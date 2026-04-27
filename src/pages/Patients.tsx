@@ -846,9 +846,10 @@ export default function Patients() {
                       <TabsContent value="link" className="space-y-4">
                         {(() => {
                           const inviteLink = `${BASE_URL}/cadastro?nutri=${user?.id}`;
-                          const proName = profile?.full_name?.split(" ")[0] || "seu nutricionista";
-                          const waMsg = `Olá! 👋 Aqui é *${profile?.full_name || "seu nutricionista"}*.\n\nCriei seu acesso ao *FitJourney* para acompanharmos sua evolução de forma personalizada. 🚀\n\nClique no link abaixo para fazer seu cadastro em 1 minuto:\n\n${inviteLink}`;
-                          const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waMsg)}`;
+                          const proName = profile?.full_name || "seu nutricionista";
+                          const clinicName = (profile as any)?.professional_profiles?.[0]?.clinic_name;
+                          const waMsg = `*Olá!* Tudo bem?\n\nSou o(a) nutricionista *${proName}*${clinicName ? ` da clínica *${clinicName}*` : ""} e convido você a começar sua jornada no *FitJourney*! 🚀\n\nClique no link abaixo para fazer seu cadastro e ter acesso ao seu plano alimentar:\n\n👉 ${inviteLink}\n\nVamos juntos! 💪`;
+                          const waUrl = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
 
                           return (
                             <>
