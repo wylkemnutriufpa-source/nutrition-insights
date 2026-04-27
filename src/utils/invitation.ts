@@ -30,11 +30,11 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
  * @param forceProduction Se true, sempre usa o domínio de produção (bom para compartilhamento real).
  * @returns A URL completa.
  */
-export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = false) => {
+export const getInvitationUrl = (code?: string, nutriId?: string, forceProduction = true) => {
   const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
   const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
 
-  // Se o usuário pedir explicitamente produção ou se não estivermos em preview, usamos PRODUCTION_URL.
+  // Agora forceProduction é true por padrão, forçando o domínio próprio fitjourney.com.br
   const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
   
   const params = new URLSearchParams();
@@ -48,7 +48,7 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
 /**
  * Gera a URL de vínculo rápido.
  */
-export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
+export const getQuickLinkUrl = (nutriId: string, forceProduction = true) => {
   const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
   const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
   const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
@@ -59,7 +59,7 @@ export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
 /**
  * Gera a URL de onboarding genérica para o paciente.
  */
-export const getOnboardingUrl = (forceProduction = false) => {
+export const getOnboardingUrl = (forceProduction = true) => {
   const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
   const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
   const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
