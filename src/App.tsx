@@ -511,9 +511,12 @@ const App = () => (
             <FitIntelligenceAssistant />
             <IFJPatientCoach />
             <CommandPaletteProvider>
-             <Routes>
-              {/* Public landing pages */}
-              <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />
+              <Routes>
+               {/* Root entry point */}
+               <Route path="/" element={<RootRoute />} />
+
+               {/* Public landing pages */}
+               <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />
               <Route path="/landing-paciente" element={<LP section="Landing"><PatientLanding /></LP>} />
               <Route path="/landing-personal" element={<LP section="Landing"><PersonalLanding /></LP>} />
               <Route path="/landing-afiliado" element={<LP section="Landing"><AffiliateLanding /></LP>} />
