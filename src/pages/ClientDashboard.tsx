@@ -977,6 +977,8 @@ export default function ClientDashboard() {
           </motion.div>
         </div>
       </motion.div>
+        </>
+      )}
     </DashboardLayout>
   );
 }
