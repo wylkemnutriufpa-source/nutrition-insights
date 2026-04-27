@@ -278,8 +278,11 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Only allow dashboard if journey status is active or onboarding is ready
-  if (!journeyLoading && !canAccessOnboarding && journeyStatus) {
+  // Fluid flow: If journey status is lead_created (just joined via link), 
+  // allow it as "active" for dashboard purposes to initiate onboarding immediately.
+  const isNewlyJoined = journeyStatus === "lead_created";
+  
+  if (!journeyLoading && !canAccessOnboarding && journeyStatus && !isNewlyJoined) {
     return <OnboardingGateScreen status={journeyStatus} />;
   }
 
