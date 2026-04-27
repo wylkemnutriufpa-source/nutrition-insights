@@ -52,27 +52,41 @@ test.describe("Fluxo do convite preserva vínculo do profissional", () => {
     expect(codeFromUrl).toBe(TEST_CODE);
   });
 
-  test("link via redirect legado /convite/CODE entrega no /cadastro com code", async ({
+  test("link via redirect legado /convite/CODE entrega no /cadastro com code e nutri", async ({
     page,
   }) => {
+    await mockInvitationLogs(page);
+    await page.route("**/functions/v1/validate-invitation", async (route) => {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({
+          success: true,
+          invitation: {
+            id: "invite-e2e",
+            code: TEST_CODE,
+            status: "pending",
+            professional_id: TEST_NUTRI_ID,
+            professional: { full_name: "Nutri E2E" },
+          },
+        }),
+      });
+    });
+
     await page.goto(`/convite/${TEST_CODE}`);
-    await page.waitForLoadState("networkidle");
+    
+    // O sistema agora mostra a tela "Validando convite..." por 600ms antes de redirecionar
+    await expect(page.getByText(/Validando seu convite/i)).toBeVisible();
+    
+    // Deve redirecionar para /cadastro
+    await page.waitForURL(/\/cadastro\?nutri=.*code=.*$/, { timeout: 10000 });
 
     const finalPath = await page.evaluate(() => window.location.pathname);
     const finalSearch = await page.evaluate(() => window.location.search);
 
-    expect(finalPath, "deve aterrissar em /cadastro mesmo via /convite/*").toBe(
-      "/cadastro",
-    );
-    expect(
-      finalSearch,
-      "code do convite NÃO PODE ser perdido durante o redirect",
-    ).toContain(`code=${TEST_CODE}`);
-
-    const notFoundHeading = page.getByRole("heading", {
-      name: /Página não encontrada/i,
-    });
-    await expect(notFoundHeading).toHaveCount(0);
+    expect(finalPath).toBe("/cadastro");
+    expect(finalSearch).toContain(`code=${TEST_CODE}`);
+    expect(finalSearch).toContain(`nutri=${TEST_NUTRI_ID}`);
   });
 
   test("/cadastro?code=CODE mostra 'Você foi convidado!' com profissional já vinculado", async ({
