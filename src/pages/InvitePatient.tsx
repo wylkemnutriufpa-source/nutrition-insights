@@ -423,15 +423,14 @@ export default function InvitePatient() {
                     {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   </Button>
                 </div>
-                <div className="grid grid-cols-2 gap-2 pt-1">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                   <Button
                     asChild
-                    size="sm"
-                    variant="outline"
-                    className="gap-1.5"
+                    size="lg"
+                    className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-lg shadow-emerald-500/20"
                   >
                     <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
-                      <MessageCircle className="w-3.5 h-3.5" /> WhatsApp
+                      <MessageCircle className="w-4 h-4" /> Enviar via WhatsApp
                     </a>
                   </Button>
                   <Button
