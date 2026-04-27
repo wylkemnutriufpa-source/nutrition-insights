@@ -35,6 +35,13 @@ export default function PatientOverview() {
   const [data, setData] = useState<OverviewData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const handleSupabaseError = (error: any, context: string) => {
+    console.error(`[Overview Error] ${context}:`, error);
+    if (error.code === 'PGRST116' || error.message?.includes('Permission denied')) {
+      // toast.error(`Acesso negado: ${context}`); // Optional, maybe too noisy
+    }
+  };
+
   useEffect(() => {
     if (!user) return;
 
@@ -42,13 +49,27 @@ export default function PatientOverview() {
       const today = format(new Date(), "yyyy-MM-dd");
       const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString();
 
-      const checklistRes: any = await supabase.from("checklist_tasks" as any).select("id, completed").eq("patient_id", user.id).eq("date", today);
-      const aptRes: any = await supabase.from("patient_appointments" as any).select("title, appointment_date").eq("patient_id", user.id).gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1);
-      const mealRes: any = await supabase.from("meal_plans" as any).select("id").eq("patient_id", user.id).eq("is_active", true).limit(1);
-      const checkinRes: any = await supabase.from("patient_checkins" as any).select("id").eq("patient_id", user.id).gte("created_at", weekAgo);
-      const notifRes: any = await supabase.from("notifications" as any).select("id").eq("user_id", user.id).eq("is_read", false);
-      const achieveRes: any = await supabase.from("user_achievements" as any).select("id").eq("user_id", user.id);
-      const npRes: any = await supabase.from("nutritionist_patients" as any).select("created_at").eq("patient_id", user.id).eq("status", "active").limit(1);
+      const fetchSafe = async (query: any, context: string) => {
+        try {
+          const { data, error } = await query;
+          if (error) throw error;
+          return { data };
+        } catch (e) {
+          handleSupabaseError(e, context);
+          return { data: null };
+        }
+      };
+
+      const [checklistRes, aptRes, mealRes, checkinRes, notifRes, achieveRes, npRes] = await Promise.all([
+        fetchSafe(supabase.from("checklist_tasks" as any).select("id, completed").eq("patient_id", user.id).eq("date", today), "checklist"),
+        fetchSafe(supabase.from("patient_appointments" as any).select("title, appointment_date").eq("patient_id", user.id).gte("appointment_date", new Date().toISOString()).order("appointment_date", { ascending: true }).limit(1), "consultas"),
+        fetchSafe(supabase.from("meal_plans" as any).select("id").eq("patient_id", user.id).eq("is_active", true).limit(1), "plano alimentar"),
+        fetchSafe(supabase.from("patient_checkins" as any).select("id").eq("patient_id", user.id).gte("created_at", weekAgo), "check-ins"),
+        fetchSafe(supabase.from("notifications" as any).select("id").eq("user_id", user.id).eq("is_read", false), "notificações"),
+        fetchSafe(supabase.from("user_achievements" as any).select("id").eq("user_id", user.id), "conquistas"),
+        fetchSafe(supabase.from("nutritionist_patients" as any).select("created_at").eq("patient_id", user.id).eq("status", "active").limit(1), "vínculo profissional")
+      ]);
+
       const checklist = checklistRes.data || [];
       const apt = aptRes.data?.[0];
       const startDate = npRes.data?.[0]?.created_at;
