@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal, FileQuestion, Clock, UserCheck, Lock, CheckCircle2, Activity } from "lucide-react";
+import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal, FileQuestion, Clock, UserCheck, Lock, CheckCircle2, Activity, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Helmet } from "react-helmet-async";
@@ -22,12 +22,14 @@ export default function Invitation() {
   const [isValidating, setIsValidating] = useState(false);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const correlationId = useMemo(() => crypto.randomUUID(), []);
 
   const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
 
   const fetchInvitation = async (showLoading = true) => {
     if (!code) {
-      console.warn("[Invitation] No code provided in URL params");
+      console.warn(`[Invitation] [CID:${correlationId}] No code provided in URL params`);
       return;
     }
     
@@ -36,23 +38,22 @@ export default function Invitation() {
     setErrorCode(null);
     setInvitation(null);
     
-    console.log("[Invitation] Validating code via edge function:", code);
+    console.log(`[Invitation] [CID:${correlationId}] Validating code:`, code);
     
     try {
       const { data, error: invokeError } = await supabase.functions.invoke("validate-invitation", {
-        body: { code }
+        body: { code, correlationId }
       });
 
       if (invokeError) {
-        console.error("[Invitation] Edge function error:", invokeError);
+        console.error(`[Invitation] [CID:${correlationId}] Edge function error:`, invokeError);
         setError("Ocorreu um erro técnico ao validar seu convite. Por favor, tente novamente.");
         return;
       }
 
       if (!data.success) {
-        console.warn("[Invitation] Validation failed:", data.error_code, data.message);
+        console.warn(`[Invitation] [CID:${correlationId}] Validation failed:`, data.error_code, data.message);
         
-        // Se o convite expirou, ainda podemos ter dados do profissional para mostrar
         if (data.invitation) {
           setInvitation(data.invitation);
         }
@@ -63,10 +64,10 @@ export default function Invitation() {
       }
 
       setInvitation(data.invitation);
-      console.log("[Invitation] Data loaded successfully:", data.invitation.patient_name);
+      console.log(`[Invitation] [CID:${correlationId}] Data loaded successfully for:`, data.invitation.patient_name);
 
     } catch (err: any) {
-      console.error("[Invitation] Fatal error fetching invitation:", err);
+      console.error(`[Invitation] [CID:${correlationId}] Fatal error fetching invitation:`, err);
       setError("Ocorreu um erro inesperado. Por favor, tente recarregar a página.");
     } finally {
       setLoading(false);
@@ -95,7 +96,7 @@ export default function Invitation() {
   const handleAccept = () => {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
-    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}`);
+    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`);
   };
 
   const handleRegenerate = async () => {
@@ -427,4 +428,3 @@ export default function Invitation() {
     </div>
   );
 }
-
