@@ -403,7 +403,15 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                               className="h-7 w-7 p-0"
                               onClick={() => {
                                 const patientFirstName = p.profile?.full_name?.split(" ")[0] || "Paciente";
-                                const waMsg = `*Olá ${patientFirstName}!* Tudo bem?\n\nSou o(a) nutricionista *${profName}* e estou muito feliz em te acompanhar! 🚀\n\nSeu acesso à plataforma *FitJourney* já está pronto. Clique no link abaixo para começar:\n\n👉 ${onboardingLink}\n\nVamos juntos! 💪`;
+                                const waMsg = getWhatsAppInvitationMessage({
+                                  patientName: patientFirstName,
+                                  professionalName: profName,
+                                  clinicName: clinicName,
+                                  invitationCode: user?.id || "",
+                                  templateType: 'patient_onboarding',
+                                  customTemplate: templates['patient_onboarding']
+                                });
+                                logInvitation({ patientName: p.profile?.full_name || p.email || "Paciente", invitationType: 'patient_onboarding' });
                                 window.open(`https://wa.me/?text=${encodeURIComponent(waMsg)}`, "_blank");
                               }}
                             >
