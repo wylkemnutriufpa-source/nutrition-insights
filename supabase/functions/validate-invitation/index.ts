@@ -28,19 +28,15 @@ Deno.serve(async (req) => {
     const userAgent = req.headers.get("user-agent") || "unknown";
     const origin = req.headers.get("origin") || req.headers.get("referer") || "unknown";
 
-    // 1. Busca o convite e dados relacionados usando service_role (bypassing RLS)
+    // 1. Busca o convite usando service_role (bypassing RLS)
     const { data: invitation, error: fetchError } = await adminClient
       .from("invitations")
-      .select(`
-        *,
-        professional:profiles!professional_id(full_name, avatar_url),
-        clinic:tenants(name)
-      `)
+      .select(`*`)
       .eq("code", normalizedCode)
       .maybeSingle();
 
     if (fetchError) {
-      console.error("[validate-invitation] Database error:", fetchError);
+      console.error("[validate-invitation] Database error fetching invitation:", fetchError);
       throw new Error("ERRO_BANCO_DADOS");
     }
 
@@ -61,7 +57,17 @@ Deno.serve(async (req) => {
       });
     }
 
-    // 2. Valida expiração
+    // 2. Busca dados do profissional e clínica em paralelo
+    const [profileRes, clinicRes] = await Promise.all([
+      adminClient.from("profiles").select("full_name, avatar_url").eq("user_id", invitation.professional_id).maybeSingle(),
+      invitation.tenant_id ? adminClient.from("tenants").select("name").eq("id", invitation.tenant_id).maybeSingle() : Promise.resolve({ data: null })
+    ]);
+
+    // Adiciona os dados ao objeto invitation para manter compatibilidade com o frontend
+    invitation.professional = profileRes.data;
+    invitation.clinic = clinicRes.data;
+
+    // 3. Valida expiração
     const now = new Date();
     const expiresAt = invitation.expires_at ? new Date(invitation.expires_at) : null;
     if (expiresAt && now > expiresAt) {
