@@ -109,7 +109,7 @@ export default function InvitePatient() {
     if (!profile) return "";
     return getWhatsAppInvitationMessage({
       patientName: name,
-      professionalName: profile.display_name || profile.full_name || "Seu Nutricionista",
+      professionalName: profile?.display_name || profile?.full_name || "Seu Nutricionista",
       clinicName: clinic?.name,
       invitationCode: invitationCode || undefined, // Fallback safe
       templateType: 'patient_onboarding',
