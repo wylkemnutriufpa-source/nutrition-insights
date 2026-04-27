@@ -65,6 +65,11 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
       .then(({ data }) => {
         if (data?.full_name) setProfName(data.full_name);
       });
+    
+    supabase.from("professional_profiles").select("clinic_name").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data?.clinic_name) setClinicName(data.clinic_name);
+      });
   }, [user?.id]);
 
   const copyOnboardingLink = async () => {
