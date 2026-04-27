@@ -403,6 +403,13 @@ function LegacyMealPlanRedirect() {
   return <Navigate to={`/meal-plans/${id}${location.search}${location.hash}`} replace />;
 }
 
+function CanonicalPublicRedirect({ to }: { to: "/convite" | "/cadastro" | "/auth/confirm" | "/intake" }) {
+  const location = useLocation();
+  const params = useParams<{ code?: string; token?: string }>();
+  const suffix = params.code || params.token ? `/${params.code || params.token}` : "";
+  return <Navigate to={`${to}${suffix}${location.search}${location.hash}`} replace />;
+}
+
 function DarkModeInit() {
   useEffect(() => {
     const stored = localStorage.getItem("theme");
