@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { BASE_URL } from "@/lib/config";
+import { PRODUCTION_URL } from "@/lib/config";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -13,12 +13,9 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@/utils/whatsapp";
-import { getWhatsAppInvitationMessage, WhatsAppTemplateType } from "@/utils/invitation";
+import { getWhatsAppInvitationMessage, WhatsAppTemplateType, getInvitationUrl, getQuickLinkUrl, getOnboardingUrl } from "@/utils/invitation";
 import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
 import WhatsAppTemplateEditor from "@/components/professional/WhatsAppTemplateEditor";
-
-
-
 
 export default function InvitePatient() {
   const { user } = useAuth();
@@ -34,17 +31,12 @@ export default function InvitePatient() {
   const [copied, setCopied] = useState<string | null>(null);
   const [createdPatientId, setCreatedPatientId] = useState<string | null>(null);
   const [sendingEmail, setSendingEmail] = useState(false);
-  const [signedLink, setSignedLink] = useState<string | null>(null);
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [clinic, setClinic] = useState<any>(null);
   const [publicProfile, setPublicProfile] = useState<any>(null);
   const { templates } = useWhatsAppTemplates();
   const { logInvitation } = useWhatsAppLogs();
-
-
-  // Base URL for production
-  const siteUrl = BASE_URL;
 
   // Generate friendly invitation link
   useEffect(() => {
@@ -54,13 +46,11 @@ export default function InvitePatient() {
         const { data, error } = await supabase.functions.invoke("create-invitation", {
           body: { 
             professional_id: user.id,
-            // Assuming we might have a tenant_id in user metadata or elsewhere
             tenant_id: (user as any).user_metadata?.tenant_id 
           }
         });
         if (error) throw error;
-        if (data?.url) {
-          setSignedLink(data.url);
+        if (data?.code) {
           setInvitationCode(data.code);
         }
       } catch (err) {
@@ -101,14 +91,15 @@ export default function InvitePatient() {
     fetchData();
   }, [user?.id]);
 
+  // Links use production URL for sharing/display by default unless in preview for testing
+  const onboardingLink = useMemo(() => getOnboardingUrl(true), []);
+  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, true), [user?.id]);
+  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, true) : "", [user?.id]);
+  const publicProfileLink = useMemo(() => {
+    if (!publicProfile?.slug) return null;
+    return `${PRODUCTION_URL}/p/${publicProfile.slug}`;
+  }, [publicProfile]);
 
-  const onboardingLink = useMemo(
-    () => `${siteUrl}/onboarding`,
-    [siteUrl],
-  );
-  const publicRegisterLink = `${siteUrl}/cadastro?nutri=${user?.id}`;
-  const quickLink = useMemo(() => `${siteUrl}/vincular/${user?.id}`, [siteUrl, user?.id]);
-  const publicProfileLink = useMemo(() => publicProfile?.slug ? `${siteUrl}/p/${publicProfile.slug}` : null, [siteUrl, publicProfile]);
   const whatsappMessage = useMemo(() => {
     if (!invitationCode || !profile) return "";
     return getWhatsAppInvitationMessage({
@@ -117,9 +108,10 @@ export default function InvitePatient() {
       clinicName: clinic?.name,
       invitationCode: invitationCode,
       templateType: 'patient_onboarding',
+      professionalId: user?.id,
       customTemplate: templates['patient_onboarding']
     });
-  }, [name, invitationCode, profile, clinic, templates]);
+  }, [name, invitationCode, profile, clinic, templates, user?.id]);
 
   const whatsappUrl = useMemo(() => {
     const phoneDigits = normalizeWhatsApp(phone || "");
