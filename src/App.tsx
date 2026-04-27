@@ -760,6 +760,7 @@ const App = () => (
               <Route path="/admin/meal-coverage" element={<AdminRoute><LP section="Admin"><MealCoverageDashboard /></LP></AdminRoute>} />
               <Route path="/admin/meal-visual-library" element={<AdminRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></AdminRoute>} />
               <Route path="/admin/plan-audit" element={<AdminRoute><LP section="Auditoria de Planos"><PlanBatchAudit /></LP></AdminRoute>} />
+              <Route path="/admin/marmita-audit" element={<AdminRoute><LP section="Auditoria de Marmitas"><MarmitaAudit /></LP></AdminRoute>} />
               <Route path="/status" element={<AdminRoute><LP section="Status"><StatusPage /></LP></AdminRoute>} />
               <Route path="/admin/qa-checklist" element={<AdminRoute><LP section="QA"><QAChecklistPage /></LP></AdminRoute>} />
               <Route path="/admin/invitation-audit" element={<AdminRoute><LP section="Auditoria"><InvitationAudit /></LP></AdminRoute>} />
