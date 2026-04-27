@@ -132,13 +132,37 @@ export default function PatientRegister() {
         }
 
         if (!invite) {
-          addLog("Código de convite não encontrado (profissional inexistente ou link incorreto).");
+          addLog("Código não encontrado em convites. Tentando onboarding_tokens...");
+          // Fallback to onboarding_tokens
+          const { data: onboarding, error: onboardingError } = await supabase.rpc("validate_onboarding_token" as any, { _token: invitationCode });
+          
+          if (!onboardingError && onboarding?.valid) {
+            addLog("Token de onboarding válido encontrado.");
+            const { data: profProfile } = await supabase
+              .from("profiles")
+              .select("user_id, full_name, avatar_url, phone")
+              .eq("user_id", onboarding.nutritionist_id)
+              .maybeSingle();
+
+            setSelectedProfessional({
+              user_id: onboarding.nutritionist_id,
+              full_name: onboarding.nutritionist_name || profProfile?.full_name || "Profissional",
+              avatar_url: profProfile?.avatar_url || null,
+              clinic_name: null,
+              phone: profProfile?.phone || null,
+            });
+            
+            if (onboarding.patient_email) setEmail(onboarding.patient_email);
+            if (onboarding.patient_name) setName(onboarding.patient_name);
+            
+            setIsProfConfirmed(true);
+            setSigValid(true);
+            return;
+          }
+
+          addLog("Código de convite/onboarding não encontrado.");
           setSigValid(false);
           toast.error("Vínculo de profissional inválido. Verifique se o link está correto.");
-          await supabase.from("invitation_logs").insert({
-            event_type: "invalid_code",
-            details: { stage: "validation", reason: "not_found", code: invitationCode }
-          });
           return;
         }
 

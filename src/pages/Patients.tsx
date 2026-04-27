@@ -798,7 +798,7 @@ export default function Patients() {
                       </TabsContent>
                       <TabsContent value="link" className="space-y-4">
                         {(() => {
-                          const inviteLink = `${BASE_URL}/cadastro?nutri=${profile?.id}`;
+                          const inviteLink = `${BASE_URL}/cadastro?nutri=${user?.id}`;
                           const proName = profile?.full_name?.split(" ")[0] || "seu nutricionista";
                           const waMsg = `Olá! 👋 Aqui é *${profile?.full_name || "seu nutricionista"}*.\n\nCriei seu acesso ao *FitJourney* para acompanharmos sua evolução de forma personalizada. 🚀\n\nClique no link abaixo para fazer seu cadastro em 1 minuto:\n\n${inviteLink}`;
                           const waUrl = `https://api.whatsapp.com/send?text=${encodeURIComponent(waMsg)}`;

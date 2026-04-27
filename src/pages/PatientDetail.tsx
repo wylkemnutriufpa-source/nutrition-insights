@@ -1710,7 +1710,7 @@ export default function PatientDetail() {
                               if (error) throw error;
                               const result = data as any;
                               if (result?.success && result?.token) {
-                                const link = `${window.location.origin}/intake/${result.token}`;
+                                const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${result.token}`;
                                 await navigator.clipboard.writeText(link);
                                 toast.success("Onboarding resetado! Link copiado para a área de transferência 📋");
                               } else {
@@ -1759,7 +1759,7 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/intake/${tokenValue}`;
+                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
                         await navigator.clipboard.writeText(link);
                         toast.success("Link de onboarding copiado! 📋");
                       } catch (err: any) {
@@ -1800,7 +1800,7 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/intake/${tokenValue}`;
+                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
 
                         // Send notification to patient
                         await supabase.from("notifications").insert({
@@ -1808,7 +1808,7 @@ export default function PatientDetail() {
                           title: "📋 Link de Anamnese",
                           message: `Seu profissional enviou um link para iniciar o onboarding. Acesse: ${link}`,
                           type: "info",
-                          action_url: `/intake/${tokenValue}`,
+                          action_url: `/cadastro?nutri=${user.id}&code=${tokenValue}`,
                         } as any);
 
                         toast.success("Link enviado como notificação ao paciente! 📩");
