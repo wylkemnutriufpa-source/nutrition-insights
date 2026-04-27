@@ -378,10 +378,12 @@ export default function PatientRegister() {
             } as any)
             .eq("code", invitationCode);
             
-          const { data: inviteData } = await supabase.from("invitations").select("id").eq("code", invitationCode).maybeSingle();
+          const { data: inviteData } = await supabase.from("invitations").select("id, professional_id, patient_email").eq("code", invitationCode).maybeSingle();
           if (inviteData) {
             await supabase.from("invitation_logs").insert({
               invitation_id: inviteData.id,
+              professional_id: inviteData.professional_id,
+              patient_email: inviteData.patient_email || email,
               event_type: "completed",
               details: { 
                 patient_id: signUpData.user.id,
