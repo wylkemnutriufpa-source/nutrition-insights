@@ -47,8 +47,12 @@ export default function PatientDiagnostic() {
   const runDiagnostic = async () => {
     setLoading(true);
     setResults(null);
+    setDebugLogs([]);
+    addLog("Iniciando diagnóstico completo...");
+    
     try {
       // 1. Check Invite
+      addLog(`Buscando convites para: ${user?.email}`);
       const { data: invite, error: inviteErr } = await (supabase as any)
         .from("invitations")
         .select("*")
@@ -57,26 +61,47 @@ export default function PatientDiagnostic() {
         .limit(1)
         .maybeSingle();
 
-      const inviteResult: any = inviteErr 
-        ? { status: 'error', message: `Erro ao buscar convite: ${inviteErr.message}` }
-        : invite 
-          ? { status: 'ok', message: `Convite encontrado (${invite.status}).` }
-          : { status: 'warning', message: "Nenhum convite específico encontrado para este e-mail." };
+      let inviteResult: any;
+      if (inviteErr) {
+        addLog(`Erro ao buscar convite: ${inviteErr.message}`);
+        inviteResult = { status: 'error', message: "Falha na comunicação com o servidor.", reason: inviteErr.message };
+      } else if (invite) {
+        addLog(`Convite encontrado: ${invite.id} (Status: ${invite.status})`);
+        const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
+        if (isExpired) {
+          inviteResult = { status: 'error', message: "Link expirado.", reason: "expirado" };
+        } else if (invite.status === 'revoked') {
+          inviteResult = { status: 'error', message: "Link revogado.", reason: "revogado" };
+        } else {
+          inviteResult = { status: 'ok', message: `Convite ${invite.status}.`, reason: invite.status };
+        }
+      } else {
+        addLog("Nenhum convite específico encontrado.");
+        inviteResult = { status: 'warning', message: "Sem convite direto.", reason: "not_found" };
+      }
 
       // 2. Check Professional Link
+      addLog("Verificando vínculo profissional ativo...");
       const { data: profLink, error: profErr } = await (supabase as any)
         .from("patient_professional_links")
         .select("professional_id, link_status")
         .eq("patient_id", user?.id)
         .maybeSingle();
       
-      const profResult: any = profErr
-        ? { status: 'error', message: `Erro ao verificar vínculo: ${profErr.message}` }
-        : profLink
-          ? { status: 'ok', message: `Vínculo ativo (${profLink.link_status}).` }
-          : { status: 'error', message: "Nenhum profissional vinculado a esta conta." };
+      let profResult: any;
+      if (profErr) {
+        addLog(`Erro de permissão ou RLS no vínculo: ${profErr.message}`);
+        profResult = { status: 'error', message: "Erro de permissão de acesso.", reason: "permission_denied" };
+      } else if (profLink) {
+        addLog(`Vínculo encontrado com: ${profLink.professional_id}`);
+        profResult = { status: 'ok', message: `Vínculo ativo: ${profLink.link_status}.`, reason: profLink.link_status };
+      } else {
+        addLog("Nenhum profissional vinculado via patient_professional_links.");
+        profResult = { status: 'error', message: "Vínculo inexistente.", reason: "no_link" };
+      }
 
       // 3. Check Program Enrollment
+      addLog("Verificando matrículas em programas...");
       const { data: enrollData, error: enrollErr } = await (supabase as any)
         .from("program_enrollments")
         .select("status")
@@ -85,20 +110,21 @@ export default function PatientDiagnostic() {
         .maybeSingle();
 
       const enrollResult: any = enrollErr
-        ? { status: 'error', message: `Erro ao verificar programa: ${enrollErr.message}` }
+        ? { status: 'error', message: "Erro ao verificar programas.", reason: enrollErr.message }
         : enrollData
-          ? { status: 'ok', message: `Matrícula em programa: ${enrollData.status}.` }
-          : { status: 'warning', message: "Nenhum programa ativo detectado." };
+          ? { status: 'ok', message: `Programa: ${enrollData.status}.` }
+          : { status: 'warning', message: "Nenhum programa ativo." };
 
       // 4. Check RLS (Access to profile settings)
+      addLog("Testando acesso às configurações (RLS Test)...");
       const { error: rlsErr } = await supabase
         .from("public_profile_settings")
         .select("id")
         .limit(1);
       
       const rlsResult: any = rlsErr
-        ? { status: 'error', message: `Erro de permissão (RLS): ${rlsErr.message}` }
-        : { status: 'ok', message: "Permissões de banco de dados (RLS) OK." };
+        ? { status: 'error', message: "Falha de RLS detectada.", reason: rlsErr.message }
+        : { status: 'ok', message: "Permissões de banco OK." };
 
       setResults({
         invite: inviteResult,
@@ -106,8 +132,10 @@ export default function PatientDiagnostic() {
         subscription: enrollResult,
         rls: rlsResult
       });
+      addLog("Diagnóstico concluído.");
       toast.success("Diagnóstico concluído.");
     } catch (err: any) {
+      addLog(`Falha fatal no diagnóstico: ${err.message}`);
       toast.error("Falha ao executar diagnóstico.");
     } finally {
       setLoading(false);
