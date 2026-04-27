@@ -756,10 +756,15 @@ export default function Patients() {
                     <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
                   </Button>
                 )}
+                <Link to="/invite-patient">
+                  <Button variant="outline" className="gap-2 border-amber-500/30 text-amber-600 hover:bg-amber-500/5">
+                    <UserPlus className="w-4 h-4" /> Convidar Paciente
+                  </Button>
+                </Link>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button className="gradient-primary gap-2 shadow-glow">
-                      <Plus className="w-4 h-4" /> Adicionar Paciente
+                      <Plus className="w-4 h-4" /> Cadastro Rápido
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
