@@ -1231,6 +1231,76 @@ export default function Patients() {
         programs={programs}
         onAssigned={() => {}}
       />
+
+      {/* Expiry Date Dialog */}
+      <Dialog open={!!expiryTarget} onOpenChange={(open) => !open && setExpiryTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Definir Vencimento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">Paciente: <strong>{expiryTarget?.name}</strong></p>
+            <div className="space-y-2">
+              <Label>Data de Vencimento</Label>
+              <Input 
+                type="date" 
+                defaultValue={expiryTarget?.current || ""} 
+                onChange={(e) => {
+                  if (expiryTarget) {
+                    setExpiryTarget({ ...expiryTarget, current: e.target.value });
+                  }
+                }}
+              />
+            </div>
+            <Button 
+              className="w-full gradient-primary"
+              onClick={() => {
+                if (expiryTarget) {
+                  updateExpiry(expiryTarget.id, expiryTarget.current || null);
+                  setExpiryTarget(null);
+                  toast.success("Vencimento atualizado");
+                }
+              }}
+            >
+              Salvar Alteração
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Protected Action Password Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-destructive" /> Ação Protegida
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Para remover <strong>{deleteTarget?.name}</strong>, digite a senha de administrador.
+            </p>
+            <div className="space-y-2">
+              <Label>Senha de Administrador</Label>
+              <Input 
+                type="password" 
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Digite a senha..."
+                autoFocus
+              />
+            </div>
+            <Button 
+              variant="destructive"
+              className="w-full"
+              onClick={confirmDeleteAction}
+              disabled={!deletePassword}
+            >
+              Confirmar Remoção
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
