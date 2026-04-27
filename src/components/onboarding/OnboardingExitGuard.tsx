@@ -17,7 +17,6 @@ interface OnboardingExitGuardProps {
 export default function OnboardingExitGuard({ enabled }: OnboardingExitGuardProps) {
   const { status: journeyStatus, loading } = usePatientJourneyStatus();
 
-  // If enabled prop is not provided, we use the journey-based logic:
   // We only guard if the state is "fluid" (early onboarding), but not yet "active" (finished).
   // Once active, the user is free to move around.
   const isEarlyOnboarding = journeyStatus !== null && 
