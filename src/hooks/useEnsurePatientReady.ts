@@ -118,8 +118,27 @@ async function runEnsureOnce(
        return { status: "ok", issues: ["permission_bypass"], actions: [] };
     }
     // Specific error: User has no patient profile or journey status
-    if (err?.message?.includes('No nutritionist_patient link found')) {
+    if (err?.message?.includes('No nutritionist_patient link found') || err?.message?.includes('No nutritionist-patient link found')) {
        console.error(`[EnsurePatientReady] CRITICAL: Patient ${patientId} has no link`);
+       
+       // Log estruturado para rastreabilidade de erro de vínculo
+       try {
+         const { data: { user } } = await supabase.auth.getUser();
+         supabase.rpc("log_audit", {
+           _action: "no_link_detected",
+           _resource_type: "auth_binding",
+           _resource_id: patientId,
+           _metadata: { 
+             email: user?.email ?? "unknown",
+             flow: "onboarding_guard",
+             context: context,
+             result: "no_link"
+           }
+         }).then();
+       } catch (e) {
+         console.warn("[EnsurePatientReady] Failed to log binding error audit", e);
+       }
+       
        return { status: "no_link", issues: ["missing_link"], actions: [] };
     }
     throw err;

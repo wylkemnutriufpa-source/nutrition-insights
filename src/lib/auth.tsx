@@ -181,7 +181,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (event === "SIGNED_IN" && session?.user) {
           console.log(`%c[Auth] User SIGNED_IN: ${session.user.email} (${session.user.id})`, "color: #10b981; font-weight: bold");
-          logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
+          
+          // Log estruturado conforme regra anti-regressão
+          logAudit("login", "auth", session.user.id, { 
+            email: session.user.email ?? "",
+            flow: "login",
+            auth_provider: session.user.app_metadata?.provider || "email",
+            result: "success"
+          });
           
           // Linkage logic moved to DB trigger handle_new_user. 
           // We only clean up local storage here to avoid redundant processing.
