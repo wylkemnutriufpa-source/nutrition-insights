@@ -16,8 +16,6 @@ const enforceCanonicalInvitePath = (url: string, code: string): string => {
   }
   console.error(message);
   
-  // No ambiente de preview do Lovable, usamos a origin atual para permitir testes.
-  // Em produção, forçamos o domínio oficial.
   const isPreview = typeof window !== "undefined" && 
     (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost"));
   
@@ -44,9 +42,7 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
   if (nutriId) params.set("nutri", nutriId);
   
   const query = params.toString();
-  const path = `/cadastro${query ? `?${query}` : ""}`;
-
-  return `${origin}${path}`;
+  return `${origin}/cadastro${query ? `?${query}` : ""}`;
 };
 
 /**
@@ -58,6 +54,17 @@ export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
   const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
   
   return `${origin}/vincular/${nutriId}`;
+};
+
+/**
+ * Gera a URL de onboarding genérica para o paciente.
+ */
+export const getOnboardingUrl = (forceProduction = false) => {
+  const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
+  const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
+  const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
+  
+  return `${origin}/onboarding`;
 };
 
 
