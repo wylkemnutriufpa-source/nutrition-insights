@@ -98,8 +98,8 @@ export default function InvitePatient() {
 
   // Links use production URL for sharing/display by default unless in preview for testing
   const onboardingLink = useMemo(() => getOnboardingUrl(true), []);
-  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, false), [user?.id]);
-  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, false) : "", [user?.id]);
+  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, true), [user?.id]);
+  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, true) : "", [user?.id]);
   const publicProfileLink = useMemo(() => {
     if (!publicProfile?.slug) return null;
     return `${PRODUCTION_URL}/p/${publicProfile.slug}`;
