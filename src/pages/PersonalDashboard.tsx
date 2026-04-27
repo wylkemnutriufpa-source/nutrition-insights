@@ -194,9 +194,14 @@ export default function PersonalDashboard() {
               <Search className="w-4 h-4" />
               Vincular Aluno
             </Button>
+            <Link to="/invite-patient">
+              <Button size="sm" variant="outline" className="gap-1.5 border-amber-500/30 text-amber-600 hover:bg-amber-500/5">
+                <UserPlus className="w-4 h-4" /> Convidar
+              </Button>
+            </Link>
             <Button onClick={() => setAddOpen(true)} size="sm" className="gap-1.5 bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white">
               <UserPlus className="w-4 h-4" />
-              Cadastrar Aluno
+              Cadastrar Rápido
             </Button>
             <Link to="/personal/students">
               <Button variant="outline" size="sm"><Users className="w-4 h-4 mr-1" /> Ver Todos</Button>
