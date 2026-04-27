@@ -304,7 +304,7 @@ export default function InvitePatient() {
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 gap-1"
-                  onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido (Preview)")}
+                  onClick={() => copyToClipboard(quickLink, "quick_link", "Vínculo Rápido")}
                 >
                   {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
