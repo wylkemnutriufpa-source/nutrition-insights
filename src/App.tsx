@@ -36,6 +36,7 @@ import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 // ── Eager-loaded (critical path) ────────────────────────────
 import GatewayPage from "./pages/GatewayPage";
 import Auth from "./pages/Auth";
+import AuthConfirm from "./pages/AuthConfirm";
 import NotFound from "./pages/NotFound";
 
 // ── Lazy-loaded pages ───────────────────────────────────────
