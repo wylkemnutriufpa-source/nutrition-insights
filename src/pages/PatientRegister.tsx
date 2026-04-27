@@ -9,11 +9,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
   Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
-  Download, Copy, FileJson, AlertTriangle, User
+  Download, Copy, FileJson, AlertTriangle, User, RefreshCw
 } from "lucide-react";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
+import { INVITATION_TEXTS } from "@/config/invitation-texts";
 
 interface ProfessionalResult {
   user_id: string;
@@ -22,6 +23,7 @@ interface ProfessionalResult {
   clinic_name: string | null;
   phone: string | null;
 }
+
 
 type InvitationIssue = {
   reason: "invalid" | "expired" | "revoked";
