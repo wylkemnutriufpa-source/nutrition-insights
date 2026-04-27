@@ -100,7 +100,7 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
 
     // Procura o botão de fechar (X)
     // No shadcn/radix UI, ele costuma ter um aria-label "Close" ou ser o botão absoluto no topo
-    const closeButton = screen.getByRole('button', { name: /close/i });
+    const closeButton = screen.getByRole('button', { name: /fechar/i });
     fireEvent.click(closeButton);
     
     expect(onOpenChange).toHaveBeenCalledWith(false);
