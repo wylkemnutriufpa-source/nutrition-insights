@@ -3,13 +3,12 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink } from "lucide-react";
+import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Helmet } from "react-helmet-async";
 import { getWhatsAppInvitationMessage, getInvitationUrl } from "@/utils/invitation";
-
-
+import { BASE_URL, OFFICIAL_DOMAIN } from "@/lib/config";
 
 export default function Invitation() {
   const { code } = useParams<{ code: string }>();
@@ -21,16 +20,27 @@ export default function Invitation() {
   const [isNutritionist, setIsNutritionist] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
+  const [showDebug, setShowDebug] = useState(false);
+
+  const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
 
   const fetchInvitation = async (showLoading = true) => {
-    if (!code) return;
+    if (!code) {
+      console.warn("[Invitation] No code provided in URL params");
+      return;
+    }
+    
     if (showLoading) setLoading(true);
     setError(null);
     
+    console.log("[Invitation] Validating code:", code, "on domain:", window.location.hostname);
+    
     try {
-      const officialDomains = ["lovable.app", "fitjourney.com.br", "localhost", "lovable.dev"];
       const currentDomain = window.location.hostname;
-      const isOfficial = officialDomains.some(d => currentDomain.includes(d));
+      
+      // Permitir domínios oficiais e previews do Lovable
+      const isOfficial = [OFFICIAL_DOMAIN, "fitjourney.com.br"].some(d => currentDomain.includes(d));
+      const isAllowedPreview = currentDomain.includes("lovable") || currentDomain.includes("localhost");
 
       const { data, error: fetchError } = await supabase
         .from("invitations")
@@ -42,43 +52,54 @@ export default function Invitation() {
         .eq("code", code)
         .maybeSingle();
 
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error("[Invitation] Supabase error:", fetchError);
+        throw fetchError;
+      }
       
       if (!data) {
-        setError("Este link de convite é inválido ou não foi encontrado.");
+        console.error("[Invitation] Code not found in database:", code);
+        setError("Este link de convite é inválido ou não foi encontrado em nossa base de dados.");
         return;
       }
 
-      if (!isOfficial) {
-        setError("Este link de convite veio de uma origem não autorizada.");
+      if (!isOfficial && !isAllowedPreview) {
+        console.warn("[Invitation] Unauthorized domain access attempt:", currentDomain);
+        setError("Este link de convite veio de uma origem não autorizada para sua segurança.");
         return;
       }
 
       const now = new Date();
       const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
       if (expiresAt && now > expiresAt) {
+        console.warn("[Invitation] Invitation expired at:", expiresAt);
         setInvitation(data);
-        setError("Este convite expirou.");
+        setError("Este convite expirou. Por favor, solicite um novo link ao seu nutricionista.");
         return;
       }
 
       if (data.status === 'completed' || data.used_at) {
-        setError("Este convite já foi utilizado para concluir um cadastro.");
+        console.warn("[Invitation] Invitation already used");
+        setError("Este convite já foi utilizado para concluir um cadastro anteriormente.");
         return;
       }
 
       setInvitation(data);
+      console.log("[Invitation] Data loaded successfully:", data.patient_name);
       
       // Log view event
       await supabase.from("invitation_logs").insert({
         invitation_id: data.id,
         event_type: "viewed",
-        details: { domain: currentDomain, host: window.location.host },
+        details: { 
+          domain: currentDomain, 
+          host: window.location.host,
+          environment: isPreview ? "preview" : "production" 
+        },
         user_agent: navigator.userAgent,
         professional_id: data.professional_id,
         patient_email: data.patient_email
       });
-
 
       if (data.status === 'pending') {
         await supabase
@@ -88,8 +109,8 @@ export default function Invitation() {
       }
 
     } catch (err: any) {
-      console.error("Error fetching invitation:", err);
-      setError("Erro ao validar convite. Tente novamente mais tarde.");
+      console.error("[Invitation] Fatal error fetching invitation:", err);
+      setError("Ocorreu um erro ao validar seu convite. Por favor, tente recarregar a página.");
     } finally {
       setLoading(false);
       setIsValidating(false);
@@ -137,17 +158,17 @@ export default function Invitation() {
       if (genError) throw genError;
       
       if (data?.code) {
-        toast.success("Novo convite gerado!");
+        toast.success("Novo convite gerado com sucesso!");
         navigate(`/convite/${data.code}`, { replace: true });
-        // Instead of reload, just let the useEffect handle it
         setIsProcessingAction(false);
       }
     } catch (err: any) {
-      console.error("Error regenerating invitation:", err);
-      toast.error(err.message || "Erro ao gerar novo convite.");
+      console.error("[Invitation] Error regenerating invitation:", err);
+      toast.error("Erro ao gerar novo convite. Tente novamente.");
       setIsProcessingAction(false);
     }
   };
+
 
   const openWhatsApp = (customMessage?: string) => {
     if (!invitation) return;
