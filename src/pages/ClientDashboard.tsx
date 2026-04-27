@@ -307,12 +307,10 @@ export default function ClientDashboard() {
     return <OnboardingGateScreen status={journeyStatus} />;
   }
 
-  // AUTOMATIC REDIRECT: Ensure lead_created and awaiting_consent land on /consent immediately
-  // avoiding any dashboard render in-between.
+  // AUTOMATIC REDIRECT: Ensure early onboarding states land on /consent immediately
   useEffect(() => {
-    if (!journeyLoading && journeyStatus && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent")) {
+    if (!journeyLoading && journeyStatus && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent" || journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release")) {
       console.log(`[Dashboard:AutoRedirect] Directing early onboarding state (${journeyStatus}) to /consent`);
-      // Use window.location to force a clean break and avoid any potential React state zombie issues
       window.location.href = "/consent";
     }
   }, [journeyStatus, journeyLoading]);

@@ -504,7 +504,7 @@ export default function PatientRegister() {
         _patient_id: signUpData.user.id,
         _full_name: name,
         _email: email.trim().toLowerCase(),
-        _phone: phone || null,
+        _phone: formattedWhatsapp,
         _whatsapp: formattedWhatsapp,
         _nutritionist_id: nutriId,
         _source: "register",
