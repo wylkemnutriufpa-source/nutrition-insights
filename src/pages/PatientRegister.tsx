@@ -107,8 +107,8 @@ export default function PatientRegister() {
 
   // Robust invitation code validation
   useEffect(() => {
-    if (!invitationCode) {
-      addLog("Nenhum código de convite detectado na URL.");
+    if (!invitationCode || sigValid !== null) {
+      if (!invitationCode) addLog("Nenhum código de convite detectado na URL.");
       return;
     }
 
@@ -123,31 +123,51 @@ export default function PatientRegister() {
 
         if (error) {
           addLog(`Erro Supabase ao buscar convite: ${error.message}`);
+          await supabase.from("invitation_logs").insert({
+            invitation_code: invitationCode,
+            event_type: "error",
+            details: { error: error.message, stage: "fetch_invitation" }
+          });
           throw error;
         }
 
         if (!invite) {
-          addLog("Código de convite não encontrado no banco de dados.");
+          addLog("Código de convite não encontrado (profissional inexistente ou link incorreto).");
           setSigValid(false);
-          toast.error("Código de convite inválido ou expirado.");
+          toast.error("Vínculo de profissional inválido. Verifique se o link está correto.");
+          await supabase.from("invitation_logs").insert({
+            invitation_code: invitationCode,
+            event_type: "invalid_code",
+            details: { stage: "validation", reason: "not_found" }
+          });
           return;
         }
 
         addLog(`Convite encontrado. Status: ${invite.status}. Profissional: ${invite.professional_id}`);
 
-        // Permite 'completed' para lidar com recarregamentos, desde que não tenha expirado
         const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
         if (isExpired) {
           addLog("O convite está expirado.");
           setSigValid(false);
-          toast.error("Este convite expirou.");
+          toast.error("Este link de convite expirou. Solicite um novo ao seu profissional.");
+          await supabase.from("invitation_logs").insert({
+            invitation_id: invite.id,
+            invitation_code: invitationCode,
+            event_type: "expired",
+            details: { expires_at: invite.expires_at }
+          });
           return;
         }
 
         if (invite.status === 'revoked') {
           addLog("O convite foi revogado pelo profissional.");
           setSigValid(false);
-          toast.error("Este convite não é mais válido.");
+          toast.error("Este convite foi revogado ou cancelado.");
+          await supabase.from("invitation_logs").insert({
+            invitation_id: invite.id,
+            invitation_code: invitationCode,
+            event_type: "revoked"
+          });
           return;
         }
 
@@ -164,7 +184,16 @@ export default function PatientRegister() {
         setSigValid(true);
         addLog("Vínculo profissional validado com sucesso.");
 
-        // Pre-fill email and name if available in invite
+        await supabase.from("invitation_logs").insert({
+          invitation_id: invite.id,
+          invitation_code: invitationCode,
+          event_type: "validated",
+          details: { 
+            professional_id: invite.professional_id,
+            patient_email_match: invite.patient_email === email
+          }
+        });
+
         if (invite.patient_email && !email) setEmail(invite.patient_email);
         if (invite.patient_name && !name) setName(invite.patient_name);
 
@@ -175,7 +204,7 @@ export default function PatientRegister() {
     };
 
     validateInvite();
-  }, [invitationCode]);
+  }, [invitationCode, sigValid, email]);
 
   // Legacy signature verification (if no invitationCode)
   useEffect(() => {
