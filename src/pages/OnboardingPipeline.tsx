@@ -461,6 +461,9 @@ export default function OnboardingPipeline() {
       setAutoRetryCountdown(0);
       setAutoRetryCancelled(false);
       clearAutoRetryTimers();
+      // Invalidar caches após sucesso na sincronização para garantir fluidez no dashboard
+      await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
+      await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
       return true;
     } catch (err: any) {
       console.error("Lifecycle sync exception:", err);
