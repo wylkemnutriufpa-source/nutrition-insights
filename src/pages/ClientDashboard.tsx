@@ -332,8 +332,8 @@ export default function ClientDashboard() {
     <DashboardLayout>
       {/* Telemetry Debug View (Only in Preview/Dev) */}
       {(window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) && (
-        <div className="hidden">
-           {/* Silently keeping telemetry active in console via useEffect above */}
+        <div className="hidden" data-testid="journey-telemetry">
+           {JSON.stringify(getTelemetryLogs())}
         </div>
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
