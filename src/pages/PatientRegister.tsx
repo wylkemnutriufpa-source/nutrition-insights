@@ -759,6 +759,18 @@ export default function PatientRegister() {
           <CardContent className="pt-6 pb-6">
             <form onSubmit={handleRegister} className="space-y-4">
 
+              {registrationDisplay.shouldShowInvalidCodeOnly && (
+                <div className="flex items-start gap-3 rounded-lg border border-destructive/20 bg-destructive/10 p-3 text-sm text-destructive">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="space-y-1">
+                    <p className="font-semibold">Link sem vínculo automático</p>
+                    <p className="text-xs leading-relaxed">
+                      {invitationIssue?.message || "Não conseguimos validar este código. Peça um novo link ao seu profissional para garantir o vínculo automático."}
+                    </p>
+                  </div>
+                </div>
+              )}
+
               {/* Selected professional badge */}
               {selectedProfessional && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
@@ -902,7 +914,7 @@ export default function PatientRegister() {
                   <ul className="text-[8px] list-disc list-inside opacity-80">
                     <li>Peça um novo link de convite ao seu profissional</li>
                     <li>Verifique se você copiou o link inteiro</li>
-                    <li>Tente buscar o profissional manualmente acima</li>
+                    <li>Se continuar, o vínculo automático não será aplicado</li>
                   </ul>
                 </div>
               </div>
