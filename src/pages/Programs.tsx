@@ -228,7 +228,7 @@ export default function Programs() {
                     <Label>Tag</Label>
                     <Select value={form.tag} onValueChange={(v) => setForm({ ...form, tag: v })}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
+                      <SelectContent className="z-[150] bg-background border-border shadow-2xl" position="popper" sideOffset={5}>
                         {TAGS.map((t) => (
                           <SelectItem key={t.value} value={t.value}>{t.label}</SelectItem>
                         ))}
