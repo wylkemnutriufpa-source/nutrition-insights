@@ -1101,6 +1101,7 @@ export default function Patients() {
                   layout={layout}
                   allPrestigePlans={prestigePlansList}
                   onlineSet={onlineSet}
+                  setExpiryTarget={setExpiryTarget}
                 />
 
                 {/* Pagination Controls */}
