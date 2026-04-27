@@ -114,8 +114,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const initializeAuth = async () => {
       const correlationId = `auth-init-${Date.now()}`;
       try {
-        console.log(`[Auth:${correlationId}] Initializing session...`);
-        const { data: { session } } = await supabase.auth.getSession();
+        console.log(`%c[Auth:${correlationId}] Initializing session...`, "color: #3b82f6; font-weight: bold");
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error(`%c[Auth:${correlationId}] getSession error:`, "color: #ef4444", sessionError);
+        }
 
         if (!mounted) return;
 
@@ -176,6 +180,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
+          console.log(`%c[Auth] User SIGNED_IN: ${session.user.email} (${session.user.id})`, "color: #10b981; font-weight: bold");
           logAudit("login", "auth", session.user.id, { email: session.user.email ?? "" });
           
           // Check for referral/linkage codes and create associations
@@ -280,6 +285,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
         if (event === "SIGNED_OUT") {
+          console.log("%c[Auth] User SIGNED_OUT", "color: #f59e0b; font-weight: bold");
           logAudit("logout", "auth");
         }
 
@@ -345,7 +351,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (mounted) {
               setLoading(false);
               checkSubscription();
-              console.log(`[Auth:${authEventId}] Data fetch complete. Roles:`, userRoles);
+              console.log(`%c[Auth:${authEventId}] Final Auth State:`, "color: #10b981; font-weight: bold", {
+                user_id: session.user.id,
+                email: session.user.email,
+                profile_exists: !!profileResult.data,
+                roles: userRoles,
+                subscription_active: subscription.subscribed
+              });
             }
           } catch (e) {
             console.error(`[Auth:${authEventId}] Error fetching user data on auth change:`, e);
