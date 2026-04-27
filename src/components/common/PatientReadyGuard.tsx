@@ -26,14 +26,9 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     enabled: !authLoading && !!targetId && (isPatient || !!patientId),
   });
 
-  // Block dashboard/critical screens if not in a fluid state
-  if (isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release")) {
-    return <OnboardingGateScreen status={journeyStatus} />;
-  }
-
-  // Permite "fixed" passar para "ok" quase instantaneamente
   const [graceDone, setGraceDone] = useState(false);
   const toastedRef = useRef<string | null>(null);
+
   useEffect(() => {
     if (result.status === "fixed") {
       const key = `${targetId}:${context}`;
@@ -49,6 +44,12 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     }
     setGraceDone(false);
   }, [result.status, targetId, context]);
+
+  // Block dashboard/critical screens if not in a fluid state
+  // IMPORTANT: This check must stay AFTER all hooks to avoid React rule violations
+  if (isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release")) {
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
 
   // Profissional sem patientId explícito: não bloqueia nada
   if (!isPatient && !patientId) return <>{children}</>;
