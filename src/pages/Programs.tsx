@@ -66,6 +66,7 @@ export default function Programs() {
   const [submitting, setSubmitting] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
   const [deletePassword, setDeletePassword] = useState("");
+  const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
 
   const fetchPrograms = async () => {
     if (!user) return;
