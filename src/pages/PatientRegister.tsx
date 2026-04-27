@@ -125,9 +125,8 @@ export default function PatientRegister() {
         if (error) {
           addLog(`Erro Supabase ao buscar convite: ${error.message}`);
           await supabase.from("invitation_logs").insert({
-            invitation_code: invitationCode,
             event_type: "error",
-            details: { error: error.message, stage: "fetch_invitation" }
+            details: { error: error.message, stage: "fetch_invitation", code: invitationCode }
           });
           throw error;
         }
@@ -137,9 +136,8 @@ export default function PatientRegister() {
           setSigValid(false);
           toast.error("Vínculo de profissional inválido. Verifique se o link está correto.");
           await supabase.from("invitation_logs").insert({
-            invitation_code: invitationCode,
             event_type: "invalid_code",
-            details: { stage: "validation", reason: "not_found" }
+            details: { stage: "validation", reason: "not_found", code: invitationCode }
           });
           return;
         }
@@ -153,9 +151,10 @@ export default function PatientRegister() {
           toast.error("Este link de convite expirou. Solicite um novo ao seu profissional.");
           await supabase.from("invitation_logs").insert({
             invitation_id: invite.id,
-            invitation_code: invitationCode,
+            professional_id: invite.professional_id,
+            patient_email: invite.patient_email,
             event_type: "expired",
-            details: { expires_at: invite.expires_at }
+            details: { expires_at: invite.expires_at, code: invitationCode }
           });
           return;
         }
@@ -166,8 +165,10 @@ export default function PatientRegister() {
           toast.error("Este convite foi revogado ou cancelado.");
           await supabase.from("invitation_logs").insert({
             invitation_id: invite.id,
-            invitation_code: invitationCode,
-            event_type: "revoked"
+            professional_id: invite.professional_id,
+            patient_email: invite.patient_email,
+            event_type: "revoked",
+            details: { code: invitationCode }
           });
           return;
         }
@@ -187,11 +188,13 @@ export default function PatientRegister() {
 
         await supabase.from("invitation_logs").insert({
           invitation_id: invite.id,
-          invitation_code: invitationCode,
+          professional_id: invite.professional_id,
+          patient_email: invite.patient_email || email,
           event_type: "validated",
           details: { 
             professional_id: invite.professional_id,
-            patient_email_match: invite.patient_email === email
+            patient_email_match: invite.patient_email === email,
+            code: invitationCode
           }
         });
 
