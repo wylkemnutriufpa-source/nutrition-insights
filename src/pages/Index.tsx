@@ -1177,7 +1177,7 @@ export default function Index() {
 
   const isProRole = isNutritionist || isPersonal || isAdmin;
   // For hybrid users, respect workspace context; for pure roles, use role check
-  const isPatient = isHybridUser ? isPatientContext : !isProRole;
+  const isPatient = isHybridUser ? isPatientContext : (!isProRole && !isAdmin);
 
   const tourKey = isProRole ? "tour_professional_completed" : "tour_patient_completed";
   const onboardingKey = isProRole ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
