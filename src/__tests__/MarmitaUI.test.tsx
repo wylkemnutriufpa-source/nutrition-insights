@@ -4,6 +4,19 @@ import { MealItemCard } from "@/components/patient/MealPlanDailyView";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter } from "react-router-dom";
 
+vi.mock("@/lib/auth", () => ({
+  useAuth: () => ({ user: { id: "test-user" } }),
+}));
+
+vi.mock("@/hooks/useMealVisualItem", () => ({
+  useMealVisualItem: () => ({ item: null }),
+}));
+
+vi.mock("@/hooks/useSignedStorageUrl", () => ({
+  useSignedStorageUrl: () => ({ url: null }),
+}));
+
+
 const queryClient = new QueryClient();
 
 const mockItem = {
