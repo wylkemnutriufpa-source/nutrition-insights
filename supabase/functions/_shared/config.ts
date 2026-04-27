@@ -3,7 +3,12 @@
  */
 
 export const BASE_URL = "https://www.fitjourney.com.br";
-export const ALLOWED_DOMAINS = ["www.fitjourney.com.br", "fitjourney.com.br"];
+export const ALLOWED_DOMAINS = [
+  "www.fitjourney.com.br", 
+  "fitjourney.com.br", 
+  "fijourney.lovable.app", 
+  "fitjourney-dev.lovable.app"
+];
 
 /**
  * Verifica se uma URL redireciona para o domínio oficial.
@@ -14,7 +19,11 @@ export function isValidDomain(url: string | null): boolean {
   if (!url) return false;
   try {
     const parsed = new URL(url);
-    return ALLOWED_DOMAINS.includes(parsed.hostname);
+    const host = parsed.hostname;
+    return ALLOWED_DOMAINS.includes(host) || 
+           host.endsWith(".lovable.app") || 
+           host.endsWith(".netlify.app") || 
+           host === "localhost";
   } catch {
     return false;
   }

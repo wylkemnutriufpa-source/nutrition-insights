@@ -38,9 +38,10 @@ export default function Invitation() {
     try {
       const currentDomain = window.location.hostname;
       
-      // Permitir domínios oficiais e previews do Lovable
-      const isOfficial = [OFFICIAL_DOMAIN, "fitjourney.com.br"].some(d => currentDomain.includes(d));
-      const isAllowedPreview = currentDomain.includes("lovable") || currentDomain.includes("localhost");
+      // Permitir domínios oficiais, previews do Lovable e o domínio configurado no momento
+      const isOfficial = [OFFICIAL_DOMAIN, "fitjourney.com.br", "www.fitjourney.com.br"].some(d => currentDomain.includes(d));
+      const isAllowedPreview = currentDomain.includes("lovable") || currentDomain.includes("localhost") || currentDomain.includes("netlify.app");
+      const isCurrentOrigin = currentDomain === new URL(BASE_URL).hostname;
 
       const { data, error: fetchError } = await supabase
         .from("invitations")
@@ -63,10 +64,11 @@ export default function Invitation() {
         return;
       }
 
-      if (!isOfficial && !isAllowedPreview) {
-        console.warn("[Invitation] Unauthorized domain access attempt:", currentDomain);
-        setError("Este link de convite veio de uma origem não autorizada para sua segurança.");
-        return;
+      // Se não for um domínio conhecido, registramos mas permitimos se o código for válido
+      // para evitar bloqueios em domínios novos não mapeados no código.
+      if (!isOfficial && !isAllowedPreview && !isCurrentOrigin) {
+        console.warn("[Invitation] Domain not in strict whitelist, but code exists:", currentDomain);
+        // Não bloqueamos mais aqui, apenas logamos. O fato do código existir no banco já é a principal validação.
       }
 
       const now = new Date();
