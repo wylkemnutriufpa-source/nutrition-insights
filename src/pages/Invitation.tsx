@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal } from "lucide-react";
+import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal, FileQuestion, Clock, UserCheck, Lock, CheckCircle2, Activity } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Helmet } from "react-helmet-async";
@@ -17,6 +17,7 @@ export default function Invitation() {
   const [invitation, setInvitation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isNutritionist, setIsNutritionist] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
@@ -32,94 +33,41 @@ export default function Invitation() {
     
     if (showLoading) setLoading(true);
     setError(null);
+    setErrorCode(null);
+    setInvitation(null);
     
-    console.log("[Invitation] Validating code:", code, "on domain:", window.location.hostname);
+    console.log("[Invitation] Validating code via edge function:", code);
     
     try {
-      const currentDomain = window.location.hostname;
-      const normalizedCode = code.trim().toUpperCase();
-      
-      // Permitir domínios oficiais, previews do Lovable e o domínio configurado no momento
-      const isOfficial = [OFFICIAL_DOMAIN, "fitjourney.com.br", "www.fitjourney.com.br"].some(d => currentDomain.includes(d));
-      const isAllowedPreview = currentDomain.includes("lovable") || currentDomain.includes("localhost") || currentDomain.includes("netlify.app");
-      const isCurrentOrigin = currentDomain === new URL(BASE_URL).hostname;
-
-      const { data, error: fetchError } = await supabase
-        .from("invitations")
-        .select(`
-          *,
-          professional:profiles!professional_id(full_name, avatar_url),
-          clinic:tenants(name)
-        `)
-        .eq("code", normalizedCode)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error("[Invitation] Supabase select error:", fetchError);
-        // Se for um erro de RLS ou permissão, damos um feedback genérico
-        if (fetchError.code === '42501') {
-          setError("Este convite existe, mas você não tem permissão para visualizá-lo neste momento. Tente novamente.");
-        } else {
-          setError(`Erro ao carregar convite: ${fetchError.message}`);
-        }
-        return;
-      }
-      
-      if (!data) {
-        console.error("[Invitation] Code not found in database:", code);
-        setError("Este link de convite é inválido ou não foi encontrado em nossa base de dados.");
-        return;
-      }
-
-      // Se não for um domínio conhecido, registramos mas permitimos se o código for válido
-      // para evitar bloqueios em domínios novos não mapeados no código.
-      if (!isOfficial && !isAllowedPreview && !isCurrentOrigin) {
-        console.warn("[Invitation] Domain not in strict whitelist, but code exists:", currentDomain);
-        // Não bloqueamos mais aqui, apenas logamos. O fato do código existir no banco já é a principal validação.
-      }
-
-      const now = new Date();
-      const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-      if (expiresAt && now > expiresAt) {
-        console.warn("[Invitation] Invitation expired at:", expiresAt);
-        setInvitation(data);
-        setError("Este convite expirou. Por favor, solicite um novo link ao seu nutricionista.");
-        return;
-      }
-
-      if (data.status === 'completed' || data.used_at) {
-        console.warn("[Invitation] Invitation already used");
-        setError("Este convite já foi utilizado para concluir um cadastro anteriormente.");
-        return;
-      }
-
-      setInvitation(data);
-      console.log("[Invitation] Data loaded successfully:", data.patient_name);
-      
-      // Log view event
-      await supabase.from("invitation_logs").insert({
-        invitation_id: data.id,
-        event_type: "viewed",
-        details: { 
-          domain: currentDomain, 
-          host: window.location.host,
-          environment: isPreview ? "preview" : "production" 
-        },
-        user_agent: navigator.userAgent,
-        professional_id: data.professional_id,
-        patient_email: data.patient_email
+      const { data, error: invokeError } = await supabase.functions.invoke("validate-invitation", {
+        body: { code }
       });
 
-      if (data.status === 'pending') {
-        await supabase
-          .from("invitations")
-          .update({ status: 'viewed' } as any)
-          .eq("id", data.id);
+      if (invokeError) {
+        console.error("[Invitation] Edge function error:", invokeError);
+        setError("Ocorreu um erro técnico ao validar seu convite. Por favor, tente novamente.");
+        return;
       }
+
+      if (!data.success) {
+        console.warn("[Invitation] Validation failed:", data.error_code, data.message);
+        
+        // Se o convite expirou, ainda podemos ter dados do profissional para mostrar
+        if (data.invitation) {
+          setInvitation(data.invitation);
+        }
+        
+        setErrorCode(data.error_code);
+        setError(data.message);
+        return;
+      }
+
+      setInvitation(data.invitation);
+      console.log("[Invitation] Data loaded successfully:", data.invitation.patient_name);
 
     } catch (err: any) {
       console.error("[Invitation] Fatal error fetching invitation:", err);
-      setError("Ocorreu um erro ao validar seu convite. Por favor, tente recarregar a página.");
+      setError("Ocorreu um erro inesperado. Por favor, tente recarregar a página.");
     } finally {
       setLoading(false);
       setIsValidating(false);
@@ -255,29 +203,77 @@ export default function Invitation() {
   const canRegenerate = isNutritionist && isOwner;
 
   if (error) {
+    const getErrorDetails = () => {
+      switch (errorCode) {
+        case "INVALID_CODE":
+          return {
+            icon: <FileQuestion className="w-10 h-10 text-destructive" />,
+            title: "Convite não encontrado",
+            step: "Verifique se você copiou o link corretamente ou peça um novo link ao seu nutricionista."
+          };
+        case "EXPIRED":
+          return {
+            icon: <Clock className="w-10 h-10 text-destructive" />,
+            title: "Convite expirado",
+            step: "Este link tinha um prazo de validade que já passou. Peça ao seu nutricionista para gerar um novo convite."
+          };
+        case "ALREADY_USED":
+          return {
+            icon: <UserCheck className="w-10 h-10 text-destructive" />,
+            title: "Convite já utilizado",
+            step: "Este convite já serviu para criar uma conta. Se você já tem acesso, faça login com seu e-mail e senha."
+          };
+        case "ERRO_PERMISSAO":
+          return {
+            icon: <Lock className="w-10 h-10 text-destructive" />,
+            title: "Acesso restrito",
+            step: "Você não tem permissão para acessar este convite. Certifique-se de estar usando o link oficial enviado para você."
+          };
+        default:
+          return {
+            icon: <AlertCircle className="w-10 h-10 text-destructive" />,
+            title: "Convite Indisponível",
+            step: "Não foi possível validar seu convite no momento. Tente recarregar a página ou entre em contato com o suporte."
+          };
+      }
+    };
+
+    const details = getErrorDetails();
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full border-destructive/20 shadow-2xl bg-destructive/5 overflow-hidden">
           <div className="h-1.5 bg-destructive w-full" />
           <CardHeader className="text-center space-y-4 pt-8">
             <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-2 border-4 border-background shadow-sm">
-              <AlertCircle className="w-10 h-10 text-destructive" />
+              {details.icon}
             </div>
             <div>
-              <CardTitle className="text-2xl font-display font-bold text-foreground tracking-tight">Convite Indisponível</CardTitle>
-              <CardDescription className="text-base mt-2 leading-relaxed">
+              <CardTitle className="text-2xl font-display font-bold text-foreground tracking-tight">
+                {details.title}
+              </CardTitle>
+              <CardDescription className="text-base mt-2 leading-relaxed text-balance">
                 {error}
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pb-8">
+            <div className="p-4 rounded-xl bg-background border border-border shadow-sm mb-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
+                <ArrowRight className="w-3 h-3 text-primary" /> Passo recomendado
+              </p>
+              <p className="text-sm text-foreground leading-relaxed">
+                {details.step}
+              </p>
+            </div>
+
             {canRegenerate ? (
               <>
                 <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm mb-2">
                   <p className="font-bold flex items-center gap-2 mb-1">
-                    <ShieldCheck className="w-4 h-4" /> Admin Nutricionista
+                    <ShieldCheck className="w-4 h-4" /> Painel do Nutricionista
                   </p>
-                  Você é o dono deste convite. Você pode gerar um novo código para o paciente agora mesmo.
+                  Como você é o profissional responsável, pode gerar um novo código agora.
                 </div>
                 <Button 
                   onClick={handleRegenerate} 
@@ -285,17 +281,8 @@ export default function Invitation() {
                   className="w-full gap-2 h-14 text-lg font-bold shadow-lg shadow-primary/20"
                 >
                   {isProcessingAction ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
-                  Gerar Novo Convite
+                  Gerar Novo Código
                 </Button>
-                 {error.includes("expirou") && (
-                    <Button 
-                     variant="outline" 
-                     onClick={() => openWhatsApp(`Olá! Seu convite anterior para o FitJourney expirou. Aqui está o novo link atualizado para você começar seu acompanhamento: ${getInvitationUrl(code || "")}`)}
-                     className="w-full gap-2 h-12"
-                    >
-                     <MessageSquare className="w-5 h-5" /> Notificar Paciente via WhatsApp
-                    </Button>
-                )}
               </>
             ) : (
               <>
@@ -304,7 +291,7 @@ export default function Invitation() {
                 </Button>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="outline" onClick={() => navigate("/auth")} className="h-12 text-sm font-medium">
-                    Ir para Login
+                    Fazer Login
                   </Button>
                   <Button variant="ghost" onClick={() => navigate("/")} className="h-12 text-sm">
                     Ir para o Início
@@ -314,14 +301,14 @@ export default function Invitation() {
             )}
             
             <p className="text-[10px] text-center text-muted-foreground mt-4 italic">
-              Se você acredita que isso é um erro, entre em contato com seu nutricionista ou com o suporte do FitJourney.
+              Código de erro: <span className="font-mono">{errorCode || "UNKNOWN"}</span>
             </p>
           </CardContent>
         </Card>
         
         {isPreview && !showDebug && (
           <Button variant="ghost" size="sm" onClick={() => setShowDebug(true)} className="mt-8 text-muted-foreground/40 hover:text-muted-foreground">
-            <Terminal className="w-4 h-4 mr-2" /> Debug Preview
+            <Terminal className="w-4 h-4 mr-2" /> Abrir Ferramentas de Debug
           </Button>
         )}
         
@@ -355,8 +342,12 @@ export default function Invitation() {
       <Card className="max-w-md w-full border-primary/20 bg-primary/5 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
         <div className="h-2 bg-primary animate-pulse" />
         <CardHeader className="text-center space-y-4 pt-8 pb-4">
-          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 flex items-center justify-center border-4 border-background shadow-xl relative group">
-            <UserPlus className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
+          <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 overflow-hidden flex items-center justify-center border-4 border-background shadow-xl relative group">
+            {professional?.avatar_url ? (
+              <img src={professional.avatar_url} alt={professional.full_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            ) : (
+              <UserPlus className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
+            )}
             <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-background rounded-full border border-primary/20 flex items-center justify-center shadow-sm">
               <CheckCircle2 className="w-5 h-5 text-primary" />
             </div>
@@ -372,8 +363,12 @@ export default function Invitation() {
         <CardContent className="space-y-6 pb-10">
           <div className="space-y-3">
             <div className="group flex items-center gap-4 p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
-              <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                <User className="w-7 h-7 text-primary" />
+              <div className="w-14 h-14 rounded-full bg-secondary overflow-hidden flex items-center justify-center group-hover:bg-primary/10 transition-colors">
+                {professional?.avatar_url ? (
+                  <img src={professional.avatar_url} alt={professional.full_name} className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-7 h-7 text-primary" />
+                )}
               </div>
               <div className="flex-1">
                 <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest">Nutricionista</p>
@@ -433,41 +428,3 @@ export default function Invitation() {
   );
 }
 
-function CheckCircle2(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14" />
-      <polyline points="22 4 12 14.01 9 11.01" />
-    </svg>
-  );
-}
-
-function Activity(props: any) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M22 12h-4l-3 9L9 3l-3 9H2" />
-    </svg>
-  );
-}
