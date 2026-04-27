@@ -36,6 +36,7 @@ export default function InvitePatient() {
   const [invitationCode, setInvitationCode] = useState<string | null>(null);
   const [profile, setProfile] = useState<any>(null);
   const [clinic, setClinic] = useState<any>(null);
+  const [publicProfile, setPublicProfile] = useState<any>(null);
 
 
   // Base URL for production
