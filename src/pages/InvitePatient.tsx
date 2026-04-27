@@ -125,16 +125,23 @@ export default function InvitePatient() {
   }, [phone, whatsappMessage]);
 
   const copyToClipboard = (value: string, key: string, label: string) => {
-    // If we're in a preview environment, the current value might be using window.location.origin
-    // Let's ensure the user knows which domain is being copied if it's relevant.
     const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
+    const isProductionUrl = value.includes("fitjourney.com.br") || value.includes(PRODUCTION_URL.replace("https://", ""));
+    
+    // Confirmação do domínio antes de copiar
+    const domainType = isProductionUrl ? "PRODUÇÃO (fitjourney.com.br)" : "PREVIEW/TESTE";
+    
     navigator.clipboard.writeText(value);
     setCopied(key);
     
-    if (isPreview && !value.includes("fitjourney.com.br")) {
-      toast.info(`${label} copiado usando domínio de preview para testes.`);
+    if (isPreview && !isProductionUrl) {
+      toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
+        description: "Este link é apenas para testes no ambiente atual."
+      });
     } else {
-      toast.success(`${label} copiado!`);
+      toast.success(`Link de ${label} copiado!`, {
+        description: `Domínio: ${domainType}`
+      });
     }
     setTimeout(() => setCopied(null), 2000);
   };
