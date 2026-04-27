@@ -122,6 +122,13 @@ interface BiquiniEnrollment {
 
 export default function ClientDashboard() {
   const { user, profile, isPatient } = useAuth();
+  
+  const handleSupabaseError = (error: any, context: string) => {
+    console.error(`[Dashboard Error] ${context}:`, error);
+    if (error.code === 'PGRST116' || error.message?.includes('Permission denied')) {
+      toast.error(`Acesso negado ao carregar ${context}. Verifique seu vínculo profissional.`);
+    }
+  };
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
