@@ -21,13 +21,13 @@ interface ChecklistStep {
 }
 
 const STEPS: ChecklistStep[] = [
-  { id: "open_invite", label: "Abrir link /cadastro?code=<code> no Safari", hint: "Use o link copiado da plataforma" },
-  { id: "no_404", label: "Página NÃO mostra erro 404" },
-  { id: "params_kept", label: "Parâmetros nutri/code permanecem na URL após redirect" },
+  { id: "open_invite", label: "Abrir link /convite/:code no Safari", hint: "Deve redirecionar para /cadastro?code=... sem 404" },
+  { id: "no_404", label: "Página NÃO mostra erro 404", hint: "Valida redirecionamento coringa /*" },
+  { id: "params_kept", label: "Parâmetros nutri/code permanecem na URL", hint: "Essencial para o vínculo automático" },
+  { id: "visual_id", label: "Identificação visual do Profissional aparece", hint: "Avatar e nome no topo do cadastro" },
   { id: "register", label: "Concluir cadastro do paciente" },
-  { id: "bind_kept", label: "Vínculo com profissional foi preservado (paciente aparece na lista do nutri)" },
-  { id: "onboarding_loads", label: "Onboarding carrega normalmente após login" },
-  { id: "no_console_error", label: "Sem erros críticos no console / DevTools" },
+  { id: "bind_kept", label: "Vínculo com profissional preservado no banco", hint: "Verificar se professional_id foi gravado" },
+  { id: "no_console_error", label: "Sem erros críticos no console", hint: "Erros 401/403 esperados apenas se não logado" },
 ];
 
 interface PreviousRun {

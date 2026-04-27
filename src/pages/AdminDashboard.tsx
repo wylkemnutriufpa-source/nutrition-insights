@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useMemo } from "react";
+import { useEffect, useState, useCallback, useMemo, lazy } from "react";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
@@ -8,6 +8,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
+import QAChecklistPage from "./QAChecklistPage";
+import InvitationAudit from "./InvitationAudit";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useNavigate } from "react-router-dom";
@@ -16,7 +18,7 @@ import {
   Shield, Users, UserCheck, Zap, Star, UserPlus, Settings, Globe,
   Eye, BarChart3, DollarSign, CreditCard, Crown, Loader2,
   Search, ToggleLeft, Trash2, Ban, CheckCircle2, Plus, FileText, Download, Sparkles,
-  Palette, LayoutGrid, GraduationCap, Wand2, Dumbbell, Image as ImageIcon
+  Palette, LayoutGrid, GraduationCap, Wand2, Dumbbell, Image as ImageIcon, ClipboardCheck, ShieldCheck
 } from "lucide-react";
 import { toast } from "sonner";
 import OnlinePatientsWidget from "@/components/dashboard/OnlinePatientsWidget";
@@ -1139,6 +1141,35 @@ export default function AdminDashboard() {
                       Gere relatórios de impacto (Dry-Run) e aplique correções em templates de dieta.
                     </p>
                     <Button variant="link" className="p-0 h-auto mt-2 text-primary">Acessar Painel →</Button>
+                  </CardContent>
+                </Card>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/invitation-audit")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <ShieldCheck className="w-5 h-5 text-primary" />
+                      Auditoria de Convites
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Monitore em tempo real o status de convites, erros de vínculo e falhas de redirecionamento.
+                    </p>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-primary">Acessar Auditoria →</Button>
+                  </CardContent>
+                </Card>
+
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/qa-checklist")}>
+                  <CardHeader className="pb-2">
+                    <CardTitle className="font-display text-lg flex items-center gap-2">
+                      <ClipboardCheck className="w-5 h-5 text-primary" />
+                      Checklist QA (Convites)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-muted-foreground">
+                      Valide manualmente o fluxo de convite → cadastro para garantir que não existam regressões.
+                    </p>
+                    <Button variant="link" className="p-0 h-auto mt-2 text-primary">Abrir Checklist →</Button>
                   </CardContent>
                 </Card>
               </div>
