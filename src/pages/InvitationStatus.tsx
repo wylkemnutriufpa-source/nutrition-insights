@@ -80,21 +80,30 @@ export default function InvitationStatus() {
     );
   }
 
-  if (!invitation) {
+  if (error || !invitation) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <Card className="max-w-md w-full">
-          <CardHeader>
-            <CardTitle>Convite não encontrado</CardTitle>
-            <CardDescription>O código {code} não existe em nossa base.</CardDescription>
+        <Card className="max-w-md w-full border-destructive/20 shadow-2xl">
+          <CardHeader className="text-center space-y-2">
+            <div className="w-16 h-16 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-2">
+              <AlertCircle className="w-8 h-8 text-destructive" />
+            </div>
+            <CardTitle className="text-2xl font-display font-bold">Convite não encontrado</CardTitle>
+            <CardDescription className="text-base">
+              {error || `O código "${code}" não existe em nossa base ou o link expirou.`}
+            </CardDescription>
           </CardHeader>
-          <CardContent>
-            <Button onClick={() => navigate("/")} className="w-full">Voltar ao Início</Button>
+          <CardContent className="space-y-3">
+            <Button onClick={() => window.location.reload()} className="w-full h-12 gap-2">
+              <RefreshCw className="w-4 h-4" /> Tentar Novamente
+            </Button>
+            <Button variant="outline" onClick={() => navigate("/")} className="w-full h-12">Voltar ao Início</Button>
           </CardContent>
         </Card>
       </div>
     );
   }
+
 
   const getStatusConfig = (status: string) => {
     switch (status) {
