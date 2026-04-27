@@ -91,9 +91,10 @@ export default function InvitePatient() {
 
   const onboardingLink = useMemo(
     () => `${siteUrl}/onboarding`,
-    [],
+    [siteUrl],
   );
   const publicRegisterLink = signedLink || `${siteUrl}/cadastro?nutri=${user?.id}`;
+  const quickLink = useMemo(() => `${siteUrl}/vincular/${user?.id}`, [siteUrl, user?.id]);
   const whatsappMessage = useMemo(() => {
     if (!invitationCode || !profile) return "";
     return getWhatsAppInvitationMessage({
