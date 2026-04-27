@@ -623,6 +623,19 @@ export default function Protocols() {
     }
 
     toast.success("Protocolo ativado para o paciente!");
+    
+    // Prompt for WhatsApp notification
+    const patient = patients.find(p => p.id === assignForm.patient_id);
+    const profName = user.user_metadata?.full_name || "Seu Nutricionista";
+    
+    promptWhatsAppNotification({
+      patientId: assignForm.patient_id,
+      patientName: patient?.full_name || "Paciente",
+      professionalName: profName,
+      type: "protocol_activated",
+      appUrl: `${BASE_URL}/auth`
+    });
+
     setAssignOpen(false);
     setAssignForm({ patient_id: "", start_date: new Date().toISOString().split("T")[0], duration: "" });
     fetchPatientProtocols();
