@@ -143,8 +143,8 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
       </QueryClientProvider>
     );
 
-    // Simula clique em "Refeição Pronta"
-    const readyMealsTab = screen.getByText(/Refeição Pronta/i);
+    // Simula clique em "Refeição Pronta" usando o papel de botão para evitar ambiguidade
+    const readyMealsTab = screen.getAllByRole('button', { name: /Refeição Pronta/i })[0];
     fireEvent.click(readyMealsTab);
 
     // Seleciona um template (ex: Frango + Arroz + Salada)
