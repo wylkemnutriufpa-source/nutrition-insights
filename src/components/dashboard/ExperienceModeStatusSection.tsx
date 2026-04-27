@@ -63,6 +63,11 @@ export default function ExperienceModeStatusSection() {
   const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode } =
     useExperienceMode();
 
+  // If no change is in progress and everything is normal, hide the section
+  if (!isLoading && !failedMode && !isOffline && pendingQueueSize === 0) {
+    return null;
+  }
+
   // Saving in-flight
   if (isLoading) {
     return (
