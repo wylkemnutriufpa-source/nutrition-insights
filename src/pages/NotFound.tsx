@@ -1,9 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
-import { Home, ArrowLeft, RefreshCw, Loader2 } from "lucide-react";
+import { Home, ArrowLeft, RefreshCw, Loader2, Stethoscope } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { hardResetPwaCaches, logRoute404 } from "@/lib/route404Telemetry";
+import NotFoundDiagnosticsModal from "@/components/common/NotFoundDiagnosticsModal";
 
 function getSafeHomePath(pathname: string) {
   if (pathname.startsWith("/~oauth/convite/")) return pathname;
@@ -28,6 +29,7 @@ export default function NotFound() {
   const safeHomePath = getSafeHomePath(location.pathname);
   const isIosSafari = useMemo(detectIosSafari, []);
   const [resetting, setResetting] = useState(false);
+  const [diagOpen, setDiagOpen] = useState(false);
 
   useEffect(() => {
     console.error(`[Router] 404 Not Found: ${location.pathname}`);
@@ -71,19 +73,31 @@ export default function NotFound() {
           <p className="text-xs text-muted-foreground mb-3">
             Caso o problema persista, é provável que seu navegador esteja com uma versão antiga em cache.
           </p>
-          <Button
-            variant="ghost"
-            onClick={handleHardReset}
-            disabled={resetting}
-            className="gap-2 text-xs"
-          >
-            {resetting ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <RefreshCw className="w-3.5 h-3.5" />
-            )}
-            {resetting ? "Limpando..." : "Limpar cache e recarregar"}
-          </Button>
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+            <Button
+              variant="default"
+              size="sm"
+              onClick={() => setDiagOpen(true)}
+              className="gap-2 text-xs"
+            >
+              <Stethoscope className="w-3.5 h-3.5" />
+              Diagnosticar e tentar correção
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={handleHardReset}
+              disabled={resetting}
+              className="gap-2 text-xs"
+            >
+              {resetting ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : (
+                <RefreshCw className="w-3.5 h-3.5" />
+              )}
+              {resetting ? "Limpando..." : "Limpar cache e recarregar"}
+            </Button>
+          </div>
 
           {isIosSafari && (
             <div className="mt-4 text-left text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-3 leading-relaxed">
@@ -97,6 +111,13 @@ export default function NotFound() {
           )}
         </div>
       </motion.div>
+
+      <NotFoundDiagnosticsModal
+        open={diagOpen}
+        onOpenChange={setDiagOpen}
+        pathname={location.pathname}
+      />
     </div>
   );
 }
+
