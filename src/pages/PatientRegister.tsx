@@ -578,6 +578,18 @@ export default function PatientRegister() {
       setCurrentUserId(signUpData.user.id);
       toast.success("Conta criada! Verifique seu e-mail.");
       setDone(true);
+
+      if (nutriId) {
+        promptWhatsAppNotification({
+          patientId: signUpData.user.id,
+          patientName: name,
+          professionalName: selectedProfessional?.full_name || "Seu Nutricionista",
+          type: "registration_updated",
+          appUrl: `${window.location.origin}/auth`,
+          clinicName: selectedProfessional?.clinic_name || undefined,
+          phone: formattedWhatsapp
+        });
+      }
     } catch (err: any) {
       addLog(`Erro inesperado: ${err.message}`);
       toast.error("Erro ao criar conta. Tente novamente.");
