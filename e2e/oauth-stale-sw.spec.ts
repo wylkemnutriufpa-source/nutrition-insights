@@ -57,7 +57,7 @@ test.describe("Stale Service Worker + /~oauth/* recovery", () => {
     expect(dismissedVersion, "anti-cache boot must clear stale PWA flags").toBeNull();
   });
 
-  test("/~oauth/convite/HEALTHCHECK lands on invitation flow without 404", async ({ page }) => {
+  test("/~oauth/convite/HEALTHCHECK lands on cadastro with code without 404", async ({ page }) => {
     const response = await page.goto("/~oauth/convite/HEALTHCHECK");
     expect(response!.status()).toBeLessThan(400);
 
@@ -68,7 +68,10 @@ test.describe("Stale Service Worker + /~oauth/* recovery", () => {
 
     const finalPath = await page.evaluate(() => window.location.pathname);
     expect(finalPath).not.toMatch(/^\/~oauth\//);
-    expect(finalPath).toMatch(/convite|cadastro|auth/);
+    expect(finalPath).toBe("/cadastro");
+
+    const finalSearch = await page.evaluate(() => window.location.search);
+    expect(finalSearch).toContain("code=HEALTHCHECK");
   });
 
   test("/~oauth/intake/healthcheck-token lands on intake without 404", async ({ page }) => {
