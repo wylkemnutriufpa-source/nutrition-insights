@@ -40,8 +40,8 @@ export default function TherapeuticMomentumBar() {
           <div className="flex-1 h-1.5 rounded-full bg-background/50">
             <div
               className={`h-full rounded-full transition-all duration-700 ${
-                momentum.color === "green" ? "bg-green-500" :
-                momentum.color === "orange" ? "bg-orange-500" : "bg-red-500"
+                momentum?.color === "green" ? "bg-green-500" :
+                momentum?.color === "orange" ? "bg-orange-500" : "bg-red-500"
               }`}
               style={{ width: `${safeNum(momentum?.score)}%` }}
             />
