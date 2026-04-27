@@ -372,7 +372,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [] }: {
+function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], setExpiryTarget }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -380,6 +380,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   onUpdateExpiry: (id: string, date: string | null) => void;
   allPrestigePlans?: PrestigePlan[];
+  setExpiryTarget: (p: { id: string, name: string, current: string | null }) => void;
 }) {
   const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
