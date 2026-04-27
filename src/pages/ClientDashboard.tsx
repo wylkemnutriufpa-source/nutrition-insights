@@ -322,7 +322,7 @@ export default function ClientDashboard() {
     catch { return []; }
   };
 
-  if (loading || journeyLoading) {
+  if (loading || journeyLoading || isLoading) {
     return (
       <DashboardLayout>
         <BrainLoaderCard text="Carregando seu painel clínico…" />
