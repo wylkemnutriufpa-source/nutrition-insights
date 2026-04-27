@@ -33,6 +33,7 @@ export default function Invitation() {
     
     if (showLoading) setLoading(true);
     setError(null);
+    setErrorCode(null);
     setInvitation(null);
     
     console.log("[Invitation] Validating code via edge function:", code);
@@ -56,7 +57,7 @@ export default function Invitation() {
           setInvitation(data.invitation);
         }
         
-        // Mapeamos o código de erro para uma mensagem mais rica se necessário
+        setErrorCode(data.error_code);
         setError(data.message);
         return;
       }
