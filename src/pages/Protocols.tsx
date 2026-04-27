@@ -19,6 +19,9 @@ import {
   BarChart3, CheckCircle2, XCircle, Calendar, TrendingUp,
   Pencil, Save, X
 } from "lucide-react";
+import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
+import { BASE_URL } from "@/lib/config";
+
 
 // ── Types ──
 interface Protocol {
