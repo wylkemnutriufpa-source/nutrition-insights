@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
@@ -190,6 +191,7 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
 }
 
 export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
+  const { showMacros, showTechnicalDetails } = useExperienceUI();
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageSearch, setImageSearch] = useState("");
@@ -970,7 +972,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         )}
 
         {/* Tags row */}
-        {(goalTag || clinicalTags.length > 0 || prepTime || source === "library") && (
+        {(goalTag || (showTechnicalDetails && (clinicalTags.length > 0 || source === "library")) || prepTime) && (
           <div className="flex flex-wrap gap-1.5 px-6 pt-3">
             {goalTag && GOAL_LABELS[goalTag] && (
               <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>
@@ -978,7 +980,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 {GOAL_LABELS[goalTag].label}
               </Badge>
             )}
-            {clinicalTags.map(tag => (
+            {showTechnicalDetails && clinicalTags.map(tag => (
               <Badge key={tag} variant="outline" className="text-[10px] bg-accent/50 border-accent">
                 <Leaf className="w-2.5 h-2.5 mr-1" />
                 {CLINICAL_LABELS[tag] || tag.replace(/_/g, " ")}
@@ -989,7 +991,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 <Clock className="w-2.5 h-2.5 mr-1" /> {prepTime} min
               </Badge>
             )}
-            {source === "library" && (
+            {showTechnicalDetails && source === "library" && (
               <Badge variant="outline" className="text-[10px] bg-primary/10 border-primary/30 text-primary">
                 Banco FitJourney
               </Badge>
@@ -1000,7 +1002,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-8 space-y-6 max-h-[calc(90vh-160px)]">
           {/* Macros */}
-          {(hasMacros || editingMacros) && (
+          {showMacros && (hasMacros || editingMacros) && (
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">

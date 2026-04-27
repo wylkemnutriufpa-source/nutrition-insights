@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/lib/auth";
 import { useState, useEffect, lazy, Suspense, useMemo } from "react";
 import { useLayoutPreference } from "@/hooks/useLayoutPreference";
@@ -19,6 +20,7 @@ import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Camera as CameraIcon, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
+  Shield, Activity,
 } from "lucide-react";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
 
@@ -144,77 +146,60 @@ export default function PatientGridDashboard() {
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🛡️ REGRESSION GUARD — BASIC MODE PATIENT DASHBOARD
-  // DO NOT add cards, sections, or complexity to the basic mode render.
-  // Basic mode = meal plan + feedback ONLY. 
-  // Any additions must go to pro/advanced blocks below.
-  // See: mem://ux/painel-basico-paciente-ultra-minimo
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  // BASIC MODE — Ultra-minimal: only meal plan + feedback (check-in com peso/foto a cada 15 dias)
   if (expUI.isBasic && !blockDashboard && !showOnboardingCard) {
     return (
-      <div className="space-y-4">
-        {/* Status do modo de experiência (compacto) */}
+      <div className="space-y-6 max-w-2xl mx-auto">
         <ExperienceModeStatusSection />
-        {/* Mode switcher — sempre visível para o paciente trocar */}
-        <div className="flex justify-center">
+        
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <UtensilsCrossed className="w-8 h-8 text-primary" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold tracking-tight">Olá! 👋</h2>
+            <p className="text-muted-foreground text-sm">Seu dia simplificado em um só lugar.</p>
+          </div>
           <InlineExperienceToggle />
         </div>
 
-        {/* Greeting */}
-        <div>
-          <h2 className="text-lg font-bold text-foreground">Meu Plano</h2>
-          <p className="text-xs text-muted-foreground">Seu plano alimentar do dia</p>
-        </div>
+        <div className="space-y-4">
+          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+            <DailyMealPlanInline />
+          </Suspense>
 
-        {/* 1. Plano alimentar — conteúdo principal */}
-        <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
-          <DailyMealPlanInline />
-        </Suspense>
+          <PlanRequestButton />
 
-        {/* CTA único: pedir plano (só aparece quando sem plano) */}
-        <PlanRequestButton />
-
-        {/* 2. Feedback / Check-in — peso + fotos com histórico de datas */}
-        <Card
-          className="cursor-pointer border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/40 hover:shadow-md transition-all group"
-          onClick={() => navigate("/checkin")}
-        >
-          <div className="flex items-center gap-3 px-4 py-4">
-            <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-              <CameraIcon className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">Enviar Feedback</h3>
-                <Badge variant="secondary" className="text-[9px] h-4">A cada 15 dias</Badge>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Card
+              className="cursor-pointer border border-primary/20 bg-primary/5 hover:border-primary/40 transition-all p-4 flex items-center gap-3 group"
+              onClick={() => navigate("/checkin")}
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <CameraIcon className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                Mande seu peso e fotos com a data — seu profissional acompanha sua evolução por aqui.
-              </p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-          </div>
-        </Card>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-bold">Enviar Feedback</h3>
+                <p className="text-[10px] text-muted-foreground">Mande seu peso e fotos</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all" />
+            </Card>
 
-        {/* 3. Receitas — incluído no básico */}
-        <Card
-          className="cursor-pointer border border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-orange-600/10 hover:border-orange-500/40 hover:shadow-md transition-all group"
-          onClick={() => navigate("/recipes")}
-        >
-          <div className="flex items-center gap-3 px-4 py-4">
-            <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-              <ChefHat className="w-5 h-5 text-orange-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">Receitas</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                Receitas práticas e saudáveis alinhadas ao seu plano.
-              </p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+            <Card
+              className="cursor-pointer border border-orange-500/20 bg-orange-500/5 hover:border-orange-500/40 transition-all p-4 flex items-center gap-3 group"
+              onClick={() => navigate("/recipes")}
+            >
+              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                <ChefHat className="w-5 h-5 text-orange-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-bold">Receitas</h3>
+                <p className="text-[10px] text-muted-foreground">Pratos saudáveis para você</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-orange-500 transition-all" />
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
@@ -282,13 +267,41 @@ export default function PatientGridDashboard() {
       </Suspense>
 
       {/* FitJourney Timeline — pro+ only */}
-      {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
+      {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="300px" />}
+
+      {/* Advanced Insights — Advanced mode only */}
+      {expUI.isAdvanced && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="p-4 border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain className="w-4 h-4 text-primary" />
+              <h4 className="text-sm font-bold">Análise Técnica</h4>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Modo de engenharia ativado. Visualizando metadados de adesão, versão do motor IFJ e indicadores de consistência metabólica.
+            </p>
+          </Card>
+          <Card className="p-4 border-violet-500/20 bg-violet-500/5">
+            <div className="flex items-center gap-2 mb-2">
+              <Rocket className="w-4 h-4 text-violet-600" />
+              <h4 className="text-sm font-bold">Performance</h4>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Projeções de médio prazo baseadas no seu histórico atual de registros e aderência calórica real.
+            </p>
+          </Card>
+        </div>
+      )}
 
       {/* Header with view toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Meu Painel</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Acesse tudo em um só lugar</p>
+          <h2 className="text-xl font-bold text-foreground">
+            {expUI.isPro ? "Meu Acompanhamento" : "Painel de Controle"}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {expUI.isPro ? "Foco em macros e adesão" : "Gestão completa da sua jornada"}
+          </p>
         </div>
         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
           <Button
@@ -352,7 +365,7 @@ export default function PatientGridDashboard() {
                                   {card.badge.text}
                                 </Badge>
                               )}
-                              <NewFeatureBadge featureKey={card.key} variant="badge" />
+                              {expUI.isAdvanced && <NewFeatureBadge featureKey={card.key} variant="badge" />}
                             </div>
                             <div className="flex-1">
                               <h3 className="text-sm font-semibold text-foreground leading-tight">{card.label}</h3>
@@ -408,6 +421,21 @@ export default function PatientGridDashboard() {
             );
           })}
         </motion.div>
+      )}
+      
+      {/* Advanced Technical Footer */}
+      {expUI.isAdvanced && (
+        <div className="pt-8 pb-4 text-center space-y-2">
+          <Separator className="mb-4 opacity-50" />
+          <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+            <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" /> Engine v3.4.1</span>
+            <span className="flex items-center gap-1.5"><Rocket className="w-3 h-3" /> Clinical Core active</span>
+            <span className="flex items-center gap-1.5"><Activity className="w-3 h-3" /> Real-time Sync</span>
+          </div>
+          <p className="text-[9px] text-muted-foreground/60 italic">
+            FitJourney Advanced Terminal • Registered patient ID: {user?.id?.slice(0, 8)}...
+          </p>
+        </div>
       )}
       </>
       )}

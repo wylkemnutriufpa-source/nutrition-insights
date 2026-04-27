@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
@@ -31,6 +32,7 @@ interface MealPlan {
 
 export default function DailyMealPlanInline() {
   const { user } = useAuth();
+  const { showMacros, isBasic } = useExperienceUI();
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
@@ -224,7 +226,7 @@ export default function DailyMealPlanInline() {
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate max-w-[200px]">{plan.title}</p>
-          {plan.plan_mode === "single_day" && (
+          {!isBasic && plan.plan_mode === "single_day" && (
             <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
               🗓️ 1 dia + substituições
             </span>
@@ -247,7 +249,7 @@ export default function DailyMealPlanInline() {
       />
 
       {/* Macros */}
-      <MacroSummary items={items} totalsStatus={plan?.totals_status} />
+      {showMacros && <MacroSummary items={items} totalsStatus={plan?.totals_status} />}
 
       {/* Emotional feedback */}
       {isToday && dailyAdherence > 0 && (
