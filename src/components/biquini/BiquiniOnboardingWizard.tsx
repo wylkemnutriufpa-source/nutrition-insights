@@ -89,11 +89,13 @@ export default function BiquiniOnboardingWizard({ programId, enrollmentId, onCom
   };
 
   const calculateMetrics = () => {
-    const w = parseFloat(weight);
-    const h = parseFloat(height) / 100; // cm to m
-    const bmi = +(w / (h * h)).toFixed(1);
+    const normalizedW = normalizeWeightInput(weight).value || 0;
+    const normalizedHRaw = normalizeHeightInput(height).value || 0;
+    const normalizedH = normalizedHRaw / 100; // cm to m
+    
+    const bmi = normalizedH > 0 ? +(normalizedW / (normalizedH * normalizedH)).toFixed(1) : 0;
     // Harris-Benedict for women
-    const tmb = +(655.1 + 9.563 * w + 1.85 * parseFloat(height) - 4.676 * 30).toFixed(0); // age ~30
+    const tmb = +(655.1 + 9.563 * normalizedW + 1.85 * normalizedHRaw - 4.676 * 30).toFixed(0); // age ~30
     const activityFactors: Record<string, number> = {
       sedentary: 1.2, light: 1.375, moderate: 1.55, active: 1.725, very_active: 1.9,
     };
