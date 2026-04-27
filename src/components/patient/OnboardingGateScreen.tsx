@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { motion } from "framer-motion";
 import { Clock, CreditCard, Stethoscope, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
