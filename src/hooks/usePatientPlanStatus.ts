@@ -51,7 +51,7 @@ function mapLifecycleToPlanStatus(lc: PatientLifecycle): PatientPlanStatusCode {
       return "plan_pending_production";
     case "onboarding_started":
     case "onboarding_ready_for_plan":
-      return lc.hasActivePlan ? "plan_delivered" : "onboarding_in_progress";
+      return lc.hasActivePlan ? "plan_delivered" : (lc.onboardingStatus === "lead_created" || lc.onboardingStatus === "awaiting_consent" ? "loading" : "onboarding_in_progress");
     case "clinical_attention":
     case "retention_risk":
       return lc.hasActivePlan ? "plan_delivered" : "no_plan";
