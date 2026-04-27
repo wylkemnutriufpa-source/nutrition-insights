@@ -314,6 +314,12 @@ export default function ClientDashboard() {
     }
   }, [journeyStatus, journeyLoading, navigate]);
 
+  // Telemetry extraction helper for diagnostics
+  const getTelemetryLogs = () => {
+    try { return JSON.parse(localStorage.getItem(`fj_journey_telemetry_${user?.id}`) || "[]"); }
+    catch { return []; }
+  };
+
   if (loading || journeyLoading) {
     return (
       <DashboardLayout>
