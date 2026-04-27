@@ -17,5 +17,19 @@ export function isOnboardingAllowedRoute(_pathname: string): boolean {
 }
 
 export function useOnboardingGuard() {
-  return { requirement: "none" as const };
+  const { status: journeyStatus, loading } = usePatientJourneyStatus();
+  const location = useLocation();
+
+  const requirement: OnboardingRequirement = useMemo(() => {
+    if (loading) return \"loading\";
+    
+    // Se o estado for 'awaiting_consent' ou 'lead_created', o paciente PRECISA aceitar o consentimento primeiro
+    if (journeyStatus === \"awaiting_consent\" || journeyStatus === \"lead_created\") {
+      return \"must_complete\";
+    }
+
+    return \"none\";
+  }, [journeyStatus, loading]);
+
+  return { requirement };
 }
