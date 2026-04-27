@@ -99,28 +99,35 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
   if (result.status === "no_link" || journeyStatus === "no_link") {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center bg-background">
-        <div className="rounded-full bg-orange-100 p-6 mb-6">
-          <AlertTriangle className="h-10 w-10 text-orange-600" />
+        <div className="rounded-full bg-orange-100 dark:bg-orange-950/30 p-6 mb-6">
+          <AlertTriangle className="h-10 w-10 text-orange-600 dark:text-orange-500" />
         </div>
         <h2 className="text-xl font-bold text-foreground mb-2">
           Vínculo não encontrado
         </h2>
         <p className="text-sm text-muted-foreground max-w-md mb-6">
-          Não conseguimos identificar seu nutricionista. Isso pode acontecer se o link de cadastro expirou ou se houve um erro no processamento.
+          Não conseguimos identificar seu nutricionista. Isso acontece quando sua conta não está corretamente vinculada a um profissional na nossa plataforma.
         </p>
-        <div className="bg-orange-50 border border-orange-100 rounded-lg p-4 mb-8 text-left max-w-sm">
-          <p className="text-xs text-orange-800 font-semibold mb-1">Ação recomendada:</p>
-          <p className="text-xs text-orange-700">
-            Entre em contato com seu nutricionista e peça um novo link de convite.
+        <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900/30 rounded-lg p-4 mb-8 text-left max-w-sm">
+          <p className="text-xs text-orange-800 dark:text-orange-400 font-semibold mb-1 flex items-center gap-1.5">
+            <ShieldCheck className="h-3.5 w-3.5" /> Ação recomendada:
+          </p>
+          <p className="text-xs text-orange-700 dark:text-orange-300">
+            Entre em contato com seu nutricionista e solicite um novo link de convite oficial para reativar seu acesso.
           </p>
         </div>
-        <Button 
-          variant="outline" 
-          onClick={() => window.location.href = "mailto:suporte@fitjourney.com.br"} 
-          className="gap-2"
-        >
-          Falar com suporte
-        </Button>
+        <div className="flex flex-col sm:flex-row gap-3">
+          <Button 
+            variant="default"
+            onClick={() => window.location.href = "mailto:suporte@fitjourney.com.br?subject=Erro de Vinculo - " + (user?.email || "Paciente")} 
+            className="gap-2"
+          >
+            Falar com suporte
+          </Button>
+          <Button variant="ghost" onClick={() => window.location.href = "/auth"}>
+            Voltar ao Login
+          </Button>
+        </div>
       </div>
     );
   }
