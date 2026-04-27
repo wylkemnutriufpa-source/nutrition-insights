@@ -145,7 +145,7 @@ export function usePatientDetail(patientId: string | undefined) {
 
       const [prestigePlansRes, patientPrestigeRes] = await Promise.all([
         supabase.from("prestige_plans").select("*").eq("is_active", true).order("display_order"),
-        supabase.from("patient_prestige").select("*").in("patient_id", patientIds).eq("is_active", true).order("created_at", { ascending: false }).limit(1).maybeSingle(),
+        supabase.from("patient_prestige").select("*").in("patient_id", patientIds).eq("is_active", true).order("assigned_at", { ascending: false }).limit(1).maybeSingle(),
       ]);
 
       const mapPlan = (d: any): PrestigePlan => ({

@@ -42,10 +42,10 @@ export default function SaveMealTemplateDialog({
   const [complexity, setComplexity] = useState("medium");
   const [saving, setSaving] = useState(false);
 
-  const totalKcal = items.reduce((s, i) => s + (i.calories_target || 0), 0);
-  const totalProtein = items.reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
-  const totalCarbs = items.reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
-  const totalFat = items.reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
+  const totalKcal = (items || []).reduce((s, i) => s + (i.calories_target || 0), 0);
+  const totalProtein = (items || []).reduce((s, i) => s + (Number(i.protein_target) || 0), 0);
+  const totalCarbs = (items || []).reduce((s, i) => s + (Number(i.carbs_target) || 0), 0);
+  const totalFat = (items || []).reduce((s, i) => s + (Number(i.fat_target) || 0), 0);
 
   const toggleTag = (tag: string) => {
     setSelectedTags(prev =>
@@ -137,8 +137,8 @@ export default function SaveMealTemplateDialog({
 
           {/* Foods list */}
           <div className="text-xs space-y-1 bg-muted/30 rounded-lg p-2.5">
-            <p className="font-medium text-[10px] text-muted-foreground uppercase">Alimentos ({items.length})</p>
-            {items.map((item, i) => (
+            <p className="font-medium text-[10px] text-muted-foreground uppercase">Alimentos ({(items || []).length})</p>
+            {(items || []).map((item, i) => (
               <div key={i} className="flex justify-between">
                 <span>{item.title}</span>
                 <span className="text-muted-foreground">{item.calories_target || 0} kcal</span>
