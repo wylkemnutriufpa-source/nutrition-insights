@@ -319,7 +319,7 @@ export default function PatientRegister() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    if (preselectedNutri && sigValid === false) {
+    if ((preselectedNutri || invitationCode) && sigValid === false) {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
       return;
     }
@@ -722,8 +722,8 @@ export default function PatientRegister() {
                 </div>
               )}
 
-              <Button type="submit" className="w-full h-11 text-base font-bold gradient-primary shadow-md" disabled={loading || !!whatsappError || (preselectedNutri && sigValid === null)}>
-                {loading || (preselectedNutri && sigValid === null) ? (
+              <Button type="submit" className="w-full h-11 text-base font-bold gradient-primary shadow-md" disabled={loading || !!whatsappError || ((preselectedNutri || invitationCode) && sigValid === null)}>
+                {loading || ((preselectedNutri || invitationCode) && sigValid === null) ? (
                   <span className="flex items-center justify-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     {sigValid === null ? "Validando link..." : "Criando conta..."}
