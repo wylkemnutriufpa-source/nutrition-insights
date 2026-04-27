@@ -14,6 +14,7 @@ import { Progress } from "@/components/ui/progress";
 import SmartTips from "@/components/patient/SmartTips";
 import { BrainLoaderCard } from "@/components/common/BrainLoader";
 import BehavioralTasksWidget from "@/components/patient/BehavioralTasksWidget";
+import ExperienceModeStatusSection from "@/components/dashboard/ExperienceModeStatusSection";
 import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget";
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
