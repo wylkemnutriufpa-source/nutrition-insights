@@ -22,8 +22,8 @@ export default function TherapeuticMomentumBar() {
 
   if (!momentum) return null;
 
-  const config = MOMENTUM_CONFIG[momentum.color] || MOMENTUM_CONFIG.orange;
-  const Icon = config.icon;
+  const config = (momentum?.color && MOMENTUM_CONFIG[momentum.color]) || MOMENTUM_CONFIG.orange;
+  const Icon = config?.icon || AlertTriangle;
 
   return (
     <motion.div
@@ -46,7 +46,7 @@ export default function TherapeuticMomentumBar() {
               style={{ width: `${safeNum(momentum?.score)}%` }}
             />
           </div>
-          <span className={`text-xs font-bold ${config.text}`}>{momentum.label}</span>
+          <span className={`text-xs font-bold ${config?.text || "text-orange-600"}`}>{momentum?.label || "Estável"}</span>
         </div>
       </div>
     </motion.div>
