@@ -282,8 +282,13 @@ export default function Invitation() {
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pb-8">
             <div className="p-5 rounded-xl bg-background border border-border shadow-sm mb-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
-                <Info className="w-3 h-3 text-primary" /> Passos para resolver
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2">
+                <Info className="w-3 h-3 text-primary" /> Por que isso aconteceu?
+              </p>
+              <p className="text-sm text-foreground mb-4 font-medium">{details.step}</p>
+              
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                Passos para resolver
               </p>
               <ul className="space-y-2">
                 {details.actions.map((action, index) => (
