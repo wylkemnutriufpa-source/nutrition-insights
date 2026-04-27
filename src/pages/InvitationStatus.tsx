@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Clock, Eye, Activity, History } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Clock, Eye, Activity, History, AlertCircle, RefreshCw } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -14,13 +14,16 @@ export default function InvitationStatus() {
   const [invitation, setInvitation] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStatus() {
       if (!code) return;
       
+      console.log("[InvitationStatus] Fetching status for code:", code);
+      
       try {
-        const { data, error } = await supabase
+        const { data, error: fetchError } = await supabase
           .from("invitations")
           .select(`
             *,
@@ -30,23 +33,36 @@ export default function InvitationStatus() {
           .eq("code", code)
           .maybeSingle();
 
-        if (error) throw error;
-        setInvitation(data);
+        if (fetchError) {
+          console.error("[InvitationStatus] Supabase error:", fetchError);
+          setError("Erro ao conectar com o banco de dados.");
+          throw fetchError;
+        }
 
-        if (data) {
-          const { data: logsData } = await supabase
+        if (!data) {
+          console.warn("[InvitationStatus] Invitation not found:", code);
+          setInvitation(null);
+        } else {
+          setInvitation(data);
+          setError(null);
+
+          const { data: logsData, error: logsError } = await supabase
             .from("invitation_logs")
             .select("*")
             .eq("invitation_id", data.id)
             .order("created_at", { ascending: false });
+          
+          if (logsError) console.error("[InvitationStatus] Error fetching logs:", logsError);
           setLogs(logsData || []);
         }
-      } catch (err) {
-        console.error("Error fetching invitation status:", err);
+      } catch (err: any) {
+        console.error("[InvitationStatus] Fatal error:", err);
+        setError(err.message || "Erro desconhecido.");
       } finally {
         setLoading(false);
       }
     }
+
 
     fetchStatus();
 
