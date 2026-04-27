@@ -98,6 +98,19 @@ Deno.serve(async (req) => {
 
     // Bloqueio de duplicados para convites específicos: verifica se já existe um convite PENDENTE para este email e nutricionista nos últimos 5 minutos
     if (email) {
+      const { data: existingPending } = await adminClient
+        .from("invitations")
+        .select("id, created_at")
+        .eq("professional_id", caller.id)
+        .eq("patient_email", email)
+        .eq("status", "pending")
+        .gt("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .maybeSingle();
+
+      if (existingPending) {
+        throw new Error("Já existe um convite pendente recente para este paciente. Aguarde alguns minutos ou use o link anterior.");
+      }
+    }
 
     // Tenta gerar um código único até 3 vezes
     let code = "";
