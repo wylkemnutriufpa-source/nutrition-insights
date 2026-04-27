@@ -340,7 +340,7 @@ export default function ClientDashboard() {
 
     return (
     <DashboardLayout>
-      {shouldBlock ? (
+      {shouldBlock && journeyStatus !== "awaiting_onboarding_release" ? (
         <div className="max-w-7xl mx-auto px-4 py-12">
           <OnboardingGateScreen status={journeyStatus!} />
         </div>
