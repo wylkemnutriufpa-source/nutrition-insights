@@ -236,28 +236,53 @@ export default function PatientRegister() {
 
   // Legacy signature verification (if no invitationCode)
   useEffect(() => {
-    if (invitationCode || !preselectedNutri || !signature) return;
-    
-    const verifySig = async () => {
-      addLog("Verificando assinatura legada...");
-      try {
-        const { data, error } = await supabase.functions.invoke("verify-registration-token", {
-          body: { nutriId: preselectedNutri, signature }
-        });
-        if (error) throw error;
-        setSigValid(data.isValid);
-        if (!data.isValid) {
-          addLog("Assinatura inválida.");
-          toast.error("Link de registro inválido. Solicite um novo ao seu profissional.");
-        } else {
-          addLog("Assinatura validada.");
+    if (invitationCode) return;
+    if (!preselectedNutri) return;
+
+    // Caso 1: Link com assinatura legada (?nutri=ID&sig=...)
+    if (signature) {
+      const verifySig = async () => {
+        addLog("Verificando assinatura legada...");
+        try {
+          const { data, error } = await supabase.functions.invoke("verify-registration-token", {
+            body: { nutriId: preselectedNutri, signature }
+          });
+          if (error) throw error;
+          setSigValid(data.isValid);
+          if (!data.isValid) {
+            addLog("Assinatura inválida.");
+            toast.error("Link de registro inválido. Solicite um novo ao seu profissional.");
+          } else {
+            addLog("Assinatura validada.");
+          }
+        } catch (err: any) {
+          addLog(`Erro na assinatura: ${err.message}`);
+          setSigValid(false);
         }
-      } catch (err: any) {
-        addLog(`Erro na assinatura: ${err.message}`);
+      };
+      verifySig();
+      return;
+    }
+
+    // Caso 2: Link direto sem assinatura (?nutri=ID) — valida só se o profissional existe
+    addLog("Link direto sem assinatura. Validando existência do profissional...");
+    (async () => {
+      const { data: prof, error } = await supabase
+        .from("profiles")
+        .select("user_id")
+        .eq("user_id", preselectedNutri)
+        .maybeSingle();
+
+      if (error || !prof) {
+        addLog(`Profissional ${preselectedNutri} não encontrado.`);
+        setSigValid(false);
+        toast.error("Vínculo de profissional inválido. Verifique se o link está correto.");
+        return;
       }
-    };
-    verifySig();
-  }, [preselectedNutri, signature, invitationCode]);
+      addLog("Profissional confirmado. Liberando cadastro.");
+      setSigValid(true);
+    })();
+  }, [preselectedNutri, signature, invitationCode, addLog]);
 
   // Search professionals
   const searchProfessionals = useCallback(async (query: string) => {
