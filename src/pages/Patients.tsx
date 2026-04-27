@@ -179,6 +179,7 @@ function AssignProgramDialog({
                     log("program_selected", { val });
                     setSelectedProgram(val);
                   }}
+                  onOpenChange={(open) => log("select_open_change", { open })}
                   disabled={loading}
                 >
                   <SelectTrigger className="w-full bg-background/50 border-border/50 h-11 focus:ring-primary/20">
