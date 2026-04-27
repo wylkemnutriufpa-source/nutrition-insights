@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon, Zap, Globe } from "lucide-react";
+import { ArrowLeft, UserPlus, Mail, Key, Copy, Check, MessageCircle, Send, LinkIcon, Zap, Globe, CheckCircle2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
