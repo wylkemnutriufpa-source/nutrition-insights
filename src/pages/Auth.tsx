@@ -250,8 +250,9 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
                         </button>
                       </div>
                     </div>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                      <Stethoscope className="w-3.5 h-3.5" /> Conta exclusiva para nutricionistas, personal trainers e profissionais de saúde.
+                    <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
+                      <Stethoscope className="w-3.5 h-3.5 shrink-0" /> 
+                      <span>Conta exclusiva para profissionais de saúde. Se você é paciente, use o link enviado pelo seu nutricionista.</span>
                     </p>
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Criando..." : <span className="flex items-center gap-2">Criar Conta <ArrowRight className="w-4 h-4" /></span>}
