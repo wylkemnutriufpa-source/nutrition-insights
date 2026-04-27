@@ -16,6 +16,14 @@ export type JourneyStatus =
   | "active" // legacy
   | null;
 
+/** 
+ * Centralized rule for allowed (non-blocking) states.
+ * States like lead_created and awaiting_consent are FLUID - they should not block the dashboard
+ * because components like OnboardingProgressModal will take over to guide the user.
+ */
+export const IS_FLUID_STATE = (status: JourneyStatus) => 
+  status === "lead_created" || status === "awaiting_consent" || status === "active" || status === "onboarding_active";
+
 /**
  * Returns the patient's journey_status from nutritionist_patients.
  * For patients with no link or legacy patients, returns "active".
