@@ -14,6 +14,7 @@ export type JourneyStatus =
   | "active_followup"
   | "clinical_followup_active"
   | "active" // legacy
+  | "no_link"
   | null;
 
 /** 
@@ -30,7 +31,7 @@ export const IS_FLUID_STATE = (status: JourneyStatus) =>
  */
 export function usePatientJourneyStatus() {
   const { user, isPatient } = useAuth();
-  const [status, setStatus] = useState<JourneyStatus>(null);
+  const [status, setStatus] = useState<JourneyStatus | "no_link">(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -52,16 +53,21 @@ export function usePatientJourneyStatus() {
         if (error) {
           console.error("[usePatientJourneyStatus] Fetch error:", error);
           if (!cancelled) {
-            setStatus("active"); // Fallback
+            setStatus("active"); // Fallback for real errors to avoid blocking legacy
             setLoading(false);
           }
           return;
         }
 
         if (!cancelled) {
-          const finalStatus = (data as any)?.journey_status || "active";
-          console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
-          setStatus(finalStatus);
+          if (!data) {
+            console.warn(`[usePatientJourneyStatus] NO LINK FOUND for ${user.id}`);
+            setStatus("no_link");
+          } else {
+            const finalStatus = (data as any).journey_status || "active";
+            console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
+            setStatus(finalStatus);
+          }
           setLoading(false);
         }
       } catch (err) {
@@ -99,7 +105,7 @@ export function usePatientJourneyStatus() {
     };
   }, [user, isPatient]);
 
-  const canAccessOnboarding = status === "lead_created" || status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active";
+  const canAccessOnboarding = status !== "no_link" && (status === "lead_created" || status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active");
 
   return { status, loading, canAccessOnboarding };
 }
