@@ -32,7 +32,7 @@ interface MealPlan {
 
 export default function DailyMealPlanInline() {
   const { user } = useAuth();
-  const { showMacros } = useExperienceUI();
+  const { showMacros, isBasic } = useExperienceUI();
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [completions, setCompletions] = useState<MealCompletion[]>([]);
