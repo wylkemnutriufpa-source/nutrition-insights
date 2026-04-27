@@ -8,14 +8,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import {
   Plus, Rocket, Users, Calendar, Tag, Trash2, UserPlus,
-  ToggleLeft, ToggleRight, Target, Sparkles
+  ToggleLeft, ToggleRight, Target, Sparkles, ShieldAlert
 } from "lucide-react";
 
 interface Program {
@@ -63,6 +64,9 @@ export default function Programs() {
     end_date: "", max_patients: "", protocol_id: "",
   });
   const [submitting, setSubmitting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
 
   const fetchPrograms = async () => {
     if (!user) return;
@@ -162,25 +166,40 @@ export default function Programs() {
     fetchPrograms();
   };
 
-  const deleteProgram = async (id: string) => {
-    // Check if it's a Biquíni Branco program (protected)
+  const deleteProgram = (id: string) => {
     const prog = programs.find(p => p.id === id);
     const isBiquini = prog?.title?.toLowerCase().includes("biqu") || prog?.tag === "biquini";
 
     if (isBiquini) {
-      const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para excluir:");
-      if (!pwd) return;
-      if (pwd !== "Wylk3mkl3yton") {
-        toast.error("Senha incorreta. Exclusão cancelada.");
-        return;
-      }
+      setDeleteTarget({ id, name: prog?.title || "Programa" });
     } else {
-      if (!confirm("Remover este programa?")) return;
+      setAlertConfig({
+        title: "Remover Programa",
+        desc: `Tem certeza que deseja excluir o programa "${prog?.title}"? Esta ação não pode ser desfeita.`,
+        action: () => executeDelete(id)
+      });
     }
+  };
 
-    await supabase.from("programs").delete().eq("id", id);
-    fetchPrograms();
-    toast.success("Programa removido");
+  const executeDelete = async (id: string) => {
+    const { error } = await supabase.from("programs").delete().eq("id", id);
+    if (error) {
+      toast.error("Erro ao remover: " + error.message);
+    } else {
+      fetchPrograms();
+      toast.success("Programa removido");
+    }
+  };
+
+  const confirmDeleteAction = async () => {
+    if (!deleteTarget) return;
+    if (deletePassword !== "Wylk3mkl3yton") {
+      toast.error("Senha incorreta. Exclusão cancelada.");
+      return;
+    }
+    await executeDelete(deleteTarget.id);
+    setDeleteTarget(null);
+    setDeletePassword("");
   };
 
   // Calculate days progress
@@ -364,6 +383,58 @@ export default function Programs() {
           </div>
         )}
       </div>
+
+      {/* Protected Action Password Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-destructive" /> Programa Protegido
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Para excluir <strong>{deleteTarget?.name}</strong>, digite a senha de administrador.
+            </p>
+            <div className="space-y-2">
+              <Label>Senha de Administrador</Label>
+              <Input 
+                type="password" 
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Digite a senha..."
+                autoFocus
+              />
+            </div>
+            <Button 
+              variant="destructive"
+              className="w-full"
+              onClick={confirmDeleteAction}
+              disabled={!deletePassword}
+            >
+              Confirmar Exclusão
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={!!alertConfig} onOpenChange={(open) => !open && setAlertConfig(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertConfig?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{alertConfig?.desc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              alertConfig?.action();
+              setAlertConfig(null);
+            }}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }

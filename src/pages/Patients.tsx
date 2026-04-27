@@ -12,7 +12,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogClose, DialogFooter } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
@@ -211,7 +212,7 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], isOnline = false }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], isOnline = false, setExpiryTarget }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -220,6 +221,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   onUpdateExpiry: (id: string, date: string | null) => void;
   allPrestigePlans?: PrestigePlan[];
   isOnline?: boolean;
+  setExpiryTarget: (p: { id: string, name: string, current: string | null }) => void;
 }) {
   const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
@@ -289,10 +291,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const current = p.expires_at || "";
-                const input = prompt("Data de vencimento (AAAA-MM-DD):", current);
-                if (input === null) return;
-                onUpdateExpiry(p.id, input || null);
+                setExpiryTarget({ id: p.id, name: displayName, current: p.expires_at });
               }}
               className="text-muted-foreground hover:text-primary p-0.5" title="Definir vencimento"
             >
@@ -373,7 +372,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   );
 }
 
-function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [] }: {
+function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], setExpiryTarget }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -381,6 +380,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   removeFromProgram: (patientId: string, programId: string, programTitle: string) => void;
   onUpdateExpiry: (id: string, date: string | null) => void;
   allPrestigePlans?: PrestigePlan[];
+  setExpiryTarget: (p: { id: string, name: string, current: string | null }) => void;
 }) {
   const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
@@ -439,6 +439,15 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
       </div>
       <ScoreRing score={score} />
       <div className="flex items-center gap-1">
+        <button
+          onClick={(e) => {
+            e.stopPropagation();
+            setExpiryTarget({ id: p.id, name: displayName, current: p.expires_at });
+          }}
+          className="text-muted-foreground hover:text-primary p-0.5" title="Definir vencimento"
+        >
+          <CalendarDays className="w-3.5 h-3.5" />
+        </button>
         <button onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
           className="text-muted-foreground hover:text-primary p-1" title="Adicionar a programa">
           <Target className="w-4 h-4" />
@@ -453,7 +462,7 @@ function PatientRow({ p, idx, navigate, toggleStatus, setAssignTarget, setAssign
   );
 }
 
-function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [], onlineSet }: {
+function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, search, emptyMessage, layout, allPrestigePlans = [], onlineSet, setExpiryTarget }: {
   patients: PatientInfo[]; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -465,6 +474,7 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
   layout: "grid" | "list";
   allPrestigePlans?: PrestigePlan[];
   onlineSet?: Set<string>;
+  setExpiryTarget: (p: { id: string, name: string, current: string | null }) => void;
 }) {
   const sorted = onlineSet && onlineSet.size > 0
     ? [...patients].sort((a, b) => {
@@ -491,7 +501,8 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
           <PatientRow key={p.id} p={p} idx={idx} navigate={navigate}
             toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
             setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
-            onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} />
+            onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans} 
+            setExpiryTarget={setExpiryTarget} />
         ))}
       </div>
     );
@@ -504,7 +515,8 @@ function PatientGrid({ patients, navigate, toggleStatus, setAssignTarget, setAss
           toggleStatus={toggleStatus} setAssignTarget={setAssignTarget}
           setAssignDialogOpen={setAssignDialogOpen} removeFromProgram={removeFromProgram}
           onUpdateExpiry={onUpdateExpiry} allPrestigePlans={allPrestigePlans}
-          isOnline={onlineSet?.has(p.patient_id)} />
+          isOnline={onlineSet?.has(p.patient_id)} 
+          setExpiryTarget={setExpiryTarget} />
       ))}
     </div>
   );
@@ -540,6 +552,10 @@ export default function Patients() {
   const [pageSize, setPageSize] = useState(DEFAULT_PAGE_SIZE);
   const [statusTab, setStatusTab] = useState<"active" | "inactive" | "all">("active");
   const [debouncedSearch, setDebouncedSearch] = useState("");
+  const [expiryTarget, setExpiryTarget] = useState<{ id: string, name: string, current: string | null } | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<{ id: string, name: string } | null>(null);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [alertConfig, setAlertConfig] = useState<{ title: string, desc: string, action: () => void } | null>(null);
 
   // Build params for server-side query
   const queryParams: PatientsListParams = {
@@ -707,23 +723,53 @@ export default function Patients() {
   const executeBulkAction = () => {
     if (bulkSelected.size === 0) { toast.info("Selecione pelo menos um paciente"); return; }
     const newStatus = bulkMode === "deactivate" ? "inactive" : "active";
-    if (!confirm(`${bulkMode === "deactivate" ? "Desativar" : "Ativar"} ${bulkSelected.size} pacientes?`)) return;
-    bulkToggleMutation.mutate({ ids: Array.from(bulkSelected), newStatus });
-    setBulkManageOpen(false);
+    
+    setAlertConfig({
+      title: `${bulkMode === "deactivate" ? "Desativar" : "Ativar"} ${bulkSelected.size} pacientes?`,
+      desc: `Eles ${bulkMode === "deactivate" ? "deixarão de ser contabilizados nas métricas de engajamento" : "voltarão a aparecer na sua lista principal"}.`,
+      action: () => {
+        bulkToggleMutation.mutate({ ids: Array.from(bulkSelected), newStatus });
+        setBulkManageOpen(false);
+      }
+    });
   };
 
   const removeFromProgram = (patientId: string, programId: string, programTitle: string) => {
     const isBiquini = programTitle.toLowerCase().includes("biqu");
     if (isBiquini) {
-      const pwd = prompt("🔒 Projeto protegido!\nDigite a senha do administrador para remover:");
-      if (!pwd) return;
-      if (pwd !== "Wylk3mkl3yton") { toast.error("Senha incorreta. Remoção cancelada."); return; }
+      setDeleteTarget({ id: `${patientId}:${programId}`, name: `paciente do programa "${programTitle}"` });
     } else {
-      if (!confirm(`Remover paciente do programa "${programTitle}"?`)) return;
+      setAlertConfig({
+        title: "Remover do Programa",
+        desc: `Tem certeza que deseja remover este paciente do programa "${programTitle}"?`,
+        action: () => {
+          removeFromProgramMutation.mutate({ patientId, programId }, {
+            onSuccess: () => toast.success(`Paciente removido de "${programTitle}"`),
+          });
+        }
+      });
     }
-    removeFromProgramMutation.mutate({ patientId, programId }, {
-      onSuccess: () => toast.success(`Paciente removido de "${programTitle}"`),
-    });
+  };
+
+  const confirmDeleteAction = () => {
+    if (!deleteTarget) return;
+    const isProgramRemoval = deleteTarget.id.includes(":");
+    
+    if (deleteTarget.name.includes("programa")) {
+      // It's a protected program removal
+      if (deletePassword !== "Wylk3mkl3yton") {
+        toast.error("Senha incorreta. Remoção cancelada.");
+        return;
+      }
+      const [patientId, programId] = deleteTarget.id.split(":");
+      removeFromProgramMutation.mutate({ patientId, programId }, {
+        onSuccess: () => {
+          toast.success(`Paciente removido com sucesso`);
+          setDeleteTarget(null);
+          setDeletePassword("");
+        },
+      });
+    }
   };
 
   const updateExpiry = (id: string, date: string | null) => {
@@ -1086,6 +1132,7 @@ export default function Patients() {
                   layout={layout}
                   allPrestigePlans={prestigePlansList}
                   onlineSet={onlineSet}
+                  setExpiryTarget={setExpiryTarget}
                 />
 
                 {/* Pagination Controls */}
@@ -1188,7 +1235,24 @@ export default function Patients() {
         </DialogContent>
       </Dialog>
 
-
+      {/* Global Alert Dialog for confirmations */}
+      <AlertDialog open={!!alertConfig} onOpenChange={(open) => !open && setAlertConfig(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{alertConfig?.title}</AlertDialogTitle>
+            <AlertDialogDescription>{alertConfig?.desc}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={() => {
+              alertConfig?.action();
+              setAlertConfig(null);
+            }}>
+              Confirmar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       <AssignProgramDialog
         open={assignDialogOpen}
         onOpenChange={setAssignDialogOpen}
@@ -1196,6 +1260,76 @@ export default function Patients() {
         programs={programs}
         onAssigned={() => {}}
       />
+
+      {/* Expiry Date Dialog */}
+      <Dialog open={!!expiryTarget} onOpenChange={(open) => !open && setExpiryTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display">Definir Vencimento</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">Paciente: <strong>{expiryTarget?.name}</strong></p>
+            <div className="space-y-2">
+              <Label>Data de Vencimento</Label>
+              <Input 
+                type="date" 
+                defaultValue={expiryTarget?.current || ""} 
+                onChange={(e) => {
+                  if (expiryTarget) {
+                    setExpiryTarget({ ...expiryTarget, current: e.target.value });
+                  }
+                }}
+              />
+            </div>
+            <Button 
+              className="w-full gradient-primary"
+              onClick={() => {
+                if (expiryTarget) {
+                  updateExpiry(expiryTarget.id, expiryTarget.current || null);
+                  setExpiryTarget(null);
+                  toast.success("Vencimento atualizado");
+                }
+              }}
+            >
+              Salvar Alteração
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Protected Action Password Dialog */}
+      <Dialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="font-display flex items-center gap-2">
+              <ShieldAlert className="w-5 h-5 text-destructive" /> Ação Protegida
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Para remover <strong>{deleteTarget?.name}</strong>, digite a senha de administrador.
+            </p>
+            <div className="space-y-2">
+              <Label>Senha de Administrador</Label>
+              <Input 
+                type="password" 
+                value={deletePassword}
+                onChange={(e) => setDeletePassword(e.target.value)}
+                placeholder="Digite a senha..."
+                autoFocus
+              />
+            </div>
+            <Button 
+              variant="destructive"
+              className="w-full"
+              onClick={confirmDeleteAction}
+              disabled={!deletePassword}
+            >
+              Confirmar Remoção
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </DashboardLayout>
   );
 }
