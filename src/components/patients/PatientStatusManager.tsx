@@ -404,11 +404,12 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                               className="h-7 w-7 p-0"
                               onClick={() => {
                                 const patientFirstName = p.profile?.full_name?.split(" ")[0] || "Paciente";
-                                const waMsg = getWhatsAppInvitationMessage({
+                                 const waMsg = getWhatsAppInvitationMessage({
                                   patientName: patientFirstName,
                                   professionalName: profName,
                                   clinicName: clinicName,
-                                  invitationCode: user?.id || "",
+                                  invitationCode: "", // Generic onboarding uses nutri ID instead of specific code
+                                  professionalId: user?.id,
                                   templateType: 'patient_onboarding',
                                   customTemplate: templates['patient_onboarding']
                                 });
