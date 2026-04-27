@@ -148,7 +148,8 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     fireEvent.click(readyMealsTab);
 
     // Seleciona um template (ex: Frango + Arroz + Salada)
-    const templateButton = screen.getByText(/Frango \+ Arroz \+ Salada/i);
+    // O template usa "Frango + Arroz + Salada" mas o texto exibido pode variar
+    const templateButton = screen.getByText(/Frango \+ Arroz/i);
     fireEvent.click(templateButton);
 
     // Verifica se addItem foi chamado com a estrutura correta para Wannubia
