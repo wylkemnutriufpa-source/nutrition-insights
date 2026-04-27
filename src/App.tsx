@@ -212,6 +212,7 @@ const CockpitPremium = lazy(() => import("./pages/CockpitPremium"));
 const StoreDashboard = lazy(() => import("./pages/store/StoreDashboard"));
 const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
+const PatientDiagnostic = lazy(() => import("./pages/PatientDiagnostic"));
 const MobileQA = lazy(() => import("./pages/MobileQA"));
 const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
 
