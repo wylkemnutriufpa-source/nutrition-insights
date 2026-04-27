@@ -6425,6 +6425,7 @@ export type Database = {
           meal_plan_id: string
           meal_plan_item_id: string
           patient_id: string
+          status: string | null
           tenant_id: string | null
         }
         Insert: {
@@ -6437,6 +6438,7 @@ export type Database = {
           meal_plan_id: string
           meal_plan_item_id: string
           patient_id: string
+          status?: string | null
           tenant_id?: string | null
         }
         Update: {
@@ -6449,6 +6451,7 @@ export type Database = {
           meal_plan_id?: string
           meal_plan_item_id?: string
           patient_id?: string
+          status?: string | null
           tenant_id?: string | null
         }
         Relationships: [
@@ -9294,6 +9297,7 @@ export type Database = {
       }
       patient_behavioral_tasks: {
         Row: {
+          category: string | null
           created_at: string
           description: string | null
           due_date: string | null
@@ -9314,6 +9318,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          category?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -9334,6 +9339,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          category?: string | null
           created_at?: string
           description?: string | null
           due_date?: string | null
@@ -9586,6 +9592,7 @@ export type Database = {
           id: string
           is_active: boolean
           patient_id: string
+          severity: string | null
           source: string
           source_answer_key: string | null
           source_answer_value: Json | null
@@ -9599,6 +9606,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           patient_id: string
+          severity?: string | null
           source?: string
           source_answer_key?: string | null
           source_answer_value?: Json | null
@@ -9612,6 +9620,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           patient_id?: string
+          severity?: string | null
           source?: string
           source_answer_key?: string | null
           source_answer_value?: Json | null
@@ -14127,6 +14136,7 @@ export type Database = {
           clinical_risk_level: string | null
           clinical_risk_score: number | null
           created_at: string
+          current_weight: number | null
           engagement_index: number | null
           engagement_level: string | null
           experience_mode: string | null
@@ -14175,6 +14185,7 @@ export type Database = {
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
+          current_weight?: number | null
           engagement_index?: number | null
           engagement_level?: string | null
           experience_mode?: string | null
@@ -14223,6 +14234,7 @@ export type Database = {
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
+          current_weight?: number | null
           engagement_index?: number | null
           engagement_level?: string | null
           experience_mode?: string | null
