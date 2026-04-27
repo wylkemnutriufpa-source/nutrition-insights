@@ -667,10 +667,10 @@ export default function PatientRegister() {
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground">Você foi convidado!</h2>
+                <h2 className="text-2xl font-bold text-foreground">Você está sendo convidado!</h2>
                 <div className="space-y-1">
                   <p className="text-muted-foreground">
-                    O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> quer acompanhar sua jornada.
+                    O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> está pronto para acompanhar você.
                   </p>
                   {selectedProfessional.clinic_name && (
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground bg-muted/50 py-1 px-3 rounded-full w-fit mx-auto">
