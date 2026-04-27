@@ -235,7 +235,7 @@ export default function Checkin() {
       const { error } = await supabase.from("patient_checkins").insert({
         patient_id: user.id,
         nutritionist_id: nutritionistId,
-        weight: weight ? parseFloat(weight) : null,
+        weight: weight ? normalizeWeightInput(weight).value : null,
         feedback: feedback.trim() || null,
         difficulty,
         photo_front_url: frontUrl,
