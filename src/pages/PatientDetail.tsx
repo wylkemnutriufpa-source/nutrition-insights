@@ -1759,7 +1759,7 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/intake/${tokenValue}`;
+                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
                         await navigator.clipboard.writeText(link);
                         toast.success("Link de onboarding copiado! 📋");
                       } catch (err: any) {
