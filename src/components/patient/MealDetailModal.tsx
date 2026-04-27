@@ -980,7 +980,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
                 {GOAL_LABELS[goalTag].label}
               </Badge>
             )}
-            {clinicalTags.map(tag => (
+            {showTechnicalDetails && clinicalTags.map(tag => (
               <Badge key={tag} variant="outline" className="text-[10px] bg-accent/50 border-accent">
                 <Leaf className="w-2.5 h-2.5 mr-1" />
                 {CLINICAL_LABELS[tag] || tag.replace(/_/g, " ")}
