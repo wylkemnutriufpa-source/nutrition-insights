@@ -82,6 +82,11 @@ export default function PatientRegister() {
 
   // Verify signature if nutri is provided
   useEffect(() => {
+    // Se veio com `code` de convite, validamos pelo código (abaixo) e ignoramos a assinatura legada.
+    if (invitationCode) {
+      setSigValid(true);
+      return;
+    }
     if (!preselectedNutri || !signature) {
       if (preselectedNutri && !signature) {
         setSigValid(false); // No signature provided for a preselected nutri
