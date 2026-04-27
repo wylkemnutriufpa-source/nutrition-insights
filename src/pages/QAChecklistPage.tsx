@@ -28,6 +28,8 @@ const STEPS: ChecklistStep[] = [
   { id: "register", label: "Concluir cadastro do paciente" },
   { id: "bind_kept", label: "Vínculo com profissional preservado no banco", hint: "Verificar se professional_id foi gravado" },
   { id: "no_console_error", label: "Sem erros críticos no console", hint: "Erros 401/403 esperados apenas se não logado" },
+  { id: "marmita_structure", label: "Marmitas Fixas: 1 Principal + 3-4 Substituições", hint: "Verificar no plano da Wannubia ou similar" },
+  { id: "marmita_label", label: "Marmitas: Rótulo 'Prato Principal' visível", hint: "No app do paciente, os itens fixos devem estar identificados" },
 ];
 
 interface PreviousRun {
