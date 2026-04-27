@@ -40,12 +40,14 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
   };
 
   const mockUpdateItem = vi.fn();
+  const mockAddItem = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useMealPlanEditorV2Store as any).mockReturnValue({
       items: [mockItem],
       updateItem: mockUpdateItem,
+      addItem: mockAddItem,
       substitutionCount: 3,
       patientName: 'Wannubia Teste'
     });
@@ -133,7 +135,8 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
   });
 
   it('deve aplicar template Wannubia e validar ordem das substituições', async () => {
-    const { addItem } = useMealPlanEditorV2Store();
+    // Pegamos a referência ao mock já configurado no beforeEach
+    const addItem = (useMealPlanEditorV2Store as any)().addItem;
     
     render(
       <QueryClientProvider client={queryClient}>
