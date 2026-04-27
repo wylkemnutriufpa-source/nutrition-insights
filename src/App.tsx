@@ -222,6 +222,7 @@ const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 const PatientDiagnostic = lazy(() => import("./pages/PatientDiagnostic"));
 const MobileQA = lazy(() => import("./pages/MobileQA"));
 const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
+const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
 
 // Install global error handlers once at module load
 installGlobalErrorHandlers();
