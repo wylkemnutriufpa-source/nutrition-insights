@@ -69,6 +69,21 @@ Deno.serve(async (req) => {
 
     const failing = results.filter((r) => !r.ok);
 
+    // Trigger an alert for every failing route so admins see it the same day.
+    if (failing.length > 0) {
+      const auditRunId = crypto.randomUUID();
+      const alertRows = failing.map((r) => ({
+        pathname: r.pathname,
+        status_code: r.status_code,
+        notes: r.notes,
+        audit_run_id: auditRunId,
+      }));
+      const { error: alertErr } = await admin.from("route_audit_alerts").insert(alertRows);
+      if (alertErr) {
+        console.error("audit-public-routes: failed to write alerts:", alertErr.message);
+      }
+    }
+
     return new Response(
       JSON.stringify({
         success: true,

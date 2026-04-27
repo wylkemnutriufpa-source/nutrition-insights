@@ -182,6 +182,8 @@ const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard"));
 const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard"));
 const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin"));
 const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit"));
+const StatusPage = lazy(() => import("./pages/StatusPage"));
+const QAChecklistPage = lazy(() => import("./pages/QAChecklistPage"));
 const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit"));
 const TemplateMassReformulation = lazy(() => import("./pages/admin/TemplateMassReformulation"));
 const AdminExperienceModeAudit = lazy(() => import("./pages/admin/AdminExperienceModeAudit"));
@@ -703,6 +705,8 @@ const App = () => (
               <Route path="/admin/meal-coverage" element={<AdminRoute><LP section="Admin"><MealCoverageDashboard /></LP></AdminRoute>} />
               <Route path="/admin/meal-visual-library" element={<AdminRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></AdminRoute>} />
               <Route path="/admin/plan-audit" element={<AdminRoute><LP section="Auditoria de Planos"><PlanBatchAudit /></LP></AdminRoute>} />
+              <Route path="/status" element={<AdminRoute><LP section="Status"><StatusPage /></LP></AdminRoute>} />
+              <Route path="/admin/qa-checklist" element={<AdminRoute><LP section="QA"><QAChecklistPage /></LP></AdminRoute>} />
               <Route path="/admin/template-nutrition-audit" element={<AdminRoute><LP section="Auditoria Nutricional"><TemplateNutritionAudit /></LP></AdminRoute>} />
               <Route path="/admin/template-mass-reformulation" element={<AdminRoute><LP section="Reformulação em Massa"><TemplateMassReformulation /></LP></AdminRoute>} />
               <Route path="/admin/mission-control" element={<AdminRoute><LP section="Mission Control"><MissionControl /></LP></AdminRoute>} />
