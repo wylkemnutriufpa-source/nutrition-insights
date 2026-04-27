@@ -98,8 +98,8 @@ export default function InvitePatient() {
 
   // Links use production URL for sharing/display by default unless in preview for testing
   const onboardingLink = useMemo(() => getOnboardingUrl(true), []);
-  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, true), [user?.id]);
-  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, true) : "", [user?.id]);
+  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, false), [user?.id]);
+  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, false) : "", [user?.id]);
   const publicProfileLink = useMemo(() => {
     if (!publicProfile?.slug) return null;
     return `${PRODUCTION_URL}/p/${publicProfile.slug}`;
@@ -125,9 +125,17 @@ export default function InvitePatient() {
   }, [phone, whatsappMessage]);
 
   const copyToClipboard = (value: string, key: string, label: string) => {
+    // If we're in a preview environment, the current value might be using window.location.origin
+    // Let's ensure the user knows which domain is being copied if it's relevant.
+    const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
     navigator.clipboard.writeText(value);
     setCopied(key);
-    toast.success(`${label} copiado!`);
+    
+    if (isPreview && !value.includes("fitjourney.com.br")) {
+      toast.info(`${label} copiado usando domínio de preview para testes.`);
+    } else {
+      toast.success(`${label} copiado!`);
+    }
     setTimeout(() => setCopied(null), 2000);
   };
 
@@ -242,16 +250,27 @@ export default function InvitePatient() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
-              <LinkIcon className="w-3.5 h-3.5 text-primary shrink-0" />
-              <code className="text-[10px] md:text-xs flex-1 truncate">{publicRegisterLink}</code>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+                <LinkIcon className="w-3.5 h-3.5 text-primary shrink-0" />
+                <code className="text-[10px] md:text-xs flex-1 truncate">{publicRegisterLink}</code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1"
+                  onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Link público (Preview)")}
+                >
+                  {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
               <Button
+                variant="outline"
                 size="sm"
-                variant="ghost"
-                className="h-7 px-2 gap-1"
-                onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Link público")}
+                className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
+                onClick={() => copyToClipboard(getInvitationUrl(undefined, user?.id, true), "public_link_prod", "Link oficial (Produção)")}
               >
-                {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied === "public_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                Copiar Link Oficial (Produção)
               </Button>
             </div>
           </CardContent>
@@ -270,16 +289,27 @@ export default function InvitePatient() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-3">
-            <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
-              <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
-              <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+            <div className="space-y-3">
+              <div className="flex items-center gap-2 bg-background border border-border rounded-lg p-2">
+                <LinkIcon className="w-3.5 h-3.5 text-accent shrink-0" />
+                <code className="text-[10px] md:text-xs flex-1 truncate">{quickLink}</code>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  className="h-7 px-2 gap-1"
+                  onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido (Preview)")}
+                >
+                  {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                </Button>
+              </div>
               <Button
+                variant="outline"
                 size="sm"
-                variant="ghost"
-                className="h-7 px-2 gap-1"
-                onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido")}
+                className="w-full gap-2 border-accent/20 hover:bg-accent/5 text-accent text-xs h-9"
+                onClick={() => copyToClipboard(user?.id ? getQuickLinkUrl(user.id, true) : "", "quick_link_prod", "Link rápido oficial (Produção)")}
               >
-                {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                {copied === "quick_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                Copiar Link Oficial (Produção)
               </Button>
             </div>
             <Button
@@ -438,16 +468,27 @@ export default function InvitePatient() {
                 <p className="text-xs text-muted-foreground">
                   Este link é exclusivo para este paciente. Ele será vinculado a você e levado ao onboarding.
                 </p>
-                <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
-                  <LinkIcon className="w-4 h-4 text-primary shrink-0" />
-                  <code className="text-xs flex-1 truncate">{getInvitationUrl(invitationCode || "", user?.id, true)}</code>
+                <div className="space-y-3">
+                  <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
+                    <LinkIcon className="w-4 h-4 text-primary shrink-0" />
+                    <code className="text-xs flex-1 truncate">{getInvitationUrl(invitationCode || "", user?.id, false)}</code>
+                    <Button
+                      size="sm"
+                      variant="ghost"
+                      className="h-7 px-2 gap-1"
+                      onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, false), "link", "Link de convite (Preview)")}
+                    >
+                      {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    </Button>
+                  </div>
                   <Button
+                    variant="outline"
                     size="sm"
-                    variant="ghost"
-                    className="h-7 px-2 gap-1"
-                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link", "Link de convite")}
+                    className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
+                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link_prod", "Link oficial (Produção)")}
                   >
-                    {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                    {copied === "link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
+                    Copiar Link Oficial (Produção)
                   </Button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
