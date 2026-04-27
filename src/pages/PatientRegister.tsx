@@ -54,12 +54,14 @@ const resolveRegistrationDisplay = (params: {
   const hasAnyLinkContext = hasNutriParam || hasCodeParam;
   const hasSelectedProfessional = Boolean(params.selectedProfessional?.user_id);
   
-  // Se o profissional foi pré-selecionado via URL (?nutri=ID), consideramos confirmado automaticamente
-  // para remover a tela de "Aceitar Convite" que o usuário detesta.
+  // PADRONIZAÇÃO: TODOS os links suportados (?nutri=, ?code=, ?token=) devem
+  // exibir a tela de boas-vindas "Você está sendo convidado!" com a foto do
+  // profissional antes do formulário, para garantir confirmação visual do
+  // vínculo. Anteriormente o link direto pulava essa tela; agora é unificado.
   const isDirectProfessionalLink = hasNutriParam && !hasCodeParam;
-  
+
   const shouldShowInvitationWelcome = Boolean(
-    hasAnyLinkContext && hasSelectedProfessional && !params.isProfConfirmed && !isDirectProfessionalLink
+    hasAnyLinkContext && hasSelectedProfessional && !params.isProfConfirmed
   );
 
   const shouldShowInvalidCodeOnly = Boolean(
