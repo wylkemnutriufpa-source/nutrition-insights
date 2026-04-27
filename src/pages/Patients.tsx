@@ -723,9 +723,15 @@ export default function Patients() {
   const executeBulkAction = () => {
     if (bulkSelected.size === 0) { toast.info("Selecione pelo menos um paciente"); return; }
     const newStatus = bulkMode === "deactivate" ? "inactive" : "active";
-    if (!confirm(`${bulkMode === "deactivate" ? "Desativar" : "Ativar"} ${bulkSelected.size} pacientes?`)) return;
-    bulkToggleMutation.mutate({ ids: Array.from(bulkSelected), newStatus });
-    setBulkManageOpen(false);
+    
+    setAlertConfig({
+      title: `${bulkMode === "deactivate" ? "Desativar" : "Ativar"} ${bulkSelected.size} pacientes?`,
+      desc: `Eles ${bulkMode === "deactivate" ? "deixarão de ser contabilizados nas métricas de engajamento" : "voltarão a aparecer na sua lista principal"}.`,
+      action: () => {
+        bulkToggleMutation.mutate({ ids: Array.from(bulkSelected), newStatus });
+        setBulkManageOpen(false);
+      }
+    });
   };
 
   const removeFromProgram = (patientId: string, programId: string, programTitle: string) => {
