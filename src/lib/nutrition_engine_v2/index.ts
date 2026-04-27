@@ -12,3 +12,7 @@ export * from "./constants";
 export * from "./calculations";
 export * from "./templates";
 export * from "./planBuilder";
+export * from "./mealStructureBuilder";
+export * from "./distributionEngine";
+export * from "./planBuilderDynamic";
+export * from "./dynamicEngine";
