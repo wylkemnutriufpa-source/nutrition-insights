@@ -50,9 +50,18 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [confirmedPayments, setConfirmedPayments] = useState<Set<string>>(new Set());
   const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
   const [sendingLinkId, setSendingLinkId] = useState<string | null>(null);
+  const [profName, setProfName] = useState("seu nutricionista");
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
   const onboardingLink = `${window.location.origin}/cadastro?nutri=${user?.id}`;
+
+  useMemo(() => {
+    if (!user?.id) return;
+    supabase.from("profiles").select("full_name").eq("id", user.id).single()
+      .then(({ data }) => {
+        if (data?.full_name) setProfName(data.full_name);
+      });
+  }, [user?.id]);
 
   const copyOnboardingLink = async () => {
     try {
