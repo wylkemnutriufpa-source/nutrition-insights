@@ -513,7 +513,7 @@ export default function PatientRegister() {
     );
   }
 
-  if (selectedProfessional && !isProfConfirmed && preselectedNutri) {
+  if (selectedProfessional && !isProfConfirmed && (preselectedNutri || invitationCode)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
