@@ -48,12 +48,23 @@ export default function Invitation() {
       if (invokeError) {
         console.error(`[Invitation] [CID:${correlationId}] Edge function error:`, invokeError);
         setError("Ocorreu um erro técnico ao validar seu convite. Por favor, tente novamente.");
+        await supabase.from("invitation_diagnostics").insert({
+          code,
+          error_type: 'technical_error',
+          metadata: { error: invokeError.message, stage: 'invoke' }
+        });
         return;
       }
 
       if (!data.success) {
         console.warn(`[Invitation] [CID:${correlationId}] Validation failed:`, data.error_code, data.message);
         
+        await supabase.from("invitation_diagnostics").insert({
+          code,
+          error_type: data.error_code || 'invalid',
+          metadata: { message: data.message, stage: 'validation_fail' }
+        });
+
         if (data.invitation) {
           setInvitation(data.invitation);
         }
@@ -69,6 +80,11 @@ export default function Invitation() {
     } catch (err: any) {
       console.error(`[Invitation] [CID:${correlationId}] Fatal error fetching invitation:`, err);
       setError("Ocorreu um erro inesperado. Por favor, tente recarregar a página.");
+      await supabase.from("invitation_diagnostics").insert({
+        code,
+        error_type: 'fatal_error',
+        metadata: { error: err.message, stage: 'catch' }
+      });
     } finally {
       setLoading(false);
       setIsValidating(false);
