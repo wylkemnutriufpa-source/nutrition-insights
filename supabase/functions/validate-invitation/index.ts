@@ -46,8 +46,9 @@ Deno.serve(async (req) => {
       // LOG FAILURE: Invalid code
       await logInvitation(adminClient, {
         event_type: "validation_failed",
-        details: { code: normalizedCode, reason: "INVALID_CODE", origin },
-        user_agent: userAgent
+        details: { code: normalizedCode, reason: "INVALID_CODE", origin, cid },
+        user_agent: userAgent,
+        correlation_id: cid
       });
       return new Response(JSON.stringify({ 
         success: false, 
