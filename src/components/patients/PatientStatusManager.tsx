@@ -15,7 +15,7 @@ import { toast } from "sonner";
 import {
   Search, CreditCard, Play, FileCheck, ArrowLeft,
   Users, Loader2, Eye, ChevronRight, DollarSign, ShieldCheck,
-  ClipboardList, KeyRound, Send, UserCog, Mail, Copy
+  ClipboardList, KeyRound, Send, UserCog, Mail, Copy, MessageCircle
 } from "lucide-react";
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
