@@ -60,21 +60,44 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Bloqueio de duplicados: verifica se já existe um convite PENDENTE para este email e nutricionista nos últimos 5 minutos
-    if (email) {
-      const { data: existingPending } = await adminClient
+    // Reuso de convite: Verifica se já existe um convite GERAL (sem nome/email) ativo para este nutricionista
+    if (!name && !email) {
+      const { data: existingGeneral } = await adminClient
         .from("invitations")
-        .select("id, created_at")
+        .select("id, code, created_at, expires_at")
         .eq("professional_id", caller.id)
-        .eq("patient_email", email)
+        .is("patient_name", null)
+        .is("patient_email", null)
         .eq("status", "pending")
-        .gt("created_at", new Date(Date.now() - 5 * 60 * 1000).toISOString())
+        .is("used_at", null)
+        .gt("expires_at", new Date().toISOString())
+        .order("created_at", { ascending: false })
+        .limit(1)
         .maybeSingle();
 
-      if (existingPending) {
-        throw new Error("Já existe um convite pendente recente para este paciente. Aguarde alguns minutos ou use o link anterior.");
+      if (existingGeneral) {
+        const browserOrigin = req.headers.get("origin");
+        const referer = req.headers.get("referer");
+        let origin = "https://www.fitjourney.com.br";
+        if (browserOrigin && !browserOrigin.includes("supabase")) {
+          origin = browserOrigin;
+        } else if (referer) {
+          try { origin = new URL(referer).origin; } catch { }
+        }
+        
+        return new Response(JSON.stringify({ 
+          success: true, 
+          code: existingGeneral.code, 
+          url: `${origin}/convite/${existingGeneral.code}`,
+          reused: true
+        }), {
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
       }
     }
+
+    // Bloqueio de duplicados para convites específicos: verifica se já existe um convite PENDENTE para este email e nutricionista nos últimos 5 minutos
+    if (email) {
 
     // Tenta gerar um código único até 3 vezes
     let code = "";
