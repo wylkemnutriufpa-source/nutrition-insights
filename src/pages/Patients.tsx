@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { BASE_URL } from "@/lib/config";
 import { useNavigate, Link } from "react-router-dom";
+import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import { useOnlinePatients } from "@/hooks/useOnlinePatients";
