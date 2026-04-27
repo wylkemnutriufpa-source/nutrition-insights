@@ -85,6 +85,14 @@ export default function InvitePatient() {
           .single();
         setClinic(clinicData);
       }
+
+      const { data: publicProfileData } = await supabase
+        .from("public_profile_settings")
+        .select("slug, is_public")
+        .eq("nutritionist_id", user.id)
+        .maybeSingle();
+      
+      setPublicProfile(publicProfileData);
     };
     fetchData();
   }, [user?.id]);
