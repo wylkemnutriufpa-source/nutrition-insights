@@ -144,77 +144,60 @@ export default function PatientGridDashboard() {
 
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   // 🛡️ REGRESSION GUARD — BASIC MODE PATIENT DASHBOARD
-  // DO NOT add cards, sections, or complexity to the basic mode render.
-  // Basic mode = meal plan + feedback ONLY. 
-  // Any additions must go to pro/advanced blocks below.
-  // See: mem://ux/painel-basico-paciente-ultra-minimo
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-  // BASIC MODE — Ultra-minimal: only meal plan + feedback (check-in com peso/foto a cada 15 dias)
   if (expUI.isBasic && !blockDashboard && !showOnboardingCard) {
     return (
-      <div className="space-y-4">
-        {/* Status do modo de experiência (compacto) */}
+      <div className="space-y-6 max-w-2xl mx-auto">
         <ExperienceModeStatusSection />
-        {/* Mode switcher — sempre visível para o paciente trocar */}
-        <div className="flex justify-center">
+        
+        <div className="flex flex-col items-center gap-4 text-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+            <UtensilsCrossed className="w-8 h-8 text-primary" />
+          </div>
+          <div className="space-y-1">
+            <h2 className="text-2xl font-bold tracking-tight">Olá! 👋</h2>
+            <p className="text-muted-foreground text-sm">Seu dia simplificado em um só lugar.</p>
+          </div>
           <InlineExperienceToggle />
         </div>
 
-        {/* Greeting */}
-        <div>
-          <h2 className="text-lg font-bold text-foreground">Meu Plano</h2>
-          <p className="text-xs text-muted-foreground">Seu plano alimentar do dia</p>
-        </div>
+        <div className="space-y-4">
+          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+            <DailyMealPlanInline />
+          </Suspense>
 
-        {/* 1. Plano alimentar — conteúdo principal */}
-        <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
-          <DailyMealPlanInline />
-        </Suspense>
+          <PlanRequestButton />
 
-        {/* CTA único: pedir plano (só aparece quando sem plano) */}
-        <PlanRequestButton />
-
-        {/* 2. Feedback / Check-in — peso + fotos com histórico de datas */}
-        <Card
-          className="cursor-pointer border border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10 hover:border-primary/40 hover:shadow-md transition-all group"
-          onClick={() => navigate("/checkin")}
-        >
-          <div className="flex items-center gap-3 px-4 py-4">
-            <div className="w-11 h-11 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center flex-shrink-0">
-              <CameraIcon className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center gap-2">
-                <h3 className="text-sm font-semibold text-foreground">Enviar Feedback</h3>
-                <Badge variant="secondary" className="text-[9px] h-4">A cada 15 dias</Badge>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <Card
+              className="cursor-pointer border border-primary/20 bg-primary/5 hover:border-primary/40 transition-all p-4 flex items-center gap-3 group"
+              onClick={() => navigate("/checkin")}
+            >
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <CameraIcon className="w-5 h-5 text-primary" />
               </div>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                Mande seu peso e fotos com a data — seu profissional acompanha sua evolução por aqui.
-              </p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-primary group-hover:translate-x-0.5 transition-all flex-shrink-0" />
-          </div>
-        </Card>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-bold">Enviar Feedback</h3>
+                <p className="text-[10px] text-muted-foreground">Mande seu peso e fotos</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all" />
+            </Card>
 
-        {/* 3. Receitas — incluído no básico */}
-        <Card
-          className="cursor-pointer border border-orange-500/20 bg-gradient-to-br from-orange-500/5 to-orange-600/10 hover:border-orange-500/40 hover:shadow-md transition-all group"
-          onClick={() => navigate("/recipes")}
-        >
-          <div className="flex items-center gap-3 px-4 py-4">
-            <div className="w-11 h-11 rounded-xl bg-orange-500/10 border border-orange-500/20 flex items-center justify-center flex-shrink-0">
-              <ChefHat className="w-5 h-5 text-orange-500" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <h3 className="text-sm font-semibold text-foreground">Receitas</h3>
-              <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
-                Receitas práticas e saudáveis alinhadas ao seu plano.
-              </p>
-            </div>
-            <ArrowRight className="w-4 h-4 text-muted-foreground/40 group-hover:text-orange-500 group-hover:translate-x-0.5 transition-all flex-shrink-0" />
+            <Card
+              className="cursor-pointer border border-orange-500/20 bg-orange-500/5 hover:border-orange-500/40 transition-all p-4 flex items-center gap-3 group"
+              onClick={() => navigate("/recipes")}
+            >
+              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
+                <ChefHat className="w-5 h-5 text-orange-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-sm font-bold">Receitas</h3>
+                <p className="text-[10px] text-muted-foreground">Pratos saudáveis para você</p>
+              </div>
+              <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-orange-500 transition-all" />
+            </Card>
           </div>
-        </Card>
+        </div>
       </div>
     );
   }
