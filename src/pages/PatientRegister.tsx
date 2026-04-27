@@ -398,7 +398,8 @@ export default function PatientRegister() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    if ((preselectedNutri || invitationCode) && sigValid === false && selectedProfessional) {
+    
+    if ((preselectedNutri || invitationCode) && sigValid === false) {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
       return;
     }
@@ -431,7 +432,9 @@ export default function PatientRegister() {
         setLoading(false);
         return;
       }
-        addLog("Nenhum profissional selecionado. Continuando cadastro sem vínculo automático...");
+
+      if (!nutriId) {
+        addLog("Nenhum profissional selecionado. Criando lead...");
         const { error: leadErr } = await supabase.from("lead_requests").insert({
           nutritionist_id: "00000000-0000-0000-0000-000000000000",
           name,
@@ -501,7 +504,6 @@ export default function PatientRegister() {
 
       if (canonErr) {
         addLog(`Erro na RPC create_patient_canonical: ${canonErr.message}`);
-        // Tenta inserção manual se a RPC falhar por RLS ou algo assim
         addLog("Tentando fallback manual para vínculo...");
         await supabase.from("profiles").update({ 
           full_name: name, 
