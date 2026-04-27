@@ -26,7 +26,7 @@ export default function PatientDiagnostic() {
     setResults(null);
     try {
       // 1. Check Invite
-      const { data: invite, error: inviteErr } = await supabase
+      const { data: invite, error: inviteErr } = await (supabase as any)
         .from("invitations")
         .select("*")
         .eq("patient_email", user?.email)
@@ -41,30 +41,31 @@ export default function PatientDiagnostic() {
           : { status: 'warning', message: "Nenhum convite específico encontrado para este e-mail." };
 
       // 2. Check Professional Link
-      const { data: profLink, error: profErr } = await supabase
-        .from("patient_nutritionists")
-        .select("nutritionist_id")
+      const { data: profLink, error: profErr } = await (supabase as any)
+        .from("patient_professional_links")
+        .select("professional_id, link_status")
         .eq("patient_id", user?.id)
         .maybeSingle();
       
       const profResult: any = profErr
         ? { status: 'error', message: `Erro ao verificar vínculo: ${profErr.message}` }
         : profLink
-          ? { status: 'ok', message: "Vínculo profissional ativo." }
+          ? { status: 'ok', message: `Vínculo ativo (${profLink.link_status}).` }
           : { status: 'error', message: "Nenhum profissional vinculado a esta conta." };
 
-      // 3. Check Subscription (Placeholder for patient-facing plan logic)
-      const { data: subData, error: subErr } = await supabase
-        .from("patient_subscriptions")
-        .select("*")
+      // 3. Check Program Enrollment
+      const { data: enrollData, error: enrollErr } = await (supabase as any)
+        .from("program_enrollments")
+        .select("status")
         .eq("patient_id", user?.id)
+        .limit(1)
         .maybeSingle();
 
-      const subResult: any = subErr
-        ? { status: 'error', message: `Erro ao verificar plano: ${subErr.message}` }
-        : subData
-          ? { status: 'ok', message: `Plano ${subData.status === 'active' ? 'Ativo' : 'Pendente'}.` }
-          : { status: 'warning', message: "Nenhum registro de assinatura direta encontrado." };
+      const enrollResult: any = enrollErr
+        ? { status: 'error', message: `Erro ao verificar programa: ${enrollErr.message}` }
+        : enrollData
+          ? { status: 'ok', message: `Matrícula em programa: ${enrollData.status}.` }
+          : { status: 'warning', message: "Nenhum programa ativo detectado." };
 
       // 4. Check RLS (Access to profile settings)
       const { error: rlsErr } = await supabase
