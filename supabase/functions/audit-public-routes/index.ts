@@ -38,9 +38,12 @@ Deno.serve(async (req) => {
     const results: Array<{ pathname: string; status_code: number; ok: boolean; notes: string | null }> = [];
 
     for (const path of PATHS) {
+      const fullUrl = `${BASE}${path}`;
       try {
         // SPA: every public route should return 200 (index.html). 404 means hosting is broken.
-        const res = await fetch(`${BASE}${path}`, {
+        // NB: paths podem incluir querystring (ex: /cadastro?code=HEALTHCHECK) — fetch
+        // aceita essa forma direto, sem precisar codificar.
+        const res = await fetch(fullUrl, {
           method: "GET",
           redirect: "manual",
           headers: {
@@ -50,18 +53,36 @@ Deno.serve(async (req) => {
         });
         // SPA fallback should always serve index.html (status 200) — anything >=400 is a real failure.
         const ok = res.status >= 200 && res.status < 400;
+
+        // Em regressão, capturamos um snippet do body para enriquecer o alerta —
+        // isso permite ver imediatamente se o hosting devolveu HTML de 404 vs erro real.
+        let bodySnippet: string | null = null;
+        if (!ok) {
+          try {
+            const text = await res.text();
+            bodySnippet = text.slice(0, 240).replace(/\s+/g, " ").trim();
+          } catch {
+            bodySnippet = null;
+          }
+        } else {
+          // Drena o body para evitar leak no Deno
+          await res.arrayBuffer().catch(() => {});
+        }
+
         results.push({
           pathname: path,
           status_code: res.status,
           ok,
-          notes: ok ? null : `unexpected status ${res.status}`,
+          notes: ok
+            ? null
+            : `status=${res.status} url=${fullUrl}${bodySnippet ? ` body="${bodySnippet}"` : ""}`,
         });
       } catch (e: any) {
         results.push({
           pathname: path,
           status_code: 0,
           ok: false,
-          notes: `fetch failed: ${e?.message || "unknown"}`,
+          notes: `fetch failed for ${fullUrl}: ${e?.message || "unknown"}`,
         });
       }
     }
