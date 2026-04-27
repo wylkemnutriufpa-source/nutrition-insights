@@ -186,8 +186,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 let targetTenantId: string | null = null;
 
                 if (inviteCode && !targetNutriId) {
-                  const { data: invite } = await supabase
-                    .from("invitations")
+                  const { data: invite } = await (supabase.from("invitations") as any)
                     .select("professional_id, tenant_id")
                     .eq("code", inviteCode)
                     .maybeSingle();
@@ -200,8 +199,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                 if (targetNutriId) {
                   // Ensure we have a tenant_id
                   if (!targetTenantId) {
-                    const { data: tenant } = await supabase
-                      .from("tenants")
+                    const { data: tenant } = await (supabase.from("tenants") as any)
                       .select("id")
                       .eq("owner_id", targetNutriId)
                       .maybeSingle();
