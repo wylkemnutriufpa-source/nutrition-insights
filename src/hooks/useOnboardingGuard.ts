@@ -5,6 +5,7 @@
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { useAuth } from "@/lib/auth";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading";
 
