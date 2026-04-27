@@ -46,6 +46,7 @@ import {
 } from "lucide-react";
 import { Link2, Copy, RefreshCw } from "lucide-react";
 import { WhatsAppNotifyButton } from "@/components/common/WhatsAppNotifyButton";
+import { sendWhatsAppNotification } from "@/utils/whatsappNotification";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
 import PatientProjectGovernance from "@/components/patient/PatientProjectGovernance";
