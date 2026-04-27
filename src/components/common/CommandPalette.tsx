@@ -25,7 +25,8 @@ import {
 const allRoutes = [
   // Professional
   { to: "/", icon: LayoutDashboard, label: "Dashboard", keywords: "dashboard painel inicio home principal resumo overview", roles: ["nutritionist", "admin", "patient", "personal"], desc: "Página principal" },
-  { to: "/patients", icon: Users, label: "Pacientes", keywords: "pacientes clientes lista gerenciar patients", roles: ["nutritionist", "admin"], desc: "Gerenciar pacientes" },
+  { to: "/patients", icon: Users, label: "Pacientes", keywords: "pacientes clientes lista gerenciar patients", roles: ["nutritionist", "admin", "personal"], desc: "Gerenciar pacientes" },
+  { to: "/invite-patient", icon: UserPlus, label: "Convidar Paciente", keywords: "convidar paciente novo cadastro convite link magic whatsapp invite", roles: ["nutritionist", "admin", "personal"], desc: "Enviar convite de acesso" },
   { to: "/ranking", icon: Trophy, label: "Ranking Global", keywords: "ranking global classificacao pontos leaderboard competicao trofeu podio posicao", roles: ["nutritionist", "admin", "patient", "personal"], desc: "Classificação de pacientes" },
   { to: "/checkin-panel", icon: ClipboardCheck, label: "Painel Check-ins", keywords: "checkin checkins painel verificacao acompanhamento progresso peso medidas", roles: ["nutritionist", "admin"], desc: "Check-ins dos pacientes" },
   { to: "/appointments", icon: Activity, label: "Agenda", keywords: "agenda consultas appointments calendario marcacao horario atendimento", roles: ["nutritionist", "admin", "patient"], desc: "Agendar consultas" },
