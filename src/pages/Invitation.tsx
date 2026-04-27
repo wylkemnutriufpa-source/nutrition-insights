@@ -203,29 +203,77 @@ export default function Invitation() {
   const canRegenerate = isNutritionist && isOwner;
 
   if (error) {
+    const getErrorDetails = () => {
+      switch (errorCode) {
+        case "INVALID_CODE":
+          return {
+            icon: <FileQuestion className="w-10 h-10 text-destructive" />,
+            title: "Convite não encontrado",
+            step: "Verifique se você copiou o link corretamente ou peça um novo link ao seu nutricionista."
+          };
+        case "EXPIRED":
+          return {
+            icon: <Clock className="w-10 h-10 text-destructive" />,
+            title: "Convite expirado",
+            step: "Este link tinha um prazo de validade que já passou. Peça ao seu nutricionista para gerar um novo convite."
+          };
+        case "ALREADY_USED":
+          return {
+            icon: <UserCheck className="w-10 h-10 text-destructive" />,
+            title: "Convite já utilizado",
+            step: "Este convite já serviu para criar uma conta. Se você já tem acesso, faça login com seu e-mail e senha."
+          };
+        case "ERRO_PERMISSAO":
+          return {
+            icon: <Lock className="w-10 h-10 text-destructive" />,
+            title: "Acesso restrito",
+            step: "Você não tem permissão para acessar este convite. Certifique-se de estar usando o link oficial enviado para você."
+          };
+        default:
+          return {
+            icon: <AlertCircle className="w-10 h-10 text-destructive" />,
+            title: "Convite Indisponível",
+            step: "Não foi possível validar seu convite no momento. Tente recarregar a página ou entre em contato com o suporte."
+          };
+      }
+    };
+
+    const details = getErrorDetails();
+
     return (
       <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full border-destructive/20 shadow-2xl bg-destructive/5 overflow-hidden">
           <div className="h-1.5 bg-destructive w-full" />
           <CardHeader className="text-center space-y-4 pt-8">
             <div className="w-20 h-20 mx-auto rounded-full bg-destructive/10 flex items-center justify-center mb-2 border-4 border-background shadow-sm">
-              <AlertCircle className="w-10 h-10 text-destructive" />
+              {details.icon}
             </div>
             <div>
-              <CardTitle className="text-2xl font-display font-bold text-foreground tracking-tight">Convite Indisponível</CardTitle>
-              <CardDescription className="text-base mt-2 leading-relaxed">
+              <CardTitle className="text-2xl font-display font-bold text-foreground tracking-tight">
+                {details.title}
+              </CardTitle>
+              <CardDescription className="text-base mt-2 leading-relaxed text-balance">
                 {error}
               </CardDescription>
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pb-8">
+            <div className="p-4 rounded-xl bg-background border border-border shadow-sm mb-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
+                <ArrowRight className="w-3 h-3 text-primary" /> Passo recomendado
+              </p>
+              <p className="text-sm text-foreground leading-relaxed">
+                {details.step}
+              </p>
+            </div>
+
             {canRegenerate ? (
               <>
                 <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 text-amber-800 text-sm mb-2">
                   <p className="font-bold flex items-center gap-2 mb-1">
-                    <ShieldCheck className="w-4 h-4" /> Admin Nutricionista
+                    <ShieldCheck className="w-4 h-4" /> Painel do Nutricionista
                   </p>
-                  Você é o dono deste convite. Você pode gerar um novo código para o paciente agora mesmo.
+                  Como você é o profissional responsável, pode gerar um novo código agora.
                 </div>
                 <Button 
                   onClick={handleRegenerate} 
@@ -233,17 +281,8 @@ export default function Invitation() {
                   className="w-full gap-2 h-14 text-lg font-bold shadow-lg shadow-primary/20"
                 >
                   {isProcessingAction ? <Loader2 className="w-5 h-5 animate-spin" /> : <RefreshCw className="w-5 h-5" />}
-                  Gerar Novo Convite
+                  Gerar Novo Código
                 </Button>
-                 {error.includes("expirou") && (
-                    <Button 
-                     variant="outline" 
-                     onClick={() => openWhatsApp(`Olá! Seu convite anterior para o FitJourney expirou. Aqui está o novo link atualizado para você começar seu acompanhamento: ${getInvitationUrl(code || "")}`)}
-                     className="w-full gap-2 h-12"
-                    >
-                     <MessageSquare className="w-5 h-5" /> Notificar Paciente via WhatsApp
-                    </Button>
-                )}
               </>
             ) : (
               <>
@@ -252,7 +291,7 @@ export default function Invitation() {
                 </Button>
                 <div className="grid grid-cols-2 gap-3">
                   <Button variant="outline" onClick={() => navigate("/auth")} className="h-12 text-sm font-medium">
-                    Ir para Login
+                    Fazer Login
                   </Button>
                   <Button variant="ghost" onClick={() => navigate("/")} className="h-12 text-sm">
                     Ir para o Início
@@ -262,14 +301,14 @@ export default function Invitation() {
             )}
             
             <p className="text-[10px] text-center text-muted-foreground mt-4 italic">
-              Se você acredita que isso é um erro, entre em contato com seu nutricionista ou com o suporte do FitJourney.
+              Código de erro: <span className="font-mono">{errorCode || "UNKNOWN"}</span>
             </p>
           </CardContent>
         </Card>
         
         {isPreview && !showDebug && (
           <Button variant="ghost" size="sm" onClick={() => setShowDebug(true)} className="mt-8 text-muted-foreground/40 hover:text-muted-foreground">
-            <Terminal className="w-4 h-4 mr-2" /> Debug Preview
+            <Terminal className="w-4 h-4 mr-2" /> Abrir Ferramentas de Debug
           </Button>
         )}
         
