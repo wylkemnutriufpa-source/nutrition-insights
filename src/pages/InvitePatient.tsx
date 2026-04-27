@@ -102,7 +102,7 @@ export default function InvitePatient() {
     () => `${siteUrl}/onboarding`,
     [siteUrl],
   );
-  const publicRegisterLink = signedLink || `${siteUrl}/cadastro?nutri=${user?.id}`;
+  const publicRegisterLink = `${siteUrl}/cadastro?nutri=${user?.id}`;
   const quickLink = useMemo(() => `${siteUrl}/vincular/${user?.id}`, [siteUrl, user?.id]);
   const publicProfileLink = useMemo(() => publicProfile?.slug ? `${siteUrl}/p/${publicProfile.slug}` : null, [siteUrl, publicProfile]);
   const whatsappMessage = useMemo(() => {
@@ -228,12 +228,11 @@ export default function InvitePatient() {
           <CardHeader className="pb-3">
             <div className="flex items-center gap-2 text-primary">
               <Zap className="w-4 h-4" />
-              <CardTitle className="text-sm">Link de Cadastro Automático (Auto-Onboarding)</CardTitle>
+              <CardTitle className="text-sm">Seu Link de Cadastro Único (Compartilhável)</CardTitle>
             </div>
             <CardDescription className="text-xs">
-              Mande esse link para pacientes que já pagaram. Eles mesmos fazem o cadastro, 
-              assinam o termo de consentimento e preenchem a anamnese. 
-              Você receberá uma notificação assim que tudo estiver pronto para avaliação.
+              Este é o seu link fixo. Mande para qualquer paciente novo. 
+              Ao clicar, eles serão vinculados a você automaticamente e levados direto para o cadastro.
             </CardDescription>
           </CardHeader>
           <CardContent>
