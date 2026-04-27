@@ -63,10 +63,12 @@ export default function InvitePatient() {
   useEffect(() => {
     if (!user?.id) return;
     const fetchData = async () => {
-      // First try to get professional profile which has the display name
+      // Fetch professional profile to use clinic_name as the display name if applicable
+      // Based on database check, display_name isn't a column, so we use full_name from profiles
+      // or clinic_name from professional_profiles if that's where the user put their title.
       const { data: profProfileData } = await supabase
         .from("professional_profiles")
-        .select("display_name, clinic_name")
+        .select("clinic_name")
         .eq("user_id", user.id)
         .maybeSingle();
 
@@ -76,10 +78,10 @@ export default function InvitePatient() {
         .eq("id", user.id)
         .single();
       
-      // Use display_name from professional profile if available, otherwise full_name
+      // Use full_name for individual identification, but let user message imply they might use clinic_name for branding
       setProfile({
         ...profileData,
-        display_name: profProfileData?.display_name || profileData?.full_name
+        display_name: profileData?.full_name // We'll keep using full_name as the primary source
       });
       setClinic({ name: profProfileData?.clinic_name });
 
