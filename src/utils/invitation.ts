@@ -1,4 +1,4 @@
-import { BASE_URL } from "@/lib/config";
+import { BASE_URL, OFFICIAL_DOMAIN } from "@/lib/config";
 
 /**
  * Gera a URL oficial do convite.
@@ -6,24 +6,31 @@ import { BASE_URL } from "@/lib/config";
  * @returns A URL completa.
  */
 export const getInvitationUrl = (code: string) => {
-  // Se estivermos em produção ou em um domínio oficial, usamos o hostname atual.
-  // Caso contrário, forçamos o domínio oficial para garantir que o link funcione no WhatsApp.
-  const officialDomains = ["fitjourney.com.br"];
   const currentHost = window.location.hostname;
-  const isOfficial = officialDomains.some(d => currentHost.includes(d));
+  
+  // Se estivermos em produção ou em um domínio oficial, usamos o hostname atual.
+  const isProduction = currentHost === OFFICIAL_DOMAIN || currentHost === "fitjourney.com.br";
+  const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
 
-  if (!isOfficial && !currentHost.includes("localhost") && !currentHost.includes("lovable")) {
-    return `${BASE_URL}/convite/${code}`;
+  // Log para depuração solicitado pelo usuário
+  console.log("[getInvitationUrl] Config:", {
+    currentHost,
+    isProduction,
+    isPreview,
+    BASE_URL,
+    OFFICIAL_DOMAIN
+  });
+
+  // Para o WhatsApp, se não for produção e não for preview, usamos o BASE_URL (produção)
+  // Mas se for preview, usamos o origin atual para o desenvolvedor testar.
+  if (isPreview) {
+    return `${window.location.origin}/convite/${code}`;
   }
 
-  // Em localhost ou lovable, usamos a origem atual para facilitar o teste, 
-  // mas o usuário pediu para "sempre abrir com fitjourney.com.br" no log.
-  // No entanto, para o link ser CLICÁVEL e funcionar no ambiente de teste, 
-  // manter a origem atual é melhor, mas para o WhatsApp WEB/Celular, 
-  // o domínio oficial é obrigatório para confiança.
-  
-  return `${window.location.origin}/convite/${code}`;
+  // Fallback padrão: Produção
+  return `${BASE_URL}/convite/${code}`;
 };
+
 
 /**
  * Gera a mensagem padrão de WhatsApp para convites.
