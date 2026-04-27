@@ -42,9 +42,21 @@ Deno.serve(async (req) => {
       .ilike("code", normalizedCode) // ilike para ser case-insensitive por segurança
       .maybeSingle();
 
-    if (fetchError) {
-      console.error(`[validate-invitation] [CID:${cid}] Database error:`, fetchError);
-      throw new Error("ERRO_BANCO_DADOS");
+    if (!invitation) {
+      // LOG FAILURE: Invalid code
+      await logInvitation(adminClient, {
+        event_type: "validation_failed",
+        details: { code: normalizedCode, reason: "INVALID_CODE", origin, cid },
+        user_agent: userAgent,
+        correlation_id: cid
+      });
+      return new Response(JSON.stringify({ 
+        success: false, 
+        error_code: "INVALID_CODE",
+        message: "Este link de convite é inválido ou não foi encontrado." 
+      }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
+      });
     }
 
     // 3. Valida expiração
