@@ -154,6 +154,18 @@ export default function MyPublicProfile() {
                 </div>
                 <p className="text-[10px] text-muted-foreground mt-2">Pacientes vinculados a você automaticamente.</p>
               </div>
+
+              <div className="p-4 rounded-xl bg-background border border-border shadow-sm">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Link Direto da Agenda</p>
+                <div className="flex items-center gap-2">
+                  <Input value={`${window.location.origin}/p/${settings.slug}/agenda`} readOnly className="h-9 text-xs font-mono" />
+                  <Button variant="ghost" size="sm" className="h-9 px-3" onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/p/${settings.slug}/agenda`);
+                    toast.success("Link da agenda copiado!");
+                  }}><Copy className="w-3.5 h-3.5" /></Button>
+                </div>
+                <p className="text-[10px] text-muted-foreground mt-2">Link direto para seu calendário de agendamentos.</p>
+              </div>
             </div>
           </CardContent>
         </Card>

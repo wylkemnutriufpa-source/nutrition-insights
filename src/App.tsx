@@ -598,6 +598,7 @@ const App = () => (
                <Route path="/convite/*" element={<InvitationCodeRedirect />} />
                <Route path="/p/:slug/paciente" element={<PublicProfileRegistrationRedirect />} />
                <Route path="/p/:slug/profissional" element={<PublicProfileRegistrationRedirect />} />
+               <Route path="/p/:slug/agenda" element={<LP section="Agenda"><PublicBooking /></LP>} />
                <Route path="/p/:slug" element={<LP section="Perfil Público"><PublicProfile /></LP>} />
                <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
