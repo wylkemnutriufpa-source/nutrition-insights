@@ -99,7 +99,7 @@ export const getWhatsAppInvitationMessage = (params: {
   const safePatientName = patientName?.trim() ? patientName.split(" ")[0] : "Paciente";
   const safeProfName = professionalName?.trim() || "Seu Nutricionista";
   const safeClinicPart = clinicName?.trim() ? ` da clínica *${clinicName}*` : "";
-  const url = getInvitationUrl(invitationCode, professionalId);
+  const url = getInvitationUrl(invitationCode, professionalId, true);
 
   // Se houver um template customizado (do banco de dados), processamos as variáveis
   if (customTemplate) {
