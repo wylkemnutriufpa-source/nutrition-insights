@@ -4,8 +4,8 @@ import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
 import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-import OnboardingGateScreen, { IS_FLUID_STATE } from "@/components/patient/OnboardingGateScreen";
+import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
+import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 
 interface Props {
   children: ReactNode;

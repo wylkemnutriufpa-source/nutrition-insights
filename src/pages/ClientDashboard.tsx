@@ -44,8 +44,8 @@ import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFe
 import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
-import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-import OnboardingGateScreen, { IS_FLUID_STATE } from "@/components/patient/OnboardingGateScreen";
+import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
+import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
 import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
 import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar";
@@ -279,23 +279,48 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Telemetry: Log journey state to detect divergence
+  // Telemetry: Log journey state to detect divergence and persist for debugging
   useEffect(() => {
-    if (journeyStatus && !journeyLoading) {
-      console.log(`[Dashboard:Telemetry] Journey Status: ${journeyStatus} | canAccess: ${canAccessOnboarding}`);
+    if (journeyStatus && !journeyLoading && user?.id) {
+      const msg = `[Dashboard:Telemetry] Journey Status: ${journeyStatus} | canAccess: ${canAccessOnboarding}`;
+      console.log(msg);
+      
+      // Persist telemetry in localized state for rapid debugging
+      try {
+        const key = `fj_journey_telemetry_${user.id}`;
+        const history = JSON.parse(localStorage.getItem(key) || "[]");
+        const entry = { status: journeyStatus, canAccess: canAccessOnboarding, at: new Date().toISOString() };
+        // Keep last 10 events
+        const newHistory = [entry, ...history].slice(0, 10);
+        localStorage.setItem(key, JSON.stringify(newHistory));
+      } catch (e) { /* ignore storage errors */ }
     }
-  }, [journeyStatus, journeyLoading, canAccessOnboarding]);
+  }, [journeyStatus, journeyLoading, canAccessOnboarding, user?.id]);
 
   // Mandatory block states only - using centralized logic
   const isFluid = IS_FLUID_STATE(journeyStatus!);
   
+  // REDIRECT logic for non-fluid onboarding states (at-rest states that need gating)
   if (!journeyLoading && journeyStatus && !isFluid) {
     return <OnboardingGateScreen status={journeyStatus} />;
   }
 
-  // Fluid flow: If journey status allows onboarding, proceed to dashboard
-  // Components like OnboardingProgressModal will take over if data is missing.
-  if (journeyLoading) {
+  // AUTOMATIC REDIRECT: Ensure lead_created and awaiting_consent land on /consent immediately
+  // avoiding any dashboard render in-between.
+  useEffect(() => {
+    if (!journeyLoading && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent")) {
+      console.log("[Dashboard:AutoRedirect] Directing early onboarding state to /consent");
+      navigate("/consent", { replace: true });
+    }
+  }, [journeyStatus, journeyLoading, navigate]);
+
+  // Telemetry extraction helper for diagnostics
+  const getTelemetryLogs = () => {
+    try { return JSON.parse(localStorage.getItem(`fj_journey_telemetry_${user?.id}`) || "[]"); }
+    catch { return []; }
+  };
+
+  if (loading || journeyLoading) {
     return (
       <DashboardLayout>
         <BrainLoaderCard text="Carregando seu painel clínico…" />
@@ -307,15 +332,15 @@ export default function ClientDashboard() {
     <DashboardLayout>
       {/* Telemetry Debug View (Only in Preview/Dev) */}
       {(window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) && (
-        <div className="hidden">
-           {/* Silently keeping telemetry active in console via useEffect above */}
+        <div className="hidden" data-testid="journey-telemetry">
+           {JSON.stringify(getTelemetryLogs())}
         </div>
       )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <ExperienceModeSwitcher />
       </div>
       <OnboardingProgressModal />
-      <OnboardingExitGuard enabled={journeyStatus !== null && !IS_FLUID_STATE(journeyStatus)} />
+      <OnboardingExitGuard />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Experience Mode Status Banner */}
         <motion.div variants={item}>
@@ -572,7 +597,7 @@ export default function ClientDashboard() {
         </motion.div>
 
         {/* Action Buttons — Hidden during early onboarding for fluid flow */}
-        {journeyStatus !== "lead_created" && journeyStatus !== "awaiting_consent" && (
+        {journeyStatus !== "lead_created" && journeyStatus !== "awaiting_consent" && journeyStatus !== "onboarding_active" && (
           <motion.div variants={item} className="flex flex-wrap gap-2">
             <PlanRequestButton />
             <WorkoutRequestButton />

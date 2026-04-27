@@ -1262,7 +1262,7 @@ export default function Anamnesis() {
 
   return (
     <DashboardLayout>
-      <OnboardingExitGuard enabled={exitGuardEnabled} hasStartedFilling={hasStartedFilling} />
+      <OnboardingExitGuard enabled={exitGuardEnabled} />
       <div className="max-w-2xl mx-auto">
         {/* Nutritionist Mode Banner */}
         {isNutritionistMode && (

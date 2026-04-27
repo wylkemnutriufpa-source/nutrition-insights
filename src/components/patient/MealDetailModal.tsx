@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogClose } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import {
@@ -1781,6 +1781,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
             </div>
           )}
         </div>
+        <DialogClose />
       </DialogContent>
     </Dialog>
 

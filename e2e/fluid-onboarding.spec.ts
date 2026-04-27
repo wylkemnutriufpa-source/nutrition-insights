@@ -34,4 +34,33 @@ test.describe('Fluid Onboarding Flow for Link Invitations', () => {
     // Telemetry check: Ensure no infinite loading or block messages appeared
     await expect(page.locator('text=Aguarde a confirmação do seu profissional')).not.toBeVisible();
   });
+
+  test('should handle delayed journey transitions and maintain fluid UI', async ({ page }) => {
+    const professionalId = 'd32c56a4-a484-472c-827a-90ed0cdd05b8'; 
+    await page.goto(`/cadastro?nutri=${professionalId}`);
+    
+    await expect(page.locator('text=Você está sendo convidado')).toBeVisible();
+    await page.click('button:has-text("Cadastrar com este Profissional")');
+    
+    const email = `fluid_delay_test_${Date.now()}@example.com`;
+    await page.fill('input[name="name"]', 'Fluid Delay Patient');
+    await page.fill('input[type="email"]', email);
+    await page.fill('input[name="whatsapp"]', '11988887777');
+    await page.fill('input[type="password"]', 'password123');
+    
+    await page.click('button[type="submit"]');
+    
+    // land on consent
+    await expect(page.locator('text=Proteção dos Seus Dados Clínicos')).toBeVisible({ timeout: 20000 });
+    
+    // Simulate navigation away to dashboard while still in awaiting_consent
+    await page.goto('/client/dashboard');
+    
+    // Should auto-redirect back to /consent because it's a fluid onboarding state
+    await expect(page).toHaveURL(/\/consent/);
+    await expect(page.locator('text=Proteção dos Seus Dados Clínicos')).toBeVisible();
+    
+    // Confirm no action buttons (PlanRequest) are visible yet
+    await expect(page.locator('button:has-text("Solicitar Plano")')).not.toBeVisible();
+  });
 });
