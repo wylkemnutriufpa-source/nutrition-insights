@@ -112,8 +112,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initializeAuth = async () => {
+      const correlationId = `auth-init-${Date.now()}`;
       try {
-        // getSession is the reliable source for the initial session
+        console.log(`[Auth:${correlationId}] Initializing session...`);
         const { data: { session } } = await supabase.auth.getSession();
 
         if (!mounted) return;
@@ -122,16 +123,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          // Wrap in Promise.allSettled so one slow/failing query never blocks the app forever
-          await Promise.allSettled([
+          console.log(`[Auth:${correlationId}] Fetching data for user:`, session.user.id);
+          const [profileResult, rolesResult] = await Promise.allSettled([
             fetchProfile(session.user.id),
             fetchRoles(session.user.id),
           ]);
           
+          console.log(`[Auth:${correlationId}] Initial fetch complete. Profile:`, 
+            profileResult.status === 'fulfilled' ? 'OK' : 'Error',
+            'Roles:', rolesResult.status === 'fulfilled' ? 'OK' : 'Error'
+          );
+
           if (mounted) {
-            // Safety: if after first fetch we still have no roles, don't flip loading=false yet
-            // if we are in the initial session load, because triggers might be slow.
-            // However, we don't want to block forever. initializeAuth is called once.
             setLoading(false);
             checkSubscription();
           }
@@ -139,7 +142,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           if (mounted) setLoading(false);
         }
       } catch (err) {
-        console.error("[Auth] initializeAuth failed:", err);
+        console.error(`[Auth:${correlationId}] initializeAuth failed:`, err);
         if (mounted) setLoading(false);
       }
     };
@@ -182,10 +185,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if ((refCode || inviteCode || nutriId) && session.user.email) {
             (async () => {
+              const linkageId = `link-${Date.now()}-${Math.random().toString(36).substring(7)}`;
               try {
-                console.log("[Auth] Processing linkage with:", { refCode, inviteCode, nutriId });
+                console.log(`[Auth:${linkageId}] Processing linkage for ${session.user.email} with:`, { refCode, inviteCode, nutriId });
                 
-                // 1. Direct Link via invitation code or nutritionist ID
                 let targetNutriId = nutriId;
                 let targetTenantId: string | null = null;
 
@@ -197,11 +200,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   if (invite) {
                     targetNutriId = invite.professional_id;
                     targetTenantId = invite.tenant_id;
+                    console.log(`[Auth:${linkageId}] Resolved nutritionist from invite code:`, targetNutriId);
                   }
                 }
 
                 if (targetNutriId) {
-                  // Ensure we have a tenant_id
                   if (!targetTenantId) {
                     const { data: tenant } = await (supabase.from("tenants") as any)
                       .select("id")
@@ -211,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                   }
 
                   if (targetTenantId) {
-                    // Ensure nutritionist_patients link exists
+                    // IDEMPOTENCY: Use maybeSingle check before insert
                     const { data: existingLink } = await (supabase.from("nutritionist_patients") as any)
                       .select("id")
                       .eq("patient_id", session.user.id)
@@ -219,6 +222,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       .maybeSingle();
 
                     if (!existingLink) {
+                      console.log(`[Auth:${linkageId}] Creating link in nutritionist_patients...`);
                       const { error: insertError } = await (supabase.from("nutritionist_patients") as any).insert({
                         nutritionist_id: targetNutriId,
                         patient_id: session.user.id,
@@ -229,10 +233,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                       });
                       
                       if (insertError) {
-                        console.error("[Auth] Failed to insert nutritionist_patients:", insertError);
+                        console.error(`[Auth:${linkageId}] Failed to insert link:`, insertError);
                       } else {
-                        console.log("[Auth] Link created in nutritionist_patients");
+                        console.log(`[Auth:${linkageId}] Link created successfully`);
                       }
+                    } else {
+                      console.log(`[Auth:${linkageId}] Link already exists, skipping insert (idempotent).`);
                     }
                   }
                 }
@@ -284,8 +290,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           // Use setTimeout to avoid deadlock with Supabase auth internals
         setTimeout(async () => {
           if (!mounted) return;
+          const authEventId = `auth-evt-${Date.now()}`;
           try {
-            // Aggressive fetch of profile and roles
+            console.log(`[Auth:${authEventId}] Fetching user data after event: ${event}`);
             const [profileResult, rolesResult] = await Promise.all([
               supabase.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle(),
               supabase.from("user_roles").select("role").eq("user_id", session.user.id),
@@ -295,16 +302,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             
             const userRoles = rolesResult.data?.map((r) => r.role) || [];
             
-            // If user has no roles yet, wait up to 4s with retries (triggers may be slow)
             if (event === "SIGNED_IN" && userRoles.length === 0) {
-              console.warn("[Auth] User has no roles yet, starting aggressive retry for:", session.user.email);
+              console.warn(`[Auth:${authEventId}] User has no roles yet, starting aggressive retry for:`, session.user.email);
               
               const maxRetries = 4;
               let currentRetry = 0;
               
               const retryFetch = async () => {
                 currentRetry++;
-                console.log(`[Auth] Retry ${currentRetry}/${maxRetries} to fetch roles...`);
+                console.log(`[Auth:${authEventId}] Retry ${currentRetry}/${maxRetries} to fetch roles...`);
                 
                 try {
                   const { data: retryRoles } = await (supabase.from("user_roles") as any).select("role").eq("user_id", session.user.id);
@@ -314,19 +320,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
                     setRoles(retried);
                     setLoading(false);
                     checkSubscription();
-                    console.log("[Auth] Roles found on retry:", retried);
+                    console.log(`[Auth:${authEventId}] Roles found on retry:`, retried);
                     return;
                   }
                   
                   if (currentRetry < maxRetries) {
                     setTimeout(retryFetch, 1000);
                   } else {
-                    console.warn("[Auth] All role retries exhausted.");
+                    console.warn(`[Auth:${authEventId}] All role retries exhausted.`);
                     setRoles([]);
                     if (mounted) setLoading(false);
                   }
                 } catch (err) {
-                  console.error("[Auth] Role retry failed:", err);
+                  console.error(`[Auth:${authEventId}] Role retry failed:`, err);
                   if (mounted && currentRetry >= maxRetries) setLoading(false);
                 }
               };
@@ -335,14 +341,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
               return;
             }
 
-            // Roles found or not, but fetch completed
             setRoles(userRoles);
             if (mounted) {
               setLoading(false);
               checkSubscription();
+              console.log(`[Auth:${authEventId}] Data fetch complete. Roles:`, userRoles);
             }
           } catch (e) {
-            console.error("Error fetching user data on auth change:", e);
+            console.error(`[Auth:${authEventId}] Error fetching user data on auth change:`, e);
             if (mounted) setLoading(false);
           }
         }, 50); // Small initial delay to avoid session race
