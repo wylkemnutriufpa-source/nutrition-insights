@@ -1002,7 +1002,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         {/* Scrollable Content */}
         <div className="flex-1 overflow-y-auto overscroll-contain px-6 pb-8 space-y-6 max-h-[calc(90vh-160px)]">
           {/* Macros */}
-          {(hasMacros || editingMacros) && (
+          {showMacros && (hasMacros || editingMacros) && (
             <div className="space-y-3">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
