@@ -307,11 +307,11 @@ export default function ClientDashboard() {
     
     // Prevent redirect loop: check if NOT on target route and if status warrants it
     if (!journeyLoading && !isLoading && journeyStatus && (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created")) {
-       if (window.location.pathname !== targetRoute) {
+       if (window.location.pathname !== targetRoute && window.location.pathname !== "/onboarding") {
          console.log(`[Dashboard:${correlationId}] Redirecting early onboarding state (${journeyStatus}) to ${targetRoute}`);
          navigate(targetRoute, { replace: true });
        } else {
-         console.log(`[Dashboard:${correlationId}] Already on ${targetRoute}, skipping redirect loop.`);
+         console.log(`[Dashboard:${correlationId}] Already on ${targetRoute} or /onboarding, skipping redirect loop.`);
        }
     }
   }, [journeyStatus, journeyLoading, isLoading, navigate]);

@@ -22,7 +22,7 @@ export type JourneyStatus =
  * because components like OnboardingProgressModal will take over to guide the user.
  */
 export const IS_FLUID_STATE = (status: JourneyStatus) => 
-  status === "active" || status === "onboarding_active";
+  status === "active" || status === "onboarding_active" || status === "lead_created" || status === "awaiting_consent";
 
 /**
  * Returns the patient's journey_status from nutritionist_patients.
