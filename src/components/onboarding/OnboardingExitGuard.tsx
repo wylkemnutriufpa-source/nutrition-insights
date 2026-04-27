@@ -1,6 +1,5 @@
 import { useEffect } from "react";
-import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-import { IS_FLUID_STATE } from "@/components/patient/OnboardingGateScreen";
+import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
 
 interface OnboardingExitGuardProps {
   /** 
