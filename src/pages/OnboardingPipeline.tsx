@@ -20,8 +20,9 @@ import { useQueryClient } from "@tanstack/react-query";
 import {
   ClipboardCheck, Scale, Camera, Clock, Utensils, Sparkles,
   CheckCircle2, ArrowRight, ArrowLeft, Loader2, AlertCircle,
-  ChefHat, Heart, Zap, ThumbsUp, Shield
+  ChefHat, Heart, Zap, ThumbsUp, Shield, RefreshCw
 } from "lucide-react";
+
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import SmartNumericInput from "@/components/ui/SmartNumericInput";
 import { normalizeHeightInput, normalizeWeightInput, type NormalizationResult } from "@/lib/normalizeInputs";
