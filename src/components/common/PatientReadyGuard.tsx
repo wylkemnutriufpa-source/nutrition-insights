@@ -27,7 +27,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
   });
 
   // Block dashboard/critical screens if not in a fluid state
-  if (isPatient && !journeyLoading && journeyStatus && !IS_FLUID_STATE(journeyStatus)) {
+  if (isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release")) {
     return <OnboardingGateScreen status={journeyStatus} />;
   }
 
