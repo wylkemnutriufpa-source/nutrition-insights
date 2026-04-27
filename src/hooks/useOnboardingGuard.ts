@@ -7,7 +7,7 @@ import { useLocation } from "react-router-dom";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import { useAuth } from "@/lib/auth";
 
-export type OnboardingRequirement = "none" | "must_complete" | "loading";
+export type OnboardingRequirement = "none" | "must_complete" | "loading" | "error_no_link";
 
 // Routes the patient is allowed to visit even when onboarding is mandatory
 const ONBOARDING_ALLOWED_ROUTES = [
@@ -40,6 +40,11 @@ export function useOnboardingGuard() {
     if (isOnboardingAllowedRoute(location.pathname)) {
       console.log(`[OnboardingGuard] Allowed route: ${location.pathname}`);
       return "none";
+    }
+
+    if (journeyStatus === "no_link") {
+      console.error("[OnboardingGuard] CRITICAL: Patient has no nutritionist link");
+      return "error_no_link";
     }
 
     // Se o estado for 'awaiting_consent' ou 'lead_created', o paciente PRECISA aceitar o consentimento primeiro
