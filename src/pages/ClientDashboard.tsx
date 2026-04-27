@@ -152,34 +152,41 @@ export default function ClientDashboard() {
       const userId = user!.id;
       const today = format(new Date(), "yyyy-MM-dd");
 
+      const fetchSafe = async (query: any, context: string) => {
+        try {
+          const { data, error } = await query;
+          if (error) throw error;
+          return { data };
+        } catch (e) {
+          handleSupabaseError(e, context);
+          return { data: null };
+        }
+      };
+
       const [programsRes, appointmentsRes, notificationsRes, checklistRes] = await Promise.all([
-        supabase
+        fetchSafe(supabase
           .from("program_patients")
           .select("program_id, current_phase, status, enrolled_at, joined_at, programs(id, title, tag, start_date)")
           .eq("patient_id", userId)
-          .eq("status", "active")
-          .catch(e => { handleSupabaseError(e, "programas"); return { data: null }; }),
-        supabase
+          .eq("status", "active"), "programas"),
+        fetchSafe(supabase
           .from("patient_appointments")
           .select("id, title, appointment_date, status, appointment_type, created_at")
           .eq("patient_id", userId)
           .gte("appointment_date", new Date().toISOString())
           .order("appointment_date", { ascending: true })
-          .limit(5)
-          .catch(e => { handleSupabaseError(e, "agendamentos"); return { data: null }; }),
-        supabase
+          .limit(5), "agendamentos"),
+        fetchSafe(supabase
           .from("notifications")
           .select("id, title, message, created_at, is_read, type")
           .eq("user_id", userId)
           .order("created_at", { ascending: false })
-          .limit(8)
-          .catch(e => { handleSupabaseError(e, "notificações"); return { data: null }; }),
-        supabase
+          .limit(8), "notificações"),
+        fetchSafe(supabase
           .from("checklist_tasks")
           .select("id, completed, date, created_at")
           .eq("patient_id", userId)
-          .eq("date", today)
-          .catch(e => { handleSupabaseError(e, "checklist"); return { data: null }; }),
+          .eq("date", today), "checklist"),
       ]);
 
       const programs = (programsRes.data || []).map((p: any) => ({
