@@ -904,7 +904,10 @@ export default function Patients() {
                                     </Button>
                                     <Button
                                       className="gap-2 h-11 bg-[#25D366] hover:bg-[#1fb858] text-white"
-                                      onClick={() => window.open(waUrl, "_blank")}
+                                      onClick={() => {
+                                        logInvitation({ patientName: "Quick Invite", invitationType: 'patient_invite' });
+                                        window.open(waUrl, "_blank");
+                                      }}
                                     >
                                       <MessageCircle className="w-4 h-4" /> WhatsApp
                                     </Button>
