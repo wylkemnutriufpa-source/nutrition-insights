@@ -109,9 +109,18 @@ Deno.serve(async (req) => {
 
     if (insertError) throw insertError;
 
-    const host = req.headers.get("host") || "www.fitjourney.com.br";
-    const protocol = host.includes("localhost") ? "http" : "https";
-    const origin = `${protocol}://${host}`;
+    // Usa origin/referer do navegador (não o host do edge runtime).
+    // Fallback: domínio oficial de produção.
+    const browserOrigin = req.headers.get("origin");
+    const referer = req.headers.get("referer");
+    let origin = "https://www.fitjourney.com.br";
+    if (browserOrigin && !browserOrigin.includes("supabase")) {
+      origin = browserOrigin;
+    } else if (referer) {
+      try {
+        origin = new URL(referer).origin;
+      } catch { /* keep fallback */ }
+    }
     const friendlyUrl = `${origin}/convite/${code}`;
     const userAgent = req.headers.get("user-agent") || "unknown";
 
