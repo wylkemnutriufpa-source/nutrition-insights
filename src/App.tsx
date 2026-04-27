@@ -438,15 +438,21 @@ function PublicProfileRegistrationRedirect() {
 
   useEffect(() => {
     if (!slug) return;
-    (async () => {
-      const { data } = await supabase
-        .from("public_profile_settings")
-        .select("nutritionist_id")
-        .eq("slug", slug)
-        .maybeSingle();
-      if (data) setTargetId(data.nutritionist_id);
-      setLoading(false);
-    })();
+    const fetchProfile = async () => {
+      try {
+        const { data } = await supabase
+          .from("public_profile_settings")
+          .select("nutritionist_id")
+          .eq("slug", slug)
+          .maybeSingle();
+        if (data) setTargetId(data.nutritionist_id);
+      } catch (err) {
+        console.error("Error fetching public profile:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
   }, [slug]);
 
   if (loading) return <PageLoader />;
