@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
-import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
+import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-center";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
@@ -26,16 +26,9 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     enabled: !authLoading && !!targetId && (isPatient || !!patientId),
   });
 
-  // Permite "fixed" passar para "ok" quase instantaneamente
   const [graceDone, setGraceDone] = useState(false);
   const toastedRef = useRef<string | null>(null);
 
-  // Block dashboard/critical screens if not in a fluid state
-  const shouldBlock = isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release");
-
-  // Permite "fixed" passar para "ok" quase instantaneamente
-  const [graceDone, setGraceDone] = useState(false);
-  const toastedRef = useRef<string | null>(null);
   useEffect(() => {
     if (result.status === "fixed") {
       const key = `${targetId}:${context}`;
@@ -51,6 +44,12 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     }
     setGraceDone(false);
   }, [result.status, targetId, context]);
+
+  // Block dashboard/critical screens if not in a fluid state
+  // IMPORTANT: This check must stay AFTER all hooks to avoid React rule violations
+  if (isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release")) {
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
 
   // Profissional sem patientId explícito: não bloqueia nada
   if (!isPatient && !patientId) return <>{children}</>;
