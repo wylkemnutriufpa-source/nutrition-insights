@@ -20,6 +20,7 @@ import {
   UtensilsCrossed, CheckCircle2, Calendar, Dumbbell,
   TrendingUp, Brain, Camera, Camera as CameraIcon, Target,
   LayoutGrid, List, ArrowRight, Sparkles, Rocket, ChevronRight, ChefHat,
+  Shield, Activity,
 } from "lucide-react";
 import NewFeatureBadge from "@/components/common/NewFeatureBadge";
 
