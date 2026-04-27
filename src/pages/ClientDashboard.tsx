@@ -278,9 +278,10 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // Fluid flow: If journey status is lead_created (just joined via link), 
-  // allow it as "active" for dashboard purposes to initiate onboarding immediately.
-  const isNewlyJoined = journeyStatus === "lead_created";
+  // Fluid flow: If patient just joined via link (lead_created) or is awaiting consent,
+  // we treat it as active to allow them into the dashboard where OnboardingProgressModal 
+  // or PatientReadyGuard will guide them to /consent and /onboarding automatically.
+  const isNewlyJoined = journeyStatus === "lead_created" || journeyStatus === "awaiting_consent";
   
   if (!journeyLoading && !canAccessOnboarding && journeyStatus && !isNewlyJoined) {
     return <OnboardingGateScreen status={journeyStatus} />;
