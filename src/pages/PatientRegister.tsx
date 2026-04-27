@@ -563,7 +563,7 @@ export default function PatientRegister() {
                 <Button onClick={() => setIsProfConfirmed(true)} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
                   Aceitar Convite e Continuar <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
-                <Button variant="ghost" onClick={() => navigate("/auth")} className="text-muted-foreground hover:text-foreground">
+                <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(`/cadastro?nutri=${preselectedNutri}&code=${invitationCode}`)}`)} className="text-muted-foreground hover:text-foreground">
                   Já tenho uma conta
                 </Button>
               </div>
