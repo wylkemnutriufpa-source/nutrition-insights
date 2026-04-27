@@ -249,7 +249,7 @@ export default function DailyMealPlanInline() {
       />
 
       {/* Macros */}
-      <MacroSummary items={items} totalsStatus={plan?.totals_status} />
+      {showMacros && <MacroSummary items={items} totalsStatus={plan?.totals_status} />}
 
       {/* Emotional feedback */}
       {isToday && dailyAdherence > 0 && (
