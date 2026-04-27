@@ -21,7 +21,7 @@ import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
 import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
 import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
-import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { getWhatsAppInvitationMessage, getInvitationUrl } from "@/utils/invitation";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
 
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
@@ -58,7 +58,7 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const { logInvitation } = useWhatsAppLogs();
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
-  const onboardingLink = `${window.location.origin}/cadastro?nutri=${user?.id}`;
+  const onboardingLink = useMemo(() => getInvitationUrl(undefined, user?.id, true), [user?.id]);
 
   useMemo(() => {
     if (!user?.id) return;
