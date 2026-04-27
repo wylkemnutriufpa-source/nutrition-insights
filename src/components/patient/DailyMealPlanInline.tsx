@@ -226,7 +226,7 @@ export default function DailyMealPlanInline() {
             )}
           </div>
           <p className="text-xs text-muted-foreground truncate max-w-[200px]">{plan.title}</p>
-          {plan.plan_mode === "single_day" && (
+          {!isBasic && plan.plan_mode === "single_day" && (
             <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
               🗓️ 1 dia + substituições
             </span>
