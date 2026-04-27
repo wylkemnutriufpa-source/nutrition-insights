@@ -100,11 +100,11 @@ export default function NextMealWidget() {
       if (!selectedMeal || !grouped[selectedMeal]) { setLoading(false); return; }
 
       const mealItems = grouped[selectedMeal];
-      const totalKcal = mealItems.reduce((s, i) => s + safeNum(i.calories_target), 0);
-      const totalProtein = mealItems.reduce((s, i) => s + safeNum(i.protein_target), 0);
-      const totalCarbs = mealItems.reduce((s, i) => s + safeNum(i.carbs_target), 0);
-      const totalFat = mealItems.reduce((s, i) => s + safeNum(i.fat_target), 0);
-      const summary = mealItems.slice(0, 3).map((i) => i.title).join(", ");
+      const totalKcal = mealItems.reduce((s, i) => s + safeNum(i?.calories_target), 0);
+      const totalProtein = mealItems.reduce((s, i) => s + safeNum(i?.protein_target), 0);
+      const totalCarbs = mealItems.reduce((s, i) => s + safeNum(i?.carbs_target), 0);
+      const totalFat = mealItems.reduce((s, i) => s + safeNum(i?.fat_target), 0);
+      const summary = mealItems.slice(0, 3).map((i) => i?.title || "Alimento").join(", ");
 
       setNextMeal({
         meal_type: selectedMeal,
@@ -142,7 +142,7 @@ export default function NextMealWidget() {
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
                 Próxima refeição
               </p>
-              {nextMeal.time_label && (
+              {nextMeal?.time_label && (
                 <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
                   <Clock className="w-3 h-3" />
                   {nextMeal.time_label}
@@ -150,7 +150,7 @@ export default function NextMealWidget() {
               )}
             </div>
             <h4 className="font-display font-bold text-sm">
-              {MEAL_LABELS[nextMeal.meal_type] || nextMeal.meal_type}
+              {(nextMeal?.meal_type && MEAL_LABELS[nextMeal.meal_type]) || nextMeal?.meal_type || "Refeição"}
             </h4>
             <p className="text-xs text-muted-foreground truncate mt-0.5">
               {nextMeal.items_summary}

@@ -57,6 +57,7 @@ import NextMealWidget from "@/components/patient/NextMealWidget";
 import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidget";
 import { PatientIntelligenceBanner } from "@/components/premium/PremiumBanners";
 import MyTeamTab from "@/components/patient/MyTeamTab";
+import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -345,7 +346,9 @@ export default function ClientDashboard() {
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Experience Mode Status Banner */}
         <motion.div variants={item}>
-          <ExperienceModeStatusSection />
+          <ErrorBoundary section="Status de Experiência">
+            <ExperienceModeStatusSection />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Schema Inconsistency Alert */}
@@ -477,37 +480,51 @@ export default function ClientDashboard() {
 
         {/* 1️⃣ Daily Focus Hero — Top Priority */}
         <motion.div variants={item}>
-          <PatientDailyFocusHero />
+          <ErrorBoundary section="Foco Diário">
+            <PatientDailyFocusHero />
+          </ErrorBoundary>
         </motion.div>
 
         {/* 2️⃣ Próxima Refeição */}
         <motion.div variants={item}>
-          <NextMealWidget />
+          <ErrorBoundary section="Próxima Refeição">
+            <NextMealWidget />
+          </ErrorBoundary>
         </motion.div>
 
         {/* 3️⃣ Smart Checklist */}
         <motion.div variants={item}>
-          <SmartChecklistWidget />
+          <ErrorBoundary section="Checklist Inteligente">
+            <SmartChecklistWidget />
+          </ErrorBoundary>
         </motion.div>
 
         {/* 4️⃣ Metabolic Insight Panel */}
         <motion.div variants={item}>
-          <PatientMetabolicInsightPanel />
+          <ErrorBoundary section="Insights Metabólicos">
+            <PatientMetabolicInsightPanel />
+          </ErrorBoundary>
         </motion.div>
 
         {/* 5️⃣ Therapeutic Momentum */}
         <motion.div variants={item}>
-          <TherapeuticMomentumBar />
+          <ErrorBoundary section="Momentum Terapêutico">
+            <TherapeuticMomentumBar />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Momentum Indicator */}
         <motion.div variants={item}>
-          <MomentumIndicator variant="card" />
+          <ErrorBoundary section="Indicador de Momentum">
+            <MomentumIndicator variant="card" />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Nutritionist Status Banner */}
         <motion.div variants={item}>
-          <NutritionistStatusBanner patientId={user?.id} />
+          <ErrorBoundary section="Status do Nutricionista">
+            <NutritionistStatusBanner patientId={user?.id} />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Plan Status Banner — SSoT driven */}
@@ -688,37 +705,51 @@ export default function ClientDashboard() {
 
         {/* Daily Missions & Adherence Score */}
         <motion.div variants={item}>
-          <DailyMissionsWidget />
+          <ErrorBoundary section="Missões Diárias">
+            <DailyMissionsWidget />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Adherence Evolution Chart */}
         <motion.div variants={item}>
-          <AdherenceEvolutionChart />
+          <ErrorBoundary section="Gráfico de Evolução">
+            <AdherenceEvolutionChart />
+          </ErrorBoundary>
         </motion.div>
 
         {/* AI Insights Widget */}
         <motion.div variants={item}>
-          <PatientAIInsightsWidget />
+          <ErrorBoundary section="AI Insights">
+            <PatientAIInsightsWidget />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Patient Intelligence Banner */}
         <motion.div variants={item}>
-          <PatientIntelligenceBanner />
+          <ErrorBoundary section="Banner de Inteligência">
+            <PatientIntelligenceBanner />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Clinical Insights from Learning Engine */}
         <motion.div variants={item}>
-          <ClinicalInsightsCard />
+          <ErrorBoundary section="Insights Clínicos">
+            <ClinicalInsightsCard />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Behavior Learning */}
         <motion.div variants={item}>
-          <PatientBehaviorLearningCard />
+          <ErrorBoundary section="Aprendizado Comportamental">
+            <PatientBehaviorLearningCard />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Journey Timeline Feed */}
         <motion.div variants={item}>
-          <JourneyTimelineFeed compact />
+          <ErrorBoundary section="Timeline da Jornada">
+            <JourneyTimelineFeed compact />
+          </ErrorBoundary>
         </motion.div>
 
         {/* Workout Section - integrated when patient has personal trainer */}

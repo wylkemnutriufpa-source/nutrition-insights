@@ -6,6 +6,7 @@ import { Brain, TrendingDown, TrendingUp, Utensils, Clock, Lightbulb, Activity }
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { cn } from "@/lib/utils";
+import { safeNum } from "@/lib/formatMacros";
 
 interface AIInsight {
   icon: React.ComponentType<{ className?: string }>;
@@ -43,10 +44,10 @@ export default function PatientAIInsightsWidget() {
           const older = snapshots.slice(7, 14);
           
           if (recent.length >= 3) {
-            const recentAvg = recent.reduce((a: number, s: any) => a + (s.adherence_score ?? 0), 0) / recent.length;
+            const recentAvg = recent.reduce((a: number, s: any) => a + (safeNum(s?.adherence_score)), 0) / recent.length;
             
             if (older.length >= 3) {
-              const olderAvg = older.reduce((a: number, s: any) => a + (s.adherence_score ?? 0), 0) / older.length;
+              const olderAvg = older.reduce((a: number, s: any) => a + (safeNum(s?.adherence_score)), 0) / older.length;
               const delta = Math.round(recentAvg - olderAvg);
               
               if (delta < -15) {
@@ -65,7 +66,7 @@ export default function PatientAIInsightsWidget() {
             }
 
             // Checklist completion
-            const avgChecklist = recent.reduce((a: number, s: any) => a + (s.checklist_completion_rate ?? 0), 0) / recent.length;
+            const avgChecklist = recent.reduce((a: number, s: any) => a + (safeNum(s?.checklist_completion_rate)), 0) / recent.length;
             if (avgChecklist < 40) {
               result.push({
                 icon: Activity,
@@ -174,7 +175,7 @@ export default function PatientAIInsightsWidget() {
         }
 
         // Calculate confidence based on data points
-        const conf = Math.min(95, Math.round(30 + (dataPoints / 60) * 65));
+        const conf = Math.min(95, Math.round(30 + (safeNum(dataPoints) / 60) * 65));
         setConfidence(conf);
         setInsights(result);
       } catch (e) {

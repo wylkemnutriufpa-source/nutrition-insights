@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { getTherapeuticMomentum } from "@/lib/therapeuticPriorityEngine";
 import { Flame, AlertTriangle, TrendingUp } from "lucide-react";
 import { motion } from "framer-motion";
+import { safeNum } from "@/lib/formatMacros";
 
 const MOMENTUM_CONFIG: Record<string, { icon: any; bg: string; text: string }> = {
   green: { icon: TrendingUp, bg: "bg-green-500/10 border-green-500/30", text: "text-green-600" },
@@ -21,8 +22,8 @@ export default function TherapeuticMomentumBar() {
 
   if (!momentum) return null;
 
-  const config = MOMENTUM_CONFIG[momentum.color] || MOMENTUM_CONFIG.orange;
-  const Icon = config.icon;
+  const config = (momentum?.color && MOMENTUM_CONFIG[momentum.color]) || MOMENTUM_CONFIG.orange;
+  const Icon = config?.icon || AlertTriangle;
 
   return (
     <motion.div
@@ -39,13 +40,13 @@ export default function TherapeuticMomentumBar() {
           <div className="flex-1 h-1.5 rounded-full bg-background/50">
             <div
               className={`h-full rounded-full transition-all duration-700 ${
-                momentum.color === "green" ? "bg-green-500" :
-                momentum.color === "orange" ? "bg-orange-500" : "bg-red-500"
+                momentum?.color === "green" ? "bg-green-500" :
+                momentum?.color === "orange" ? "bg-orange-500" : "bg-red-500"
               }`}
-              style={{ width: `${momentum.score}%` }}
+              style={{ width: `${safeNum(momentum?.score)}%` }}
             />
           </div>
-          <span className={`text-xs font-bold ${config.text}`}>{momentum.label}</span>
+          <span className={`text-xs font-bold ${config?.text || "text-orange-600"}`}>{momentum?.label || "Estável"}</span>
         </div>
       </div>
     </motion.div>

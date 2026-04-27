@@ -6,6 +6,7 @@ import { resolvePatientDailyFocus, completeDailyFocus, type DailyFocus } from "@
 import { resolveFocusAction, getFocusQuickActions } from "@/lib/focusActionResolver";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { safeNum } from "@/lib/formatMacros";
 import {
   CheckCircle2, Droplets, UtensilsCrossed, AlertTriangle, TrendingUp,
   Sparkles, ChevronRight, ClipboardCheck, MessageSquare, ArrowRight, Clock,
@@ -97,8 +98,8 @@ export default function PatientDailyFocusHero() {
   }
 
   const hero = focusItems.find(f => !f.is_completed) || focusItems[0];
-  const Icon = FOCUS_ICONS[hero.focus_type] || Sparkles;
-  const bgClass = FOCUS_BG[hero.focus_color] || FOCUS_BG.primary;
+  const Icon = (hero?.focus_type && FOCUS_ICONS[hero.focus_type]) || Sparkles;
+  const bgClass = (hero?.focus_color && FOCUS_BG[hero.focus_color]) || FOCUS_BG.primary;
   const pendingItems = focusItems.filter(f => !f.is_completed);
 
   return (
@@ -117,8 +118,8 @@ export default function PatientDailyFocusHero() {
             <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold mb-1">
               🎯 Seu foco agora
             </p>
-            <h3 className="font-display font-bold text-lg leading-tight">{hero.focus_title}</h3>
-            <p className="text-sm text-muted-foreground mt-1">{hero.focus_description}</p>
+            <h3 className="font-display font-bold text-lg leading-tight">{hero?.focus_title || "Carregando..."}</h3>
+            <p className="text-sm text-muted-foreground mt-1">{hero?.focus_description || "Atualizando suas prioridades."}</p>
 
             {!hero.is_completed && (
               <div className="flex items-center gap-2 mt-3">
