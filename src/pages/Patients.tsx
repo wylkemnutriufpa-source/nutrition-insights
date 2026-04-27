@@ -184,7 +184,7 @@ function AssignProgramDialog({
                   <SelectTrigger className="w-full bg-background/50 border-border/50 h-11 focus:ring-primary/20">
                     <SelectValue placeholder="Selecione um programa..." />
                   </SelectTrigger>
-                  <SelectContent className="z-[110]">
+                  <SelectContent className="z-[150] bg-background border-border shadow-2xl" position="popper" sideOffset={5}>
                     {available.map(p => (
                       <SelectItem key={p.id} value={p.id} className="cursor-pointer">
                         {p.title}
