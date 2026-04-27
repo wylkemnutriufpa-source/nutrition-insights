@@ -600,10 +600,15 @@ export default function PatientRegister() {
               {selectedProfessional && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-primary/5 border border-primary/20">
                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
-                    {selectedProfessional.avatar_url ? (
-                      <img src={selectedProfessional.avatar_url} alt="Prof" className="w-full h-full object-cover" />
+                    {selectedProfessional.avatar_url && !avatarError ? (
+                      <img 
+                        src={selectedProfessional.avatar_url} 
+                        alt="Prof" 
+                        className="w-full h-full object-cover" 
+                        onError={() => setAvatarError(true)}
+                      />
                     ) : (
-                      <Stethoscope className="w-4 h-4 text-primary" />
+                      <User className="w-4 h-4 text-primary" />
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
