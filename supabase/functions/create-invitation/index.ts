@@ -61,6 +61,7 @@ Deno.serve(async (req) => {
     }
 
     // Reuso de convite: Verifica se já existe um convite GERAL (sem nome/email) ativo para este nutricionista
+    // Convites gerais NÃO expiram automaticamente — só são invalidados quando usados (used_at definido).
     if (!name && !email) {
       const { data: existingGeneral } = await adminClient
         .from("invitations")
@@ -68,9 +69,8 @@ Deno.serve(async (req) => {
         .eq("professional_id", caller.id)
         .is("patient_name", null)
         .is("patient_email", null)
-        .eq("status", "pending")
+        .in("status", ["pending", "viewed"])
         .is("used_at", null)
-        .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
