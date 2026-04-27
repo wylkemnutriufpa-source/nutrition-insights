@@ -210,31 +210,53 @@ export default function Invitation() {
           return {
             icon: <FileQuestion className="w-10 h-10 text-destructive" />,
             title: "Convite não encontrado",
-            step: "Verifique se você copiou o link corretamente ou peça um novo link ao seu nutricionista."
+            step: "O link pode estar incompleto ou incorreto.",
+            actions: [
+              "Verifique se você copiou o link inteiro enviado pelo profissional.",
+              "Solicite um novo link de convite.",
+              "Certifique-se de que não há espaços extras no final do link."
+            ]
           };
         case "EXPIRED":
           return {
             icon: <Clock className="w-10 h-10 text-destructive" />,
             title: "Convite expirado",
-            step: "Este link tinha um prazo de validade que já passou. Peça ao seu nutricionista para gerar um novo convite."
+            step: "Este link tinha um prazo de validade que já passou.",
+            actions: [
+              "Peça ao seu nutricionista para gerar um novo convite.",
+              "Lembre-se que links de convite costumam expirar em 7 dias por segurança."
+            ]
           };
         case "ALREADY_USED":
           return {
             icon: <UserCheck className="w-10 h-10 text-destructive" />,
             title: "Convite já utilizado",
-            step: "Este convite já serviu para criar uma conta. Se você já tem acesso, faça login com seu e-mail e senha."
+            step: "Este convite já serviu para criar uma conta.",
+            actions: [
+              "Se você já criou sua conta, faça login com seu e-mail e senha.",
+              "Se você esqueceu sua senha, use a opção 'Esqueci minha senha' na tela de login."
+            ]
           };
         case "ERRO_PERMISSAO":
           return {
             icon: <Lock className="w-10 h-10 text-destructive" />,
             title: "Acesso restrito",
-            step: "Você não tem permissão para acessar este convite. Certifique-se de estar usando o link oficial enviado para você."
+            step: "Você não tem permissão para acessar este convite.",
+            actions: [
+              "Certifique-se de estar usando o link oficial enviado para você.",
+              "Tente abrir o link em uma aba anônima para evitar conflitos de sessão."
+            ]
           };
         default:
           return {
             icon: <AlertCircle className="w-10 h-10 text-destructive" />,
             title: "Convite Indisponível",
-            step: "Não foi possível validar seu convite no momento. Tente recarregar a página ou entre em contato com o suporte."
+            step: "Não foi possível validar seu convite no momento.",
+            actions: [
+              "Tente recarregar a página em alguns instantes.",
+              "Verifique sua conexão com a internet.",
+              "Entre em contato com o suporte se o problema persistir."
+            ]
           };
       }
     };
