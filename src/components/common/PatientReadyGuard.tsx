@@ -1,7 +1,7 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
-import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-center";
+import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
