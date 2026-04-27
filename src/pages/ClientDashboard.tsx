@@ -340,7 +340,7 @@ export default function ClientDashboard() {
         <ExperienceModeSwitcher />
       </div>
       <OnboardingProgressModal />
-      <OnboardingExitGuard enabled={journeyStatus !== null && !IS_FLUID_STATE(journeyStatus)} />
+      <OnboardingExitGuard />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Experience Mode Status Banner */}
         <motion.div variants={item}>
