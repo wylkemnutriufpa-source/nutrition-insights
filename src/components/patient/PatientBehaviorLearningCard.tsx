@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { Brain, Clock, TrendingDown, TrendingUp, AlertCircle, Sparkles } from "lucide-react";
+import { safeNum } from "@/lib/formatMacros";
 
 interface BehaviorPattern {
   type: "peak_performance" | "weak_window" | "consistency_gap" | "recovery_signal";
@@ -58,8 +59,8 @@ export default function PatientBehaviorLearningCard() {
       </div>
 
       <div className="px-5 pb-5 space-y-2.5">
-        {patterns.slice(0, 4).map((pattern, i) => {
-          const config = PATTERN_CONFIG[pattern.type] || PATTERN_CONFIG.recovery_signal;
+        {(patterns || []).slice(0, 4).map((pattern, i) => {
+          const config = (pattern?.type && PATTERN_CONFIG[pattern.type]) || PATTERN_CONFIG.recovery_signal;
           const Icon = config.icon;
           return (
             <motion.div
@@ -81,7 +82,7 @@ export default function PatientBehaviorLearningCard() {
                   </span>
                 )}
               </div>
-              <span className="text-[10px] font-bold text-muted-foreground">{pattern.confidence}%</span>
+              <span className="text-[10px] font-bold text-muted-foreground">{safeNum(pattern?.confidence)}%</span>
             </motion.div>
           );
         })}
