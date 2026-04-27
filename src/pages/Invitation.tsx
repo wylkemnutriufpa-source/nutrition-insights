@@ -32,94 +32,40 @@ export default function Invitation() {
     
     if (showLoading) setLoading(true);
     setError(null);
+    setInvitation(null);
     
-    console.log("[Invitation] Validating code:", code, "on domain:", window.location.hostname);
+    console.log("[Invitation] Validating code via edge function:", code);
     
     try {
-      const currentDomain = window.location.hostname;
-      const normalizedCode = code.trim().toUpperCase();
-      
-      // Permitir domínios oficiais, previews do Lovable e o domínio configurado no momento
-      const isOfficial = [OFFICIAL_DOMAIN, "fitjourney.com.br", "www.fitjourney.com.br"].some(d => currentDomain.includes(d));
-      const isAllowedPreview = currentDomain.includes("lovable") || currentDomain.includes("localhost") || currentDomain.includes("netlify.app");
-      const isCurrentOrigin = currentDomain === new URL(BASE_URL).hostname;
-
-      const { data, error: fetchError } = await supabase
-        .from("invitations")
-        .select(`
-          *,
-          professional:profiles!professional_id(full_name, avatar_url),
-          clinic:tenants(name)
-        `)
-        .eq("code", normalizedCode)
-        .maybeSingle();
-
-      if (fetchError) {
-        console.error("[Invitation] Supabase select error:", fetchError);
-        // Se for um erro de RLS ou permissão, damos um feedback genérico
-        if (fetchError.code === '42501') {
-          setError("Este convite existe, mas você não tem permissão para visualizá-lo neste momento. Tente novamente.");
-        } else {
-          setError(`Erro ao carregar convite: ${fetchError.message}`);
-        }
-        return;
-      }
-      
-      if (!data) {
-        console.error("[Invitation] Code not found in database:", code);
-        setError("Este link de convite é inválido ou não foi encontrado em nossa base de dados.");
-        return;
-      }
-
-      // Se não for um domínio conhecido, registramos mas permitimos se o código for válido
-      // para evitar bloqueios em domínios novos não mapeados no código.
-      if (!isOfficial && !isAllowedPreview && !isCurrentOrigin) {
-        console.warn("[Invitation] Domain not in strict whitelist, but code exists:", currentDomain);
-        // Não bloqueamos mais aqui, apenas logamos. O fato do código existir no banco já é a principal validação.
-      }
-
-      const now = new Date();
-      const expiresAt = data.expires_at ? new Date(data.expires_at) : null;
-      if (expiresAt && now > expiresAt) {
-        console.warn("[Invitation] Invitation expired at:", expiresAt);
-        setInvitation(data);
-        setError("Este convite expirou. Por favor, solicite um novo link ao seu nutricionista.");
-        return;
-      }
-
-      if (data.status === 'completed' || data.used_at) {
-        console.warn("[Invitation] Invitation already used");
-        setError("Este convite já foi utilizado para concluir um cadastro anteriormente.");
-        return;
-      }
-
-      setInvitation(data);
-      console.log("[Invitation] Data loaded successfully:", data.patient_name);
-      
-      // Log view event
-      await supabase.from("invitation_logs").insert({
-        invitation_id: data.id,
-        event_type: "viewed",
-        details: { 
-          domain: currentDomain, 
-          host: window.location.host,
-          environment: isPreview ? "preview" : "production" 
-        },
-        user_agent: navigator.userAgent,
-        professional_id: data.professional_id,
-        patient_email: data.patient_email
+      const { data, error: invokeError } = await supabase.functions.invoke("validate-invitation", {
+        body: { code }
       });
 
-      if (data.status === 'pending') {
-        await supabase
-          .from("invitations")
-          .update({ status: 'viewed' } as any)
-          .eq("id", data.id);
+      if (invokeError) {
+        console.error("[Invitation] Edge function error:", invokeError);
+        setError("Ocorreu um erro técnico ao validar seu convite. Por favor, tente novamente.");
+        return;
       }
+
+      if (!data.success) {
+        console.warn("[Invitation] Validation failed:", data.error_code, data.message);
+        
+        // Se o convite expirou, ainda podemos ter dados do profissional para mostrar
+        if (data.invitation) {
+          setInvitation(data.invitation);
+        }
+        
+        // Mapeamos o código de erro para uma mensagem mais rica se necessário
+        setError(data.message);
+        return;
+      }
+
+      setInvitation(data.invitation);
+      console.log("[Invitation] Data loaded successfully:", data.invitation.patient_name);
 
     } catch (err: any) {
       console.error("[Invitation] Fatal error fetching invitation:", err);
-      setError("Ocorreu um erro ao validar seu convite. Por favor, tente recarregar a página.");
+      setError("Ocorreu um erro inesperado. Por favor, tente recarregar a página.");
     } finally {
       setLoading(false);
       setIsValidating(false);
