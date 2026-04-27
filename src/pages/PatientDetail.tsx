@@ -1800,7 +1800,7 @@ export default function PatientDetail() {
                           tokenValue = (newToken as any).token;
                         }
 
-                        const link = `${window.location.origin}/intake/${tokenValue}`;
+                        const link = `${window.location.origin}/cadastro?nutri=${user.id}&code=${tokenValue}`;
 
                         // Send notification to patient
                         await supabase.from("notifications").insert({
