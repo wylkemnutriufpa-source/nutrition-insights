@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal, FileQuestion, Clock, UserCheck, Lock, CheckCircle2, Activity } from "lucide-react";
+import { UserPlus, Building2, User, ArrowRight, Loader2, AlertCircle, RefreshCw, MessageSquare, ExternalLink, ShieldCheck, Terminal, FileQuestion, Clock, UserCheck, Lock, CheckCircle2, Activity, Info } from "lucide-react";
 import { toast } from "sonner";
 import { useAuth } from "@/lib/auth";
 import { Helmet } from "react-helmet-async";
@@ -22,12 +22,14 @@ export default function Invitation() {
   const [isValidating, setIsValidating] = useState(false);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
   const [showDebug, setShowDebug] = useState(false);
+  const [avatarError, setAvatarError] = useState(false);
+  const correlationId = useMemo(() => crypto.randomUUID(), []);
 
   const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
 
   const fetchInvitation = async (showLoading = true) => {
     if (!code) {
-      console.warn("[Invitation] No code provided in URL params");
+      console.warn(`[Invitation] [CID:${correlationId}] No code provided in URL params`);
       return;
     }
     
@@ -36,23 +38,22 @@ export default function Invitation() {
     setErrorCode(null);
     setInvitation(null);
     
-    console.log("[Invitation] Validating code via edge function:", code);
+    console.log(`[Invitation] [CID:${correlationId}] Validating code:`, code);
     
     try {
       const { data, error: invokeError } = await supabase.functions.invoke("validate-invitation", {
-        body: { code }
+        body: { code, correlationId }
       });
 
       if (invokeError) {
-        console.error("[Invitation] Edge function error:", invokeError);
+        console.error(`[Invitation] [CID:${correlationId}] Edge function error:`, invokeError);
         setError("Ocorreu um erro técnico ao validar seu convite. Por favor, tente novamente.");
         return;
       }
 
       if (!data.success) {
-        console.warn("[Invitation] Validation failed:", data.error_code, data.message);
+        console.warn(`[Invitation] [CID:${correlationId}] Validation failed:`, data.error_code, data.message);
         
-        // Se o convite expirou, ainda podemos ter dados do profissional para mostrar
         if (data.invitation) {
           setInvitation(data.invitation);
         }
@@ -63,10 +64,10 @@ export default function Invitation() {
       }
 
       setInvitation(data.invitation);
-      console.log("[Invitation] Data loaded successfully:", data.invitation.patient_name);
+      console.log(`[Invitation] [CID:${correlationId}] Data loaded successfully for:`, data.invitation.patient_name);
 
     } catch (err: any) {
-      console.error("[Invitation] Fatal error fetching invitation:", err);
+      console.error(`[Invitation] [CID:${correlationId}] Fatal error fetching invitation:`, err);
       setError("Ocorreu um erro inesperado. Por favor, tente recarregar a página.");
     } finally {
       setLoading(false);
@@ -95,7 +96,7 @@ export default function Invitation() {
   const handleAccept = () => {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
-    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}`);
+    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`);
   };
 
   const handleRegenerate = async () => {
@@ -209,31 +210,53 @@ export default function Invitation() {
           return {
             icon: <FileQuestion className="w-10 h-10 text-destructive" />,
             title: "Convite não encontrado",
-            step: "Verifique se você copiou o link corretamente ou peça um novo link ao seu nutricionista."
+            step: "O link pode estar incompleto ou incorreto.",
+            actions: [
+              "Verifique se você copiou o link inteiro enviado pelo profissional.",
+              "Solicite um novo link de convite.",
+              "Certifique-se de que não há espaços extras no final do link."
+            ]
           };
         case "EXPIRED":
           return {
             icon: <Clock className="w-10 h-10 text-destructive" />,
             title: "Convite expirado",
-            step: "Este link tinha um prazo de validade que já passou. Peça ao seu nutricionista para gerar um novo convite."
+            step: "Este link tinha um prazo de validade que já passou.",
+            actions: [
+              "Peça ao seu nutricionista para gerar um novo convite.",
+              "Lembre-se que links de convite costumam expirar em 7 dias por segurança."
+            ]
           };
         case "ALREADY_USED":
           return {
             icon: <UserCheck className="w-10 h-10 text-destructive" />,
             title: "Convite já utilizado",
-            step: "Este convite já serviu para criar uma conta. Se você já tem acesso, faça login com seu e-mail e senha."
+            step: "Este convite já serviu para criar uma conta.",
+            actions: [
+              "Se você já criou sua conta, faça login com seu e-mail e senha.",
+              "Se você esqueceu sua senha, use a opção 'Esqueci minha senha' na tela de login."
+            ]
           };
         case "ERRO_PERMISSAO":
           return {
             icon: <Lock className="w-10 h-10 text-destructive" />,
             title: "Acesso restrito",
-            step: "Você não tem permissão para acessar este convite. Certifique-se de estar usando o link oficial enviado para você."
+            step: "Você não tem permissão para acessar este convite.",
+            actions: [
+              "Certifique-se de estar usando o link oficial enviado para você.",
+              "Tente abrir o link em uma aba anônima para evitar conflitos de sessão."
+            ]
           };
         default:
           return {
             icon: <AlertCircle className="w-10 h-10 text-destructive" />,
             title: "Convite Indisponível",
-            step: "Não foi possível validar seu convite no momento. Tente recarregar a página ou entre em contato com o suporte."
+            step: "Não foi possível validar seu convite no momento.",
+            actions: [
+              "Tente recarregar a página em alguns instantes.",
+              "Verifique sua conexão com a internet.",
+              "Entre em contato com o suporte se o problema persistir."
+            ]
           };
       }
     };
@@ -258,13 +281,23 @@ export default function Invitation() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pb-8">
-            <div className="p-4 rounded-xl bg-background border border-border shadow-sm mb-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
-                <ArrowRight className="w-3 h-3 text-primary" /> Passo recomendado
+            <div className="p-5 rounded-xl bg-background border border-border shadow-sm mb-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1 flex items-center gap-2">
+                <Info className="w-3 h-3 text-primary" /> Por que isso aconteceu?
               </p>
-              <p className="text-sm text-foreground leading-relaxed">
-                {details.step}
+              <p className="text-sm text-foreground mb-4 font-medium">{details.step}</p>
+              
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
+                Passos para resolver
               </p>
+              <ul className="space-y-2">
+                {details.actions.map((action, index) => (
+                  <li key={index} className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
+                    {action}
+                  </li>
+                ))}
+              </ul>
             </div>
 
             {canRegenerate ? (
@@ -343,10 +376,15 @@ export default function Invitation() {
         <div className="h-2 bg-primary animate-pulse" />
         <CardHeader className="text-center space-y-4 pt-8 pb-4">
           <div className="w-24 h-24 mx-auto rounded-full bg-primary/10 overflow-hidden flex items-center justify-center border-4 border-background shadow-xl relative group">
-            {professional?.avatar_url ? (
-              <img src={professional.avatar_url} alt={professional.full_name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+            {professional?.avatar_url && !avatarError ? (
+              <img 
+                src={professional.avatar_url} 
+                alt={professional.full_name} 
+                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" 
+                onError={() => setAvatarError(true)}
+              />
             ) : (
-              <UserPlus className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
+              <User className="w-12 h-12 text-primary group-hover:scale-110 transition-transform" />
             )}
             <div className="absolute -bottom-1 -right-1 w-8 h-8 bg-background rounded-full border border-primary/20 flex items-center justify-center shadow-sm">
               <CheckCircle2 className="w-5 h-5 text-primary" />
@@ -364,8 +402,13 @@ export default function Invitation() {
           <div className="space-y-3">
             <div className="group flex items-center gap-4 p-5 rounded-2xl bg-background border border-border/50 hover:border-primary/30 transition-all shadow-sm hover:shadow-md">
               <div className="w-14 h-14 rounded-full bg-secondary overflow-hidden flex items-center justify-center group-hover:bg-primary/10 transition-colors">
-                {professional?.avatar_url ? (
-                  <img src={professional.avatar_url} alt={professional.full_name} className="w-full h-full object-cover" />
+                {professional?.avatar_url && !avatarError ? (
+                  <img 
+                    src={professional.avatar_url} 
+                    alt={professional.full_name} 
+                    className="w-full h-full object-cover" 
+                    onError={() => setAvatarError(true)}
+                  />
                 ) : (
                   <User className="w-7 h-7 text-primary" />
                 )}
@@ -427,4 +470,3 @@ export default function Invitation() {
     </div>
   );
 }
-

@@ -18,9 +18,11 @@ Deno.serve(async (req) => {
     });
 
     const body = await req.json();
-    const { code } = body;
+    const { code, correlationId } = body;
+    const cid = correlationId || "no-cid";
 
     if (!code) {
+      console.error(`[validate-invitation] [CID:${cid}] Código ausente`);
       throw new Error("CÓDIGO_AUSENTE");
     }
 
@@ -36,7 +38,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (fetchError) {
-      console.error("[validate-invitation] Database error:", fetchError);
+      console.error(`[validate-invitation] [CID:${cid}] Database error:`, fetchError);
       throw new Error("ERRO_BANCO_DADOS");
     }
 
@@ -44,8 +46,9 @@ Deno.serve(async (req) => {
       // LOG FAILURE: Invalid code
       await logInvitation(adminClient, {
         event_type: "validation_failed",
-        details: { code: normalizedCode, reason: "INVALID_CODE", origin },
-        user_agent: userAgent
+        details: { code: normalizedCode, reason: "INVALID_CODE", origin, cid },
+        user_agent: userAgent,
+        correlation_id: cid
       });
       return new Response(JSON.stringify({ 
         success: false, 
@@ -73,10 +76,11 @@ Deno.serve(async (req) => {
       await logInvitation(adminClient, {
         invitation_id: invitation.id,
         event_type: "validation_failed",
-        details: { code: normalizedCode, reason: "EXPIRED", expires_at: invitation.expires_at, origin },
+        details: { code: normalizedCode, reason: "EXPIRED", expires_at: invitation.expires_at, origin, cid },
         user_agent: userAgent,
         professional_id: invitation.professional_id,
-        patient_email: invitation.patient_email
+        patient_email: invitation.patient_email,
+        correlation_id: cid
       });
       return new Response(JSON.stringify({ 
         success: false, 
@@ -98,10 +102,11 @@ Deno.serve(async (req) => {
       await logInvitation(adminClient, {
         invitation_id: invitation.id,
         event_type: "validation_failed",
-        details: { code: normalizedCode, reason: "ALREADY_USED", used_at: invitation.used_at, origin },
+        details: { code: normalizedCode, reason: "ALREADY_USED", used_at: invitation.used_at, origin, cid },
         user_agent: userAgent,
         professional_id: invitation.professional_id,
-        patient_email: invitation.patient_email
+        patient_email: invitation.patient_email,
+        correlation_id: cid
       });
       return new Response(JSON.stringify({ 
         success: false, 
@@ -116,10 +121,11 @@ Deno.serve(async (req) => {
     await logInvitation(adminClient, {
       invitation_id: invitation.id,
       event_type: "viewed",
-      details: { code: normalizedCode, origin },
+      details: { code: normalizedCode, origin, cid },
       user_agent: userAgent,
       professional_id: invitation.professional_id,
-      patient_email: invitation.patient_email
+      patient_email: invitation.patient_email,
+      correlation_id: cid
     });
 
     if (invitation.status === 'pending') {
