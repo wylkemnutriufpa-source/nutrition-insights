@@ -521,12 +521,16 @@ export default function PatientRegister() {
         addLog(`ERRO CRÍTICO na RPC create_patient_canonical: ${canonErr.message}`);
         // Se a RPC falhou, registramos o erro para auditoria mas tentamos um fallback mínimo 
         // para que o paciente não fique totalmente perdido, embora o vínculo possa falhar.
-        await supabase.from("onboarding_runtime_errors" as any).insert({
-          patient_id: signUpData.user.id,
-          context: "registration_rpc_failure",
-          error_message: canonErr.message,
-          error_payload: { nutriId, invitationCode, email, correlationId }
-        } as any).catch(() => {});
+        try {
+          await supabase.from("onboarding_runtime_errors" as any).insert({
+            patient_id: signUpData.user.id,
+            context: "registration_rpc_failure",
+            error_message: canonErr.message,
+            error_payload: { nutriId, invitationCode, email, correlationId }
+          } as any);
+        } catch (e) {
+          addLog("Falha ao logar erro de runtime.");
+        }
         
         toast.error("Ocorreu um erro ao vincular seu perfil. Nossa equipe foi notificada.");
       } else {
