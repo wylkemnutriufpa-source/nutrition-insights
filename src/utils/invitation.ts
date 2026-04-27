@@ -24,11 +24,11 @@ export const getInvitationUrl = (code: string) => {
   // Para o WhatsApp, se não for produção e não for preview, usamos o BASE_URL (produção)
   // Mas se for preview, usamos o origin atual para o desenvolvedor testar.
   if (isPreview) {
-    return `${window.location.origin}/convite/${code}`;
+    return `${window.location.origin}/~oauth/convite/${code}`;
   }
 
   // Fallback padrão: Produção
-  return `${BASE_URL}/convite/${code}`;
+  return `${BASE_URL}/~oauth/convite/${code}`;
 };
 
 
