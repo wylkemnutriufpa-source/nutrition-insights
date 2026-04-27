@@ -421,6 +421,21 @@ export default function PatientGridDashboard() {
           })}
         </motion.div>
       )}
+      
+      {/* Advanced Technical Footer */}
+      {expUI.isAdvanced && (
+        <div className="pt-8 pb-4 text-center space-y-2">
+          <Separator className="mb-4 opacity-50" />
+          <div className="flex items-center justify-center gap-4 text-[10px] font-mono text-muted-foreground uppercase tracking-widest">
+            <span className="flex items-center gap-1.5"><Shield className="w-3 h-3" /> Engine v3.4.1</span>
+            <span className="flex items-center gap-1.5"><Rocket className="w-3 h-3" /> Clinical Core active</span>
+            <span className="flex items-center gap-1.5"><Activity className="w-3 h-3" /> Real-time Sync</span>
+          </div>
+          <p className="text-[9px] text-muted-foreground/60 italic">
+            FitJourney Advanced Terminal • Registered patient ID: {user?.id?.slice(0, 8)}...
+          </p>
+        </div>
+      )}
       </>
       )}
     </div>
