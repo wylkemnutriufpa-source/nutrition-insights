@@ -15375,6 +15375,48 @@ export type Database = {
         }
         Relationships: []
       }
+      qa_checklist_runs: {
+        Row: {
+          audit_snapshot: Json | null
+          checklist_key: string
+          created_at: string
+          device_label: string | null
+          executed_by: string | null
+          id: string
+          notes: string | null
+          passed: boolean
+          steps: Json
+          telemetry_snapshot: Json | null
+          user_agent: string | null
+        }
+        Insert: {
+          audit_snapshot?: Json | null
+          checklist_key: string
+          created_at?: string
+          device_label?: string | null
+          executed_by?: string | null
+          id?: string
+          notes?: string | null
+          passed?: boolean
+          steps?: Json
+          telemetry_snapshot?: Json | null
+          user_agent?: string | null
+        }
+        Update: {
+          audit_snapshot?: Json | null
+          checklist_key?: string
+          created_at?: string
+          device_label?: string | null
+          executed_by?: string | null
+          id?: string
+          notes?: string | null
+          passed?: boolean
+          steps?: Json
+          telemetry_snapshot?: Json | null
+          user_agent?: string | null
+        }
+        Relationships: []
+      }
       quick_meal_templates: {
         Row: {
           created_at: string
@@ -16013,6 +16055,42 @@ export type Database = {
           session_id?: string | null
           user_agent?: string | null
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      route_audit_alerts: {
+        Row: {
+          audit_run_id: string | null
+          created_at: string
+          id: string
+          notes: string | null
+          pathname: string
+          resolved: boolean
+          resolved_at: string | null
+          resolved_by: string | null
+          status_code: number
+        }
+        Insert: {
+          audit_run_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pathname: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status_code?: number
+        }
+        Update: {
+          audit_run_id?: string | null
+          created_at?: string
+          id?: string
+          notes?: string | null
+          pathname?: string
+          resolved?: boolean
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status_code?: number
         }
         Relationships: []
       }
