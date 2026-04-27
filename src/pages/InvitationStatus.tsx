@@ -3,7 +3,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Loader2, CheckCircle2, XCircle, Clock, Eye, Activity, History, AlertCircle, RefreshCw } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle, Clock, Eye, Activity, History, AlertCircle, RefreshCw, MessageSquare } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
@@ -13,14 +13,13 @@ export default function InvitationStatus() {
   const navigate = useNavigate();
   const [invitation, setInvitation] = useState<any>(null);
   const [logs, setLogs] = useState<any[]>([]);
+  const [whatsappLogs, setWhatsappLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchStatus() {
       if (!code) return;
-      
-      console.log("[InvitationStatus] Fetching status for code:", code);
       
       try {
         const { data, error: fetchError } = await supabase
@@ -34,43 +33,39 @@ export default function InvitationStatus() {
           .maybeSingle();
 
         if (fetchError) {
-          console.error("[InvitationStatus] Supabase error:", fetchError);
           setError("Erro ao conectar com o banco de dados.");
           throw fetchError;
         }
 
-        if (!data) {
-          console.warn("[InvitationStatus] Invitation not found:", code);
-          setInvitation(null);
-        } else {
+        if (data) {
           setInvitation(data);
           setError(null);
 
-          const { data: logsData, error: logsError } = await supabase
+          const { data: logsData } = await supabase
             .from("invitation_logs")
             .select("*")
             .eq("invitation_id", data.id)
             .order("created_at", { ascending: false });
-          
-          if (logsError) console.error("[InvitationStatus] Error fetching logs:", logsError);
           setLogs(logsData || []);
+
+          const { data: waLogs } = await supabase
+            .from("whatsapp_invitation_logs")
+            .select("*")
+            .eq("patient_name", data.patient_name)
+            .order("sent_at", { ascending: false });
+          setWhatsappLogs(waLogs || []);
         }
       } catch (err: any) {
-        console.error("[InvitationStatus] Fatal error:", err);
         setError(err.message || "Erro desconhecido.");
       } finally {
         setLoading(false);
       }
     }
 
-
     fetchStatus();
-
-    // Polling leve: atualiza a cada 5 segundos
     const interval = setInterval(fetchStatus, 5000);
     return () => clearInterval(interval);
   }, [code]);
-
 
   if (loading) {
     return (
@@ -103,7 +98,6 @@ export default function InvitationStatus() {
       </div>
     );
   }
-
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -153,12 +147,6 @@ export default function InvitationStatus() {
                 <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Criado em</p>
                 <p className="text-sm">{format(new Date(invitation.created_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
               </div>
-              {invitation.expires_at && (
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase font-bold tracking-wider">Expira em</p>
-                  <p className="text-sm">{format(new Date(invitation.expires_at), "dd/MM/yyyy 'às' HH:mm", { locale: ptBR })}</p>
-                </div>
-              )}
             </CardContent>
           </Card>
 
@@ -166,7 +154,6 @@ export default function InvitationStatus() {
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-3">
               <div>
                 <CardTitle className="text-sm">Estado Atual</CardTitle>
-                <CardDescription>Resumo da situação deste link</CardDescription>
               </div>
               <div className={`flex items-center gap-2 px-3 py-1 rounded-full border ${statusConfig.color}`}>
                 {statusConfig.icon}
@@ -175,19 +162,10 @@ export default function InvitationStatus() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div className="bg-muted/50 p-4 rounded-xl border border-border">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-full bg-background flex items-center justify-center border border-border">
-                    <History className="w-5 h-5 text-muted-foreground" />
-                  </div>
-                  <div>
-                    <h3 className="text-sm font-bold">Linha do Tempo</h3>
-                    <p className="text-xs text-muted-foreground">Últimas 5 interações registradas</p>
-                  </div>
-                </div>
-                
-                <div className="mt-4 space-y-4">
+                <h3 className="text-sm font-bold mb-4">Linha do Tempo</h3>
+                <div className="space-y-4">
                   {logs.length > 0 ? (
-                    logs.slice(0, 5).map((log, i) => (
+                    logs.slice(0, 5).map((log) => (
                       <div key={log.id} className="relative pl-6 pb-2 border-l-2 border-border last:pb-0">
                         <div className="absolute left-[-5px] top-0 w-2 h-2 rounded-full bg-primary" />
                         <div className="flex flex-col">
@@ -195,27 +173,41 @@ export default function InvitationStatus() {
                           <span className="text-[10px] text-muted-foreground">
                             {format(new Date(log.created_at), "dd/MM 'às' HH:mm:ss", { locale: ptBR })}
                           </span>
-                          {log.details?.domain && (
-                            <span className="text-[9px] text-muted-foreground mt-0.5">Origem: {log.details.domain}</span>
-                          )}
                         </div>
                       </div>
                     ))
                   ) : (
-                    <p className="text-xs text-muted-foreground py-2 text-center">Nenhuma atividade registrada ainda.</p>
+                    <p className="text-xs text-muted-foreground text-center">Nenhuma atividade registrada ainda.</p>
                   )}
                 </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button className="flex-1" onClick={() => navigate(`/convite/${code}`)}>Visualizar como Paciente</Button>
-                {invitation.status === 'completed' && (
-                  <Button variant="outline" className="flex-1">Ir para Perfil do Paciente</Button>
-                )}
               </div>
             </CardContent>
           </Card>
         </div>
+
+        <Card className="w-full">
+          <CardHeader>
+            <CardTitle className="text-sm flex items-center gap-2">
+              <MessageSquare className="w-4 h-4 text-[#25D366]" /> Histórico de WhatsApp
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {whatsappLogs.length > 0 ? (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {whatsappLogs.map((log) => (
+                  <div key={log.id} className="p-3 rounded-lg border border-border bg-accent/5 flex items-start gap-3">
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs font-bold capitalize">{log.invitation_type.replace('_', ' ')}</p>
+                      <p className="text-[10px] text-muted-foreground">{format(new Date(log.sent_at), "dd/MM/yy 'às' HH:mm", { locale: ptBR })}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p className="text-xs text-muted-foreground text-center py-4">Nenhum envio registrado.</p>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

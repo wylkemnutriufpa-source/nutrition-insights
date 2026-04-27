@@ -13,7 +13,9 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@/utils/whatsapp";
-import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { getWhatsAppInvitationMessage, WhatsAppTemplateType } from "@/utils/invitation";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
+import WhatsAppTemplateEditor from "@/components/professional/WhatsAppTemplateEditor";
 
 
 
@@ -37,6 +39,8 @@ export default function InvitePatient() {
   const [profile, setProfile] = useState<any>(null);
   const [clinic, setClinic] = useState<any>(null);
   const [publicProfile, setPublicProfile] = useState<any>(null);
+  const { templates } = useWhatsAppTemplates();
+  const { logInvitation } = useWhatsAppLogs();
 
 
   // Base URL for production
@@ -111,9 +115,11 @@ export default function InvitePatient() {
       patientName: name,
       professionalName: profile.full_name || "Seu Nutricionista",
       clinicName: clinic?.name,
-      invitationCode: invitationCode
+      invitationCode: invitationCode,
+      templateType: 'patient_onboarding',
+      customTemplate: templates['patient_onboarding']
     });
-  }, [name, invitationCode, profile, clinic]);
+  }, [name, invitationCode, profile, clinic, templates]);
 
   const whatsappUrl = useMemo(() => {
     const phoneDigits = normalizeWhatsApp(phone || "");
@@ -212,16 +218,19 @@ export default function InvitePatient() {
   return (
     <SubscriptionGuard featureName="Convite de Pacientes">
       <div className="max-w-lg mx-auto space-y-4">
-        <div className="flex items-center gap-3">
-          <Link to="/patients">
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <ArrowLeft className="w-4 h-4" />
-            </Button>
-          </Link>
-          <div>
-            <h1 className="text-xl font-display font-bold">Convidar Paciente</h1>
-            <p className="text-xs text-muted-foreground">Cadastre e envie acesso ao seu paciente</p>
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <Link to="/patients">
+              <Button variant="ghost" size="icon" className="h-8 w-8">
+                <ArrowLeft className="w-4 h-4" />
+              </Button>
+            </Link>
+            <div>
+              <h1 className="text-xl font-display font-bold">Convidar Paciente</h1>
+              <p className="text-xs text-muted-foreground">Cadastre e envie acesso ao seu paciente</p>
+            </div>
           </div>
+          <WhatsAppTemplateEditor />
         </div>
 
         <Card className="border-primary/20 bg-primary/5">
@@ -281,9 +290,17 @@ export default function InvitePatient() {
               variant="outline"
               size="sm"
               className="w-full gap-2 border-[#25D366]/30 hover:bg-[#25D366]/10 text-[#128C7E]"
+              onClick={() => logInvitation({ patientName: "Lead Link Rápido", invitationType: "quick_link" })}
             >
               <a 
-                href={`https://wa.me/?text=${encodeURIComponent(`Olá! Sou o(a) nutricionista *${profile?.full_name || "Seu Nutri"}* e convido você a começar seu acompanhamento comigo através deste link rápido: ${quickLink}`)}`} 
+                href={`https://wa.me/?text=${encodeURIComponent(getWhatsAppInvitationMessage({
+                  patientName: "",
+                  professionalName: profile?.full_name || "Seu Nutri",
+                  clinicName: clinic?.name,
+                  invitationCode: user?.id || "",
+                  templateType: 'quick_link',
+                  customTemplate: templates['quick_link']
+                }))}`} 
                 target="_blank" 
                 rel="noopener noreferrer"
               >
@@ -443,7 +460,12 @@ export default function InvitePatient() {
                     size="lg"
                     className="gap-2 bg-[#25D366] hover:bg-[#128C7E] text-white border-none shadow-lg shadow-emerald-500/20"
                   >
-                    <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                    <a 
+                      href={whatsappUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      onClick={() => logInvitation({ patientName: name, patientPhone: phone, invitationType: 'patient_onboarding' })}
+                    >
                       <MessageCircle className="w-4 h-4" /> Enviar via WhatsApp
                     </a>
                   </Button>

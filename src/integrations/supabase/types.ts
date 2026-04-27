@@ -18788,6 +18788,36 @@ export type Database = {
           },
         ]
       }
+      whatsapp_invitation_logs: {
+        Row: {
+          id: string
+          invitation_type: string | null
+          metadata: Json | null
+          patient_name: string | null
+          patient_phone: string | null
+          professional_id: string
+          sent_at: string
+        }
+        Insert: {
+          id?: string
+          invitation_type?: string | null
+          metadata?: Json | null
+          patient_name?: string | null
+          patient_phone?: string | null
+          professional_id: string
+          sent_at?: string
+        }
+        Update: {
+          id?: string
+          invitation_type?: string | null
+          metadata?: Json | null
+          patient_name?: string | null
+          patient_phone?: string | null
+          professional_id?: string
+          sent_at?: string
+        }
+        Relationships: []
+      }
       whatsapp_logs: {
         Row: {
           created_at: string
@@ -18887,6 +18917,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      whatsapp_templates: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          professional_id: string
+          template_key: string
+          updated_at: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          professional_id: string
+          template_key: string
+          updated_at?: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          professional_id?: string
+          template_key?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       workout_completions: {
         Row: {

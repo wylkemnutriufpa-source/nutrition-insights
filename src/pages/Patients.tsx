@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import { BASE_URL } from "@/lib/config";
 import { useNavigate, Link } from "react-router-dom";
+import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import { useOnlinePatients } from "@/hooks/useOnlinePatients";
@@ -580,6 +582,8 @@ export default function Patients() {
   const [statusManagerSearch, setStatusManagerSearch] = useState("");
   const [statusManagerMode, setStatusManagerMode] = useState(false);
   const { onlineUsers } = useOnlinePatients();
+  const { templates } = useWhatsAppTemplates();
+  const { logInvitation } = useWhatsAppLogs();
   const onlineSet = useMemo(() => new Set(onlineUsers.map(u => u.user_id)), [onlineUsers]);
 
   // Debounced search: proper cleanup with useEffect
@@ -848,7 +852,14 @@ export default function Patients() {
                           const inviteLink = `${BASE_URL}/cadastro?nutri=${user?.id}`;
                           const proName = profile?.full_name || "seu nutricionista";
                           const clinicName = (profile as any)?.professional_profiles?.[0]?.clinic_name;
-                          const waMsg = `*Olá!* Tudo bem?\n\nSou o(a) nutricionista *${proName}*${clinicName ? ` da clínica *${clinicName}*` : ""} e convido você a começar sua jornada no *FitJourney*! 🚀\n\nClique no link abaixo para fazer seu cadastro e ter acesso ao seu plano alimentar:\n\n👉 ${inviteLink}\n\nVamos juntos! 💪`;
+                          const waMsg = getWhatsAppInvitationMessage({
+                            patientName: "",
+                            professionalName: proName,
+                            clinicName: clinicName,
+                            invitationCode: user?.id || "",
+                            templateType: 'patient_invite',
+                            customTemplate: templates?.['patient_invite']
+                          });
                           const waUrl = `https://wa.me/?text=${encodeURIComponent(waMsg)}`;
 
                           return (
@@ -893,7 +904,10 @@ export default function Patients() {
                                     </Button>
                                     <Button
                                       className="gap-2 h-11 bg-[#25D366] hover:bg-[#1fb858] text-white"
-                                      onClick={() => window.open(waUrl, "_blank")}
+                                      onClick={() => {
+                                        logInvitation({ patientName: "Quick Invite", invitationType: 'patient_invite' });
+                                        window.open(waUrl, "_blank");
+                                      }}
                                     >
                                       <MessageCircle className="w-4 h-4" /> WhatsApp
                                     </Button>

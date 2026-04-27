@@ -20,6 +20,8 @@ import {
 import { releaseOnboarding } from "@/lib/serverTransitions";
 import { acquireActionLock, releaseActionLock, isAtOrPast } from "@/lib/fitjourneyBible";
 import { updatePatientJourneyInCache, invalidateLifecycleQueries } from "@/lib/lifecycleCache";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
+import { getWhatsAppInvitationMessage } from "@/utils/invitation";
 import type { PatientInfo } from "@/hooks/queries/usePatientsList";
 
 const JOURNEY_LABELS: Record<string, { label: string; color: string }> = {
@@ -51,6 +53,9 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
   const [releasedOnboarding, setReleasedOnboarding] = useState<Set<string>>(new Set());
   const [sendingLinkId, setSendingLinkId] = useState<string | null>(null);
   const [profName, setProfName] = useState("seu nutricionista");
+  const [clinicName, setClinicName] = useState<string | undefined>();
+  const { templates } = useWhatsAppTemplates();
+  const { logInvitation } = useWhatsAppLogs();
   const isInactivePatient = (patient: PatientInfo) => patient.status !== "active";
 
   const onboardingLink = `${window.location.origin}/cadastro?nutri=${user?.id}`;
@@ -60,6 +65,11 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
     supabase.from("profiles").select("full_name").eq("id", user.id).single()
       .then(({ data }) => {
         if (data?.full_name) setProfName(data.full_name);
+      });
+    
+    supabase.from("professional_profiles").select("clinic_name").eq("user_id", user.id).maybeSingle()
+      .then(({ data }) => {
+        if (data?.clinic_name) setClinicName(data.clinic_name);
       });
   }, [user?.id]);
 
@@ -394,7 +404,15 @@ export default function PatientStatusManager({ patients, onToggleStatus, onClose
                               className="h-7 w-7 p-0"
                               onClick={() => {
                                 const patientFirstName = p.profile?.full_name?.split(" ")[0] || "Paciente";
-                                const waMsg = `*Olá ${patientFirstName}!* Tudo bem?\n\nSou o(a) nutricionista *${profName}* e estou muito feliz em te acompanhar! 🚀\n\nSeu acesso à plataforma *FitJourney* já está pronto. Clique no link abaixo para começar:\n\n👉 ${onboardingLink}\n\nVamos juntos! 💪`;
+                                const waMsg = getWhatsAppInvitationMessage({
+                                  patientName: patientFirstName,
+                                  professionalName: profName,
+                                  clinicName: clinicName,
+                                  invitationCode: user?.id || "",
+                                  templateType: 'patient_onboarding',
+                                  customTemplate: templates['patient_onboarding']
+                                });
+                                logInvitation({ patientName: p.profile?.full_name || p.email || "Paciente", invitationType: 'patient_onboarding' });
                                 window.open(`https://wa.me/?text=${encodeURIComponent(waMsg)}`, "_blank");
                               }}
                             >
