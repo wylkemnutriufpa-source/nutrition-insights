@@ -762,8 +762,20 @@ export default function PatientRegister() {
               <div className="mt-2 p-2 bg-destructive/10 border border-destructive/20 rounded flex items-start gap-2 text-destructive">
                 <AlertTriangle className="h-3 w-3 shrink-0 mt-0.5" />
                 <div>
-                  <p className="font-bold uppercase tracking-tight text-[9px]">Erro de Vínculo Detectado</p>
-                  <p className="text-[9px] leading-tight">O link pode estar expirado ou revogado. Se você acredita que isso é um erro, copie os logs acima e envie para o suporte.</p>
+                  <p className="font-bold uppercase tracking-tight text-[9px]">Vínculo do Profissional Não Validado</p>
+                  <p className="text-[9px] leading-tight">
+                    {invitationCode 
+                      ? "O código de convite pode estar expirado, já ter sido usado ou ser inválido." 
+                      : signature 
+                        ? "A assinatura de segurança do link é inválida ou expirou." 
+                        : "Não conseguimos encontrar o nutricionista indicado pelo link."}
+                  </p>
+                  <p className="text-[9px] mt-1 font-semibold">O que fazer?</p>
+                  <ul className="text-[8px] list-disc list-inside opacity-80">
+                    <li>Peça um novo link de convite ao seu profissional</li>
+                    <li>Verifique se você copiou o link inteiro</li>
+                    <li>Tente buscar o profissional manualmente acima</li>
+                  </ul>
                 </div>
               </div>
             )}
