@@ -10,6 +10,14 @@ interface Props {
   status: JourneyStatus;
 }
 
+/** 
+ * Centralized rule for allowed (non-blocking) states.
+ * States like lead_created and awaiting_consent are FLUID - they should not block the dashboard
+ * because components like OnboardingProgressModal will take over to guide the user.
+ */
+export const IS_FLUID_STATE = (status: JourneyStatus) => 
+  status === "lead_created" || status === "awaiting_consent" || status === "active" || status === "onboarding_active";
+
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; title: string; description: string; action?: { label: string; route: string } }> = {
   lead_created: {
     icon: Clock,
