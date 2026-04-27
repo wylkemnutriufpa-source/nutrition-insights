@@ -286,11 +286,11 @@ export default function ClientDashboard() {
     }
   }, [journeyStatus, journeyLoading, canAccessOnboarding]);
 
-  // Mandatory block states only
-  const isBlockedState = journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release";
+  // Mandatory block states only - using centralized logic
+  const isFluid = IS_FLUID_STATE(journeyStatus!);
   
-  if (!journeyLoading && isBlockedState) {
-    return <OnboardingGateScreen status={journeyStatus!} />;
+  if (!journeyLoading && journeyStatus && !isFluid) {
+    return <OnboardingGateScreen status={journeyStatus} />;
   }
 
   // Fluid flow: If journey status allows onboarding, proceed to dashboard
