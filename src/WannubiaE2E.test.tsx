@@ -40,12 +40,14 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
   };
 
   const mockUpdateItem = vi.fn();
+  const mockAddItem = vi.fn();
 
   beforeEach(() => {
     vi.clearAllMocks();
     (useMealPlanEditorV2Store as any).mockReturnValue({
       items: [mockItem],
       updateItem: mockUpdateItem,
+      addItem: mockAddItem,
       substitutionCount: 3,
       patientName: 'Wannubia Teste'
     });
@@ -100,7 +102,7 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
 
     // Procura o botão de fechar (X)
     // No shadcn/radix UI, ele costuma ter um aria-label "Close" ou ser o botão absoluto no topo
-    const closeButton = screen.getByRole('button', { name: /close/i });
+    const closeButton = screen.getByRole('button', { name: /fechar/i });
     fireEvent.click(closeButton);
     
     expect(onOpenChange).toHaveBeenCalledWith(false);
@@ -108,9 +110,11 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
 
   it('deve permitir macros parciais zerados se kcal total > 0', async () => {
     // Configura item com proteína zerada mas kcal > 0
+    const mockAddItem = vi.fn();
     (useMealPlanEditorV2Store as any).mockReturnValue({
       items: [{ ...mockItem, protein_target: 0 }],
       updateItem: mockUpdateItem,
+      addItem: mockAddItem,
       substitutionCount: 3,
       patientName: 'Wannubia Teste'
     });
@@ -130,5 +134,49 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     const { toast } = await import('sonner');
     const errorCalls = (toast.error as any).mock.calls.map((c: any) => c[0]);
     expect(errorCalls).not.toContain("Não é possível salvar uma refeição com macros zerados.");
+  });
+
+  it('deve aplicar template Wannubia e validar ordem das substituições', async () => {
+    // Para este teste, vamos validar a função de aplicação de template diretamente no componente
+    // se não conseguirmos via E2E puro devido a limitações de ambiente de teste
+    const { validateMealSubstitutions } = await import('./lib/mealPlanSubstitutionValidator');
+    
+    const itemWithTemplate = {
+      ...mockItem,
+      calories_target: 400,
+      protein_target: 30,
+      edit_metadata: {
+        ...mockItem.edit_metadata,
+        substitutions_json: [
+          "• Frango → Sobrecoxa, Filé de tilápia",
+          "• Arroz → Macarrão integral, Batata doce",
+          "• Feijao → Lentilha, Feijão preto"
+        ]
+      }
+    };
+
+    const result = validateMealSubstitutions(itemWithTemplate as any, 4, 'Wannubia');
+    
+    // Se a ordem estiver correta, não deve haver erros de ordem
+    const orderErrors = result.errors.filter(e => e.includes("Wannubia: A"));
+    expect(orderErrors).toHaveLength(0);
+
+    // Agora testamos uma ordem errada
+    const itemWithWrongOrder = {
+      ...mockItem,
+      edit_metadata: {
+        ...mockItem.edit_metadata,
+        substitutions_json: [
+          "• Arroz branco → Macarrão integral", // Carboidrato em 1º (Erro)
+          "• Peito de frango → Sobrecoxa",     // Proteína em 2º (Erro)
+          "• Feijão carioca → Lentilha"
+        ]
+      }
+    };
+
+    const resultWrong = validateMealSubstitutions(itemWithWrongOrder as any, 4, 'Wannubia');
+    expect(resultWrong.valid).toBe(false);
+    expect(resultWrong.errors).toContain("Wannubia: A primeira substituição deve ser uma Proteína (ex: Frango, Carne).");
+    expect(resultWrong.errors).toContain("Wannubia: A segunda substituição deve ser um Carboidrato (ex: Arroz, Batata).");
   });
 });
