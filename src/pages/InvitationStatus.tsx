@@ -223,7 +223,10 @@ export default function InvitationStatus() {
                 )}
               </div>
             </CardContent>
-          <Card className="md:col-span-3">
+          </Card>
+        </div>
+
+        <Card className="w-full">
             <CardHeader>
               <CardTitle className="text-sm flex items-center gap-2">
                 <MessageSquare className="w-4 h-4 text-[#25D366]" /> Histórico de WhatsApp
