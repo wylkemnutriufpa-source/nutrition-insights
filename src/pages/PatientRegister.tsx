@@ -162,7 +162,7 @@ export default function PatientRegister() {
             if (onboarding.patient_email) setEmail(onboarding.patient_email);
             if (onboarding.patient_name) setName(onboarding.patient_name);
             
-            setIsProfConfirmed(true);
+            setIsProfConfirmed(false);
             setSigValid(true);
             return;
           }
@@ -214,7 +214,7 @@ export default function PatientRegister() {
           clinic_name: (invite.metadata as any)?.clinic_name || null,
           phone: prof?.phone || null,
         });
-        setIsProfConfirmed(true);
+        setIsProfConfirmed(false);
         setSigValid(true);
         addLog("Vínculo profissional validado via convite com sucesso.");
 
@@ -513,7 +513,7 @@ export default function PatientRegister() {
     );
   }
 
-  if (selectedProfessional && !isProfConfirmed && preselectedNutri) {
+  if (selectedProfessional && !isProfConfirmed && (preselectedNutri || invitationCode)) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4 relative overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
