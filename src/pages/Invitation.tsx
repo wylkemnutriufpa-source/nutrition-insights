@@ -90,8 +90,18 @@ export default function Invitation() {
   }, [user]);
 
   useEffect(() => {
-    fetchInvitation();
+    if (code) {
+      fetchInvitation();
+    }
   }, [code]);
+
+  // Redirecionamento automático quando o convite é válido
+  useEffect(() => {
+    if (invitation && !error && !isProcessingAction) {
+      console.log("[Invitation] Convite válido detectado. Redirecionando automaticamente para cadastro...");
+      handleAccept();
+    }
+  }, [invitation, error]);
 
   const handleAccept = () => {
     if (!invitation || error || isProcessingAction) return;
