@@ -387,13 +387,19 @@ export default function MealPlanEditorV2() {
 
     const profName = profProfile?.full_name || "Seu Nutricionista";
     const appUrl = `${BASE_URL}/plano`;
-    const message = getMealPlanReadyMessage(store.patientName, profName, appUrl);
-
-    await sendWhatsAppNotification({
-      patientId: plan.patient_id,
-      message
+    
+    // Agora usando promptWhatsAppNotification para padronizar o pop-up
+    import("@/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
+      promptWhatsAppNotification({
+        patientId: plan.patient_id,
+        patientName: store.patientName || "Paciente",
+        professionalName: profName,
+        type: "meal_plan_ready",
+        appUrl
+      });
     });
   };
+
 
   // Keyboard shortcuts (Esc exits fullscreen)
   useEffect(() => {
