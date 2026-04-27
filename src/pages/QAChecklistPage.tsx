@@ -88,9 +88,9 @@ export default function QAChecklistPage() {
       const [auditRes, telemRes] = await Promise.all([
         supabase
           .from("public_route_audits")
-          .select("pathname, status_code, ok, notes, created_at")
-          .gte("created_at", since)
-          .order("created_at", { ascending: false })
+          .select("pathname, status_code, ok, notes, checked_at")
+          .gte("checked_at", since)
+          .order("checked_at", { ascending: false })
           .limit(50),
         supabase
           .from("route_404_telemetry")
