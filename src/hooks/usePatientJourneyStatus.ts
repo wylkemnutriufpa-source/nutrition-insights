@@ -14,6 +14,7 @@ export type JourneyStatus =
   | "active_followup"
   | "clinical_followup_active"
   | "active" // legacy
+  | "no_link"
   | null;
 
 /** 
