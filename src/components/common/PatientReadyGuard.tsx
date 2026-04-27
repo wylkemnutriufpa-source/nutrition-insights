@@ -26,10 +26,12 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     enabled: !authLoading && !!targetId && (isPatient || !!patientId),
   });
 
+  // Permite "fixed" passar para "ok" quase instantaneamente
+  const [graceDone, setGraceDone] = useState(false);
+  const toastedRef = useRef<string | null>(null);
+
   // Block dashboard/critical screens if not in a fluid state
-  if (isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release")) {
-    return <OnboardingGateScreen status={journeyStatus} />;
-  }
+  const shouldBlock = isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release");
 
   // Permite "fixed" passar para "ok" quase instantaneamente
   const [graceDone, setGraceDone] = useState(false);
