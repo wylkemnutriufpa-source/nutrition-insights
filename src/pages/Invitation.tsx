@@ -99,6 +99,15 @@ export default function Invitation() {
     navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`);
   };
 
+  const handleSafeRegisterFallback = () => {
+    const professionalId = invitation?.professional_id;
+    if (professionalId) {
+      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}`);
+      return;
+    }
+    fetchInvitation();
+  };
+
   const handleRegenerate = async () => {
     if (!user || !invitation || isProcessingAction) return;
     
@@ -323,11 +332,11 @@ export default function Invitation() {
                   <RefreshCw className="w-5 h-5" /> Tentar Validar Novamente
                 </Button>
                 <div className="grid grid-cols-2 gap-3">
-                  <Button variant="outline" onClick={() => navigate("/auth")} className="h-12 text-sm font-medium">
-                    Fazer Login
+                  <Button variant="outline" onClick={handleSafeRegisterFallback} className="h-12 text-sm font-medium">
+                    Continuar Cadastro
                   </Button>
-                  <Button variant="ghost" onClick={() => navigate("/")} className="h-12 text-sm">
-                    Ir para o Início
+                  <Button variant="ghost" onClick={() => navigate(`/convite/${code || ""}`)} className="h-12 text-sm">
+                    Voltar ao Convite
                   </Button>
                 </div>
               </>
