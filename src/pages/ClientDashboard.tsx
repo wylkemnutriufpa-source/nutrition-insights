@@ -298,10 +298,11 @@ export default function ClientDashboard() {
   }, [journeyStatus, journeyLoading, canAccessOnboarding, user?.id]);
 
   // Mandatory block states only - using centralized logic
-  const isFluid = IS_FLUID_STATE(journeyStatus!);
+  const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
   
   // REDIRECT logic for non-fluid onboarding states (at-rest states that need gating)
-  if (!journeyLoading && journeyStatus && !isFluid) {
+  if (isPatient && !journeyLoading && journeyStatus && !isFluid) {
+    console.log(`[Dashboard:Gate] Blocking dashboard for status: ${journeyStatus}`);
     return <OnboardingGateScreen status={journeyStatus} />;
   }
 
