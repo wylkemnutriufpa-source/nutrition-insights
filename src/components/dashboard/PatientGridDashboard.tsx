@@ -265,13 +265,41 @@ export default function PatientGridDashboard() {
       </Suspense>
 
       {/* FitJourney Timeline — pro+ only */}
-      {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="400px" />}
+      {!expUI.isBasic && <FitJourneyTimeline compact maxHeight="300px" />}
+
+      {/* Advanced Insights — Advanced mode only */}
+      {expUI.isAdvanced && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="p-4 border-primary/20 bg-primary/5">
+            <div className="flex items-center gap-2 mb-2">
+              <Brain className="w-4 h-4 text-primary" />
+              <h4 className="text-sm font-bold">Análise Técnica</h4>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Modo de engenharia ativado. Visualizando metadados de adesão, versão do motor IFJ e indicadores de consistência metabólica.
+            </p>
+          </Card>
+          <Card className="p-4 border-violet-500/20 bg-violet-500/5">
+            <div className="flex items-center gap-2 mb-2">
+              <Rocket className="w-4 h-4 text-violet-600" />
+              <h4 className="text-sm font-bold">Performance</h4>
+            </div>
+            <p className="text-[10px] text-muted-foreground leading-relaxed">
+              Projeções de médio prazo baseadas no seu histórico atual de registros e aderência calórica real.
+            </p>
+          </Card>
+        </div>
+      )}
 
       {/* Header with view toggle */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-xl font-bold text-foreground">Meu Painel</h2>
-          <p className="text-xs text-muted-foreground mt-0.5">Acesse tudo em um só lugar</p>
+          <h2 className="text-xl font-bold text-foreground">
+            {expUI.isPro ? "Meu Acompanhamento" : "Painel de Controle"}
+          </h2>
+          <p className="text-xs text-muted-foreground mt-0.5">
+            {expUI.isPro ? "Foco em macros e adesão" : "Gestão completa da sua jornada"}
+          </p>
         </div>
         <div className="flex items-center gap-1 bg-muted/50 rounded-lg p-0.5">
           <Button
