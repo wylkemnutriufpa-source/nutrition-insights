@@ -130,6 +130,14 @@ Deno.serve(async (req) => {
 
     if (!isUnique) throw new Error("Falha ao gerar código de convite único. Tente novamente.");
 
+    // Para convites GERAIS (sem nome/email): nunca expiram automaticamente.
+    // Só são invalidados quando o paciente FINALIZA o cadastro (used_at).
+    // Para convites ESPECÍFICOS (com email): expiram em 30 dias para evitar acúmulo indefinido.
+    const isGeneralInvite = !name && !email;
+    const expiresAt = isGeneralInvite
+      ? null
+      : new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
+
     const { data: invitation, error: insertError } = await adminClient
       .from("invitations")
       .insert({
@@ -138,7 +146,7 @@ Deno.serve(async (req) => {
         tenant_id: tenant_id || null,
         patient_name: name || null,
         patient_email: email || null,
-        expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 dias
+        expires_at: expiresAt,
       })
       .select()
       .single();
