@@ -109,7 +109,7 @@ export default function InvitePatient() {
     if (!profile) return "";
     return getWhatsAppInvitationMessage({
       patientName: name,
-      professionalName: profile.display_name || profile.full_name || "Seu Nutricionista",
+      professionalName: profile?.display_name || profile?.full_name || "Dr. Wylkem Raiol",
       clinicName: clinic?.name,
       invitationCode: invitationCode || undefined, // Fallback safe
       templateType: 'patient_onboarding',
@@ -125,16 +125,23 @@ export default function InvitePatient() {
   }, [phone, whatsappMessage]);
 
   const copyToClipboard = (value: string, key: string, label: string) => {
-    // If we're in a preview environment, the current value might be using window.location.origin
-    // Let's ensure the user knows which domain is being copied if it's relevant.
     const isPreview = window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost");
+    const isProductionUrl = value.includes("fitjourney.com.br") || value.includes(PRODUCTION_URL.replace("https://", ""));
+    
+    // Confirmação do domínio antes de copiar
+    const domainType = isProductionUrl ? "PRODUÇÃO (fitjourney.com.br)" : "PREVIEW/TESTE";
+    
     navigator.clipboard.writeText(value);
     setCopied(key);
     
-    if (isPreview && !value.includes("fitjourney.com.br")) {
-      toast.info(`${label} copiado usando domínio de preview para testes.`);
+    if (isPreview && !isProductionUrl) {
+      toast.info(`Link de ${label} copiado! Domínio: ${domainType}.`, {
+        description: "Este link é apenas para testes no ambiente atual."
+      });
     } else {
-      toast.success(`${label} copiado!`);
+      toast.success(`Link de ${label} copiado!`, {
+        description: `Domínio: ${domainType}`
+      });
     }
     setTimeout(() => setCopied(null), 2000);
   };
@@ -258,7 +265,7 @@ export default function InvitePatient() {
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 gap-1"
-                  onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Link público (Preview)")}
+                  onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Convite")}
                 >
                   {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
@@ -267,7 +274,7 @@ export default function InvitePatient() {
                 variant="outline"
                 size="sm"
                 className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
-                onClick={() => copyToClipboard(getInvitationUrl(undefined, user?.id, true), "public_link_prod", "Link oficial (Produção)")}
+                onClick={() => copyToClipboard(getInvitationUrl(undefined, user?.id, true), "public_link_prod", "Convite Oficial")}
               >
                 {copied === "public_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
                 Copiar Link Oficial (Produção)
@@ -297,7 +304,7 @@ export default function InvitePatient() {
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 gap-1"
-                  onClick={() => copyToClipboard(quickLink, "quick_link", "Link rápido (Preview)")}
+                  onClick={() => copyToClipboard(quickLink, "quick_link", "Vínculo Rápido")}
                 >
                   {copied === "quick_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
@@ -306,7 +313,7 @@ export default function InvitePatient() {
                 variant="outline"
                 size="sm"
                 className="w-full gap-2 border-accent/20 hover:bg-accent/5 text-accent text-xs h-9"
-                onClick={() => copyToClipboard(user?.id ? getQuickLinkUrl(user.id, true) : "", "quick_link_prod", "Link rápido oficial (Produção)")}
+                onClick={() => copyToClipboard(user?.id ? getQuickLinkUrl(user.id, true) : "", "quick_link_prod", "Vínculo Rápido Oficial")}
               >
                 {copied === "quick_link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
                 Copiar Link Oficial (Produção)
@@ -322,9 +329,9 @@ export default function InvitePatient() {
               <a 
                 href={`https://wa.me/?text=${encodeURIComponent(getWhatsAppInvitationMessage({
                   patientName: "",
-                  professionalName: profile?.display_name || profile?.full_name || "Seu Nutri",
+                  professionalName: profile?.display_name || profile?.full_name || "Dr. Wylkem Raiol",
                   clinicName: clinic?.name,
-                  invitationCode: user?.id || "",
+                  invitationCode: invitationCode || "",
                   templateType: 'quick_link',
                   customTemplate: templates['quick_link']
                 }))}`} 
@@ -476,7 +483,7 @@ export default function InvitePatient() {
                       size="sm"
                       variant="ghost"
                       className="h-7 px-2 gap-1"
-                      onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, false), "link", "Link de convite (Preview)")}
+                      onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, false), "link", "Convite Individual")}
                     >
                       {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                     </Button>
@@ -485,7 +492,7 @@ export default function InvitePatient() {
                     variant="outline"
                     size="sm"
                     className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
-                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link_prod", "Link oficial (Produção)")}
+                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link_prod", "Convite Oficial")}
                   >
                     {copied === "link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
                     Copiar Link Oficial (Produção)

@@ -16,7 +16,7 @@ export default function WhatsAppTemplateEditor() {
   const { templates, saveTemplate, loading } = useWhatsAppTemplates();
   const [activeTab, setActiveTab] = useState<WhatsAppTemplateType>("patient_onboarding");
   const [content, setContent] = useState("");
-  const [profData, setProfData] = useState({ name: "", clinic: "" });
+  const [profData, setProfData] = useState({ name: "Dr. Wylkem Raiol", clinic: "" });
 
   // Load professional data for realistic preview
   useMemo(() => {
@@ -51,7 +51,7 @@ export default function WhatsAppTemplateEditor() {
   const previewMessage = useMemo(() => {
     return getWhatsAppInvitationMessage({
       patientName: "João Silva",
-      professionalName: profData.name,
+      professionalName: profData.name || "Dr. Wylkem Raiol",
       clinicName: profData.clinic,
       invitationCode: "ABC123",
       professionalId: user?.id,
