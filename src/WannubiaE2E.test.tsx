@@ -152,10 +152,10 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
     const readyMealsTab = screen.getAllByRole('button', { name: /Refeição Pronta/i })[0];
     fireEvent.click(readyMealsTab);
 
-    // Seleciona um template (ex: Frango + Arroz + Salada)
-    // O template usa "Frango + Arroz + Salada" mas o texto exibido pode variar
-    const templateButton = screen.getByText(/Frango \+ Arroz/i);
-    fireEvent.click(templateButton);
+    // Seleciona um template
+    // Buscamos um botão que contenha o emoji e o texto do template
+    const templateButton = screen.getByText(/🍗/i).closest('button');
+    if (templateButton) fireEvent.click(templateButton);
 
     // Verifica se addItem foi chamado com a estrutura correta para Wannubia
     await waitFor(() => {
