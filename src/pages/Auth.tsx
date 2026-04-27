@@ -85,7 +85,9 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           _metadata: {},
         });
       }
-      navigate(nextPath.startsWith("/") ? nextPath : "/");
+      const target = nextPath.startsWith("/") ? nextPath : "/";
+      console.log(`[Auth] Redirecting to post-login target: ${target}`);
+      navigate(target, { replace: true });
     }
   };
 
