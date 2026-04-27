@@ -616,6 +616,20 @@ export default function PatientRegister() {
           </CardContent>
         </Card>
 
+        {debugLogs.length > 0 && (
+          <div className="mt-6 p-3 rounded-lg bg-black/5 dark:bg-white/5 border border-border text-[10px] font-mono overflow-hidden">
+            <div className="flex justify-between items-center mb-2">
+              <span className="text-muted-foreground uppercase tracking-wider font-bold">Logs de Diagnóstico</span>
+              <span className="px-1.5 py-0.5 rounded bg-primary/20 text-primary font-bold">PatientID: {supabase.auth.getSession().then(({data}) => data.session?.user.id || 'N/A')}</span>
+            </div>
+            <div className="max-h-32 overflow-y-auto space-y-1">
+              {debugLogs.map((log, i) => (
+                <div key={i} className="text-muted-foreground border-l border-primary/30 pl-2 py-0.5">{log}</div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <p className="text-center text-xs text-muted-foreground mt-4">
           Ao criar sua conta, você concorda com os termos de uso.
         </p>
