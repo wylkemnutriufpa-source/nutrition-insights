@@ -586,8 +586,8 @@ const App = () => (
               <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register" element={<LP section="Cadastro"><PatientRegister /></LP>} />
               <Route path="/register-patient" element={<LP section="Cadastro"><PatientRegister /></LP>} />
-               <Route path="/vincular/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
-               <Route path="/q/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
+               <Route path="/vincular/:nutriId" element={<Navigate to="/cadastro?nutri=:nutriId" replace />} />
+               <Route path="/q/:nutriId" element={<Navigate to="/cadastro?nutri=:nutriId" replace />} />
                 <Route path="/convite" element={<Navigate to="/cadastro" replace />} />
                <Route path="/convite/*" element={<InvitationCodeRedirect />} />
                <Route path="/p/:slug/paciente" element={<PublicProfileRegistrationRedirect />} />
