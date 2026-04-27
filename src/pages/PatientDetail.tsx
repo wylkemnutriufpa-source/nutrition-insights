@@ -1808,7 +1808,7 @@ export default function PatientDetail() {
                           title: "📋 Link de Anamnese",
                           message: `Seu profissional enviou um link para iniciar o onboarding. Acesse: ${link}`,
                           type: "info",
-                          action_url: `/intake/${tokenValue}`,
+                          action_url: `/cadastro?nutri=${user.id}&code=${tokenValue}`,
                         } as any);
 
                         toast.success("Link enviado como notificação ao paciente! 📩");
