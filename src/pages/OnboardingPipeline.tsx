@@ -223,7 +223,10 @@ export default function OnboardingPipeline() {
   function getCurrentStep(): number {
     // Step 0: Consent
     if (!hasConsent && !consentLoading) return 0;
+    
+    // Fallback: Se não tem consentimento e não está carregando, passo 0 é obrigatório
     if (!pipeline) return 0;
+
     if (!pipeline.anamnesis_completed) return 1;
     if (!pipeline.body_data_completed) return 2;
     if (!pipeline.preferences_completed) return 3;

@@ -298,21 +298,23 @@ export default function ClientDashboard() {
   }, [journeyStatus, journeyLoading, canAccessOnboarding, user?.id]);
 
   // Mandatory block states only - using centralized logic
-  const isFluid = IS_FLUID_STATE(journeyStatus!);
+  const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
   
   // REDIRECT logic for non-fluid onboarding states (at-rest states that need gating)
-  if (!journeyLoading && journeyStatus && !isFluid) {
+  if (isPatient && !journeyLoading && journeyStatus && !isFluid) {
+    console.log(`[Dashboard:Gate] Blocking dashboard for status: ${journeyStatus}`);
     return <OnboardingGateScreen status={journeyStatus} />;
   }
 
   // AUTOMATIC REDIRECT: Ensure lead_created and awaiting_consent land on /consent immediately
   // avoiding any dashboard render in-between.
   useEffect(() => {
-    if (!journeyLoading && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent")) {
-      console.log("[Dashboard:AutoRedirect] Directing early onboarding state to /consent");
-      navigate("/consent", { replace: true });
+    if (!journeyLoading && journeyStatus && (journeyStatus === "lead_created" || journeyStatus === "awaiting_consent")) {
+      console.log(`[Dashboard:AutoRedirect] Directing early onboarding state (${journeyStatus}) to /consent`);
+      // Use window.location to force a clean break and avoid any potential React state zombie issues
+      window.location.href = "/consent";
     }
-  }, [journeyStatus, journeyLoading, navigate]);
+  }, [journeyStatus, journeyLoading]);
 
   // Telemetry extraction helper for diagnostics
   const getTelemetryLogs = () => {
