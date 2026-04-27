@@ -380,15 +380,20 @@ export default function PatientDetail() {
     setActivateOpen(false);
     invalidate();
 
-    toast.success(activateForm.status === "active" ? "Protocolo ativado!" : "Protocolo programado!", {
-      action: {
-        label: "Notificar via WhatsApp?",
-        onClick: () => sendWhatsAppNotification({
+    if (activateForm.status === "active") {
+      import("@/utils/whatsappNotification").then(({ promptWhatsAppNotification }) => {
+        promptWhatsAppNotification({
           patientId: patientId!,
-          message: `Olá ${profile?.full_name?.split(' ')[0]}! Um novo protocolo "${selectedProto?.title}" foi ativado para você. Confira no app!`
-        })
-      }
-    });
+          patientName: profile?.full_name || "Paciente",
+          professionalName: (window as any).PROFESSIONAL_NAME || "Seu Nutricionista",
+          type: "protocol_activated",
+          appUrl: `${window.location.origin}/auth`
+        });
+      });
+    } else {
+      toast.success("Protocolo programado!");
+    }
+
   };
 
   const addTimelineNote = async (e: React.FormEvent) => {
