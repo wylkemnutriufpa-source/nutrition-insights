@@ -105,8 +105,8 @@ export default function IntakeOnboarding() {
   }
 
   if (status === "valid" && tokenData) {
-    // User not logged in or logged in as different user — redirect to auth
-    const loginUrl = `/auth?redirect=/intake/${token}`;
+    // User not logged in or logged in as different user — keep the professional binding in the registration URL
+    const registerUrl = `/cadastro?nutri=${tokenData.nutritionist_id}&code=${token}`;
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
@@ -119,10 +119,10 @@ export default function IntakeOnboarding() {
               </p>
             )}
             <p className="text-muted-foreground text-sm">
-              Faça login para iniciar seu onboarding.
+              Crie seu acesso para iniciar o onboarding com vínculo automático ao profissional.
             </p>
-            <Button onClick={() => navigate(loginUrl, { replace: true })} className="w-full">
-              Entrar e Iniciar Onboarding
+            <Button onClick={() => navigate(registerUrl, { replace: true })} className="w-full">
+              Criar Acesso e Iniciar Onboarding
             </Button>
           </CardContent>
         </Card>
@@ -141,8 +141,8 @@ export default function IntakeOnboarding() {
           <Icon className="w-12 h-12 text-muted-foreground mx-auto" />
           <h2 className="text-xl font-bold">{errorConfig.title}</h2>
           <p className="text-muted-foreground text-sm">{errorConfig.description}</p>
-          <Button variant="outline" onClick={() => navigate("/auth")}>
-            Ir para Login
+          <Button variant="outline" onClick={() => navigate("/")}>
+            Voltar ao início
           </Button>
         </CardContent>
       </Card>
