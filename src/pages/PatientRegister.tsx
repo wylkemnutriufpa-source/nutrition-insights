@@ -252,15 +252,19 @@ export default function PatientRegister() {
             if (onboarding.patient_email) setEmail(onboarding.patient_email);
             if (onboarding.patient_name) setName(onboarding.patient_name);
             
+            setLinkSource("onboarding_token");
+            setInvitationIssue(null);
             setIsProfConfirmed(false);
             setSigValid(true);
             return;
           }
 
           addLog("Código de convite/onboarding não encontrado.");
+          setInvitationIssue({
+            reason: "invalid",
+            message: "Este código não foi encontrado. Você pode continuar o cadastro, mas o vínculo automático não será aplicado.",
+          });
           setSigValid(false);
-          // Don't toast immediately if it's just an invalid code, maybe they want to search?
-          // But usually code is specific.
           return;
         }
 
@@ -269,6 +273,10 @@ export default function PatientRegister() {
         const isExpired = invite.expires_at && new Date(invite.expires_at) < new Date();
         if (isExpired) {
           addLog("O convite está expirado.");
+          setInvitationIssue({
+            reason: "expired",
+            message: "Este convite expirou. Você pode continuar o cadastro, mas precisa pedir um novo link para o vínculo automático.",
+          });
           setSigValid(false);
           await supabase.from("invitation_logs").insert({
             invitation_id: invite.id,
@@ -283,6 +291,10 @@ export default function PatientRegister() {
 
         if (invite.status === 'revoked') {
           addLog("O convite foi revogado pelo profissional.");
+          setInvitationIssue({
+            reason: "revoked",
+            message: "Este convite foi revogado. Você pode continuar o cadastro, mas precisa pedir um novo link para o vínculo automático.",
+          });
           setSigValid(false);
           await supabase.from("invitation_logs").insert({
             invitation_id: invite.id,
@@ -304,6 +316,8 @@ export default function PatientRegister() {
           clinic_name: (invite.metadata as any)?.clinic_name || null,
           phone: prof?.phone || null,
         });
+        setLinkSource("invitation");
+        setInvitationIssue(null);
         setIsProfConfirmed(false);
         setSigValid(true);
         addLog("Vínculo profissional validado via convite com sucesso.");
