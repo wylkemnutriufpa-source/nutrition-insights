@@ -475,12 +475,7 @@ export default function InvitePatient() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="w-full gap-2 border-primary/20 hover:bg-primary/5 text-primary text-xs h-9"
-                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link_prod", "Convite Oficial")}
-                  >
-                    {copied === "link_prod" ? <CheckCircle2 className="w-3.5 h-3.5" /> : <Globe className="w-3.5 h-3.5" />}
-                    Copiar Link Oficial (Produção)
-                  </Button>
+                    {/* Botão de produção redundante removido */}
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
                   <Button
