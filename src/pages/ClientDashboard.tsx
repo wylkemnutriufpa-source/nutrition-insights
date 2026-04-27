@@ -320,10 +320,7 @@ export default function ClientDashboard() {
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
   
   // REDIRECT logic for non-fluid onboarding states
-  if (isPatient && !journeyLoading && journeyStatus && !isFluid) {
-    console.log(`[Dashboard:Gate] Blocking dashboard for status: ${journeyStatus}`);
-    return <OnboardingGateScreen status={journeyStatus} />;
-  }
+  const shouldBlock = isPatient && !journeyLoading && journeyStatus && !isFluid;
 
   // Telemetry extraction helper for diagnostics
   const getTelemetryLogs = () => {
