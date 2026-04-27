@@ -71,7 +71,7 @@ export function usePatientJourneyStatus() {
     };
   }, [user, isPatient]);
 
-  const canAccessOnboarding = status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active";
+  const canAccessOnboarding = status === "lead_created" || status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active";
 
   return { status, loading, canAccessOnboarding };
 }
