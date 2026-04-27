@@ -10,14 +10,14 @@
  *  - Log detalhado em onboarding_runtime_errors
  *  - Hard validation: lifecycle + pipeline obrigatórios
  *
- * Retorna status: "loading" | "ok" | "fixed" | "error"
+ * Retorna status: "loading" | "ok" | "fixed" | "error" | "no_link"
  */
 
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { logRegression } from "@/lib/regressionGuard";
 
-export type EnsureStatus = "loading" | "ok" | "fixed" | "error";
+export type EnsureStatus = "loading" | "ok" | "fixed" | "error" | "no_link";
 
 export interface EnsureResult {
   status: EnsureStatus;
@@ -119,7 +119,8 @@ async function runEnsureOnce(
     }
     // Specific error: User has no patient profile or journey status
     if (err?.message?.includes('No nutritionist_patient link found')) {
-       return { status: "fixed", issues: ["missing_link_reconciled"], actions: [] };
+       console.error(`[EnsurePatientReady] CRITICAL: Patient ${patientId} has no link`);
+       return { status: "no_link", issues: ["missing_link"], actions: [] };
     }
     throw err;
   }
