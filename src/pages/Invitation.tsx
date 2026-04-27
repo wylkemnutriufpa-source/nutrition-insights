@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -90,19 +90,31 @@ export default function Invitation() {
   }, [user]);
 
   useEffect(() => {
-    fetchInvitation();
+    if (code) {
+      fetchInvitation();
+    }
   }, [code]);
 
-  const handleAccept = () => {
+  const handleAccept = useCallback(() => {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
-    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`);
-  };
+    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
+  }, [invitation, error, isProcessingAction, code, correlationId, navigate]);
+
+  // Redirecionamento automático quando o convite é válido
+  useEffect(() => {
+    if (invitation && !error && !isProcessingAction) {
+      const timer = setTimeout(() => {
+        handleAccept();
+      }, 600);
+      return () => clearTimeout(timer);
+    }
+  }, [invitation, error, handleAccept]);
 
   const handleSafeRegisterFallback = () => {
     const professionalId = invitation?.professional_id;
     if (professionalId) {
-      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}`);
+      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}`, { replace: true });
       return;
     }
     fetchInvitation();

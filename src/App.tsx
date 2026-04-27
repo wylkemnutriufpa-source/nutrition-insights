@@ -561,7 +561,7 @@ const App = () => (
                <Route path="/vincular/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
                <Route path="/q/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
                <Route path="/convite" element={<Navigate to="/cadastro" replace />} />
-              <Route path="/convite/:code" element={<InvitationCodeRedirect />} />
+              <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
                <Route path="/auth/confirm" element={<LP section="Confirmação"><AuthConfirm /></LP>} />
