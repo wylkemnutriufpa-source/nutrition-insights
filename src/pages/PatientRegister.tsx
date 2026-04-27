@@ -154,18 +154,14 @@ export default function PatientRegister() {
   const currentCadastroPath = buildCadastroPath({ preselectedNutri, invitationCode, selectedProfessional });
 
   // Mostramos o profissional resolvido de forma clara.
-  // Se for convite, pedimos confirmação visual. Se for link direto, já confirmamos.
+  // IMPORTANTE: Agora sempre mostramos a tela de boas-vindas com a foto do profissional
+  // para garantir a confiança do paciente no vínculo, conforme solicitado pelo usuário.
   useEffect(() => {
     if (selectedProfessional && !isProfConfirmed) {
-      if (linkSource === "nutri") {
-        addLog(`Link direto (?nutri=). Confirmando automaticamente.`);
-        setIsProfConfirmed(true);
-      } else {
-        addLog(`Convite detectado. Aguardando confirmação ou interação.`);
-        // Mantemos isProfConfirmed como false para mostrar o card de "Você foi convidado!"
-      }
+      addLog(`Profissional resolvido: ${selectedProfessional.full_name}. Mostrando tela de boas-vindas para confirmação visual.`);
+      // Removemos a confirmação automática para links diretos
     }
-  }, [selectedProfessional, isProfConfirmed, addLog, linkSource]);
+  }, [selectedProfessional, isProfConfirmed, addLog]);
 
   useEffect(() => {
     const state = {
@@ -216,8 +212,8 @@ export default function PatientRegister() {
           phone: profileData.phone,
         });
         setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
-        // Se for link direto (?nutri=ID), confirma automaticamente para pular a tela de boas-vindas
-        setIsProfConfirmed(true);
+        // REMOVIDO: Confirmação automática removida para garantir que a foto do profissional apareça.
+        setIsProfConfirmed(false);
         setSigValid(true);
       } else {
         addLog(`AVISO: Profissional ${preselectedNutri} não encontrado no banco.`);
@@ -671,10 +667,10 @@ export default function PatientRegister() {
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground">Você foi convidado!</h2>
+                <h2 className="text-2xl font-bold text-foreground">Você está sendo convidado!</h2>
                 <div className="space-y-1">
                   <p className="text-muted-foreground">
-                    O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> quer acompanhar sua jornada.
+                    O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> está pronto para acompanhar você.
                   </p>
                   {selectedProfessional.clinic_name && (
                     <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground bg-muted/50 py-1 px-3 rounded-full w-fit mx-auto">
@@ -690,7 +686,7 @@ export default function PatientRegister() {
                   addLog(`Convite aceito; preservando contexto ${cadastroPath}`);
                   setIsProfConfirmed(true);
                 }} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
-                  Aceitar Convite e Continuar <ArrowRight className="w-5 h-5 ml-2" />
+                  Cadastrar com este Profissional <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(cadastroPath)}`)} className="text-muted-foreground hover:text-foreground">
                   Já tenho uma conta
