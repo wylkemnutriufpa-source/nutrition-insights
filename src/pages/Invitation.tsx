@@ -17,6 +17,7 @@ export default function Invitation() {
   const [invitation, setInvitation] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [errorCode, setErrorCode] = useState<string | null>(null);
   const [isNutritionist, setIsNutritionist] = useState(false);
   const [isValidating, setIsValidating] = useState(false);
   const [isProcessingAction, setIsProcessingAction] = useState(false);
