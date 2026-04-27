@@ -210,8 +210,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
                   if (targetTenantId) {
                     // Ensure nutritionist_patients link exists
-                    const { data: existingLink } = await supabase
-                      .from("nutritionist_patients")
+                    const { data: existingLink } = await (supabase.from("nutritionist_patients") as any)
                       .select("id")
                       .eq("patient_id", session.user.id)
                       .eq("nutritionist_id", targetNutriId)
