@@ -3,7 +3,7 @@ import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Users, UtensilsCrossed, BookOpen, ChefHat, Zap, AlertTriangle, ClipboardCheck, Plus, ArrowLeft, Search } from "lucide-react";
+import { Users, UtensilsCrossed, BookOpen, ChefHat, Zap, AlertTriangle, ClipboardCheck, Plus, ArrowLeft, Search, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
