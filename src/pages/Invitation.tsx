@@ -55,8 +55,14 @@ export default function Invitation() {
         .maybeSingle();
 
       if (fetchError) {
-        console.error("[Invitation] Supabase error:", fetchError);
-        throw fetchError;
+        console.error("[Invitation] Supabase select error:", fetchError);
+        // Se for um erro de RLS ou permissão, damos um feedback genérico
+        if (fetchError.code === '42501') {
+          setError("Este convite existe, mas você não tem permissão para visualizá-lo neste momento. Tente novamente.");
+        } else {
+          setError(`Erro ao carregar convite: ${fetchError.message}`);
+        }
+        return;
       }
       
       if (!data) {
