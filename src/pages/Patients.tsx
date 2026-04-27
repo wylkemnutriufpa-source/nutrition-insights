@@ -212,7 +212,7 @@ function AssignProgramDialog({
   );
 }
 
-function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], isOnline = false }: {
+function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssignDialogOpen, removeFromProgram, onUpdateExpiry, allPrestigePlans = [], isOnline = false, setExpiryTarget }: {
   p: PatientInfo; idx: number; navigate: any;
   toggleStatus: (id: string, status: string) => void;
   setAssignTarget: (p: PatientInfo) => void;
@@ -221,6 +221,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
   onUpdateExpiry: (id: string, date: string | null) => void;
   allPrestigePlans?: PrestigePlan[];
   isOnline?: boolean;
+  setExpiryTarget: (p: { id: string, name: string, current: string | null }) => void;
 }) {
   const isInactive = p.status === "inactive";
   const score = p.priorityScore || 0;
@@ -290,10 +291,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
             <button
               onClick={(e) => {
                 e.stopPropagation();
-                const current = p.expires_at || "";
-                const input = prompt("Data de vencimento (AAAA-MM-DD):", current);
-                if (input === null) return;
-                onUpdateExpiry(p.id, input || null);
+                setExpiryTarget({ id: p.id, name: displayName, current: p.expires_at });
               }}
               className="text-muted-foreground hover:text-primary p-0.5" title="Definir vencimento"
             >
