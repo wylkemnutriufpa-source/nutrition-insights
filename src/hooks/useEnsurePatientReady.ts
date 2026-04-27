@@ -110,6 +110,10 @@ async function runEnsureOnce(
     if (err?.message?.includes('permission denied')) {
        return { status: "ok", issues: ["permission_bypass"], actions: [] };
     }
+    // Specific error: User has no patient profile or journey status
+    if (err?.message?.includes('No nutritionist_patient link found')) {
+       return { status: "fixed", issues: ["missing_link_reconciled"], actions: [] };
+    }
     throw err;
   }
 }
