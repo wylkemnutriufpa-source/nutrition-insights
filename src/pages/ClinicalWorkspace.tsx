@@ -3,7 +3,7 @@ import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
-import { Users, UtensilsCrossed, BookOpen, ChefHat, Zap, AlertTriangle, ClipboardCheck, Plus, ArrowLeft, Search } from "lucide-react";
+import { Users, UtensilsCrossed, BookOpen, ChefHat, Zap, AlertTriangle, ClipboardCheck, Plus, ArrowLeft, Search, UserPlus } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Link } from "react-router-dom";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
@@ -82,6 +82,11 @@ export default function ClinicalWorkspace() {
                 className="pl-9 w-64 h-9 text-sm"
               />
             </div>
+            <Link to="/invite-patient">
+              <Button size="sm" variant="outline" className="gap-1.5 border-amber-500/30 text-amber-600 hover:bg-amber-500/5">
+                <UserPlus className="w-4 h-4" /> Convidar
+              </Button>
+            </Link>
             <Button size="sm" className="gap-1.5">
               <Plus className="w-4 h-4" /> Criar Plano
             </Button>

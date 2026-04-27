@@ -18,10 +18,10 @@ import { toast } from "sonner";
 import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
-  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles
+  LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles, UserPlus
 } from "lucide-react";
 import { BASE_URL } from "@/lib/config";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import PatientStatusManager from "@/components/patients/PatientStatusManager";
 import PrestigeBadge from "@/components/prestige/PrestigeBadge";
 import { useOnlinePatients } from "@/hooks/useOnlinePatients";
@@ -756,10 +756,15 @@ export default function Patients() {
                     <Settings2 className="w-3.5 h-3.5" /> Controle Rápido
                   </Button>
                 )}
+                <Link to="/invite-patient">
+                  <Button variant="outline" className="gap-2 border-amber-500/30 text-amber-600 hover:bg-amber-500/5">
+                    <UserPlus className="w-4 h-4" /> Convidar Paciente
+                  </Button>
+                </Link>
                 <Dialog open={open} onOpenChange={setOpen}>
                   <DialogTrigger asChild>
                     <Button className="gradient-primary gap-2 shadow-glow">
-                      <Plus className="w-4 h-4" /> Adicionar Paciente
+                      <Plus className="w-4 h-4" /> Cadastro Rápido
                     </Button>
                   </DialogTrigger>
                   <DialogContent>
