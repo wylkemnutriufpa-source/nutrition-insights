@@ -98,63 +98,109 @@ function AssignProgramDialog({
   onAssigned: () => void;
 }) {
   const [selectedProgram, setSelectedProgram] = useState("");
+  const { isOpen, setIsOpen, log, withLoading, loading } = useSafeInteraction("AssignProgram");
   const assignMutation = useAssignToProgram();
+
+  // Sync internal state with prop
+  useEffect(() => {
+    if (open !== isOpen) {
+      setIsOpen(open);
+      if (open) log("modal_opened", { patientId: patient?.patient_id });
+    }
+  }, [open, isOpen, setIsOpen, log, patient]);
+
+  // Sync prop with internal state changes (e.g. from Dialog close)
+  const handleOpenChange = (val: boolean) => {
+    log("onOpenChange", { val });
+    setIsOpen(val);
+    onOpenChange(val);
+  };
 
   const alreadyEnrolled = new Set(patient?.programs?.map(p => p.id) || []);
   const available = programs.filter(p => !alreadyEnrolled.has(p.id));
 
   const handleAssign = async () => {
-    if (!patient || !selectedProgram) return;
-    await assignMutation.mutateAsync({ patientId: patient.patient_id, programId: selectedProgram });
-    onAssigned();
-    onOpenChange(false);
-    setSelectedProgram("");
+    if (!patient || !selectedProgram) {
+      log("assign_blocked", { hasPatient: !!patient, selectedProgram });
+      return;
+    }
+    
+    await withLoading(async () => {
+      await assignMutation.mutateAsync({ patientId: patient.patient_id, programId: selectedProgram });
+      log("assign_completed");
+      onAssigned();
+      handleOpenChange(false);
+      setSelectedProgram("");
+    });
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-sm">
+    <Dialog open={isOpen} onOpenChange={handleOpenChange}>
+      <DialogContent className="max-w-sm border-border/40 bg-background/95 backdrop-blur-xl">
         <DialogHeader>
-          <DialogTitle className="font-display flex items-center gap-2">
-            <Target className="w-5 h-5" /> Adicionar a Programa
+          <DialogTitle className="font-display flex items-center gap-2 text-foreground">
+            <Target className="w-5 h-5 text-primary" /> Adicionar a Programa
           </DialogTitle>
         </DialogHeader>
-        <div className="space-y-4">
+        
+        <div className="space-y-4 pt-2">
           <p className="text-sm text-muted-foreground">
             Adicionando <strong>{patient?.profile?.full_name}</strong> a um programa
           </p>
+          
           {patient?.programs && patient.programs.length > 0 && (
-            <div>
-              <Label className="text-xs">Programas atuais</Label>
-              <div className="flex flex-wrap gap-1 mt-1">
+            <div className="bg-accent/5 p-3 rounded-lg border border-border/30">
+              <Label className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1.5 block">Programas atuais</Label>
+              <div className="flex flex-wrap gap-1.5">
                 {patient.programs.map(pg => (
-                  <Badge key={pg.id} variant="secondary" className="text-xs">{pg.title}</Badge>
+                  <Badge key={pg.id} variant="secondary" className="text-[10px] bg-background/50 border-border/50">{pg.title}</Badge>
                 ))}
               </div>
             </div>
           )}
+          
           {available.length === 0 ? (
-            <p className="text-sm text-muted-foreground text-center py-4">
-              {programs.length === 0 ? "Nenhum programa criado ainda" : "Paciente já está em todos os programas"}
-            </p>
+            <div className="text-center py-6 bg-accent/5 rounded-xl border border-dashed border-border/50">
+              <p className="text-xs text-muted-foreground px-4">
+                {programs.length === 0 
+                  ? "Nenhum programa criado ainda. Crie programas na aba de Programas." 
+                  : "Este paciente já está inscrito em todos os programas disponíveis."}
+              </p>
+            </div>
           ) : (
-            <>
-              <div>
-                <Label className="text-xs">Programa</Label>
-                <Select value={selectedProgram} onValueChange={setSelectedProgram}>
-                  <SelectTrigger><SelectValue placeholder="Selecione um programa" /></SelectTrigger>
-                  <SelectContent>
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label className="text-xs font-medium text-foreground ml-0.5">Selecionar Programa</Label>
+                <Select 
+                  value={selectedProgram} 
+                  onValueChange={(val) => {
+                    log("program_selected", { val });
+                    setSelectedProgram(val);
+                  }}
+                  disabled={loading}
+                >
+                  <SelectTrigger className="w-full bg-background/50 border-border/50 h-11 focus:ring-primary/20">
+                    <SelectValue placeholder="Selecione um programa..." />
+                  </SelectTrigger>
+                  <SelectContent className="z-[110]">
                     {available.map(p => (
-                      <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                      <SelectItem key={p.id} value={p.id} className="cursor-pointer">
+                        {p.title}
+                      </SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
               </div>
-              <Button onClick={handleAssign} disabled={!selectedProgram || assignMutation.isPending} className="w-full gap-2">
-                {assignMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Target className="w-4 h-4" />}
-                Adicionar ao Programa
+              
+              <Button 
+                onClick={handleAssign} 
+                disabled={!selectedProgram || loading} 
+                className="w-full h-11 gap-2 shadow-lg shadow-primary/10 transition-all hover:scale-[1.01] active:scale-[0.99]"
+              >
+                {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                Confirmar Inscrição
               </Button>
-            </>
+            </div>
           )}
         </div>
       </DialogContent>
