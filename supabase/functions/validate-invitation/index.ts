@@ -38,7 +38,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (fetchError) {
-      console.error("[validate-invitation] Database error:", fetchError);
+      console.error(`[validate-invitation] [CID:${cid}] Database error:`, fetchError);
       throw new Error("ERRO_BANCO_DADOS");
     }
 
