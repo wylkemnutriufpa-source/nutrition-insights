@@ -18,9 +18,11 @@ Deno.serve(async (req) => {
     });
 
     const body = await req.json();
-    const { code } = body;
+    const { code, correlationId } = body;
+    const cid = correlationId || "no-cid";
 
     if (!code) {
+      console.error(`[validate-invitation] [CID:${cid}] Código ausente`);
       throw new Error("CÓDIGO_AUSENTE");
     }
 
