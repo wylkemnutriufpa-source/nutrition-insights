@@ -278,8 +278,12 @@ export default function ClientDashboard() {
 
   const unreadCount = notifications.filter((n) => !n.is_read).length;
 
-  // No automatic redirects to onboarding - system is fluid.
-  if (loading) {
+  // Only allow dashboard if journey status is active or onboarding is ready
+  if (!journeyLoading && !canAccessOnboarding && journeyStatus) {
+    return <OnboardingGateScreen status={journeyStatus} />;
+  }
+
+  if (loading || journeyLoading) {
     return (
       <DashboardLayout>
         <BrainLoaderCard text="Carregando seu painel clínico…" />
