@@ -408,8 +408,23 @@ function LegacyMealPlanRedirect() {
 function CanonicalPublicRedirect({ to }: { to: "/convite" | "/cadastro" | "/auth/confirm" | "/intake" }) {
   const location = useLocation();
   const params = useParams<{ code?: string; token?: string }>();
+  if (to === "/convite" && params.code) {
+    const search = new URLSearchParams(location.search);
+    search.set("code", params.code);
+    const query = search.toString();
+    return <Navigate to={`/cadastro${query ? `?${query}` : ""}${location.hash}`} replace />;
+  }
   const suffix = params.code || params.token ? `/${params.code || params.token}` : "";
   return <Navigate to={`${to}${suffix}${location.search}${location.hash}`} replace />;
+}
+
+function InvitationCodeRedirect() {
+  const location = useLocation();
+  const { code } = useParams<{ code: string }>();
+  const search = new URLSearchParams(location.search);
+  if (code) search.set("code", code);
+  const query = search.toString();
+  return <Navigate to={`/cadastro${query ? `?${query}` : ""}${location.hash}`} replace />;
 }
 
 function DarkModeInit() {
@@ -545,8 +560,8 @@ const App = () => (
               <Route path="/register-patient" element={<LP section="Cadastro"><PatientRegister /></LP>} />
                <Route path="/vincular/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
                <Route path="/q/:nutriId" element={<LP section="Link Rápido"><QuickLink /></LP>} />
-               <Route path="/convite" element={<Navigate to="/" replace />} />
-              <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
+               <Route path="/convite" element={<Navigate to="/cadastro" replace />} />
+              <Route path="/convite/:code" element={<InvitationCodeRedirect />} />
               <Route path="/convite/:code/status" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                <Route path="/auth" element={<LP section="Auth"><Auth /></LP>} />
                <Route path="/auth/confirm" element={<LP section="Confirmação"><AuthConfirm /></LP>} />
