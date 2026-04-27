@@ -13,7 +13,9 @@ import { toast } from "sonner";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import SubscriptionGuard from "@/components/common/SubscriptionGuard";
 import { validateWhatsApp, normalizeWhatsApp, formatInternationalWhatsApp } from "@/utils/whatsapp";
-import { getWhatsAppInvitationMessage } from "@/utils/invitation";
+import { getWhatsAppInvitationMessage, WhatsAppTemplateType } from "@/utils/invitation";
+import { useWhatsAppTemplates, useWhatsAppLogs } from "@/hooks/useWhatsAppBusiness";
+import WhatsAppTemplateEditor from "@/components/professional/WhatsAppTemplateEditor";
 
 
 
