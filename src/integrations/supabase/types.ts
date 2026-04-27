@@ -5927,6 +5927,7 @@ export type Database = {
       }
       invitation_logs: {
         Row: {
+          correlation_id: string | null
           created_at: string
           details: Json | null
           domain_used: string | null
@@ -5939,6 +5940,7 @@ export type Database = {
           user_agent: string | null
         }
         Insert: {
+          correlation_id?: string | null
           created_at?: string
           details?: Json | null
           domain_used?: string | null
@@ -5951,6 +5953,7 @@ export type Database = {
           user_agent?: string | null
         }
         Update: {
+          correlation_id?: string | null
           created_at?: string
           details?: Json | null
           domain_used?: string | null
