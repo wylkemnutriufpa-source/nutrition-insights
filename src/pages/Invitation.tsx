@@ -281,13 +281,18 @@ export default function Invitation() {
             </div>
           </CardHeader>
           <CardContent className="flex flex-col gap-4 pb-8">
-            <div className="p-4 rounded-xl bg-background border border-border shadow-sm mb-2">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2 flex items-center gap-2">
-                <ArrowRight className="w-3 h-3 text-primary" /> Passo recomendado
+            <div className="p-5 rounded-xl bg-background border border-border shadow-sm mb-2">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3 flex items-center gap-2">
+                <Info className="w-3 h-3 text-primary" /> Passos para resolver
               </p>
-              <p className="text-sm text-foreground leading-relaxed">
-                {details.step}
-              </p>
+              <ul className="space-y-2">
+                {details.actions.map((action, index) => (
+                  <li key={index} className="text-sm text-foreground flex items-start gap-2 leading-relaxed">
+                    <span className="w-1.5 h-1.5 rounded-full bg-primary shrink-0 mt-1.5" />
+                    {action}
+                  </li>
+                ))}
+              </ul>
             </div>
 
             {canRegenerate ? (
