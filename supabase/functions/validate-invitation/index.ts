@@ -121,10 +121,11 @@ Deno.serve(async (req) => {
     await logInvitation(adminClient, {
       invitation_id: invitation.id,
       event_type: "viewed",
-      details: { code: normalizedCode, origin },
+      details: { code: normalizedCode, origin, cid },
       user_agent: userAgent,
       professional_id: invitation.professional_id,
-      patient_email: invitation.patient_email
+      patient_email: invitation.patient_email,
+      correlation_id: cid
     });
 
     if (invitation.status === 'pending') {
