@@ -96,13 +96,13 @@ export default function Invitation() {
   const handleAccept = () => {
     if (!invitation || error || isProcessingAction) return;
     setIsProcessingAction(true);
-    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`);
+    navigate(`/cadastro?nutri=${invitation.professional_id}&code=${code}&cid=${correlationId}`, { replace: true });
   };
 
   const handleSafeRegisterFallback = () => {
     const professionalId = invitation?.professional_id;
     if (professionalId) {
-      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}`);
+      navigate(`/cadastro?nutri=${professionalId}&code=${code || ""}&cid=${correlationId}`, { replace: true });
       return;
     }
     fetchInvitation();
