@@ -403,6 +403,13 @@ function LegacyMealPlanRedirect() {
   return <Navigate to={`/meal-plans/${id}${location.search}${location.hash}`} replace />;
 }
 
+function CanonicalPublicRedirect({ to }: { to: "/convite" | "/cadastro" | "/auth/confirm" | "/intake" }) {
+  const location = useLocation();
+  const params = useParams<{ code?: string; token?: string }>();
+  const suffix = params.code || params.token ? `/${params.code || params.token}` : "";
+  return <Navigate to={`${to}${suffix}${location.search}${location.hash}`} replace />;
+}
+
 function DarkModeInit() {
   useEffect(() => {
     const stored = localStorage.getItem("theme");
@@ -518,6 +525,10 @@ const App = () => (
                <Route path="/inicio" element={<RootRoute />} />
                <Route path="/dashboard" element={<RootRoute />} />
                <Route path="/patient-dashboard" element={<Navigate to="/client/dashboard" replace />} />
+               <Route path="/~oauth/cadastro" element={<CanonicalPublicRedirect to="/cadastro" />} />
+               <Route path="/~oauth/convite/:code" element={<CanonicalPublicRedirect to="/convite" />} />
+               <Route path="/~oauth/intake/:token" element={<CanonicalPublicRedirect to="/intake" />} />
+               <Route path="/~oauth/auth/confirm" element={<CanonicalPublicRedirect to="/auth/confirm" />} />
 
                {/* Public landing pages */}
                <Route path="/landing" element={<LP section="Landing"><Landing /></LP>} />

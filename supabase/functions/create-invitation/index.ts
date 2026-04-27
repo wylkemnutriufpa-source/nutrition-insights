@@ -88,7 +88,7 @@ Deno.serve(async (req) => {
         return new Response(JSON.stringify({ 
           success: true, 
           code: existingGeneral.code, 
-          url: `${origin}/convite/${existingGeneral.code}`,
+          url: `${origin}/~oauth/convite/${existingGeneral.code}`,
           reused: true
         }), {
           headers: { ...corsHeaders, "Content-Type": "application/json" },
@@ -165,7 +165,7 @@ Deno.serve(async (req) => {
         origin = new URL(referer).origin;
       } catch { /* keep fallback */ }
     }
-    const friendlyUrl = `${origin}/convite/${code}`;
+    const friendlyUrl = `${origin}/~oauth/convite/${code}`;
     const userAgent = req.headers.get("user-agent") || "unknown";
     const host = req.headers.get("host") || "unknown";
 

@@ -5,6 +5,9 @@ import { Home, ArrowLeft } from "lucide-react";
 import { useEffect } from "react";
 
 function getSafeHomePath(pathname: string) {
+  if (pathname.startsWith("/~oauth/convite/")) return pathname;
+  if (pathname.startsWith("/~oauth/intake/")) return pathname;
+  if (pathname.startsWith("/~oauth/cadastro")) return `${pathname}${window.location.search}`;
   if (pathname.startsWith("/convite/")) return pathname;
   if (pathname.startsWith("/intake/")) return pathname;
   if (pathname.startsWith("/cadastro")) return `${pathname}${window.location.search}`;
