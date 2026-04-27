@@ -305,11 +305,17 @@ export default function ClientDashboard() {
 
     return (
     <DashboardLayout>
+      {/* Telemetry Debug View (Only in Preview/Dev) */}
+      {(window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) && (
+        <div className="hidden">
+           {/* Silently keeping telemetry active in console via useEffect above */}
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <ExperienceModeSwitcher />
       </div>
       <OnboardingProgressModal />
-      <OnboardingExitGuard enabled={journeyStatus !== null && !["plan_published", "active_followup", "active", "clinical_followup_active"].includes(journeyStatus)} />
+      <OnboardingExitGuard enabled={journeyStatus !== null && !IS_FLUID_STATE(journeyStatus)} />
       <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden">
         {/* Experience Mode Status Banner */}
         <motion.div variants={item}>
