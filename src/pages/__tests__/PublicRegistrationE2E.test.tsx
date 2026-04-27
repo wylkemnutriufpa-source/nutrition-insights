@@ -86,7 +86,7 @@ describe("Public Registration E2E Simulation", () => {
     renderWithProviders(null, [`/cadastro?nutri=${nutriId}`]);
 
     // Should see the invitation acceptance screen first
-    expect(await screen.findByText(/Você foi convidado!/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Você está sendo convidado/i)).toBeInTheDocument();
     expect(await screen.findByText(/Dr. Healthy/)).toBeInTheDocument();
   });
 
@@ -108,7 +108,7 @@ describe("Public Registration E2E Simulation", () => {
 
     renderWithProviders(null, [`/convite/${invitationCode}`]);
 
-    expect(await screen.findByText(/Você foi convidado!/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Você está sendo convidado/i)).toBeInTheDocument();
     expect(await screen.findByText(/Dr. Healthy/)).toBeInTheDocument();
     expect(await screen.findByText(/Olá, John!/i)).toBeInTheDocument();
   });

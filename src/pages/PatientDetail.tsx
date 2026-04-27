@@ -45,6 +45,8 @@ import {
   TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search, ShieldAlert, Timer
 } from "lucide-react";
 import { Link2, Copy, RefreshCw } from "lucide-react";
+import { WhatsAppNotifyButton } from "@/components/common/WhatsAppNotifyButton";
+import { sendWhatsAppNotification } from "@/utils/whatsappNotification";
 import BodyProjectionProCard from "@/components/patient/BodyProjectionProCard";
 import ActiveProtocolBadge from "@/components/patient/ActiveProtocolBadge";
 import PatientProjectGovernance from "@/components/patient/PatientProjectGovernance";
@@ -331,6 +333,17 @@ export default function PatientDetail() {
       toast.success("Cadastro atualizado com sucesso!");
       setOpenSection(null);
       invalidate();
+      
+      // Prompt for WhatsApp notification
+      toast.info("Deseja notificar o paciente sobre a atualização?", {
+        action: {
+          label: "Via WhatsApp",
+          onClick: () => sendWhatsAppNotification({
+            patientId: patientId!,
+            message: `Olá ${profile?.full_name?.split(' ')[0]}! Seu cadastro foi atualizado no sistema FitJourney. Acesse para conferir!`
+          })
+        }
+      });
     } catch (e: any) {
       toast.error(e.message || "Erro ao atualizar cadastro");
     }
@@ -365,6 +378,16 @@ export default function PatientDetail() {
     toast.success(activateForm.status === "active" ? "Protocolo ativado! Checklist sincronizado." : "Protocolo programado!");
     setActivateOpen(false);
     invalidate();
+
+    toast.success(activateForm.status === "active" ? "Protocolo ativado!" : "Protocolo programado!", {
+      action: {
+        label: "Notificar via WhatsApp?",
+        onClick: () => sendWhatsAppNotification({
+          patientId: patientId!,
+          message: `Olá ${profile?.full_name?.split(' ')[0]}! Um novo protocolo "${selectedProto?.title}" foi ativado para você. Confira no app!`
+        })
+      }
+    });
   };
 
   const addTimelineNote = async (e: React.FormEvent) => {

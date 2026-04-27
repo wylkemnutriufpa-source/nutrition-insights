@@ -245,6 +245,38 @@ export function validateMealSubstitutions(item: MealPlanItem, maxCount: number =
         }
       });
     }
+    
+    // 6. Fixed Meal Validation (Marmita Fixa)
+    if (meta.is_fixed) {
+      if (substitutions.length < 3 || substitutions.length > 4) {
+        const msg = `Marmita Fixa "${item.title}" deve ter entre 3 e 4 substituições (atual: ${substitutions.length}).`;
+        errors.push(msg);
+        detailedErrors.push({
+          mealId: item.id,
+          mealTitle: item.title || "Sem título",
+          substitutionIndex: -1,
+          foodName: "Erro de Quantidade",
+          macros: {},
+          limitError: msg
+        });
+      }
+      
+      const genericTerms = ["marmita do dia", "marmita dia", "ver no app", "conferir", "opcoes do dia"];
+      const foundGeneric = substitutions.find(sub => genericTerms.some(term => normalize(sub).includes(term)));
+      
+      if (foundGeneric) {
+        const msg = `Marmita Fixa "${item.title}" contém termos genéricos proibidos ("${foundGeneric}"). Especifique o prato real conforme receitas do sistema.`;
+        errors.push(msg);
+        detailedErrors.push({
+          mealId: item.id,
+          mealTitle: item.title || "Sem título",
+          substitutionIndex: -1,
+          foodName: "Termo Genérico",
+          macros: {},
+          limitError: msg
+        });
+      }
+    }
   });
 
   return {

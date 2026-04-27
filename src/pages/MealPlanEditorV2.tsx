@@ -20,6 +20,8 @@ import { Button } from "@/components/ui/button";
 import { WeeklyGrid } from "@/components/meal-editor-v2/WeeklyGrid";
 import { ListView } from "@/components/meal-editor-v2/ListView";
 import { EditorSyncBadge } from "@/components/meal-editor-v2/EditorSyncBadge";
+import { sendWhatsAppNotification, getMealPlanReadyMessage } from "@/utils/whatsappNotification";
+import { BASE_URL } from "@/lib/config";
 
 import { MealLibrarySidebar } from "@/components/meal-editor-v2/MealLibrarySidebar";
 import { MealLibraryModal } from "@/components/meal-editor-v2/MealLibraryModal";
@@ -374,6 +376,25 @@ export default function MealPlanEditorV2() {
     await store.hydrate(id, user.id);
   };
 
+  const handleNotifyWhatsApp = async () => {
+    if (!plan?.patient_id || !user?.id) return;
+    
+    const { data: profProfile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("user_id", user.id)
+      .single();
+
+    const profName = profProfile?.full_name || "Seu Nutricionista";
+    const appUrl = `${BASE_URL}/plano`;
+    const message = getMealPlanReadyMessage(store.patientName, profName, appUrl);
+
+    await sendWhatsAppNotification({
+      patientId: plan.patient_id,
+      message
+    });
+  };
+
   // Keyboard shortcuts (Esc exits fullscreen)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -665,7 +686,13 @@ export default function MealPlanEditorV2() {
       if (!result.success) throw new Error(result.error || "Erro ao publicar");
       
       await refreshPlanFromServer();
-      toast.success("✅ Plano publicado com sucesso!", { id: toastId });
+      toast.success("✅ Plano publicado com sucesso!", { 
+        id: toastId,
+        action: {
+          label: "Notificar WhatsApp?",
+          onClick: handleNotifyWhatsApp
+        }
+      });
     } catch (err: any) {
       console.error("[Publish] Error:", err);
       toast.error("Erro ao publicar: " + (err?.message || "Tente novamente"), { id: toastId });
@@ -761,7 +788,14 @@ export default function MealPlanEditorV2() {
         return;
       }
 
-      toast.success("✅ Plano salvo e publicado! O paciente já pode visualizar.", { id: toastId, duration: 5000 });
+      toast.success("✅ Plano salvo e publicado!", { 
+        id: toastId, 
+        duration: 5000,
+        action: {
+          label: "Notificar WhatsApp?",
+          onClick: handleNotifyWhatsApp
+        }
+      });
     } catch (err: any) {
       console.error("[SaveAndPublish] Error:", err);
       toast.error("Erro ao salvar/publicar: " + (err?.message || "Tente novamente"), { id: toastId });

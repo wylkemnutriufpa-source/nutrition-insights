@@ -392,9 +392,9 @@ export default function Invitation() {
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background p-4 relative">
       <Helmet>
-        <title>Você foi convidado! | FitJourney</title>
+        <title>Você está sendo convidado | FitJourney</title>
         <meta name="description" content="Seu acompanhamento nutricional de alta performance começa agora." />
-        <meta property="og:title" content="Você foi convidado para o FitJourney!" />
+        <meta property="og:title" content="Você está sendo convidado para o FitJourney!" />
         <meta property="og:description" content={`Acompanhamento com ${professional?.full_name || 'seu nutricionista'}`} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={getInvitationUrl(code || "")} />
@@ -428,7 +428,7 @@ export default function Invitation() {
             </div>
           </div>
           <div>
-            <CardTitle className="text-3xl font-display font-bold text-foreground tracking-tight">Você foi convidado!</CardTitle>
+            <CardTitle className="text-3xl font-display font-bold text-foreground tracking-tight">Você está sendo convidado</CardTitle>
             <CardDescription className="text-lg mt-2 font-medium text-muted-foreground/80">
               {patient_name ? `Olá, ${patient_name.split(' ')[0]}! ` : ""}
               Seu acompanhamento nutricional começa agora.
@@ -475,7 +475,7 @@ export default function Invitation() {
               size="lg" 
               className="w-full gap-3 text-xl h-16 rounded-2xl shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-[0.98] transition-all"
             >
-              Aceitar Convite
+              Cadastrar com este Profissional
               <ArrowRight className="w-6 h-6" />
             </Button>
             
