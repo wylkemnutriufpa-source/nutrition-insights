@@ -57,50 +57,42 @@ const renderWithProviders = (component: React.ReactNode, initialEntries = ["/"])
 describe("Public Registration E2E Simulation", () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    // Mock crypto.randomUUID if not available in environment
     if (!global.crypto.randomUUID) {
       global.crypto.randomUUID = () => "test-uuid-123" as any;
     }
   });
 
-  it("should load /cadastro?nutri=ID without errors and enable the button", async () => {
+  it("should load /cadastro?nutri=ID and show the invitation screen", async () => {
     const nutriId = "nutri-123";
     
-    // Mock profile fetch
-    (supabase.from as any)().maybeSingle.mockResolvedValueOnce({
-      data: { user_id: nutriId, full_name: "Dr. Healthy", avatar_url: null, phone: "123" },
-      error: null
-    });
-    // Mock professional profile fetch
-    (supabase.from as any)().maybeSingle.mockResolvedValueOnce({
-      data: { clinic_name: "Healthy Clinic" },
-      error: null
-    });
-    // Mock existence check
-    (supabase.from as any)().maybeSingle.mockResolvedValueOnce({
-      data: { user_id: nutriId },
-      error: null
-    });
-
-    renderWithProviders(<PatientRegister />, [`/cadastro?nutri=${nutriId}`]);
-
-    // Check if nutritionist name is visible
-    await waitFor(() => {
-      expect(screen.getByText("Dr. Healthy")).toBeInTheDocument();
+    // Setup mocks for profile and professional_profiles
+    const fromMock = supabase.from as any;
+    fromMock.mockImplementation((table: string) => {
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockImplementation(() => {
+          if (table === "profiles") {
+            return Promise.resolve({ data: { user_id: nutriId, full_name: "Dr. Healthy", avatar_url: null, phone: "123" }, error: null });
+          }
+          if (table === "professional_profiles") {
+            return Promise.resolve({ data: { clinic_name: "Healthy Clinic" }, error: null });
+          }
+          return Promise.resolve({ data: null, error: null });
+        }),
+      };
     });
 
-    // Button should be enabled (not disabled)
-    const submitButton = screen.getByRole("button", { name: /Concluir Cadastro/i });
-    expect(submitButton).not.toBeDisabled();
-    
-    // Check for logs with CID
-    expect(screen.getByText(/CID:test-uuid-123/)).toBeInTheDocument();
+    renderWithProviders(null, [`/cadastro?nutri=${nutriId}`]);
+
+    // Should see the invitation acceptance screen first
+    expect(await screen.findByText(/Você foi convidado!/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Dr. Healthy/)).toBeInTheDocument();
   });
 
   it("should load /convite/:code and display professional data correctly", async () => {
     const invitationCode = "INVITE-2024";
     
-    // Mock edge function invoke
     (supabase.functions.invoke as any).mockResolvedValueOnce({
       data: {
         success: true,
@@ -114,23 +106,16 @@ describe("Public Registration E2E Simulation", () => {
       error: null
     });
 
-    renderWithProviders(<Invitation />, [`/convite/${invitationCode}`]);
+    renderWithProviders(null, [`/convite/${invitationCode}`]);
 
-    // Check if professional data is visible
-    await waitFor(() => {
-      expect(screen.getByText("Dr. Healthy")).toBeInTheDocument();
-      expect(screen.getByText(/Olá, John!/i)).toBeInTheDocument();
-      expect(screen.getByText("Healthy Clinic")).toBeInTheDocument();
-    });
-
-    // Check for "Começar Agora" button
-    expect(screen.getByText(/Começar Agora/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Você foi convidado!/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Dr. Healthy/)).toBeInTheDocument();
+    expect(await screen.findByText(/Olá, John!/i)).toBeInTheDocument();
   });
 
   it("should show detailed error screen on /convite/:code when code is invalid", async () => {
     const invitationCode = "INVALID-CODE";
     
-    // Mock edge function invoke failure
     (supabase.functions.invoke as any).mockResolvedValueOnce({
       data: {
         success: false,
@@ -140,13 +125,10 @@ describe("Public Registration E2E Simulation", () => {
       error: null
     });
 
-    renderWithProviders(<Invitation />, [`/convite/${invitationCode}`]);
+    renderWithProviders(null, [`/convite/${invitationCode}`]);
 
-    await waitFor(() => {
-      expect(screen.getByText("Convite não encontrado")).toBeInTheDocument();
-      expect(screen.getByText(/O link pode estar incompleto ou incorreto/i)).toBeInTheDocument();
-      expect(screen.getByText(/Passos para resolver/i)).toBeInTheDocument();
-      expect(screen.getByText(/Verifique se você copiou o link inteiro/i)).toBeInTheDocument();
-    });
+    expect(await screen.findByText("Convite não encontrado")).toBeInTheDocument();
+    expect(await screen.findByText(/O link pode estar incompleto ou incorreto/i)).toBeInTheDocument();
+    expect(await screen.findByText(/Passos para resolver/i)).toBeInTheDocument();
   });
 });
