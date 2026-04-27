@@ -79,7 +79,7 @@ export default function BiquiniOnboardingWizard({ programId, enrollmentId, onCom
 
   const canAdvance = () => {
     switch (step) {
-      case 0: return parseFloat(weight) > 0 && parseFloat(height) > 0;
+      case 0: return (normalizeWeightInput(weight).value || 0) > 0 && (normalizeHeightInput(height).value || 0) > 0;
       case 1: return hasMeasurements !== null;
       case 2: return clinical.main_goal && clinical.activity_level;
       case 3: return photos.front && photos.side && photos.back;
