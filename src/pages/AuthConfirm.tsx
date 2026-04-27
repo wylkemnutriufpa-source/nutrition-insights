@@ -15,6 +15,25 @@ export default function AuthConfirm() {
   const token_hash = searchParams.get("token_hash");
   const type = searchParams.get("type") as any;
   const next = searchParams.get("next") || "/";
+  const [checkingSession, setCheckingSession] = useState(!token_hash);
+
+  useEffect(() => {
+    if (token_hash) return;
+
+    let cancelled = false;
+    supabase.auth.getSession().then(({ data }) => {
+      if (cancelled) return;
+      if (data.session) {
+        navigate(next.startsWith("/") ? next : "/", { replace: true });
+        return;
+      }
+      setCheckingSession(false);
+    });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [token_hash, next, navigate]);
 
   const handleConfirm = async () => {
     if (!token_hash || !type) {
@@ -36,7 +55,7 @@ export default function AuthConfirm() {
         setError("O link de confirmação expirou ou já foi utilizado. Por favor, solicite um novo.");
       } else {
         toast.success("Login confirmado com sucesso!");
-        navigate(next);
+        navigate(next.startsWith("/") ? next : "/", { replace: true });
       }
     } catch (err) {
       console.error("Unexpected error during auth confirmation:", err);
@@ -49,7 +68,19 @@ export default function AuthConfirm() {
   // If we have the necessary params, but haven't started loading yet, 
   // we wait for the user to click the button to prevent bot consumption.
   
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="text-center space-y-4">
+          <Loader2 className="w-10 h-10 animate-spin text-primary mx-auto" />
+          <p className="text-muted-foreground">Confirmando seu acesso...</p>
+        </div>
+      </div>
+    );
+  }
+
   if (!token_hash || !type) {
+    const fallbackPath = next.startsWith("/cadastro") || next.startsWith("/convite") || next.startsWith("/intake") ? next : "/";
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="max-w-md w-full">
@@ -63,8 +94,8 @@ export default function AuthConfirm() {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Button onClick={() => navigate("/auth")} className="w-full">
-              Voltar para Login
+            <Button onClick={() => navigate(fallbackPath, { replace: true })} className="w-full">
+              Voltar ao Acesso Seguro
             </Button>
           </CardContent>
         </Card>
