@@ -351,7 +351,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (mounted) {
               setLoading(false);
               checkSubscription();
-              console.log(`[Auth:${authEventId}] Data fetch complete. Roles:`, userRoles);
+              console.log(`%c[Auth:${authEventId}] Final Auth State:`, "color: #10b981; font-weight: bold", {
+                user_id: session.user.id,
+                email: session.user.email,
+                profile_exists: !!profileResult.data,
+                roles: userRoles,
+                subscription_active: subscription.subscribed
+              });
             }
           } catch (e) {
             console.error(`[Auth:${authEventId}] Error fetching user data on auth change:`, e);
