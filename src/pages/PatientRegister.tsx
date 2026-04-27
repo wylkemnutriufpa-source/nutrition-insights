@@ -499,8 +499,8 @@ export default function PatientRegister() {
 
       addLog(`Usuário Auth criado: ${signUpData.user.id}. Vinculando paciente...`);
 
-      // Chama RPC canônica
-      const { error: canonErr } = await supabase.rpc("create_patient_canonical" as any, {
+      // Chama RPC canônica — AGUARDA COMPLETAMENTE antes de prosseguir
+      const { data: canonData, error: canonErr } = await supabase.rpc("create_patient_canonical" as any, {
         _patient_id: signUpData.user.id,
         _full_name: name,
         _email: email.trim().toLowerCase(),
@@ -573,11 +573,13 @@ export default function PatientRegister() {
         addLog("Sessão detectada. Redirecionando para /consent...");
         toast.success("Conta criada! Redirecionando...");
         
-        // Pequeno delay para garantir que o toast seja visto e o estado de loading não pisque
+        // Delay estendido para garantir que os gatilhos do banco (roles, profile)
+        // tenham tempo de propagar antes da primeira verificação do guard de rotas
         setTimeout(() => {
           setLoading(false);
+          addLog("Redirecionando para consentimento...");
           navigate("/consent", { replace: true });
-        }, 800);
+        }, 1500);
         return;
       }
 
