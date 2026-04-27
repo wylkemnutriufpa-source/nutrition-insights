@@ -44,12 +44,18 @@ Deno.serve(async (req) => {
 
     if (!invitation) {
       // LOG FAILURE: Invalid code
+      try {
+        await adminClient.from("invitation_audits").insert({
+          code: normalizedCode,
+          status_code: 400,
+          error_type: "INVALID_CODE",
+          stage: "validation",
+          user_agent: userAgent,
+          metadata: { origin, cid }
+        });
+      } catch (logErr) { console.error("Error logging failure:", logErr); }
+
       await logInvitation(adminClient, {
-        event_type: "validation_failed",
-        details: { code: normalizedCode, reason: "INVALID_CODE", origin, cid },
-        user_agent: userAgent,
-        correlation_id: cid
-      });
       return new Response(JSON.stringify({ 
         success: false, 
         error_code: "INVALID_CODE",
@@ -109,6 +115,17 @@ Deno.serve(async (req) => {
     }
 
     // 5. Sucesso! Registra a visualização e retorna dados
+    try {
+      await adminClient.from("invitation_audits").insert({
+        code: normalizedCode,
+        professional_id: invitation.professional_id,
+        status_code: 200,
+        stage: "validation",
+        user_agent: userAgent,
+        metadata: { origin, cid }
+      });
+    } catch (logErr) { console.error("Error logging success:", logErr); }
+
     await logInvitation(adminClient, {
       invitation_id: invitation.id,
       event_type: "viewed",
