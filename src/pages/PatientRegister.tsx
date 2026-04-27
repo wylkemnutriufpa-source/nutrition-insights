@@ -437,7 +437,8 @@ export default function PatientRegister() {
       addLog(`ID do Profissional selecionado: ${nutriId || "Nenhum"}`);
 
       if (!nutriId && (preselectedNutri || invitationCode)) {
-        toast.error("Vínculo de profissional não identificado. Recarregue a página ou use o link correto.");
+        addLog("BLOQUEIO: Cadastro sem vínculo profissional em link parametrizado.");
+        toast.error("Vínculo de profissional não identificado. O cadastro de pacientes exige um convite válido.");
         setLoading(false);
         return;
       }
