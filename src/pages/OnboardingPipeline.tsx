@@ -630,7 +630,7 @@ export default function OnboardingPipeline() {
 
   return (
     <DashboardLayout>
-      <OnboardingExitGuard enabled={exitGuardEnabled} hasStartedFilling={hasStartedFilling} />
+      <OnboardingExitGuard enabled={exitGuardEnabled} />
       <div className="max-w-3xl mx-auto py-6 space-y-6">
         {/* Header */}
         <div className="text-center space-y-2">
