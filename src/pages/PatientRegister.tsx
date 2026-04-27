@@ -678,19 +678,22 @@ export default function PatientRegister() {
                       src={selectedProfessional.avatar_url} 
                       alt={selectedProfessional.full_name} 
                       className="w-full h-full object-cover"
+                      data-testid="professional-avatar-img"
                       onError={() => {
                         addLog("Erro ao carregar avatar do nutricionista. Usando fallback.");
                         setAvatarError(true);
                       }}
                     />
                   ) : (
-                    <User className="w-10 h-10 text-primary" />
+                    <div className="w-full h-full flex items-center justify-center bg-primary/5" data-testid="professional-avatar-fallback">
+                      <User className="w-10 h-10 text-primary" />
+                    </div>
                   )}
                 </div>
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-foreground">Você está sendo convidado!</h2>
+                <h2 className="text-2xl font-bold text-foreground">{INVITATION_TEXTS.WELCOME_TITLE}</h2>
                 <div className="space-y-1">
                   <p className="text-muted-foreground">
                     O profissional <strong className="text-primary">{selectedProfessional.full_name}</strong> está pronto para acompanhar você.
@@ -709,15 +712,15 @@ export default function PatientRegister() {
                   addLog(`Convite aceito; preservando contexto ${cadastroPath}`);
                   setIsProfConfirmed(true);
                 }} className="w-full h-12 text-base font-bold gradient-primary shadow-lg shadow-primary/20">
-                  Cadastrar com este Profissional <ArrowRight className="w-5 h-5 ml-2" />
+                  {INVITATION_TEXTS.CTA_REGISTER} <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button variant="ghost" onClick={() => navigate(`/auth?next=${encodeURIComponent(cadastroPath)}`)} className="text-muted-foreground hover:text-foreground">
-                  Já tenho uma conta
+                  {INVITATION_TEXTS.ALREADY_HAS_ACCOUNT}
                 </Button>
               </div>
               
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-medium">
-                Vínculo profissional automático ao concluir
+                {INVITATION_TEXTS.AUTOMATIC_LINK_NOTICE}
               </p>
             </CardContent>
           </Card>
@@ -725,6 +728,7 @@ export default function PatientRegister() {
       </div>
     );
   }
+
 
 
   // GUARD: Cadastro de paciente é EXCLUSIVAMENTE via link do profissional.
