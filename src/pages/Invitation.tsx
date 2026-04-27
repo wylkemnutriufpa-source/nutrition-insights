@@ -427,6 +427,16 @@ export default function Invitation() {
               <CheckCircle2 className="w-5 h-5 text-primary" />
             </div>
           </div>
+          <div className="mt-2">
+            <h3 className="text-sm font-semibold text-primary uppercase tracking-wider">
+              {professional?.full_name || "Seu Nutricionista"}
+            </h3>
+            {clinic?.name && (
+              <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                <Building2 className="w-3 h-3" /> {clinic.name}
+              </p>
+            )}
+          </div>
           <div>
             <CardTitle className="text-3xl font-display font-bold text-foreground tracking-tight">Você está sendo convidado</CardTitle>
             <CardDescription className="text-lg mt-2 font-medium text-muted-foreground/80">
