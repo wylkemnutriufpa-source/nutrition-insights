@@ -187,7 +187,7 @@ Deno.serve(async (req) => {
     // Magic link opcional: envia email real de acesso ao paciente.
     if (method === "magic_link") {
       try {
-        const redirectTo = `${BASE_URL}/auth/confirm?type=magiclink&next=/onboarding`;
+        const redirectTo = `${BASE_URL}/~oauth/auth/confirm?type=magiclink&next=/onboarding`;
         if (!isValidDomain(redirectTo)) {
           console.error(`[invite-patient] Tentativa de usar domínio inválido: ${redirectTo}`);
         }
