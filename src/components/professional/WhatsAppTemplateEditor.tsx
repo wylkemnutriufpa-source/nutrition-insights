@@ -51,7 +51,7 @@ export default function WhatsAppTemplateEditor() {
   const previewMessage = useMemo(() => {
     return getWhatsAppInvitationMessage({
       patientName: "João Silva",
-      professionalName: profData.name,
+      professionalName: profData.name || "Dr. Wylkem Raiol",
       clinicName: profData.clinic,
       invitationCode: "ABC123",
       professionalId: user?.id,
