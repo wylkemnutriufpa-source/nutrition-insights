@@ -429,19 +429,18 @@ export default function InvitePatient() {
               </div>
 
               <div className="space-y-2 text-left">
-                <p className="text-sm font-semibold text-foreground">📤 Link oficial de onboarding</p>
+                <p className="text-sm font-semibold text-foreground">📤 Link oficial de convite</p>
                 <p className="text-xs text-muted-foreground">
-                  Toda anamnese acontece dentro do onboarding — esse é o único caminho do paciente.
-                  Compartilhe o link abaixo via WhatsApp ou envie por email.
+                  Este link é exclusivo para este paciente. Ele será vinculado a você e levado ao onboarding.
                 </p>
                 <div className="flex items-center gap-2 bg-card border border-border rounded-lg p-2">
                   <LinkIcon className="w-4 h-4 text-primary shrink-0" />
-                  <code className="text-xs flex-1 truncate">{onboardingLink}</code>
+                  <code className="text-xs flex-1 truncate">{getInvitationUrl(invitationCode || "", user?.id, true)}</code>
                   <Button
                     size="sm"
                     variant="ghost"
                     className="h-7 px-2 gap-1"
-                    onClick={() => copyToClipboard(onboardingLink, "link", "Link")}
+                    onClick={() => copyToClipboard(getInvitationUrl(invitationCode || "", user?.id, true), "link", "Link de convite")}
                   >
                     {copied === "link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                   </Button>
