@@ -53,17 +53,24 @@ const resolveRegistrationDisplay = (params: {
   const hasCodeParam = Boolean(params.invitationCode);
   const hasAnyLinkContext = hasNutriParam || hasCodeParam;
   const hasSelectedProfessional = Boolean(params.selectedProfessional?.user_id);
+  
+  // Se o profissional foi pré-selecionado via URL (?nutri=ID), consideramos confirmado automaticamente
+  // para remover a tela de "Aceitar Convite" que o usuário detesta.
+  const isDirectProfessionalLink = hasNutriParam && !hasCodeParam;
+  
   const shouldShowInvitationWelcome = Boolean(
-    hasAnyLinkContext && hasSelectedProfessional && !params.isProfConfirmed,
+    hasAnyLinkContext && hasSelectedProfessional && !params.isProfConfirmed && !isDirectProfessionalLink
   );
+
   const shouldShowInvalidCodeOnly = Boolean(
-    hasCodeParam && params.sigValid === false && !hasSelectedProfessional && !hasNutriParam,
+    hasCodeParam && params.sigValid === false && !hasSelectedProfessional && !hasNutriParam
   );
+
   const routeDecision = !hasAnyLinkContext
     ? "no_link_context"
     : shouldShowInvalidCodeOnly
       ? "invalid_code_only"
-      : shouldShowInvitationWelcome
+      : (shouldShowInvitationWelcome)
         ? "invitation_welcome"
         : hasSelectedProfessional
           ? "registration_linked"
@@ -75,6 +82,7 @@ const resolveRegistrationDisplay = (params: {
     shouldShowInvalidCodeOnly,
     shouldShowNoContextGuard: !hasAnyLinkContext,
     isLinkValidationPending: hasAnyLinkContext && params.sigValid === null,
+    isDirectProfessionalLink,
     routeDecision,
   };
 };
@@ -194,10 +202,12 @@ export default function PatientRegister() {
           phone: profileData.phone,
         });
         setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
-        // Reset confirmation if nutri changes
-        setIsProfConfirmed(false);
+        // Se for link direto (?nutri=ID), confirma automaticamente para pular a tela de boas-vindas
+        setIsProfConfirmed(true);
+        setSigValid(true);
       } else {
         addLog(`AVISO: Profissional ${preselectedNutri} não encontrado no banco.`);
+        setSigValid(false);
       }
     })();
   }, [preselectedNutri, addLog]);
@@ -388,7 +398,8 @@ export default function PatientRegister() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     if (loading) return;
-    if ((preselectedNutri || invitationCode) && sigValid === false && selectedProfessional) {
+    
+    if ((preselectedNutri || invitationCode) && sigValid === false) {
       toast.error("Vínculo de profissional inválido. Use o link oficial fornecido pelo seu profissional.");
       return;
     }
@@ -413,11 +424,17 @@ export default function PatientRegister() {
     setLoading(true);
     addLog(`Iniciando registro para ${email}...`);
     try {
-      const nutriId = selectedProfessional?.user_id || null;
+      const nutriId = selectedProfessional?.user_id || preselectedNutri || null;
       addLog(`ID do Profissional selecionado: ${nutriId || "Nenhum"}`);
 
+      if (!nutriId && (preselectedNutri || invitationCode)) {
+        toast.error("Vínculo de profissional não identificado. Recarregue a página ou use o link correto.");
+        setLoading(false);
+        return;
+      }
+
       if (!nutriId) {
-        addLog("Nenhum profissional selecionado. Continuando cadastro sem vínculo automático...");
+        addLog("Nenhum profissional selecionado. Criando lead...");
         const { error: leadErr } = await supabase.from("lead_requests").insert({
           nutritionist_id: "00000000-0000-0000-0000-000000000000",
           name,
@@ -487,7 +504,6 @@ export default function PatientRegister() {
 
       if (canonErr) {
         addLog(`Erro na RPC create_patient_canonical: ${canonErr.message}`);
-        // Tenta inserção manual se a RPC falhar por RLS ou algo assim
         addLog("Tentando fallback manual para vínculo...");
         await supabase.from("profiles").update({ 
           full_name: name, 
