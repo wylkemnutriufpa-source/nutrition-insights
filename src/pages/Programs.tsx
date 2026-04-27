@@ -345,7 +345,7 @@ export default function Programs() {
                         <div className="space-y-4">
                           <Select value={enrollPatientId} onValueChange={setEnrollPatientId}>
                             <SelectTrigger><SelectValue placeholder="Selecione o paciente..." /></SelectTrigger>
-                            <SelectContent>
+                            <SelectContent className="z-[150] bg-background border-border shadow-2xl" position="popper" sideOffset={5}>
                               {patients.map((pt) => (
                                 <SelectItem key={pt.id} value={pt.id}>{pt.name}</SelectItem>
                               ))}
