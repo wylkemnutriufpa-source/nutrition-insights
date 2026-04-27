@@ -36,7 +36,7 @@ Deno.serve(async (req) => {
       .maybeSingle();
 
     if (fetchError) {
-      console.error("[validate-invitation] Database error fetching invitation:", fetchError);
+      console.error("[validate-invitation] Database error:", fetchError);
       throw new Error("ERRO_BANCO_DADOS");
     }
 
@@ -52,8 +52,7 @@ Deno.serve(async (req) => {
         error_code: "INVALID_CODE",
         message: "Este link de convite é inválido ou não foi encontrado." 
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 404
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
@@ -63,7 +62,6 @@ Deno.serve(async (req) => {
       invitation.tenant_id ? adminClient.from("tenants").select("name").eq("id", invitation.tenant_id).maybeSingle() : Promise.resolve({ data: null })
     ]);
 
-    // Adiciona os dados ao objeto invitation para manter compatibilidade com o frontend
     invitation.professional = profileRes.data;
     invitation.clinic = clinicRes.data;
 
@@ -84,18 +82,17 @@ Deno.serve(async (req) => {
         success: false, 
         error_code: "EXPIRED",
         message: "Este convite expirou. Por favor, solicite um novo link ao seu nutricionista.",
-        invitation: { // Return partial data so UI can show who sent it if possible
+        invitation: { 
           professional: invitation.professional,
           clinic: invitation.clinic,
           professional_id: invitation.professional_id
         }
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 410
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // 3. Valida se já foi usado
+    // 4. Valida se já foi usado
     if (invitation.status === 'completed' || invitation.used_at) {
       // LOG FAILURE: Already used
       await logInvitation(adminClient, {
@@ -111,12 +108,11 @@ Deno.serve(async (req) => {
         error_code: "ALREADY_USED",
         message: "Este convite já foi utilizado para concluir um cadastro anteriormente." 
       }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-        status: 409
+        headers: { ...corsHeaders, "Content-Type": "application/json" }
       });
     }
 
-    // 4. Sucesso! Registra a visualização e retorna dados
+    // 5. Sucesso! Registra a visualização e retorna dados
     await logInvitation(adminClient, {
       invitation_id: invitation.id,
       event_type: "viewed",
@@ -126,7 +122,6 @@ Deno.serve(async (req) => {
       patient_email: invitation.patient_email
     });
 
-    // Atualiza status para 'viewed' se for 'pending'
     if (invitation.status === 'pending') {
       await adminClient
         .from("invitations")
