@@ -329,7 +329,7 @@ export default function InvitePatient() {
               <a 
                 href={`https://wa.me/?text=${encodeURIComponent(getWhatsAppInvitationMessage({
                   patientName: "",
-                  professionalName: profile?.display_name || profile?.full_name || "Seu Nutri",
+                  professionalName: profile?.display_name || profile?.full_name || "Dr. Wylkem Raiol",
                   clinicName: clinic?.name,
                   invitationCode: invitationCode || "",
                   templateType: 'quick_link',
