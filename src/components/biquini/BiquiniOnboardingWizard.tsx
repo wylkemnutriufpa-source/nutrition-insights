@@ -103,8 +103,8 @@ export default function BiquiniOnboardingWizard({ programId, enrollmentId, onCom
     const get = +(tmb * factor).toFixed(0);
     const deficit = 400;
     const kcalTarget = get - deficit;
-    const protein = +(w * 1.8).toFixed(0);
-    const fat = +(w * 0.9).toFixed(0);
+    const protein = +(normalizedW * 1.8).toFixed(0);
+    const fat = +(normalizedW * 0.9).toFixed(0);
     const proteinKcal = protein * 4;
     const fatKcal = fat * 9;
     const carbKcal = Math.max(0, kcalTarget - proteinKcal - fatKcal);
