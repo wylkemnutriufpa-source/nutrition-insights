@@ -184,19 +184,25 @@ Deno.serve(async (req) => {
     const host = req.headers.get("host") || "unknown";
     const userAgent = req.headers.get("user-agent") || "unknown";
 
-    // Magic link opcional
+    // Magic link opcional: envia email real de acesso ao paciente.
     if (method === "magic_link") {
       try {
-        const redirectTo = `${BASE_URL}/auth/confirm?type=magiclink`;
+        const redirectTo = `${BASE_URL}/auth/confirm?type=magiclink&next=/onboarding`;
         if (!isValidDomain(redirectTo)) {
           console.error(`[invite-patient] Tentativa de usar domínio inválido: ${redirectTo}`);
         }
 
-        await adminClient.auth.admin.generateLink({
-          type: "magiclink",
-          email: normalizedEmail,
-          options: { redirectTo },
+        const emailClient = createClient(supabaseUrl, Deno.env.get("SUPABASE_ANON_KEY")!, {
+          auth: { autoRefreshToken: false, persistSession: false },
         });
+        const { error: otpError } = await emailClient.auth.signInWithOtp({
+          email: normalizedEmail,
+          options: {
+            emailRedirectTo: redirectTo,
+            shouldCreateUser: false,
+          },
+        });
+        if (otpError) throw otpError;
 
         // Log da geração do convite/link
         await logInvitation(adminClient, {
