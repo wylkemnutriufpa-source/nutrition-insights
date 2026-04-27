@@ -6,6 +6,7 @@ import { useState, useEffect, useCallback, useMemo } from "react";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
 import {
