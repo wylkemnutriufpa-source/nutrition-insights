@@ -232,11 +232,22 @@ const MealItemCard = memo(function MealItemCard({
             </div>
           )}
           <div className="flex-1 min-w-0">
-            <p className={`font-medium text-sm ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
-              {item.title}
-            </p>
+            <div className="flex items-center gap-2 flex-wrap">
+              <p className={`font-medium text-sm ${status === "followed" ? "line-through text-muted-foreground" : ""}`}>
+                {item.title}
+              </p>
+              {item.is_primary && (item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && (
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] py-0 h-4 font-bold uppercase tracking-tight">
+                  Prato Principal
+                </Badge>
+              )}
+            </div>
             {item.description && (
-              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-6 whitespace-pre-line">{item.description}</p>
+              <p className="text-xs text-muted-foreground mt-0.5 line-clamp-6 whitespace-pre-line">
+                {(item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && !item.is_primary 
+                  ? `Substituição: ${item.title}` 
+                  : item.description}
+              </p>
             )}
             {impacts.length > 0 && !focusMode && (
               <div className="flex flex-wrap gap-1 mt-1.5">
