@@ -36,12 +36,16 @@ export function useOnboardingGuard() {
     if (journeyLoading || authLoading) return "loading";
     
     // REDIRECT PROTECTION: Do not suggest completion if we are already on an allowed route
+    // This prevents infinite loops
     if (isOnboardingAllowedRoute(location.pathname)) {
+      console.log(`[OnboardingGuard] Allowed route: ${location.pathname}`);
       return "none";
     }
 
     // Se o estado for 'awaiting_consent' ou 'lead_created', o paciente PRECISA aceitar o consentimento primeiro
+    // We only block if the journey status explicitly requires it
     if (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created") {
+      console.log(`[OnboardingGuard] Mandatory completion required for status: ${journeyStatus}`);
       return "must_complete";
     }
 
