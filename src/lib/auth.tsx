@@ -351,10 +351,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             console.error(`[Auth:${authEventId}] Error fetching user data on auth change:`, e);
             if (mounted) setLoading(false);
           }
-        }, 50);
-            console.error("Error fetching user data on auth change:", e);
-            if (mounted) setLoading(false);
-          }
         }, 50); // Small initial delay to avoid session race
       } else {
         setProfile(null);
