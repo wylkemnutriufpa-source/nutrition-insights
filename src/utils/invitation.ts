@@ -48,7 +48,7 @@ export const getInvitationUrl = (code?: string, nutriId?: string, forceProductio
 /**
  * Gera a URL de vínculo rápido.
  */
-export const getQuickLinkUrl = (nutriId: string, forceProduction = false) => {
+export const getQuickLinkUrl = (nutriId: string, forceProduction = true) => {
   const currentHost = typeof window !== "undefined" ? window.location.hostname : OFFICIAL_DOMAIN;
   const isPreview = currentHost.includes("lovable") || currentHost.includes("localhost");
   const origin = (forceProduction || !isPreview) ? PRODUCTION_URL : window.location.origin;
