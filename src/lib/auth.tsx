@@ -283,70 +283,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           // Use setTimeout to avoid deadlock with Supabase auth internals
         setTimeout(async () => {
-            if (!mounted) return;
-            try {
-              const [, rolesResult] = await Promise.all([
-                fetchProfile(session.user.id),
-                supabase.from("user_roles").select("role").eq("user_id", session.user.id),
-              ]);
-              const userRoles = rolesResult.data?.map((r) => r.role) || [];
-              setRoles(userRoles);
-
-              // If user has no roles yet, wait up to 4s with retries (triggers may be slow)
-              if (event === "SIGNED_IN" && userRoles.length === 0) {
-                console.warn("[Auth] User has no roles yet, starting aggressive retry for:", session.user.email);
+          if (!mounted) return;
+          try {
+            // Aggressive fetch of profile and roles
+            const [profileResult, rolesResult] = await Promise.all([
+              supabase.from("profiles").select("*").eq("user_id", session.user.id).maybeSingle(),
+              supabase.from("user_roles").select("role").eq("user_id", session.user.id),
+            ]);
+            
+            if (profileResult.data) setProfile(profileResult.data);
+            
+            const userRoles = rolesResult.data?.map((r) => r.role) || [];
+            
+            // If user has no roles yet, wait up to 4s with retries (triggers may be slow)
+            if (event === "SIGNED_IN" && userRoles.length === 0) {
+              console.warn("[Auth] User has no roles yet, starting aggressive retry for:", session.user.email);
+              
+              const maxRetries = 4;
+              let currentRetry = 0;
+              
+              const retryFetch = async () => {
+                currentRetry++;
+                console.log(`[Auth] Retry ${currentRetry}/${maxRetries} to fetch roles...`);
                 
-                const maxRetries = 3;
-                let currentRetry = 0;
-                
-                const retryFetch = async () => {
-                  currentRetry++;
-                  console.log(`[Auth] Retry ${currentRetry}/${maxRetries} to fetch roles...`);
+                try {
+                  const { data: retryRoles } = await (supabase.from("user_roles") as any).select("role").eq("user_id", session.user.id);
+                  const retried = retryRoles?.map((r: any) => r.role) || [];
                   
-                  try {
-                    const { data: retryRoles } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id);
-                    const retried = retryRoles?.map((r) => r.role) || [];
-                    
-                    if (mounted && retried.length > 0) {
-                      setRoles(retried);
-                      setLoading(false);
-                      checkSubscription();
-                      console.log("[Auth] Roles found on retry:", retried);
-                      return;
-                    }
-                    
-                    if (currentRetry < maxRetries) {
-                      setTimeout(retryFetch, 1000);
-                    } else {
-                      console.warn("[Auth] All role retries exhausted.");
-                      if (mounted) setLoading(false);
-                    }
-                  } catch (err) {
-                    console.error("[Auth] Role retry failed:", err);
-                    if (mounted && currentRetry >= maxRetries) setLoading(false);
+                  if (mounted && retried.length > 0) {
+                    setRoles(retried);
+                    setLoading(false);
+                    checkSubscription();
+                    console.log("[Auth] Roles found on retry:", retried);
+                    return;
                   }
-                };
-                
-                setTimeout(retryFetch, 1000);
-                return;
-              }
-
-              if (mounted) {
-                setLoading(false);
-                checkSubscription();
-              }
-            } catch (e) {
-              console.error("Error fetching user data on auth change:", e);
-              if (mounted) setLoading(false);
+                  
+                  if (currentRetry < maxRetries) {
+                    setTimeout(retryFetch, 1000);
+                  } else {
+                    console.warn("[Auth] All role retries exhausted.");
+                    setRoles([]);
+                    if (mounted) setLoading(false);
+                  }
+                } catch (err) {
+                  console.error("[Auth] Role retry failed:", err);
+                  if (mounted && currentRetry >= maxRetries) setLoading(false);
+                }
+              };
+              
+              setTimeout(retryFetch, 500);
+              return;
             }
-          }, 50); // Small initial delay to avoid session race
-        } else {
-          setProfile(null);
-          setRoles([]);
-          setLoading(false);
-        }
+
+            // Roles found or not, but fetch completed
+            setRoles(userRoles);
+            if (mounted) {
+              setLoading(false);
+              checkSubscription();
+            }
+          } catch (e) {
+            console.error("Error fetching user data on auth change:", e);
+            if (mounted) setLoading(false);
+          }
+        }, 50); // Small initial delay to avoid session race
+      } else {
+        setProfile(null);
+        setRoles([]);
+        setLoading(false);
       }
-    );
+    }
+  );
 
     return () => {
       mounted = false;
