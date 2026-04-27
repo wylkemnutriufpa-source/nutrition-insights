@@ -133,6 +133,38 @@ export default function PatientRegister() {
   const [searchLoading, setSearchLoading] = useState(false);
   const [selectedProfessional, setSelectedProfessional] = useState<ProfessionalResult | null>(null);
   const [isProfConfirmed, setIsProfConfirmed] = useState(false);
+  const [linkSource, setLinkSource] = useState<RegistrationLinkSource>(preselectedNutri ? "nutri" : invitationCode ? "invitation" : "none");
+  const [invitationIssue, setInvitationIssue] = useState<InvitationIssue>(null);
+
+  const registrationDisplay = resolveRegistrationDisplay({
+    preselectedNutri,
+    invitationCode,
+    selectedProfessional,
+    isProfConfirmed,
+    sigValid,
+  });
+
+  useEffect(() => {
+    const state = {
+      decision: registrationDisplay.routeDecision,
+      invitationCode: Boolean(invitationCode),
+      preselectedNutri: Boolean(preselectedNutri),
+      selectedProfessional: selectedProfessional?.user_id || null,
+      isProfConfirmed,
+      sigValid,
+      linkSource,
+    };
+    addLog(`Decisão PatientRegister: ${JSON.stringify(state)}`);
+  }, [
+    registrationDisplay.routeDecision,
+    invitationCode,
+    preselectedNutri,
+    selectedProfessional?.user_id,
+    isProfConfirmed,
+    sigValid,
+    linkSource,
+    addLog,
+  ]);
 
   // Pre-select professional from URL
   useEffect(() => {
@@ -160,6 +192,7 @@ export default function PatientRegister() {
           clinic_name: (profData as any)?.clinic_name || null,
           phone: profileData.phone,
         });
+        setLinkSource(current => current === "invitation" || current === "onboarding_token" ? current : "nutri");
         // Reset confirmation if nutri changes
         setIsProfConfirmed(false);
       } else {
