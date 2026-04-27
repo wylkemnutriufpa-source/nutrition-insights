@@ -338,7 +338,13 @@ export default function ClientDashboard() {
 
     return (
     <DashboardLayout>
-      {/* Telemetry Debug View (Only in Preview/Dev) */}
+      {shouldBlock ? (
+        <div className="max-w-7xl mx-auto px-4 py-12">
+          <OnboardingGateScreen status={journeyStatus!} />
+        </div>
+      ) : (
+        <>
+          {/* Telemetry Debug View (Only in Preview/Dev) */}
       {(window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) && (
         <div className="hidden" data-testid="journey-telemetry">
            {JSON.stringify(getTelemetryLogs())}
