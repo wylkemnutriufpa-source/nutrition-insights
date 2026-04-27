@@ -110,9 +110,11 @@ describe('Wannubia E2E - Editor de Marmitas Fixas', () => {
 
   it('deve permitir macros parciais zerados se kcal total > 0', async () => {
     // Configura item com proteína zerada mas kcal > 0
+    const mockAddItem = vi.fn();
     (useMealPlanEditorV2Store as any).mockReturnValue({
       items: [{ ...mockItem, protein_target: 0 }],
       updateItem: mockUpdateItem,
+      addItem: mockAddItem,
       substitutionCount: 3,
       patientName: 'Wannubia Teste'
     });
