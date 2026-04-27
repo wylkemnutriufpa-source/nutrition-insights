@@ -265,7 +265,7 @@ export default function InvitePatient() {
                   size="sm"
                   variant="ghost"
                   className="h-7 px-2 gap-1"
-                  onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Link público (Preview)")}
+                  onClick={() => copyToClipboard(publicRegisterLink, "public_link", "Convite")}
                 >
                   {copied === "public_link" ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                 </Button>
