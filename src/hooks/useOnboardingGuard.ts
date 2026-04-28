@@ -23,7 +23,9 @@ const ONBOARDING_ALLOWED_ROUTES = [
 ];
 
 export function isOnboardingAllowedRoute(pathname: string): boolean {
-  return ONBOARDING_ALLOWED_ROUTES.some(route => pathname.startsWith(route));
+  // Normalize path to check prefix
+  const path = pathname === "/" ? "/" : pathname;
+  return ONBOARDING_ALLOWED_ROUTES.some(route => path.startsWith(route));
 }
 
 export function useOnboardingGuard() {
@@ -43,22 +45,21 @@ export function useOnboardingGuard() {
     }
 
     // JOURNEY STATUS LOGGING
-    console.log(`[OnboardingGuard] Current Path: ${location.pathname} | Status: ${journeyStatus}`);
+    console.log(`[OnboardingGuard] Path: ${location.pathname} | Status: ${journeyStatus}`);
 
     if (journeyStatus === "no_link" || journeyStatus === null) {
-      console.error("[OnboardingGuard] CRITICAL: Patient has no nutritionist link or journey is null");
+      console.error("[OnboardingGuard] CRITICAL: Patient has no nutritionist link");
       return "error_no_link";
     }
 
-    // If status is 'awaiting_consent' or 'lead_created', onboarding is required
-    // OR if onboarding is explicitly active
-    const needsOnboarding = 
+    // CRITICAL: Define states that MUST BE on onboarding/consent routes
+    const isLockedState = 
       journeyStatus === "awaiting_consent" || 
       journeyStatus === "lead_created" || 
       journeyStatus === "onboarding_active";
 
-    if (needsOnboarding) {
-      console.log(`[OnboardingGuard] Mandatory completion required for status: ${journeyStatus}. Redirecting to /onboarding`);
+    if (isLockedState) {
+      console.log(`[OnboardingGuard] Locked state (${journeyStatus}) detected on ${location.pathname}. Redirect required.`);
       return "must_complete";
     }
 
