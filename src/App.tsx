@@ -15,6 +15,7 @@ import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
+import { OrphanUserBlock } from "@/components/common/OrphanUserBlock";
 
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
