@@ -1384,12 +1384,12 @@ export default function Anamnesis() {
               Pergunta {step + 1} de {questions.length}
             </span>
             <div className="flex items-center gap-3">
-              {autoSaveStatus === "saving" && (
+              {autoSaveStatus === "syncing" && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
                   <Loader2 className="w-3 h-3 animate-spin" /> Salvando...
                 </span>
               )}
-              {autoSaveStatus === "saved" && (
+              {autoSaveStatus === "success" && (
                 <span className="flex items-center gap-1 text-xs text-success">
                   <Save className="w-3 h-3" /> Salvo
                 </span>
