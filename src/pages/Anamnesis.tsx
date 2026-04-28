@@ -24,7 +24,8 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
 import { useAppState } from "@/hooks/useAppState";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
-import { getBackupValidity, getConflictVersionKey } from "@/utils/dataSafety";
+import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@/utils/dataSafety";
+
 
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
@@ -571,12 +572,16 @@ export default function Anamnesis() {
   const [patientName, setPatientName] = useState<string>("");
   const [draftId, setDraftId] = useState<string | null>(null);
   const { status: autoSaveStatus, lastAction, updateStatus: setAutoSaveStatus } = useSyncStatus();
+  const { status: submitSyncStatus, updateStatus: setSubmitSyncStatus } = useSyncStatus();
   const [showConflictModal, setShowConflictModal] = useState(false);
+
   const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
   const [backupExpired, setBackupExpired] = useState(false);
   const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
   const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
+  const [lastServerUpdateAt, setLastServerUpdateAt] = useState<string | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
+
   const [adaptiveStep, setAdaptiveStep] = useState(0);
   const [onboardingBlocked, setOnboardingBlocked] = useState(false);
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(tenantId ?? null);
@@ -594,7 +599,22 @@ export default function Anamnesis() {
   const q = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
+  // Stage 5 - Fail-Fast Global Guard
+  useEffect(() => {
+    if (isReady && !isDegraded && user) {
+      const state = validateSystemState({ userId: user.id, tenantId: resolvedTenantId });
+      if (!state.valid) {
+        fjLog("CRITICAL", `System state invalid: ${state.reason}`);
+        // If critical and nutritionist mode, we can be more lenient, but for patients we block.
+        if (!isNutritionistMode) {
+          setOnboardingBlocked(true);
+        }
+      }
+    }
+  }, [isReady, isDegraded, user, resolvedTenantId, isNutritionistMode]);
+
   // Resolve a guaranteed tenant_id for writes.
+
   // `patient_anamnesis.tenant_id` is NOT NULL, so onboarding cannot depend only
   // on the async tenant context; fall back to the target profile tenant.
   useEffect(() => {
@@ -721,17 +741,19 @@ export default function Anamnesis() {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V4.6)
+      // CONFLICT DETECTION (Hardening V4.6/V4.7)
       if (latestAnamnesis && localData && resolvedTenantId) {
         const serverUpdatedAt = latestAnamnesis.updated_at || latestAnamnesis.created_at;
         const localUpdatedAt = localData.updated_at;
+        
+        setLastServerUpdateAt(serverUpdatedAt);
         
         // Versioned Decision Key V4.6
         const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverUpdatedAt, localUpdatedAt);
         const resolution = localStorage.getItem(resolutionKey);
 
         if (resolution) {
-          addLog(`Conflito já resolvido via versão: ${resolution}`);
+          fjLog("SYNC", `Conflito já resolvido via versão: ${resolution}`);
           if (resolution === "restaurar_servidor") {
             setAnswers(latestAnamnesis.answers);
           } else {
@@ -741,10 +763,11 @@ export default function Anamnesis() {
           return;
         }
 
-        // If they differ by more than 2 seconds
+        // Stage 2 - Concurrency Detection: If they differ significantly
         const serverTS = new Date(serverUpdatedAt).getTime();
         const localTS = new Date(localUpdatedAt).getTime();
         if (Math.abs(serverTS - localTS) > 2000) {
+          fjLog("SYNC", "Conflito detectado no carregamento inicial.");
           setServerVersion({ 
             answers: latestAnamnesis.answers as Record<string, any>, 
             updated_at: serverUpdatedAt,
@@ -756,6 +779,7 @@ export default function Anamnesis() {
           return;
         }
       }
+
 
       // No conflict or no data scenarios
       if (!latestAnamnesis) {
@@ -827,16 +851,39 @@ export default function Anamnesis() {
       return;
     }
 
-    setAutoSaveStatus("syncing");
+    setAutoSaveStatus("syncing", "autosave");
 
     try {
+      // Stage 2 - Concurrency Guard before Update
+      if (draftId && lastServerUpdateAt) {
+        const { data: currentServer } = await supabase
+          .from("patient_anamnesis")
+          .select("updated_at, answers")
+          .eq("id", draftId)
+          .maybeSingle();
+          
+        if (currentServer?.updated_at && currentServer.updated_at !== lastServerUpdateAt) {
+          fjLog("SYNC", "Conflito de concorrência detectado durante autosave.");
+          setServerVersion({
+            answers: currentServer.answers as Record<string, any>,
+            updated_at: currentServer.updated_at,
+            id: draftId
+          });
+          setShowConflictModal(true);
+          setAutoSaveStatus("error", "autosave_conflict");
+          return;
+        }
+      }
+
       let error;
       if (draftId) {
+
         const { error: updateError } = await supabase
           .from("patient_anamnesis")
           .update({ 
             answers: currentAnswers, 
             updated_at: new Date().toISOString(),
+
             tenant_id: resolvedTenantId // Ensure tenant_id is always set
           })
           .eq("id", draftId);
@@ -873,7 +920,10 @@ export default function Anamnesis() {
       }
 
       retryCount.current = 0;
+      const newUpdateAt = new Date().toISOString();
+      setLastServerUpdateAt(newUpdateAt);
       setAutoSaveStatus("success", "autosave");
+
     } catch (e) {
       console.error("[FJ:Anamnesis] autosave threw:", e);
       setAutoSaveStatus("error");
@@ -927,13 +977,15 @@ export default function Anamnesis() {
     if (!user || !targetUserId) return;
 
     // BLOQUEIO DE AÇÃO CRÍTICA: Impedir finalização se o estado não estiver pronto ou degradado
-    if (!isReady || isDegraded) {
-      console.warn("[FJ:Anamnesis] Submit blocked: System not ready or degraded", { isReady, isDegraded });
+    if (!isReady || isDegraded || !resolvedTenantId) {
+      fjLog("CRITICAL", "Submit blocked: System not ready, degraded or missing tenant", { isReady, isDegraded, resolvedTenantId });
       toast.error("O sistema está operando em modo limitado ou ainda carregando. Aguarde a sincronização completa.");
       return;
     }
 
+    setSubmitSyncStatus("syncing", "anamnesis_submit");
     setSubmitting(true);
+
 
     // ── Robust input parsing with unit normalization ──
     const sex = answers.sex;
@@ -1049,7 +1101,9 @@ export default function Anamnesis() {
         return;
       }
       anamData = data;
+      setSubmitSyncStatus("success", "anamnesis_submit");
     }
+
 
     // Sync onboarding pipeline FIRST so the patient leaves step 1 immediately,
     // even if AI/secondary automations are slow or temporarily failing.
@@ -1538,6 +1592,7 @@ export default function Anamnesis() {
               size="sm"
               onClick={async () => {
                 await performAutoSave(answers);
+
                 toast.success("Rascunho salvo! Você pode continuar depois 💾");
                 if (isNutritionistMode && forPatientId) {
                   navigate(`/patients/${forPatientId}`);
@@ -1732,7 +1787,19 @@ export default function Anamnesis() {
         )}
       </div>
 
-      <AlertDialog open={showConflictModal} onOpenChange={setShowConflictModal}>
+      <AlertDialog 
+        open={showConflictModal} 
+        onOpenChange={(open) => {
+          // Stage 3 - Mobile Hardening: Ensure body scroll is managed by AlertDialog (default)
+          // and prevent accidental closing if not handled
+          setShowConflictModal(open);
+          if (!open) {
+            // Restore overflow just in case
+            document.body.style.overflow = "auto";
+          }
+        }}
+      >
+
         <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">

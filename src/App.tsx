@@ -28,6 +28,8 @@ import { AnimatePresence } from "framer-motion";
 import SafePage from "@/components/common/SafePage";
 import PatientReadyGuard from "@/components/common/PatientReadyGuard";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
+import { SystemStateGuard } from "@/components/common/SystemStateGuard";
+
 
 // Eager
 import GatewayPage from "./pages/GatewayPage";
@@ -179,7 +181,9 @@ function AppContent() {
       {isOrphan && <OrphanUserBlock />}
       <AnimatePresence mode="wait">
         <Suspense fallback={<BrainLoaderScreen />}>
-          <Routes>
+          <SystemStateGuard>
+            <Routes>
+
             <Route path="/" element={<LP section="Início"><Index /></LP>} />
             <Route path="/auth" element={<Auth />} />
             <Route path="/auth/confirm" element={<AuthConfirm />} />
@@ -187,9 +191,11 @@ function AppContent() {
             <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
             <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
             <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
-            <Route path="*" element={<LP section="404"><NotFound /></LP>} />
-          </Routes>
+              <Route path="*" element={<LP section="404"><NotFound /></LP>} />
+            </Routes>
+          </SystemStateGuard>
         </Suspense>
+
       </AnimatePresence>
     </div>
   );

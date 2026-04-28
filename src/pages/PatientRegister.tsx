@@ -138,6 +138,9 @@ export default function PatientRegister() {
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+  const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
+
+
 
   // Professional (optional)
   const [showProfSearch, setShowProfSearch] = useState(!!preselectedNutri);
@@ -596,23 +599,78 @@ export default function PatientRegister() {
         addLog(`Erro secundário (notificação/convite): ${err.message}`);
       }
 
-      addLog("Registro concluído com sucesso.");
+      addLog("Registro concluído com sucesso. Iniciando validação de vínculo crítica...");
       
+      // STAGE 1 - HARD FAIL VÍNCULO (CRÍTICO ABSOLUTO)
+      const validateLinkage = async (patientId: string) => {
+        addLog(`[FJ:LINKAGE] Validando vínculo para ${patientId}...`);
+        
+        // 1. Validar profiles.tenant_id
+        const { data: profile, error: profErr } = await supabase
+          .from("profiles")
+          .select("tenant_id")
+          .eq("user_id", patientId)
+          .single();
+          
+        if (profErr || !profile?.tenant_id) {
+          addLog(`[FJ:CRITICAL] profiles.tenant_id null para ${patientId}`);
+          return { success: false, reason: "profile_tenant_null" };
+        }
+        
+        // 2. Validar user_tenants EXISTS
+        const { data: userTenant, error: utErr } = await supabase
+          .from("user_tenants")
+          .select("id")
+          .eq("user_id", patientId)
+          .eq("tenant_id", profile.tenant_id)
+          .maybeSingle();
+          
+        if (utErr || !userTenant) {
+          addLog(`[FJ:CRITICAL] user_tenants não encontrado para ${patientId}`);
+          return { success: false, reason: "user_tenant_missing" };
+        }
+        
+        // 3. Validar nutritionist_patients EXISTS
+        const { data: linkage, error: linkErr } = await supabase
+          .from("nutritionist_patients")
+          .select("id")
+          .eq("patient_id", patientId)
+          .eq("nutritionist_id", nutriId)
+          .maybeSingle();
+          
+        if (linkErr || !linkage) {
+          addLog(`[FJ:CRITICAL] nutritionist_patients não encontrado para ${patientId}`);
+          return { success: false, reason: "linkage_missing" };
+        }
+        
+        addLog("[FJ:LINKAGE] Vínculo validado com sucesso total.");
+        return { success: true };
+      };
+
+      const linkageResult = await validateLinkage(signUpData.user.id);
+      
+      if (!linkageResult.success) {
+        setLinkageError({
+          type: linkageResult.reason || "unknown",
+          message: "Ocorreu uma falha crítica ao vincular sua conta ao profissional nutricionista. Por favor, tente novamente ou fale com o suporte."
+        });
+        setLoading(false);
+        return;
+      }
+
       // Se tiver sessão, redireciona explicitamente limpando estados de loading
       if (signUpData.session) {
         setCurrentUserId(signUpData.user.id);
-        addLog("Sessão detectada. Redirecionando para /consent...");
-        toast.success("Conta criada! Redirecionando...");
+        addLog("Sessão detectada e vínculo garantido. Redirecionando...");
+        toast.success("Conta criada e vinculada com sucesso!");
         
-        // Delay estendido para garantir que os gatilhos do banco (roles, profile)
-        // tenham tempo de propagar antes da primeira verificação do guard de rotas
         setTimeout(() => {
           setLoading(false);
-          addLog("Redirecionando para consentimento...");
           navigate("/client/dashboard", { replace: true });
-        }, 1500);
+        }, 1000);
         return;
       }
+
 
       setCurrentUserId(signUpData.user.id);
       toast.success("Conta criada! Verifique seu e-mail.");
@@ -638,7 +696,45 @@ export default function PatientRegister() {
   };
 
 
+  // ─── Linkage Error Screen ───
+  if (linkageError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md text-center">
+          <div className="mb-6"><FitJourneyLogo size="lg" /></div>
+          <Card className="shadow-2xl border-destructive/20 bg-destructive/5 backdrop-blur-sm">
+            <CardContent className="pt-8 pb-8 space-y-6">
+              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto border-2 border-destructive/20">
+                <AlertTriangle className="w-8 h-8 text-destructive" />
+              </div>
+              <div className="space-y-2">
+                <h2 className="text-xl font-bold text-foreground">Erro Crítico de Vínculo 🛑</h2>
+                <p className="text-muted-foreground text-sm leading-relaxed">
+                  {linkageError.message}
+                </p>
+                <div className="p-3 bg-muted/50 rounded-lg text-[10px] font-mono text-muted-foreground mt-4 break-all">
+                  ERROR_CODE: {linkageError.type} | CID: {correlationId}
+                </div>
+              </div>
+              <div className="grid gap-3 pt-4">
+                <Button onClick={() => window.location.reload()} className="w-full h-12 gap-2">
+                  <RefreshCw className="w-4 h-4" /> Tentar Novamente
+                </Button>
+                <Button variant="outline" asChild className="w-full h-12">
+                  <a href="https://wa.me/suporte_fitjourney" target="_blank" rel="noopener noreferrer">
+                    Falar com Suporte
+                  </a>
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+    );
+  }
+
   // ─── Done Screen ───
+
   if (done) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
