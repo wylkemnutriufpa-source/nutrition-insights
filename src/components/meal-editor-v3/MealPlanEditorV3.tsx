@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useMealEditorV3Store } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { MealListSidebar } from './MealListSidebar';
 import { ActiveMealContent } from './ActiveMealContent';
@@ -140,7 +140,7 @@ export const MealPlanEditorV3: React.FC = () => {
           
           <Button 
             size="sm" 
-            onClick={handleSave}
+            onClick={handleSaveClick}
             className={cn(
               "font-bold shadow-lg shadow-primary/20 px-6",
               planStatus === 'error' && "bg-destructive hover:bg-destructive/90 shadow-destructive/20"
@@ -222,6 +222,14 @@ export const MealPlanEditorV3: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+      {validationResults && (
+        <ValidationModal 
+          isOpen={isValidationModalOpen}
+          onClose={() => setIsValidationModalOpen(false)}
+          onConfirm={confirmSave}
+          results={validationResults}
+        />
+      )}
     </div>
   );
 };
