@@ -1,6 +1,6 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "generatedAt": "2026-04-27",
+  "generatedAt": "2026-04-28",
   "tables": {
     "meal_plans": [
       "adherence_score",
@@ -109,6 +109,7 @@
       "historical_loss_rate",
       "id",
       "is_orphan",
+      "last_editor_version_used",
       "marmita_mode",
       "metabolic_confidence_score",
       "metabolic_last_evaluated_at",
@@ -118,6 +119,7 @@
       "notes",
       "phone",
       "plateau_probability",
+      "preferred_editor_version",
       "ranking_nickname",
       "regain_probability",
       "search_vector",
