@@ -514,16 +514,27 @@ const MealGroup = memo(function MealGroup({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
+  const { isBasic } = useExperienceUI();
   const mealFollowed = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const mealPartial = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "partial")).length;
+  const isCurrent = isCurrentMeal(mealType.time);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
+    <div className={`transition-all duration-300 ${isCurrent && isBasic ? "scale-[1.02] ring-2 ring-primary/20 rounded-2xl p-1 bg-primary/5" : ""}`}>
+      <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">{mealType.icon}</div>
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"}`}>
+            {mealType.icon}
+          </div>
           <div>
-            <h3 className="font-display font-semibold text-sm">{mealType.label}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-display font-semibold text-sm">{mealType.label}</h3>
+              {isCurrent && (
+                <Badge className="bg-primary text-white text-[9px] animate-pulse py-0 h-4 border-none">
+                  Agora
+                </Badge>
+              )}
+            </div>
             <p className="text-[10px] text-muted-foreground">{mealType.time}</p>
           </div>
         </div>
