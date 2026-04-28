@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { LogOut, Moon, Sun, ChevronRight, Settings, Menu, ClipboardCheck, Shield, Activity, LayoutDashboard, Dumbbell, Lock, Rocket, RefreshCw } from "lucide-react";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import SyncButton from "@/components/common/SyncButton";
 import { Search } from "lucide-react";
 import NotificationBell from "@/components/notifications/NotificationBell";

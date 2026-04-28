@@ -163,9 +163,11 @@ export default function DailyMealPlanInline() {
       }
     }
 
-    if (status === "followed") {
-      toast.success("✅ Refeição seguida! +10 XP");
-    }
+      if (status === "followed" && !isBasic) {
+        toast.success("✅ Refeição seguida! +10 XP");
+      } else if (status === "followed") {
+        toast.success("✅ Refeição seguida!");
+      }
   }, [user, plan, date, completions, fetchData]);
 
   const changeDate = useCallback((offset: number) => {
@@ -280,10 +282,10 @@ export default function DailyMealPlanInline() {
         ))}
       </div>
 
-      {/* Tip */}
-      <Card className="p-3 text-center border-border/50">
-        <p className="text-[11px] text-muted-foreground">
-          💡 Marque cada refeição como <span className="text-emerald-500 font-medium">seguida</span>, <span className="text-amber-500 font-medium">parcial</span> ou <span className="text-red-500 font-medium">não seguida</span>
+      {/* Tip - Hide in basic mode if preferred, but it's small help */}
+      <Card className="p-3 text-center border-border/50 bg-muted/5">
+        <p className="text-[10px] text-muted-foreground italic">
+          💡 Clique na refeição para ver detalhes ou marcar como seguida.
         </p>
       </Card>
 
