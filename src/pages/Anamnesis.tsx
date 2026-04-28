@@ -827,7 +827,7 @@ export default function Anamnesis() {
       return;
     }
 
-    setAutoSaveStatus("saving");
+    setAutoSaveStatus("syncing");
 
     try {
       let error;
@@ -873,8 +873,7 @@ export default function Anamnesis() {
       }
 
       retryCount.current = 0;
-      setAutoSaveStatus("saved");
-      setTimeout(() => setAutoSaveStatus("idle"), 2000);
+      setAutoSaveStatus("success", "autosave");
     } catch (e) {
       console.error("[FJ:Anamnesis] autosave threw:", e);
       setAutoSaveStatus("error");
