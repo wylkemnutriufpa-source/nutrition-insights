@@ -848,10 +848,10 @@ export default function Anamnesis() {
   const handleSubmit = async () => {
     if (!user || !targetUserId) return;
 
-    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir finalização se o estado não estiver pronto
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:Anamnesis] Submit blocked: System not ready (state inconsistency or timeout)");
-      toast.error("O sistema ainda está carregando dados vitais. Aguarde um momento.");
+    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir finalização se o estado não estiver pronto ou degradado
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:Anamnesis] Submit blocked: System not ready or degraded", { isReady, isDegraded });
+      toast.error("O sistema está operando em modo limitado ou ainda carregando. Aguarde a sincronização completa.");
       return;
     }
 
