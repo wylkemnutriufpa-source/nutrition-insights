@@ -44,6 +44,7 @@ const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
 const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
+const DietBuilder = lazy(() => import("./pages/diet-builder/DietBuilder"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Protocols = lazy(() => import("./pages/Protocols"));
 const Programs = lazy(() => import("./pages/Programs"));
@@ -190,6 +191,7 @@ function AppContent() {
             <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
             <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
             <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
+            <Route path="/diet-builder" element={<NutritionistRoute><LP section="Diet Builder"><DietBuilder /></LP></NutritionistRoute>} />
             <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
               <Route path="*" element={<LP section="404"><NotFound /></LP>} />
             </Routes>
