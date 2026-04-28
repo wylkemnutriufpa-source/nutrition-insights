@@ -615,34 +615,40 @@ export type Database = {
       audit_logs: {
         Row: {
           action: string
+          correlation_id: string | null
           created_at: string
           id: string
           ip_address: string | null
           metadata: Json | null
           resource_id: string | null
           resource_type: string
+          status: string | null
           tenant_id: string
           user_id: string
         }
         Insert: {
           action: string
+          correlation_id?: string | null
           created_at?: string
           id?: string
           ip_address?: string | null
           metadata?: Json | null
           resource_id?: string | null
           resource_type: string
+          status?: string | null
           tenant_id: string
           user_id: string
         }
         Update: {
           action?: string
+          correlation_id?: string | null
           created_at?: string
           id?: string
           ip_address?: string | null
           metadata?: Json | null
           resource_id?: string | null
           resource_type?: string
+          status?: string | null
           tenant_id?: string
           user_id?: string
         }
@@ -20535,9 +20541,11 @@ export type Database = {
       log_audit: {
         Args: {
           _action: string
+          _correlation_id?: string
           _metadata?: Json
           _resource_id?: string
           _resource_type: string
+          _status?: string
         }
         Returns: undefined
       }
