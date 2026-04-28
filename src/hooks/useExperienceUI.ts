@@ -17,7 +17,7 @@ export function useExperienceUI() {
 
     // ── UI visibility helpers ──
     /** Show meal macros (calories, protein, carbs, fat) */
-    showMacros: minMode("pro"),
+    showMacros: true, // Macros are essential information for patients in all modes
     /** Show full plan structure and adjustments */
     showPlanStructure: minMode("pro"),
     /** Show advanced technical details (engine version, metadata, full logs) */

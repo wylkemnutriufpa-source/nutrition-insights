@@ -606,7 +606,7 @@ export default function PatientMealPlan() {
               allMarked={allMarked}
             />
 
-            {!isBasic && <MacroSummary items={items} totalsStatus={plan?.totals_status} />}
+            <MacroSummary items={items} totalsStatus={plan?.totals_status} />
 
             <div className="space-y-6">
               {groupedItems.length > 0 ? (
