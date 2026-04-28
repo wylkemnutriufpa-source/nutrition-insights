@@ -360,12 +360,6 @@ const MealItemCard = memo(function MealItemCard({
                     CONCLUIR AGORA
                   </Button>
                 )
-                    onClick={(e) => { e.stopPropagation(); onSetAdherence(item, "followed"); }}
-                    className="w-full h-auto min-h-[3rem] py-3 px-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-sm sm:text-base shadow-lg shadow-primary/20 transition-all active:scale-[0.98] whitespace-normal leading-tight"
-                  >
-                    Marcar como concluído
-                  </Button>
-                )
               ) : (
                 <div className="flex flex-wrap gap-1.5">
                   {ADHERENCE_OPTIONS.map(opt => (
