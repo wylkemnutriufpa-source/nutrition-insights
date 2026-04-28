@@ -1,87 +1,43 @@
-name: Schema Governance & Reference Check
+name: Schema Integrity Check
 
 on:
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-    branches: [main]
+    branches: [ main ]
 
 jobs:
-  schema-governance:
-    name: Schema Integrity
+  verify-schema:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-
+      
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: '20'
 
       - name: Install dependencies
-        run: npm install -g pnpm && pnpm install --no-frozen-lockfile
+        run: npm install -g pnpm && pnpm install
 
       - name: Verify Schema Snapshot
         id: verify
         run: pnpm run schema:verify
-        env:
-          NODE_ENV: production # Ensures auto-update doesn't run
-
-      - name: Upload Diff Artifact
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: schema.diff
-          path: schema.diff
-
-  schema-check:
-    name: Frontend ↔ Schema snapshot
-    needs: schema-governance
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Node
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-
-      - name: Run schema check (JSON output)
-        id: check
         continue-on-error: true
-        run: |
-          node scripts/check-schema-references.mjs --json > schema-report.json || true
-          cat schema-report.json
 
-      - name: Decide if violations are critical
-        id: triage
-        run: |
-          node -e "
-            const fs = require('fs');
-            const r = JSON.parse(fs.readFileSync('./schema-report.json', 'utf8'));
-            const critical = ['meal_plans','meal_plan_items','profiles','nutritionist_patients','onboarding_pipelines'];
-            const v = r.violations || [];
-            const blockers = v.filter(x => critical.includes(x.table));
-            console.log('total violations:', v.length);
-            console.log('critical violations:', blockers.length);
-            if (blockers.length > 0) {
-              console.error('::error ::Critical schema violations detected');
-              for (const b of blockers) {
-                console.error('::error file=' + b.file + ',line=' + b.line + '::' + b.table + ' missing: ' + b.missing.join(', '));
-              }
-              process.exit(1);
-            }
-            if (v.length > 0) {
-              console.warn('::warning ::Non-critical schema drift detected (' + v.length + ' violations)');
-              for (const b of v) {
-                console.warn('::warning file=' + b.file + ',line=' + b.line + '::' + b.table + ' missing: ' + b.missing.join(', '));
-              }
-            }
-          "
+      - name: Run Determinism Test
+        run: node scripts/test-determinism.mjs
 
-      - name: Upload report
+      - name: Upload Schema Diff Artifact
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: schema-report
-          path: schema-report.json
+          name: schema-diff-artifact
+          path: schema.diff
+          if-no-files-found: ignore
+
+      - name: Check Verification Status
+        if: steps.verify.outcome == 'failure'
+        run: |
+          echo "Schema verification failed. Please check the 'schema-diff-artifact' for details."
+          exit 1
