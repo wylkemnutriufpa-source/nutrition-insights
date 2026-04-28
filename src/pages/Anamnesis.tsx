@@ -717,25 +717,36 @@ export default function Anamnesis() {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V4.0)
-      if (latestAnamnesis && localData) {
-        const serverUpdatedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at).getTime();
-        const localUpdatedAt = new Date(localData.updated_at).getTime();
+      // CONFLICT DETECTION (Hardening V4.6)
+      if (latestAnamnesis && localData && resolvedTenantId) {
+        const serverUpdatedAt = latestAnamnesis.updated_at || latestAnamnesis.created_at;
+        const localUpdatedAt = localData.updated_at;
         
-        // Check if conflict was already resolved for these exact versions
-        const resolutionKey = `fj_conflict_resolved_${targetUserId}`;
-        const lastResolved = localStorage.getItem(resolutionKey);
-        const currentConflictId = `${serverUpdatedAt}_${localUpdatedAt}`;
+        // Versioned Decision Key V4.6
+        const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverUpdatedAt, localUpdatedAt);
+        const resolution = localStorage.getItem(resolutionKey);
 
-        // If they differ by more than 2 seconds AND not resolved yet
-        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000 && lastResolved !== currentConflictId) {
+        if (resolution) {
+          addLog(`Conflito já resolvido via versão: ${resolution}`);
+          if (resolution === "restaurar_servidor") {
+            setAnswers(latestAnamnesis.answers);
+          } else {
+            setAnswers(localData.answers);
+          }
+          setDraftId(latestAnamnesis.id);
+          return;
+        }
+
+        // If they differ by more than 2 seconds
+        const serverTS = new Date(serverUpdatedAt).getTime();
+        const localTS = new Date(localUpdatedAt).getTime();
+        if (Math.abs(serverTS - localTS) > 2000) {
           setServerVersion({ 
             answers: latestAnamnesis.answers as Record<string, any>, 
-            updated_at: latestAnamnesis.updated_at || latestAnamnesis.created_at,
+            updated_at: serverUpdatedAt,
             id: latestAnamnesis.id
           });
           setShowConflictModal(true);
-          // Modal handles the setAnswers. Default to local for UI continuity until choice.
           setAnswers(localData.answers);
           setDraftId(latestAnamnesis.id);
           return;
