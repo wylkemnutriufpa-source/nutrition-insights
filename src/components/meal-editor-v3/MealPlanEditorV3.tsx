@@ -56,7 +56,7 @@ export const MealPlanEditorV3: React.FC = () => {
               className="data-[state=checked]:bg-primary"
             />
             <Label htmlFor="fast-mode" className="text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-              <Lightning className={cn("w-3 h-3 transition-colors", fastMode ? "text-primary" : "text-muted-foreground")} />
+              <Zap className={cn("w-3 h-3 transition-colors", fastMode ? "text-primary" : "text-muted-foreground")} />
               MODO RÁPIDO
             </Label>
           </div>
