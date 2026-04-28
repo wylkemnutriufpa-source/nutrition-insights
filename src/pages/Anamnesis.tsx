@@ -796,6 +796,13 @@ export default function Anamnesis() {
     }
   }, [targetUserId]);
 
+  const logSafetyAction = useCallback((type: string) => {
+    if (!targetUserId) return;
+    const action = { type, timestamp: new Date().toISOString() };
+    setLastSafetyAction(action);
+    localStorage.setItem(`fj_anamnesis_action_${targetUserId}`, JSON.stringify(action));
+  }, [targetUserId]);
+
   // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
