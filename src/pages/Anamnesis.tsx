@@ -771,37 +771,49 @@ export default function Anamnesis() {
     toast.info("Modo edição ativado! Revise suas respostas ✏️");
   };
 
+  // Backup local automatico
+  const saveLocalBackup = useCallback((currentAnswers: Record<string, any>) => {
+    if (!targetUserId) return;
+    try {
+      localStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
+        answers: currentAnswers,
+        updated_at: new Date().toISOString()
+      }));
+    } catch (e) {
+      console.warn("[FJ:Anamnesis] backup fail:", e);
+    }
+  }, [targetUserId]);
+
   // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
 
-    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir salvamento se o estado não estiver pronto ou em modo degradado
+    // BLOQUEIO DE AÇÃO CRÍTICA
     if (!isReady || isDegraded) {
       console.warn("[FJ:Anamnesis] Autosave blocked: System not ready or in degraded mode", { isReady, isDegraded });
+      return;
+    }
+
+    if (!resolvedTenantId) {
+      console.warn("[FJ:Anamnesis] Autosave deferred: tenant_id unresolved.");
       return;
     }
 
     setAutoSaveStatus("saving");
 
     try {
+      let error;
       if (draftId) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from("patient_anamnesis")
-          .update({ answers: currentAnswers, updated_at: new Date().toISOString() })
+          .update({ 
+            answers: currentAnswers, 
+            updated_at: new Date().toISOString(),
+            tenant_id: resolvedTenantId // Ensure tenant_id is always set
+          })
           .eq("id", draftId);
-        if (error) {
-          console.error("[FJ:Anamnesis] autosave UPDATE failed:", error);
-          setAutoSaveStatus("idle");
-          return;
-        }
+        error = updateError;
       } else {
-        if (!resolvedTenantId) {
-          console.warn("[FJ:Anamnesis] Autosave deferred: tenant_id unresolved. Waiting for state synchronization.");
-          // No error status, just idle waiting for the next trigger once tenant is resolved
-          setAutoSaveStatus("idle");
-          return;
-        }
-
         const insertPayload: any = {
           user_id: targetUserId,
           answers: currentAnswers,
@@ -809,26 +821,37 @@ export default function Anamnesis() {
           tenant_id: resolvedTenantId,
         };
 
-        const { data, error } = await supabase
+        const { data, error: insertError } = await supabase
           .from("patient_anamnesis")
           .insert(insertPayload)
           .select("id")
           .maybeSingle();
-        if (error) {
-          console.error("[FJ:Anamnesis] autosave INSERT failed:", error);
-          toast.error("Não foi possível salvar o rascunho. Recarregue a página.");
-          setAutoSaveStatus("idle");
-          return;
-        }
+        error = insertError;
         if (data?.id) setDraftId(data.id);
       }
+
+      if (error) {
+        console.error("[FJ:Anamnesis] autosave failed:", error);
+        setAutoSaveStatus("error");
+        
+        // Retry logic (max 3 retries)
+        if (retryCount.current < 3) {
+          retryCount.current += 1;
+          setTimeout(() => performAutoSave(currentAnswers), 3000 * retryCount.current);
+        } else {
+          toast.error("Erro ao salvar rascunho. Verifique sua conexão.");
+        }
+        return;
+      }
+
+      retryCount.current = 0;
       setAutoSaveStatus("saved");
       setTimeout(() => setAutoSaveStatus("idle"), 2000);
     } catch (e) {
       console.error("[FJ:Anamnesis] autosave threw:", e);
-      setAutoSaveStatus("idle");
+      setAutoSaveStatus("error");
     }
-  }, [targetUserId, user, draftId, resolvedTenantId]);
+  }, [targetUserId, user, draftId, resolvedTenantId, isReady, isDegraded]);
 
   // Debounced autosave on answers change — wait for first user interaction (not just mount)
   useEffect(() => {
@@ -843,21 +866,26 @@ export default function Anamnesis() {
   }, [answers, performAutoSave, completed]);
 
   const setAnswer = (value: any) => {
-    setAnswers((prev) => ({ ...prev, [q.id]: value }));
+    const newAnswers = { ...answers, [q.id]: value };
+    setAnswers(newAnswers);
+    saveLocalBackup(newAnswers);
   };
 
   const toggleMulti = (value: string) => {
     const current: string[] = answers[q.id] || [];
+    let newAnswers;
     if (value === "none") {
-      setAnswer(["none"]);
-      return;
-    }
-    const filtered = current.filter((v) => v !== "none");
-    if (filtered.includes(value)) {
-      setAnswer(filtered.filter((v) => v !== value));
+      newAnswers = { ...answers, [q.id]: ["none"] };
     } else {
-      setAnswer([...filtered, value]);
+      const filtered = current.filter((v) => v !== "none");
+      if (filtered.includes(value)) {
+        newAnswers = { ...answers, [q.id]: filtered.filter((v) => v !== value) };
+      } else {
+        newAnswers = { ...answers, [q.id]: [...filtered, value] };
+      }
     }
+    setAnswers(newAnswers);
+    saveLocalBackup(newAnswers);
   };
 
   const canNext = () => {
