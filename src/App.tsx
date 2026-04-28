@@ -888,14 +888,47 @@ const App = () => (
               {/* Ambassador */}
               <Route path="/ambassador" element={<ProtectedRoute><LP section="Embaixador"><AmbassadorDashboard /></LP></ProtectedRoute>} />
 
-              {/* Global Ranking */}
-              <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
+function AppContent() {
+  const { isReady, isDegraded, isOrphan } = useAppState();
 
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            </CommandPaletteProvider>
-            </CelebrationProvider>
-            </ExperienceModeProvider>
+  return (
+    <div className="min-h-screen">
+      {isDegraded && <DegradedModeBanner />}
+      {isOrphan && <OrphanUserBlock />}
+      
+      <AnimatePresence mode="wait">
+        <Suspense fallback={<BrainLoaderScreen />}>
+          <Routes>
+            <Route path="/" element={<Index />} />
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/auth/confirm" element={<AuthConfirm />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+      </AnimatePresence>
+    </div>
+  );
+}
+
+const App = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <Helmet>
+        <title>FitJourney</title>
+      </Helmet>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <TenantProvider>
+              <ExperienceModeProvider>
+                <CelebrationProvider>
+                  <CommandPaletteProvider>
+                    <AppStateProvider>
+                      <AppContent />
+                    </AppStateProvider>
+                  </CommandPaletteProvider>
+                </CelebrationProvider>
+              </ExperienceModeProvider>
             </TenantProvider>
           </AuthProvider>
         </BrowserRouter>
