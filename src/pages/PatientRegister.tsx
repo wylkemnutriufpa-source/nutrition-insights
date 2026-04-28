@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useSyncStatus } from "@/hooks/useSyncStatus";
 import {
   Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
-  Download, Copy, FileJson, AlertTriangle, User, RefreshCw
+  Download, Copy, FileJson, AlertTriangle, User, RefreshCw, Check
 } from "lucide-react";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
@@ -135,8 +137,9 @@ export default function PatientRegister() {
   const [whatsappError, setWhatsappError] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const { status: syncStatus, updateStatus: setSyncStatus } = useSyncStatus();
+  const loading = syncStatus === "syncing";
+  const done = syncStatus === "success";
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
 
@@ -439,7 +442,7 @@ export default function PatientRegister() {
 
     const formattedWhatsapp = formatInternationalWhatsApp(whatsapp);
     
-    setLoading(true);
+    setSyncStatus("syncing", "PATIENT_REGISTER");
     addLog(`Iniciando registro para ${email}...`);
     try {
       const nutriId = selectedProfessional?.user_id || preselectedNutri || null;
@@ -448,7 +451,7 @@ export default function PatientRegister() {
       if (!nutriId && (preselectedNutri || invitationCode)) {
         addLog("BLOQUEIO: Cadastro sem vínculo profissional em link parametrizado.");
         toast.error("Vínculo de profissional não identificado. O cadastro de pacientes exige um convite válido.");
-        setLoading(false);
+        setSyncStatus("error", "PATIENT_REGISTER", "Vínculo não identificado");
         return;
       }
 
@@ -469,12 +472,13 @@ export default function PatientRegister() {
           addLog(`Erro ao criar lead: ${leadErr.message}`);
           toast.error("Selecione um profissional para concluir o cadastro.");
           setShowProfSearch(true);
+          setSyncStatus("error", "PATIENT_REGISTER", leadErr.message);
           return;
         }
 
         addLog("Lead criado com sucesso.");
         toast.success("Recebemos seu interesse!");
-        setDone(true);
+        setSyncStatus("success", "PATIENT_REGISTER");
         return;
       }
 
@@ -654,7 +658,7 @@ export default function PatientRegister() {
           type: linkageResult.reason || "unknown",
           message: "Ocorreu uma falha crítica ao vincular sua conta ao profissional nutricionista. Por favor, tente novamente ou fale com o suporte."
         });
-        setLoading(false);
+        setSyncStatus("error", "LINKAGE_VALIDATION", linkageResult.reason);
         return;
       }
 
@@ -665,7 +669,7 @@ export default function PatientRegister() {
         toast.success("Conta criada e vinculada com sucesso!");
         
         setTimeout(() => {
-          setLoading(false);
+          setSyncStatus("success", "PATIENT_REGISTER");
           navigate("/client/dashboard", { replace: true });
         }, 1000);
         return;
@@ -674,7 +678,7 @@ export default function PatientRegister() {
 
       setCurrentUserId(signUpData.user.id);
       toast.success("Conta criada! Verifique seu e-mail.");
-      setDone(true);
+      setSyncStatus("success", "PATIENT_REGISTER");
 
       if (nutriId) {
         promptWhatsAppNotification({
@@ -690,47 +694,14 @@ export default function PatientRegister() {
     } catch (err: any) {
       addLog(`Erro inesperado: ${err.message}`);
       toast.error("Erro ao criar conta. Tente novamente.");
-    } finally {
-      setLoading(false);
+      setSyncStatus("error", "PATIENT_REGISTER", err.message);
     }
   };
 
 
   // ─── Linkage Error Screen ───
   if (linkageError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md text-center">
-          <div className="mb-6"><FitJourneyLogo size="lg" /></div>
-          <Card className="shadow-2xl border-destructive/20 bg-destructive/5 backdrop-blur-sm">
-            <CardContent className="pt-8 pb-8 space-y-6">
-              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto border-2 border-destructive/20">
-                <AlertTriangle className="w-8 h-8 text-destructive" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-foreground">Erro Crítico de Vínculo 🛑</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {linkageError.message}
-                </p>
-                <div className="p-3 bg-muted/50 rounded-lg text-[10px] font-mono text-muted-foreground mt-4 break-all">
-                  ERROR_CODE: {linkageError.type} | CID: {correlationId}
-                </div>
-              </div>
-              <div className="grid gap-3 pt-4">
-                <Button onClick={() => window.location.reload()} className="w-full h-12 gap-2">
-                  <RefreshCw className="w-4 h-4" /> Tentar Novamente
-                </Button>
-                <Button variant="outline" asChild className="w-full h-12">
-                  <a href="https://wa.me/suporte_fitjourney" target="_blank" rel="noopener noreferrer">
-                    Falar com Suporte
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
+    return <HardFailLinkage />;
   }
 
   // ─── Done Screen ───

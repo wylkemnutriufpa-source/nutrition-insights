@@ -10,7 +10,7 @@ import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AppStateProvider, useAppState } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
-import { OrphanUserBlock } from "@/components/common/OrphanUserBlock";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { GlobalErrorBoundary, CriticalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
@@ -179,7 +179,7 @@ function AppContent() {
   return (
     <div className="min-h-screen">
       {isDegraded && <DegradedModeBanner />}
-      {isOrphan && <OrphanUserBlock />}
+      {isOrphan && <HardFailLinkage />}
       <AnimatePresence mode="wait">
         <Suspense fallback={<BrainLoaderScreen />}>
           <SystemStateGuard>
