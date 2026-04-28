@@ -102,7 +102,8 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   }
 
   // 4. Auth Guard
-  if (!user && !isInList(safePathname, UNIVERSAL_ROUTES)) {
+  const isUniversal = isInList(safePathname, UNIVERSAL_ROUTES);
+  if (!user && !isUniversal) {
     return { type: 'REDIRECT', target: '/auth', reason: 'Unauthorized access' };
   }
 
