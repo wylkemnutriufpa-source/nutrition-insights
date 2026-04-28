@@ -155,6 +155,11 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
         onClose={() => setIsMarmitaModalOpen(false)}
         mealId={meal.id}
       />
+      <AddFoodModal 
+        isOpen={isModalOpen} 
+        onClose={() => setIsModalOpen(false)} 
+        mealId={meal.id} 
+      />
     </div>
   );
 };
