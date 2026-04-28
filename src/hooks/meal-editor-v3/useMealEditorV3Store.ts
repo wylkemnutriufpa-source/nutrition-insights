@@ -124,7 +124,14 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         set({ 
           patientId: id, 
           fastMode: storedFastMode === 'true',
-          patientTargets: { calories: 2000, protein: 150, carbs: 200, fat: 60 } 
+          patientTargets: { 
+            calories: 2000, 
+            protein: 150, 
+            carbs: 200, 
+            fat: 60,
+            isIntolerant: false,
+            drinksCoffee: true
+          } 
         });
       },
       setActiveMeal: (id) => set({ activeMealId: id }),
