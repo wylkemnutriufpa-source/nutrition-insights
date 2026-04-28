@@ -1,7 +1,8 @@
-import { AlertTriangle, LogOut, MessageCircle, Info } from "lucide-react";
+import { AlertTriangle, LogOut, MessageCircle, Info, Copy, Check } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/lib/auth";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { logAudit, getSessionCorrelationId } from "@/lib/auditLog";
 import { SupportModal } from "./SupportModal";
 import { useTenant } from "@/lib/tenantContext";
