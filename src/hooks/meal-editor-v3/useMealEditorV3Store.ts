@@ -302,8 +302,8 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         const meal = meals.find(m => m.id === mealId);
         const item = meal?.items.find(i => i.instanceId === instanceId);
         
-        if (item?.isMarmita) {
-          toast.error('Marmitas possuem composição fixa');
+        if (item?.isMarmita || item?.locked) {
+          toast.error('Marmitas/Itens bloqueados possuem composição fixa');
           return;
         }
 
