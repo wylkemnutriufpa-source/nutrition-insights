@@ -211,7 +211,7 @@ const WeeklyReportLegacy = lazy(() => import("./pages/WeeklyReport"));
 const WeightTrajectoryLegacy = lazy(() => import("./pages/WeightTrajectory"));
 const AdminPrestigeLegacy2 = lazy(() => import("./pages/AdminPrestige"));
 const OperationalDashboardLegacy2 = lazy(() => import("./pages/OperationalDashboard"));
-const AdminDashboardLegacy = lazy(() => import("./pages/AdminDashboard"));
+const AdminDashboardLegacy = lazy(() => import("./pages/admin/AdminDashboard"));
 const ClientDashboardLegacy = lazy(() => import("./pages/ClientDashboard"));
 const PatientsLegacy = lazy(() => import("./pages/Patients"));
 const DietBuilderLegacy = lazy(() => import("./pages/diet-builder/DietBuilder"));
