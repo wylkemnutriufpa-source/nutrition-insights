@@ -549,8 +549,8 @@ export default function FitnessAnamnesis() {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
     
     // BLOQUEIO DE AÇÃO CRÍTICA
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:FitnessAnamnesis] Autosave blocked: System not ready");
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:FitnessAnamnesis] Autosave blocked: System not ready or degraded", { isReady, isDegraded });
       return;
     }
 
