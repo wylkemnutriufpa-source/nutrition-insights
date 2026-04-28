@@ -752,9 +752,9 @@ export default function Anamnesis() {
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
 
-    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir salvamento se o estado não estiver pronto
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:Anamnesis] Autosave blocked: System not ready (state inconsistency or timeout)");
+    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir salvamento se o estado não estiver pronto ou em modo degradado
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:Anamnesis] Autosave blocked: System not ready or in degraded mode", { isReady, isDegraded });
       return;
     }
 
