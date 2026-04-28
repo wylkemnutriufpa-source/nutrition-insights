@@ -44,14 +44,30 @@ export function usePatientJourneyStatus() {
     const fetchStatus = async () => {
       try {
         console.log(`[usePatientJourneyStatus] Fetching status for ${user.id}...`);
-        const { data, error } = await supabase
-          .from("nutritionist_patients")
-          .select("journey_status")
-          .eq("patient_id", user.id)
-          .eq("status", "active")
-          .order("created_at", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const [journeyRes, anamRes] = await Promise.all([
+          supabase
+            .from("nutritionist_patients")
+            .select("journey_status")
+            .eq("patient_id", user.id)
+            .eq("status", "active")
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("patient_anamnesis")
+            .select("status")
+            .eq("user_id", user.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle()
+        ]);
+
+        const data = journeyRes.data;
+        const error = journeyRes.error;
+
+        if (anamRes.data) {
+          setAnamnesisStatus(anamRes.data.status as any);
+        }
 
         if (error) {
           console.error("[usePatientJourneyStatus] Fetch error:", error);
