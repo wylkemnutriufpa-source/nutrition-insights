@@ -477,16 +477,22 @@ export default function PatientRegister() {
 
       // ─── FLUXO B: COM NUTRICIONISTA ───
       addLog("Criando usuário no Auth...");
+      
+      // CRITICAL FIX: Ensure nutritionist_id is in metadata for trigger handle_new_user
+      const signUpOptions = { 
+        data: { 
+          full_name: name,
+          nutritionist_id: nutriId,
+          role: 'patient'
+        } 
+      };
+      
+      addLog(`Metadata para SignUp: ${JSON.stringify(signUpOptions.data)}`);
+
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: { 
-          data: { 
-            full_name: name,
-            nutritionist_id: nutriId,
-            role: 'patient'
-          } 
-        },
+        options: signUpOptions,
       });
 
       if (signUpErr) {

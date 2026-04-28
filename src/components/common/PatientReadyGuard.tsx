@@ -96,7 +96,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     );
   }
 
-  if (result.status === "no_link" || journeyStatus === "no_link") {
+  if (result.status === "no_link" || journeyStatus === "no_link" || (isPatient && !journeyLoading && journeyStatus === null)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center bg-background">
         <div className="rounded-full bg-orange-100 dark:bg-orange-950/30 p-6 mb-6">
