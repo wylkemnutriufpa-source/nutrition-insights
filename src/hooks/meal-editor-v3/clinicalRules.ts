@@ -78,7 +78,7 @@ export function applyClinicalRules(meals: Meal[], conditionId: string): { meals:
         log.changes.push({
           type: 'removal',
           foodName: item.name,
-          reason: `Restrição da condição: ${condition.name}`
+          reason: `Restrição da condição: ${condition.condition_name}`
         });
         return false;
       }
