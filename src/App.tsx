@@ -367,33 +367,35 @@ function RootRoute() {
     ? readActiveEditorRoute()
     : null;
 
-  const userRole = isPatient ? "patient" : isAdmin ? "admin" : "professional";
-
-  // Flip bootDone once auth finishes loading. MUST run inside useEffect — calling
-  // setTimeout(setState) during render creates an infinite re-render loop because
-  // every render schedules another state update before the previous one settles.
   useEffect(() => {
     if (!loading && !bootDone) setBootDone(true);
   }, [loading, bootDone]);
 
-  // Show page loader while auth is loading
-  if (!bootDone) {
-    return <PageLoader />;
+  if (!bootDone) return <PageLoader />;
+  if (!user) return <GatewayPage />;
+
+  // 1. Check Onboarding MUST COMPLETE
+  if (requirement === "must_complete") {
+    console.log("[RootRoute] Redirecting to /onboarding due to requirement");
+    return <Navigate to="/onboarding" replace />;
   }
 
-  if (!user) return <GatewayPage />;
+  // 2. Pro/Editor restoration
   if (activeEditorRoute?.shouldRestore) {
     return <Navigate to={activeEditorRoute.route} replace />;
   }
-  // Lojista goes to store dashboard (if not also a professional)
+
+  // 3. Lojista
   if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
     return <Navigate to="/store" replace />;
   }
-  // Patients go to client dashboard by default, no mandatory onboarding flow
+
+  // 4. Pure Patients
   if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
     return <Navigate to="/client/dashboard" replace />;
   }
-  // Prioritize Index (Nutritionist Dashboard) as requested to focus on Nutricionista
+
+  // 5. Professionals
   if (isPersonal && !isNutritionist && !isAdmin) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
   return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
 }

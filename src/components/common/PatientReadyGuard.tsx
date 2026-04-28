@@ -1,10 +1,12 @@
 import { ReactNode, useEffect, useState, useRef } from "react";
+import { useLocation } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { useEnsurePatientReady } from "@/hooks/useEnsurePatientReady";
 import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
+import { isOnboardingAllowedRoute } from "@/hooks/useOnboardingGuard";
 import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 
 interface Props {
@@ -18,6 +20,7 @@ interface Props {
 export default function PatientReadyGuard({ children, context, patientId }: Props) {
   const { user, isPatient, loading: authLoading } = useAuth();
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const location = useLocation();
   const targetId = patientId ?? user?.id ?? null;
 
   const result = useEnsurePatientReady(targetId, {
@@ -47,7 +50,18 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
 
   // Block dashboard/critical screens if not in a fluid state
   // IMPORTANT: This check must stay AFTER all hooks to avoid React rule violations
-  const shouldBlockJourney = isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release" || journeyStatus === "lead_created");
+  const isAllowedPath = isOnboardingAllowedRoute(location.pathname);
+  
+  const shouldBlockJourney = 
+    isPatient && 
+    !journeyLoading && 
+    !isAllowedPath && // NEVER block if we are already on an allowed onboarding path
+    journeyStatus && 
+    (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release" || journeyStatus === "lead_created");
+
+  if (shouldBlockJourney) {
+    console.log(`[PatientReadyGuard] Blocking access to ${location.pathname} for status ${journeyStatus}`);
+  }
 
   // Profissional sem patientId explícito: não bloqueia nada
   if (!isPatient && !patientId) return <>{children}</>;
