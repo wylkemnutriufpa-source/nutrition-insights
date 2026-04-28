@@ -518,9 +518,10 @@ const MealGroup = memo(function MealGroup({
 
   return (
     <div 
-      className={`transition-all duration-300 w-full max-w-full ${isCurrent && isBasic ? "ring-2 ring-primary ring-offset-2 rounded-2xl p-2 bg-primary/10 shadow-lg" : ""}`}
+      className={`transition-all duration-300 w-full max-w-full overflow-hidden ${isCurrent && isBasic ? "ring-2 ring-primary ring-offset-2 rounded-2xl p-2 bg-primary/10 shadow-lg" : ""}`}
       role="region"
       aria-label={`Refeição: ${mealType.label}${isCurrent ? " - Agora" : ""}`}
+      aria-current={isCurrent ? "time" : undefined}
     >
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
