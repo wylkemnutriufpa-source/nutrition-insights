@@ -179,7 +179,7 @@ function AppContent() {
   return (
     <div className="min-h-screen">
       {isDegraded && <DegradedModeBanner />}
-      {isOrphan && <OrphanUserBlock />}
+      {isOrphan && <HardFailLinkage />}
       <AnimatePresence mode="wait">
         <Suspense fallback={<BrainLoaderScreen />}>
           <SystemStateGuard>
