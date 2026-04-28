@@ -90,6 +90,165 @@ const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
 const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 
+// NOVOS LAZY IMPORTS RECONCILIADOS
+const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
+const GrowthDashboard = lazy(() => import("./pages/GrowthDashboard"));
+const AdminGuideEngine = lazy(() => import("./pages/AdminGuideEngine"));
+const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const AdminMarketingContent = lazy(() => import("./pages/AdminMarketingContent"));
+const AdminMenuConfig = lazy(() => import("./pages/AdminMenuConfig"));
+const AdminPatientFeatures = lazy(() => import("./pages/AdminPatientFeatures"));
+const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
+const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourney"));
+const ImportPatients = lazy(() => import("./pages/ImportPatients"));
+const ProfessionalClinicalAnalytics = lazy(() => import("./pages/ProfessionalClinicalAnalytics"));
+const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
+const ClinicalIntelligence = lazy(() => import("./pages/ClinicalIntelligence"));
+const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
+const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
+const ClinicalPredictions = lazy(() => import("./pages/ClinicalPredictions"));
+const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard"));
+const ClinicalSimulation = lazy(() => import("./pages/ClinicalSimulation"));
+const ClinicalCRM = lazy(() => import("./pages/ClinicalCRM"));
+const PersonalStudents = lazy(() => import("./pages/PersonalStudents"));
+const PersonalWorkouts = lazy(() => import("./pages/PersonalWorkouts"));
+const CheckinPanel = lazy(() => import("./pages/CheckinPanel"));
+const Checklist = lazy(() => import("./pages/Checklist"));
+const Feedbacks = lazy(() => import("./pages/Feedbacks"));
+const FitnessAnamnesis = lazy(() => import("./pages/FitnessAnamnesis"));
+const GlobalTips = lazy(() => import("./pages/GlobalTips"));
+const HealthCheckQuiz = lazy(() => import("./pages/HealthCheckQuiz"));
+const HumanPerformance = lazy(() => import("./pages/HumanPerformance"));
+const InOfficeSelector = lazy(() => import("./pages/InOfficeSelector"));
+const InvitePatient = lazy(() => import("./pages/InvitePatient"));
+const Library = lazy(() => import("./pages/Library"));
+const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
+const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
+const MyReferrals = lazy(() => import("./pages/MyReferrals"));
+const OnboardingTracker = lazy(() => import("./pages/OnboardingTracker"));
+const Planner = lazy(() => import("./pages/Planner"));
+const PopulationIntelligence = lazy(() => import("./pages/PopulationIntelligence"));
+const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
+const ProfessionalGuide = lazy(() => import("./pages/ProfessionalGuide"));
+const Programs = lazy(() => import("./pages/Programs"));
+const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
+const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
+const Protocols = lazy(() => import("./pages/Protocols"));
+const RecipeBuilder = lazy(() => import("./pages/RecipeBuilder"));
+const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
+const TeamManagement = lazy(() => import("./pages/TeamManagement"));
+const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
+const UserGuide = lazy(() => import("./pages/UserGuide"));
+const WeeklyGoals = lazy(() => import("./pages/WeeklyGoals"));
+const WeeklyReport = lazy(() => import("./pages/WeeklyReport"));
+const WeightTrajectory = lazy(() => import("./pages/WeightTrajectory"));
+const AdminPrestige = lazy(() => import("./pages/AdminPrestige"));
+const OperationalDashboard = lazy(() => import("./pages/OperationalDashboard"));
+const ClinicalBrainLegacy = lazy(() => import("./pages/ClinicalBrain"));
+const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
+const InOfficeWizard = lazy(() => import("./pages/InOfficeWizard"));
+const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
+const QAChecklist = lazy(() => import("./pages/QAChecklistPage"));
+const InvitationAudit = lazy(() => import("./pages/InvitationAudit"));
+const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit.tsx"));
+const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard.tsx"));
+const AdminExperienceModeAudit = lazy(() => import("./pages/admin/AdminExperienceModeAudit.tsx"));
+const AdminExperienceModeReconcile = lazy(() => import("./pages/admin/AdminExperienceModeReconcile.tsx"));
+const AdminPlanLoadingDiagnostics = lazy(() => import("./pages/admin/AdminPlanLoadingDiagnostics.tsx"));
+const ImageFallbackAdmin = lazy(() => import("./pages/admin/ImageFallbackAdmin.tsx"));
+const MarmitaAudit = lazy(() => import("./pages/admin/MarmitaAudit.tsx"));
+const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard.tsx"));
+const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin.tsx"));
+const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit.tsx"));
+const TemplateMassReformulation = lazy(() => import("./pages/admin/TemplateMassReformulation.tsx"));
+const PlatformGovernance = lazy(() => import("./pages/PlatformGovernance"));
+const SystemDiagnostics = lazy(() => import("./pages/SystemDiagnostics"));
+const SystemHealthLive = lazy(() => import("./pages/SystemHealthLive"));
+const RealtimeDebugCenter = lazy(() => import("./pages/RealtimeDebugCenter"));
+const SchemaMonitor = lazy(() => import("./pages/SchemaMonitor"));
+const PhytotherapyProtocolsLegacy = lazy(() => import("./pages/PhytotherapyProtocols"));
+const ProtocolsLegacy = lazy(() => import("./pages/Protocols"));
+const AdminPrestigeLegacy = lazy(() => import("./pages/AdminPrestige"));
+const OperationalDashboardLegacy = lazy(() => import("./pages/OperationalDashboard"));
+const BiquiniBrancoLanding = lazy(() => import("./pages/BiquiniBrancoLanding"));
+const PublicDemo = lazy(() => import("./pages/PublicDemo"));
+const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
+const SystemPresentationLegacy = lazy(() => import("./pages/SystemPresentation"));
+const TechnicalSheetsLegacy = lazy(() => import("./pages/store/TechnicalSheets"));
+const AdminClinicalRules = lazy(() => import("./pages/admin/ClinicalRules"));
+
+const PersonalStudentsLegacy = lazy(() => import("./pages/PersonalStudents"));
+const PersonalWorkoutsLegacy = lazy(() => import("./pages/PersonalWorkouts"));
+const CheckinPanelLegacy = lazy(() => import("./pages/CheckinPanel"));
+const ChecklistLegacy = lazy(() => import("./pages/Checklist"));
+const FeedbacksLegacy = lazy(() => import("./pages/Feedbacks"));
+const FitnessAnamnesisLegacy = lazy(() => import("./pages/FitnessAnamnesis"));
+const GlobalTipsLegacy = lazy(() => import("./pages/GlobalTips"));
+const HealthCheckQuizLegacy = lazy(() => import("./pages/HealthCheckQuiz"));
+const HumanPerformanceLegacy = lazy(() => import("./pages/HumanPerformance"));
+const InOfficeSelectorLegacy = lazy(() => import("./pages/InOfficeSelector"));
+const InvitePatientLegacy = lazy(() => import("./pages/InvitePatient"));
+const LibraryLegacy = lazy(() => import("./pages/Library"));
+const MetabolicTwinLegacy = lazy(() => import("./pages/MetabolicTwin"));
+const MyPublicProfileLegacy = lazy(() => import("./pages/MyPublicProfile"));
+const MyReferralsLegacy = lazy(() => import("./pages/MyReferrals"));
+const OnboardingTrackerLegacy = lazy(() => import("./pages/OnboardingTracker"));
+const PlannerLegacy = lazy(() => import("./pages/Planner"));
+const PopulationIntelligenceLegacy = lazy(() => import("./pages/PopulationIntelligence"));
+const PopulationNutritionIntelligenceLegacy = lazy(() => import("./pages/PopulationNutritionIntelligence"));
+const ProfessionalGuideLegacy = lazy(() => import("./pages/ProfessionalGuide"));
+const ProgramsLegacy = lazy(() => import("./pages/Programs"));
+const ProtocolTransitionsLegacy = lazy(() => import("./pages/ProtocolTransitions"));
+const PhytotherapyProtocolsLegacy2 = lazy(() => import("./pages/PhytotherapyProtocols"));
+const ProtocolsLegacy2 = lazy(() => import("./pages/Protocols"));
+const RecipeBuilderLegacy = lazy(() => import("./pages/RecipeBuilder"));
+const SecurityDashboardLegacy = lazy(() => import("./pages/SecurityDashboard"));
+const TeamManagementLegacy = lazy(() => import("./pages/TeamManagement"));
+const TherapeuticIntelligenceLegacy = lazy(() => import("./pages/TherapeuticIntelligence"));
+const UserGuideLegacy = lazy(() => import("./pages/UserGuide"));
+const WeeklyGoalsLegacy = lazy(() => import("./pages/WeeklyGoals"));
+const WeeklyReportLegacy = lazy(() => import("./pages/WeeklyReport"));
+const WeightTrajectoryLegacy = lazy(() => import("./pages/WeightTrajectory"));
+const AdminPrestigeLegacy2 = lazy(() => import("./pages/AdminPrestige"));
+const OperationalDashboardLegacy2 = lazy(() => import("./pages/OperationalDashboard"));
+const AdminDashboardLegacy = lazy(() => import("./pages/AdminDashboard"));
+const ClientDashboardLegacy = lazy(() => import("./pages/ClientDashboard"));
+const PatientsLegacy = lazy(() => import("./pages/Patients"));
+const DietBuilderLegacy = lazy(() => import("./pages/diet-builder/DietBuilder"));
+const MealPlanEditorV3Legacy = lazy(() => import("./pages/MealPlanEditorV3Page"));
+const SettingsLegacy = lazy(() => import("./pages/Settings"));
+const ChatLegacy = lazy(() => import("./pages/Chat"));
+const AppointmentsLegacy = lazy(() => import("./pages/Appointments"));
+const AnamnesisLegacy = lazy(() => import("./pages/Anamnesis"));
+const MealsLegacy = lazy(() => import("./pages/Meals"));
+const RecipesLegacy = lazy(() => import("./pages/Recipes"));
+const ShoppingListLegacy = lazy(() => import("./pages/ShoppingList"));
+const FinancialLegacy = lazy(() => import("./pages/Financial"));
+const IntegrationsLegacy = lazy(() => import("./pages/Integrations"));
+const BrandingLegacy = lazy(() => import("./pages/Branding"));
+const NotificationsLegacy = lazy(() => import("./pages/Notifications"));
+const DietTemplatesLegacy = lazy(() => import("./pages/DietTemplates"));
+const FoodDatabaseLegacy = lazy(() => import("./pages/FoodDatabase"));
+const AutomationCenterLegacy = lazy(() => import("./pages/AutomationCenter"));
+const CampaignCenterLegacy = lazy(() => import("./pages/CampaignCenter"));
+const ClinicalBrainLegacy2 = lazy(() => import("./pages/ClinicalBrain"));
+const LabInterpreterLegacy = lazy(() => import("./pages/LabInterpreter"));
+const MissionControlLegacy = lazy(() => import("./pages/MissionControl"));
+const WorkspaceEditorLegacy = lazy(() => import("./pages/WorkspaceEditor"));
+const AdminAffiliatesLegacy = lazy(() => import("./pages/AdminAffiliates"));
+const AdminBookingSettingsLegacy = lazy(() => import("./pages/AdminBookingSettings"));
+const AdminFeatureControlLegacy = lazy(() => import("./pages/AdminFeatureControl"));
+const AdminPricingLegacy = lazy(() => import("./pages/AdminPricing"));
+const AdminProfessionalsLegacy = lazy(() => import("./pages/AdminProfessionals"));
+const AdminSubscriptionMonitorLegacy = lazy(() => import("./pages/AdminSubscriptionMonitor"));
+const AdminSiteEditorLegacy = lazy(() => import("./pages/AdminSiteEditor"));
+const AdminResourceCenterLegacy = lazy(() => import("./pages/AdminResourceCenter"));
+const AdminTestimonialsLegacy = lazy(() => import("./pages/AdminTestimonials"));
+const PatientIntelligenceLegacy = lazy(() => import("./pages/PatientIntelligence"));
+const ClinicalControlTowerLegacy = lazy(() => import("./pages/ClinicalControlTower"));
+const TechnicalSheetsLegacy2 = lazy(() => import("./pages/store/TechnicalSheets"));
+
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -169,6 +328,9 @@ function AppContent() {
           <SystemStateGuard>
             <Routes>
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
+              <Route path="/dashboard" element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="/professional/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/confirm" element={<AuthConfirm />} />
               <Route path="/reset-password" element={<ResetPassword />} />
@@ -192,6 +354,61 @@ function AppContent() {
               <Route path="/diet-builder" element={<NutritionistRoute><LP section="Diet Builder"><DietBuilder /></LP></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates de Dieta"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/food-database" element={<NutritionistRoute><LP section="Banco de Alimentos"><FoodDatabase /></LP></NutritionistRoute>} />
+              <Route path="/admin/import-patients" element={<NutritionistRoute><LP section="Importar Pacientes"><ImportPatients /></LP></NutritionistRoute>} />
+              <Route path="/admin/menu-config" element={<NutritionistRoute><LP section="Config Menu"><AdminMenuConfig /></LP></NutritionistRoute>} />
+              <Route path="/admin/prestige" element={<NutritionistRoute><LP section="Prestígio"><AdminPrestige /></LP></NutritionistRoute>} />
+              <Route path="/admin/operational-costs" element={<NutritionistRoute><LP section="Custos Operacionais"><AdminOperationalCosts /></LP></NutritionistRoute>} />
+              <Route path="/admin/protocol-biquini-branco" element={<NutritionistRoute><LP section="Protocolo Biquíni Branco"><AdminProtocolBiquiniBranco /></LP></NutritionistRoute>} />
+              <Route path="/admin/protocol-fitjourney" element={<NutritionistRoute><LP section="Protocolo FitJourney"><AdminProtocolFitJourney /></LP></NutritionistRoute>} />
+              <Route path="/admin/growth" element={<NutritionistRoute><LP section="Growth Dashboard"><GrowthDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/guide-engine" element={<NutritionistRoute><LP section="Guide Engine"><AdminGuideEngine /></LP></NutritionistRoute>} />
+              <Route path="/admin/marketing-content" element={<NutritionistRoute><LP section="Central de Conteúdo"><AdminMarketingContent /></LP></NutritionistRoute>} />
+              <Route path="/admin/patient-features" element={<NutritionistRoute><LP section="Features por Plano"><AdminPatientFeatures /></LP></NutritionistRoute>} />
+              <Route path="/admin/landing-pages" element={<NutritionistRoute><LP section="Landing Pages"><AdminLandingPages /></LP></NutritionistRoute>} />
+              <Route path="/admin/profissionais" element={<NutritionistRoute><LP section="Profissionais"><AdminProfessionals /></LP></NutritionistRoute>} />
+              <Route path="/admin/features" element={<NutritionistRoute><LP section="Features Profissionais"><AdminFeatureControl /></LP></NutritionistRoute>} />
+              <Route path="/admin/resources" element={<NutritionistRoute><LP section="Recursos"><AdminResourceCenter /></LP></NutritionistRoute>} />
+              <Route path="/operational" element={<NutritionistRoute><LP section="Painel Operacional"><OperationalDashboard /></LP></NutritionistRoute>} />
+              <Route path="/ambassador" element={<ProtectedRoute><LP section="Embaixador"><AmbassadorDashboard /></LP></ProtectedRoute>} />
+              <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação do Sistema"><SystemPresentation /></LP></ProtectedRoute>} />
+              <Route path="/checkin-panel" element={<ProtectedRoute><LP section="Check-ins"><CheckinPanel /></LP></ProtectedRoute>} />
+              <Route path="/checklist" element={<ProtectedRoute><LP section="Checklist"><Checklist /></LP></ProtectedRoute>} />
+              <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
+              <Route path="/fitness-anamnesis" element={<ProtectedRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></ProtectedRoute>} />
+              <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas Globais"><GlobalTips /></LP></ProtectedRoute>} />
+              <Route path="/health-quiz" element={<ProtectedRoute><LP section="Health Check"><HealthCheckQuiz /></LP></ProtectedRoute>} />
+              <Route path="/human-performance" element={<ProtectedRoute><LP section="Performance Humana"><HumanPerformance /></LP></ProtectedRoute>} />
+              <Route path="/in-office" element={<NutritionistRoute><LP section="Modo Consultório"><InOfficeSelector /></LP></NutritionistRoute>} />
+              <Route path="/in-office/wizard" element={<NutritionistRoute><LP section="Assistente Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
+              <Route path="/invite-patient" element={<NutritionistRoute><LP section="Convidar Paciente"><InvitePatient /></LP></NutritionistRoute>} />
+              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
+              <Route path="/metabolic-twin" element={<ProtectedRoute><LP section="Digital Twin"><MetabolicTwin /></LP></ProtectedRoute>} />
+              <Route path="/my-public-profile" element={<ProtectedRoute><LP section="Meu Perfil Público"><MyPublicProfile /></LP></ProtectedRoute>} />
+              <Route path="/my-referrals" element={<ProtectedRoute><LP section="Minhas Indicações"><MyReferrals /></LP></ProtectedRoute>} />
+              <Route path="/onboarding" element={<ProtectedRoute><LP section="Onboarding"><OnboardingTracker /></LP></ProtectedRoute>} />
+              <Route path="/planner" element={<ProtectedRoute><LP section="Planner"><Planner /></LP></ProtectedRoute>} />
+              <Route path="/population-intelligence" element={<NutritionistRoute><LP section="Inteligência Populacional"><PopulationIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/professional-guide" element={<NutritionistRoute><LP section="Guia Profissional"><ProfessionalGuide /></LP></NutritionistRoute>} />
+              <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM Clínico"><ClinicalCRM /></LP></NutritionistRoute>} />
+              <Route path="/programs" element={<ProtectedRoute><LP section="Programas"><Programs /></LP></ProtectedRoute>} />
+              <Route path="/protocol-transitions" element={<NutritionistRoute><LP section="Transições de Protocolo"><ProtocolTransitions /></LP></NutritionistRoute>} />
+              <Route path="/protocolos-fitoterapicos" element={<ProtectedRoute><LP section="Protocolos Fitoterápicos"><PhytotherapyProtocols /></LP></ProtectedRoute>} />
+              <Route path="/protocols" element={<ProtectedRoute><LP section="Protocolos"><Protocols /></LP></ProtectedRoute>} />
+              <Route path="/recipe-builder" element={<ProtectedRoute><LP section="Calculadora de Receitas"><RecipeBuilder /></LP></ProtectedRoute>} />
+              <Route path="/security-dashboard" element={<ProtectedRoute><LP section="Security Dashboard"><SecurityDashboard /></LP></ProtectedRoute>} />
+              <Route path="/team" element={<NutritionistRoute><LP section="Equipe Clínica"><TeamManagement /></LP></NutritionistRoute>} />
+              <Route path="/therapeutic-intelligence" element={<NutritionistRoute><LP section="Inteligência Terapêutica"><TherapeuticIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia do Paciente"><UserGuide /></LP></ProtectedRoute>} />
+              <Route path="/weekly-goals" element={<ProtectedRoute><LP section="Metas Semanais"><WeeklyGoals /></LP></ProtectedRoute>} />
+              <Route path="/weekly-report" element={<ProtectedRoute><LP section="Relatório Semanal"><WeeklyReport /></LP></ProtectedRoute>} />
+              <Route path="/weight-trajectory" element={<ProtectedRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></ProtectedRoute>} />
+              <Route path="/personal/dashboard" element={<ProtectedRoute><LP section="Dashboard Personal"><PersonalDashboard /></LP></ProtectedRoute>} />
+              <Route path="/personal/students" element={<ProtectedRoute><LP section="Alunos"><PersonalStudents /></LP></ProtectedRoute>} />
+              <Route path="/personal/workouts" element={<ProtectedRoute><LP section="Treinos"><PersonalWorkouts /></LP></ProtectedRoute>} />
+              <Route path="/store" element={<ProtectedRoute><LP section="Painel da Loja"><OperationalDashboard /></LP></ProtectedRoute>} />
+              <Route path="/store/technical-sheets" element={<NutritionistRoute><LP section="Fichas Técnicas"><TechnicalSheets /></LP></NutritionistRoute>} />
+
               
               {/* Editor V3 Routes */}
               <Route path="/meal-plan-editor-v3/:patientId" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
@@ -232,6 +449,29 @@ function AppContent() {
               <Route path="/admin/professionals" element={<NutritionistRoute><LP section="Profissionais"><AdminProfessionals /></LP></NutritionistRoute>} />
               <Route path="/admin/subscriptions" element={<NutritionistRoute><LP section="Assinaturas"><AdminSubscriptionMonitor /></LP></NutritionistRoute>} />
               <Route path="/admin/site-editor" element={<NutritionistRoute><LP section="Editor do Site"><AdminSiteEditor /></LP></NutritionistRoute>} />
+              <Route path="/admin/qa-checklist" element={<NutritionistRoute><LP section="Checklist QA"><QAChecklist /></LP></NutritionistRoute>} />
+              <Route path="/admin/invitation-audit" element={<NutritionistRoute><LP section="Auditoria de Convites"><InvitationAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/template-nutrition-audit" element={<NutritionistRoute><LP section="Auditoria de Templates"><TemplateNutritionAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/ai-usage" element={<NutritionistRoute><LP section="Uso de IA"><AIUsageDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-audit" element={<NutritionistRoute><LP section="Auditoria de Experiência"><AdminExperienceModeAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-reconcile" element={<NutritionistRoute><LP section="Reconciliação de Experiência"><AdminExperienceModeReconcile /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-diagnostics" element={<NutritionistRoute><LP section="Diagnóstico de Planos"><AdminPlanLoadingDiagnostics /></LP></NutritionistRoute>} />
+              <Route path="/admin/image-fallback" element={<NutritionistRoute><LP section="Fallbacks de Imagem"><ImageFallbackAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/marmita-audit" element={<NutritionistRoute><LP section="Auditoria de Marmitas"><MarmitaAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/meal-coverage" element={<NutritionistRoute><LP section="Cobertura de Refeições"><MealCoverageDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/visual-library" element={<NutritionistRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-batch-audit" element={<NutritionistRoute><LP section="Auditoria em Massa"><PlanBatchAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/template-reformulation" element={<NutritionistRoute><LP section="Reformulação de Templates"><TemplateMassReformulation /></LP></NutritionistRoute>} />
+              <Route path="/admin/governance" element={<NutritionistRoute><LP section="Governança"><PlatformGovernance /></LP></NutritionistRoute>} />
+              <Route path="/admin/diagnostics" element={<NutritionistRoute><LP section="Diagnóstico do Sistema"><SystemDiagnostics /></LP></NutritionistRoute>} />
+              <Route path="/admin/health-live" element={<NutritionistRoute><LP section="Status em Tempo Real"><SystemHealthLive /></LP></NutritionistRoute>} />
+              <Route path="/admin/debug" element={<NutritionistRoute><LP section="Centro de Debug"><RealtimeDebugCenter /></LP></NutritionistRoute>} />
+              <Route path="/admin/schema" element={<NutritionistRoute><LP section="Monitor de Schema"><SchemaMonitor /></LP></NutritionistRoute>} />
+              <Route path="/biquini-branco" element={<LP section="Biquíni Branco"><BiquiniBrancoLanding /></LP>} />
+              <Route path="/demo" element={<LP section="Demo"><PublicDemo /></LP>} />
+              <Route path="/status" element={<LP section="Status"><DiagnosticStatus /></LP>} />
+
+
               <Route path="/admin/resource-center" element={<NutritionistRoute><LP section="Centro de Recursos"><AdminResourceCenter /></LP></NutritionistRoute>} />
               <Route path="/admin/testimonials" element={<NutritionistRoute><LP section="Depoimentos"><AdminTestimonials /></LP></NutritionistRoute>} />
               <Route path="/patient-intelligence" element={<NutritionistRoute><LP section="Inteligência do Paciente"><PatientIntelligence /></LP></NutritionistRoute>} />
