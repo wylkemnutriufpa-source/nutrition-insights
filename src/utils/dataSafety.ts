@@ -1,3 +1,5 @@
+import { logAudit, getSessionCorrelationId } from "@/lib/auditLog";
+
 export type BackupValidity = "valid" | "expired" | "invalid";
 
 export const BACKUP_TTL_DAYS = 30;
