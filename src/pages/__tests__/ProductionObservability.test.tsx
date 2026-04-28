@@ -30,7 +30,7 @@ vi.mock("@/lib/auditLog", () => ({
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
 
-import { OrphanUserBlock } from "../OrphanUserBlock";
+import { OrphanUserBlock } from "@/components/common/OrphanUserBlock";
 
 describe("Production Observability - Hard Fail Linkage", () => {
   const renderWithProviders = (ui: any) => render(
