@@ -134,16 +134,37 @@ describe("PatientMealPlan - Basic Mode", () => {
   });
 
   it("should show empty state if no meals for the day", async () => {
-    // Mock RPC returning no items for the day
+    // Mock RPC returning no items for the day, but having other items in the plan
     (supabase.rpc as any).mockResolvedValue({
       data: {
         id: "plan-id",
         title: "Plano Teste",
         start_date: new Date().toISOString(),
-        items: [],
+        items: [], // No items for today
       },
       error: null,
     });
+
+    // Mocking allItems to have something so we don't hit the top-level empty state
+    // We need to mock the from('meal_plan_items').select('*') call
+    (supabase.from as any).mockImplementation((table: string) => {
+      if (table === "meal_plan_items") {
+        return {
+          select: vi.fn().mockReturnThis(),
+          eq: vi.fn().mockReturnThis(),
+          then: (cb: any) => cb({ data: [{ id: "other-meal", day_of_week: 1 }], error: null }),
+        };
+      }
+      return {
+        select: vi.fn().mockReturnThis(),
+        eq: vi.fn().mockReturnThis(),
+        maybeSingle: vi.fn().mockResolvedValue({ data: null, error: null }),
+        order: vi.fn().mockReturnThis(),
+        gte: vi.fn().mockReturnThis(),
+        lte: vi.fn().mockReturnThis(),
+      };
+    });
+
 
     render(
       <QueryClientProvider client={queryClient}>
