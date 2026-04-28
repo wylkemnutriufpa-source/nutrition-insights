@@ -522,7 +522,7 @@ const MealGroup = memo(function MealGroup({
   const isCurrent = isCurrentMeal(mealType.time);
 
   return (
-    <div className={`transition-all duration-300 ${isCurrent && isBasic ? "scale-[1.02] ring-2 ring-primary/20 rounded-2xl p-1 bg-primary/5" : ""}`}>
+    <div className={`transition-all duration-300 w-full max-w-full ${isCurrent && isBasic ? "ring-2 ring-primary/30 rounded-2xl p-2 bg-primary/5" : ""}`}>
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
           <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"}`}>
