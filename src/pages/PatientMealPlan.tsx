@@ -10,13 +10,22 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
-  Utensils, Flame, Zap, Eye, Timer,
+  Utensils, Flame, Zap, Eye, Timer, RefreshCw,
   CalendarDays, Star, ChevronDown, ChevronUp,
-  CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
+  CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown, Calendar
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { ptBR } from "date-fns/locale";
+
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
@@ -91,6 +100,7 @@ export default function PatientMealPlan() {
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showOthersModal, setShowOthersModal] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const xpTimerRef = useRef<number | null>(null);
@@ -98,7 +108,19 @@ export default function PatientMealPlan() {
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
+
+  // Forçar sempre abrir no dia atual no modo básico
+  useEffect(() => {
+    if (isBasic) {
+      const today = new Date().toISOString().split("T")[0];
+      if (date !== today) {
+        setDate(today);
+      }
+    }
+  }, [isBasic]);
+
   const weekDates = useMemo(() => getWeekDates(date), [date]);
+
 
   const journeyDay = plan ? Math.max(1, Math.ceil((new Date().getTime() - new Date(plan.start_date).getTime()) / 86400000)) : 1;
   const followedStreak = completions.filter(c => c.adherence_status === "followed").length;
@@ -404,16 +426,25 @@ export default function PatientMealPlan() {
   if (!plan || allItems.length === 0) {
     return (
       <DashboardLayout>
-        <div className="max-w-2xl mx-auto">
-          <div className="glass rounded-2xl p-12 text-center">
-            <Utensils className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">Nenhum plano alimentar ativo</h3>
-            <p className="text-muted-foreground text-sm">Seu nutricionista precisa criar um plano alimentar para você.</p>
+        <div className="max-w-2xl mx-auto py-12 px-4">
+          <div className="glass rounded-2xl p-12 text-center border-dashed border-2">
+            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Utensils className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-display font-bold text-xl mb-2">Nenhum plano alimentar ativo</h3>
+            <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-8">
+              Seu nutricionista ainda não liberou seu plano ou ele expirou. Que tal entrar em contato?
+            </p>
+            <Button onClick={() => window.location.reload()} variant="outline" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Tentar atualizar
+            </Button>
           </div>
         </div>
       </DashboardLayout>
     );
   }
+
 
   return (
     <DashboardLayout>
