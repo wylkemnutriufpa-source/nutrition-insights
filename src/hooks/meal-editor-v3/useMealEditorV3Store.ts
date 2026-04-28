@@ -30,6 +30,7 @@ export interface Meal {
   id: string;
   name: string;
   items: MealItem[];
+  daySubstitutions?: Record<string, string>; // dayId -> instanceId
 }
 
 interface HistoryState {
