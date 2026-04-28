@@ -9,6 +9,10 @@ vi.mock('@/hooks/useExperienceUI', () => ({
   useExperienceUI: vi.fn()
 }));
 
+vi.mock('@/lib/auth', () => ({
+  useAuth: vi.fn(() => ({ user: { id: 'test-user' } }))
+}));
+
 vi.mock('@/hooks/useMealVisualItem', () => ({
   useMealVisualItem: vi.fn(() => ({ item: null }))
 }));
