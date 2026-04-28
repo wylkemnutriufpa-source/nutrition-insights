@@ -3,6 +3,8 @@ import { Plus, Trash2, Repeat, Save, ChevronDown, Utensils } from 'lucide-react'
 import { Meal, useDietStore, Food } from '@/stores/diet-builder/useDietStore';
 import { Button } from '@/components/ui/button';
 import { AddFoodModal } from './AddFoodModal';
+import { MarmitaLibraryModal } from './MarmitaLibraryModal';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
