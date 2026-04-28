@@ -265,20 +265,21 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   );
 };
 
-const FoodRow = ({ food, onAdd, isRecent, isActive }: { food: Food, onAdd: () => void, isRecent?: boolean, isActive?: boolean }) => (
+const FoodRow = ({ food, onAdd, isRecent, isActive, isSelected }: { food: Food, onAdd: () => void, isRecent?: boolean, isActive?: boolean, isSelected?: boolean }) => (
   <button 
     className={cn(
       "w-full flex items-center justify-between p-3.5 rounded-xl border bg-card hover:bg-accent transition-all text-left group hover:border-primary/20 hover:shadow-sm",
-      isActive && "border-primary bg-primary/5 shadow-md ring-2 ring-primary/10"
+      isActive && "border-primary bg-primary/5 shadow-md ring-2 ring-primary/10",
+      isSelected && "border-primary bg-primary/10 shadow-inner"
     )}
     onClick={onAdd}
   >
     <div className="flex items-center gap-3">
       <div className={cn(
         "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-        isRecent ? "bg-amber-100 text-amber-600" : "bg-muted group-hover:bg-primary/10 group-hover:text-primary"
+        isRecent ? "bg-amber-100 text-amber-600" : (isSelected ? "bg-primary text-white" : "bg-muted group-hover:bg-primary/10 group-hover:text-primary")
       )}>
-        {isRecent ? <History className="w-4 h-4" /> : <Package className="w-4 h-4" />}
+        {isSelected ? <PlusCircle className="w-4 h-4" /> : (isRecent ? <History className="w-4 h-4" /> : <Package className="w-4 h-4" />)}
       </div>
       <div>
         <h4 className="font-bold text-sm leading-none mb-1">{food.name}</h4>
@@ -291,8 +292,11 @@ const FoodRow = ({ food, onAdd, isRecent, isActive }: { food: Food, onAdd: () =>
         </div>
       </div>
     </div>
-    <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-      <Plus className="w-4 h-4" />
+    <div className={cn(
+      "h-7 w-7 rounded-full flex items-center justify-center transition-all",
+      isSelected ? "bg-primary text-white" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
+    )}>
+      {isSelected ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
     </div>
   </button>
 );
