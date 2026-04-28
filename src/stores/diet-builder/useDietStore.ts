@@ -31,6 +31,7 @@ export interface DietState {
     carbs: number;
     fat: number;
   };
+  isFallback: boolean;
   templates: { name: string; items: Food[] }[];
   
   // Actions
@@ -43,6 +44,7 @@ export interface DietState {
   setMeals: (meals: Meal[]) => void;
   setGoal: (goal: string) => void;
   setCalorieTarget: (target: number) => void;
+  setIsFallback: (isFallback: boolean) => void;
 }
 
 const initialMeals: Meal[] = [
@@ -60,6 +62,7 @@ export const useDietStore = create<DietState>()(
       goal: 'Hipertrofia',
       calorieTarget: 2000,
       totals: { calories: 0, protein: 0, carbs: 0, fat: 0 },
+      isFallback: false,
       templates: [
         { 
           name: 'Marmita Padrão', 
@@ -127,6 +130,7 @@ export const useDietStore = create<DietState>()(
       setMeals: (meals) => set({ meals, totals: calculateTotals(meals) }),
       setGoal: (goal) => set({ goal }),
       setCalorieTarget: (calorieTarget) => set({ calorieTarget }),
+      setIsFallback: (isFallback) => set({ isFallback }),
     }),
     { name: 'diet-builder-storage' }
   )
