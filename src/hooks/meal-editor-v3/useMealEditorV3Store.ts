@@ -43,6 +43,8 @@ interface MealPlanState {
     protein: number;
     carbs: number;
     fat: number;
+    isIntolerant?: boolean;
+    drinksCoffee?: boolean;
   } | null;
   meals: Meal[];
   activeMealId: string | null;
