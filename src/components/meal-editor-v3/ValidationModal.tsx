@@ -137,12 +137,15 @@ const MetricCard = ({ label, icon: Icon, current, target, unit, status }: any) =
           <span className="text-xs text-muted-foreground">/ {target} {unit}</span>
         </div>
       </div>
-      <Progress value={percentage} className={cn(
-        "h-1.5",
-        status === 'ok' ? "bg-green-100" : status === 'warn' ? "bg-amber-100" : "bg-red-100"
-      )} indicatorClassName={cn(
-        status === 'ok' ? "bg-green-500" : status === 'warn' ? "bg-amber-500" : "bg-red-500"
-      )} />
+      <div className="h-1.5 w-full bg-secondary rounded-full overflow-hidden">
+        <div 
+          className={cn(
+            "h-full transition-all duration-500",
+            status === 'ok' ? "bg-green-500" : status === 'warn' ? "bg-amber-500" : "bg-red-500"
+          )} 
+          style={{ width: `${percentage}%` }}
+        />
+      </div>
     </Card>
   );
 };
