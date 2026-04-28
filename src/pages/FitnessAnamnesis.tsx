@@ -590,6 +590,14 @@ export default function FitnessAnamnesis() {
 
   const handleSubmit = async () => {
     if (!user || !targetUserId) return;
+    
+    // BLOQUEIO DE AÇÃO CRÍTICA
+    if ((window as any).__FJ_READY__ === false) {
+      console.warn("[FJ:FitnessAnamnesis] Submit blocked: System not ready");
+      toast.error("O sistema ainda está carregando dados vitais. Aguarde um momento.");
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
