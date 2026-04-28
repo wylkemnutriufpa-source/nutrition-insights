@@ -31,6 +31,7 @@ const SUBSTITUTIONS: Record<string, Omit<Food, 'id'>[]> = {
 
 export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMarmitaModalOpen, setIsMarmitaModalOpen] = useState(false);
   const { removeFood, replaceFood, saveAsTemplate } = useDietStore();
 
   const mealTotals = meal.items.reduce((acc, item) => ({
