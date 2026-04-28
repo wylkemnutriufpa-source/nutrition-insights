@@ -94,7 +94,7 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-700">{item.name}</span>
                   {item.locked && <Lock className="w-3 h-3 text-emerald-500" />}
-                  {SUBSTITUTIONS[item.name] && !item.locked && (
+                  {(item.substitutions?.length || SUBSTITUTIONS[item.name]) && !item.locked && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-1 text-slate-300 hover:text-emerald-500 transition-colors">
@@ -103,7 +103,7 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
                       </DropdownMenuTrigger>
                       <DropdownMenuContent className="rounded-xl border-none shadow-xl">
                         <div className="p-2 text-[10px] font-bold text-slate-400 uppercase tracking-widest px-3">Sugestões</div>
-                        {SUBSTITUTIONS[item.name].map((sub, idx) => (
+                        {(item.substitutions || SUBSTITUTIONS[item.name]).map((sub, idx) => (
                           <DropdownMenuItem 
                             key={idx} 
                             onClick={() => replaceFood(meal.id, item.id, sub)}

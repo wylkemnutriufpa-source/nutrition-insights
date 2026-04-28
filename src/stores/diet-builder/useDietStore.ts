@@ -11,6 +11,7 @@ export interface Food {
   amount?: string;
   marmitaId?: string; // Para identificar itens de marmitas bloqueadas
   locked?: boolean;
+  substitutions?: Omit<Food, 'id'>[];
 }
 
 export interface Meal {
@@ -39,6 +40,9 @@ export interface DietState {
   addTemplate: (mealId: string, templateName: string) => void;
   saveAsTemplate: (name: string, items: Food[]) => void;
   resetDiet: () => void;
+  setMeals: (meals: Meal[]) => void;
+  setGoal: (goal: string) => void;
+  setCalorieTarget: (target: number) => void;
 }
 
 const initialMeals: Meal[] = [
@@ -120,6 +124,9 @@ export const useDietStore = create<DietState>()(
       },
 
       resetDiet: () => set({ meals: initialMeals, totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } }),
+      setMeals: (meals) => set({ meals, totals: calculateTotals(meals) }),
+      setGoal: (goal) => set({ goal }),
+      setCalorieTarget: (calorieTarget) => set({ calorieTarget }),
     }),
     { name: 'diet-builder-storage' }
   )

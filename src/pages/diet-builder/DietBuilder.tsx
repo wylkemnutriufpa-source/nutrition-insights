@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDietStore } from '@/stores/diet-builder/useDietStore';
 import { MealCard } from '@/components/diet-builder/MealCard';
+import { PlanGenerationModal } from '@/components/diet-builder/PlanGenerationModal';
 import { 
   Target, 
   Flame, 
@@ -10,7 +11,8 @@ import {
   ChevronLeft,
   Share2,
   MoreVertical,
-  Zap
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const DietBuilder: React.FC = () => {
   const { meals, totals, calorieTarget, patientName, goal } = useDietStore();
+  const [isGenModalOpen, setIsGenModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const calPercentage = Math.min((totals.calories / calorieTarget) * 100, 100);
@@ -45,7 +48,14 @@ const DietBuilder: React.FC = () => {
                 <p className="text-xs font-semibold text-emerald-600 uppercase tracking-widest">{goal}</p>
               </div>
             </div>
-            <div className="flex gap-2">
+            <div className="flex items-center gap-2">
+              <Button 
+                onClick={() => setIsGenModalOpen(true)}
+                className="rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold gap-2 px-4 shadow-lg shadow-emerald-100"
+              >
+                <Sparkles className="w-4 h-4" />
+                Gerar Plano
+              </Button>
               <Button variant="ghost" size="icon" className="rounded-xl">
                 <Share2 className="w-5 h-5 text-slate-400" />
               </Button>
@@ -122,6 +132,11 @@ const DietBuilder: React.FC = () => {
             </Button>
           </div>
         </main>
+
+        <PlanGenerationModal 
+          isOpen={isGenModalOpen} 
+          onClose={() => setIsGenModalOpen(false)} 
+        />
       </div>
     </DashboardLayout>
   );
