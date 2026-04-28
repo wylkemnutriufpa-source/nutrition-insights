@@ -14,6 +14,10 @@ vi.mock("@/lib/auth", () => ({
   })) 
 }));
 
+vi.mock("@/lib/tenantContext", () => ({
+  useTenant: vi.fn(() => ({ tenantId: "tenant-1", isLoading: false }))
+}));
+
 vi.mock("@/hooks/useAppState", () => ({
   AppStateProvider: ({ children }: any) => <>{children}</>,
   useAppState: vi.fn(() => ({ 
