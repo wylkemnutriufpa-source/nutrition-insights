@@ -1,6 +1,5 @@
-import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react";
+import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
-import { supabase } from "@/integrations/supabase/client";
 
 interface AppStateContextType {
   isReady: boolean;
@@ -27,17 +26,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (authLoading) return;
 
-    // Ready when auth is done and profile is loaded
     if (user && profile) {
       setIsReady(true);
       setIsLoading(false);
       setIsDegraded(false);
     } else if (!user) {
-      // Guest or login screen
       setIsReady(true);
       setIsLoading(false);
     } else {
-      // User without profile (rare / edge case)
       const timeout = setTimeout(() => {
         setIsDegraded(true);
         setIsLoading(false);
@@ -46,7 +42,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     }
   }, [user, profile, authLoading]);
 
-  // Sync with global flag if needed for legacy components
   useEffect(() => {
     (window as any).__FJ_READY__ = isReady;
   }, [isReady]);
