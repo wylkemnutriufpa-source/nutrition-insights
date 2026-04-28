@@ -18334,6 +18334,45 @@ export type Database = {
           },
         ]
       }
+      user_linkage_log: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          error_message: string | null
+          id: string
+          invite_code: string | null
+          metadata: Json | null
+          nutritionist_id_resolved: string | null
+          status: string
+          tenant_id_resolved: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          error_message?: string | null
+          id?: string
+          invite_code?: string | null
+          metadata?: Json | null
+          nutritionist_id_resolved?: string | null
+          status: string
+          tenant_id_resolved?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          error_message?: string | null
+          id?: string
+          invite_code?: string | null
+          metadata?: Json | null
+          nutritionist_id_resolved?: string | null
+          status?: string
+          tenant_id_resolved?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_menu_usage: {
         Row: {
           clicks_count: number
