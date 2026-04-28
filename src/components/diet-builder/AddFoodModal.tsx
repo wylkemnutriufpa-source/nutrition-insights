@@ -11,14 +11,16 @@ interface AddFoodModalProps {
   mealId: string;
 }
 
+// Base nutricional USDA - Cada alimento deve ter ID, Macros e ser consistente.
 const MOCK_FOODS: Omit<Food, 'id'>[] = [
-  { name: 'Frango Grelhado', calories: 165, protein: 31, carbs: 0, fat: 4 },
-  { name: 'Arroz Integral', calories: 130, protein: 3, carbs: 28, fat: 1 },
-  { name: 'Batata Doce', calories: 86, protein: 2, carbs: 20, fat: 0 },
-  { name: 'Ovo Cozido', calories: 78, protein: 6, carbs: 1, fat: 5 },
-  { name: 'Banana', calories: 89, protein: 1, carbs: 23, fat: 0 },
-  { name: 'Aveia', calories: 389, protein: 17, carbs: 66, fat: 7 },
-  { name: 'Patinho Moído', calories: 219, protein: 26, carbs: 0, fat: 12 },
+  { name: 'Peito de Frango Grelhado (USDA)', calories: 165, protein: 31, carbs: 0, fat: 4 },
+  { name: 'Arroz Integral Cozido (USDA)', calories: 111, protein: 2.6, carbs: 23, fat: 0.9 },
+  { name: 'Batata Doce Cozida (USDA)', calories: 86, protein: 1.6, carbs: 20, fat: 0.1 },
+  { name: 'Ovo de Galinha Inteiro (USDA)', calories: 155, protein: 13, carbs: 1.1, fat: 11 },
+  { name: 'Banana Nanica (USDA)', calories: 89, protein: 1.1, carbs: 23, fat: 0.3 },
+  { name: 'Aveia em Flocos (USDA)', calories: 389, protein: 16.9, carbs: 66, fat: 6.9 },
+  { name: 'Carne Moída Patinho (USDA)', calories: 219, protein: 26, carbs: 0, fat: 12 },
+  { name: 'Brócolis Cozido (USDA)', calories: 35, protein: 2.4, carbs: 7, fat: 0.4 },
 ];
 
 export const AddFoodModal: React.FC<AddFoodModalProps> = ({ isOpen, onClose, mealId }) => {
