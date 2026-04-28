@@ -6,6 +6,7 @@ import { MacroSummary } from './MacroSummary';
 import { ClinicalRulesPanel } from './ClinicalRulesPanel';
 import { ValidationModal } from './ValidationModal';
 import { TemplateLibrary } from './TemplateLibrary';
+import { MobileMealEditorV3 } from './MobileMealEditorV3';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
