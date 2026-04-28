@@ -216,10 +216,10 @@ export const ActiveMealContent: React.FC = () => {
                             addBtnRef.current?.focus();
                           }
                         }}
-                        disabled={item.isMarmita}
+                        disabled={item.isMarmita || item.locked}
                         className={cn(
                           "w-14 h-9 text-center text-xs font-black rounded-xl",
-                          item.isMarmita && "opacity-50 cursor-not-allowed bg-muted border-none"
+                          (item.isMarmita || item.locked) && "opacity-50 cursor-not-allowed bg-muted border-none"
                         )}
                         min="0"
                         step="0.1"
