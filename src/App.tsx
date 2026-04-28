@@ -9,7 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { TenantProvider } from "@/lib/tenantContext";
 import { supabase } from "@/integrations/supabase/client";
-import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";

@@ -24,6 +24,31 @@ export const IS_FLUID_STATE = (status: JourneyStatus) =>
   status === "active" || status === "onboarding_active" || status === "lead_created" || status === "awaiting_consent" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "clinical_followup_active";
 
 /**
+ * Single Source of Truth for Navigation Decision.
+ * CENTRALIZED LOGIC - Anti-Loop Protection.
+ */
+export const getUserRouteByStatus = (status: JourneyStatus): string => {
+  switch (status) {
+    case "lead_created":
+    case "awaiting_consent":
+      return "/consent";
+    case "onboarding_active":
+      return "/onboarding";
+    case "no_link":
+      return "/erro-vinculo"; // This will need a dedicated page or handled in PatientReadyGuard
+    case "active":
+    case "active_followup":
+    case "clinical_followup_active":
+    case "plan_published":
+    case "onboarding_completed":
+    case "draft_ready_for_review":
+      return "/client/dashboard";
+    default:
+      return "/client/dashboard";
+  }
+};
+
+/**
  * Returns the patient's journey_status from nutritionist_patients.
  */
 export function usePatientJourneyStatus() {
