@@ -543,6 +543,13 @@ export default function FitnessAnamnesis() {
 
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
+    
+    // BLOQUEIO DE AÇÃO CRÍTICA
+    if ((window as any).__FJ_READY__ === false) {
+      console.warn("[FJ:FitnessAnamnesis] Autosave blocked: System not ready");
+      return;
+    }
+
     setAutoSaveStatus("saving");
     try {
       if (draftId) {
@@ -561,7 +568,7 @@ export default function FitnessAnamnesis() {
     } catch {
       setAutoSaveStatus("idle");
     }
-  }, [targetUserId, user, draftId]);
+  }, [targetUserId, user, draftId, tenantId]);
 
   useEffect(() => {
     if (Object.keys(answers).length === 0 || completed) return;
@@ -583,6 +590,14 @@ export default function FitnessAnamnesis() {
 
   const handleSubmit = async () => {
     if (!user || !targetUserId) return;
+    
+    // BLOQUEIO DE AÇÃO CRÍTICA
+    if ((window as any).__FJ_READY__ === false) {
+      console.warn("[FJ:FitnessAnamnesis] Submit blocked: System not ready");
+      toast.error("O sistema ainda está carregando dados vitais. Aguarde um momento.");
+      return;
+    }
+
     setSubmitting(true);
 
     const payload = {
