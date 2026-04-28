@@ -161,7 +161,7 @@ export const ActiveMealContent: React.FC = () => {
               >
                 <Card className={cn(
                   "p-4 flex items-center gap-4 group transition-all shadow-sm relative overflow-hidden rounded-2xl",
-                  item.isMarmita ? "border-orange-200 bg-orange-50/30" : "hover:border-primary/50"
+                  (item.isMarmita || item.locked) ? "border-orange-200 bg-orange-50/30" : "hover:border-primary/50"
                 )}>
                   {item.imageUrl && !fastMode && (
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0 border">
@@ -171,7 +171,7 @@ export const ActiveMealContent: React.FC = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold truncate text-sm">{item.name}</h3>
-                      {item.isMarmita && (
+                      {(item.isMarmita || item.locked) && (
                         <div className="flex items-center gap-1.5">
                           <Badge variant="secondary" className="bg-orange-500 text-white border-none text-[10px] h-4 uppercase font-black px-2 shadow-sm shadow-orange-500/20">
                             COMPOSIÇÃO FIXA
@@ -216,10 +216,10 @@ export const ActiveMealContent: React.FC = () => {
                             addBtnRef.current?.focus();
                           }
                         }}
-                        disabled={item.isMarmita}
+                        disabled={item.isMarmita || item.locked}
                         className={cn(
                           "w-14 h-9 text-center text-xs font-black rounded-xl",
-                          item.isMarmita && "opacity-50 cursor-not-allowed bg-muted border-none"
+                          (item.isMarmita || item.locked) && "opacity-50 cursor-not-allowed bg-muted border-none"
                         )}
                         min="0"
                         step="0.1"
@@ -228,7 +228,7 @@ export const ActiveMealContent: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1">
-                      {!item.isMarmita && (
+                      {!(item.isMarmita || item.locked) && (
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button 
                             variant="ghost" 
@@ -252,7 +252,7 @@ export const ActiveMealContent: React.FC = () => {
                   </div>
                 </Card>
 
-                {(item.substitutions || []).length > 0 && !item.isMarmita && (
+                {(item.substitutions || []).length > 0 && !(item.isMarmita || item.locked) && (
                   <div className="ml-8 space-y-1">
                     {item.substitutions?.map((sub) => (
                       <motion.div 
