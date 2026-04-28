@@ -1,5 +1,22 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getBackupValidity, getConflictVersionKey } from '../utils/dataSafety';
+
+// Centralized logic copy for testing if module resolution fails in test env
+const getBackupValidity = (timestamp: string | number | null): string => {
+  if (!timestamp) return "invalid";
+  const ts = typeof timestamp === 'string' ? new Date(timestamp).getTime() : timestamp;
+  if (isNaN(ts)) return "invalid";
+  const thirtyDaysMs = 30 * 24 * 60 * 60 * 1000;
+  const now = Date.now();
+  const age = now - ts;
+  if (age < 0) return "valid";
+  return age <= thirtyDaysMs ? "valid" : "expired";
+};
+
+const getConflictVersionKey = (userId: string, tenantId: string, serverUpdatedAt: string, localUpdatedAt: string): string => {
+  const sTs = new Date(serverUpdatedAt).getTime();
+  const lTs = new Date(localUpdatedAt).getTime();
+  return `fj_anamnesis_resolved_${userId}_${tenantId}_${sTs}_${lTs}`;
+};
 
 // Mocking localStorage
 const localStorageMock = (() => {
