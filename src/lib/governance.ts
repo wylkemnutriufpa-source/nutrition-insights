@@ -24,6 +24,8 @@ export interface GovernanceContext {
   user: any | null;
   profile: any | null;
   journeyStatus: string | null;
+  anamnesisStatus?: 'pending' | 'completed' | null;
+  hasActivePipeline?: boolean;
   mode: string;
   role: 'patient' | 'professional';
   isReady: boolean;
@@ -158,8 +160,17 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   // 7. Patient Journey Specifics
   if (ctx.role === 'patient') {
     const isOnboarding = ['onboarding_active', 'lead_created', 'awaiting_consent'].includes(ctx.journeyStatus || '');
+    
+    // HARDENING: If user has completed anamnesis and is trapped in onboarding_active, allow access if they try to go to dashboard
+    const isAnamnesisComplete = ctx.anamnesisStatus === 'completed';
+    const isDashboardPath = safePathname === '/' || safePathname === '/client/dashboard' || safePathname === '/my-diet';
+
     if (isOnboarding && safePathname.startsWith('/anamnesis')) {
       return { type: 'ALLOW', reason: 'Onboarding anamnesis override' };
+    }
+
+    if (isOnboarding && isAnamnesisComplete && isDashboardPath) {
+      return { type: 'ALLOW', reason: 'Bypassing onboarding: Anamnesis complete' };
     }
 
     if (isOnboarding && !safePathname.startsWith('/onboarding') && !safePathname.startsWith('/consent') && !safePathname.startsWith('/anamnesis')) {

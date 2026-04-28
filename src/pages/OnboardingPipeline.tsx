@@ -992,6 +992,60 @@ export default function OnboardingPipeline() {
                 </CardContent>
               </Card>
             )}
+
+            {/* FALLBACK DE SEGURANÇA: Botão para forçar saída se estiver preso */}
+            {(pipeline.anamnesis_completed || pipeline.plan_generated) && (
+              <div className="mt-8 pt-6 border-t border-slate-100 dark:border-slate-800">
+                <div className="flex flex-col items-center gap-3">
+                  <p className="text-[10px] text-slate-400 text-center max-w-xs uppercase tracking-wider font-medium">
+                    Suporte Técnico
+                  </p>
+                  <p className="text-xs text-slate-500 text-center max-w-xs">
+                    Se você já completou as etapas e continua vendo esta tela, clique no botão abaixo para forçar a sincronização.
+                  </p>
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full sm:w-auto gap-2 text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 transition-all duration-300"
+                    onClick={async () => {
+                      const loadingToast = toast.loading("Sincronizando seu acesso...");
+                      try {
+                        console.log("[FJ:HardFix] Triggering manual state sync for patient:", user?.id);
+                        
+                        // 1. Tenta forçar a transição atômica via RPC
+                        const { data: fixResult, error: fixError } = await supabase.rpc('run_patient_realtime_fix' as any, { _patient_id: user?.id });
+                        if (fixError) throw fixError;
+                        
+                        console.log("[FJ:HardFix] RPC Result:", fixResult);
+
+                        // 2. Garante que nutritionist_patients tenha status active se houver link
+                        const { error: updateError } = await supabase
+                          .from("nutritionist_patients")
+                          .update({ journey_status: 'active' } as any)
+                          .eq("patient_id", user?.id)
+                          .eq("status", "active");
+                        
+                        if (updateError) console.warn("[FJ:HardFix] NP update error (might be ignored):", updateError);
+
+                        // 3. Invalida caches para o Governance liberar o acesso
+                        await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+                        
+                        toast.success("Sincronização concluída! Redirecionando...", { id: loadingToast });
+                        
+                        // Pequeno delay para o state atualizar e o governance re-avaliar
+                        setTimeout(() => navigate("/"), 1000);
+                      } catch (err) {
+                        console.error("Force sync error:", err);
+                        toast.error("Erro na sincronização. Tente novamente.", { id: loadingToast });
+                      }
+                    }}
+                  >
+                    <RefreshCw className="h-3 w-3" />
+                    <span className="text-xs font-semibold">Forçar Acesso ao Dashboard</span>
+                  </Button>
+                </div>
+              </div>
+            )}
           </motion.div>
         </AnimatePresence>
       </div>
