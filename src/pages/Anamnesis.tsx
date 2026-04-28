@@ -1661,6 +1661,69 @@ export default function Anamnesis() {
           </motion.div>
         )}
       </div>
+
+      <AlertDialog open={showConflictModal} onOpenChange={setShowConflictModal}>
+        <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">
+              <History className="w-5 h-5 text-primary" />
+              Conflito de Versão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-2">
+              <p>
+                Encontramos uma versão diferente das suas respostas no servidor. 
+                Qual versão você deseja manter?
+              </p>
+              
+              <div className="grid gap-3 pt-2">
+                <div className="p-3 rounded-xl border border-border bg-muted/30">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Versão Local (Atual)</p>
+                  <p className="text-sm font-medium">
+                    {localBackup ? new Date(localBackup.updated_at).toLocaleString('pt-BR') : "Sem data"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Dados salvos neste dispositivo.
+                  </p>
+                </div>
+                
+                <div className="p-3 rounded-xl border border-primary/20 bg-primary/5">
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Versão do Servidor</p>
+                  <p className="text-sm font-medium">
+                    {serverVersion ? new Date(serverVersion.updated_at).toLocaleString('pt-BR') : "Sem data"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Dados salvos na nuvem.
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowConflictModal(false);
+                toast.success("Mantendo versão local! 🏠");
+              }}
+              className="sm:flex-1"
+            >
+              Manter Local
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (serverVersion) {
+                  setAnswers(serverVersion.answers);
+                  saveLocalBackup(serverVersion.answers);
+                  setShowConflictModal(false);
+                  toast.success("Versão do servidor restaurada! ☁️");
+                }
+              }}
+              className="sm:flex-1 gradient-primary shadow-glow"
+            >
+              Restaurar Servidor
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
