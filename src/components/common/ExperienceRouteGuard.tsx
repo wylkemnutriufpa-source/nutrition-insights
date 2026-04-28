@@ -1,48 +1,47 @@
-import { useEffect, useMemo } from "react";
+import { useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
-import { getVisibleRoutes, useExperienceMode } from "@/hooks/useExperienceMode";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
-
-function matchesRouteOrChild(pathname: string, route: string) {
-  if (route === "/") return pathname === "/";
-  return pathname === route || pathname.startsWith(`${route}/`);
-}
+import { useAuth } from "@/lib/auth";
+import { useAppState } from "@/hooks/useAppState";
+import { getSystemDecision, logDecision, type GovernanceContext } from "@/lib/governance";
 
 /**
  * Automatically redirects to "/" if the current route is not allowed
  * by the active experience mode + role. Place inside <BrowserRouter>.
- * 
- * SPECIAL EXCEPTION: During onboarding_active, /anamnesis is ALWAYS allowed.
  */
 export default function ExperienceRouteGuard() {
   const { mode, role } = useExperienceMode();
   const { status: journeyStatus } = usePatientJourneyStatus();
+  const { user, profile } = useAuth();
+  const { isReady, isDegraded } = useAppState();
   const location = useLocation();
   const navigate = useNavigate();
 
-  const allControlledRoutes = useMemo(() => [...getVisibleRoutes("advanced", role)], [role]);
-  const allowedRoutes = useMemo(() => [...getVisibleRoutes(mode, role)], [mode, role]);
-
   useEffect(() => {
-    // Stage 1: Check if route is controlled by experience modes
-    const isControlled = allControlledRoutes.some((r) => matchesRouteOrChild(location.pathname, r));
-    if (!isControlled) return;
+    if (!isReady) return;
 
-    // Stage 2: Onboarding Override (CRITICAL ANTI-LOOP)
-    // If the patient is in active onboarding, they MUST be able to access /anamnesis
-    const isOnboardingFlow = journeyStatus === "onboarding_active" || journeyStatus === "lead_created" || journeyStatus === "awaiting_consent";
-    if (isOnboardingFlow && location.pathname.startsWith("/anamnesis")) {
-      console.log("[ExperienceRouteGuard] [GuardOverride] Onboarding bypass active for /anamnesis");
-      return;
-    }
+    const ctx: GovernanceContext = {
+      pathname: location.pathname,
+      user,
+      profile,
+      journeyStatus: journeyStatus as any,
+      mode,
+      role,
+      isReady,
+      isDegraded
+    };
 
-    // Stage 3: Normal mode validation
-    const isAllowed = allowedRoutes.some((r) => matchesRouteOrChild(location.pathname, r));
-    if (!isAllowed) {
-      console.warn("[ExperienceRouteGuard] Blocking route", location.pathname, "for mode", mode, "role", role);
-      navigate("/", { replace: true });
+    const decision = getSystemDecision(ctx);
+
+    if (decision.type === 'REDIRECT' && decision.target && decision.target !== location.pathname) {
+      logDecision(decision);
+      navigate(decision.target, { replace: true });
+    } else if (decision.type === 'BLOCK' && decision.target) {
+      logDecision(decision);
+      navigate(decision.target, { replace: true });
     }
-  }, [location.pathname, mode, role, allControlledRoutes, allowedRoutes, navigate, journeyStatus]);
+  }, [location.pathname, mode, role, journeyStatus, user, profile, isReady, isDegraded, navigate]);
 
   return null;
 }

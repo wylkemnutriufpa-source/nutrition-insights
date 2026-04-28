@@ -2,95 +2,73 @@
  * Hook that checks if a patient must complete onboarding before accessing the system.
  * Returns whether the patient should be redirected to /onboarding.
  */
-import { useMemo } from "react";
-import { useLocation } from "react-router-dom";
-import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
+import { useMemo, useEffect } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import { useAuth } from "@/lib/auth";
-import { useEffect, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { useAppState } from "./useAppState";
+import { useExperienceMode } from "./useExperienceMode";
+import { getSystemDecision, type GovernanceContext } from "@/lib/governance";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading" | "error_no_link";
 
-// Routes the patient is allowed to visit even when onboarding is mandatory
-const ONBOARDING_ALLOWED_ROUTES = [
-  "/onboarding",
-  "/onboarding-pipeline",
-  "/consent",
-  "/auth",
-  "/reset-password",
-  "/settings",
-  "/privacy-policy",
-  "/termos-de-uso",
-  "/support",
-  "/erro-vinculo"
-];
-
-export function isOnboardingAllowedRoute(pathname: string): boolean {
-  // Normalize path to check prefix
-  const path = pathname === "/" ? "/" : pathname;
-  return ONBOARDING_ALLOWED_ROUTES.some(route => path.startsWith(route));
-}
-
-// Redirect tracker for Anti-Loop Hard Protection
-const redirectHistory: Record<string, { from: string, to: string, count: number }> = {};
-
 export function useOnboardingGuard() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
-  const { loading: authLoading, user } = useAuth();
+  const { loading: authLoading, user, profile, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { mode, role } = useExperienceMode();
+  const { isReady, isDegraded } = useAppState();
   const location = useLocation();
   const navigate = useNavigate();
-  const isRedirecting = useRef(false);
 
   useEffect(() => {
-    // Stage 1: Wait for status
-    if (journeyLoading || authLoading || !user) return;
+    if (journeyLoading || authLoading || !user || !isReady) return;
 
-    // Stage 2: Centralized Decision
-    const targetPath = getUserRouteByStatus(journeyStatus);
-    const currentPath = location.pathname;
+    const ctx: GovernanceContext = {
+      pathname: location.pathname,
+      user,
+      profile,
+      journeyStatus: journeyStatus as any,
+      mode,
+      role,
+      isReady,
+      isDegraded,
+      isNutritionist,
+      isPersonal,
+      isAdmin
+    };
 
-    // Stage 3: Anti-Loop Protection
-    if (currentPath === targetPath || isOnboardingAllowedRoute(currentPath)) {
-      return;
+    const decision = getSystemDecision(ctx);
+
+    if (decision.type === 'REDIRECT' && decision.target && decision.target !== location.pathname) {
+      navigate(decision.target, { replace: true });
     }
-
-    // Loop Trava (Hard Protection)
-    const loopKey = `${user.id}:${currentPath}:${targetPath}`;
-    const history = redirectHistory[loopKey] || { from: currentPath, to: targetPath, count: 0 };
-    
-    if (history.count >= 2) {
-      console.warn("[OnboardingRedirect] LOOP DETECTED AND BLOCKED", { from: currentPath, to: targetPath, status: journeyStatus });
-      return;
-    }
-
-    // Stage 4: Execution
-    console.log("[OnboardingRedirect]", {
-      from: currentPath,
-      to: targetPath,
-      status: journeyStatus,
-      blocked: false,
-      reason: currentPath === targetPath ? "same_route" : "redirecting"
-    });
-
-    history.count++;
-    redirectHistory[loopKey] = history;
-    
-    navigate(targetPath, { replace: true });
-
-  }, [journeyStatus, journeyLoading, authLoading, location.pathname, user, navigate]);
+  }, [journeyStatus, journeyLoading, authLoading, location.pathname, user, profile, isReady, isDegraded, mode, role, navigate, isNutritionist, isPersonal, isAdmin]);
 
   const requirement: OnboardingRequirement = useMemo(() => {
-    if (journeyLoading || authLoading) return "loading";
-    if (isOnboardingAllowedRoute(location.pathname)) return "none";
-    if (journeyStatus === "no_link" || journeyStatus === null) return "error_no_link";
+    if (journeyLoading || authLoading || !isReady) return "loading";
     
-    const targetPath = getUserRouteByStatus(journeyStatus);
-    if (location.pathname !== targetPath && !isOnboardingAllowedRoute(location.pathname)) {
-        return "must_complete";
+    const ctx: GovernanceContext = {
+      pathname: location.pathname,
+      user,
+      profile,
+      journeyStatus: journeyStatus as any,
+      mode,
+      role,
+      isReady,
+      isDegraded,
+      isNutritionist,
+      isPersonal,
+      isAdmin
+    };
+
+    const decision = getSystemDecision(ctx);
+    if (decision.type === 'REDIRECT' && (decision.target === '/onboarding' || decision.target === '/consent')) {
+      return "must_complete";
     }
+    if (journeyStatus === "no_link") return "error_no_link";
 
     return "none";
-  }, [journeyStatus, journeyLoading, authLoading, location.pathname]);
+  }, [journeyStatus, journeyLoading, authLoading, location.pathname, isReady, isDegraded, mode, role, user, profile, isNutritionist, isPersonal, isAdmin]);
 
   return { requirement };
 }

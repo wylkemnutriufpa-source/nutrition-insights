@@ -144,6 +144,11 @@ async function checkOnce(forceReload = false): Promise<void> {
   if (!remote || !remote.version) return;
 
   const isMatch = remote.version === LOCAL_VERSION;
+  
+  try {
+    (window as any).__FJ_VERSION_MISMATCH__ = !isMatch;
+  } catch {}
+
   if (isMatch) return;
 
   if (!canReloadNow()) return;
@@ -173,6 +178,7 @@ export function startVersionSync(): void {
 
   try {
     (window as any).__APP_VERSION__ = LOCAL_VERSION;
+    (window as any).__FJ_VERSION_MISMATCH__ = false;
   } catch {}
 
   if (isPreviewOrIframe()) return;
