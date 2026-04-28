@@ -1244,27 +1244,7 @@ export default function Anamnesis() {
 
   // Blocked state — onboarding not released
   if (onboardingBlocked && !isNutritionistMode) {
-    return (
-      <DashboardLayout>
-        <div className="max-w-lg mx-auto flex flex-col items-center justify-center min-h-[60vh] text-center space-y-6">
-          <div className="w-20 h-20 rounded-full bg-warning/10 flex items-center justify-center">
-            <Lock className="w-10 h-10 text-warning" />
-          </div>
-          <h1 className="font-display text-2xl font-bold">Aguardando Ativação Clínica</h1>
-          <p className="text-muted-foreground max-w-md">
-            Seu nutricionista precisa liberar o onboarding antes que você possa preencher a anamnese.
-            Isso garante que sua jornada seja personalizada e alinhada ao seu plano de atendimento.
-          </p>
-          <div className="p-4 rounded-xl bg-muted/30 border border-border text-sm text-muted-foreground">
-            <AlertTriangle className="w-4 h-4 inline mr-1.5 text-warning" />
-            Entre em contato com seu profissional caso já tenha realizado o pagamento.
-          </div>
-          <Button variant="outline" onClick={() => navigate("/")}>
-            Voltar ao Dashboard
-          </Button>
-        </div>
-      </DashboardLayout>
-    );
+    return <HardFailLinkage />;
   }
 
   // Compute active adaptive blocks based on current answers
