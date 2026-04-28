@@ -188,6 +188,7 @@ function DynamicSidebar({
   onLinkClick?: () => void;
 }) {
   const { categories, flatItems, trackClick } = useSmartMenu();
+  const { minMode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
@@ -310,7 +311,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      {effectiveProRole && (
+      {effectiveProRole && minMode("pro") && (
         <div className="px-3 mb-1 space-y-1">
           <Link
             to="/control-tower"
@@ -409,7 +410,7 @@ function DynamicSidebar({
         </div>
       )}
 
-      {!effectiveProRole && (
+      {!effectiveProRole && minMode("pro") && (
         <div className="px-3 mb-1 space-y-1">
           <Link
             to="/onboarding"

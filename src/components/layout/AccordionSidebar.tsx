@@ -352,7 +352,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
 
   return (
     <div className="space-y-1">
-      {fixedItems.map((item) => {
+      {minMode("pro") && fixedItems.map((item) => {
         const Icon = getIcon(item.icon);
         const active = location.pathname === item.route;
         return (
