@@ -21,29 +21,43 @@ import { assertContract, ContractViolationError } from "@/lib/contractGuards";
 
 describe("Critical Contracts — Freeze Inteligente", () => {
   describe("1. Acesso do Paciente", () => {
-    it("paciente vê seu próprio plano publicado", () => {
+    it("paciente vê seu próprio plano publicado no seu tenant", () => {
       const r = patientAccessContract({
         requestingPatientId: "p1",
-        returnedPlans: [{ id: "plan1", patient_id: "p1", plan_status: "published_to_patient" }],
+        requestingTenantId: "t1",
+        returnedPlans: [{ id: "plan1", patient_id: "p1", tenant_id: "t1", plan_status: "published_to_patient" }],
         route: "/my-diet",
       });
       expect(r.ok).toBe(true);
     });
 
-    it("rejeita plano de outro paciente (vazamento RLS)", () => {
+    it("rejeita plano de outro paciente (vazamento user_id)", () => {
       const r = patientAccessContract({
         requestingPatientId: "p1",
-        returnedPlans: [{ id: "planX", patient_id: "p2", plan_status: "published" }],
+        requestingTenantId: "t1",
+        returnedPlans: [{ id: "planX", patient_id: "p2", tenant_id: "t1", plan_status: "published" }],
         route: "/my-diet",
       });
       expect(r.ok).toBe(false);
       expect(r.violations.join(" ")).toMatch(/pertence a outro paciente/);
     });
 
+    it("rejeita plano de outro tenant (vazamento tenant_id)", () => {
+      const r = patientAccessContract({
+        requestingPatientId: "p1",
+        requestingTenantId: "t1",
+        returnedPlans: [{ id: "planX", patient_id: "p1", tenant_id: "t2", plan_status: "published" }],
+        route: "/my-diet",
+      });
+      expect(r.ok).toBe(false);
+      expect(r.violations.join(" ")).toMatch(/Vazamento de Tenant/);
+    });
+
     it("rejeita plano não publicado retornado para paciente", () => {
       const r = patientAccessContract({
         requestingPatientId: "p1",
-        returnedPlans: [{ id: "draft1", patient_id: "p1", plan_status: "draft" }],
+        requestingTenantId: "t1",
+        returnedPlans: [{ id: "draft1", patient_id: "p1", tenant_id: "t1", plan_status: "draft" }],
         route: "/my-diet",
       });
       expect(r.ok).toBe(false);
