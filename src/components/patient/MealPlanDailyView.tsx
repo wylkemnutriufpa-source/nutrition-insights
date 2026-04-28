@@ -189,8 +189,6 @@ const MealItemCard = memo(function MealItemCard({
 }) {
   const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
-  // Primary: use image_url directly from item (populated during generation)
-  // Fallback: resolve from visual library if item.image_url is missing
   const needsVisualFallback = !item.image_url && !!item.visual_library_item_id;
   const { item: visualItem } = useMealVisualItem(needsVisualFallback ? item.visual_library_item_id : null);
   const fallbackImage = visualItem?.image_url || visualItem?.image_path || null;
@@ -215,7 +213,6 @@ const MealItemCard = memo(function MealItemCard({
       }}
       className={`glass rounded-xl overflow-hidden transition-all w-full max-w-full ${statusColor}`}
     >
-      {/* Visual image hero */}
       {resolvedImage && (
         <div
           className="relative w-full aspect-[16/9] overflow-hidden cursor-pointer bg-muted/30"
@@ -223,7 +220,6 @@ const MealItemCard = memo(function MealItemCard({
         >
           <img src={resolvedImage} alt={item.title} className="w-full h-full object-cover object-center" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-background/70 via-transparent to-transparent" />
-          {/* Status overlay icon */}
           <div className="absolute top-2 right-2">
             {status === "followed" ? <CheckCircle2 className="w-5 h-5 text-emerald-500 drop-shadow" />
               : status === "partial" ? <MinusCircle className="w-5 h-5 text-amber-500 drop-shadow" />
@@ -259,7 +255,7 @@ const MealItemCard = memo(function MealItemCard({
                 {item.title}
               </p>
               {item.is_primary && (item.title.toLowerCase().includes("marmita") || (item as any).edit_metadata?.is_fixed) && (
-                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] py-0 h-4 font-bold uppercase tracking-tight">
+                <Badge variant="secondary" className="bg-primary/10 text-primary border-primary/20 text-[10px] py-0 h-4 font-bold uppercase tracking-tight text-center">
                   Prato Principal
                 </Badge>
               )}
@@ -376,7 +372,6 @@ const MealItemCard = memo(function MealItemCard({
                   ))}
                 </div>
               )}
-              {/* Substitution button — escondido no modo básico para reduzir decisões */}
               {!isBasic && (
                 <button
                   type="button"
@@ -530,10 +525,12 @@ const MealGroup = memo(function MealGroup({
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-display font-semibold text-sm">{mealType.label}</h3>
+              <h3 className="font-display font-semibold text-sm">
+                {isCurrent && isBasic ? `Agora: ${mealType.label}` : mealType.label}
+              </h3>
               {isCurrent && (
-                <Badge className="bg-primary text-white text-[9px] animate-pulse py-0 h-4 border-none">
-                  Agora
+                <Badge className="bg-primary text-white text-[9px] animate-pulse py-0 h-4 border-none font-bold uppercase">
+                  Sua vez
                 </Badge>
               )}
             </div>
