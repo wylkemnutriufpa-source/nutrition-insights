@@ -5,6 +5,7 @@ import { validateSystemState, fjLog } from "@/utils/dataSafety";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, RefreshCw, ShieldAlert } from "lucide-react";
+import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 
 /**
  * Global Guard to ensure the system is in a consistent state.
@@ -12,7 +13,7 @@ import { AlertTriangle, RefreshCw, ShieldAlert } from "lucide-react";
  */
 export function SystemStateGuard({ children }: { children: React.ReactNode }) {
   const { user, loading: authLoading, isPatient } = useAuth();
-  const { tenantId, loading: tenantLoading } = useTenant();
+  const { tenantId, isLoading: tenantLoading } = useTenant();
   const [error, setError] = useState<{ reason: string } | null>(null);
 
   useEffect(() => {
@@ -34,8 +35,9 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md text-center space-y-6 animate-in fade-in zoom-in-95">
+          <div className="mb-8 flex justify-center"><FitJourneyLogo size="lg" /></div>
           <ShieldAlert className="w-16 h-16 text-destructive mx-auto" />
-          <Card className="border-destructive/20 bg-destructive/5 shadow-2xl">
+          <Card className="border-destructive/20 bg-destructive/5 backdrop-blur-sm shadow-2xl">
             <CardContent className="pt-8 pb-8 space-y-4">
               <h2 className="text-2xl font-bold text-foreground">Acesso Bloqueado</h2>
               <p className="text-muted-foreground text-sm leading-relaxed">
