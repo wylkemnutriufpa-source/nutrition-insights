@@ -78,6 +78,7 @@ function StreakBadge({ count }: { count: number }) {
 
 export default function PatientMealPlan() {
   const { user } = useAuth();
+  const { isBasic } = useExperienceUI();
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [allItems, setAllItems] = useState<MealPlanItem[]>([]);
@@ -89,6 +90,7 @@ export default function PatientMealPlan() {
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
   const [focusMode, setFocusMode] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const xpTimerRef = useRef<number | null>(null);
