@@ -128,6 +128,13 @@ export default function MealPlans() {
     let query = supabase.from("meal_plans").select("*")
       .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
     
+    // Filtro por tipo/editor (V2 vs V3)
+    if (statusFilter === "v3_only") {
+      query = query.eq('generation_source', 'v3');
+    } else if (statusFilter === "v2_only") {
+      query = query.neq('generation_source', 'v3');
+    }
+
     const { data, error } = await withTenantFilter(query, tenantId);
     if (error) {
       console.error("[MealPlans] Falha ao buscar planos:", error);
@@ -149,7 +156,7 @@ export default function MealPlans() {
       const enriched = data.map((p: any) => ({ ...p, patient_name: nameMap.get(p.patient_id) || "Paciente" }));
       setPlans(enriched);
 
-      // Anomalous drop detection (Implementation of user request)
+      // Anomalous drop detection
       const patientIdFilter = searchParams.get("patient_id") || searchParams.get("patientId");
       if (patientIdFilter) {
         import("@/lib/planDiagnostics").then(({ checkPlanAnomalies }) => {
