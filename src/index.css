@@ -66,4 +66,6 @@
 @layer utilities {
   .glass { @apply bg-card/80 backdrop-blur-xl border border-border/50; }
   .gradient-primary { background: linear-gradient(135deg, hsl(152, 58%, 42%), hsl(170, 60%, 45%)); }
+  .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  .no-scrollbar::-webkit-scrollbar { display: none; }
 }
