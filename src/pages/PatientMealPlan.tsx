@@ -10,13 +10,22 @@ import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
-  Utensils, Flame, Zap, Eye, Timer,
+  Utensils, Flame, Zap, Eye, Timer, RefreshCw,
   CalendarDays, Star, ChevronDown, ChevronUp,
-  CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
+  CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown, Calendar
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
 import { MealDetailModal } from "@/components/patient/MealDetailModal";
 import MealSubstitutionModal from "@/components/patient/MealSubstitutionModal";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { ptBR } from "date-fns/locale";
+
 import type { FoodItem } from "@/components/meals/FoodAutocomplete";
 import {
   MacroSummary, AdherenceCard, DateNavigator, MealGroup,
@@ -91,6 +100,7 @@ export default function PatientMealPlan() {
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
   const [focusMode, setFocusMode] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [showOthersModal, setShowOthersModal] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const xpTimerRef = useRef<number | null>(null);
@@ -98,7 +108,19 @@ export default function PatientMealPlan() {
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
+
+  // Forçar sempre abrir no dia atual no modo básico
+  useEffect(() => {
+    if (isBasic) {
+      const today = new Date().toISOString().split("T")[0];
+      if (date !== today) {
+        setDate(today);
+      }
+    }
+  }, [isBasic]);
+
   const weekDates = useMemo(() => getWeekDates(date), [date]);
+
 
   const journeyDay = plan ? Math.max(1, Math.ceil((new Date().getTime() - new Date(plan.start_date).getTime()) / 86400000)) : 1;
   const followedStreak = completions.filter(c => c.adherence_status === "followed").length;
@@ -298,6 +320,13 @@ export default function PatientMealPlan() {
     setDate(d.toISOString().split("T")[0]);
   }, [date]);
 
+  const handleDateSelect = useCallback((selectedDate: Date | undefined) => {
+    if (selectedDate) {
+      setDate(selectedDate.toISOString().split("T")[0]);
+      setShowOthersModal(false);
+    }
+  }, []);
+
   const handleExportPDF = useCallback(async () => {
     if (!user || !plan || allItems.length === 0) return;
     setExportingPDF(true);
@@ -404,16 +433,25 @@ export default function PatientMealPlan() {
   if (!plan || allItems.length === 0) {
     return (
       <DashboardLayout>
-        <div className="max-w-2xl mx-auto">
-          <div className="glass rounded-2xl p-12 text-center">
-            <Utensils className="w-16 h-16 mx-auto text-muted-foreground mb-4" />
-            <h3 className="font-display font-semibold text-lg mb-1">Nenhum plano alimentar ativo</h3>
-            <p className="text-muted-foreground text-sm">Seu nutricionista precisa criar um plano alimentar para você.</p>
+        <div className="max-w-2xl mx-auto py-12 px-4">
+          <div className="glass rounded-2xl p-12 text-center border-dashed border-2">
+            <div className="w-20 h-20 bg-muted/50 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Utensils className="w-10 h-10 text-muted-foreground" />
+            </div>
+            <h3 className="font-display font-bold text-xl mb-2">Nenhum plano alimentar ativo</h3>
+            <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-8">
+              Seu nutricionista ainda não liberou seu plano ou ele expirou. Que tal entrar em contato?
+            </p>
+            <Button onClick={() => window.location.reload()} variant="outline" className="gap-2">
+              <RefreshCw className="w-4 h-4" />
+              Tentar atualizar
+            </Button>
           </div>
         </div>
       </DashboardLayout>
     );
   }
+
 
   return (
     <DashboardLayout>
@@ -501,34 +539,54 @@ export default function PatientMealPlan() {
           <div className="space-y-5 mt-4">
             {isBasic ? (
               <div className="flex flex-col items-center gap-3">
-                {showCalendar ? (
-                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="w-full">
-                    <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-wider bg-primary/5 text-primary border-primary/20 px-3 py-1">
+                    {isToday ? "Hoje" : DAYS[dayOfWeek]}
+                  </Badge>
+                  {!isToday && (
                     <Button 
                       variant="ghost" 
                       size="sm" 
-                      onClick={() => setShowCalendar(false)}
-                      className="mt-2 text-[10px] text-muted-foreground mx-auto flex gap-1"
+                      onClick={() => setDate(new Date().toISOString().split("T")[0])}
+                      className="text-[10px] h-6 px-2 text-muted-foreground hover:text-primary"
                     >
-                      <ChevronUp className="w-3 h-3" /> Ocultar calendário
+                      Voltar para hoje
                     </Button>
-                  </motion.div>
-                ) : (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    onClick={() => setShowCalendar(true)}
-                    className="text-xs font-medium rounded-full px-4 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-1.5"
-                  >
-                    <CalendarDays className="w-3.5 h-3.5" />
-                    Ver outros dias
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </Button>
-                )}
+                  )}
+                </div>
+                
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowOthersModal(true)}
+                  className="text-xs font-bold rounded-full px-6 py-5 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-2 shadow-sm transition-all hover:scale-105 active:scale-95"
+                >
+                  <Calendar className="w-4 h-4" />
+                  Ver outros dias
+                </Button>
+
+                <Dialog open={showOthersModal} onOpenChange={setShowOthersModal}>
+                  <DialogContent className="sm:max-w-[425px] p-0 overflow-hidden rounded-3xl border-none">
+                    <DialogHeader className="p-6 pb-0">
+                      <DialogTitle className="font-display text-xl font-bold">Selecionar dia</DialogTitle>
+                    </DialogHeader>
+                    <div className="p-4">
+                      <CalendarComponent
+                        mode="single"
+                        selected={new Date(date + "T12:00:00")}
+                        onSelect={handleDateSelect}
+                        locale={ptBR}
+                        className="rounded-md border-none shadow-none"
+                        disabled={(date) => date > new Date()}
+                      />
+                    </div>
+                  </DialogContent>
+                </Dialog>
               </div>
             ) : (
               <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
             )}
+
 
             <AdherenceCard
               dailyAdherence={dailyAdherence}
@@ -543,20 +601,42 @@ export default function PatientMealPlan() {
             {!isBasic && <MacroSummary items={items} totalsStatus={plan?.totals_status} />}
 
             <div className="space-y-6">
-              {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
-                <MealGroup
-                  key={key}
-                  mealType={{ key, label, icon, time }}
-                  items={mealItems}
-                  completions={completions}
-                  justCompleted={justCompleted}
-                  focusMode={focusMode}
-                  onSetAdherence={setAdherence}
-                  onOpenDetail={setSelectedMeal}
-                  onOpenSubstitution={setSubstitutionItem}
-                />
-              ))}
+              {groupedItems.length > 0 ? (
+                groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
+                  <MealGroup
+                    key={key}
+                    mealType={{ key, label, icon, time }}
+                    items={mealItems}
+                    completions={completions}
+                    justCompleted={justCompleted}
+                    focusMode={focusMode}
+                    onSetAdherence={setAdherence}
+                    onOpenDetail={setSelectedMeal}
+                    onOpenSubstitution={setSubstitutionItem}
+                  />
+                ))
+              ) : (
+                <div className="glass rounded-2xl p-8 text-center border-dashed border-2 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                  <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Utensils className="w-8 h-8 text-primary/40" />
+                  </div>
+                  <h3 className="font-display font-bold text-lg mb-1">Nada planejado para este dia</h3>
+                  <p className="text-muted-foreground text-xs max-w-[200px] mx-auto mb-6">
+                    Seu nutricionista não definiu refeições para {isToday ? "hoje" : "este dia"}.
+                  </p>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setDate(new Date().toISOString().split("T")[0])}
+                    className="gap-2 text-xs"
+                  >
+                    <RefreshCw className="w-3 h-3" />
+                    Ver hoje
+                  </Button>
+                </div>
+              )}
             </div>
+
 
             <div className="glass rounded-xl p-4 text-center space-y-1">
               <p className="text-xs text-muted-foreground">

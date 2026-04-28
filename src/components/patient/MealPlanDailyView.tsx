@@ -517,26 +517,34 @@ const MealGroup = memo(function MealGroup({
   const isCurrent = isCurrentMeal(mealType.time);
 
   return (
-    <div className={`transition-all duration-300 w-full max-w-full ${isCurrent && isBasic ? "ring-2 ring-primary/30 rounded-2xl p-2 bg-primary/5" : ""}`}>
+    <div 
+      className={`transition-all duration-300 w-full max-w-full ${isCurrent && isBasic ? "ring-2 ring-primary ring-offset-2 rounded-2xl p-2 bg-primary/10 shadow-lg" : ""}`}
+      role="region"
+      aria-label={`Refeição: ${mealType.label}${isCurrent ? " - Agora" : ""}`}
+    >
       <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
-          <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"}`}>
+          <div 
+            className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"}`}
+            aria-hidden="true"
+          >
             {mealType.icon}
           </div>
           <div>
             <div className="flex items-center gap-2">
-              <h3 className="font-display font-semibold text-sm">
-                {isCurrent && isBasic ? `Agora: ${mealType.label}` : mealType.label}
+              <h3 className={`font-display font-bold text-sm ${isCurrent && isBasic ? "text-primary text-base" : ""}`}>
+                {isCurrent && isBasic ? `AGORA: ${mealType.label.toUpperCase()}` : mealType.label}
               </h3>
               {isCurrent && (
-                <Badge className="bg-primary text-white text-[9px] animate-pulse py-0 h-4 border-none font-bold uppercase">
+                <Badge className="bg-primary text-white text-[9px] animate-pulse py-0 h-4 border-none font-bold uppercase" aria-live="polite">
                   Sua vez
                 </Badge>
               )}
             </div>
-            <p className="text-[10px] text-muted-foreground">{mealType.time}</p>
+            <p className={`text-[10px] font-medium ${isCurrent && isBasic ? "text-primary" : "text-muted-foreground"}`}>{mealType.time}</p>
           </div>
         </div>
+
         <div className="flex gap-1">
           {mealFollowed > 0 && <Badge className="bg-emerald-500/20 text-emerald-600 text-[10px]">{mealFollowed}✓</Badge>}
           {mealPartial > 0 && <Badge className="bg-amber-500/20 text-amber-600 text-[10px]">{mealPartial}~</Badge>}
