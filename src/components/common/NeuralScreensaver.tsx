@@ -160,7 +160,7 @@ export default function NeuralScreensaver() {
         animate={{ opacity: 1 }}
         exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
         transition={{ duration: 0.8, ease: EASE_PREMIUM }}
-        className="fixed inset-0 z-[99998] flex flex-col items-center justify-center overflow-hidden cursor-pointer"
+        className="fixed inset-0 z-[130] flex flex-col items-center justify-center overflow-hidden cursor-pointer"
         style={{
           background: "radial-gradient(ellipse at 50% 40%, hsl(152 30% 8%) 0%, hsl(222 40% 5%) 45%, hsl(0 0% 2%) 100%)",
         }}
