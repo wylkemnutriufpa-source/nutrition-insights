@@ -45,9 +45,9 @@ const computeTotals = (items: MealItem[]) =>
   );
 
 export const MobileMealCard: React.FC<Props> = ({
-  meal, defaultTime, weekMode, onAddItem, onEditItem, onSubstituteItem,
+  meal, defaultTime, weekMode, activeDayId, onAddItem, onEditItem, onSubstituteItem,
 }) => {
-  const { removeFoodFromMeal, duplicateMeal } = useMealEditorV3Store();
+  const { removeFoodFromMeal, duplicateMeal, setDaySubstitution } = useMealEditorV3Store();
   const Icon = getIcon(meal.name);
   const totals = computeTotals(meal.items);
   const [actionItem, setActionItem] = useState<MealItem | null>(null);
