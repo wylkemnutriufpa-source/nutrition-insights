@@ -15,7 +15,7 @@ import {
   AlertDialogHeader, 
   AlertDialogTitle 
 } from "@/components/ui/alert-dialog";
-import { fetchPatientAnamnesis } from "@/lib/diet/planGeneratorEngine";
+import { fetchPatientAnamnesis, logAuditEvent } from "@/lib/diet/planGeneratorEngine";
 
 interface EditorMatrixModalProps {
   isOpen: boolean;
