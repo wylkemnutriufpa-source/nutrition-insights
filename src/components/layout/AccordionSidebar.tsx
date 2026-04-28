@@ -327,7 +327,7 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isRouteAllowed } = useExperienceMode();
+  const { isRouteAllowed, minMode } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
@@ -352,7 +352,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
 
   return (
     <div className="space-y-1">
-      {fixedItems.map((item) => {
+      {minMode("pro") && fixedItems.map((item) => {
         const Icon = getIcon(item.icon);
         const active = location.pathname === item.route;
         return (
