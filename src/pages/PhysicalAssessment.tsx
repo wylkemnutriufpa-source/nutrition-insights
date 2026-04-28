@@ -302,7 +302,13 @@ export default function PhysicalAssessment() {
 
   const handleSave = async () => {
     if (!user || !patientId) return;
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:PhysicalAssessment] Save blocked: System not ready or degraded", { isReady, isDegraded });
+      toast.error("O sistema ainda está carregando ou em modo limitado. Aguarde um momento.");
+      return;
+    }
     setSaving(true);
+
 
     const payload: any = {
       patient_id: patientId,
