@@ -310,5 +310,6 @@ export const MealPlanEditorV3: React.FC = () => {
         />
       )}
     </div>
+    </>
   );
 };
