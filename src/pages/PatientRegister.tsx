@@ -136,8 +136,9 @@ export default function PatientRegister() {
   const [whatsappError, setWhatsappError] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
+  const { status: syncStatus, updateStatus: setSyncStatus } = useSyncStatus();
+  const loading = syncStatus === "syncing";
+  const done = syncStatus === "success";
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
 
