@@ -109,17 +109,15 @@ export default function PatientMealPlan() {
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
 
-  // Forçar sempre abrir no dia atual no modo básico apenas na carga inicial
-  const initialLoadRef = useRef(true);
+  // Force opening on the current day in basic mode ALWAYS (resets on navigation or mode change)
   useEffect(() => {
-    if (isBasic && initialLoadRef.current) {
+    if (isBasic) {
       const today = new Date().toISOString().split("T")[0];
       if (date !== today) {
         setDate(today);
       }
-      initialLoadRef.current = false;
     }
-  }, [isBasic, date]);
+  }, [isBasic]);
 
   const weekDates = useMemo(() => getWeekDates(date), [date]);
 
