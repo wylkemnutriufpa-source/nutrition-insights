@@ -444,8 +444,16 @@ export default function PatientMealPlan() {
             <p className="text-muted-foreground text-sm max-w-xs mx-auto mb-8">
               Seu nutricionista ainda não liberou seu plano ou ele expirou. Que tal entrar em contato?
             </p>
-            <Button onClick={() => window.location.reload()} variant="outline" className="gap-2">
-              <RefreshCw className="w-4 h-4" />
+            <Button 
+              onClick={() => {
+                setLoading(true);
+                fetchData();
+              }} 
+              variant="outline" 
+              className="gap-2"
+              disabled={loading}
+            >
+              <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
               Tentar atualizar
             </Button>
           </div>
@@ -457,7 +465,7 @@ export default function PatientMealPlan() {
 
   return (
     <DashboardLayout>
-      <div className={`max-w-2xl mx-auto space-y-5 transition-all duration-500 ${focusMode ? "pt-2" : ""}`}>
+      <div className={`max-w-2xl mx-auto space-y-5 transition-all duration-500 overflow-x-hidden pb-10 ${focusMode ? "pt-2" : ""}`}>
         <AnimatePresence>
           {xpPopup.show && <XPPopup show={xpPopup.show} points={xpPopup.points} />}
         </AnimatePresence>
