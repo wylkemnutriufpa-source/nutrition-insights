@@ -3,6 +3,7 @@ import "./i18n";
 import App from "./App.tsx";
 import "./index.css";
 import { stampBuildIdentity } from "./lib/buildInfo";
+import { startVersionSync } from "./lib/versionCheck";
 
 // Diagnóstico de inicialização para depuração de ambiente (Preview vs Prod)
 console.log("[FitJourney:Boot] Iniciando sistema...", {
