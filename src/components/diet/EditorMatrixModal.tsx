@@ -1,26 +1,98 @@
 import { motion, AnimatePresence } from "framer-motion";
-import { X, UtensilsCrossed, Zap, ArrowLeft, MousePointer2, Rocket } from "lucide-react";
+import { X, UtensilsCrossed, Zap, ArrowLeft, MousePointer2, Rocket, AlertCircle, Loader2 } from "lucide-react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
+import { fetchPatientAnamnesis } from "@/lib/diet/planGeneratorEngine";
 
 interface EditorMatrixModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (version: "v2" | "v3") => void;
+  patientId: string;
 }
 
-export function EditorMatrixModal({ isOpen, onClose, onSelect }: EditorMatrixModalProps) {
+export function EditorMatrixModal({ isOpen, onClose, onSelect, patientId }: EditorMatrixModalProps) {
   const [lastChoice, setLastChoice] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showExitConfirm, setShowExitConfirm] = useState(false);
+  const [isValidating, setIsValidating] = useState(false);
 
   useEffect(() => {
-    const saved = localStorage.getItem("preferred_editor_version");
-    if (saved) setLastChoice(saved);
-  }, []);
+    if (isOpen && patientId) {
+      loadPreference();
+    }
+  }, [isOpen, patientId]);
 
-  const handleSelect = (version: "v2" | "v3") => {
-    localStorage.setItem("preferred_editor_version", version);
-    onSelect(version);
+  const loadPreference = async () => {
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("preferred_editor_version, last_editor_version_used")
+        .eq("user_id", patientId)
+        .maybeSingle();
+
+      if (error) throw error;
+      
+      // Prioridade: Preferência do paciente > Último usado > LocalStorage
+      const choice = data?.last_editor_version_used || data?.preferred_editor_version || localStorage.getItem("preferred_editor_version");
+      if (choice) setLastChoice(choice);
+    } catch (err) {
+      console.error("Erro ao carregar preferência:", err);
+      const saved = localStorage.getItem("preferred_editor_version");
+      if (saved) setLastChoice(saved);
+    }
+  };
+
+  const handleSelect = async (version: "v2" | "v3") => {
+    setIsLoading(true);
+    try {
+      // 1. Persistir no Backend (Harden Entry Point)
+      await supabase
+        .from("profiles")
+        .update({ 
+          last_editor_version_used: version,
+          preferred_editor_version: version 
+        } as any)
+        .eq("user_id", patientId);
+
+      // 2. Persistir no LocalStorage (Backup)
+      localStorage.setItem("preferred_editor_version", version);
+
+      // 3. Validação V3 (Se necessário)
+      if (version === "v3") {
+        setIsValidating(true);
+        const patientData = await fetchPatientAnamnesis(patientId);
+        setIsValidating(false);
+        
+        if (patientData?.is_fallback) {
+          toast.info("Ativando Fallback Inteligente: Dados de anamnese incompletos, usaremos dados de cadastro.");
+        }
+      }
+
+      onSelect(version);
+    } catch (err) {
+      console.error("Erro ao salvar preferência:", err);
+      onSelect(version); // Prossegue mesmo com erro no save
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCloseAttempt = () => {
+    setShowExitConfirm(true);
   };
 
   return (
