@@ -151,7 +151,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
 
       applyTemplate: (template) => {
         set({ 
-          meals: template.meals, 
+          meals: template.meals as Meal[], 
           planStatus: 'draft',
           lastActionInsight: `Template "${template.name}" aplicado com sucesso.`
         });
@@ -162,10 +162,13 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         const userData = (await supabase.auth.getUser()).data.user;
         if (!userData) return;
 
+        const favoriteData = type === 'full_plan' ? meals : meals.find(m => m.id === get().activeMealId);
+        if (!favoriteData) return;
+
         await supabase.from('meal_plan_favorites').insert([{
           name,
           type,
-          data: type === 'full_plan' ? meals : meals.find(m => m.id === get().activeMealId),
+          data: favoriteData as any,
           user_id: userData.id
         }]);
         toast.success('Salvo nos favoritos');
