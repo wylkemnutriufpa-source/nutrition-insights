@@ -118,7 +118,6 @@ const DietBuilder: React.FC = () => {
       </div>
     </DashboardLayout>
   );
-  );
 };
 
 export default DietBuilder;
