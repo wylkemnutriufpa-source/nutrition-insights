@@ -30,7 +30,14 @@ const DietBuilder: React.FC = () => {
         <header className="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100">
           <div className="max-w-4xl mx-auto px-6 h-16 flex items-center justify-between">
             <div className="flex items-center gap-4">
-              <button onClick={() => navigate(-1)} className="p-2 hover:bg-slate-50 rounded-xl transition-colors">
+              <button 
+                onClick={() => {
+                  if (confirm("Deseja sair sem salvar as alterações?")) {
+                    navigate(-1);
+                  }
+                }} 
+                className="p-2 hover:bg-slate-50 rounded-xl transition-colors"
+              >
                 <ChevronLeft className="w-6 h-6 text-slate-600" />
               </button>
               <div>
