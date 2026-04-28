@@ -1,4 +1,4 @@
-name: Schema Reference Check
+name: Schema Governance & Reference Check
 
 on:
   push:
@@ -7,8 +7,8 @@ on:
     branches: [main]
 
 jobs:
-  schema-check:
-    name: Frontend ↔ Schema snapshot
+  schema-governance:
+    name: Schema Integrity
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -18,8 +18,34 @@ jobs:
         with:
           node-version: "20"
 
-      # Schema-check only depends on Node + the JSON snapshot,
-      # no install step is required.
+      - name: Install dependencies
+        run: npm install -g pnpm && pnpm install --no-frozen-lockfile
+
+      - name: Verify Schema Snapshot
+        id: verify
+        run: pnpm run schema:verify
+        env:
+          NODE_ENV: production # Ensures auto-update doesn't run
+
+      - name: Upload Diff Artifact
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: schema.diff
+          path: schema.diff
+
+  schema-check:
+    name: Frontend ↔ Schema snapshot
+    needs: schema-governance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
       - name: Run schema check (JSON output)
         id: check
         continue-on-error: true
@@ -30,12 +56,9 @@ jobs:
       - name: Decide if violations are critical
         id: triage
         run: |
-          # A violation is "critical" only if it touches one of the production
-          # critical tables (meal_plans, profiles, nutritionist_patients,
-          # meal_plan_items). Anything else is reported as a warning so the
-          # pipeline does not block on harmless drift.
           node -e "
-            const r = require('./schema-report.json');
+            const fs = require('fs');
+            const r = JSON.parse(fs.readFileSync('./schema-report.json', 'utf8'));
             const critical = ['meal_plans','meal_plan_items','profiles','nutritionist_patients','onboarding_pipelines'];
             const v = r.violations || [];
             const blockers = v.filter(x => critical.includes(x.table));
