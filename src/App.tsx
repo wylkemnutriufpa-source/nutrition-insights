@@ -420,7 +420,8 @@ function RootRoute() {
         journey_status: journeyStatus || "n/a",
         isReady,
         isDegraded,
-        isLoading
+        isLoading,
+        isOrphan
       });
       
       if (user && !tenantId && !tenantLoading && isPatient) {
