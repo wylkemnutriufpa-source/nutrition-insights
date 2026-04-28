@@ -572,7 +572,9 @@ export default function Anamnesis() {
   const [patientName, setPatientName] = useState<string>("");
   const [draftId, setDraftId] = useState<string | null>(null);
   const { status: autoSaveStatus, lastAction, updateStatus: setAutoSaveStatus } = useSyncStatus();
+  const { status: submitSyncStatus, updateStatus: setSubmitSyncStatus } = useSyncStatus();
   const [showConflictModal, setShowConflictModal] = useState(false);
+
   const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
   const [backupExpired, setBackupExpired] = useState(false);
   const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
@@ -595,7 +597,22 @@ export default function Anamnesis() {
   const q = questions[step];
   const progress = ((step + 1) / questions.length) * 100;
 
+  // Stage 5 - Fail-Fast Global Guard
+  useEffect(() => {
+    if (isReady && !isDegraded && user) {
+      const state = validateSystemState({ userId: user.id, tenantId: resolvedTenantId });
+      if (!state.valid) {
+        fjLog("CRITICAL", `System state invalid: ${state.reason}`);
+        // If critical and nutritionist mode, we can be more lenient, but for patients we block.
+        if (!isNutritionistMode) {
+          setOnboardingBlocked(true);
+        }
+      }
+    }
+  }, [isReady, isDegraded, user, resolvedTenantId, isNutritionistMode]);
+
   // Resolve a guaranteed tenant_id for writes.
+
   // `patient_anamnesis.tenant_id` is NOT NULL, so onboarding cannot depend only
   // on the async tenant context; fall back to the target profile tenant.
   useEffect(() => {
@@ -928,13 +945,15 @@ export default function Anamnesis() {
     if (!user || !targetUserId) return;
 
     // BLOQUEIO DE AÇÃO CRÍTICA: Impedir finalização se o estado não estiver pronto ou degradado
-    if (!isReady || isDegraded) {
-      console.warn("[FJ:Anamnesis] Submit blocked: System not ready or degraded", { isReady, isDegraded });
+    if (!isReady || isDegraded || !resolvedTenantId) {
+      fjLog("CRITICAL", "Submit blocked: System not ready, degraded or missing tenant", { isReady, isDegraded, resolvedTenantId });
       toast.error("O sistema está operando em modo limitado ou ainda carregando. Aguarde a sincronização completa.");
       return;
     }
 
+    setSubmitSyncStatus("syncing", "anamnesis_submit");
     setSubmitting(true);
+
 
     // ── Robust input parsing with unit normalization ──
     const sex = answers.sex;
@@ -1050,7 +1069,9 @@ export default function Anamnesis() {
         return;
       }
       anamData = data;
+      setSubmitSyncStatus("success", "anamnesis_submit");
     }
+
 
     // Sync onboarding pipeline FIRST so the patient leaves step 1 immediately,
     // even if AI/secondary automations are slow or temporarily failing.
@@ -1539,6 +1560,7 @@ export default function Anamnesis() {
               size="sm"
               onClick={async () => {
                 await performAutoSave(answers);
+
                 toast.success("Rascunho salvo! Você pode continuar depois 💾");
                 if (isNutritionistMode && forPatientId) {
                   navigate(`/patients/${forPatientId}`);
@@ -1733,7 +1755,19 @@ export default function Anamnesis() {
         )}
       </div>
 
-      <AlertDialog open={showConflictModal} onOpenChange={setShowConflictModal}>
+      <AlertDialog 
+        open={showConflictModal} 
+        onOpenChange={(open) => {
+          // Stage 3 - Mobile Hardening: Ensure body scroll is managed by AlertDialog (default)
+          // and prevent accidental closing if not handled
+          setShowConflictModal(open);
+          if (!open) {
+            // Restore overflow just in case
+            document.body.style.overflow = "auto";
+          }
+        }}
+      >
+
         <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">
