@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer,
-  CalendarDays, Star,
+  CalendarDays, Star, ChevronDown, ChevronUp,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
