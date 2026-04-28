@@ -90,9 +90,21 @@ export function HardFailLinkage() {
 
           <div className="mt-6 pt-6 border-t flex flex-col items-center gap-1.5">
             <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">ID do Erro (Correlation)</span>
-            <code className="text-[11px] font-mono text-foreground/60 bg-muted px-3 py-1 rounded-lg border">
-              {correlationId}
-            </code>
+            <div className="flex items-center gap-2">
+              <code className="text-[11px] font-mono text-foreground/60 bg-muted px-3 py-1 rounded-lg border">
+                {correlationId}
+              </code>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(correlationId);
+                  toast.success("ID copiado!");
+                }}
+                className="p-1.5 hover:bg-muted rounded-md text-muted-foreground transition-colors"
+                title="Copiar ID"
+              >
+                <Copy className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
