@@ -36,31 +36,24 @@ vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: vi.fn(),
     from: vi.fn(() => ({
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
-          limit: vi.fn(() => ({
-            maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
-          })),
-          order: vi.fn(() => Promise.resolve({ data: [], error: null })),
-        })),
-        order: vi.fn(() => Promise.resolve({ data: [], error: null })),
-      })),
-      channel: vi.fn(() => ({
-        on: vi.fn(() => ({
-          subscribe: vi.fn(),
-        })),
-      })),
-      removeChannel: vi.fn(),
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockReturnThis(),
+      maybeSingle: vi.fn(() => Promise.resolve({ data: null, error: null })),
+      limit: vi.fn().mockReturnThis(),
+      order: vi.fn().mockReturnThis(),
+      gte: vi.fn().mockReturnThis(),
+      lte: vi.fn().mockReturnThis(),
     })),
     channel: vi.fn(() => ({
-      on: vi.fn(() => ({
-        subscribe: vi.fn(),
+      on: vi.fn().mockReturnThis(),
+      subscribe: vi.fn(() => ({
+        unsubscribe: vi.fn(),
       })),
     })),
     removeChannel: vi.fn(),
   },
 }));
+
 
 describe("PatientMealPlan - Basic Mode", () => {
   beforeEach(() => {
