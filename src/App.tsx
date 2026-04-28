@@ -77,6 +77,17 @@ const ClinicalBrain = lazy(() => import("./pages/ClinicalBrain"));
 const LabInterpreter = lazy(() => import("./pages/LabInterpreter"));
 const MissionControl = lazy(() => import("./pages/MissionControl"));
 const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
+const AdminAffiliates = lazy(() => import("./pages/AdminAffiliates"));
+const AdminBookingSettings = lazy(() => import("./pages/AdminBookingSettings"));
+const AdminFeatureControl = lazy(() => import("./pages/AdminFeatureControl"));
+const AdminPricing = lazy(() => import("./pages/AdminPricing"));
+const AdminProfessionals = lazy(() => import("./pages/AdminProfessionals"));
+const AdminSubscriptionMonitor = lazy(() => import("./pages/AdminSubscriptionMonitor"));
+const AdminSiteEditor = lazy(() => import("./pages/AdminSiteEditor"));
+const AdminResourceCenter = lazy(() => import("./pages/AdminResourceCenter"));
+const AdminTestimonials = lazy(() => import("./pages/AdminTestimonials"));
+const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
+const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 
 const queryClient = new QueryClient({
