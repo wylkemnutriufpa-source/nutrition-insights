@@ -4,6 +4,7 @@ interface AppStateContextType {
   isReady: boolean;
   isDegraded: boolean;
   isLoading: boolean;
+  isOrphan: boolean;
 }
 
 const AppStateContext = createContext<AppStateContextType | undefined>(undefined);
