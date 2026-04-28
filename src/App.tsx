@@ -363,6 +363,8 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 function RootRoute() {
   const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
   const { requirement } = useOnboardingGuard();
+  const { status: journeyStatus } = usePatientJourneyStatus();
+  const location = useLocation();
   const [bootDone, setBootDone] = useState(false);
   const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
@@ -376,10 +378,8 @@ function RootRoute() {
   if (!user) return <GatewayPage />;
 
   // 1. Centralized Patient Decision
-  const { status: journeyStatus } = usePatientJourneyStatus();
   if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
     const targetPath = getUserRouteByStatus(journeyStatus);
-    const location = useLocation();
     if (location.pathname === "/" || location.pathname === "") {
       return <Navigate to={targetPath} replace />;
     }
