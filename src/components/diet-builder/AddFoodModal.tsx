@@ -62,7 +62,7 @@ export const AddFoodModal: React.FC<AddFoodModalProps> = ({ isOpen, onClose, mea
             className={`flex-1 py-3 px-2 rounded-2xl flex flex-col items-center gap-1 transition-all ${activeTab === 'template' ? 'bg-violet-50 text-violet-600 ring-2 ring-violet-500/20' : 'bg-slate-50 text-slate-500 hover:bg-slate-100'}`}
           >
             <Package className="w-5 h-5" />
-            <span className="text-xs font-medium">Marmitas</span>
+            <span className="text-xs font-medium">Templates</span>
           </button>
           <button 
             onClick={() => setActiveTab('auto')}
