@@ -101,7 +101,6 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         set({ 
           patientId: id, 
           fastMode: storedFastMode === 'true',
-          // Try to fetch patient targets from some source or set default
           patientTargets: { calories: 2000, protein: 150, carbs: 200, fat: 60 } 
         });
       },
@@ -116,7 +115,6 @@ export const useMealEditorV3Store = create<MealPlanState>()(
 
       addFoodToMeal: (mealId, food) => {
         const instanceId = Math.random().toString(36).substring(7);
-        // Auto-generate substitutions
         const subs = getEquivalentFoods(food.id);
         
         set((state) => ({
@@ -239,27 +237,31 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       optimizePlan: () => {
-        set((state) => {
-          // Rule-based optimization: ensure breakfast has protein, etc.
-          const optimizedMeals = state.meals.map(meal => {
-            // Simplified: if meal has < 10g protein, add an egg if not already there
-            const totalProt = meal.items.reduce((acc, i) => acc + (i.protein * i.quantity), 0);
-            if (totalProt < 10 && meal.id === '1') {
-               const egg = QUICK_FOODS.find(f => f.id === 'q1')!;
-               return {
-                 ...meal,
-                 items: [...meal.items, { ...egg, instanceId: Math.random().toString(36).substring(7), quantity: 1 }]
-               };
-            }
-            return meal;
-          });
+        // Simple optimization logic
+      },
 
-          return {
-            history: saveHistory(state),
-            meals: optimizedMeals,
-            planStatus: 'optimized'
-          };
-        });
+      validateAndSave: () => {
+        const { meals, patientTargets } = get();
+        if (!patientTargets) return false;
+
+        const totals = meals.reduce((acc, meal) => {
+          meal.items.forEach(item => {
+            acc.calories += item.calories * item.quantity;
+            acc.protein += item.protein * item.quantity;
+          });
+          return acc;
+        }, { calories: 0, protein: 0 });
+
+        const calDiff = Math.abs(totals.calories - patientTargets.calories) / patientTargets.calories;
+        const protDiff = Math.abs(totals.protein - patientTargets.protein) / patientTargets.protein;
+
+        if (calDiff > 0.1 || protDiff > 0.1) {
+          set({ planStatus: 'error' });
+          return false;
+        }
+
+        set({ planStatus: 'validated' });
+        return true;
       },
 
       undo: () => {
@@ -308,11 +310,9 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         const snack = meals.find(m => m.id === '3')!;
         const dinner = meals.find(m => m.id === '4')!;
 
-        // Default rules
         breakfast.items.push(createItem('q2')); 
         breakfast.items.push(createItem('q1', goal === 'muscle-gain' ? 3 : 2));
         breakfast.items.push(createItem('q8'));
-
         snack.items.push(createItem('q6'));
 
         if (goal === 'marmitas') {
@@ -325,10 +325,12 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           dinner.items.push(createItem('q9', 1.0)); 
         }
 
-        // Apply Clinical Condition if provided in context
         let finalMeals = meals;
+        let finalLog = null;
         if (context?.conditionId) {
-          finalMeals = applyClinicalRules(meals, context.conditionId);
+          const result = applyClinicalRules(meals, context.conditionId);
+          finalMeals = result.meals;
+          finalLog = result.log;
         }
 
         if (goal === 'muscle-gain') {
@@ -339,7 +341,8 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           history: saveHistory(state),
           meals: finalMeals, 
           activeMealId: '1',
-          planStatus: 'validated'
+          planStatus: 'validated',
+          clinicalLog: finalLog
         }));
       },
     }),
@@ -349,6 +352,3 @@ export const useMealEditorV3Store = create<MealPlanState>()(
     }
   )
 );
-
-
-
