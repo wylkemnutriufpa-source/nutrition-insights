@@ -12,6 +12,7 @@ import {
   Eye, EyeOff, ArrowRight, CheckCircle2, Search, Stethoscope, Loader2, UserPlus, ArrowLeft, Building2,
   Download, Copy, FileJson, AlertTriangle, User, RefreshCw, Check
 } from "lucide-react";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import FitJourneyLogo from "@/components/common/FitJourneyLogo";
 import { formatInternationalWhatsApp, validateWhatsApp as sharedValidateWhatsApp } from "@/utils/whatsapp";
 import { promptWhatsAppNotification } from "@/utils/whatsappNotification";
