@@ -101,6 +101,8 @@ function NumField({ label, value, onChange, unit, icon }: {
 
 export default function PhysicalAssessment() {
   const { user } = useAuth();
+  const { isReady, isDegraded } = useAppState();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId");
