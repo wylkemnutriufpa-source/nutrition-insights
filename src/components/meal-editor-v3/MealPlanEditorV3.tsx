@@ -3,6 +3,7 @@ import { useMealEditorV3Store } from '@/hooks/meal-editor-v3/useMealEditorV3Stor
 import { MealListSidebar } from './MealListSidebar';
 import { ActiveMealContent } from './ActiveMealContent';
 import { MacroSummary } from './MacroSummary';
+import { ClinicalRulesPanel } from './ClinicalRulesPanel';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -37,13 +38,12 @@ const GENERATION_OPTIONS = [
 export const MealPlanEditorV3: React.FC = () => {
   const { 
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
-    planStatus, optimizePlan 
+    planStatus, optimizePlan, validateAndSave 
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
 
   const handleGenerate = (optionId: string) => {
-    // Check if it's a clinical condition or a goal
     const isClinical = GENERATION_OPTIONS.find(o => o.id === optionId)?.isClinical;
     
     if (isClinical) {
@@ -61,6 +61,15 @@ export const MealPlanEditorV3: React.FC = () => {
     toast.success('Plano otimizado clinicamente!');
   };
 
+  const handleSave = () => {
+    const isValid = validateAndSave();
+    if (isValid) {
+      toast.success('Plano validado e salvo com sucesso!');
+    } else {
+      toast.error('Plano fora da meta nutricional (limite 10%)');
+    }
+  };
+
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background overflow-hidden selection:bg-primary/10">
       <div className="flex items-center justify-between px-6 py-4 border-b bg-background/50 backdrop-blur-xl z-20">
@@ -74,10 +83,13 @@ export const MealPlanEditorV3: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, x: -10 }}
                     animate={{ opacity: 1, x: 0 }}
-                    className="flex items-center gap-1 bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded text-[9px] font-bold"
+                    className={cn(
+                      "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold",
+                      planStatus === 'error' ? "bg-red-500/10 text-red-600" : "bg-green-500/10 text-green-600"
+                    )}
                   >
                     <CheckCircle2 className="w-2.5 h-2.5" />
-                    {planStatus === 'validated' ? 'VALIDADO' : 'OTIMIZADO'}
+                    {planStatus === 'validated' ? 'VALIDADO' : planStatus === 'error' ? 'FORA DA META' : 'OTIMIZADO'}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -126,7 +138,14 @@ export const MealPlanEditorV3: React.FC = () => {
             GERAR PLANO
           </Button>
           
-          <Button size="sm" className="font-bold shadow-lg shadow-primary/20 px-6">
+          <Button 
+            size="sm" 
+            onClick={handleSave}
+            className={cn(
+              "font-bold shadow-lg shadow-primary/20 px-6",
+              planStatus === 'error' && "bg-destructive hover:bg-destructive/90 shadow-destructive/20"
+            )}
+          >
             <Save className="w-3.5 h-3.5 mr-2" />
             SALVAR
           </Button>
@@ -148,8 +167,11 @@ export const MealPlanEditorV3: React.FC = () => {
           </motion.div>
         </main>
 
-        <aside className="w-80 border-l bg-muted/20 p-6 hidden xl:block">
+        <aside className="w-80 border-l bg-muted/20 p-6 hidden xl:block overflow-y-auto">
           <MacroSummary />
+          <div className="mt-8 pt-8 border-t">
+            <ClinicalRulesPanel />
+          </div>
         </aside>
       </div>
 
@@ -190,4 +212,3 @@ export const MealPlanEditorV3: React.FC = () => {
     </div>
   );
 };
-
