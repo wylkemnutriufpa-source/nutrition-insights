@@ -276,5 +276,3 @@ export function EditorMatrixModal({ isOpen, onClose, onSelect, patientId }: Edit
     </>
   );
 }
-  );
-}
