@@ -24,6 +24,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
 import { useAppState } from "@/hooks/useAppState";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
+import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@/utils/dataSafety";
 
 
