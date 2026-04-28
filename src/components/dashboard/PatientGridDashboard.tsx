@@ -153,8 +153,8 @@ export default function PatientGridDashboard() {
         {expUI.showExperienceToggle && <ExperienceModeStatusSection />}
         
         <div className="flex flex-col items-center gap-2 text-center pt-4">
-          <h2 className="text-3xl font-extrabold tracking-tight">Olá! 👋</h2>
-          <p className="text-muted-foreground text-sm">Aqui está sua alimentação para hoje.</p>
+          <h2 className="text-3xl font-extrabold tracking-tight">Hoje você precisa seguir sua dieta 🍎</h2>
+          <p className="text-muted-foreground text-sm">Cada refeição é um passo em direção ao seu objetivo.</p>
           {expUI.showExperienceToggle && <div className="mt-2"><InlineExperienceToggle /></div>}
         </div>
 

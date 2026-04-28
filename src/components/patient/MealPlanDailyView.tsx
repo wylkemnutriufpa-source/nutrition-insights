@@ -106,6 +106,25 @@ function getMotivationalMessage(pct: number): { emoji: string; message: string; 
   return { emoji: "⏳", message: "Marque suas refeições!", color: "text-muted-foreground" };
 }
 
+function isCurrentMeal(timeRange: string): boolean {
+  try {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    // Format: "HH:MM - HH:MM"
+    const [start, end] = timeRange.split(" - ");
+    const [startH, startM] = start.split(":").map(Number);
+    const [endH, endM] = end.split(":").map(Number);
+    
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+    
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ── Macro Summary Bar (memoized) ──
 const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: { items: MealPlanItem[], totalsStatus?: string }) {
   const totals = useMemo(() => ({
@@ -168,7 +187,7 @@ const MealItemCard = memo(function MealItemCard({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
-  const { showMacros } = useExperienceUI();
+  const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
   // Primary: use image_url directly from item (populated during generation)
   // Fallback: resolve from visual library if item.image_url is missing
@@ -324,21 +343,39 @@ const MealItemCard = memo(function MealItemCard({
                 )}
               </div>
             )}
-            <div className="flex gap-1.5 mt-3">
-              {ADHERENCE_OPTIONS.map(opt => (
-                <button
-                  key={opt.status}
-                  onClick={(e) => { e.stopPropagation(); onSetAdherence(item, opt.status); }}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
-                    status === opt.status
-                      ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
-                      : "border-border/50 text-muted-foreground hover:border-border"
-                  }`}
-                >
-                  {opt.icon}
-                  {opt.label}
-                </button>
-              ))}
+            <div className="flex flex-col gap-2 mt-3">
+              {isBasic ? (
+                status === "followed" ? (
+                  <div className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 font-bold text-sm">
+                    <CheckCircle2 className="w-5 h-5" />
+                    Refeição Concluída! 🎉
+                  </div>
+                ) : (
+                  <Button
+                    onClick={(e) => { e.stopPropagation(); onSetAdherence(item, "followed"); }}
+                    className="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Marcar como concluído
+                  </Button>
+                )
+              ) : (
+                <div className="flex gap-1.5">
+                  {ADHERENCE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.status}
+                      onClick={(e) => { e.stopPropagation(); onSetAdherence(item, opt.status); }}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                        status === opt.status
+                          ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
+                          : "border-border/50 text-muted-foreground hover:border-border"
+                      }`}
+                    >
+                      {opt.icon}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* Substitution button */}
               <button
                 type="button"
@@ -477,16 +514,27 @@ const MealGroup = memo(function MealGroup({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
+  const { isBasic } = useExperienceUI();
   const mealFollowed = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "followed")).length;
   const mealPartial = items.filter(i => completions.find(c => c.meal_plan_item_id === i.id && c.adherence_status === "partial")).length;
+  const isCurrent = isCurrentMeal(mealType.time);
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-3">
+    <div className={`transition-all duration-300 ${isCurrent && isBasic ? "scale-[1.02] ring-2 ring-primary/20 rounded-2xl p-1 bg-primary/5" : ""}`}>
+      <div className="flex items-center justify-between mb-3 px-1">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">{mealType.icon}</div>
+          <div className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${isCurrent ? "bg-primary text-white shadow-lg shadow-primary/20" : "bg-primary/10 text-primary"}`}>
+            {mealType.icon}
+          </div>
           <div>
-            <h3 className="font-display font-semibold text-sm">{mealType.label}</h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-display font-semibold text-sm">{mealType.label}</h3>
+              {isCurrent && (
+                <Badge className="bg-primary text-white text-[9px] animate-pulse py-0 h-4 border-none">
+                  Agora
+                </Badge>
+              )}
+            </div>
             <p className="text-[10px] text-muted-foreground">{mealType.time}</p>
           </div>
         </div>
