@@ -162,7 +162,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         const { patientTargets, availableClinicalRules } = get();
         let adaptedMeals = JSON.parse(JSON.stringify(template.meals)) as Meal[];
 
-        // Clinical Adaptation from Template
+        // --- ETAPA 1 & 2: Clinical Adaptation & Automatic Breakfast Logic ---
         if (template.clinical_condition) {
           const condition = availableClinicalRules.find(r => r.condition_name === template.clinical_condition);
           if (condition) {
@@ -172,77 +172,77 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           }
         }
 
-        const isHypertrophy = patientTargets?.calories && patientTargets.calories > 2500;
-        const isWeightLoss = patientTargets?.calories && patientTargets.calories < 1800;
+        const isHypertrophy = patientTargets?.calories && patientTargets.calories >= 2500;
+        const isWeightLoss = patientTargets?.calories && patientTargets.calories <= 1800;
 
         adaptedMeals = adaptedMeals.map(meal => ({
           ...meal,
           items: meal.items.filter(item => {
-            // Rule: intolerância -> remover leite
+            // Regra: intolerância -> remover leite
             if (patientTargets?.isIntolerant && item.name.toLowerCase().includes('leite')) return false;
-            // Rule: paciente não toma café -> substituir automaticamente (por chá)
-            if (patientTargets?.drinksCoffee === false && item.name.toLowerCase().includes('café')) {
-              // We'll handle replacement in the next map step or here
-              return true;
-            }
             return true;
           }).map(item => {
-            if (item.isMarmita) return item;
+            if (item.isMarmita || item.locked) return item;
             
             let quantity = item.quantity;
             let name = item.name;
             let calories = item.calories;
             let fat = item.fat;
+            let protein = item.protein;
 
-            // Rule: paciente não toma café -> trocar por Chá
-            if (patientTargets?.drinksCoffee === false && name.toLowerCase().includes('café')) {
-              name = 'Chá de Ervas';
-              calories = 0;
-              fat = 0;
+            // --- ETAPA 2: Bebidas automáticas ---
+            if (name.toLowerCase().includes('café')) {
+              if (patientTargets?.drinksCoffee === false) {
+                name = 'Chá de Ervas'; // Não toma café -> Chá
+                calories = 1; fat = 0; protein = 0;
+              } else if (patientTargets?.isIntolerant && name.toLowerCase().includes('leite')) {
+                name = 'Café Preto'; // Intolerante -> Café Preto
+                calories = 2; fat = 0; protein = 0;
+              } else if (isWeightLoss && name.toLowerCase().includes('leite')) {
+                name = 'Café com Leite Desnatado'; // Emagrecimento -> Desnatado
+                calories = 37; fat = 0.1; protein = 3.5;
+              }
             }
 
-            // Rule: emagrecimento -> leite desnatado
-            if (isWeightLoss && name.toLowerCase().includes('leite') && !name.toLowerCase().includes('desnatado')) {
-              name = 'Leite Desnatado';
-              calories = 35;
-              fat = 0.1;
-            }
-
-            // Hypertrophy Rules
+            // --- ETAPA 4: Adaptação Automática por Objetivo ---
             if (isHypertrophy) {
-              if (name.toLowerCase().includes('ovo')) quantity += 1;
-              if (item.protein > 15) quantity *= 1.2;
+              if (name.toLowerCase().includes('ovo')) quantity += 1; // Aumentar ovos
+              if (item.protein > 10) quantity *= 1.3; // Reforçar proteína
+            } else if (isWeightLoss) {
+              if (item.carbs > 15) quantity *= 0.7; // Reduzir carbo
             }
 
-            // Weight Loss Rules
-            if (isWeightLoss) {
-              if (item.carbs > 20) quantity *= 0.8;
-            }
-
-            return { ...item, name, calories, fat, quantity };
+            return { ...item, name, calories, fat, protein, quantity };
           })
         }));
 
-        // Rule: Hipertrofia -> Adicionar fruta no almoço/jantar se não existir
-        if (isHypertrophy) {
-          adaptedMeals = adaptedMeals.map(meal => {
-            if ((meal.name === 'Almoço' || meal.name === 'Jantar') && !meal.items.some(i => i.name.toLowerCase().includes('fruta'))) {
-              return {
-                ...meal,
-                items: [...meal.items, {
-                  id: 'q15', name: 'Fruta da Estação', calories: 60, protein: 0.5, carbs: 15, fat: 0.1,
-                  portionValue: 100, portionUnit: 'g', quantity: 1, instanceId: Math.random().toString(36).substring(7)
-                }]
+        // --- ETAPA 3: Lanches Inteligentes (Fruta Base) ---
+        adaptedMeals = adaptedMeals.map(meal => {
+          if (meal.name.toLowerCase().includes('lanche')) {
+            const hasFruit = meal.items.some(i => i.name.toLowerCase().includes('fruta') || i.name.toLowerCase().includes('banana') || i.name.toLowerCase().includes('maçã'));
+            if (!hasFruit) {
+              const fruitItem = {
+                id: 'q6', name: 'Fruta da Estação', calories: 60, protein: 0.5, carbs: 15, fat: 0.1,
+                portionValue: 100, portionUnit: 'g', quantity: 1, instanceId: Math.random().toString(36).substring(7)
               };
+              meal.items.push(fruitItem);
             }
-            return meal;
-          });
-        }
+            
+            // Se dia longo (simulado por hipertrofia ou alta caloria) -> Fruta + Proteína
+            if (isHypertrophy && !meal.items.some(i => i.protein > 5)) {
+              meal.items.push({
+                id: 'q1', name: 'Ovo Cozido', calories: 78, protein: 6, carbs: 0.6, fat: 5,
+                portionValue: 1, portionUnit: 'un', quantity: 1, instanceId: Math.random().toString(36).substring(7)
+              });
+            }
+          }
+          return meal;
+        });
 
         set({ 
           meals: adaptedMeals, 
           planStatus: 'draft',
-          lastActionInsight: `Template "${template.name}" adaptado dinamicamente para o perfil do paciente.`
+          lastActionInsight: `Template "${template.name}" aplicado e adaptado 100% via inteligência clínica.`
         });
       },
 
