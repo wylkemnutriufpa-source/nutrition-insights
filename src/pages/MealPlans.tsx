@@ -128,6 +128,13 @@ export default function MealPlans() {
     let query = supabase.from("meal_plans").select("*")
       .eq("nutritionist_id", user.id).order("created_at", { ascending: false });
     
+    // Filtro por tipo/editor (V2 vs V3)
+    if (statusFilter === "v3_only") {
+      query = query.eq('generation_source', 'v3');
+    } else if (statusFilter === "v2_only") {
+      query = query.neq('generation_source', 'v3');
+    }
+
     const { data, error } = await withTenantFilter(query, tenantId);
     if (error) {
       console.error("[MealPlans] Falha ao buscar planos:", error);
@@ -149,7 +156,7 @@ export default function MealPlans() {
       const enriched = data.map((p: any) => ({ ...p, patient_name: nameMap.get(p.patient_id) || "Paciente" }));
       setPlans(enriched);
 
-      // Anomalous drop detection (Implementation of user request)
+      // Anomalous drop detection
       const patientIdFilter = searchParams.get("patient_id") || searchParams.get("patientId");
       if (patientIdFilter) {
         import("@/lib/planDiagnostics").then(({ checkPlanAnomalies }) => {
@@ -445,6 +452,8 @@ export default function MealPlans() {
 
   const filteredPlans = plans.filter((p) => {
     if (statusFilter === STATUS_FILTER_ALL) return true;
+    if (statusFilter === "v3_only") return (p as any).generation_source === 'v3';
+    if (statusFilter === "v2_only") return (p as any).generation_source !== 'v3';
     if (statusFilter === STATUS_FILTER_UNKNOWN) {
       return isTrulyUnknownPlanStatus(p.plan_status as string | null | undefined);
     }
@@ -565,6 +574,8 @@ export default function MealPlans() {
                 className="rounded-md border border-input bg-background px-2 py-1 text-xs"
               >
                 <option value={STATUS_FILTER_ALL}>Todos ({plans.length})</option>
+                <option value="v3_only">Apenas Smart V3</option>
+                <option value="v2_only">Apenas Clássico V2</option>
                 {statusKeysPresent
                   .filter((k) => KNOWN_PLAN_STATUS_KEYS.includes(k))
                   .map((k) => {
