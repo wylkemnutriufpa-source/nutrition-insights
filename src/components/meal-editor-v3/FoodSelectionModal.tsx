@@ -21,7 +21,7 @@ interface FoodSelectionModalProps {
 }
 
 export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, onClose, mealId, onSelect }) => {
-  const { addFoodToMeal } = useMealEditorV3Store();
+  const { addFoodToMeal, meals } = useMealEditorV3Store();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [history, setHistory] = useState<Food[]>([]);
@@ -43,7 +43,6 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
   const handleAdd = (food: Food) => {
     if (onSelect) {
-      // If onSelect is provided, we might want to batch select for substitutions
       if (selectedForBatch.find(f => f.id === food.id)) {
         setSelectedForBatch(prev => prev.filter(f => f.id !== food.id));
       } else {
@@ -51,12 +50,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
       }
     } else {
       addFoodToMeal(mealId, food);
-      toast.success(`${food.name} adicionado`);
-      
-      setHistory(prev => {
-        const filtered = prev.filter(f => f.id !== food.id);
-        return [food, ...filtered].slice(0, 5);
-      });
+      // addFoodToMeal already handles toast and validation
     }
   };
 
@@ -95,6 +89,10 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   useEffect(() => {
     setActiveIndex(0);
   }, [debouncedSearch]);
+
+  const activeMeal = meals.find(m => m.id === mealId);
+  const mealName = activeMeal?.name.toLowerCase() || "";
+  const isLunchOrDinner = mealName.includes('almoço') || mealName.includes('jantar');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -223,38 +221,50 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
             <TabsContent value="templates" className="h-full p-6 m-0">
               <ScrollArea className="h-full">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
-                  {MARMITAS.map((food, idx) => (
-                    <motion.div
-                      key={food.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: idx * 0.05 }}
-                    >
-                      <Card 
-                        className="overflow-hidden cursor-pointer hover:border-primary transition-all group rounded-2xl border-muted/50 shadow-sm hover:shadow-xl"
-                        onClick={() => handleAdd(food)}
+                  {isLunchOrDinner ? (
+                    MARMITAS.map((food, idx) => (
+                      <motion.div
+                        key={food.id}
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.05 }}
                       >
-                        <div className="aspect-[16/10] bg-muted relative">
-                          {food.imageUrl ? (
-                            <img src={food.imageUrl} alt={food.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
-                          ) : (
-                            <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted/50">
-                              <Package className="w-8 h-8 opacity-20" />
-                            </div>
-                          )}
-                          <Badge className="absolute top-2 right-2 bg-orange-500 border-none font-bold text-[9px] h-4">MARMITA</Badge>
-                        </div>
-                        <div className="p-3">
-                          <h4 className="font-bold text-sm mb-1 line-clamp-1">{food.name}</h4>
-                          <div className="flex gap-2 text-[9px] font-bold text-muted-foreground uppercase">
-                            <span className="text-blue-500">{food.protein}g P</span>
-                            <span className="text-green-500">{food.carbs}g C</span>
-                            <span>{food.calories} kcal</span>
+                        <Card 
+                          className="overflow-hidden cursor-pointer hover:border-primary transition-all group rounded-2xl border-muted/50 shadow-sm hover:shadow-xl"
+                          onClick={() => handleAdd(food)}
+                        >
+                          <div className="aspect-[16/10] bg-muted relative">
+                            {food.imageUrl ? (
+                              <img src={food.imageUrl} alt={food.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                            ) : (
+                              <div className="w-full h-full flex items-center justify-center text-muted-foreground bg-muted/50">
+                                <Package className="w-8 h-8 opacity-20" />
+                              </div>
+                            )}
+                            <Badge className="absolute top-2 right-2 bg-orange-500 border-none font-bold text-[9px] h-4">MARMITA</Badge>
                           </div>
-                        </div>
-                      </Card>
-                    </motion.div>
-                  ))}
+                          <div className="p-3">
+                            <h4 className="font-bold text-sm mb-1 line-clamp-1">{food.name}</h4>
+                            <div className="flex gap-2 text-[9px] font-bold text-muted-foreground uppercase">
+                              <span className="text-blue-500">{food.protein}g P</span>
+                              <span className="text-green-500">{food.carbs}g C</span>
+                              <span>{food.calories} kcal</span>
+                            </div>
+                          </div>
+                        </Card>
+                      </motion.div>
+                    ))
+                  ) : (
+                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
+                      <div className="p-4 bg-muted/30 rounded-full mb-4">
+                        <Package className="w-12 h-12 text-muted-foreground/30" />
+                      </div>
+                      <h3 className="text-sm font-bold text-muted-foreground">Marmitas indisponíveis</h3>
+                      <p className="text-xs text-muted-foreground/60 max-w-[200px] mt-2">
+                        Marmitas só podem ser adicionadas no Almoço ou Jantar.
+                      </p>
+                    </div>
+                  )}
                 </div>
               </ScrollArea>
             </TabsContent>
