@@ -18,6 +18,8 @@ export const TRACKED_TABLES = [
   "onboarding_pipelines",
   "patient_anamnesis",
   "system_alerts",
+  "audit_events",
+  "patient_settings",
 ];
 
 export function generateSnapshotData() {
