@@ -100,6 +100,7 @@ const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
+const ClinicalRulesAdmin = lazy(() => import("./pages/admin/ClinicalRules"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
