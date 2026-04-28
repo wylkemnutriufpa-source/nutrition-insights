@@ -38,7 +38,7 @@ const GENERATION_OPTIONS = [
 export const MealPlanEditorV3: React.FC = () => {
   const { 
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
-    planStatus, optimizePlan, validateAndSave 
+    planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
@@ -95,7 +95,7 @@ export const MealPlanEditorV3: React.FC = () => {
               </AnimatePresence>
             </div>
           </div>
-
+          
           <div className="h-8 w-px bg-border hidden sm:block" />
           
           <div className="hidden sm:flex items-center space-x-2 bg-muted/30 px-3 py-1.5 rounded-full border border-border/50">
@@ -163,6 +163,19 @@ export const MealPlanEditorV3: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
+            <AnimatePresence>
+              {lastActionInsight && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl flex items-center gap-2 text-xs text-blue-600 font-medium"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {lastActionInsight}
+                </motion.div>
+              )}
+            </AnimatePresence>
             <ActiveMealContent />
           </motion.div>
         </main>
