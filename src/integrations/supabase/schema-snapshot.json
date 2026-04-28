@@ -1,6 +1,8 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "generatedAt": "2026-04-28",
+  "generatedAt": "2026-04-28T17:27:03.927Z",
+  "lastMigration": "20260428171309_125aadca-206f-436e-8bb4-d78fde4b93d0.sql",
+  "migrationsCount": 619,
   "tables": {
     "meal_plans": [
       "adherence_score",
