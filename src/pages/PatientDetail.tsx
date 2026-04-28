@@ -42,7 +42,7 @@ import UnblockPatientDialog from "@/components/patient/UnblockPatientDialog";
 import {
   ArrowLeft, User, Calendar, FileText, ListChecks, Play,
   Clock, Activity, Plus, MessageSquare, AlertTriangle, CheckCircle2,
-  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search, ShieldAlert, Timer
+  TrendingUp, Zap, Heart, Brain, BookOpen, Scale, Calculator, CalendarDays, CreditCard, Send, UtensilsCrossed, X, Maximize2, ChefHat, Upload, Power, Trash2, Stethoscope, Crown, UserCog, Pencil, Sparkles, Rocket, Shield, Loader2, Search, ShieldAlert, Timer, History
 } from "lucide-react";
 import { Link2, Copy, RefreshCw } from "lucide-react";
 import { WhatsAppNotifyButton } from "@/components/common/WhatsAppNotifyButton";
@@ -835,6 +835,53 @@ export default function PatientDetail() {
           </div>
         </div>
 
+        {/* Últimos Planos Section */}
+        {mealPlans && mealPlans.length > 0 && (
+          <div className="mb-6 space-y-3">
+            <h3 className="text-sm font-semibold text-muted-foreground flex items-center gap-2 px-1">
+              <History className="w-4 h-4" /> Últimos Planos Alimentares
+            </h3>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {mealPlans.slice(0, 2).map((plan: any) => (
+                <div 
+                  key={plan.id}
+                  className="glass flex items-center justify-between p-4 rounded-xl border border-border/40 hover:border-primary/30 transition-all group"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-success/10 flex items-center justify-center">
+                      <UtensilsCrossed className="w-5 h-5 text-success" />
+                    </div>
+                    <div>
+                      <p className="text-sm font-semibold text-foreground group-hover:text-primary transition-colors">
+                        {plan.title || `Plano #${plan.id.slice(0, 4)}`}
+                      </p>
+                      <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                        Criado em {new Date(plan.created_at).toLocaleDateString("pt-BR")}
+                      </p>
+                    </div>
+                  </div>
+                  <Button 
+                    size="sm" 
+                    variant="ghost" 
+                    className="h-8 gap-2 text-xs font-medium hover:bg-primary/10 hover:text-primary"
+                    onClick={() => {
+                      const version = (profile as any)?.last_editor_version_used || "v2";
+                      if (version === "v3") {
+                        navigate(`/diet-builder?patientId=${resolvedPatientId}&planId=${plan.id}`);
+                      } else {
+                        navigate(`/meal-plans/${plan.id}`);
+                      }
+                    }}
+                  >
+                    Abrir no Editor {((profile as any)?.last_editor_version_used || "v2").toUpperCase()}
+                    <Rocket className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Section Cards Grid */}
         {(() => {
           const allSections = [
@@ -1369,7 +1416,7 @@ export default function PatientDetail() {
 
               {/* Editor Matrix Modal */}
               <EditorMatrixModal 
-                isOpen={matrixOpen}
+                isOpen={matrixOpen} patientId={resolvedPatientId}
                 onClose={() => setMatrixOpen(false)}
                 onSelect={(version) => {
                   setMatrixOpen(false);
