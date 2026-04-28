@@ -91,7 +91,9 @@ export function generateSnapshotData() {
 
   return {
     "$schema": "./schema-snapshot.schema.json",
-    "generatedAt": new Date().toISOString().split("T")[0],
+    "generatedAt": new Date().toISOString(),
+    "lastMigration": migrations[migrations.length - 1] || null,
+    "migrationsCount": migrations.length,
     "tables": resultTables
   };
 }
