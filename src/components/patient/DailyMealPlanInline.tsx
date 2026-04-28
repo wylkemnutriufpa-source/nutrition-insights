@@ -212,29 +212,26 @@ export default function DailyMealPlanInline() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex-1">
-          <div className="flex items-center gap-2">
-            <h2 className="font-display text-lg font-bold flex items-center gap-2">
-              <Utensils className="w-5 h-5 text-primary" />
-              Plano Alimentar
-            </h2>
-            {isRefreshing && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="w-3 h-3 border-2 border-primary/40 border-t-transparent rounded-full animate-spin"
-              />
-            )}
+      {!isBasic && (
+        <div className="flex items-center justify-between">
+          <div className="flex-1">
+            <div className="flex items-center gap-2">
+              <h2 className="font-display text-lg font-bold flex items-center gap-2">
+                <Utensils className="w-5 h-5 text-primary" />
+                Plano Alimentar
+              </h2>
+              {isRefreshing && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  className="w-3 h-3 border-2 border-primary/40 border-t-transparent rounded-full animate-spin"
+                />
+              )}
+            </div>
+            <p className="text-xs text-muted-foreground truncate max-w-[200px]">{plan.title}</p>
           </div>
-          <p className="text-xs text-muted-foreground truncate max-w-[200px]">{plan.title}</p>
-          {!isBasic && plan.plan_mode === "single_day" && (
-            <span className="inline-flex items-center gap-1 mt-1 text-[10px] font-semibold uppercase tracking-wider text-primary bg-primary/10 border border-primary/20 px-2 py-0.5 rounded-full">
-              🗓️ 1 dia + substituições
-            </span>
-          )}
         </div>
-      </div>
+      )}
 
       {/* Date Nav */}
       <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
