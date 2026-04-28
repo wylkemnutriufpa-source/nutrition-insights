@@ -101,14 +101,17 @@ export const MobileMealCard: React.FC<Props> = ({
           meal.items.map((item) => {
             const isSelectedSub = weekMode && activeDayId && meal.daySubstitutions?.[activeDayId] === item.instanceId;
             const hasOtherSubSelected = weekMode && activeDayId && meal.daySubstitutions?.[activeDayId] && meal.daySubstitutions[activeDayId] !== item.instanceId;
+            const isBaseItem = !item.substitutions || item.substitutions.length === 0;
+            // Se for Modo Semana e nada selecionado, o item base (sem substituições) é o ativo
+            const isActive = isSelectedSub || (weekMode && !meal.daySubstitutions?.[activeDayId] && isBaseItem);
 
             return (
               <div 
                 key={item.instanceId} 
                 className={cn(
                   "px-3 py-2.5 transition-all duration-300",
-                  isSelectedSub && "bg-primary/10 border-l-4 border-l-primary",
-                  hasOtherSubSelected && "opacity-40 grayscale-[0.5]"
+                  isActive && "bg-primary/10 border-l-4 border-l-primary",
+                  !isActive && weekMode && "opacity-40 grayscale-[0.5]"
                 )}
               >
                 <div className="flex items-center gap-3">
@@ -152,7 +155,7 @@ export const MobileMealCard: React.FC<Props> = ({
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {weekMode && activeDayId && !isSelectedSub && (
+                    {weekMode && activeDayId && !isActive && (
                       <Button
                         variant="ghost"
                         size="sm"
@@ -163,7 +166,7 @@ export const MobileMealCard: React.FC<Props> = ({
                       </Button>
                     )}
                     
-                    {isSelectedSub && (
+                    {isActive && weekMode && (
                       <Badge className="bg-primary text-white text-[8px] font-black h-5 uppercase">
                         ATIVO
                       </Badge>

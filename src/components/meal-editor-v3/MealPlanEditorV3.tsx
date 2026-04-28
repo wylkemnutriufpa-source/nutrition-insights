@@ -43,7 +43,8 @@ export const MealPlanEditorV3: React.FC = () => {
   const { 
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
-    fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView
+    fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView,
+    viewMode, setViewMode
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
@@ -177,6 +178,25 @@ export const MealPlanEditorV3: React.FC = () => {
               VER COMO PACIENTE
             </Label>
           </div>
+        </div>
+        
+        <div className="flex items-center gap-2 bg-muted/30 px-1 py-1 rounded-lg border border-border/50">
+          <Button 
+            variant={viewMode === 'day' ? 'default' : 'ghost'} 
+            size="sm" 
+            onClick={() => setViewMode('day')}
+            className="h-7 text-[10px] font-bold px-3"
+          >
+            MODO DIA
+          </Button>
+          <Button 
+            variant={viewMode === 'week' ? 'default' : 'ghost'} 
+            size="sm" 
+            onClick={() => setViewMode('week')}
+            className="h-7 text-[10px] font-bold px-3"
+          >
+            MODO SEMANA
+          </Button>
         </div>
 
         <div className="flex items-center gap-2">

@@ -36,13 +36,9 @@ const GENERATION_OPTIONS = [
 export const MobileMealEditorV3: React.FC = () => {
   const {
     meals, patientTargets, generateDeterministicPlan, planStatus,
+    viewMode, setViewMode, activeDay, setActiveDay
   } = useMealEditorV3Store();
 
-  const [activeDay, setActiveDay] = useState<string>(() => {
-    const days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-    return days[new Date().getDay()];
-  });
-  const [view, setView] = useState<'day' | 'week'>('day');
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [addModalMealId, setAddModalMealId] = useState<string | null>(null);
   const [substitutionTarget, setSubstitutionTarget] = useState<{
@@ -143,7 +139,7 @@ export const MobileMealEditorV3: React.FC = () => {
 
         {/* Tabs Dia/Semana + Dias */}
         <div className="px-4 pb-3 space-y-2">
-          <Tabs value={view} onValueChange={(v) => setView(v as 'day' | 'week')}>
+          <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as 'day' | 'week')}>
             <TabsList className="grid grid-cols-2 w-full h-8 bg-muted/50">
               <TabsTrigger value="day" className="text-[11px] font-bold h-6">
                 Modo Dia
@@ -159,7 +155,7 @@ export const MobileMealEditorV3: React.FC = () => {
 
       {/* Lista de refeições */}
       <main className="flex-1 px-4 py-4 space-y-3 pb-32">
-        {view === 'week' && (
+        {viewMode === 'week' && (
           <div className="rounded-2xl border border-primary/20 bg-primary/5 px-4 py-3 text-[11px] text-primary font-semibold">
             <Sparkles className="w-3.5 h-3.5 inline mr-1.5 -mt-0.5" />
             Modo Semana — visualizando substituições do plano vigente. Não gera novos planos.
@@ -178,7 +174,7 @@ export const MobileMealEditorV3: React.FC = () => {
               <MobileMealCard
                 meal={meal}
                 defaultTime={DEFAULT_TIMES[meal.name.toLowerCase()]}
-                weekMode={view === 'week'}
+                weekMode={viewMode === 'week'}
                 activeDayId={activeDay}
                 onAddItem={(mealId) => setAddModalMealId(mealId)}
                 onEditItem={(mealId) => setAddModalMealId(mealId)}
