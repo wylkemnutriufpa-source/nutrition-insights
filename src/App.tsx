@@ -1,4 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
+import { toast } from "sonner";
 import UpdateBanner from "@/components/common/UpdateBanner";
 import BuildStatusPanel from "@/components/dev/BuildStatusPanel";
 import TextSourceInspector from "@/components/dev/TextSourceInspector";
