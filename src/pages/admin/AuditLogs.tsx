@@ -1,7 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import { 
   Table, 
   TableBody, 
@@ -30,7 +31,13 @@ import {
   User,
   Shield,
   FileJson,
-  AlertCircle
+  AlertCircle,
+  Download,
+  Link as LinkIcon,
+  RefreshCcw,
+  AlertTriangle,
+  History,
+  Activity
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
