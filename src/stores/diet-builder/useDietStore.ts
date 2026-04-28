@@ -68,7 +68,11 @@ export const useDietStore = create<DietState>()(
       ],
 
       addFood: (mealId, food) => {
-        const newFood = { ...food, id: Math.random().toString(36).substr(2, 9) };
+        const newFood = { 
+          ...food, 
+          id: Math.random().toString(36).substr(2, 9),
+          locked: (food as any).locked || false 
+        };
         set((state) => {
           const newMeals = state.meals.map((m) =>
             m.id === mealId ? { ...m, items: [...m.items, newFood] } : m
