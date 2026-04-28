@@ -6,7 +6,7 @@ import { Loader2, ShieldCheck, AlertTriangle, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
-import { isOnboardingAllowedRoute } from "@/hooks/useOnboardingGuard";
+import { ONBOARDING_ALLOWED_ROUTES } from "@/lib/governance";
 import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 
 interface Props {
@@ -50,7 +50,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
 
   // Block dashboard/critical screens if not in a fluid state
   // IMPORTANT: This check must stay AFTER all hooks to avoid React rule violations
-  const isAllowedPath = isOnboardingAllowedRoute(location.pathname);
+  const isAllowedPath = ONBOARDING_ALLOWED_ROUTES.some(r => location.pathname.startsWith(r));
   
   const shouldBlockJourney = 
     isPatient && 
