@@ -478,11 +478,12 @@ export default function PatientRegister() {
       // ─── FLUXO B: COM NUTRICIONISTA ───
       addLog("Criando usuário no Auth...");
       
-      // CRITICAL FIX: Ensure nutritionist_id is in metadata for trigger handle_new_user
+      // CRITICAL: Ensure both nutritionist_id and invitation_code are in metadata for trigger handle_new_user
       const signUpOptions = { 
         data: { 
           full_name: name,
           nutritionist_id: nutriId,
+          invitation_code: invitationCode || null,
           role: 'patient'
         } 
       };
