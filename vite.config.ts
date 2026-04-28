@@ -1,6 +1,7 @@
-import { defineConfig } from "vite";
+import { defineConfig, type Plugin } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import fs from "fs";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 
@@ -14,6 +15,47 @@ const BUILD_HASH =
   // Fallback: timestamp-derived short hash, unique per build.
   Math.random().toString(36).slice(2, 10);
 
+const BUILD_VERSION = `${BUILD_HASH}-${Date.parse(BUILD_TIMESTAMP)}`;
+
+/**
+ * Emits a `/version.json` at build time AND serves it in dev.
+ * The frontend polls this endpoint to detect new deploys and auto-reload.
+ */
+function versionJsonPlugin(): Plugin {
+  const payload = () =>
+    JSON.stringify({
+      version: BUILD_VERSION,
+      hash: BUILD_HASH,
+      timestamp: BUILD_TIMESTAMP,
+    });
+
+  return {
+    name: "fj-version-json",
+    apply: () => true,
+    configureServer(server) {
+      server.middlewares.use("/version.json", (_req, res) => {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+        res.end(payload());
+      });
+    },
+    generateBundle() {
+      this.emitFile({
+        type: "asset",
+        fileName: "version.json",
+        source: payload(),
+      });
+    },
+    closeBundle() {
+      // Also write to public for static hosting fallback
+      try {
+        const out = path.resolve(__dirname, "public", "version.json");
+        fs.writeFileSync(out, payload(), "utf8");
+      } catch {}
+    },
+  };
+}
+
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
   base: "/",
@@ -21,6 +63,7 @@ export default defineConfig(({ mode }) => ({
     __BUILD_HASH__: JSON.stringify(BUILD_HASH),
     __BUILD_TIMESTAMP__: JSON.stringify(BUILD_TIMESTAMP),
     __BUILD_MODE__: JSON.stringify(mode),
+    __BUILD_VERSION__: JSON.stringify(BUILD_VERSION),
   },
   server: {
     host: "::",
@@ -31,6 +74,7 @@ export default defineConfig(({ mode }) => ({
   },
   plugins: [
     react(),
+    versionJsonPlugin(),
     mode === "development" && componentTagger(),
     VitePWA({
         // autoUpdate makes the new worker download/activate quickly; UI still controls hard reload.
@@ -43,12 +87,17 @@ export default defineConfig(({ mode }) => ({
           clientsClaim: true,
           skipWaiting: true,
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/convite/, /^\/cadastro/, /^\/auth\/confirm/, /^\/intake/, /^\/api/],
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/convite/, /^\/cadastro/, /^\/auth\/confirm/, /^\/intake/, /^\/api/, /^\/version\.json/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         importScripts: ["/sw-push.js"],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // /version.json — must ALWAYS be fresh for the version-sync poller
+            urlPattern: ({ url }) => url.pathname === "/version.json",
+            handler: "NetworkOnly",
+          },
           {
             // Supabase REST API — NetworkOnly for critical clinical data
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
