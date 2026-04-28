@@ -1729,6 +1729,7 @@ export default function Anamnesis() {
                 const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
                 const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
                 localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                logSafetyAction("manter_local");
                 toast.success("Mantendo versão local! 🏠");
               }}
               className="sm:flex-1"
@@ -1745,6 +1746,7 @@ export default function Anamnesis() {
                   const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
                   const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
                   localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                  logSafetyAction("restaurar_servidor");
                   toast.success("Versão do servidor restaurada! ☁️");
                 }
               }}
