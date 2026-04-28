@@ -113,3 +113,8 @@ if (isPreviewHost() || isInIframe()) {
 })();
 
 createRoot(document.getElementById("root")!).render(<App />);
+
+// Start the version sync loop AFTER the app mounts.
+// Self-disables in preview/iframe; in production it polls /version.json
+// every 2 minutes and forces a clean reload when a new deploy is detected.
+startVersionSync();
