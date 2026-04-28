@@ -1552,12 +1552,12 @@ export default function Anamnesis() {
 
             {/* Advanced Sync Indicator */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              {autoSaveStatus === "saving" ? (
+              {autoSaveStatus === "syncing" ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin text-primary" />
                   Sincronizando...
                 </>
-              ) : autoSaveStatus === "saved" ? (
+              ) : autoSaveStatus === "success" ? (
                 <>
                   <Check className="w-3 h-3 text-emerald-500" />
                   Salvo automaticamente
@@ -1576,10 +1576,10 @@ export default function Anamnesis() {
             </div>
           </div>
 
-          {lastSafetyAction && (
+          {lastAction && (
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground italic">
               <History className="w-3 h-3" />
-              Última ação: {lastSafetyAction.type.replace(/_/g, ' ')} há {Math.round((new Date().getTime() - new Date(lastSafetyAction.timestamp).getTime()) / 60000)} min
+              Última ação: {lastAction.type.replace(/_/g, ' ')} há {Math.round((Date.now() - new Date(lastAction.timestamp).getTime()) / 60000)} min
             </div>
           )}
 
