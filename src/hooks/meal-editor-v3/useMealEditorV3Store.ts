@@ -596,6 +596,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           planStatus: 'validated',
           clinicalLog: finalLog
         }));
+      },
       setDaySubstitution: (mealId, dayId, instanceId) => {
         set((state) => ({
           meals: state.meals.map((m) =>
