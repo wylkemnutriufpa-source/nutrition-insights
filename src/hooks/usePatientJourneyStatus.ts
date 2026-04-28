@@ -62,13 +62,31 @@ export function usePatientJourneyStatus() {
         if (!cancelled) {
           if (!data) {
             console.warn(`[usePatientJourneyStatus] NO LINK FOUND for ${user.id}`);
-            setStatus("no_link");
+            // Check if there's a recent signup that might still be processing
+            setStatus(null); // Keep null while we decide if it's truly no_link or just processing
+            
+            // Try one more time after a short delay if it's a fresh login
+            setTimeout(async () => {
+              if (cancelled) return;
+              const { data: retryData } = await supabase
+                .from("nutritionist_patients")
+                .select("journey_status")
+                .eq("patient_id", user.id)
+                .maybeSingle();
+              
+              if (!retryData) {
+                setStatus("no_link");
+              } else {
+                setStatus((retryData as any).journey_status || "active");
+              }
+              setLoading(false);
+            }, 2000);
           } else {
             const finalStatus = (data as any).journey_status || "active";
             console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
             setStatus(finalStatus);
+            setLoading(false);
           }
-          setLoading(false);
         }
       } catch (err) {
         console.error("[usePatientJourneyStatus] Unexpected error:", err);
@@ -97,6 +115,19 @@ export function usePatientJourneyStatus() {
           if (newStatus) setStatus(newStatus);
         }
       )
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "nutritionist_patients",
+          filter: `patient_id=eq.${user.id}`,
+        },
+        (payload) => {
+          const newStatus = (payload.new as any)?.journey_status;
+          if (newStatus) setStatus(newStatus);
+        }
+      )
       .subscribe();
 
     return () => {
@@ -105,7 +136,7 @@ export function usePatientJourneyStatus() {
     };
   }, [user, isPatient]);
 
-  const canAccessOnboarding = status !== "no_link" && (status === "lead_created" || status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active");
+  const canAccessOnboarding = status !== "no_link" && status !== null && (status === "lead_created" || status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active");
 
   return { status, loading, canAccessOnboarding };
 }
