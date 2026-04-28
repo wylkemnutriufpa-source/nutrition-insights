@@ -13,6 +13,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { AppStateProvider } from "@/hooks/useAppState";
+import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
+
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
