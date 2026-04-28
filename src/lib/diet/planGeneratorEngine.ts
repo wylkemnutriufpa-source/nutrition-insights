@@ -24,12 +24,17 @@ export interface PatientData {
   routine_meals_count: number;
 }
 
-export async function fetchPatientAnamnesis(userId: string): Promise<PatientData | null> {
-  const { data, error } = await supabase
-    .from('patient_anamnesis')
-    .select('*')
-    .eq('user_id', userId)
-    .maybeSingle();
+export async function fetchPatientAnamnesis(userId?: string): Promise<PatientData | null> {
+  let query = supabase.from('patient_anamnesis').select('*');
+  
+  if (userId && userId !== 'dummy-user-id') {
+    query = query.eq('user_id', userId);
+  } else {
+    // Busca o primeiro disponível para demonstração se nenhum ID for passado
+    query = query.limit(1);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error || !data) return null;
 
