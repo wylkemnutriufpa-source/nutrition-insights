@@ -441,8 +441,9 @@ function RootRoute() {
   if (!user) return <GatewayPage />;
 
   return (
-    <AppStateProvider value={{ isReady, isDegraded, isLoading }}>
-      {isDegraded && <DegradedModeBanner />}
+    <AppStateProvider value={{ isReady, isDegraded, isLoading, isOrphan }}>
+      {isOrphan && bootDone && <OrphanUserBlock />}
+      {isDegraded && !isOrphan && <DegradedModeBanner />}
       <Suspense fallback={<PageLoader />}>
         {(() => {
           // 1. Centralized Patient Decision
