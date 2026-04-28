@@ -571,6 +571,8 @@ export default function Anamnesis() {
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
+  const [backupExpired, setBackupExpired] = useState(false);
+  const [lastSafetyAction, setLastSafetyAction] = useState<{ type: string, timestamp: string } | null>(null);
   const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
   const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
@@ -660,22 +662,29 @@ export default function Anamnesis() {
     })();
   }, [targetUserId, isNutritionistMode]);
 
-  // Load existing draft and local backup on mount
+  // Load existing draft, local backup and last safety action on mount
   useEffect(() => {
     if (!targetUserId) return;
     (async () => {
-      // 1. Get local backup first
+      // 1. Get last safety action
+      try {
+        const actionKey = `fj_anamnesis_action_${targetUserId}`;
+        const storedAction = localStorage.getItem(actionKey);
+        if (storedAction) setLastSafetyAction(JSON.parse(storedAction));
+      } catch (e) { console.warn("[FJ:Anamnesis] failed to read safety action:", e); }
+
+      // 2. Get local backup
       const backupKey = `fj_anamnesis_backup_${targetUserId}`;
       let localData: { answers: Record<string, any>, updated_at: string } | null = null;
       try {
         const stored = localStorage.getItem(backupKey);
         if (stored) {
           localData = JSON.parse(stored);
-          // TTL Check: Clean backups older than 30 days
+          // TTL Check: Mark backups older than 30 days
           const thirtyDays = 30 * 24 * 60 * 60 * 1000;
           if (new Date().getTime() - new Date(localData!.updated_at).getTime() > thirtyDays) {
-            localStorage.removeItem(backupKey);
-            localData = null;
+            setBackupExpired(true);
+            localData = null; // Don't use expired data for auto-restore
           }
         }
       } catch (e) {
@@ -785,6 +794,13 @@ export default function Anamnesis() {
     } catch (e) {
       console.warn("[FJ:Anamnesis] backup fail:", e);
     }
+  }, [targetUserId]);
+
+  const logSafetyAction = useCallback((type: string) => {
+    if (!targetUserId) return;
+    const action = { type, timestamp: new Date().toISOString() };
+    setLastSafetyAction(action);
+    localStorage.setItem(`fj_anamnesis_action_${targetUserId}`, JSON.stringify(action));
   }, [targetUserId]);
 
   // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
@@ -1492,16 +1508,23 @@ export default function Anamnesis() {
               variant="outline"
               size="sm"
               onClick={() => {
+                if (backupExpired) {
+                  toast.error("Este backup expirou (>30 dias) e não pode ser restaurado.");
+                  return;
+                }
                 if (!localBackup) {
-                  toast.error("Nenhum backup local encontrado.");
+                  toast.error("Não há backup local disponível para restaurar.");
                   return;
                 }
                 setShowManualRestoreModal(true);
               }}
-              className="gap-1.5 text-muted-foreground"
+              disabled={backupExpired || !localBackup}
+              className={`gap-1.5 transition-all duration-300 ${backupExpired ? 'opacity-50 grayscale' : 'text-muted-foreground hover:text-primary'}`}
             >
-              <RefreshCcw className="w-4 h-4" /> Restaurar backup
+              <RefreshCcw className={`w-4 h-4 ${backupExpired ? '' : 'group-hover:rotate-180 transition-transform duration-500'}`} /> 
+              {backupExpired ? "Backup expirado" : "Restaurar backup"}
             </Button>
+            
             <Button
               variant="outline"
               size="sm"
@@ -1518,7 +1541,39 @@ export default function Anamnesis() {
             >
               <Save className="w-4 h-4" /> Salvar e sair
             </Button>
+
+            {/* Advanced Sync Indicator */}
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {autoSaveStatus === "saving" ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                  Sincronizando...
+                </>
+              ) : autoSaveStatus === "saved" ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-500" />
+                  Salvo automaticamente
+                </>
+              ) : autoSaveStatus === "error" ? (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  Erro ao sincronizar
+                </>
+              ) : (
+                <>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                  Proteção de dados ativa
+                </>
+              )}
+            </div>
           </div>
+
+          {lastSafetyAction && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground italic">
+              <History className="w-3 h-3" />
+              Última ação: {lastSafetyAction.type.replace(/_/g, ' ')} há {Math.round((new Date().getTime() - new Date(lastSafetyAction.timestamp).getTime()) / 60000)} min
+            </div>
+          )}
 
           {step < questions.length - 1 ? (
             <Button
@@ -1713,6 +1768,7 @@ export default function Anamnesis() {
                 const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
                 const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
                 localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                logSafetyAction("manter_local");
                 toast.success("Mantendo versão local! 🏠");
               }}
               className="sm:flex-1"
@@ -1729,6 +1785,7 @@ export default function Anamnesis() {
                   const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
                   const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
                   localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                  logSafetyAction("restaurar_servidor");
                   toast.success("Versão do servidor restaurada! ☁️");
                 }
               }}
@@ -1761,6 +1818,7 @@ export default function Anamnesis() {
                 if (localBackup) {
                   setAnswers(localBackup.answers);
                   setShowManualRestoreModal(false);
+                  logSafetyAction("restaurar_manual_local");
                   toast.success("Respostas restauradas do backup local! ⚡");
                 }
               }}
