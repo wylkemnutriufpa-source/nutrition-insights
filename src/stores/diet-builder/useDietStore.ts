@@ -123,6 +123,9 @@ export const useDietStore = create<DietState>()(
       },
 
       resetDiet: () => set({ meals: initialMeals, totals: { calories: 0, protein: 0, carbs: 0, fat: 0 } }),
+      setMeals: (meals) => set({ meals, totals: calculateTotals(meals) }),
+      setGoal: (goal) => set({ goal }),
+      setCalorieTarget: (calorieTarget) => set({ calorieTarget }),
     }),
     { name: 'diet-builder-storage' }
   )
