@@ -29,7 +29,7 @@ export const ClinicalRulesPanel: React.FC = () => {
         <div>
           <h3 className="text-sm font-bold flex items-center gap-2 mb-2">
             <Info className="w-4 h-4 text-primary" />
-            Condição: {condition?.name}
+            Condição: {condition?.condition_name}
           </h3>
           
           <div className="space-y-3">

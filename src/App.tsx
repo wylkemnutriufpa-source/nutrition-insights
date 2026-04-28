@@ -100,6 +100,7 @@ const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
+const ClinicalRulesAdmin = lazy(() => import("./pages/admin/ClinicalRules"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -198,6 +199,7 @@ function AppContent() {
             <Route path="/diet-builder" element={<NutritionistRoute><LP section="Diet Builder"><DietBuilder /></LP></NutritionistRoute>} />
             <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
             <Route path="/admin/audit-logs" element={<NutritionistRoute><LP section="Audit Logs"><AuditLogs /></LP></NutritionistRoute>} />
+            <Route path="/admin/clinical-rules" element={<NutritionistRoute><LP section="Regras Clínicas"><ClinicalRulesAdmin /></LP></NutritionistRoute>} />
               <Route path="*" element={<LP section="404"><NotFound /></LP>} />
             </Routes>
           </SystemStateGuard>
