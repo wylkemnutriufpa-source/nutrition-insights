@@ -125,7 +125,7 @@ export const MealPlanEditorV3: React.FC = () => {
     </div>
 
     {/* Desktop profissional */}
-    <div className="hidden xl:flex flex-col h-[calc(100vh-4rem)] bg-background overflow-hidden selection:bg-primary/10">
+    <div className="hidden xl:flex flex-col h-screen bg-[#fafafa] dark:bg-[#050505] overflow-hidden selection:bg-primary/10">
 
       <div className="flex items-center justify-between px-6 py-4 border-b bg-background/50 backdrop-blur-xl z-20">
         <div className="flex items-center gap-6">
@@ -240,7 +240,7 @@ export const MealPlanEditorV3: React.FC = () => {
       </div>
 
       <div className="flex flex-1 overflow-hidden relative">
-        <aside className="w-64 border-r bg-muted/20 hidden lg:block">
+        <aside className="w-72 border-r bg-white dark:bg-[#0a0a0a] hidden lg:block shadow-[1px_0_0_0_rgba(0,0,0,0.05)] z-10">
           <MealListSidebar />
         </aside>
 
@@ -267,7 +267,7 @@ export const MealPlanEditorV3: React.FC = () => {
           </motion.div>
         </main>
 
-        <aside className="w-80 border-l bg-muted/20 p-6 hidden xl:block overflow-y-auto">
+        <aside className="w-80 border-l bg-white dark:bg-[#0a0a0a] p-5 hidden xl:block overflow-y-auto shadow-[-1px_0_0_0_rgba(0,0,0,0.05)]">
           <Tabs defaultValue="summary">
             <TabsList className="w-full bg-muted/30 p-1 mb-6">
               <TabsTrigger value="summary" className="flex-1 text-[10px] font-bold">RESUMO</TabsTrigger>

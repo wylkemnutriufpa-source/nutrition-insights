@@ -19,11 +19,11 @@ export const MealListSidebar: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-full py-6">
-      <div className="px-6 mb-6">
-        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/50">Dieta do Dia</h2>
+    <div className="flex flex-col h-full">
+      <div className="px-6 py-4 border-b bg-muted/5">
+        <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Estrutura do Plano</h2>
       </div>
-      <div className="space-y-2 px-3">
+      <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {meals.map((meal) => {
           const Icon = MEAL_ICONS[meal.name] || Utensils;
           const isActive = activeMealId === meal.id;
@@ -34,9 +34,9 @@ export const MealListSidebar: React.FC = () => {
               key={meal.id}
               onClick={() => setActiveMeal(meal.id)}
               className={cn(
-                "w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-2xl text-left transition-all relative group overflow-hidden",
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all relative group overflow-hidden border border-transparent",
                 isActive 
-                  ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                  ? "bg-primary/5 border-primary/20 text-primary shadow-sm" 
                   : "hover:bg-muted/50 text-foreground"
               )}
             >
