@@ -232,7 +232,7 @@ export default function AuditLogs() {
           <DialogHeader>
             <div className="flex items-center gap-3 mb-2">
               <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <terminal className="h-5 w-5 text-primary" />
+                <Terminal className="h-5 w-5 text-primary" />
               </div>
               <div>
                 <DialogTitle className="text-xl font-bold tracking-tight">Detalhes do Evento</DialogTitle>
