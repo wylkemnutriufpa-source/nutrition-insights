@@ -558,12 +558,16 @@ export default function Anamnesis() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [patientName, setPatientName] = useState<string>("");
   const [draftId, setDraftId] = useState<string | null>(null);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
+  const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
   const [adaptiveStep, setAdaptiveStep] = useState(0);
   const [onboardingBlocked, setOnboardingBlocked] = useState(false);
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(tenantId ?? null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCount = useRef(0);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist
   const targetUserId = forPatientId || user?.id;
