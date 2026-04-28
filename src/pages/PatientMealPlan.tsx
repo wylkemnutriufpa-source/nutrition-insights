@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
+import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { supabase } from "@/integrations/supabase/client";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
@@ -10,7 +11,7 @@ import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer,
-  CalendarDays, Star,
+  CalendarDays, Star, ChevronDown, ChevronUp,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
@@ -77,6 +78,7 @@ function StreakBadge({ count }: { count: number }) {
 
 export default function PatientMealPlan() {
   const { user } = useAuth();
+  const { isBasic } = useExperienceUI();
   const [plan, setPlan] = useState<MealPlan | null>(null);
   const [items, setItems] = useState<MealPlanItem[]>([]);
   const [allItems, setAllItems] = useState<MealPlanItem[]>([]);
@@ -88,6 +90,7 @@ export default function PatientMealPlan() {
   const [substitutionItem, setSubstitutionItem] = useState<MealPlanItem | null>(null);
   const [activeSubstitutions, setActiveSubstitutions] = useState<Record<string, { foodName: string; originalTitle: string }>>({});
   const [focusMode, setFocusMode] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
   const [xpPopup, setXpPopup] = useState<{ show: boolean; points: number }>({ show: false, points: 0 });
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const xpTimerRef = useRef<number | null>(null);
@@ -280,7 +283,7 @@ export default function PatientMealPlan() {
         confetti();
         toast.success("🏆 Dia perfeito! Todas as refeições seguidas!");
       } else {
-        toast.success("✅ Refeição seguida! +10 XP");
+        toast.success("✅ Muito bem! Continue assim.");
       }
     } else if (status === "partial") {
       toast("⚠️ Parcialmente seguida", { description: "Tente seguir 100% na próxima!" });
@@ -428,8 +431,12 @@ export default function PatientMealPlan() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="text-center flex-1">
-              <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
-              <p className="text-muted-foreground text-sm">{plan.title}</p>
+              <h1 className="font-display text-2xl font-bold">
+                {isBasic ? "Sua dieta de hoje" : "Meu Plano Alimentar"}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {isBasic ? "Siga o guia abaixo para ter resultados" : plan.title}
+              </p>
             </div>
             <Button
               variant="outline"
@@ -443,35 +450,39 @@ export default function PatientMealPlan() {
             </Button>
           </div>
 
-          {/* Plan info — sempre diário com substituições */}
-          <div className="flex flex-col gap-2 mt-4">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
-              <CalendarDays className="w-4 h-4 text-primary shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                Plano diário com substituições inteligentes — toque em qualquer refeição para ver alternativas equivalentes.
-              </p>
-            </div>
-          </div>
-
-          {/* Journey Timeline */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                <Timer className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-bold text-primary">Dia {journeyDay} da Jornada</span>
+          {/* Plan info — escondido no modo básico para clareza */}
+          {!isBasic && (
+            <>
+              <div className="flex flex-col gap-2 mt-4">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+                  <CalendarDays className="w-4 h-4 text-primary shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    Plano diário com substituições inteligentes — toque em qualquer refeição para ver alternativas equivalentes.
+                  </p>
+                </div>
               </div>
-              <StreakBadge count={followedStreak} />
-            </div>
-            <Button
-              variant={focusMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFocusMode(!focusMode)}
-              className="gap-1.5 text-xs"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              {focusMode ? "Sair do foco" : "Modo foco"}
-            </Button>
-          </div>
+
+              {/* Journey Timeline */}
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                    <Timer className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-bold text-primary">Dia {journeyDay} da Jornada</span>
+                  </div>
+                  <StreakBadge count={followedStreak} />
+                </div>
+                <Button
+                  variant={focusMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFocusMode(!focusMode)}
+                  className="gap-1.5 text-xs"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  {focusMode ? "Sair do foco" : "Modo foco"}
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Emotional State */}
           {isToday && dailyAdherence > 0 && (
@@ -488,7 +499,36 @@ export default function PatientMealPlan() {
 
           {/* MODO DIÁRIO ÚNICO — substituições inteligentes substituem a "visão semanal" */}
           <div className="space-y-5 mt-4">
-            <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+            {isBasic ? (
+              <div className="flex flex-col items-center gap-3">
+                {showCalendar ? (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="w-full">
+                    <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowCalendar(false)}
+                      className="mt-2 text-[10px] text-muted-foreground mx-auto flex gap-1"
+                    >
+                      <ChevronUp className="w-3 h-3" /> Ocultar calendário
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowCalendar(true)}
+                    className="text-xs font-medium rounded-full px-4 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-1.5"
+                  >
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    Ver outros dias
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+            )}
 
             <AdherenceCard
               dailyAdherence={dailyAdherence}
@@ -500,7 +540,7 @@ export default function PatientMealPlan() {
               allMarked={allMarked}
             />
 
-            <MacroSummary items={items} totalsStatus={plan?.totals_status} />
+            {!isBasic && <MacroSummary items={items} totalsStatus={plan?.totals_status} />}
 
             <div className="space-y-6">
               {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
