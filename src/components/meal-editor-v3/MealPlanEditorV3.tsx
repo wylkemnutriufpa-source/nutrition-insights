@@ -4,7 +4,12 @@ import { MealListSidebar } from './MealListSidebar';
 import { ActiveMealContent } from './ActiveMealContent';
 import { MacroSummary } from './MacroSummary';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, Package, ShieldCheck, Settings2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { 
+  RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
+  Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
+  Stethoscope, Baby, HeartPulse, Activity
+} from 'lucide-react';
 import {
   Dialog,
   DialogContent,
@@ -15,26 +20,45 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 
 const GENERATION_OPTIONS = [
   { id: 'weight-loss', label: 'Emagrecimento', icon: Flame, color: 'text-orange-500', bg: 'bg-orange-50' },
   { id: 'muscle-gain', label: 'Hipertrofia', icon: Dumbbell, color: 'text-blue-500', bg: 'bg-blue-50' },
-  { id: 'simple', label: 'Simples', icon: Apple, color: 'text-green-500', bg: 'bg-green-50' },
   { id: 'low-carb', label: 'Low Carb', icon: Salad, color: 'text-emerald-500', bg: 'bg-emerald-50' },
-  { id: 'keto', label: 'Cetogênica', icon: Soup, color: 'text-purple-500', bg: 'bg-purple-50' },
   { id: 'marmitas', label: 'Marmitas', icon: Package, color: 'text-amber-500', bg: 'bg-amber-50' },
-  { id: 'clinical', label: 'Clínico', icon: ShieldCheck, color: 'text-cyan-500', bg: 'bg-cyan-50' },
-  { id: 'custom', label: 'Personalizado', icon: Settings2, color: 'text-slate-500', bg: 'bg-slate-50' },
+  { id: 'gastritis', label: 'Gastrite', icon: Stethoscope, color: 'text-rose-500', bg: 'bg-rose-50', isClinical: true },
+  { id: 'lactating', label: 'Lactante', icon: Baby, color: 'text-pink-500', bg: 'bg-pink-50', isClinical: true },
+  { id: 'triglycerides', label: 'Triglicerídeos', icon: HeartPulse, color: 'text-red-500', bg: 'bg-red-50', isClinical: true },
+  { id: 'liver_fat', label: 'Gordura Fígado', icon: Activity, color: 'text-green-600', bg: 'bg-green-50', isClinical: true },
 ];
 
 export const MealPlanEditorV3: React.FC = () => {
-  const { generateDeterministicPlan, resetPlan, fastMode, setFastMode } = useMealEditorV3Store();
+  const { 
+    generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
+    planStatus, optimizePlan 
+  } = useMealEditorV3Store();
+  
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
 
-  const handleGenerate = (goalId: string) => {
-    generateDeterministicPlan(goalId);
+  const handleGenerate = (optionId: string) => {
+    // Check if it's a clinical condition or a goal
+    const isClinical = GENERATION_OPTIONS.find(o => o.id === optionId)?.isClinical;
+    
+    if (isClinical) {
+      generateDeterministicPlan('simple', { conditionId: optionId });
+    } else {
+      generateDeterministicPlan(optionId);
+    }
+    
     setIsGenerateModalOpen(false);
+    toast.success('Plano gerado com sucesso!');
+  };
+
+  const handleOptimize = () => {
+    optimizePlan();
+    toast.success('Plano otimizado clinicamente!');
   };
 
   return (
@@ -43,7 +67,21 @@ export const MealPlanEditorV3: React.FC = () => {
         <div className="flex items-center gap-6">
           <div>
             <h1 className="text-xl font-bold tracking-tight">Editor V3</h1>
-            <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">Intelligent Diet Engine</p>
+            <div className="flex items-center gap-2">
+              <p className="text-muted-foreground text-[10px] uppercase font-bold tracking-widest">Intelligent Diet Engine</p>
+              <AnimatePresence>
+                {planStatus !== 'draft' && (
+                  <motion.div
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className="flex items-center gap-1 bg-green-500/10 text-green-600 px-1.5 py-0.5 rounded text-[9px] font-bold"
+                  >
+                    <CheckCircle2 className="w-2.5 h-2.5" />
+                    {planStatus === 'validated' ? 'VALIDADO' : 'OTIMIZADO'}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
           </div>
           
           <div className="h-8 w-px bg-border hidden sm:block" />
@@ -67,6 +105,17 @@ export const MealPlanEditorV3: React.FC = () => {
             <RefreshCw className="w-3.5 h-3.5 mr-2" />
             Limpar
           </Button>
+          
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleOptimize}
+            className="bg-purple-500/5 border-purple-500/20 text-purple-600 hover:bg-purple-500/10 font-bold"
+          >
+            <Sparkles className="w-3.5 h-3.5 mr-2" />
+            OTIMIZAR
+          </Button>
+
           <Button 
             variant="outline" 
             size="sm" 
@@ -76,6 +125,7 @@ export const MealPlanEditorV3: React.FC = () => {
             <Zap className="w-3.5 h-3.5 mr-2" />
             GERAR PLANO
           </Button>
+          
           <Button size="sm" className="font-bold shadow-lg shadow-primary/20 px-6">
             <Save className="w-3.5 h-3.5 mr-2" />
             SALVAR
@@ -104,11 +154,11 @@ export const MealPlanEditorV3: React.FC = () => {
       </div>
 
       <Dialog open={isGenerateModalOpen} onOpenChange={setIsGenerateModalOpen}>
-        <DialogContent className="max-w-2xl sm:rounded-3xl border-none shadow-2xl">
+        <DialogContent className="max-w-3xl sm:rounded-3xl border-none shadow-2xl">
           <DialogHeader>
-            <DialogTitle className="text-2xl font-bold">Gerar Plano de Dieta</DialogTitle>
+            <DialogTitle className="text-2xl font-bold">Inteligência Clínica V3</DialogTitle>
             <DialogDescription className="font-medium">
-              O motor inteligente criará um plano 100% equilibrado instantaneamente.
+              Gere um plano baseado em objetivos ou condições clínicas específicas.
             </DialogDescription>
           </DialogHeader>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 py-6">
@@ -120,11 +170,14 @@ export const MealPlanEditorV3: React.FC = () => {
                 transition={{ delay: idx * 0.05 }}
                 onClick={() => handleGenerate(opt.id)}
                 className={cn(
-                  "flex flex-col items-center justify-center gap-3 p-5 rounded-3xl border-2 border-transparent transition-all group",
+                  "flex flex-col items-center justify-center gap-3 p-5 rounded-3xl border-2 border-transparent transition-all group relative",
                   opt.bg,
                   "hover:border-primary/20 hover:shadow-xl hover:-translate-y-1 active:scale-95"
                 )}
               >
+                {opt.isClinical && (
+                  <Badge className="absolute top-2 right-2 text-[8px] bg-primary/10 text-primary border-none font-bold">CLÍNICO</Badge>
+                )}
                 <div className={cn("p-3 rounded-2xl bg-white shadow-sm group-hover:shadow-md transition-all")}>
                   <opt.icon className={cn("w-8 h-8", opt.color)} />
                 </div>
@@ -137,3 +190,4 @@ export const MealPlanEditorV3: React.FC = () => {
     </div>
   );
 };
+
