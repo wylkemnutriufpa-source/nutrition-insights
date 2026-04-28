@@ -62,7 +62,8 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       mode,
       role,
       isReady,
-      isDegraded
+      isDegraded,
+      versionMismatch: (window as any).__FJ_VERSION_MISMATCH__
     };
 
     const decision = getSystemDecision(ctx);
