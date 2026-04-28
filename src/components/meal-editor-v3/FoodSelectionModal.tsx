@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle } from 'lucide-react';
+import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle, X } from 'lucide-react';
 import { QUICK_FOODS, MARMITAS } from '@/hooks/meal-editor-v3/constants';
 import { useMealEditorV3Store, Food } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { Card } from '@/components/ui/card';
