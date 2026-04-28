@@ -89,6 +89,7 @@ interface MealPlanState {
   
   resetPlan: () => void;
   generateDeterministicPlan: (goal: string, context?: any) => Promise<void>;
+  setDaySubstitution: (mealId: string, dayId: string, instanceId: string) => void;
 }
 
 const DEFAULT_MEALS = [
