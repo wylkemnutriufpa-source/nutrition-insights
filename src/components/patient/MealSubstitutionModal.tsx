@@ -114,6 +114,13 @@ export default function MealSubstitutionModal({
     }
   };
 
+    // Garantir que o scroll do body não fique travado ao fechar e que cliques fora funcionem via radix-ui padrão
+  useEffect(() => {
+    if (!open) {
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [open]);
+
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setSelected(null); onOpenChange(o); }}>
       <DialogContent className="max-w-md max-h-[90vh] p-0 overflow-hidden rounded-2xl border-border/50 shadow-2xl">
