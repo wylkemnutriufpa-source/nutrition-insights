@@ -7,8 +7,26 @@ import { useDietStore, Food } from '@/stores/diet-builder/useDietStore';
 // Regra crítica: Marmitas são fixas e não editáveis.
 // Estrutura: template { id, nome, tipo: "marmita", locked: true, imagem, alimentos[], macros_fixos }
 const MARMITAS_DB = [
-  { id: 'm1', name: 'Marmita Fit Frango c/ Batata Doce', imagem: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', locked: true, items: [{ id: 'a1', name: 'Frango', calories: 200, protein: 30, carbs: 0, fat: 5 }, { id: 'a2', name: 'Batata Doce', calories: 100, protein: 2, carbs: 22, fat: 0 }] },
-  { id: 'm2', name: 'Marmita Carne c/ Arroz Integral', imagem: 'https://images.unsplash.com/photo-1544025162-d76694265547?w=400', locked: true, items: [{ id: 'b1', name: 'Patinho', calories: 220, protein: 28, carbs: 0, fat: 8 }, { id: 'b2', name: 'Arroz', calories: 120, protein: 3, carbs: 25, fat: 1 }] },
+  { 
+    id: 'm1', 
+    name: 'Marmita Fit Frango c/ Batata Doce', 
+    imagem: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', 
+    locked: true, 
+    items: [
+      { name: 'Frango (Marmita)', calories: 200, protein: 30, carbs: 0, fat: 5, locked: true }, 
+      { name: 'Batata Doce (Marmita)', calories: 100, protein: 2, carbs: 22, fat: 0, locked: true }
+    ] 
+  },
+  { 
+    id: 'm2', 
+    name: 'Marmita Carne c/ Arroz Integral', 
+    imagem: 'https://images.unsplash.com/photo-1544025162-d76694265547?w=400', 
+    locked: true, 
+    items: [
+      { name: 'Patinho (Marmita)', calories: 220, protein: 28, carbs: 0, fat: 8, locked: true }, 
+      { name: 'Arroz (Marmita)', calories: 120, protein: 3, carbs: 25, fat: 1, locked: true }
+    ] 
+  },
 ];
 
 export const MarmitaLibraryModal: React.FC<{ isOpen: boolean; onClose: () => void; mealId: string }> = ({ isOpen, onClose, mealId }) => {
