@@ -885,30 +885,47 @@ const App = () => (
               <Route path="/my-public-profile" element={<ProfessionalRoute><LP section="Perfil"><MyPublicProfile /></LP></ProfessionalRoute>} />
               <Route path="/my-referrals" element={<ProtectedRoute><LP section="Indicações"><MyReferrals /></LP></ProtectedRoute>} />
 
-              {/* Ambassador */}
-              <Route path="/ambassador" element={<ProtectedRoute><LP section="Embaixador"><AmbassadorDashboard /></LP></ProtectedRoute>} />
+              {/* Global Ranking */}
+              <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
 
-function AppContent() {
-  const { isReady, isDegraded, isOrphan } = useAppState();
-
-  return (
-    <div className="min-h-screen">
-      {isDegraded && <DegradedModeBanner />}
-      {isOrphan && <OrphanUserBlock />}
-      
-      <AnimatePresence mode="wait">
-        <Suspense fallback={<BrainLoaderScreen />}>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/auth" element={<Auth />} />
-            <Route path="/auth/confirm" element={<AuthConfirm />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </Suspense>
-      </AnimatePresence>
-    </div>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Suspense>
+        </AnimatePresence>
+      </div>
+    </AppStateProvider>
   );
 }
+
+const App = () => (
+  <HelmetProvider>
+    <QueryClientProvider client={queryClient}>
+      <Helmet>
+        <title>FitJourney</title>
+      </Helmet>
+      <TooltipProvider>
+        <BrowserRouter>
+          <AuthProvider>
+            <TenantProvider>
+              <ExperienceModeProvider>
+                <CelebrationProvider>
+                  <CommandPaletteProvider>
+                    <AppContent />
+                  </CommandPaletteProvider>
+                </CelebrationProvider>
+              </ExperienceModeProvider>
+            </TenantProvider>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+      <UpdateBanner />
+      <BuildStatusPanel />
+      <TextSourceInspector />
+    </QueryClientProvider>
+  </HelmetProvider>
+);
+
+export default App;
 
 const App = () => (
   <HelmetProvider>
