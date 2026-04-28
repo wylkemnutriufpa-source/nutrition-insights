@@ -58,11 +58,40 @@ export const ActiveMealContent: React.FC = () => {
         </div>
         
         <div className="flex items-center gap-2">
-          <div className="flex border rounded-lg overflow-hidden mr-2">
+          {!fastMode && (
+            <div className="hidden md:flex items-center gap-1 bg-muted/30 p-1 rounded-xl border mr-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-[10px] font-bold px-3 hover:bg-background"
+                onClick={() => duplicateMeal(activeMeal.id)}
+              >
+                <Copy className="w-3 h-3 mr-1.5" /> DUPLICAR
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-[10px] font-bold px-3 hover:bg-background"
+                onClick={() => balanceMacros(activeMeal.id, 500)}
+              >
+                <Scale className="w-3 h-3 mr-1.5" /> BALANCEAR
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="h-8 text-[10px] font-bold px-3 hover:text-destructive hover:bg-destructive/5"
+                onClick={() => clearMeal(activeMeal.id)}
+              >
+                <Eraser className="w-3 h-3 mr-1.5" /> LIMPAR
+              </Button>
+            </div>
+          )}
+
+          <div className="flex border rounded-xl overflow-hidden mr-1 bg-muted/30">
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-9 w-9 border-r rounded-none" 
+              className="h-9 w-9 border-r rounded-none hover:bg-background" 
               onClick={undo}
               disabled={history.past.length === 0}
             >
@@ -71,7 +100,7 @@ export const ActiveMealContent: React.FC = () => {
             <Button 
               variant="ghost" 
               size="icon" 
-              className="h-9 w-9 rounded-none" 
+              className="h-9 w-9 rounded-none hover:bg-background" 
               onClick={redo}
               disabled={history.future.length === 0}
             >
@@ -79,32 +108,13 @@ export const ActiveMealContent: React.FC = () => {
             </Button>
           </div>
 
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="icon" className="h-9 w-9">
-                <MoreHorizontal className="w-4 h-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => duplicateMeal(activeMeal.id)}>
-                <Copy className="w-4 h-4 mr-2" /> Duplicar Refeição
-              </DropdownMenuItem>
-              <DropdownMenuItem onClick={() => balanceMacros(activeMeal.id, 500)}>
-                <Scale className="w-4 h-4 mr-2" /> Balancear (500 kcal)
-              </DropdownMenuItem>
-              <DropdownMenuItem className="text-destructive" onClick={() => clearMeal(activeMeal.id)}>
-                <Eraser className="w-4 h-4 mr-2" /> Limpar Refeição
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-
           <Button 
             ref={addBtnRef}
             onClick={() => setIsAddModalOpen(true)} 
-            className="rounded-full shadow-lg bg-primary hover:bg-primary/90 ml-2"
+            className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 ml-1 font-bold px-6"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Adicionar
+            ADICIONAR
           </Button>
         </div>
       </div>
