@@ -6,16 +6,9 @@ import { useAuth } from "@/lib/auth";
 import { useAppState } from "@/hooks/useAppState";
 import { getSystemDecision, logDecision, type GovernanceContext } from "@/lib/governance";
 
-function matchesRouteOrChild(pathname: string, route: string) {
-  if (route === "/") return pathname === "/";
-  return pathname === route || pathname.startsWith(`${route}/`);
-}
-
 /**
  * Automatically redirects to "/" if the current route is not allowed
  * by the active experience mode + role. Place inside <BrowserRouter>.
- * 
- * SPECIAL EXCEPTION: During onboarding_active, /anamnesis is ALWAYS allowed.
  */
 export default function ExperienceRouteGuard() {
   const { mode, role } = useExperienceMode();
@@ -49,9 +42,6 @@ export default function ExperienceRouteGuard() {
       navigate(decision.target, { replace: true });
     }
   }, [location.pathname, mode, role, journeyStatus, user, profile, isReady, isDegraded, navigate]);
-
-  return null;
-}
 
   return null;
 }
