@@ -39,6 +39,9 @@ export interface DietState {
   addTemplate: (mealId: string, templateName: string) => void;
   saveAsTemplate: (name: string, items: Food[]) => void;
   resetDiet: () => void;
+  setMeals: (meals: Meal[]) => void;
+  setGoal: (goal: string) => void;
+  setCalorieTarget: (target: number) => void;
 }
 
 const initialMeals: Meal[] = [
