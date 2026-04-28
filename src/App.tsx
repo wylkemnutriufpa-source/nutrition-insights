@@ -375,12 +375,13 @@ function RootRoute() {
   if (!bootDone) return <PageLoader />;
   if (!user) return <GatewayPage />;
 
-  // 1. Check Onboarding MUST COMPLETE
-  const { status: journeyStatus } = usePatientJourneyStatus();
-  if (requirement === "must_complete") {
-    const targetRoute = (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created") ? "/consent" : "/onboarding";
-    console.log(`[RootRoute] Mandatory state (${journeyStatus}) -> Redirecting to ${targetRoute}`);
-    return <Navigate to={targetRoute} replace />;
+  // 1. Centralized Patient Decision
+  if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
+    const targetPath = getUserRouteByStatus(journeyStatus);
+    const location = useLocation();
+    if (location.pathname === "/" || location.pathname === "") {
+      return <Navigate to={targetPath} replace />;
+    }
   }
 
   // 2. Pro/Editor restoration
