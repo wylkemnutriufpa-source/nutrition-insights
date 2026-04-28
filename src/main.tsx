@@ -14,9 +14,46 @@ console.log("[FitJourney:Boot] Iniciando sistema...", {
 });
 
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
-// Crítico para confirmar que a versão publicada é a que está rodando.
 stampBuildIdentity();
 
+/**
+ * Global Stability Guard: Captura erros críticos de carregamento (ChunkLoadError)
+ * e re-renders infinitos (React #310) antes mesmo do React montar.
+ */
+const handleGlobalStabilityError = (error: any) => {
+  const errorMsg = error?.message || String(error);
+  const isChunkError = /loading.*chunk/i.test(errorMsg) || /failed.*fetch/i.test(errorMsg);
+  const isInfiniteLoop = errorMsg.includes("Minified React error #310") || errorMsg.includes("Too many re-renders");
+
+  console.error("[FitJourney:Stability] Erro Crítico Detectado:", {
+    msg: errorMsg,
+    isChunkError,
+    isInfiniteLoop,
+    timestamp: Date.now()
+  });
+
+  if (isChunkError) {
+    // Se falhou carregar um pedaço do JS, a única solução é recarregar do servidor.
+    // Usamos sessionStorage para evitar loops de recarregamento infinito.
+    const lastReload = sessionStorage.getItem("fj:chunk-reload-ts");
+    const now = Date.now();
+    if (!lastReload || now - Number(lastReload) > 30000) {
+      sessionStorage.setItem("fj:chunk-reload-ts", String(now));
+      console.warn("[FitJourney:Stability] ChunkMismatch detectado. Forçando reload...");
+      window.location.reload();
+    }
+  }
+
+  if (isInfiniteLoop) {
+    // Se detectamos loop de re-render, limpamos o cache de estado e recarregamos.
+    console.warn("[FitJourney:Stability] InfiniteLoop detectado. Limpando sessão...");
+    sessionStorage.clear();
+    window.location.href = "/";
+  }
+};
+
+window.addEventListener("error", (e) => handleGlobalStabilityError(e.error));
+window.addEventListener("unhandledrejection", (e) => handleGlobalStabilityError(e.reason));
 
 /**
  * Preview / iframe detection — used to prevent SW registration in dev.
@@ -52,25 +89,15 @@ if (isPreviewHost() || isInIframe()) {
 }
 
 /**
- * Anti-cache rescue path: when a stale Service Worker (very common on iOS Safari)
- * intercepts navigation and returns an old shell, we expose `/~oauth/<canonical>`
- * shortcuts that:
- *   1) bypass `navigateFallback` via `navigateFallbackDenylist` in vite.config.ts
- *   2) on boot, force-unregister any existing SW and clear caches
- *   3) rewrite the URL back to the canonical path (e.g. /convite/CODE)
- *
- * This guarantees that a patient who clicks an invitation link from a phone
- * that has the old PWA cached will land on the fresh build.
+ * Anti-cache rescue path: handles /~oauth/ bypass.
  */
 (function rescueFromStaleServiceWorker() {
   try {
     const path = window.location.pathname;
     if (!path.startsWith("/~oauth/")) return;
 
-    // Tag this rescue boot so the React app can react if needed.
     sessionStorage.setItem("fj:rescue-boot", String(Date.now()));
 
-    // Force-clear stale SW + caches synchronously-as-possible.
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then((regs) => {
         regs.forEach((r) => r.unregister().catch(() => {}));
@@ -79,8 +106,6 @@ if (isPreviewHost() || isInIframe()) {
     if ("caches" in window) {
       caches.keys().then((keys) => keys.forEach((k) => caches.delete(k).catch(() => {}))).catch(() => {});
     }
-    // The CanonicalPublicRedirect route in App.tsx will rewrite the URL back to
-    // its canonical form once React mounts, preserving the original query/hash.
   } catch {
     // best-effort
   }
