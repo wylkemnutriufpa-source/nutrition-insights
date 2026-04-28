@@ -87,7 +87,7 @@ export default defineConfig(({ mode }) => ({
           clientsClaim: true,
           skipWaiting: true,
         navigateFallback: "/index.html",
-        navigateFallbackDenylist: [/^\/~oauth/, /^\/convite/, /^\/cadastro/, /^\/auth\/confirm/, /^\/intake/, /^\/api/],
+        navigateFallbackDenylist: [/^\/~oauth/, /^\/convite/, /^\/cadastro/, /^\/auth\/confirm/, /^\/intake/, /^\/api/, /^\/version\.json/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         importScripts: ["/sw-push.js"],
