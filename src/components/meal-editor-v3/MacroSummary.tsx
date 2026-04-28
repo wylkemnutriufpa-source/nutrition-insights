@@ -22,6 +22,16 @@ export const MacroSummary: React.FC = () => {
     console.warn('Meta do paciente não encontrada, usando fallback controlado.');
   }
 
+  const totals = meals.reduce((acc, meal) => {
+    meal.items.forEach(item => {
+      acc.calories += item.calories * item.quantity;
+      acc.protein += item.protein * item.quantity;
+      acc.carbs += item.carbs * item.quantity;
+      acc.fat += item.fat * item.quantity;
+    });
+    return acc;
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
   const isGoalReached = (current: number, target: number) => {
     const diff = Math.abs(current - target);
     return diff <= target * 0.05; // 5% tolerance

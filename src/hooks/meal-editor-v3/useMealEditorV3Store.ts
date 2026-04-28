@@ -57,7 +57,7 @@ interface MealPlanState {
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
   addSubstitution: (mealId: string, instanceId: string, food: Food) => void;
   removeSubstitution: (mealId: string, instanceId: string, foodId: string) => void;
-  
+
   duplicateMeal: (mealId: string) => void;
   clearMeal: (mealId: string) => void;
   balanceMacros: (mealId: string, targetKcal: number) => void;
