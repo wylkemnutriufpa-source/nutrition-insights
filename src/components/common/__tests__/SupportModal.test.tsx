@@ -62,9 +62,7 @@ describe("SupportModal - Accessibility & Interaction", () => {
     const onClose = vi.fn();
     renderWithProviders(<SupportModal isOpen={true} onClose={onClose} />);
     
-    // Close button (X) - we need to find it by its svg or aria-label if Radix provides one
-    // Radix Dialog close usually has a primitive that we can target
-    const closeBtn = screen.getByRole("button", { name: /close/i });
+    const closeBtn = screen.getByRole("button", { name: /fechar/i });
     fireEvent.click(closeBtn);
     
     expect(onClose).toHaveBeenCalled();
