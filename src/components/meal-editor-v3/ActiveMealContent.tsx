@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Plus, Trash2, SwitchCamera, Package, PlusCircle, X, 
-  Copy, Eraser, Scale, Undo2, Redo2, Zap, MoreHorizontal
+  Copy, Eraser, Scale, Undo2, Redo2, Zap, MoreHorizontal, Star
 } from 'lucide-react';
 import { FoodSelectionModal } from './FoodSelectionModal';
 import { Badge } from '@/components/ui/badge';
