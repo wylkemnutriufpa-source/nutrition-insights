@@ -279,12 +279,14 @@ export default function DailyMealPlanInline() {
         ))}
       </div>
 
-      {/* Tip - Hide in basic mode if preferred, but it's small help */}
-      <Card className="p-3 text-center border-border/50 bg-muted/5">
-        <p className="text-[10px] text-muted-foreground italic">
-          💡 Clique na refeição para ver detalhes ou marcar como seguida.
-        </p>
-      </Card>
+      {/* Tip - Hide in basic mode */}
+      {!isBasic && (
+        <Card className="p-3 text-center border-border/50 bg-muted/5">
+          <p className="text-[10px] text-muted-foreground italic">
+            💡 Clique na refeição para ver detalhes ou marcar como seguida.
+          </p>
+        </Card>
+      )}
 
       <MealDetailModal
         open={!!selectedMeal}
