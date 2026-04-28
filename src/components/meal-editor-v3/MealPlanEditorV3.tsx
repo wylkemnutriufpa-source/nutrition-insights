@@ -85,17 +85,17 @@ export const MealPlanEditorV3: React.FC = () => {
                     animate={{ opacity: 1, x: 0 }}
                     className={cn(
                       "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold",
-                      planStatus === 'error' ? "bg-red-500/10 text-red-600" : "bg-green-500/10 text-green-600"
+                      planStatus === 'error' || consistencyMessage ? "bg-red-500/10 text-red-600" : "bg-green-500/10 text-green-600"
                     )}
                   >
                     <CheckCircle2 className="w-2.5 h-2.5" />
-                    {planStatus === 'validated' ? 'VALIDADO' : planStatus === 'error' ? 'FORA DA META' : 'OTIMIZADO'}
+                    {consistencyMessage ? 'AJUSTES NECESSÁRIOS' : (planStatus === 'validated' ? 'PLANO CONSISTENTE' : 'OTIMIZADO')}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
           </div>
-          
+
           <div className="h-8 w-px bg-border hidden sm:block" />
           
           <div className="hidden sm:flex items-center space-x-2 bg-muted/30 px-3 py-1.5 rounded-full border border-border/50">
