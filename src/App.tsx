@@ -376,6 +376,14 @@ function RootRoute() {
         console.error("%c[FJ:Boot] Initialization timeout reached (8s) - Unblocking UI in degraded mode", "color: #ef4444; font-weight: bold");
         setTimedOut(true);
         setBootDone(true);
+        toast.error("A inicialização está demorando mais que o esperado. Algumas funções podem estar limitadas.", {
+          duration: 6000,
+          description: "O sistema continuará carregando em segundo plano.",
+          action: {
+            label: "Recarregar",
+            onClick: () => window.location.reload()
+          }
+        });
       }
     }, 8000);
     return () => clearTimeout(timer);
