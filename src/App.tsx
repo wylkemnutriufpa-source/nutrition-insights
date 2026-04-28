@@ -44,6 +44,7 @@ const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
 const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
+const DietBuilder = lazy(() => import("./pages/diet-builder/DietBuilder"));
 const Settings = lazy(() => import("./pages/Settings"));
 const Protocols = lazy(() => import("./pages/Protocols"));
 const Programs = lazy(() => import("./pages/Programs"));
