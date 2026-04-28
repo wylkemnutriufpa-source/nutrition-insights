@@ -183,6 +183,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                               food={food} 
                               onAdd={() => handleAdd(food)} 
                               isActive={idx === activeIndex}
+                              isSelected={selectedForBatch.some(f => f.id === food.id)}
                             />
                           </motion.div>
                         ))}
