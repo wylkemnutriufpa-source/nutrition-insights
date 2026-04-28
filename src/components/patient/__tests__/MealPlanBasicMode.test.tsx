@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import PatientMealPlan from '@/pages/PatientMealPlan';
 import { supabase } from '@/integrations/supabase/client';
 import { useExperienceUI } from '@/hooks/useExperienceUI';
@@ -58,7 +59,11 @@ describe('PatientMealPlan - Basic Mode', () => {
   });
 
   it('should always open on today by default in basic mode', async () => {
-    render(<PatientMealPlan />);
+    render(
+      <MemoryRouter>
+        <PatientMealPlan />
+      </MemoryRouter>
+    );
     
     // Check if "Hoje" is displayed
     const todayLabel = await screen.findByText(/Hoje/i);
@@ -66,7 +71,11 @@ describe('PatientMealPlan - Basic Mode', () => {
   });
 
   it('should allow navigation to other days only via modal (not resetting immediately)', async () => {
-    const { rerender } = render(<PatientMealPlan />);
+    render(
+      <MemoryRouter>
+        <PatientMealPlan />
+      </MemoryRouter>
+    );
     
     // Initial load is today
     expect(await screen.findByText(/Hoje/i)).toBeDefined();
@@ -77,7 +86,11 @@ describe('PatientMealPlan - Basic Mode', () => {
   });
 
   it('should have accessibility attributes for current meal (AGORA)', async () => {
-    render(<PatientMealPlan />);
+    render(
+      <MemoryRouter>
+        <PatientMealPlan />
+      </MemoryRouter>
+    );
     
     // Mock current time to match a meal type if needed, but the component has its own logic
     // We check for aria-current="time" or aria-label containing "Agora"
