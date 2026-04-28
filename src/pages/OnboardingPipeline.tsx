@@ -151,6 +151,13 @@ export default function OnboardingPipeline() {
     // Run once per pipeline-id load — ignore the resolved boolean here;
     // success silently clears `syncError`, failure surfaces the banner.
     void runLifecycleSync(pipeline.id);
+    
+    // REDIRECT PROTECTION: Se o plano já foi gerado mas o paciente ainda está em 'awaiting_consent' ou 'lead_created'
+    // forçamos a transição atômica para o dashboard através de invalidação de query
+    if (pipeline.plan_generated) {
+      console.log("[OnboardingPipeline] Plan generated, forcing state refresh");
+      queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [pipeline?.id, pipeline?.plan_generated, pipeline?.plan_approved]);
 

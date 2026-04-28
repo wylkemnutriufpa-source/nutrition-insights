@@ -45,11 +45,11 @@ export default function OnboardingGateScreen({ status }: Props) {
     // Mostre o botão de tentar novamente após 8 segundos se não houver redirecionamento
     const retryTimer = setTimeout(() => setShowRetry(true), 8000);
 
-    if (status === "lead_created") {
+    if (status === "lead_created" || status === "awaiting_consent") {
       const timer = setTimeout(() => {
-        console.log("[OnboardingGate:Redirect] Directing lead_created to /onboarding");
+        console.log(`[OnboardingGate:Redirect] Directing ${status} to /onboarding`);
         navigate("/onboarding", { replace: true });
-      }, 2000);
+      }, 1500);
       return () => {
         clearTimeout(timer);
         clearTimeout(retryTimer);

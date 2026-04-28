@@ -55,6 +55,11 @@ export default function AuthConfirm() {
         setError("O link de confirmação expirou ou já foi utilizado. Por favor, solicite um novo.");
       } else {
         toast.success("Login confirmado com sucesso!");
+        
+        // REDIRECT PROTECTION: Invalida caches para garantir que o vínculo seja detectado
+        (window as any).__REACT_QUERY_CLIENT__?.invalidateQueries({ queryKey: ["patient-journey-status"] });
+        (window as any).__REACT_QUERY_CLIENT__?.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
+        
         navigate(next.startsWith("/") ? next : "/", { replace: true });
       }
     } catch (err) {

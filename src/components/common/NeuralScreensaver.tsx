@@ -71,8 +71,15 @@ export default function NeuralScreensaver() {
     saveSessionContext(location.pathname, user.id);
   }, [location.pathname, user]);
 
-  // Reset dismissed flag when user navigates
   useEffect(() => {
+    // REDIRECT PROTECTION: Do not show screensaver during onboarding/consent
+    const path = location.pathname;
+    const isProtected = path.startsWith("/onboarding") || path.startsWith("/consent") || path.startsWith("/anamnesis") || path.startsWith("/intake");
+    if (isProtected) {
+      dismissedRef.current = true;
+      setActive(false);
+      return;
+    }
     dismissedRef.current = false;
   }, [location.pathname]);
 

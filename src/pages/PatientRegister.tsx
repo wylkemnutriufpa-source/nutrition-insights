@@ -477,16 +477,22 @@ export default function PatientRegister() {
 
       // ─── FLUXO B: COM NUTRICIONISTA ───
       addLog("Criando usuário no Auth...");
+      
+      // CRITICAL FIX: Ensure nutritionist_id is in metadata for trigger handle_new_user
+      const signUpOptions = { 
+        data: { 
+          full_name: name,
+          nutritionist_id: nutriId,
+          role: 'patient'
+        } 
+      };
+      
+      addLog(`Metadata para SignUp: ${JSON.stringify(signUpOptions.data)}`);
+
       const { data: signUpData, error: signUpErr } = await supabase.auth.signUp({
         email: email.trim().toLowerCase(),
         password,
-        options: { 
-          data: { 
-            full_name: name,
-            nutritionist_id: nutriId,
-            role: 'patient'
-          } 
-        },
+        options: signUpOptions,
       });
 
       if (signUpErr) {
@@ -504,6 +510,10 @@ export default function PatientRegister() {
       }
 
       addLog(`Usuário Auth criado: ${signUpData.user.id}. Vinculando paciente...`);
+
+      // 4.5. Garante que o usuário autenticado tenha o token de acesso pronto
+      const { data: { session } } = await supabase.auth.getSession();
+      addLog(`Sessão ativa: ${!!session}`);
 
       // 5. Vincular paciente via RPC canônica — AGUARDA COMPLETAMENTE antes de prosseguir
       addLog(`Chamando create_patient_canonical com nutriId: ${nutriId}`);

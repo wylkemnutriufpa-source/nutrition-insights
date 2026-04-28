@@ -47,7 +47,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
 
   // Block dashboard/critical screens if not in a fluid state
   // IMPORTANT: This check must stay AFTER all hooks to avoid React rule violations
-  const shouldBlockJourney = isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release");
+  const shouldBlockJourney = isPatient && !journeyLoading && journeyStatus && (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release" || journeyStatus === "lead_created");
 
   // Profissional sem patientId explícito: não bloqueia nada
   if (!isPatient && !patientId) return <>{children}</>;
@@ -96,7 +96,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     );
   }
 
-  if (result.status === "no_link" || journeyStatus === "no_link") {
+  if (result.status === "no_link" || journeyStatus === "no_link" || (isPatient && !journeyLoading && journeyStatus === null)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] p-8 text-center bg-background">
         <div className="rounded-full bg-orange-100 dark:bg-orange-950/30 p-6 mb-6">
@@ -132,7 +132,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     );
   }
 
-  if (shouldBlockJourney) {
+  if (shouldBlockJourney && !authLoading && !journeyLoading) {
     return <OnboardingGateScreen status={journeyStatus!} />;
   }
 

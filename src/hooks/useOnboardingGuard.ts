@@ -42,8 +42,8 @@ export function useOnboardingGuard() {
       return "none";
     }
 
-    if (journeyStatus === "no_link") {
-      console.error("[OnboardingGuard] CRITICAL: Patient has no nutritionist link");
+    if (journeyStatus === "no_link" || journeyStatus === null) {
+      console.error("[OnboardingGuard] CRITICAL: Patient has no nutritionist link or journey is null");
       return "error_no_link";
     }
 

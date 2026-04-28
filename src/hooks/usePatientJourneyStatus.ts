@@ -19,15 +19,12 @@ export type JourneyStatus =
 
 /** 
  * Centralized rule for allowed (non-blocking) states.
- * States like lead_created and awaiting_consent are FLUID - they should not block the dashboard
- * because components like OnboardingProgressModal will take over to guide the user.
  */
 export const IS_FLUID_STATE = (status: JourneyStatus) => 
   status === "active" || status === "onboarding_active" || status === "lead_created" || status === "awaiting_consent" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "clinical_followup_active";
 
 /**
  * Returns the patient's journey_status from nutritionist_patients.
- * For patients with no link or legacy patients, returns "active".
  */
 export function usePatientJourneyStatus() {
   const { user, isPatient } = useAuth();
@@ -53,7 +50,7 @@ export function usePatientJourneyStatus() {
         if (error) {
           console.error("[usePatientJourneyStatus] Fetch error:", error);
           if (!cancelled) {
-            setStatus("active"); // Fallback for real errors to avoid blocking legacy
+            setStatus("active");
             setLoading(false);
           }
           return;
@@ -62,13 +59,49 @@ export function usePatientJourneyStatus() {
         if (!cancelled) {
           if (!data) {
             console.warn(`[usePatientJourneyStatus] NO LINK FOUND for ${user.id}`);
-            setStatus("no_link");
+            // Check if user has NO link at all
+            setStatus(null);
+            
+            // Fresh signup processing fallback: try again after a delay
+            setTimeout(async () => {
+              if (cancelled) return;
+              const { data: retryData } = await supabase
+                .from("nutritionist_patients")
+                .select("journey_status")
+                .eq("patient_id", user.id)
+                .maybeSingle();
+              
+              if (!retryData) {
+                // If still no link, check if it's an orphan patient and try to auto-heal
+                console.log("[usePatientJourneyStatus] Trying auto-heal for orphan patient...");
+                const { data: healData } = await supabase.rpc("run_patient_realtime_fix" as any, { _patient_id: user.id });
+                
+                if (healData?.success) {
+                    const { data: finalData } = await supabase
+                        .from("nutritionist_patients")
+                        .select("journey_status")
+                        .eq("patient_id", user.id)
+                        .maybeSingle();
+                    
+                    if (finalData) {
+                        setStatus((finalData as any).journey_status || "awaiting_consent");
+                        setLoading(false);
+                        return;
+                    }
+                }
+                
+                setStatus("no_link");
+              } else {
+                setStatus((retryData as any).journey_status || "active");
+              }
+              setLoading(false);
+            }, 1500);
           } else {
             const finalStatus = (data as any).journey_status || "active";
             console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
             setStatus(finalStatus);
+            setLoading(false);
           }
-          setLoading(false);
         }
       } catch (err) {
         console.error("[usePatientJourneyStatus] Unexpected error:", err);
@@ -81,13 +114,13 @@ export function usePatientJourneyStatus() {
 
     fetchStatus();
 
-    // Listen for realtime changes to journey_status
+    // Listen for insert/update events
     const channel = supabase
       .channel(`journey-${user.id}`)
       .on(
         "postgres_changes",
         {
-          event: "UPDATE",
+          event: "*",
           schema: "public",
           table: "nutritionist_patients",
           filter: `patient_id=eq.${user.id}`,
@@ -105,7 +138,7 @@ export function usePatientJourneyStatus() {
     };
   }, [user, isPatient]);
 
-  const canAccessOnboarding = status !== "no_link" && (status === "lead_created" || status === "awaiting_consent" || status === "onboarding_active" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "active" || status === "clinical_followup_active");
+  const canAccessOnboarding = status !== "no_link" && status !== null;
 
   return { status, loading, canAccessOnboarding };
 }
