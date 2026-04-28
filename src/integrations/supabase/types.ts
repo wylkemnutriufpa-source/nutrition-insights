@@ -14164,6 +14164,7 @@ export type Database = {
           historical_loss_rate: number | null
           id: string
           is_orphan: boolean | null
+          last_editor_version_used: string | null
           marmita_mode: boolean | null
           metabolic_confidence_score: number | null
           metabolic_last_evaluated_at: string | null
@@ -14173,6 +14174,7 @@ export type Database = {
           notes: string | null
           phone: string | null
           plateau_probability: number | null
+          preferred_editor_version: string | null
           ranking_nickname: string | null
           regain_probability: number | null
           search_vector: unknown
@@ -14214,6 +14216,7 @@ export type Database = {
           historical_loss_rate?: number | null
           id?: string
           is_orphan?: boolean | null
+          last_editor_version_used?: string | null
           marmita_mode?: boolean | null
           metabolic_confidence_score?: number | null
           metabolic_last_evaluated_at?: string | null
@@ -14223,6 +14226,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           plateau_probability?: number | null
+          preferred_editor_version?: string | null
           ranking_nickname?: string | null
           regain_probability?: number | null
           search_vector?: unknown
@@ -14264,6 +14268,7 @@ export type Database = {
           historical_loss_rate?: number | null
           id?: string
           is_orphan?: boolean | null
+          last_editor_version_used?: string | null
           marmita_mode?: boolean | null
           metabolic_confidence_score?: number | null
           metabolic_last_evaluated_at?: string | null
@@ -14273,6 +14278,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           plateau_probability?: number | null
+          preferred_editor_version?: string | null
           ranking_nickname?: string | null
           regain_probability?: number | null
           search_vector?: unknown
