@@ -548,6 +548,11 @@ export default function FitnessAnamnesis() {
       if (draftId) {
         await supabase.from("patient_anamnesis").update({ answers: currentAnswers, updated_at: new Date().toISOString() }).eq("id", draftId);
       } else {
+        if (!tenantId) {
+          console.warn("[FJ:FitnessAnamnesis] Autosave deferred: tenant_id unresolved.");
+          setAutoSaveStatus("idle");
+          return;
+        }
         const { data } = await supabase.from("patient_anamnesis").insert({ user_id: targetUserId, answers: currentAnswers, status: "draft", ...getTenantIdForInsert(tenantId) }).select("id").single();
         if (data) setDraftId(data.id);
       }
