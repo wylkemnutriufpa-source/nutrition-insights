@@ -38,19 +38,27 @@ export function useOnboardingGuard() {
     // REDIRECT PROTECTION: Do not suggest completion if we are already on an allowed route
     // This prevents infinite loops
     if (isOnboardingAllowedRoute(location.pathname)) {
-      console.log(`[OnboardingGuard] Allowed route: ${location.pathname}`);
+      console.log(`[OnboardingGuard] Path allowed, skipping redirect: ${location.pathname}`);
       return "none";
     }
+
+    // JOURNEY STATUS LOGGING
+    console.log(`[OnboardingGuard] Current Path: ${location.pathname} | Status: ${journeyStatus}`);
 
     if (journeyStatus === "no_link" || journeyStatus === null) {
       console.error("[OnboardingGuard] CRITICAL: Patient has no nutritionist link or journey is null");
       return "error_no_link";
     }
 
-    // Se o estado for 'awaiting_consent' ou 'lead_created', o paciente PRECISA aceitar o consentimento primeiro
-    // We only block if the journey status explicitly requires it
-    if (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created") {
-      console.log(`[OnboardingGuard] Mandatory completion required for status: ${journeyStatus}`);
+    // If status is 'awaiting_consent' or 'lead_created', onboarding is required
+    // OR if onboarding is explicitly active
+    const needsOnboarding = 
+      journeyStatus === "awaiting_consent" || 
+      journeyStatus === "lead_created" || 
+      journeyStatus === "onboarding_active";
+
+    if (needsOnboarding) {
+      console.log(`[OnboardingGuard] Mandatory completion required for status: ${journeyStatus}. Redirecting to /onboarding`);
       return "must_complete";
     }
 
