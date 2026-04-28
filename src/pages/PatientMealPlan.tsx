@@ -491,7 +491,36 @@ export default function PatientMealPlan() {
 
           {/* MODO DIÁRIO ÚNICO — substituições inteligentes substituem a "visão semanal" */}
           <div className="space-y-5 mt-4">
-            <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+            {isBasic ? (
+              <div className="flex flex-col items-center gap-3">
+                {showCalendar ? (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="w-full">
+                    <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setShowCalendar(false)}
+                      className="mt-2 text-[10px] text-muted-foreground mx-auto flex gap-1"
+                    >
+                      <ChevronUp className="w-3 h-3" /> Ocultar calendário
+                    </Button>
+                  </motion.div>
+                ) : (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => setShowCalendar(true)}
+                    className="text-xs font-medium rounded-full px-4 border-primary/20 bg-primary/5 text-primary hover:bg-primary/10 gap-1.5"
+                  >
+                    <CalendarDays className="w-3.5 h-3.5" />
+                    Ver outros dias
+                    <ChevronDown className="w-3.5 h-3.5" />
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <DateNavigator date={date} dayOfWeek={dayOfWeek} isToday={isToday} onChangeDate={changeDate} />
+            )}
 
             <AdherenceCard
               dailyAdherence={dailyAdherence}
