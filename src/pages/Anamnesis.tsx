@@ -649,10 +649,22 @@ export default function Anamnesis() {
     })();
   }, [targetUserId, isNutritionistMode]);
 
-  // Load existing draft on mount
+  // Load existing draft and local backup on mount
   useEffect(() => {
     if (!targetUserId) return;
     (async () => {
+      // 1. Get local backup first
+      const backupKey = `fj_anamnesis_backup_${targetUserId}`;
+      let localData: { answers: Record<string, any>, updated_at: string } | null = null;
+      try {
+        const stored = localStorage.getItem(backupKey);
+        if (stored) localData = JSON.parse(stored);
+      } catch (e) {
+        console.warn("[FJ:Anamnesis] failed to read local backup:", e);
+      }
+      setLocalBackup(localData);
+
+      // 2. Get server data
       const [{ data: anamnesisRows }, { data: pipelineData }] = await Promise.all([
         supabase
           .from("patient_anamnesis")
@@ -676,7 +688,7 @@ export default function Anamnesis() {
       const latestAnamnesis = anamnesisRows?.[0] as any;
       const latestPipeline = pipelineData as any;
 
-      // 📡 TELEMETRIA: registra a decisão de roteamento (lê via window.__fjAnamneseTrace)
+      // 📡 TELEMETRIA: registra a decisão de roteamento
       try {
         const trace = {
           ts: new Date().toISOString(),
@@ -687,55 +699,62 @@ export default function Anamnesis() {
           hasPipeline: !!latestPipeline,
           pipelineStatus: latestPipeline?.status ?? null,
           pipelineAnamnesisCompleted: latestPipeline?.anamnesis_completed ?? null,
+          hasLocalBackup: !!localData,
         };
         (window as any).__fjAnamneseTrace = trace;
-        try {
-          const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
-          arr.push(trace);
-          localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
-        } catch { /* ignore */ }
+        const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
+        arr.push(trace);
+        localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
         console.info("[FJ:Anamnesis] route-decision trace:", trace);
       } catch { /* ignore */ }
 
-      // Detect active pipeline for auto-redirect behavior
+      // Detect active pipeline
       if (latestPipeline && !isNutritionistMode) {
         setHasActivePipeline(true);
       }
 
-      if (!latestAnamnesis) return;
+      // CONFLICT DETECTION (Hardening V3.5)
+      if (latestAnamnesis && localData) {
+        const serverUpdatedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at).getTime();
+        const localUpdatedAt = new Date(localData.updated_at).getTime();
+        
+        // If they differ by more than 2 seconds, treat as conflict
+        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000) {
+          setServerVersion({ 
+            answers: latestAnamnesis.answers as Record<string, any>, 
+            updated_at: latestAnamnesis.updated_at || latestAnamnesis.created_at,
+            id: latestAnamnesis.id
+          });
+          setShowConflictModal(true);
+          // We don't return here, we let the modal handle it. 
+          // Defaulting to local version for now until choice.
+          setAnswers(localData.answers);
+          setDraftId(latestAnamnesis.id);
+          return;
+        }
+      }
 
-      const pipelineTouchedAt = new Date(latestPipeline?.updated_at || latestPipeline?.created_at || 0).getTime();
-      const anamnesisTouchedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at || 0).getTime();
-      const ignoreStaleAnamnesis =
-        latestPipeline?.status === "pending_anamnesis" &&
-        !latestPipeline?.anamnesis_completed &&
-        anamnesisTouchedAt < pipelineTouchedAt;
-
-      if (ignoreStaleAnamnesis) {
-        setCompleted(false);
-        setDraftId(null);
-        setAnswers({});
-        setStep(0);
+      // No conflict or no data scenarios
+      if (!latestAnamnesis) {
+        if (localData) {
+          setAnswers(localData.answers);
+          const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
+          if (lastIdx > 0) setStep(lastIdx);
+          else if (lastIdx === -1) setStep(questions.length - 1);
+          toast.info("Dados restaurados do backup local! ⚡");
+        }
         return;
       }
 
+      // Use latestAnamnesis (standard behavior)
+      setDraftId(latestAnamnesis.id);
+      const savedAnswers = latestAnamnesis.answers as Record<string, any>;
+      if (savedAnswers) setAnswers(savedAnswers);
+
       if (latestAnamnesis.status === "completed") {
-        // 🛡️ ANTI-LOOP HARDENING (v3.0): NUNCA redirecionar de /anamnesis para
-        // /onboarding-pipeline. O OnboardingPipeline manda a paciente pra cá via
-        // AnamnesisAutoRedirect; se a anamnese também devolvesse pro pipeline,
-        // criaria loop infinito. Aqui apenas exibimos a tela "concluída" — a
-        // paciente decide manualmente continuar (botão "Continuar Onboarding").
         setCompleted(true);
-        setDraftId(latestAnamnesis.id);
-        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
-        if (savedAnswers) setAnswers(savedAnswers);
       } else if (latestAnamnesis.status === "draft") {
-        // Restore draft
-        setDraftId(latestAnamnesis.id);
-        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
         if (savedAnswers && Object.keys(savedAnswers).length > 0) {
-          setAnswers(savedAnswers);
-          // Jump to last answered question
           const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
           if (lastIdx > 0) setStep(lastIdx);
           else if (lastIdx === -1) setStep(questions.length - 1);
