@@ -98,6 +98,7 @@ const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
 const ClinicalPipeline = lazy(() => import("./pages/ClinicalPipeline"));
 const Integrations = lazy(() => import("./pages/Integrations"));
 const TeamManagement = lazy(() => import("./pages/TeamManagement"));
+const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
