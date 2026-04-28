@@ -6710,6 +6710,33 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_plan_favorites: {
+        Row: {
+          created_at: string
+          data: Json
+          id: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          data: Json
+          id?: string
+          name: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          data?: Json
+          id?: string
+          name?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       meal_plan_item_versions: {
         Row: {
           action_type: string
@@ -7007,6 +7034,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      meal_plan_templates: {
+        Row: {
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          is_premium: boolean | null
+          meals: Json
+          name: string
+        }
+        Insert: {
+          category: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_premium?: boolean | null
+          meals?: Json
+          name: string
+        }
+        Update: {
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_premium?: boolean | null
+          meals?: Json
+          name?: string
+        }
+        Relationships: []
       }
       meal_plan_versions: {
         Row: {

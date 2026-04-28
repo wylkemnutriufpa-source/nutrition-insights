@@ -21,7 +21,7 @@ export interface Food {
 
 export interface MealItem extends Food {
   instanceId: string;
-  quantity: number; // multiplier for portionValue
+  quantity: number; 
   substitutions?: Food[];
 }
 
@@ -53,12 +53,21 @@ interface MealPlanState {
   consistencyMessage: string | null;
   lastActionInsight: string | null;
   availableClinicalRules: any[];
+  isPatientView: boolean;
+  templates: any[];
+  favorites: any[];
 
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
   setFastMode: (enabled: boolean) => void;
+  setPatientView: (enabled: boolean) => void;
   
   fetchClinicalRules: () => Promise<void>;
+  fetchTemplates: () => Promise<void>;
+  applyTemplate: (template: any) => void;
+  saveAsFavorite: (name: string, type: 'meal' | 'full_plan') => Promise<void>;
+  clonePlan: (newPatientId: string, newTargets: any) => void;
+
   addFoodToMeal: (mealId: string, food: Food) => void;
   removeFoodFromMeal: (mealId: string, instanceId: string) => void;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
@@ -104,6 +113,9 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       consistencyMessage: null,
       lastActionInsight: null,
       availableClinicalRules: [],
+      isPatientView: false,
+      templates: [],
+      favorites: [],
 
       setPatientId: (id) => {
         const storedFastMode = localStorage.getItem(`fastMode_${id}`);
@@ -121,6 +133,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }
         set({ fastMode: enabled });
       },
+      setPatientView: (enabled) => set({ isPatientView: enabled }),
 
       fetchClinicalRules: async () => {
         const { data } = await supabase
@@ -129,6 +142,54 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           .order('condition_name');
         
         if (data) set({ availableClinicalRules: data });
+      },
+
+      fetchTemplates: async () => {
+        const { data } = await supabase.from('meal_plan_templates').select('*');
+        if (data) set({ templates: data });
+      },
+
+      applyTemplate: (template) => {
+        set({ 
+          meals: template.meals as Meal[], 
+          planStatus: 'draft',
+          lastActionInsight: `Template "${template.name}" aplicado com sucesso.`
+        });
+      },
+
+      saveAsFavorite: async (name, type) => {
+        const { meals } = get();
+        const userData = (await supabase.auth.getUser()).data.user;
+        if (!userData) return;
+
+        const favoriteData = type === 'full_plan' ? meals : meals.find(m => m.id === get().activeMealId);
+        if (!favoriteData) return;
+
+        await supabase.from('meal_plan_favorites').insert([{
+          name,
+          type,
+          data: favoriteData as any,
+          user_id: userData.id
+        }]);
+        toast.success('Salvo nos favoritos');
+      },
+
+      clonePlan: (newPatientId, newTargets) => {
+        const { meals } = get();
+        const currentCals = meals.reduce((acc, m) => acc + m.items.reduce((a, i) => a + i.calories * i.quantity, 0), 0);
+        const ratio = newTargets.calories / (currentCals || 1);
+
+        const adaptedMeals = meals.map(m => ({
+          ...m,
+          items: m.items.map(i => i.isMarmita ? i : { ...i, quantity: i.quantity * ratio })
+        }));
+
+        set({ 
+          patientId: newPatientId, 
+          patientTargets: newTargets, 
+          meals: adaptedMeals,
+          lastActionInsight: 'Plano clonado e adaptado para o novo paciente.'
+        });
       },
 
       addFoodToMeal: (mealId, food) => {
@@ -329,13 +390,13 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }
 
         if (clinicalLog) {
-          await supabase.from('meal_clinical_decision_log').insert({
+          await supabase.from('meal_clinical_decision_log').insert([{
             patient_id: patientId,
             condition_applied: clinicalLog.conditionId,
             rules_applied: clinicalLog.appliedRules,
             substitutions: clinicalLog.changes.filter(c => c.type === 'substitution'),
             reasons: clinicalLog.changes.map(c => c.reason)
-          });
+          }]);
         }
 
         set({ planStatus: 'validated', consistencyMessage: null });

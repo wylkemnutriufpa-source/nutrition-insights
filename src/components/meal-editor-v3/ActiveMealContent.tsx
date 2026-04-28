@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
   Plus, Trash2, SwitchCamera, Package, PlusCircle, X, 
-  Copy, Eraser, Scale, Undo2, Redo2, Zap, MoreHorizontal
+  Copy, Eraser, Scale, Undo2, Redo2, Zap, MoreHorizontal, Star
 } from 'lucide-react';
 import { FoodSelectionModal } from './FoodSelectionModal';
 import { Badge } from '@/components/ui/badge';
@@ -24,7 +24,7 @@ export const ActiveMealContent: React.FC = () => {
     meals, activeMealId, removeFoodFromMeal, updateFoodQuantity, 
     addSubstitution, removeSubstitution, fastMode,
     undo, redo, clearMeal, duplicateMeal, balanceMacros,
-    history, generateDeterministicPlan
+    history, generateDeterministicPlan, saveAsFavorite
   } = useMealEditorV3Store();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -111,6 +111,15 @@ export const ActiveMealContent: React.FC = () => {
           >
             <Plus className="w-4 h-4 mr-2" />
             ADICIONAR
+          </Button>
+
+          <Button 
+            variant="ghost"
+            size="icon"
+            onClick={() => saveAsFavorite(activeMeal.name, 'meal')}
+            className="h-9 w-9 text-muted-foreground hover:text-yellow-500 rounded-xl"
+          >
+            <Star className="w-4 h-4" />
           </Button>
         </div>
       </div>
