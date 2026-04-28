@@ -290,11 +290,19 @@ export default function AuditLogs() {
                             <TooltipProvider>
                               <Tooltip>
                                 <TooltipTrigger asChild>
-                                  <Badge variant="outline" className="text-[9px] h-4 bg-blue-500/5 text-blue-600 border-blue-500/20 gap-1 w-fit">
-                                    <Layers className="h-2 w-2" /> SESSION
-                                  </Badge>
+                                  {log.correlation_id?.includes('_req_') ? (
+                                    <Badge variant="outline" className="text-[9px] h-4 bg-purple-500/5 text-purple-600 border-purple-500/20 gap-1 w-fit">
+                                      <Activity className="h-2 w-2" /> REQUEST
+                                    </Badge>
+                                  ) : (
+                                    <Badge variant="outline" className="text-[9px] h-4 bg-blue-500/5 text-blue-600 border-blue-500/20 gap-1 w-fit">
+                                      <Layers className="h-2 w-2" /> SESSION
+                                    </Badge>
+                                  )}
                                 </TooltipTrigger>
-                                <TooltipContent>ID de Sessão (Pai)</TooltipContent>
+                                <TooltipContent>
+                                  {log.correlation_id?.includes('_req_') ? "ID de Requisição (Filho)" : "ID de Sessão (Pai)"}
+                                </TooltipContent>
                               </Tooltip>
                             </TooltipProvider>
                             <code className="text-[10px] font-mono text-muted-foreground truncate max-w-[120px]">
