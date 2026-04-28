@@ -31,19 +31,23 @@ export function logAudit(
       if (error) {
         console.warn("[audit] Failed to persist log, attempting silent retry...", error.message);
         // Minimal silent retry logic
-        setTimeout(() => {
-          supabase.rpc("log_audit", {
-            _action: action,
-            _resource_type: resourceType,
-            _resource_id: resourceId ?? null,
-            _metadata: { ...metadata, retry: true } as unknown as Json,
-            _correlation_id: finalCorrelationId,
-            _status: status
-          }).catch(() => {});
+        setTimeout(async () => {
+          try {
+            await supabase.rpc("log_audit", {
+              _action: action,
+              _resource_type: resourceType,
+              _resource_id: resourceId ?? null,
+              _metadata: { ...metadata, retry: true } as unknown as Json,
+              _correlation_id: finalCorrelationId,
+              _status: status
+            });
+          } catch (e) {
+            // Silent failure on retry
+          }
         }, 2000);
       }
-    })
-    .catch(err => console.error("[audit] Critical failure logging audit event:", err));
+    });
+}
 }
 
 export function getSessionCorrelationId() {
