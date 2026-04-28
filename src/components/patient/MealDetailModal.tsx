@@ -191,7 +191,7 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
 }
 
 export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
-  const { showMacros, showTechnicalDetails } = useExperienceUI();
+  const { showMacros, showTechnicalDetails, isBasic } = useExperienceUI();
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);
   const [imageSearch, setImageSearch] = useState("");
@@ -972,7 +972,7 @@ export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, on
         )}
 
         {/* Tags row */}
-        {(goalTag || (showTechnicalDetails && (clinicalTags.length > 0 || source === "library")) || prepTime) && (
+        {!isBasic && (goalTag || (showTechnicalDetails && (clinicalTags.length > 0 || source === "library")) || prepTime) && (
           <div className="flex flex-wrap gap-1.5 px-6 pt-3">
             {goalTag && GOAL_LABELS[goalTag] && (
               <Badge variant="outline" className={`text-[10px] ${GOAL_LABELS[goalTag].color}`}>

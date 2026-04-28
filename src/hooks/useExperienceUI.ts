@@ -48,10 +48,11 @@ export function useExperienceUI() {
     showTimeline: minMode("pro"),
     showExperienceToggle: minMode("pro"),
     showGuidedTour: minMode("pro"),
+    showDetailedAdherence: minMode("pro"),
 
     // ── Text helpers ──
     /** Dashboard title by mode */
-    dashboardTitle: isBasic ? "Meu Plano" : isPro ? "Dashboard Pro" : "Comando Avançado",
+    dashboardTitle: isBasic ? "Minha Dieta" : isPro ? "Dashboard Pro" : "Comando Avançado",
     dashboardSubtitle: isBasic
       ? "Sua alimentação de hoje"
       : isPro

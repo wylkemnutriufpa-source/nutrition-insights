@@ -377,14 +377,33 @@ const AdherenceCard = memo(function AdherenceCard({
   totalItems: number;
   allMarked: boolean;
 }) {
+  const { isBasic, showDetailedAdherence } = useExperienceUI();
   const motivational = getMotivationalMessage(dailyAdherence);
+
+  if (isBasic) {
+    if (completionsCount === 0) return null;
+    return (
+      <motion.div 
+        className="bg-primary/5 border border-primary/10 rounded-2xl p-4 text-center" 
+        initial={{ opacity: 0, y: 10 }} 
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <p className={`text-sm font-bold ${motivational.color}`}>
+          {motivational.emoji} {motivational.message}
+        </p>
+        <p className="text-[10px] text-muted-foreground mt-1">
+          {completionsCount} de {totalItems} refeições concluídas
+        </p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div className="glass rounded-2xl p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Flame className="w-5 h-5 text-primary" />
-          <span className="font-display font-semibold">Aderência do Dia</span>
+          <span className="font-display font-semibold">Progresso do Dia</span>
         </div>
         <span className="text-lg font-bold text-primary">{Math.round(dailyAdherence)}%</span>
       </div>
@@ -420,19 +439,24 @@ const DateNavigator = memo(function DateNavigator({
   isToday: boolean;
   onChangeDate: (offset: number) => void;
 }) {
+  const { isBasic } = useExperienceUI();
+
   return (
     <div className="flex items-center justify-center gap-4">
-      <Button variant="ghost" size="icon" onClick={() => onChangeDate(-1)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onChangeDate(-1)}>
         <ChevronLeft className="w-5 h-5" />
       </Button>
-      <div className="flex items-center gap-2">
-        <Calendar className="w-4 h-4 text-primary" />
-        <span className="font-medium">
-          {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" })}
-        </span>
-        <Badge variant="outline" className="ml-1">{DAYS[dayOfWeek]}</Badge>
+      <div className="flex flex-col items-center">
+        <div className="flex items-center gap-2">
+          {!isBasic && <Calendar className="w-4 h-4 text-primary" />}
+          <span className="font-bold text-sm">
+            {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}
+          </span>
+          {!isBasic && <Badge variant="outline" className="ml-1 text-[10px]">{DAYS[dayOfWeek]}</Badge>}
+        </div>
+        {isBasic && <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{DAYS[dayOfWeek]}</span>}
       </div>
-      <Button variant="ghost" size="icon" onClick={() => onChangeDate(1)} disabled={isToday}>
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onChangeDate(1)} disabled={isToday}>
         <ChevronRight className="w-5 h-5" />
       </Button>
     </div>

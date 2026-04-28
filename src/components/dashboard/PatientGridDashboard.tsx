@@ -149,55 +149,56 @@ export default function PatientGridDashboard() {
   // ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
   if (expUI.isBasic && !blockDashboard && !showOnboardingCard) {
     return (
-      <div className="space-y-6 max-w-2xl mx-auto">
+      <div className="space-y-8 max-w-2xl mx-auto pb-10">
         {expUI.showExperienceToggle && <ExperienceModeStatusSection />}
         
-        <div className="flex flex-col items-center gap-4 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shadow-sm">
-            <UtensilsCrossed className="w-8 h-8 text-primary" />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-2xl font-bold tracking-tight">Olá! 👋</h2>
-            <p className="text-muted-foreground text-sm">Sua alimentação de hoje em um só lugar.</p>
-          </div>
-          {expUI.showExperienceToggle && <InlineExperienceToggle />}
+        <div className="flex flex-col items-center gap-2 text-center pt-4">
+          <h2 className="text-3xl font-extrabold tracking-tight">Olá! 👋</h2>
+          <p className="text-muted-foreground text-sm">Aqui está sua alimentação para hoje.</p>
+          {expUI.showExperienceToggle && <div className="mt-2"><InlineExperienceToggle /></div>}
         </div>
 
-        <div className="space-y-4">
-          <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
-            <DailyMealPlanInline />
-          </Suspense>
+        <div className="space-y-8">
+          <section className="space-y-4">
+            <Suspense fallback={<div className="flex items-center justify-center py-12"><div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" /></div>}>
+              <DailyMealPlanInline />
+            </Suspense>
+          </section>
 
-          <PlanRequestButton />
+          <Separator className="opacity-50" />
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Card
-              className="cursor-pointer border border-primary/20 bg-primary/5 hover:border-primary/40 transition-all p-4 flex items-center gap-3 group"
-              onClick={() => navigate("/checkin")}
-            >
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <CameraIcon className="w-5 h-5 text-primary" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold">Enviar Feedback</h3>
-                <p className="text-[10px] text-muted-foreground">Mande seu peso e fotos</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-primary transition-all" />
-            </Card>
-
-            <Card
-              className="cursor-pointer border border-orange-500/20 bg-orange-500/5 hover:border-orange-500/40 transition-all p-4 flex items-center gap-3 group"
+              className="cursor-pointer border-none bg-orange-500/5 hover:bg-orange-500/10 transition-all p-5 flex items-center gap-4 group rounded-2xl"
               onClick={() => navigate("/recipes")}
             >
-              <div className="w-10 h-10 rounded-lg bg-orange-500/10 flex items-center justify-center shrink-0">
-                <ChefHat className="w-5 h-5 text-orange-500" />
+              <div className="w-12 h-12 rounded-xl bg-orange-500/10 flex items-center justify-center shrink-0">
+                <ChefHat className="w-6 h-6 text-orange-600" />
               </div>
               <div className="flex-1 min-w-0">
-                <h3 className="text-sm font-bold">Receitas</h3>
-                <p className="text-[10px] text-muted-foreground">Pratos saudáveis para você</p>
+                <h3 className="text-base font-bold">Ver Receitas</h3>
+                <p className="text-xs text-muted-foreground">Sugestões saudáveis</p>
               </div>
-              <ArrowRight className="w-4 h-4 text-muted-foreground/30 group-hover:text-orange-500 transition-all" />
+              <ArrowRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-orange-600 transition-all" />
             </Card>
+
+            <Card
+              className="cursor-pointer border-none bg-primary/5 hover:bg-primary/10 transition-all p-5 flex items-center gap-4 group rounded-2xl"
+              onClick={() => navigate("/checkin")}
+            >
+              <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
+                <CameraIcon className="w-6 h-6 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="text-base font-bold">Enviar Feedback</h3>
+                <p className="text-xs text-muted-foreground">Fotos e progresso</p>
+              </div>
+              <ArrowRight className="w-5 h-5 text-muted-foreground/30 group-hover:text-primary transition-all" />
+            </Card>
+          </div>
+
+          <div className="pt-4 flex justify-center">
+            <PlanRequestButton />
           </div>
         </div>
       </div>
