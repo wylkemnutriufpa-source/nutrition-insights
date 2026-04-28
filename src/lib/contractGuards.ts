@@ -25,13 +25,15 @@ export class ContractViolationError extends Error {
   }
 }
 
-/** RESET LÓGICO: assertContract é NO-OP. Sistema apenas persiste. */
+/** Executa o contrato e lança erro se houver violações. */
 export function assertContract<C extends CriticalContractId>(
-  _contractId: C,
-  _snapshot: Parameters<(typeof CRITICAL_CONTRACTS)[C]>[0],
+  contractId: C,
+  snapshot: Parameters<(typeof CRITICAL_CONTRACTS)[C]>[0],
 ): void {
-  // No-op. O sistema não bloqueia mais nada.
-  return;
+  const result = checkContract(contractId, snapshot);
+  if (!result.ok) {
+    throw new ContractViolationError(contractId, result.violations);
+  }
 }
 
 /** Valida sem lançar — retorna o resultado. */

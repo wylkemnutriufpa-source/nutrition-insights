@@ -620,6 +620,7 @@ export type Database = {
           id: string
           ip_address: string | null
           metadata: Json | null
+          parent_correlation_id: string | null
           resource_id: string | null
           resource_type: string
           status: string | null
@@ -633,6 +634,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           metadata?: Json | null
+          parent_correlation_id?: string | null
           resource_id?: string | null
           resource_type: string
           status?: string | null
@@ -646,6 +648,7 @@ export type Database = {
           id?: string
           ip_address?: string | null
           metadata?: Json | null
+          parent_correlation_id?: string | null
           resource_id?: string | null
           resource_type?: string
           status?: string | null
@@ -20538,17 +20541,30 @@ export type Database = {
         Args: { _tenant_id: string; _user_id: string }
         Returns: boolean
       }
-      log_audit: {
-        Args: {
-          _action: string
-          _correlation_id?: string
-          _metadata?: Json
-          _resource_id?: string
-          _resource_type: string
-          _status?: string
-        }
-        Returns: undefined
-      }
+      log_audit:
+        | {
+            Args: {
+              _action: string
+              _correlation_id?: string
+              _metadata?: Json
+              _parent_correlation_id?: string
+              _resource_id?: string
+              _resource_type: string
+              _status?: string
+            }
+            Returns: string
+          }
+        | {
+            Args: {
+              _action: string
+              _correlation_id?: string
+              _metadata?: Json
+              _resource_id?: string
+              _resource_type: string
+              _status?: string
+            }
+            Returns: undefined
+          }
       log_pipeline_execution: {
         Args: {
           _error_details?: Json

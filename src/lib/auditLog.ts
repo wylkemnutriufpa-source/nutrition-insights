@@ -31,11 +31,11 @@ export function logAudit(
       _resource_type: resourceType,
       _resource_id: resourceId ?? null,
       _metadata: { 
-        ...metadata, 
-        parent_correlation_id: SESSION_CORRELATION_ID 
+        ...metadata
       } as unknown as Json,
       _correlation_id: finalCorrelationId,
-      _status: status
+      _status: status,
+      _parent_correlation_id: SESSION_CORRELATION_ID
     })
     .then(({ error }) => {
       if (error) {
