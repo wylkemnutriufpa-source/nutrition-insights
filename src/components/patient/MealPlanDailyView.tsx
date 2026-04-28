@@ -377,14 +377,33 @@ const AdherenceCard = memo(function AdherenceCard({
   totalItems: number;
   allMarked: boolean;
 }) {
+  const { isBasic, showDetailedAdherence } = useExperienceUI();
   const motivational = getMotivationalMessage(dailyAdherence);
+
+  if (isBasic) {
+    if (completionsCount === 0) return null;
+    return (
+      <motion.div 
+        className="bg-primary/5 border border-primary/10 rounded-2xl p-4 text-center" 
+        initial={{ opacity: 0, y: 10 }} 
+        animate={{ opacity: 1, y: 0 }}
+      >
+        <p className={`text-sm font-bold ${motivational.color}`}>
+          {motivational.emoji} {motivational.message}
+        </p>
+        <p className="text-[10px] text-muted-foreground mt-1">
+          {completionsCount} de {totalItems} refeições concluídas
+        </p>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div className="glass rounded-2xl p-5" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <Flame className="w-5 h-5 text-primary" />
-          <span className="font-display font-semibold">Aderência do Dia</span>
+          <span className="font-display font-semibold">Progresso do Dia</span>
         </div>
         <span className="text-lg font-bold text-primary">{Math.round(dailyAdherence)}%</span>
       </div>
