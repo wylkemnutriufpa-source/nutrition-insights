@@ -160,7 +160,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       applyTemplate: (template) => {
-        const { patientTargets, availableClinicalRules } = get();
+        const { patientTargets, availableClinicalRules, addFoodToMeal } = get();
         let adaptedMeals = JSON.parse(JSON.stringify(template.meals)) as Meal[];
 
         // --- ETAPA 1 & 2: Clinical Adaptation & Automatic Breakfast Logic ---
