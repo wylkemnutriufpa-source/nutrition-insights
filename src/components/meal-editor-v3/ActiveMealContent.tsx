@@ -172,9 +172,12 @@ export const ActiveMealContent: React.FC = () => {
                     <div className="flex items-center gap-2 mb-1">
                       <h3 className="font-bold truncate text-sm">{item.name}</h3>
                       {item.isMarmita && (
-                        <Badge variant="secondary" className="bg-orange-500 text-white border-none text-[10px] h-4 uppercase font-bold">
-                          COMPOSIÇÃO FIXA
-                        </Badge>
+                        <div className="flex items-center gap-1.5">
+                          <Badge variant="secondary" className="bg-orange-500 text-white border-none text-[10px] h-4 uppercase font-black px-2 shadow-sm shadow-orange-500/20">
+                            COMPOSIÇÃO FIXA
+                          </Badge>
+                          <Lock className="w-3 h-3 text-orange-500" />
+                        </div>
                       )}
                     </div>
                     
