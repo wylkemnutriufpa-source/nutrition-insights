@@ -17,15 +17,13 @@ interface MealCardProps {
 }
 
 const SUBSTITUTIONS: Record<string, Omit<Food, 'id'>[]> = {
-  'Frango Grelhado': [
-    { name: 'Carne Vermelha', calories: 220, protein: 28, carbs: 0, fat: 12 },
-    { name: 'Peixe Grelhado', calories: 140, protein: 25, carbs: 0, fat: 3 },
-    { name: 'Ovo Omelete', calories: 180, protein: 13, carbs: 2, fat: 14 },
+  'Peito de Frango Grelhado (USDA)': [
+    { name: 'Patinho Moído (USDA)', calories: 219, protein: 26, carbs: 0, fat: 12 },
+    { name: 'Ovo de Galinha (USDA)', calories: 155, protein: 13, carbs: 1, fat: 11 },
   ],
-  'Arroz Integral': [
-    { name: 'Batata Doce', calories: 86, protein: 2, carbs: 20, fat: 0 },
-    { name: 'Macarrão Integral', calories: 150, protein: 5, carbs: 30, fat: 1 },
-    { name: 'Quinoa', calories: 120, protein: 4, carbs: 21, fat: 2 },
+  'Arroz Integral Cozido (USDA)': [
+    { name: 'Batata Doce Cozida (USDA)', calories: 86, protein: 2, carbs: 20, fat: 0 },
+    { name: 'Quinoa Cozida (USDA)', calories: 120, protein: 4, carbs: 21, fat: 2 },
   ]
 };
 
