@@ -843,6 +843,14 @@ export default function Anamnesis() {
 
   const handleSubmit = async () => {
     if (!user || !targetUserId) return;
+
+    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir finalização se o estado não estiver pronto
+    if ((window as any).__FJ_READY__ === false) {
+      console.warn("[FJ:Anamnesis] Submit blocked: System not ready (state inconsistency or timeout)");
+      toast.error("O sistema ainda está carregando dados vitais. Aguarde um momento.");
+      return;
+    }
+
     setSubmitting(true);
 
     // ── Robust input parsing with unit normalization ──
