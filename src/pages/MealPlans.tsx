@@ -452,6 +452,8 @@ export default function MealPlans() {
 
   const filteredPlans = plans.filter((p) => {
     if (statusFilter === STATUS_FILTER_ALL) return true;
+    if (statusFilter === "v3_only") return (p as any).generation_source === 'v3';
+    if (statusFilter === "v2_only") return (p as any).generation_source !== 'v3';
     if (statusFilter === STATUS_FILTER_UNKNOWN) {
       return isTrulyUnknownPlanStatus(p.plan_status as string | null | undefined);
     }
