@@ -4,6 +4,7 @@ import { MealListSidebar } from './MealListSidebar';
 import { ActiveMealContent } from './ActiveMealContent';
 import { MacroSummary } from './MacroSummary';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { 
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
