@@ -11,9 +11,8 @@ const snapshotPath = path.join(projectRoot, "src", "integrations", "supabase", "
 const migrationsDir = path.join(projectRoot, "supabase", "migrations");
 
 // Check environments
-const IS_CI = !!process.env.CI || !!process.env.GITHUB_ACTIONS;
+const IS_CI = !!process.env.CI || !!process.env.GITHUB_ACTIONS || !!process.env.VERCEL;
 const IS_DEV = process.env.NODE_ENV === "development" || !process.env.NODE_ENV;
-const IS_PROD = process.env.NODE_ENV === "production";
 
 console.log("Checking schema snapshot consistency...");
 
@@ -67,7 +66,7 @@ for (const table of allTables) {
   }
 }
 
-// Check for missing migration files even if schema matches (e.g. data only migrations or migrations that don't affect tracked tables)
+// Check for missing migration files
 if (lastSnapshotMigration !== lastActualMigration) {
   hasDiff = true;
 }
@@ -75,57 +74,54 @@ if (lastSnapshotMigration !== lastActualMigration) {
 if (hasDiff) {
   console.error("\n✗ SCHEMA SNAPSHOT OUTDATED!");
 
-  // Find range of missing migrations
+  // Find missing migrations
   const startIndex = lastSnapshotMigration ? migrations.indexOf(lastSnapshotMigration) + 1 : 0;
   const missingMigrations = migrations.slice(startIndex);
 
   if (missingMigrations.length > 0) {
-    const range = `${missingMigrations[0].split("_")[0]} → ${missingMigrations[missingMigrations.length - 1].split("_")[0]}`;
-    console.error(`\nMissing migrations: ${range}`);
-    console.error(`Last applied: ${lastSnapshotMigration || "None"}`);
-    console.error(`Current expected: ${lastActualMigration}`);
+    console.error(`\nMigrations faltantes:`);
+    missingMigrations.forEach(m => console.error(`- ${m}`));
+    console.error(`\nÚltimo aplicado: ${lastSnapshotMigration || "Nenhum"}`);
+    console.error(`Último disponível: ${lastActualMigration}`);
   }
 
   if (diffResults.length > 0) {
     console.table(diffResults);
   }
 
-  // Generate diff artifact for CI
+  // Generate diff artifact
   const diffFile = path.join(projectRoot, "schema.diff");
-  const diffContent = `
-Snapshot Outdated Diff
-=====================
-Last Snapshot Migration: ${lastSnapshotMigration}
-Last Actual Migration: ${lastActualMigration}
-
-Schema Diffs:
-${JSON.stringify(diffResults, null, 2)}
-  `.trim();
+  const diffContent = JSON.stringify({
+    lastSnapshotMigration,
+    lastActualMigration,
+    missingMigrations,
+    diffResults
+  }, null, 2);
   fs.writeFileSync(diffFile, diffContent);
   console.log(`\nArtifact generated: ${diffFile}`);
 
-  // Auto-update logic
-  if ((IS_DEV || IS_CI) && !IS_PROD) {
-    console.log("\nAuto-updating snapshot (Dev/CI mode)...");
+  // Auto-update logic (ONLY DEV)
+  if (IS_DEV && !IS_CI) {
+    console.log("\nAmbiente local detectado. Executando auto-update...");
     try {
-      execSync("npm run schema:update", { stdio: "inherit" });
-      console.log("✓ Snapshot updated successfully.");
-      
-      // If CI, we still want to fail to force the user to commit the snapshot
-      if (IS_CI) {
-        console.error("\nFAILING CI: Snapshot was updated automatically but MUST be committed to the repository.");
-        console.error("Please run 'npm run schema:update' locally and commit the changes.");
-        process.exit(1);
-      }
-      
+      execSync("pnpm schema:update", { stdio: "inherit" });
+      console.log("✓ Snapshot atualizado automaticamente.");
       process.exit(0);
     } catch (error) {
-      console.error("Failed to auto-update snapshot:", error.message);
+      console.error("Erro ao atualizar snapshot:", error.message);
       process.exit(1);
     }
   }
 
-  console.error("\nExecute: npm run schema:update\n");
+  // NO CI: FAIL HARD
+  if (IS_CI) {
+    console.error("\n[CI FAIL] Snapshot inconsistente detectado no CI.");
+    console.error("Não é permitido atualizar o snapshot no CI.");
+    console.error("Execute 'pnpm schema:update' localmente e realize o commit do arquivo 'schema-snapshot.json'.");
+    process.exit(1);
+  }
+
+  console.error("\nExecute: pnpm schema:update\n");
   process.exit(1);
 } else {
   console.log("✓ Schema snapshot is up to date.");

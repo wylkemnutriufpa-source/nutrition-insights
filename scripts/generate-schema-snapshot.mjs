@@ -84,16 +84,20 @@ export function generateSnapshotData() {
     }
   }
 
+  // Final deterministic sorting
   const resultTables = {};
-  for (const tableName of TRACKED_TABLES) {
+  const sortedTrackedTables = [...TRACKED_TABLES].sort();
+  
+  for (const tableName of sortedTrackedTables) {
     if (tables[tableName]) {
+      // Sorting columns for determinism
       resultTables[tableName] = Array.from(new Set(tables[tableName])).sort();
     }
   }
 
   return {
     "$schema": "./schema-snapshot.schema.json",
-    "generatedAt": new Date().toISOString(),
+    // We remove generatedAt to avoid false diffs if only the timestamp changed
     "lastMigration": migrations[migrations.length - 1] || null,
     "migrationsCount": migrations.length,
     "tables": resultTables
@@ -102,6 +106,17 @@ export function generateSnapshotData() {
 
 if (process.argv[1] === url.fileURLToPath(import.meta.url)) {
   const newSnapshot = generateSnapshotData();
-  fs.writeFileSync(snapshotPath, JSON.stringify(newSnapshot, null, 2) + "\n");
-  console.log(`✓ Generated ${snapshotPath} from ${fs.readdirSync(migrationsDir).length} migrations.`);
+  // Stringify with ordered keys for full determinism
+  const deterministicOutput = JSON.stringify(newSnapshot, (key, value) => {
+    if (value && typeof value === 'object' && !Array.isArray(value)) {
+      return Object.keys(value).sort().reduce((sorted, k) => {
+        sorted[k] = value[k];
+        return sorted;
+      }, {});
+    }
+    return value;
+  }, 2);
+  
+  fs.writeFileSync(snapshotPath, deterministicOutput + "\n");
+  console.log(`✓ Generated deterministic ${snapshotPath} from ${fs.readdirSync(migrationsDir).length} migrations.`);
 }
