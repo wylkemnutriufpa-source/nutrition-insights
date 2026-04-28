@@ -11,6 +11,7 @@ export interface Food {
   amount?: string;
   marmitaId?: string; // Para identificar itens de marmitas bloqueadas
   locked?: boolean;
+  substitutions?: Omit<Food, 'id'>[];
 }
 
 export interface Meal {
