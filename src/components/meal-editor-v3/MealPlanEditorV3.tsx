@@ -117,7 +117,15 @@ export const MealPlanEditorV3: React.FC = () => {
   };
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] bg-background overflow-hidden selection:bg-primary/10">
+    <>
+    {/* Mobile / Tablet — layout baseado na referência visual */}
+    <div className="xl:hidden">
+      <MobileMealEditorV3 />
+    </div>
+
+    {/* Desktop profissional */}
+    <div className="hidden xl:flex flex-col h-[calc(100vh-4rem)] bg-background overflow-hidden selection:bg-primary/10">
+
       <div className="flex items-center justify-between px-6 py-4 border-b bg-background/50 backdrop-blur-xl z-20">
         <div className="flex items-center gap-6">
           <div>
