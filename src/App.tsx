@@ -12,7 +12,7 @@ import { AppStateProvider, useAppState } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { OrphanUserBlock } from "@/components/common/OrphanUserBlock";
 import { Helmet, HelmetProvider } from "react-helmet-async";
-import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
+import { GlobalErrorBoundary, CriticalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import PageLoader from "@/components/common/PageLoader";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
@@ -195,35 +195,37 @@ function AppContent() {
 }
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Helmet><title>FitJourney</title></Helmet>
-        <Toaster />
-        <Sonner />
-        <MobileAutoFixer />
-        <GlobalErrorBoundary />
-        <BrowserRouter>
-          <AuthProvider>
-            <TenantProvider>
-              <ExperienceModeProvider>
-                <ExperienceThemeSync />
-                <ExperienceRouteGuard />
-                <WorkspaceRouteGuard />
-                <CelebrationProvider>
-                  <CommandPaletteProvider>
-                    <AppStateProvider>
-                      <AppContent />
-                    </AppStateProvider>
-                  </CommandPaletteProvider>
-                </CelebrationProvider>
-              </ExperienceModeProvider>
-            </TenantProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+  <CriticalErrorBoundary>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Helmet><title>FitJourney</title></Helmet>
+          <Toaster />
+          <Sonner />
+          <MobileAutoFixer />
+          <GlobalErrorBoundary />
+          <BrowserRouter>
+            <AuthProvider>
+              <TenantProvider>
+                <ExperienceModeProvider>
+                  <ExperienceThemeSync />
+                  <ExperienceRouteGuard />
+                  <WorkspaceRouteGuard />
+                  <CelebrationProvider>
+                    <CommandPaletteProvider>
+                      <AppStateProvider>
+                        <AppContent />
+                      </AppStateProvider>
+                    </CommandPaletteProvider>
+                  </CelebrationProvider>
+                </ExperienceModeProvider>
+              </TenantProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  </CriticalErrorBoundary>
 );
 
 export default App;
