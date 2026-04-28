@@ -1772,10 +1772,10 @@ export default function Anamnesis() {
             <AlertDialogCancel 
               onClick={() => {
                 setShowConflictModal(false);
-                // Persist decision
-                const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
-                const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
-                localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                if (serverVersion && localBackup && resolvedTenantId) {
+                  const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
+                  localStorage.setItem(resolutionKey, "manter_local");
+                }
                 logSafetyAction("manter_local");
                 toast.success("Mantendo versão local! 🏠");
               }}
@@ -1785,14 +1785,12 @@ export default function Anamnesis() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (serverVersion) {
+                if (serverVersion && localBackup && resolvedTenantId) {
                   setAnswers(serverVersion.answers);
                   saveLocalBackup(serverVersion.answers);
                   setShowConflictModal(false);
-                  // Persist decision
-                  const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
-                  const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
-                  localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                  const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
+                  localStorage.setItem(resolutionKey, "restaurar_servidor");
                   logSafetyAction("restaurar_servidor");
                   toast.success("Versão do servidor restaurada! ☁️");
                 }
