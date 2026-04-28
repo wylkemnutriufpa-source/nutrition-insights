@@ -596,9 +596,9 @@ export default function FitnessAnamnesis() {
     if (!user || !targetUserId) return;
     
     // BLOQUEIO DE AÇÃO CRÍTICA
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:FitnessAnamnesis] Submit blocked: System not ready");
-      toast.error("O sistema ainda está carregando dados vitais. Aguarde um momento.");
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:FitnessAnamnesis] Submit blocked: System not ready or degraded", { isReady, isDegraded });
+      toast.error("O sistema ainda está carregando dados vitais ou em modo limitado. Aguarde um momento.");
       return;
     }
 
