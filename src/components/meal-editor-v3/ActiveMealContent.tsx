@@ -131,7 +131,7 @@ export const ActiveMealContent: React.FC = () => {
                 <Package className="w-12 h-12 text-muted-foreground/30 mb-4" />
                 <p className="text-muted-foreground font-medium">Nenhum alimento adicionado.</p>
                 <Button variant="link" onClick={() => setIsAddModalOpen(true)} className="text-primary mt-2">
-                  Clique aqui para adicionar
+                   Clique aqui para adicionar
                 </Button>
               </Card>
             </motion.div>
@@ -191,6 +191,11 @@ export const ActiveMealContent: React.FC = () => {
                         type="number"
                         value={item.quantity}
                         onChange={(e) => updateFoodQuantity(activeMeal.id, item.instanceId, parseFloat(e.target.value) || 0)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter') {
+                            addBtnRef.current?.focus();
+                          }
+                        }}
                         disabled={item.isMarmita}
                         className="w-14 h-8 text-center text-xs font-bold"
                         min="0"
@@ -258,7 +263,7 @@ export const ActiveMealContent: React.FC = () => {
         onClose={() => {
           setIsAddModalOpen(false);
           setSubstitutionModalData(null);
-          // Restore focus to add button or handle keyboard flow
+          // Restore focus to add button
           addBtnRef.current?.focus();
         }} 
         mealId={activeMeal.id}
@@ -267,5 +272,3 @@ export const ActiveMealContent: React.FC = () => {
     </div>
   );
 };
-
-

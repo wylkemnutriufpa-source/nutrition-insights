@@ -36,12 +36,18 @@ interface HistoryState {
 
 interface MealPlanState {
   patientId: string | null;
+  patientTargets: {
+    calories: number;
+    protein: number;
+    carbs: number;
+    fat: number;
+  } | null;
   meals: Meal[];
   activeMealId: string | null;
   fastMode: boolean;
   history: HistoryState;
-  planStatus: 'draft' | 'validated' | 'optimized';
-  
+  planStatus: 'draft' | 'validated' | 'optimized' | 'syncing' | 'error' | 'success';
+
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
   setFastMode: (enabled: boolean) => void;
@@ -51,7 +57,7 @@ interface MealPlanState {
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
   addSubstitution: (mealId: string, instanceId: string, food: Food) => void;
   removeSubstitution: (mealId: string, instanceId: string, foodId: string) => void;
-  
+
   duplicateMeal: (mealId: string) => void;
   clearMeal: (mealId: string) => void;
   balanceMacros: (mealId: string, targetKcal: number) => void;
@@ -72,7 +78,7 @@ const DEFAULT_MEALS = [
 ];
 
 const saveHistory = (state: MealPlanState) => ({
-  past: [...state.history.past.slice(-20), state.meals],
+  past: [...state.history.past, JSON.parse(JSON.stringify(state.meals))].slice(-30),
   future: [],
 });
 
@@ -80,15 +86,30 @@ export const useMealEditorV3Store = create<MealPlanState>()(
   persist(
     (set, get) => ({
       patientId: null,
+      patientTargets: null,
       meals: DEFAULT_MEALS,
       activeMealId: '1',
       fastMode: false,
       history: { past: [], future: [] },
       planStatus: 'draft',
 
-      setPatientId: (id) => set({ patientId: id }),
+      setPatientId: (id) => {
+        const storedFastMode = localStorage.getItem(`fastMode_${id}`);
+        set({ 
+          patientId: id, 
+          fastMode: storedFastMode === 'true',
+          // Try to fetch patient targets from some source or set default
+          patientTargets: { calories: 2000, protein: 150, carbs: 200, fat: 60 } 
+        });
+      },
       setActiveMeal: (id) => set({ activeMealId: id }),
-      setFastMode: (enabled) => set({ fastMode: enabled }),
+      setFastMode: (enabled) => {
+        const { patientId } = get();
+        if (patientId) {
+          localStorage.setItem(`fastMode_${patientId}`, enabled.toString());
+        }
+        set({ fastMode: enabled });
+      },
 
       addFoodToMeal: (mealId, food) => {
         const instanceId = Math.random().toString(36).substring(7);
