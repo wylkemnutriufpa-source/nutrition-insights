@@ -131,10 +131,10 @@ describe("Governance Engine — Chaos & Resilience", () => {
       let state = ctx({ user: null, profile: null, isReady: false, journeyStatus: null });
       expect(getSystemDecision(state).type).toBe("ALLOW"); // Universal route / allow
 
-      // 2. User carregado mas profile/tenant ainda não
+      // 2. User carregado mas profile/tenant ainda não (IsReady false)
       state = { ...state, user: { id: "u" } };
-      // Se pathname é /, allow. Se fosse privada, redirect.
-      expect(getSystemDecision({ ...state, pathname: "/my-diet" }).type).toBe("REDIRECT");
+      // Se pathname é /, allow. Se fosse privada, redirect para login (auth guard)
+      expect(getSystemDecision({ ...state, pathname: "/patients" }).type).toBe("REDIRECT");
 
       // 3. Profile carregado (orphan)
       state = { ...state, profile: { id: "u", is_orphan: true } };
