@@ -148,7 +148,7 @@ const ClinicalBrainLegacy = lazy(() => import("./pages/ClinicalBrain"));
 const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const InOfficeWizard = lazy(() => import("./pages/InOfficeWizard"));
 const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
-const QAChecklist = lazy(() => import("./pages/QAChecklistPage"));
+const QAChecklist = lazy(() => import("./pages/admin/QAChecklistPage"));
 const InvitationAudit = lazy(() => import("./pages/InvitationAudit"));
 const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit.tsx"));
 const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard.tsx"));
