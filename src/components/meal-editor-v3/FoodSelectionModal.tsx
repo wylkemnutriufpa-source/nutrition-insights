@@ -26,6 +26,8 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   const [debouncedSearch, setDebouncedSearch] = useState('');
   const [history, setHistory] = useState<Food[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 150);
@@ -57,13 +59,28 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && filteredQuickFoods.length > 0) {
-      handleAdd(filteredQuickFoods[0]);
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setActiveIndex(prev => Math.min(prev + 1, filteredQuickFoods.length - 1));
+    }
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setActiveIndex(prev => Math.max(prev - 1, 0));
+    }
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      if (filteredQuickFoods.length > 0) {
+        handleAdd(filteredQuickFoods[activeIndex]);
+      }
     }
     if (e.key === 'Escape') {
       onClose();
     }
   };
+
+  useEffect(() => {
+    setActiveIndex(0);
+  }, [debouncedSearch]);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

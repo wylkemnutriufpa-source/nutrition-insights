@@ -8,25 +8,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { CheckCircle2, AlertCircle } from 'lucide-react';
 
 export const MacroSummary: React.FC = () => {
-  const { meals, fastMode } = useMealEditorV3Store();
-
-  const totals = meals.reduce((acc, meal) => {
-    meal.items.forEach(item => {
-      acc.calories += item.calories * item.quantity;
-      acc.protein += item.protein * item.quantity;
-      acc.carbs += item.carbs * item.quantity;
-      acc.fat += item.fat * item.quantity;
-    });
-    return acc;
-  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
-
-  // Mock targets
-  const targets = {
-    calories: 2200,
-    protein: 160,
-    carbs: 220,
-    fat: 70
+  const { meals, fastMode, patientTargets, planStatus } = useMealEditorV3Store();
+  
+  // Real targets with fallback
+  const targets = patientTargets || {
+    calories: 2000,
+    protein: 150,
+    carbs: 200,
+    fat: 60
   };
+
+  if (!patientTargets) {
+    console.warn('Meta do paciente não encontrada, usando fallback controlado.');
+  }
 
   const isGoalReached = (current: number, target: number) => {
     const diff = Math.abs(current - target);
@@ -41,7 +35,28 @@ export const MacroSummary: React.FC = () => {
     <div className="space-y-6">
       <div>
         <div className="flex items-center justify-between mb-4">
-          <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resumo Diário</h2>
+          <div className="flex flex-col">
+            <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Resumo Diário</h2>
+            <AnimatePresence>
+              {(planStatus === 'syncing' || planStatus === 'success' || planStatus === 'error') && (
+                <motion.span
+                  initial={{ opacity: 0, x: -5 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0 }}
+                  className={cn(
+                    "text-[8px] font-bold uppercase mt-0.5",
+                    planStatus === 'syncing' && "text-blue-500",
+                    planStatus === 'success' && "text-green-500",
+                    planStatus === 'error' && "text-red-500"
+                  )}
+                >
+                  {planStatus === 'syncing' && "Atualizando..."}
+                  {planStatus === 'success' && "Meta atingida ✔"}
+                  {planStatus === 'error' && "Erro ⚠"}
+                </motion.span>
+              )}
+            </AnimatePresence>
+          </div>
           {isGoalReached(totals.calories, targets.calories) && (
             <motion.div 
               initial={{ scale: 0 }} 
@@ -53,7 +68,7 @@ export const MacroSummary: React.FC = () => {
             </motion.div>
           )}
         </div>
-        
+
         <div className="space-y-1 mb-6">
           <div className="flex justify-between items-end mb-1">
             <AnimatedNumber 
