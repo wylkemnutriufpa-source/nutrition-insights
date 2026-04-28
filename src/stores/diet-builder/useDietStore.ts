@@ -120,7 +120,7 @@ export const useDietStore = create<DietState>()(
 
         try {
           await supabase.from('profiles').update({
-            editor_state: { meals, goal, calorieTarget, isFallback },
+            editor_state: { meals, goal, calorieTarget, isFallback } as any,
             last_editor_step: currentStep,
             current_editor_mode: 'V3'
           }).eq('id', patientId);
