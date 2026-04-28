@@ -27,6 +27,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   const [history, setHistory] = useState<Food[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedForBatch, setSelectedForBatch] = useState<Food[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 150);
@@ -36,21 +37,35 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
+      setSelectedForBatch([]);
     }
   }, [isOpen]);
 
   const handleAdd = (food: Food) => {
     if (onSelect) {
-      onSelect(food);
+      // If onSelect is provided, we might want to batch select for substitutions
+      if (selectedForBatch.find(f => f.id === food.id)) {
+        setSelectedForBatch(prev => prev.filter(f => f.id !== food.id));
+      } else {
+        setSelectedForBatch(prev => [...prev, food]);
+      }
     } else {
       addFoodToMeal(mealId, food);
       toast.success(`${food.name} adicionado`);
+      
+      setHistory(prev => {
+        const filtered = prev.filter(f => f.id !== food.id);
+        return [food, ...filtered].slice(0, 5);
+      });
     }
-    
-    setHistory(prev => {
-      const filtered = prev.filter(f => f.id !== food.id);
-      return [food, ...filtered].slice(0, 5);
-    });
+  };
+
+  const confirmBatch = () => {
+    if (onSelect && selectedForBatch.length > 0) {
+      selectedForBatch.forEach(food => onSelect(food));
+      toast.success(`${selectedForBatch.length} substituições adicionadas`);
+      onClose();
+    }
   };
 
   const filteredQuickFoods = QUICK_FOODS.filter(f => 
