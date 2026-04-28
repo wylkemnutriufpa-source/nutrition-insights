@@ -9,11 +9,13 @@ import {
   Droplets,
   ChevronLeft,
   Share2,
-  MoreVertical
+  MoreVertical,
+  Zap
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const DietBuilder: React.FC = () => {
   const { meals, totals, calorieTarget, patientName, goal } = useDietStore();
