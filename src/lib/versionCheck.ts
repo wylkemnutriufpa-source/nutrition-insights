@@ -4,10 +4,10 @@
  * Polls /version.json and forces a clean reload when the deployed version
  * differs from the version embedded in the running bundle.
  *
- * Goals:
- *  - ZERO manual cache clearing
- *  - ZERO update delay (auto-refresh within POLL_INTERVAL_MS of deploy)
- *  - User always on the correct version
+ * UX Safe Rules:
+ * - Detects active user (typing, open modals, busy states)
+ * - Defer auto-reload if user is active
+ * - Passive updates via events/banners
  */
 
 import { BUILD_INFO } from "./buildInfo";
@@ -75,7 +75,6 @@ async function nukeCachesAndSW(): Promise<void> {
         .then((regs) =>
           Promise.all(
             regs.map((r) =>
-              // Try to update first; if a new SW is waiting, activate it.
               r
                 .update()
                 .catch(() => {})
@@ -112,76 +111,83 @@ function markReload(): void {
   } catch {}
 }
 
-function hardReload(): void {
+function hardReload(reason: string): void {
+  console.info(`[FJ:Version] forcing reload. reason=${reason}`);
   const url = new URL(window.location.href);
   url.searchParams.set("v", String(Date.now()));
   window.location.replace(url.toString());
 }
 
-async function checkOnce(): Promise<void> {
+export function isUserActive(): boolean {
+  // 1. Focused input
+  const activeEl = document.activeElement;
+  const isTyping = activeEl && (
+    activeEl.tagName === 'INPUT' || 
+    activeEl.tagName === 'TEXTAREA' || 
+    (activeEl as HTMLElement).isContentEditable
+  );
+  if (isTyping) return true;
+
+  // 2. Busy states (autosave, forms)
+  const busyElement = document.querySelector('[data-state="busy"], [data-loading="true"], [data-form-dirty="true"]');
+  if (busyElement) return true;
+
+  // 3. Open UI elements (Modals, Sheets, etc)
+  const modalOpen = document.querySelector('[role="dialog"], [role="menu"], [data-state="open"]');
+  if (modalOpen) return true;
+
+  return false;
+}
+
+async function checkOnce(forceReload = false): Promise<void> {
   const remote = await fetchRemoteVersion();
-  if (!remote || !remote.version) {
-    console.info("[FJ:Version] check skipped — no remote version available");
-    return;
-  }
+  if (!remote || !remote.version) return;
 
   const isMatch = remote.version === LOCAL_VERSION;
-  console.info(
-    `[FJ:Version] local=${LOCAL_VERSION} remote=${remote.version} action=${
-      isMatch ? "ok" : "reload"
-    }`
-  );
-
   if (isMatch) return;
-  if (!canReloadNow()) {
-    console.warn("[FJ:Version] reload throttled — waiting for cooldown");
+
+  if (!canReloadNow()) return;
+
+  const active = isUserActive();
+  
+  if (!forceReload && active) {
+    console.info("[FJ:Version] Update available, but user is active. Deferring reload...");
+    window.dispatchEvent(new CustomEvent('fj-update-available', { 
+      detail: { version: remote.version, local: LOCAL_VERSION } 
+    }));
     return;
   }
 
   markReload();
   await nukeCachesAndSW();
-  hardReload();
+  hardReload(forceReload ? "manual-click" : (active ? "deferred-active" : "auto-idle"));
 }
 
-/**
- * Start the version sync loop. Safe to call multiple times.
- * Skips automatically inside Lovable preview / iframe environments.
- */
+export function forceUpdate(): void {
+  void checkOnce(true);
+}
+
 export function startVersionSync(): void {
   if (started) return;
   started = true;
 
-  // Expose current version for debugging / E2E
   try {
     (window as any).__APP_VERSION__ = LOCAL_VERSION;
   } catch {}
 
-  if (isPreviewOrIframe()) {
-    console.info("[FJ:Version] preview/iframe detected — version sync disabled");
-    return;
-  }
+  if (isPreviewOrIframe()) return;
 
-  // Initial check after a short delay so the app can boot first
-  setTimeout(() => {
-    void checkOnce();
-  }, 5_000);
+  setTimeout(() => { void checkOnce(); }, 5_000);
 
-  // Periodic check
-  timer = setInterval(() => {
-    void checkOnce();
-  }, POLL_INTERVAL_MS);
+  timer = setInterval(() => { void checkOnce(); }, POLL_INTERVAL_MS);
 
-  // Re-check when the tab becomes visible again
   document.addEventListener("visibilitychange", () => {
     if (document.visibilityState === "visible") {
       void checkOnce();
     }
   });
 
-  // Re-check when network comes back
-  window.addEventListener("online", () => {
-    void checkOnce();
-  });
+  window.addEventListener("online", () => { void checkOnce(); });
 }
 
 export function stopVersionSync(): void {
