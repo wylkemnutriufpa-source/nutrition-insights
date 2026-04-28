@@ -30,6 +30,7 @@ export interface Meal {
   id: string;
   name: string;
   items: MealItem[];
+  daySubstitutions?: Record<string, string>; // dayId -> instanceId
 }
 
 interface HistoryState {
@@ -88,6 +89,7 @@ interface MealPlanState {
   
   resetPlan: () => void;
   generateDeterministicPlan: (goal: string, context?: any) => Promise<void>;
+  setDaySubstitution: (mealId: string, dayId: string, instanceId: string) => void;
 }
 
 const DEFAULT_MEALS = [
@@ -593,6 +595,21 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           activeMealId: '1',
           planStatus: 'validated',
           clinicalLog: finalLog
+        }));
+      },
+      setDaySubstitution: (mealId, dayId, instanceId) => {
+        set((state) => ({
+          meals: state.meals.map((m) =>
+            m.id === mealId
+              ? {
+                  ...m,
+                  daySubstitutions: {
+                    ...(m.daySubstitutions || {}),
+                    [dayId]: instanceId,
+                  },
+                }
+              : m
+          ),
         }));
       },
     }),

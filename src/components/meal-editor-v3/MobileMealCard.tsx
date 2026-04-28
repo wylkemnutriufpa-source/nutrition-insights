@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Meal, MealItem, useMealEditorV3Store } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import {
   Sun, Coffee, Utensils, Moon, Star, MoreVertical,
@@ -24,6 +25,7 @@ interface Props {
   meal: Meal;
   defaultTime?: string;
   weekMode?: boolean;
+  activeDayId?: string;
   onAddItem: (mealId: string) => void;
   onEditItem: (mealId: string, item: MealItem) => void;
   onSubstituteItem: (mealId: string, item: MealItem) => void;
@@ -44,9 +46,9 @@ const computeTotals = (items: MealItem[]) =>
   );
 
 export const MobileMealCard: React.FC<Props> = ({
-  meal, defaultTime, weekMode, onAddItem, onEditItem, onSubstituteItem,
+  meal, defaultTime, weekMode, activeDayId, onAddItem, onEditItem, onSubstituteItem,
 }) => {
-  const { removeFoodFromMeal, duplicateMeal } = useMealEditorV3Store();
+  const { removeFoodFromMeal, duplicateMeal, setDaySubstitution } = useMealEditorV3Store();
   const Icon = getIcon(meal.name);
   const totals = computeTotals(meal.items);
   const [actionItem, setActionItem] = useState<MealItem | null>(null);
@@ -96,60 +98,93 @@ export const MobileMealCard: React.FC<Props> = ({
             Adicionar alimento
           </button>
         ) : (
-          meal.items.map((item) => (
-            <div key={item.instanceId} className="px-3 py-2.5">
-              <div className="flex items-center gap-3">
-                {item.imageUrl ? (
-                  <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted flex-shrink-0 border">
-                    <img
-                      src={item.imageUrl}
-                      alt={item.name}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                ) : (
-                  <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0">
-                    <Utensils className="w-4 h-4 text-muted-foreground/40" />
-                  </div>
-                )}
+          meal.items.map((item) => {
+            const isSelectedSub = weekMode && activeDayId && meal.daySubstitutions?.[activeDayId] === item.instanceId;
+            const hasOtherSubSelected = weekMode && activeDayId && meal.daySubstitutions?.[activeDayId] && meal.daySubstitutions[activeDayId] !== item.instanceId;
 
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="font-bold text-sm truncate">{item.name}</p>
-                    {(item.isMarmita || item.locked) && (
-                      <Lock className="w-3 h-3 text-orange-500 flex-shrink-0" />
-                    )}
-                  </div>
-                  <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 tabular-nums">
-                    {Math.round(item.quantity * item.portionValue)}
-                    {item.portionUnit} • {Math.round(item.calories * item.quantity)} kcal
-                  </p>
-                  {weekMode && item.substitutions && item.substitutions.length > 0 && (
-                    <div className="mt-1.5 flex flex-wrap gap-1">
-                      {item.substitutions.slice(0, 3).map((s) => (
-                        <span
-                          key={s.id}
-                          className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
-                        >
-                          OU {s.name}
-                        </span>
-                      ))}
+            return (
+              <div 
+                key={item.instanceId} 
+                className={cn(
+                  "px-3 py-2.5 transition-all duration-300",
+                  isSelectedSub && "bg-primary/10 border-l-4 border-l-primary",
+                  hasOtherSubSelected && "opacity-40 grayscale-[0.5]"
+                )}
+              >
+                <div className="flex items-center gap-3">
+                  {item.imageUrl ? (
+                    <div className="w-12 h-12 rounded-xl overflow-hidden bg-muted flex-shrink-0 border">
+                      <img
+                        src={item.imageUrl}
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                  ) : (
+                    <div className="w-12 h-12 rounded-xl bg-muted/50 flex items-center justify-center flex-shrink-0">
+                      <Utensils className="w-4 h-4 text-muted-foreground/40" />
                     </div>
                   )}
-                </div>
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8 rounded-lg text-muted-foreground flex-shrink-0"
-                  onClick={() => setActionItem(item)}
-                  aria-label="Mais opções do item"
-                >
-                  <MoreVertical className="w-4 h-4" />
-                </Button>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <p className="font-bold text-sm truncate">{item.name}</p>
+                      {(item.isMarmita || item.locked) && (
+                        <Lock className="w-3 h-3 text-orange-500 flex-shrink-0" />
+                      )}
+                    </div>
+                    <p className="text-[10px] font-semibold text-muted-foreground mt-0.5 tabular-nums">
+                      {Math.round(item.quantity * item.portionValue)}
+                      {item.portionUnit} • {Math.round(item.calories * item.quantity)} kcal
+                    </p>
+                    {weekMode && item.substitutions && item.substitutions.length > 0 && (
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {item.substitutions.slice(0, 3).map((s) => (
+                          <span
+                            key={s.id}
+                            className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground"
+                          >
+                            OU {s.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-1">
+                    {weekMode && activeDayId && !isSelectedSub && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 text-[9px] font-black uppercase px-2 hover:bg-primary/20 text-primary"
+                        onClick={() => setDaySubstitution(meal.id, activeDayId, item.instanceId)}
+                      >
+                        Selecionar
+                      </Button>
+                    )}
+                    
+                    {isSelectedSub && (
+                      <Badge className="bg-primary text-white text-[8px] font-black h-5 uppercase">
+                        ATIVO
+                      </Badge>
+                    )}
+
+                    {!weekMode && (
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 rounded-lg text-muted-foreground flex-shrink-0"
+                        onClick={() => setActionItem(item)}
+                        aria-label="Mais opções do item"
+                      >
+                        <MoreVertical className="w-4 h-4" />
+                      </Button>
+                    )}
+                  </div>
+                </div>
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
