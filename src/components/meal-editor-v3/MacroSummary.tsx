@@ -10,6 +10,16 @@ import { CheckCircle2, AlertCircle } from 'lucide-react';
 export const MacroSummary: React.FC = () => {
   const { meals, fastMode, patientTargets, planStatus } = useMealEditorV3Store();
   
+  const totals = meals.reduce((acc, meal) => {
+    meal.items.forEach(item => {
+      acc.calories += item.calories * item.quantity;
+      acc.protein += item.protein * item.quantity;
+      acc.carbs += item.carbs * item.quantity;
+      acc.fat += item.fat * item.quantity;
+    });
+    return acc;
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
+
   // Real targets with fallback
   const targets = patientTargets || {
     calories: 2000,
@@ -21,16 +31,6 @@ export const MacroSummary: React.FC = () => {
   if (!patientTargets) {
     console.warn('Meta do paciente não encontrada, usando fallback controlado.');
   }
-
-  const totals = meals.reduce((acc, meal) => {
-    meal.items.forEach(item => {
-      acc.calories += item.calories * item.quantity;
-      acc.protein += item.protein * item.quantity;
-      acc.carbs += item.carbs * item.quantity;
-      acc.fat += item.fat * item.quantity;
-    });
-    return acc;
-  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   const isGoalReached = (current: number, target: number) => {
     const diff = Math.abs(current - target);
@@ -182,4 +182,3 @@ const MacroProgress: React.FC<MacroProgressProps> = ({ label, current, target, u
     </div>
   );
 };
-

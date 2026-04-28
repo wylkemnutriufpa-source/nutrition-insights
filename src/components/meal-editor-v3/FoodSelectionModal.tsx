@@ -27,7 +27,6 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   const [history, setHistory] = useState<Food[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
-  const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 150);
@@ -158,7 +157,11 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: idx * 0.03 }}
                           >
-                            <FoodRow food={food} onAdd={() => handleAdd(food)} />
+                            <FoodRow 
+                              food={food} 
+                              onAdd={() => handleAdd(food)} 
+                              isActive={idx === activeIndex}
+                            />
                           </motion.div>
                         ))}
                       </AnimatePresence>
@@ -239,9 +242,12 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   );
 };
 
-const FoodRow = ({ food, onAdd, isRecent }: { food: Food, onAdd: () => void, isRecent?: boolean }) => (
+const FoodRow = ({ food, onAdd, isRecent, isActive }: { food: Food, onAdd: () => void, isRecent?: boolean, isActive?: boolean }) => (
   <button 
-    className="w-full flex items-center justify-between p-3.5 rounded-xl border bg-card hover:bg-accent transition-all text-left group hover:border-primary/20 hover:shadow-sm" 
+    className={cn(
+      "w-full flex items-center justify-between p-3.5 rounded-xl border bg-card hover:bg-accent transition-all text-left group hover:border-primary/20 hover:shadow-sm",
+      isActive && "border-primary bg-primary/5 shadow-md ring-2 ring-primary/10"
+    )}
     onClick={onAdd}
   >
     <div className="flex items-center gap-3">
