@@ -21,6 +21,7 @@ export const FJ_LOG_TAGS = {
 export const fjLog = (tag: keyof typeof FJ_LOG_TAGS, message: string, data?: any) => {
   const fullTag = FJ_LOG_TAGS[tag];
   const timestamp = new Date().toISOString();
+  const correlationId = getSessionCorrelationId();
   
   // Format for audit persistence
   const logEntry = {
@@ -32,15 +33,18 @@ export const fjLog = (tag: keyof typeof FJ_LOG_TAGS, message: string, data?: any
 
   console.log(`${fullTag} [${timestamp}] ${message}`, data || "");
   
+  // Persist to audit logs
+  logAudit(
+    `SYSTEM_${tag}`,
+    "system",
+    null,
+    logEntry,
+    tag === "CRITICAL" ? "error" : "success",
+    correlationId
+  );
+
   if (tag === "CRITICAL") {
     console.error(`${fullTag} CRITICAL ERROR DETECTED:`, message, data);
-  }
-
-  // Future: persist to FJ_AUDIT_LOGS table via edge function
-  // For now, ensure it stands out in dev tools
-  if ((window as any).__FJ_DEBUG__) {
-    (window as any).__FJ_LOGS__ = (window as any).__FJ_LOGS__ || [];
-    (window as any).__FJ_LOGS__.push(logEntry);
   }
 };
 
