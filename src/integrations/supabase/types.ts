@@ -7042,9 +7042,11 @@ export type Database = {
           created_at: string
           description: string | null
           id: string
+          is_lunchbox: boolean | null
           is_premium: boolean | null
           meals: Json
           name: string
+          target_goal: string | null
           template_marmita: boolean | null
         }
         Insert: {
@@ -7053,9 +7055,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_lunchbox?: boolean | null
           is_premium?: boolean | null
           meals?: Json
           name: string
+          target_goal?: string | null
           template_marmita?: boolean | null
         }
         Update: {
@@ -7064,9 +7068,11 @@ export type Database = {
           created_at?: string
           description?: string | null
           id?: string
+          is_lunchbox?: boolean | null
           is_premium?: boolean | null
           meals?: Json
           name?: string
+          target_goal?: string | null
           template_marmita?: boolean | null
         }
         Relationships: []
