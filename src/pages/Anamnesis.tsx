@@ -9,7 +9,17 @@ import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save, Lock, AlertTriangle, ArrowRight } from "lucide-react";
+import { 
+  AlertDialog, 
+  AlertDialogAction, 
+  AlertDialogCancel, 
+  AlertDialogContent, 
+  AlertDialogDescription, 
+  AlertDialogFooter, 
+  AlertDialogHeader, 
+  AlertDialogTitle 
+} from "@/components/ui/alert-dialog";
+import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save, Lock, AlertTriangle, ArrowRight, History, RefreshCcw } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
 import { useAppState } from "@/hooks/useAppState";
@@ -558,12 +568,16 @@ export default function Anamnesis() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [patientName, setPatientName] = useState<string>("");
   const [draftId, setDraftId] = useState<string | null>(null);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
+  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const [showConflictModal, setShowConflictModal] = useState(false);
+  const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
+  const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
   const [adaptiveStep, setAdaptiveStep] = useState(0);
   const [onboardingBlocked, setOnboardingBlocked] = useState(false);
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(tenantId ?? null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const retryCount = useRef(0);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist
   const targetUserId = forPatientId || user?.id;
@@ -645,10 +659,22 @@ export default function Anamnesis() {
     })();
   }, [targetUserId, isNutritionistMode]);
 
-  // Load existing draft on mount
+  // Load existing draft and local backup on mount
   useEffect(() => {
     if (!targetUserId) return;
     (async () => {
+      // 1. Get local backup first
+      const backupKey = `fj_anamnesis_backup_${targetUserId}`;
+      let localData: { answers: Record<string, any>, updated_at: string } | null = null;
+      try {
+        const stored = localStorage.getItem(backupKey);
+        if (stored) localData = JSON.parse(stored);
+      } catch (e) {
+        console.warn("[FJ:Anamnesis] failed to read local backup:", e);
+      }
+      setLocalBackup(localData);
+
+      // 2. Get server data
       const [{ data: anamnesisRows }, { data: pipelineData }] = await Promise.all([
         supabase
           .from("patient_anamnesis")
@@ -672,7 +698,7 @@ export default function Anamnesis() {
       const latestAnamnesis = anamnesisRows?.[0] as any;
       const latestPipeline = pipelineData as any;
 
-      // 📡 TELEMETRIA: registra a decisão de roteamento (lê via window.__fjAnamneseTrace)
+      // 📡 TELEMETRIA: registra a decisão de roteamento
       try {
         const trace = {
           ts: new Date().toISOString(),
@@ -683,55 +709,62 @@ export default function Anamnesis() {
           hasPipeline: !!latestPipeline,
           pipelineStatus: latestPipeline?.status ?? null,
           pipelineAnamnesisCompleted: latestPipeline?.anamnesis_completed ?? null,
+          hasLocalBackup: !!localData,
         };
         (window as any).__fjAnamneseTrace = trace;
-        try {
-          const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
-          arr.push(trace);
-          localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
-        } catch { /* ignore */ }
+        const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
+        arr.push(trace);
+        localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
         console.info("[FJ:Anamnesis] route-decision trace:", trace);
       } catch { /* ignore */ }
 
-      // Detect active pipeline for auto-redirect behavior
+      // Detect active pipeline
       if (latestPipeline && !isNutritionistMode) {
         setHasActivePipeline(true);
       }
 
-      if (!latestAnamnesis) return;
+      // CONFLICT DETECTION (Hardening V3.5)
+      if (latestAnamnesis && localData) {
+        const serverUpdatedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at).getTime();
+        const localUpdatedAt = new Date(localData.updated_at).getTime();
+        
+        // If they differ by more than 2 seconds, treat as conflict
+        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000) {
+          setServerVersion({ 
+            answers: latestAnamnesis.answers as Record<string, any>, 
+            updated_at: latestAnamnesis.updated_at || latestAnamnesis.created_at,
+            id: latestAnamnesis.id
+          });
+          setShowConflictModal(true);
+          // We don't return here, we let the modal handle it. 
+          // Defaulting to local version for now until choice.
+          setAnswers(localData.answers);
+          setDraftId(latestAnamnesis.id);
+          return;
+        }
+      }
 
-      const pipelineTouchedAt = new Date(latestPipeline?.updated_at || latestPipeline?.created_at || 0).getTime();
-      const anamnesisTouchedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at || 0).getTime();
-      const ignoreStaleAnamnesis =
-        latestPipeline?.status === "pending_anamnesis" &&
-        !latestPipeline?.anamnesis_completed &&
-        anamnesisTouchedAt < pipelineTouchedAt;
-
-      if (ignoreStaleAnamnesis) {
-        setCompleted(false);
-        setDraftId(null);
-        setAnswers({});
-        setStep(0);
+      // No conflict or no data scenarios
+      if (!latestAnamnesis) {
+        if (localData) {
+          setAnswers(localData.answers);
+          const lastIdx = questions.findIndex((q) => !(q.id in localData!.answers));
+          if (lastIdx > 0) setStep(lastIdx);
+          else if (lastIdx === -1) setStep(questions.length - 1);
+          toast.info("Dados restaurados do backup local! ⚡");
+        }
         return;
       }
 
+      // Use latestAnamnesis (standard behavior)
+      setDraftId(latestAnamnesis.id);
+      const savedAnswers = latestAnamnesis.answers as Record<string, any>;
+      if (savedAnswers) setAnswers(savedAnswers);
+
       if (latestAnamnesis.status === "completed") {
-        // 🛡️ ANTI-LOOP HARDENING (v3.0): NUNCA redirecionar de /anamnesis para
-        // /onboarding-pipeline. O OnboardingPipeline manda a paciente pra cá via
-        // AnamnesisAutoRedirect; se a anamnese também devolvesse pro pipeline,
-        // criaria loop infinito. Aqui apenas exibimos a tela "concluída" — a
-        // paciente decide manualmente continuar (botão "Continuar Onboarding").
         setCompleted(true);
-        setDraftId(latestAnamnesis.id);
-        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
-        if (savedAnswers) setAnswers(savedAnswers);
       } else if (latestAnamnesis.status === "draft") {
-        // Restore draft
-        setDraftId(latestAnamnesis.id);
-        const savedAnswers = latestAnamnesis.answers as Record<string, any>;
         if (savedAnswers && Object.keys(savedAnswers).length > 0) {
-          setAnswers(savedAnswers);
-          // Jump to last answered question
           const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
           if (lastIdx > 0) setStep(lastIdx);
           else if (lastIdx === -1) setStep(questions.length - 1);
@@ -748,37 +781,49 @@ export default function Anamnesis() {
     toast.info("Modo edição ativado! Revise suas respostas ✏️");
   };
 
+  // Backup local automatico
+  const saveLocalBackup = useCallback((currentAnswers: Record<string, any>) => {
+    if (!targetUserId) return;
+    try {
+      localStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
+        answers: currentAnswers,
+        updated_at: new Date().toISOString()
+      }));
+    } catch (e) {
+      console.warn("[FJ:Anamnesis] backup fail:", e);
+    }
+  }, [targetUserId]);
+
   // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
 
-    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir salvamento se o estado não estiver pronto ou em modo degradado
+    // BLOQUEIO DE AÇÃO CRÍTICA
     if (!isReady || isDegraded) {
       console.warn("[FJ:Anamnesis] Autosave blocked: System not ready or in degraded mode", { isReady, isDegraded });
+      return;
+    }
+
+    if (!resolvedTenantId) {
+      console.warn("[FJ:Anamnesis] Autosave deferred: tenant_id unresolved.");
       return;
     }
 
     setAutoSaveStatus("saving");
 
     try {
+      let error;
       if (draftId) {
-        const { error } = await supabase
+        const { error: updateError } = await supabase
           .from("patient_anamnesis")
-          .update({ answers: currentAnswers, updated_at: new Date().toISOString() })
+          .update({ 
+            answers: currentAnswers, 
+            updated_at: new Date().toISOString(),
+            tenant_id: resolvedTenantId // Ensure tenant_id is always set
+          })
           .eq("id", draftId);
-        if (error) {
-          console.error("[FJ:Anamnesis] autosave UPDATE failed:", error);
-          setAutoSaveStatus("idle");
-          return;
-        }
+        error = updateError;
       } else {
-        if (!resolvedTenantId) {
-          console.warn("[FJ:Anamnesis] Autosave deferred: tenant_id unresolved. Waiting for state synchronization.");
-          // No error status, just idle waiting for the next trigger once tenant is resolved
-          setAutoSaveStatus("idle");
-          return;
-        }
-
         const insertPayload: any = {
           user_id: targetUserId,
           answers: currentAnswers,
@@ -786,26 +831,37 @@ export default function Anamnesis() {
           tenant_id: resolvedTenantId,
         };
 
-        const { data, error } = await supabase
+        const { data, error: insertError } = await supabase
           .from("patient_anamnesis")
           .insert(insertPayload)
           .select("id")
           .maybeSingle();
-        if (error) {
-          console.error("[FJ:Anamnesis] autosave INSERT failed:", error);
-          toast.error("Não foi possível salvar o rascunho. Recarregue a página.");
-          setAutoSaveStatus("idle");
-          return;
-        }
+        error = insertError;
         if (data?.id) setDraftId(data.id);
       }
+
+      if (error) {
+        console.error("[FJ:Anamnesis] autosave failed:", error);
+        setAutoSaveStatus("error");
+        
+        // Retry logic (max 3 retries)
+        if (retryCount.current < 3) {
+          retryCount.current += 1;
+          setTimeout(() => performAutoSave(currentAnswers), 3000 * retryCount.current);
+        } else {
+          toast.error("Erro ao salvar rascunho. Verifique sua conexão.");
+        }
+        return;
+      }
+
+      retryCount.current = 0;
       setAutoSaveStatus("saved");
       setTimeout(() => setAutoSaveStatus("idle"), 2000);
     } catch (e) {
       console.error("[FJ:Anamnesis] autosave threw:", e);
-      setAutoSaveStatus("idle");
+      setAutoSaveStatus("error");
     }
-  }, [targetUserId, user, draftId, resolvedTenantId]);
+  }, [targetUserId, user, draftId, resolvedTenantId, isReady, isDegraded]);
 
   // Debounced autosave on answers change — wait for first user interaction (not just mount)
   useEffect(() => {
@@ -820,21 +876,26 @@ export default function Anamnesis() {
   }, [answers, performAutoSave, completed]);
 
   const setAnswer = (value: any) => {
-    setAnswers((prev) => ({ ...prev, [q.id]: value }));
+    const newAnswers = { ...answers, [q.id]: value };
+    setAnswers(newAnswers);
+    saveLocalBackup(newAnswers);
   };
 
   const toggleMulti = (value: string) => {
     const current: string[] = answers[q.id] || [];
+    let newAnswers;
     if (value === "none") {
-      setAnswer(["none"]);
-      return;
-    }
-    const filtered = current.filter((v) => v !== "none");
-    if (filtered.includes(value)) {
-      setAnswer(filtered.filter((v) => v !== value));
+      newAnswers = { ...answers, [q.id]: ["none"] };
     } else {
-      setAnswer([...filtered, value]);
+      const filtered = current.filter((v) => v !== "none");
+      if (filtered.includes(value)) {
+        newAnswers = { ...answers, [q.id]: filtered.filter((v) => v !== value) };
+      } else {
+        newAnswers = { ...answers, [q.id]: [...filtered, value] };
+      }
     }
+    setAnswers(newAnswers);
+    saveLocalBackup(newAnswers);
   };
 
   const canNext = () => {
@@ -1316,6 +1377,11 @@ export default function Anamnesis() {
                   <Save className="w-3 h-3" /> Salvo
                 </span>
               )}
+              {autoSaveStatus === "error" && (
+                <span className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertTriangle className="w-3 h-3" /> Erro ao salvar
+                </span>
+              )}
               <ProgressPulse trigger={step}>
                 <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
               </ProgressPulse>
@@ -1595,6 +1661,69 @@ export default function Anamnesis() {
           </motion.div>
         )}
       </div>
+
+      <AlertDialog open={showConflictModal} onOpenChange={setShowConflictModal}>
+        <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">
+              <History className="w-5 h-5 text-primary" />
+              Conflito de Versão
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-4 pt-2">
+              <p>
+                Encontramos uma versão diferente das suas respostas no servidor. 
+                Qual versão você deseja manter?
+              </p>
+              
+              <div className="grid gap-3 pt-2">
+                <div className="p-3 rounded-xl border border-border bg-muted/30">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1">Versão Local (Atual)</p>
+                  <p className="text-sm font-medium">
+                    {localBackup ? new Date(localBackup.updated_at).toLocaleString('pt-BR') : "Sem data"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Dados salvos neste dispositivo.
+                  </p>
+                </div>
+                
+                <div className="p-3 rounded-xl border border-primary/20 bg-primary/5">
+                  <p className="text-xs font-semibold text-primary uppercase tracking-wider mb-1">Versão do Servidor</p>
+                  <p className="text-sm font-medium">
+                    {serverVersion ? new Date(serverVersion.updated_at).toLocaleString('pt-BR') : "Sem data"}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Dados salvos na nuvem.
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="flex-col sm:flex-row gap-2 mt-4">
+            <AlertDialogCancel 
+              onClick={() => {
+                setShowConflictModal(false);
+                toast.success("Mantendo versão local! 🏠");
+              }}
+              className="sm:flex-1"
+            >
+              Manter Local
+            </AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (serverVersion) {
+                  setAnswers(serverVersion.answers);
+                  saveLocalBackup(serverVersion.answers);
+                  setShowConflictModal(false);
+                  toast.success("Versão do servidor restaurada! ☁️");
+                }
+              }}
+              className="sm:flex-1 gradient-primary shadow-glow"
+            >
+              Restaurar Servidor
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
