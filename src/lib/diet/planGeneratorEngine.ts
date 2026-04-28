@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Food, Meal } from "@/stores/diet-builder/useDietStore";
+import { validateMealPlan } from "./planValidator";
 
 export type PlanType = 
   | 'hipertrofia' 
