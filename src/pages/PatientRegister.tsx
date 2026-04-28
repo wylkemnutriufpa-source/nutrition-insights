@@ -140,7 +140,6 @@ export default function PatientRegister() {
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
 
-  const [linkageError, setLinkageError] = useState<{ type: string; message: string } | null>(null);
 
 
   // Professional (optional)
