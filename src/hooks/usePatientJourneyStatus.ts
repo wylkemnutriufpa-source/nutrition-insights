@@ -162,5 +162,5 @@ export function usePatientJourneyStatus() {
 
   const canAccessOnboarding = status !== "no_link" && status !== null;
 
-  return { status, loading, canAccessOnboarding };
+  return { status, anamnesisStatus, loading, canAccessOnboarding };
 }
