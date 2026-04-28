@@ -34,6 +34,7 @@ export const IS_FLUID_STATE = (status: JourneyStatus) =>
 export function usePatientJourneyStatus() {
   const { user, isPatient } = useAuth();
   const [status, setStatus] = useState<JourneyStatus | "no_link">(null);
+  const [anamnesisStatus, setAnamnesisStatus] = useState<'pending' | 'completed' | null>(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
