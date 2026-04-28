@@ -59,19 +59,27 @@ export function EditorMatrixModal({ isOpen, onClose, onSelect, patientId }: Edit
   const handleSelect = async (version: "v2" | "v3") => {
     setIsLoading(true);
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
       // 1. Persistir no Backend (Harden Entry Point)
       await supabase
         .from("profiles")
         .update({ 
           last_editor_version_used: version,
-          preferred_editor_version: version 
+          preferred_editor_version: version,
+          current_editor_mode: version.toUpperCase()
         } as any)
         .eq("user_id", patientId);
 
-      // 2. Persistir no LocalStorage (Backup)
+      // 2. Log de Auditoria
+      if (user) {
+        await logAuditEvent(user.id, patientId, 'escolha_editor', { mode: version.toUpperCase() });
+      }
+
+      // 3. Persistir no LocalStorage (Backup)
       localStorage.setItem("preferred_editor_version", version);
 
-      // 3. Validação V3 (Se necessário)
+      // 4. Validação V3 (Se necessário)
       if (version === "v3") {
         setIsValidating(true);
         const patientData = await fetchPatientAnamnesis(patientId);
