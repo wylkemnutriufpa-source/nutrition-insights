@@ -122,14 +122,15 @@ export const useMealEditorV3Store = create<MealPlanState>()(
 
       setPatientId: (id) => {
         const storedFastMode = localStorage.getItem(`fastMode_${id}`);
+        // Simulando dados reais de anamnese para testes
         set({ 
           patientId: id, 
           fastMode: storedFastMode === 'true',
           patientTargets: { 
-            calories: 2000, 
-            protein: 150, 
-            carbs: 200, 
-            fat: 60,
+            calories: 2200, 
+            protein: 160, 
+            carbs: 220, 
+            fat: 70,
             isIntolerant: false,
             drinksCoffee: true
           } 
