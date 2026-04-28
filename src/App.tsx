@@ -900,45 +900,29 @@ const App = () => (
 const App = () => (
   <HelmetProvider>
     <QueryClientProvider client={queryClient}>
-      <Helmet>
-        <title>FitJourney</title>
-      </Helmet>
       <TooltipProvider>
-        <BrowserRouter>
+        <Helmet>
+          <title>FitJourney — Plataforma para Nutricionistas</title>
+          <meta name="description" content="Plataforma completa para nutricionistas: planos alimentares, IA, gamificação, avaliações físicas e gestão de pacientes." />
+          <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=5" />
+          <link rel="canonical" href="https://www.fitjourney.com.br" />
+        </Helmet>
+        <Toaster />
+        <Sonner />
+        <MobileAutoFixer />
+        <GlobalErrorBoundary />
+        <BrowserRouter basename="/">
           <AuthProvider>
             <TenantProvider>
               <ExperienceModeProvider>
+                <ExperienceThemeSync />
+                <ExperienceRouteGuard />
+                <WorkspaceRouteGuard />
                 <CelebrationProvider>
-                  <CommandPaletteProvider>
-                    <AppContent />
-                  </CommandPaletteProvider>
-                </CelebrationProvider>
-              </ExperienceModeProvider>
-            </TenantProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-      <UpdateBanner />
-      <BuildStatusPanel />
-      <TextSourceInspector />
-    </QueryClientProvider>
-  </HelmetProvider>
-);
-
-export default App;
-
-const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <Helmet>
-        <title>FitJourney</title>
-      </Helmet>
-      <TooltipProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <TenantProvider>
-              <ExperienceModeProvider>
-                <CelebrationProvider>
+                  <DarkModeInit />
+                  <NeuralScreensaver />
+                  <FitIntelligenceAssistant />
+                  <IFJPatientCoach />
                   <CommandPaletteProvider>
                     <AppStateProvider>
                       <AppContent />
