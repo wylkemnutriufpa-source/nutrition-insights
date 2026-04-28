@@ -55,9 +55,9 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
   const shouldBlockJourney = 
     isPatient && 
     !journeyLoading && 
-    !isAllowedPath && // NEVER block if we are already on an allowed onboarding path
+    !isAllowedPath && 
     journeyStatus && 
-    (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release" || journeyStatus === "lead_created");
+    (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release");
 
   if (shouldBlockJourney) {
     console.log(`[PatientReadyGuard] Blocking access to ${location.pathname} for status ${journeyStatus}`);
