@@ -431,8 +431,12 @@ export default function PatientMealPlan() {
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="text-center flex-1">
-              <h1 className="font-display text-2xl font-bold">Meu Plano Alimentar</h1>
-              <p className="text-muted-foreground text-sm">{plan.title}</p>
+              <h1 className="font-display text-2xl font-bold">
+                {isBasic ? "Sua dieta de hoje" : "Meu Plano Alimentar"}
+              </h1>
+              <p className="text-muted-foreground text-sm">
+                {isBasic ? "Siga o guia abaixo para ter resultados" : plan.title}
+              </p>
             </div>
             <Button
               variant="outline"
