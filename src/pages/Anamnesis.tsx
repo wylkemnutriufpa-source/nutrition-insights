@@ -570,6 +570,7 @@ export default function Anamnesis() {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
   const [showConflictModal, setShowConflictModal] = useState(false);
+  const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
   const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
   const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
@@ -668,7 +669,15 @@ export default function Anamnesis() {
       let localData: { answers: Record<string, any>, updated_at: string } | null = null;
       try {
         const stored = localStorage.getItem(backupKey);
-        if (stored) localData = JSON.parse(stored);
+        if (stored) {
+          localData = JSON.parse(stored);
+          // TTL Check: Clean backups older than 30 days
+          const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+          if (new Date().getTime() - new Date(localData!.updated_at).getTime() > thirtyDays) {
+            localStorage.removeItem(backupKey);
+            localData = null;
+          }
+        }
       } catch (e) {
         console.warn("[FJ:Anamnesis] failed to read local backup:", e);
       }
@@ -698,46 +707,30 @@ export default function Anamnesis() {
       const latestAnamnesis = anamnesisRows?.[0] as any;
       const latestPipeline = pipelineData as any;
 
-      // 📡 TELEMETRIA: registra a decisão de roteamento
-      try {
-        const trace = {
-          ts: new Date().toISOString(),
-          targetUserId,
-          cameFromPipeline: searchParams.get("pipeline") === "true",
-          hasAnamnesis: !!latestAnamnesis,
-          anamnesisStatus: latestAnamnesis?.status ?? null,
-          hasPipeline: !!latestPipeline,
-          pipelineStatus: latestPipeline?.status ?? null,
-          pipelineAnamnesisCompleted: latestPipeline?.anamnesis_completed ?? null,
-          hasLocalBackup: !!localData,
-        };
-        (window as any).__fjAnamneseTrace = trace;
-        const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
-        arr.push(trace);
-        localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
-        console.info("[FJ:Anamnesis] route-decision trace:", trace);
-      } catch { /* ignore */ }
-
       // Detect active pipeline
       if (latestPipeline && !isNutritionistMode) {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V3.5)
+      // CONFLICT DETECTION (Hardening V4.0)
       if (latestAnamnesis && localData) {
         const serverUpdatedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at).getTime();
         const localUpdatedAt = new Date(localData.updated_at).getTime();
         
-        // If they differ by more than 2 seconds, treat as conflict
-        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000) {
+        // Check if conflict was already resolved for these exact versions
+        const resolutionKey = `fj_conflict_resolved_${targetUserId}`;
+        const lastResolved = localStorage.getItem(resolutionKey);
+        const currentConflictId = `${serverUpdatedAt}_${localUpdatedAt}`;
+
+        // If they differ by more than 2 seconds AND not resolved yet
+        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000 && lastResolved !== currentConflictId) {
           setServerVersion({ 
             answers: latestAnamnesis.answers as Record<string, any>, 
             updated_at: latestAnamnesis.updated_at || latestAnamnesis.created_at,
             id: latestAnamnesis.id
           });
           setShowConflictModal(true);
-          // We don't return here, we let the modal handle it. 
-          // Defaulting to local version for now until choice.
+          // Modal handles the setAnswers. Default to local for UI continuity until choice.
           setAnswers(localData.answers);
           setDraftId(latestAnamnesis.id);
           return;
@@ -1498,6 +1491,20 @@ export default function Anamnesis() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => {
+                if (!localBackup) {
+                  toast.error("Nenhum backup local encontrado.");
+                  return;
+                }
+                setShowManualRestoreModal(true);
+              }}
+              className="gap-1.5 text-muted-foreground"
+            >
+              <RefreshCcw className="w-4 h-4" /> Restaurar backup
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={async () => {
                 await performAutoSave(answers);
                 toast.success("Rascunho salvo! Você pode continuar depois 💾");
@@ -1702,6 +1709,10 @@ export default function Anamnesis() {
             <AlertDialogCancel 
               onClick={() => {
                 setShowConflictModal(false);
+                // Persist decision
+                const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
+                const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
+                localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
                 toast.success("Mantendo versão local! 🏠");
               }}
               className="sm:flex-1"
@@ -1714,12 +1725,48 @@ export default function Anamnesis() {
                   setAnswers(serverVersion.answers);
                   saveLocalBackup(serverVersion.answers);
                   setShowConflictModal(false);
+                  // Persist decision
+                  const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
+                  const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
+                  localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
                   toast.success("Versão do servidor restaurada! ☁️");
                 }
               }}
               className="sm:flex-1 gradient-primary shadow-glow"
             >
               Restaurar Servidor
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      <AlertDialog open={showManualRestoreModal} onOpenChange={setShowManualRestoreModal}>
+        <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">
+              <RefreshCcw className="w-5 h-5 text-primary" />
+              Restaurar Backup Local
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso irá sobrescrever suas respostas atuais com a versão salva localmente em:
+              <span className="block mt-2 font-medium text-foreground">
+                {localBackup ? new Date(localBackup.updated_at).toLocaleString('pt-BR') : "Data desconhecida"}
+              </span>
+              Tem certeza que deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (localBackup) {
+                  setAnswers(localBackup.answers);
+                  setShowManualRestoreModal(false);
+                  toast.success("Respostas restauradas do backup local! ⚡");
+                }
+              }}
+              className="gradient-primary shadow-glow"
+            >
+              Confirmar Restauração
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
