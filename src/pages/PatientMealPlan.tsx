@@ -283,7 +283,7 @@ export default function PatientMealPlan() {
         confetti();
         toast.success("🏆 Dia perfeito! Todas as refeições seguidas!");
       } else {
-        toast.success("✅ Refeição seguida! +10 XP");
+        toast.success("✅ Muito bem! Continue assim.");
       }
     } else if (status === "partial") {
       toast("⚠️ Parcialmente seguida", { description: "Tente seguir 100% na próxima!" });
