@@ -1779,6 +1779,7 @@ export default function Anamnesis() {
                 if (localBackup) {
                   setAnswers(localBackup.answers);
                   setShowManualRestoreModal(false);
+                  logSafetyAction("restaurar_manual_local");
                   toast.success("Respostas restauradas do backup local! ⚡");
                 }
               }}
