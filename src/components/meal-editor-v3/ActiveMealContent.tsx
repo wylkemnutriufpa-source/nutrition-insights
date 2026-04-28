@@ -17,6 +17,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from '@/lib/utils';
 
 export const ActiveMealContent: React.FC = () => {
   const { 
@@ -33,7 +34,6 @@ export const ActiveMealContent: React.FC = () => {
   const activeMeal = meals.find((m) => m.id === activeMealId);
 
   useEffect(() => {
-    // Focus first meal on load if needed or handle focus logic
   }, [activeMealId]);
 
   if (!activeMeal) return null;
@@ -190,14 +190,23 @@ export const ActiveMealContent: React.FC = () => {
                       <Input
                         type="number"
                         value={item.quantity}
-                        onChange={(e) => updateFoodQuantity(activeMeal.id, item.instanceId, parseFloat(e.target.value) || 0)}
+                        onChange={(e) => {
+                          if (item.isMarmita) {
+                            toast.error('Marmitas possuem composição fixa');
+                            return;
+                          }
+                          updateFoodQuantity(activeMeal.id, item.instanceId, parseFloat(e.target.value) || 0);
+                        }}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter') {
                             addBtnRef.current?.focus();
                           }
                         }}
                         disabled={item.isMarmita}
-                        className="w-14 h-8 text-center text-xs font-bold"
+                        className={cn(
+                          "w-14 h-8 text-center text-xs font-bold",
+                          item.isMarmita && "opacity-50 cursor-not-allowed bg-muted"
+                        )}
                         min="0"
                         step="0.1"
                       />
@@ -225,7 +234,6 @@ export const ActiveMealContent: React.FC = () => {
                   </div>
                 </Card>
 
-                {/* Substitutions */}
                 {(item.substitutions || []).length > 0 && (
                   <div className="ml-8 space-y-1">
                     {item.substitutions?.map((sub) => (
@@ -263,7 +271,6 @@ export const ActiveMealContent: React.FC = () => {
         onClose={() => {
           setIsAddModalOpen(false);
           setSubstitutionModalData(null);
-          // Restore focus to add button
           addBtnRef.current?.focus();
         }} 
         mealId={activeMeal.id}
