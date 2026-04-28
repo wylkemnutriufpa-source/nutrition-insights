@@ -132,7 +132,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     );
   }
 
-  if (shouldBlockJourney) {
+  if (shouldBlockJourney && !authLoading && !journeyLoading) {
     return <OnboardingGateScreen status={journeyStatus!} />;
   }
 
