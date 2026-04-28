@@ -106,6 +106,25 @@ function getMotivationalMessage(pct: number): { emoji: string; message: string; 
   return { emoji: "⏳", message: "Marque suas refeições!", color: "text-muted-foreground" };
 }
 
+function isCurrentMeal(timeRange: string): boolean {
+  try {
+    const now = new Date();
+    const currentMinutes = now.getHours() * 60 + now.getMinutes();
+    
+    // Format: "HH:MM - HH:MM"
+    const [start, end] = timeRange.split(" - ");
+    const [startH, startM] = start.split(":").map(Number);
+    const [endH, endM] = end.split(":").map(Number);
+    
+    const startMinutes = startH * 60 + startM;
+    const endMinutes = endH * 60 + endM;
+    
+    return currentMinutes >= startMinutes && currentMinutes <= endMinutes;
+  } catch (e) {
+    return false;
+  }
+}
+
 // ── Macro Summary Bar (memoized) ──
 const MacroSummary = memo(function MacroSummary({ items, totalsStatus = 'ok' }: { items: MealPlanItem[], totalsStatus?: string }) {
   const totals = useMemo(() => ({
