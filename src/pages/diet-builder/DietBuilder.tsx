@@ -132,6 +132,11 @@ const DietBuilder: React.FC = () => {
             </Button>
           </div>
         </main>
+
+        <PlanGenerationModal 
+          isOpen={isGenModalOpen} 
+          onClose={() => setIsGenModalOpen(false)} 
+        />
       </div>
     </DashboardLayout>
   );
