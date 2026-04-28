@@ -31,6 +31,7 @@ export interface Meal {
   name: string;
   items: MealItem[];
   daySubstitutions?: Record<string, string>; // dayId -> instanceId
+  selectionMode?: 'day' | 'week';
 }
 
 interface HistoryState {
@@ -51,6 +52,8 @@ interface MealPlanState {
   meals: Meal[];
   activeMealId: string | null;
   fastMode: boolean;
+  viewMode: 'day' | 'week';
+  activeDay: string;
   history: HistoryState;
   planStatus: 'draft' | 'validated' | 'optimized' | 'syncing' | 'error' | 'success';
   clinicalLog: ClinicalLog | null;
@@ -65,6 +68,8 @@ interface MealPlanState {
   setActiveMeal: (id: string | null) => void;
   setFastMode: (enabled: boolean) => void;
   setPatientView: (enabled: boolean) => void;
+  setViewMode: (mode: 'day' | 'week') => void;
+  setActiveDay: (dayId: string) => void;
   
   fetchClinicalRules: () => Promise<void>;
   fetchTemplates: () => Promise<void>;
@@ -112,6 +117,8 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       meals: DEFAULT_MEALS,
       activeMealId: '1',
       fastMode: false,
+      viewMode: 'day',
+      activeDay: 'mon',
       history: { past: [], future: [] },
       planStatus: 'draft',
       clinicalLog: null,
@@ -147,6 +154,14 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         set({ fastMode: enabled });
       },
       setPatientView: (enabled) => set({ isPatientView: enabled }),
+      setViewMode: (mode) => {
+        const { viewMode } = get();
+        if (mode === 'week') {
+          toast.info('Modo semanal é apenas visualização e escolha de variações');
+        }
+        set({ viewMode: mode });
+      },
+      setActiveDay: (dayId) => set({ activeDay: dayId }),
 
       fetchClinicalRules: async () => {
         const { data } = await supabase
@@ -286,7 +301,12 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       addFoodToMeal: (mealId, food) => {
-        const { availableClinicalRules, meals } = get();
+        const { availableClinicalRules, meals, viewMode } = get();
+        
+        if (viewMode === 'week') {
+          toast.error('Não é permitido adicionar alimentos no Modo Semana');
+          return;
+        }
         
         // --- ETAPA 1: CORREÇÃO DE MARMITAS ---
         if (food.isMarmita) {
@@ -321,7 +341,12 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       removeFoodFromMeal: (mealId, instanceId) => {
-        const { meals } = get();
+        const { meals, viewMode } = get();
+        
+        if (viewMode === 'week') {
+          toast.error('Não é permitido remover alimentos no Modo Semana');
+          return;
+        }
         const meal = meals.find(m => m.id === mealId);
         const item = meal?.items.find(i => i.instanceId === instanceId);
         
@@ -342,7 +367,12 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       updateFoodQuantity: (mealId, instanceId, quantity) => {
-        const { meals } = get();
+        const { meals, viewMode } = get();
+        
+        if (viewMode === 'week') {
+          toast.error('Não é permitido editar quantidades no Modo Semana');
+          return;
+        }
         const meal = meals.find(m => m.id === mealId);
         const item = meal?.items.find(i => i.instanceId === instanceId);
         
@@ -433,6 +463,11 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       duplicateMeal: (mealId) => {
+        const { viewMode } = get();
+        if (viewMode === 'week') {
+          toast.error('Não é permitido duplicar refeições no Modo Semana');
+          return;
+        }
         set((state) => {
           const meal = state.meals.find(m => m.id === mealId);
           if (!meal) return state;
@@ -477,7 +512,12 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       validateAndSave: async () => {
-        const { meals, patientTargets, patientId, clinicalLog } = get();
+        const { meals, patientTargets, patientId, clinicalLog, viewMode } = get();
+        
+        if (viewMode === 'week') {
+          toast.error('Retorne ao Modo Dia para validar e salvar o plano estrutural');
+          return false;
+        }
         if (!patientTargets) {
           toast.warning('Baseado em dados parciais (falta anamnese)');
         }
@@ -513,6 +553,21 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }
 
         set({ planStatus: 'validated', consistencyMessage: null });
+        return true;
+      },
+
+      validateConsistency: () => {
+        const { meals } = get();
+        // Verifica se todos os itens em daySubstitutions ainda existem na lista de itens
+        for (const meal of meals) {
+          if (meal.daySubstitutions) {
+            for (const [day, instanceId] of Object.entries(meal.daySubstitutions)) {
+              if (!meal.items.some(i => i.instanceId === instanceId)) {
+                return false;
+              }
+            }
+          }
+        }
         return true;
       },
 
@@ -598,19 +653,25 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }));
       },
       setDaySubstitution: (mealId, dayId, instanceId) => {
-        set((state) => ({
-          meals: state.meals.map((m) =>
-            m.id === mealId
-              ? {
-                  ...m,
-                  daySubstitutions: {
-                    ...(m.daySubstitutions || {}),
-                    [dayId]: instanceId,
-                  },
-                }
-              : m
-          ),
-        }));
+        set((state) => {
+          const auditLog = `Substituição alterada no dia ${dayId} da refeição ${mealId}`;
+          console.log(`[AUDITORIA] ${auditLog}`);
+          
+          return {
+            meals: state.meals.map((m) =>
+              m.id === mealId
+                ? {
+                    ...m,
+                    daySubstitutions: {
+                      ...(m.daySubstitutions || {}),
+                      [dayId]: instanceId,
+                    },
+                  }
+                : m
+            ),
+            lastActionInsight: `Variação de cardápio salva para ${dayId}`
+          };
+        });
       },
     }),
     {
