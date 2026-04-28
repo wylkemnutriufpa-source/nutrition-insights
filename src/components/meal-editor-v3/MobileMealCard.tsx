@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Meal, MealItem, useMealEditorV3Store } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent } from '@/components/ui/sheet';
 import {
   Sun, Coffee, Utensils, Moon, Star, MoreVertical,
