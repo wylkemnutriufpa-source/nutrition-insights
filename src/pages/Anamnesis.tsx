@@ -1739,6 +1739,38 @@ export default function Anamnesis() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+      <AlertDialog open={showManualRestoreModal} onOpenChange={setShowManualRestoreModal}>
+        <AlertDialogContent className="max-w-md border-primary/20 bg-background/95 backdrop-blur-xl">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-xl font-display">
+              <RefreshCcw className="w-5 h-5 text-primary" />
+              Restaurar Backup Local
+            </AlertDialogTitle>
+            <AlertDialogDescription>
+              Isso irá sobrescrever suas respostas atuais com a versão salva localmente em:
+              <span className="block mt-2 font-medium text-foreground">
+                {localBackup ? new Date(localBackup.updated_at).toLocaleString('pt-BR') : "Data desconhecida"}
+              </span>
+              Tem certeza que deseja continuar?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                if (localBackup) {
+                  setAnswers(localBackup.answers);
+                  setShowManualRestoreModal(false);
+                  toast.success("Respostas restauradas do backup local! ⚡");
+                }
+              }}
+              className="gradient-primary shadow-glow"
+            >
+              Confirmar Restauração
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </DashboardLayout>
   );
 }
