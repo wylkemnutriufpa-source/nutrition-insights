@@ -150,10 +150,10 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
         )}
       </div>
 
-      <AddFoodModal 
-        isOpen={isModalOpen} 
-        onClose={() => setIsModalOpen(false)} 
-        mealId={meal.id} 
+      <MarmitaLibraryModal
+        isOpen={isMarmitaModalOpen}
+        onClose={() => setIsMarmitaModalOpen(false)}
+        mealId={meal.id}
       />
     </div>
   );
