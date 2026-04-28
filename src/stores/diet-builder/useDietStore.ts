@@ -9,6 +9,8 @@ export interface Food {
   carbs: number;
   fat: number;
   amount?: string;
+  marmitaId?: string; // Para identificar itens de marmitas bloqueadas
+  locked?: boolean;
 }
 
 export interface Meal {
