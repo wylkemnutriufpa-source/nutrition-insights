@@ -669,7 +669,15 @@ export default function Anamnesis() {
       let localData: { answers: Record<string, any>, updated_at: string } | null = null;
       try {
         const stored = localStorage.getItem(backupKey);
-        if (stored) localData = JSON.parse(stored);
+        if (stored) {
+          localData = JSON.parse(stored);
+          // TTL Check: Clean backups older than 30 days
+          const thirtyDays = 30 * 24 * 60 * 60 * 1000;
+          if (new Date().getTime() - new Date(localData!.updated_at).getTime() > thirtyDays) {
+            localStorage.removeItem(backupKey);
+            localData = null;
+          }
+        }
       } catch (e) {
         console.warn("[FJ:Anamnesis] failed to read local backup:", e);
       }
@@ -699,46 +707,30 @@ export default function Anamnesis() {
       const latestAnamnesis = anamnesisRows?.[0] as any;
       const latestPipeline = pipelineData as any;
 
-      // 📡 TELEMETRIA: registra a decisão de roteamento
-      try {
-        const trace = {
-          ts: new Date().toISOString(),
-          targetUserId,
-          cameFromPipeline: searchParams.get("pipeline") === "true",
-          hasAnamnesis: !!latestAnamnesis,
-          anamnesisStatus: latestAnamnesis?.status ?? null,
-          hasPipeline: !!latestPipeline,
-          pipelineStatus: latestPipeline?.status ?? null,
-          pipelineAnamnesisCompleted: latestPipeline?.anamnesis_completed ?? null,
-          hasLocalBackup: !!localData,
-        };
-        (window as any).__fjAnamneseTrace = trace;
-        const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
-        arr.push(trace);
-        localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
-        console.info("[FJ:Anamnesis] route-decision trace:", trace);
-      } catch { /* ignore */ }
-
       // Detect active pipeline
       if (latestPipeline && !isNutritionistMode) {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V3.5)
+      // CONFLICT DETECTION (Hardening V4.0)
       if (latestAnamnesis && localData) {
         const serverUpdatedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at).getTime();
         const localUpdatedAt = new Date(localData.updated_at).getTime();
         
-        // If they differ by more than 2 seconds, treat as conflict
-        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000) {
+        // Check if conflict was already resolved for these exact versions
+        const resolutionKey = `fj_conflict_resolved_${targetUserId}`;
+        const lastResolved = localStorage.getItem(resolutionKey);
+        const currentConflictId = `${serverUpdatedAt}_${localUpdatedAt}`;
+
+        // If they differ by more than 2 seconds AND not resolved yet
+        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000 && lastResolved !== currentConflictId) {
           setServerVersion({ 
             answers: latestAnamnesis.answers as Record<string, any>, 
             updated_at: latestAnamnesis.updated_at || latestAnamnesis.created_at,
             id: latestAnamnesis.id
           });
           setShowConflictModal(true);
-          // We don't return here, we let the modal handle it. 
-          // Defaulting to local version for now until choice.
+          // Modal handles the setAnswers. Default to local for UI continuity until choice.
           setAnswers(localData.answers);
           setDraftId(latestAnamnesis.id);
           return;
