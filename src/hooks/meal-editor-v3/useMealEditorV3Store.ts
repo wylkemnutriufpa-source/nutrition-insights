@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { QUICK_FOODS, MARMITAS } from './constants';
 
 export interface Food {
   id: string;
@@ -38,7 +39,7 @@ interface MealPlanState {
   addSubstitution: (mealId: string, instanceId: string, food: Food) => void;
   removeSubstitution: (mealId: string, instanceId: string, foodId: string) => void;
   resetPlan: () => void;
-  generateDeterministicPlan: (goal: string, anamnesis: any) => void;
+  generateDeterministicPlan: (goal: string, context?: any) => void;
 }
 
 const DEFAULT_MEALS = [
@@ -136,19 +137,51 @@ export const useMealEditorV3Store = create<MealPlanState>()(
 
       resetPlan: () => set({ meals: DEFAULT_MEALS }),
 
-      generateDeterministicPlan: (goal, anamnesis) => {
-        // Logic for Etapa 5 & 6
-        // Simplified for now, will expand later
-        const newMeals = [...DEFAULT_MEALS];
-        // ... build logic based on goal ...
-        set({ meals: newMeals });
+      generateDeterministicPlan: (goal, context) => {
+        const meals: Meal[] = JSON.parse(JSON.stringify(DEFAULT_MEALS));
+        const foodMap = QUICK_FOODS.reduce((acc, f) => ({ ...acc, [f.id]: f }), {} as any);
+        
+        const createItem = (foodId: string, quantity = 1): MealItem => ({
+          ...foodMap[foodId],
+          instanceId: Math.random().toString(36).substring(7),
+          quantity
+        });
+
+        const breakfast = meals.find(m => m.id === '1')!;
+        const lunch = meals.find(m => m.id === '2')!;
+        const snack = meals.find(m => m.id === '3')!;
+        const dinner = meals.find(m => m.id === '4')!;
+
+        // Rule 1: Breakfast (Pão + Ovo or Queijo)
+        breakfast.items.push(createItem('q2')); // Pão
+        breakfast.items.push(createItem('q1', goal === 'muscle-gain' ? 3 : 2)); // Ovo
+        breakfast.items.push(createItem('q8')); // Leite
+
+        // Rule 2: Snacks (Fruits)
+        snack.items.push(createItem('q6')); // Banana
+
+        if (goal === 'marmitas') {
+          lunch.items.push({ ...MARMITAS[0], instanceId: Math.random().toString(36).substring(7), quantity: 1 });
+          dinner.items.push({ ...MARMITAS[1], instanceId: Math.random().toString(36).substring(7), quantity: 1 });
+        } else {
+          lunch.items.push(createItem('q10', 1.5)); // Arroz
+          lunch.items.push(createItem('q9', 1.2)); // Frango
+          
+          dinner.items.push(createItem('q10', 1.2)); // Arroz
+          dinner.items.push(createItem('q9', 1.0)); // Frango
+        }
+
+        if (goal === 'muscle-gain') {
+          snack.items.push(createItem('q7')); // Extra apple
+        }
+
+        set({ meals, activeMealId: '1' });
       },
     }),
     {
       name: 'meal-editor-v3-storage',
       storage: createJSONStorage(() => localStorage),
-      // We could use a custom key per patient by modifying the storage dynamically if needed, 
-      // but standard persist with patientId in state is often enough if we handle switching.
     }
   )
 );
+
