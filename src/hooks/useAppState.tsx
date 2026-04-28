@@ -1,5 +1,9 @@
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
+import { getSystemDecision, GovernanceContext, logDecision } from "@/lib/governance";
+import { useExperienceMode } from "./useExperienceMode";
+import { usePatientJourneyStatus } from "./usePatientJourneyStatus";
+import { useLocation } from "react-router-dom";
 
 interface AppStateContextType {
   isReady: boolean;
@@ -17,6 +21,10 @@ const AppStateContext = createContext<AppStateContextType>({
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const { user, profile, loading: authLoading } = useAuth();
+  const { mode, role } = useExperienceMode();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const location = useLocation();
+  
   const [isReady, setIsReady] = useState(false);
   const [isDegraded, setIsDegraded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -24,7 +32,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const isOrphan = useMemo(() => profile?.is_orphan === true, [profile]);
 
   useEffect(() => {
-    if (authLoading) return;
+    if (authLoading || journeyLoading) return;
 
     if (user && profile) {
       setIsReady(true);
@@ -40,7 +48,28 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       }, 5000);
       return () => clearTimeout(timeout);
     }
-  }, [user, profile, authLoading]);
+  }, [user, profile, authLoading, journeyLoading]);
+
+  // Governance Effect
+  useEffect(() => {
+    if (!isReady) return;
+
+    const ctx: GovernanceContext = {
+      pathname: location.pathname,
+      user,
+      profile,
+      journeyStatus: journeyStatus as any,
+      mode,
+      role,
+      isReady,
+      isDegraded
+    };
+
+    const decision = getSystemDecision(ctx);
+    if (decision.type !== 'ALLOW') {
+      logDecision(decision);
+    }
+  }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isDegraded]);
 
   useEffect(() => {
     (window as any).__FJ_READY__ = isReady;
