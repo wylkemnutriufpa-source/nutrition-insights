@@ -450,35 +450,39 @@ export default function PatientMealPlan() {
             </Button>
           </div>
 
-          {/* Plan info — sempre diário com substituições */}
-          <div className="flex flex-col gap-2 mt-4">
-            <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
-              <CalendarDays className="w-4 h-4 text-primary shrink-0" />
-              <p className="text-xs text-muted-foreground">
-                Plano diário com substituições inteligentes — toque em qualquer refeição para ver alternativas equivalentes.
-              </p>
-            </div>
-          </div>
-
-          {/* Journey Timeline */}
-          <div className="flex items-center justify-between mt-4">
-            <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
-                <Timer className="w-3.5 h-3.5 text-primary" />
-                <span className="text-xs font-bold text-primary">Dia {journeyDay} da Jornada</span>
+          {/* Plan info — escondido no modo básico para clareza */}
+          {!isBasic && (
+            <>
+              <div className="flex flex-col gap-2 mt-4">
+                <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-muted/50 border border-border/50">
+                  <CalendarDays className="w-4 h-4 text-primary shrink-0" />
+                  <p className="text-xs text-muted-foreground">
+                    Plano diário com substituições inteligentes — toque em qualquer refeição para ver alternativas equivalentes.
+                  </p>
+                </div>
               </div>
-              <StreakBadge count={followedStreak} />
-            </div>
-            <Button
-              variant={focusMode ? "default" : "outline"}
-              size="sm"
-              onClick={() => setFocusMode(!focusMode)}
-              className="gap-1.5 text-xs"
-            >
-              <Eye className="w-3.5 h-3.5" />
-              {focusMode ? "Sair do foco" : "Modo foco"}
-            </Button>
-          </div>
+
+              {/* Journey Timeline */}
+              <div className="flex items-center justify-between mt-4">
+                <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20">
+                    <Timer className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-bold text-primary">Dia {journeyDay} da Jornada</span>
+                  </div>
+                  <StreakBadge count={followedStreak} />
+                </div>
+                <Button
+                  variant={focusMode ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setFocusMode(!focusMode)}
+                  className="gap-1.5 text-xs"
+                >
+                  <Eye className="w-3.5 h-3.5" />
+                  {focusMode ? "Sair do foco" : "Modo foco"}
+                </Button>
+              </div>
+            </>
+          )}
 
           {/* Emotional State */}
           {isToday && dailyAdherence > 0 && (
