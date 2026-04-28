@@ -18,7 +18,8 @@ import {
   ChefHat, 
   Star,
   Loader2,
-  CheckCircle2
+  CheckCircle2,
+  AlertCircle
 } from 'lucide-react';
 import { useDietStore } from '@/stores/diet-builder/useDietStore';
 import { PlanType, generateMealPlan, fetchPatientAnamnesis } from '@/lib/diet/planGeneratorEngine';
@@ -43,19 +44,17 @@ const PLAN_OPTIONS = [
 export const PlanGenerationModal: React.FC<PlanGenerationModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<PlanType | null>(null);
-  const { setMeals, setGoal, setCalorieTarget } = useDietStore();
+  const { setMeals, setGoal, setCalorieTarget, setIsFallback } = useDietStore();
 
   const handleGenerate = async () => {
     if (!selectedType) return;
     
     setLoading(true);
     try {
-      // No mundo real, usaríamos o ID do paciente selecionado.
-      // Aqui usaremos um ID de exemplo ou o atual logado.
-      const patientData = await fetchPatientAnamnesis('dummy-user-id');
+      const patientData = await fetchPatientAnamnesis();
       
       if (!patientData) {
-        toast.error("Anamnese não encontrada para este paciente.");
+        toast.error("Erro ao carregar dados do paciente.");
         return;
       }
 
@@ -64,10 +63,18 @@ export const PlanGenerationModal: React.FC<PlanGenerationModalProps> = ({ isOpen
       setMeals(generatedMeals);
       setGoal(selectedType.charAt(0).toUpperCase() + selectedType.slice(1));
       setCalorieTarget(patientData.calories_target);
+      setIsFallback(!!patientData.is_fallback);
       
-      toast.success("Plano gerado com sucesso!", {
-        icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
-      });
+      if (patientData.is_fallback) {
+        toast.warning("Plano gerado com dados básicos. Complete a anamnese para maior precisão.", {
+          duration: 6000,
+          icon: <AlertCircle className="w-5 h-5 text-amber-500" />,
+        });
+      } else {
+        toast.success("Plano gerado com sucesso!", {
+          icon: <CheckCircle2 className="w-5 h-5 text-emerald-500" />,
+        });
+      }
       onClose();
     } catch (error) {
       console.error(error);
