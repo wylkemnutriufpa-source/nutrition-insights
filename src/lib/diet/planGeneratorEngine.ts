@@ -106,24 +106,25 @@ export async function generateMealPlan(patientData: PatientData, type: PlanType)
     const meals = await generateRawMealPlan(patientData, type);
     const validation = validateMealPlan(meals, patientData, type);
 
-    console.log(`[FJ:PLAN_VALIDATION] Tentativa ${attempts}: Score ${validation.score}`);
-
     if (validation.isValid) {
+      console.log(`[FJ:PLAN_VALIDATION] Plano VALIDADO na tentativa ${attempts} (Score 100)`);
       return meals;
     }
 
+    console.warn(`[FJ:PLAN_VALIDATION] Tentativa ${attempts} falhou (Score ${validation.score}). Erros:`, validation.errors);
     lastResult = { meals, score: validation.score, errors: validation.errors };
   }
 
   // Se falhou após 3 tentativas
-  console.error(`[FJ:PLAN_VALIDATION] Falha crítica após ${MAX_ATTEMPTS} tentativas.`, lastResult?.errors);
+  console.error(`[FJ:PLAN_VALIDATION] Falha crítica: Impossível gerar plano perfeito após ${MAX_ATTEMPTS} tentativas.`);
   
-  if (lastResult) {
-    // Retornamos o melhor esforço mas avisamos (o componente deve tratar)
+  if (lastResult && lastResult.score >= 80) {
+    // Se o score for razoável, permite edição manual
     return lastResult.meals;
   }
   
-  return [];
+  // Se for realmente ruim, lança erro para a UI tratar
+  throw new Error("Não foi possível gerar um plano nutricional seguro. Por favor, monte manualmente ou altere as restrições.");
 }
 
 async function generateRawMealPlan(patientData: PatientData, type: PlanType): Promise<Meal[]> {
