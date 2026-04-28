@@ -61,6 +61,7 @@ import type { PatientSignals } from "@/components/dashboard/SmartRecommendations
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+import { EditorMatrixModal } from "@/components/diet/EditorMatrixModal";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
