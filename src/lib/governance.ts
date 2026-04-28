@@ -109,7 +109,18 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
 
   if (!user) return { type: 'ALLOW', reason: 'Public allowed' };
 
-  // 5. Profile Readiness
+  // 5. Hard Fail Guard: Profile Consistency (Critical)
+  if (isReady && !isInList(safePathname, PUBLIC_ROUTES) && !isInList(safePathname, ONBOARDING_ALLOWED_ROUTES)) {
+    if (!profile?.tenant_id && !ctx.isAdmin) {
+      return { 
+        type: 'BLOCK', 
+        reason: 'Critical: Access blocked due to inconsistent profile (missing tenant)', 
+        target: '/hard-fail-linkage' 
+      };
+    }
+  }
+
+  // 6. Profile Readiness (Orphan)
   if (profile?.is_orphan && !isInList(safePathname, ["/settings", "/auth"])) {
     return { type: 'REDIRECT', target: '/settings', reason: 'Orphan user profile incomplete' };
   }
