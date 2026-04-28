@@ -23,6 +23,8 @@ import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, User
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
 import { useAppState } from "@/hooks/useAppState";
+import { useSyncStatus } from "@/hooks/useSyncStatus";
+import { getBackupValidity, getConflictVersionKey } from "@/utils/dataSafety";
 
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
@@ -568,11 +570,10 @@ export default function Anamnesis() {
   const [aiResult, setAiResult] = useState<any>(null);
   const [patientName, setPatientName] = useState<string>("");
   const [draftId, setDraftId] = useState<string | null>(null);
-  const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved" | "error">("idle");
+  const { status: autoSaveStatus, lastAction, updateStatus: setAutoSaveStatus } = useSyncStatus();
   const [showConflictModal, setShowConflictModal] = useState(false);
   const [showManualRestoreModal, setShowManualRestoreModal] = useState(false);
   const [backupExpired, setBackupExpired] = useState(false);
-  const [lastSafetyAction, setLastSafetyAction] = useState<{ type: string, timestamp: string } | null>(null);
   const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
   const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
@@ -581,6 +582,10 @@ export default function Anamnesis() {
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(tenantId ?? null);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCount = useRef(0);
+
+  const addLog = useCallback((msg: string) => {
+    console.log(`[FJ:Anamnesis] ${msg}`);
+  }, []);
 
   // The target user: either the patient themselves or the patient being filled by nutritionist
   const targetUserId = forPatientId || user?.id;
@@ -662,29 +667,24 @@ export default function Anamnesis() {
     })();
   }, [targetUserId, isNutritionistMode]);
 
-  // Load existing draft, local backup and last safety action on mount
+  // Load existing draft, local backup and version on mount
   useEffect(() => {
     if (!targetUserId) return;
     (async () => {
-      // 1. Get last safety action
-      try {
-        const actionKey = `fj_anamnesis_action_${targetUserId}`;
-        const storedAction = localStorage.getItem(actionKey);
-        if (storedAction) setLastSafetyAction(JSON.parse(storedAction));
-      } catch (e) { console.warn("[FJ:Anamnesis] failed to read safety action:", e); }
-
-      // 2. Get local backup
+      // 1. Get local backup
       const backupKey = `fj_anamnesis_backup_${targetUserId}`;
       let localData: { answers: Record<string, any>, updated_at: string } | null = null;
       try {
         const stored = localStorage.getItem(backupKey);
         if (stored) {
           localData = JSON.parse(stored);
-          // TTL Check: Mark backups older than 30 days
-          const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-          if (new Date().getTime() - new Date(localData!.updated_at).getTime() > thirtyDays) {
+          // Centralized TTL Check V4.6
+          const validity = getBackupValidity(localData!.updated_at);
+          if (validity === "expired") {
             setBackupExpired(true);
             localData = null; // Don't use expired data for auto-restore
+          } else if (validity === "invalid") {
+            localData = null;
           }
         }
       } catch (e) {
@@ -721,25 +721,36 @@ export default function Anamnesis() {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V4.0)
-      if (latestAnamnesis && localData) {
-        const serverUpdatedAt = new Date(latestAnamnesis.updated_at || latestAnamnesis.created_at).getTime();
-        const localUpdatedAt = new Date(localData.updated_at).getTime();
+      // CONFLICT DETECTION (Hardening V4.6)
+      if (latestAnamnesis && localData && resolvedTenantId) {
+        const serverUpdatedAt = latestAnamnesis.updated_at || latestAnamnesis.created_at;
+        const localUpdatedAt = localData.updated_at;
         
-        // Check if conflict was already resolved for these exact versions
-        const resolutionKey = `fj_conflict_resolved_${targetUserId}`;
-        const lastResolved = localStorage.getItem(resolutionKey);
-        const currentConflictId = `${serverUpdatedAt}_${localUpdatedAt}`;
+        // Versioned Decision Key V4.6
+        const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverUpdatedAt, localUpdatedAt);
+        const resolution = localStorage.getItem(resolutionKey);
 
-        // If they differ by more than 2 seconds AND not resolved yet
-        if (Math.abs(serverUpdatedAt - localUpdatedAt) > 2000 && lastResolved !== currentConflictId) {
+        if (resolution) {
+          addLog(`Conflito já resolvido via versão: ${resolution}`);
+          if (resolution === "restaurar_servidor") {
+            setAnswers(latestAnamnesis.answers);
+          } else {
+            setAnswers(localData.answers);
+          }
+          setDraftId(latestAnamnesis.id);
+          return;
+        }
+
+        // If they differ by more than 2 seconds
+        const serverTS = new Date(serverUpdatedAt).getTime();
+        const localTS = new Date(localUpdatedAt).getTime();
+        if (Math.abs(serverTS - localTS) > 2000) {
           setServerVersion({ 
             answers: latestAnamnesis.answers as Record<string, any>, 
-            updated_at: latestAnamnesis.updated_at || latestAnamnesis.created_at,
+            updated_at: serverUpdatedAt,
             id: latestAnamnesis.id
           });
           setShowConflictModal(true);
-          // Modal handles the setAnswers. Default to local for UI continuity until choice.
           setAnswers(localData.answers);
           setDraftId(latestAnamnesis.id);
           return;
@@ -798,10 +809,8 @@ export default function Anamnesis() {
 
   const logSafetyAction = useCallback((type: string) => {
     if (!targetUserId) return;
-    const action = { type, timestamp: new Date().toISOString() };
-    setLastSafetyAction(action);
-    localStorage.setItem(`fj_anamnesis_action_${targetUserId}`, JSON.stringify(action));
-  }, [targetUserId]);
+    setAutoSaveStatus("success", type);
+  }, [targetUserId, setAutoSaveStatus]);
 
   // Autosave function — defensive: maybeSingle, explicit error logging, no silent loops
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
@@ -818,7 +827,7 @@ export default function Anamnesis() {
       return;
     }
 
-    setAutoSaveStatus("saving");
+    setAutoSaveStatus("syncing");
 
     try {
       let error;
@@ -864,8 +873,7 @@ export default function Anamnesis() {
       }
 
       retryCount.current = 0;
-      setAutoSaveStatus("saved");
-      setTimeout(() => setAutoSaveStatus("idle"), 2000);
+      setAutoSaveStatus("success", "autosave");
     } catch (e) {
       console.error("[FJ:Anamnesis] autosave threw:", e);
       setAutoSaveStatus("error");
@@ -1376,12 +1384,12 @@ export default function Anamnesis() {
               Pergunta {step + 1} de {questions.length}
             </span>
             <div className="flex items-center gap-3">
-              {autoSaveStatus === "saving" && (
+              {autoSaveStatus === "syncing" && (
                 <span className="flex items-center gap-1 text-xs text-muted-foreground animate-pulse">
                   <Loader2 className="w-3 h-3 animate-spin" /> Salvando...
                 </span>
               )}
-              {autoSaveStatus === "saved" && (
+              {autoSaveStatus === "success" && (
                 <span className="flex items-center gap-1 text-xs text-success">
                   <Save className="w-3 h-3" /> Salvo
                 </span>
@@ -1544,12 +1552,12 @@ export default function Anamnesis() {
 
             {/* Advanced Sync Indicator */}
             <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
-              {autoSaveStatus === "saving" ? (
+              {autoSaveStatus === "syncing" ? (
                 <>
                   <Loader2 className="w-3 h-3 animate-spin text-primary" />
                   Sincronizando...
                 </>
-              ) : autoSaveStatus === "saved" ? (
+              ) : autoSaveStatus === "success" ? (
                 <>
                   <Check className="w-3 h-3 text-emerald-500" />
                   Salvo automaticamente
@@ -1568,10 +1576,10 @@ export default function Anamnesis() {
             </div>
           </div>
 
-          {lastSafetyAction && (
+          {lastAction && (
             <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground italic">
               <History className="w-3 h-3" />
-              Última ação: {lastSafetyAction.type.replace(/_/g, ' ')} há {Math.round((new Date().getTime() - new Date(lastSafetyAction.timestamp).getTime()) / 60000)} min
+              Última ação: {lastAction.type.replace(/_/g, ' ')} há {Math.round((Date.now() - new Date(lastAction.timestamp).getTime()) / 60000)} min
             </div>
           )}
 
@@ -1764,10 +1772,10 @@ export default function Anamnesis() {
             <AlertDialogCancel 
               onClick={() => {
                 setShowConflictModal(false);
-                // Persist decision
-                const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
-                const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
-                localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                if (serverVersion && localBackup && resolvedTenantId) {
+                  const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
+                  localStorage.setItem(resolutionKey, "manter_local");
+                }
                 logSafetyAction("manter_local");
                 toast.success("Mantendo versão local! 🏠");
               }}
@@ -1777,14 +1785,12 @@ export default function Anamnesis() {
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={() => {
-                if (serverVersion) {
+                if (serverVersion && localBackup && resolvedTenantId) {
                   setAnswers(serverVersion.answers);
                   saveLocalBackup(serverVersion.answers);
                   setShowConflictModal(false);
-                  // Persist decision
-                  const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
-                  const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
-                  localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
+                  const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
+                  localStorage.setItem(resolutionKey, "restaurar_servidor");
                   logSafetyAction("restaurar_servidor");
                   toast.success("Versão do servidor restaurada! ☁️");
                 }
