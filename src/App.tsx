@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { TenantProvider } from "@/lib/tenantContext";
+import { TenantProvider, useTenant } from "@/lib/tenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
@@ -361,18 +361,39 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
+  const { user, loading: authLoading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista, roles } = useAuth();
+  const { tenantId, isLoading: tenantLoading, memberships } = useTenant();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const { requirement } = useOnboardingGuard();
-  const { status: journeyStatus } = usePatientJourneyStatus();
   const location = useLocation();
   const [bootDone, setBootDone] = useState(false);
-  const activeEditorRoute = !loading && user && (isNutritionist || isAdmin)
+
+  // Single consistency log
+  useEffect(() => {
+    if (!authLoading && !tenantLoading && !journeyLoading && user) {
+      console.log("%c[FJ:Consistency] State synchronization validated:", "color: #10b981; font-weight: bold", {
+        user_id: user?.id,
+        tenant_id: tenantId,
+        membership: memberships.length > 0 ? `${memberships.length} active` : "NONE",
+        journey_status: journeyStatus,
+        roles: roles,
+        path: location.pathname
+      });
+    }
+  }, [authLoading, tenantLoading, journeyLoading, user, tenantId, memberships, journeyStatus, roles, location.pathname]);
+
+  const activeEditorRoute = !authLoading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
     : null;
 
   useEffect(() => {
-    if (!loading && !bootDone) setBootDone(true);
-  }, [loading, bootDone]);
+    // Gate de carregamento único: aguardar auth + tenant + journey (se paciente)
+    const isCriticalLoading = authLoading || tenantLoading || (isPatient && journeyLoading);
+    
+    if (!isCriticalLoading && !bootDone) {
+      setBootDone(true);
+    }
+  }, [authLoading, tenantLoading, journeyLoading, isPatient, bootDone]);
 
   if (!bootDone) return <PageLoader />;
   if (!user) return <GatewayPage />;
