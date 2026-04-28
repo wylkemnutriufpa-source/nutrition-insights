@@ -376,6 +376,7 @@ function RootRoute() {
   if (!user) return <GatewayPage />;
 
   // 1. Centralized Patient Decision
+  const { status: journeyStatus } = usePatientJourneyStatus();
   if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
     const targetPath = getUserRouteByStatus(journeyStatus);
     const location = useLocation();
