@@ -187,7 +187,7 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[99999] flex flex-col items-center justify-center overflow-hidden"
+          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden"
           style={{
             background:
               "radial-gradient(ellipse at center, hsl(240 30% 8%) 0%, hsl(240 40% 4%) 60%, hsl(0 0% 0%) 100%)",

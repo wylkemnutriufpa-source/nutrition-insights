@@ -183,7 +183,7 @@ export default function TextSourceInspector() {
     <>
       <div
         data-testid="text-inspector-toggle"
-        className="fixed top-3 left-3 z-[9999] rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[10px] font-medium text-amber-200 shadow"
+        className="fixed top-3 left-3 z-[170] rounded-md border border-amber-500/40 bg-amber-500/10 px-2 py-1 text-[10px] font-medium text-amber-200 shadow"
       >
         🔍 Text Inspector ativo · ALT+click
         <button
@@ -198,7 +198,7 @@ export default function TextSourceInspector() {
       {result && (
         <div
           data-testid="text-inspector-result"
-          className="fixed bottom-3 right-3 z-[9999] w-[320px] rounded-lg border border-border bg-background/95 p-3 text-xs shadow-2xl backdrop-blur-sm"
+          className="fixed bottom-3 right-3 z-[170] w-[320px] rounded-lg border border-border bg-background/95 p-3 text-xs shadow-2xl backdrop-blur-sm"
         >
           <div className="mb-2 flex items-center justify-between">
             <span className="font-semibold text-foreground">Origem do texto</span>
