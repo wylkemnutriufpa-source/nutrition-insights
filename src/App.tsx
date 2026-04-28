@@ -250,6 +250,61 @@ function AppContent() {
               <Route path="/diet-builder" element={<NutritionistRoute><LP section="Diet Builder"><DietBuilder /></LP></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates de Dieta"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/food-database" element={<NutritionistRoute><LP section="Banco de Alimentos"><FoodDatabase /></LP></NutritionistRoute>} />
+              <Route path="/admin/import-patients" element={<NutritionistRoute><LP section="Importar Pacientes"><ImportPatients /></LP></NutritionistRoute>} />
+              <Route path="/admin/menu-config" element={<NutritionistRoute><LP section="Config Menu"><AdminMenuConfig /></LP></NutritionistRoute>} />
+              <Route path="/admin/prestige" element={<NutritionistRoute><LP section="Prestígio"><AdminPrestige /></LP></NutritionistRoute>} />
+              <Route path="/admin/operational-costs" element={<NutritionistRoute><LP section="Custos Operacionais"><AdminOperationalCosts /></LP></NutritionistRoute>} />
+              <Route path="/admin/protocol-biquini-branco" element={<NutritionistRoute><LP section="Protocolo Biquíni Branco"><AdminProtocolBiquiniBranco /></LP></NutritionistRoute>} />
+              <Route path="/admin/protocol-fitjourney" element={<NutritionistRoute><LP section="Protocolo FitJourney"><AdminProtocolFitJourney /></LP></NutritionistRoute>} />
+              <Route path="/admin/growth" element={<NutritionistRoute><LP section="Growth Dashboard"><GrowthDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/guide-engine" element={<NutritionistRoute><LP section="Guide Engine"><AdminGuideEngine /></LP></NutritionistRoute>} />
+              <Route path="/admin/marketing-content" element={<NutritionistRoute><LP section="Central de Conteúdo"><AdminMarketingContent /></LP></NutritionistRoute>} />
+              <Route path="/admin/patient-features" element={<NutritionistRoute><LP section="Features por Plano"><AdminPatientFeatures /></LP></NutritionistRoute>} />
+              <Route path="/admin/landing-pages" element={<NutritionistRoute><LP section="Landing Pages"><AdminLandingPages /></LP></NutritionistRoute>} />
+              <Route path="/admin/profissionais" element={<NutritionistRoute><LP section="Profissionais"><AdminProfessionals /></LP></NutritionistRoute>} />
+              <Route path="/admin/features" element={<NutritionistRoute><LP section="Features Profissionais"><AdminFeatureControl /></LP></NutritionistRoute>} />
+              <Route path="/admin/resources" element={<NutritionistRoute><LP section="Recursos"><AdminResourceCenter /></LP></NutritionistRoute>} />
+              <Route path="/operational" element={<NutritionistRoute><LP section="Painel Operacional"><OperationalDashboard /></LP></NutritionistRoute>} />
+              <Route path="/ambassador" element={<ProtectedRoute><LP section="Embaixador"><AmbassadorDashboard /></LP></ProtectedRoute>} />
+              <Route path="/apresentacao" element={<ProtectedRoute><LP section="Apresentação do Sistema"><SystemPresentation /></LP></ProtectedRoute>} />
+              <Route path="/checkin-panel" element={<ProtectedRoute><LP section="Check-ins"><CheckinPanel /></LP></ProtectedRoute>} />
+              <Route path="/checklist" element={<ProtectedRoute><LP section="Checklist"><Checklist /></LP></ProtectedRoute>} />
+              <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
+              <Route path="/fitness-anamnesis" element={<ProtectedRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></ProtectedRoute>} />
+              <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas Globais"><GlobalTips /></LP></ProtectedRoute>} />
+              <Route path="/health-quiz" element={<ProtectedRoute><LP section="Health Check"><HealthCheckQuiz /></LP></ProtectedRoute>} />
+              <Route path="/human-performance" element={<ProtectedRoute><LP section="Performance Humana"><HumanPerformance /></LP></ProtectedRoute>} />
+              <Route path="/in-office" element={<NutritionistRoute><LP section="Modo Consultório"><InOfficeSelector /></LP></NutritionistRoute>} />
+              <Route path="/in-office/wizard" element={<NutritionistRoute><LP section="Assistente Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
+              <Route path="/invite-patient" element={<NutritionistRoute><LP section="Convidar Paciente"><InvitePatient /></LP></NutritionistRoute>} />
+              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
+              <Route path="/metabolic-twin" element={<ProtectedRoute><LP section="Digital Twin"><MetabolicTwin /></LP></ProtectedRoute>} />
+              <Route path="/my-public-profile" element={<ProtectedRoute><LP section="Meu Perfil Público"><MyPublicProfile /></LP></ProtectedRoute>} />
+              <Route path="/my-referrals" element={<ProtectedRoute><LP section="Minhas Indicações"><MyReferrals /></LP></ProtectedRoute>} />
+              <Route path="/onboarding" element={<ProtectedRoute><LP section="Onboarding"><OnboardingTracker /></LP></ProtectedRoute>} />
+              <Route path="/planner" element={<ProtectedRoute><LP section="Planner"><Planner /></LP></ProtectedRoute>} />
+              <Route path="/population-intelligence" element={<NutritionistRoute><LP section="Inteligência Populacional"><PopulationIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/professional-guide" element={<NutritionistRoute><LP section="Guia Profissional"><ProfessionalGuide /></LP></NutritionistRoute>} />
+              <Route path="/professional/crm" element={<NutritionistRoute><LP section="CRM Clínico"><ClinicalCRM /></LP></NutritionistRoute>} />
+              <Route path="/programs" element={<ProtectedRoute><LP section="Programas"><Programs /></LP></ProtectedRoute>} />
+              <Route path="/protocol-transitions" element={<NutritionistRoute><LP section="Transições de Protocolo"><ProtocolTransitions /></LP></NutritionistRoute>} />
+              <Route path="/protocolos-fitoterapicos" element={<ProtectedRoute><LP section="Protocolos Fitoterápicos"><PhytotherapyProtocols /></LP></ProtectedRoute>} />
+              <Route path="/protocols" element={<ProtectedRoute><LP section="Protocolos"><Protocols /></LP></ProtectedRoute>} />
+              <Route path="/recipe-builder" element={<ProtectedRoute><LP section="Calculadora de Receitas"><RecipeBuilder /></LP></ProtectedRoute>} />
+              <Route path="/security-dashboard" element={<ProtectedRoute><LP section="Security Dashboard"><SecurityDashboard /></LP></ProtectedRoute>} />
+              <Route path="/team" element={<NutritionistRoute><LP section="Equipe Clínica"><TeamManagement /></LP></NutritionistRoute>} />
+              <Route path="/therapeutic-intelligence" element={<NutritionistRoute><LP section="Inteligência Terapêutica"><TherapeuticIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/user-guide" element={<ProtectedRoute><LP section="Guia do Paciente"><UserGuide /></LP></ProtectedRoute>} />
+              <Route path="/weekly-goals" element={<ProtectedRoute><LP section="Metas Semanais"><WeeklyGoals /></LP></ProtectedRoute>} />
+              <Route path="/weekly-report" element={<ProtectedRoute><LP section="Relatório Semanal"><WeeklyReport /></LP></ProtectedRoute>} />
+              <Route path="/weight-trajectory" element={<ProtectedRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></ProtectedRoute>} />
+              <Route path="/personal/dashboard" element={<ProtectedRoute><LP section="Dashboard Personal"><PersonalDashboard /></LP></ProtectedRoute>} />
+              <Route path="/personal/students" element={<ProtectedRoute><LP section="Alunos"><PersonalStudents /></LP></ProtectedRoute>} />
+              <Route path="/personal/workouts" element={<ProtectedRoute><LP section="Treinos"><PersonalWorkouts /></LP></ProtectedRoute>} />
+              <Route path="/store" element={<ProtectedRoute><LP section="Painel da Loja"><OperationalDashboard /></LP></ProtectedRoute>} />
+              <Route path="/store/technical-sheets" element={<NutritionistRoute><LP section="Fichas Técnicas"><TechnicalSheets /></LP></NutritionistRoute>} />
+
               
               {/* Editor V3 Routes */}
               <Route path="/meal-plan-editor-v3/:patientId" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
