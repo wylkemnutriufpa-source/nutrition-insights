@@ -1367,6 +1367,20 @@ export default function PatientDetail() {
                 </DialogContent>
               </Dialog>
 
+              {/* Editor Matrix Modal */}
+              <EditorMatrixModal 
+                isOpen={matrixOpen}
+                onClose={() => setMatrixOpen(false)}
+                onSelect={(version) => {
+                  setMatrixOpen(false);
+                  if (version === "v2") {
+                    setOpenSection("meal-plans");
+                  } else {
+                    navigate(`/diet-builder?patientId=${resolvedPatientId}`);
+                  }
+                }}
+              />
+
               {/* Meal Plans Modal */}
               <Dialog open={openSection === "meal-plans"} onOpenChange={(v) => !v && setOpenSection(null)}>
                 <DialogContent className="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
