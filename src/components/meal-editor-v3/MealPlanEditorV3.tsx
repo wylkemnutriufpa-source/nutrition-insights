@@ -4,7 +4,7 @@ import { MealListSidebar } from './MealListSidebar';
 import { ActiveMealContent } from './ActiveMealContent';
 import { MacroSummary } from './MacroSummary';
 import { Button } from '@/components/ui/button';
-import { RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, Package, ShieldCheck, Settings2, Lightning } from 'lucide-react';
+import { RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, Package, ShieldCheck, Settings2 } from 'lucide-react';
 import {
   Dialog,
   DialogContent,
