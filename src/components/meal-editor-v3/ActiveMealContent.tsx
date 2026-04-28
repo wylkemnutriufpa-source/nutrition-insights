@@ -228,7 +228,7 @@ export const ActiveMealContent: React.FC = () => {
                     </div>
 
                     <div className="flex items-center gap-1">
-                      {!item.isMarmita && (
+                      {!(item.isMarmita || item.locked) && (
                         <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                           <Button 
                             variant="ghost" 
