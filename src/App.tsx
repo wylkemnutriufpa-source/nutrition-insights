@@ -462,6 +462,15 @@ function AppContent() {
               <Route path="/admin/visual-library" element={<NutritionistRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></NutritionistRoute>} />
               <Route path="/admin/plan-batch-audit" element={<NutritionistRoute><LP section="Auditoria em Massa"><PlanBatchAudit /></LP></NutritionistRoute>} />
               <Route path="/admin/template-reformulation" element={<NutritionistRoute><LP section="Reformulação de Templates"><TemplateMassReformulation /></LP></NutritionistRoute>} />
+              <Route path="/admin/governance" element={<NutritionistRoute><LP section="Governança"><PlatformGovernance /></LP></NutritionistRoute>} />
+              <Route path="/admin/diagnostics" element={<NutritionistRoute><LP section="Diagnóstico do Sistema"><SystemDiagnostics /></LP></NutritionistRoute>} />
+              <Route path="/admin/health-live" element={<NutritionistRoute><LP section="Status em Tempo Real"><SystemHealthLive /></LP></NutritionistRoute>} />
+              <Route path="/admin/debug" element={<NutritionistRoute><LP section="Centro de Debug"><RealtimeDebugCenter /></LP></NutritionistRoute>} />
+              <Route path="/admin/schema" element={<NutritionistRoute><LP section="Monitor de Schema"><SchemaMonitor /></LP></NutritionistRoute>} />
+              <Route path="/biquini-branco" element={<LP section="Biquíni Branco"><BiquiniBrancoLanding /></LP>} />
+              <Route path="/demo" element={<LP section="Demo"><PublicDemo /></LP>} />
+              <Route path="/status" element={<LP section="Status"><DiagnosticStatus /></LP>} />
+
 
               <Route path="/admin/resource-center" element={<NutritionistRoute><LP section="Centro de Recursos"><AdminResourceCenter /></LP></NutritionistRoute>} />
               <Route path="/admin/testimonials" element={<NutritionistRoute><LP section="Depoimentos"><AdminTestimonials /></LP></NutritionistRoute>} />
