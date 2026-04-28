@@ -94,6 +94,11 @@ export default defineConfig(({ mode }) => ({
         cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
+            // /version.json — must ALWAYS be fresh for the version-sync poller
+            urlPattern: ({ url }) => url.pathname === "/version.json",
+            handler: "NetworkOnly",
+          },
+          {
             // Supabase REST API — NetworkOnly for critical clinical data
             urlPattern: /^https:\/\/.*\.supabase\.co\/rest\/v1\/.*/i,
             handler: "NetworkOnly",
