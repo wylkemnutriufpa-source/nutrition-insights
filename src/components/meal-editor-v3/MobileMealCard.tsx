@@ -24,6 +24,7 @@ interface Props {
   meal: Meal;
   defaultTime?: string;
   weekMode?: boolean;
+  activeDayId?: string;
   onAddItem: (mealId: string) => void;
   onEditItem: (mealId: string, item: MealItem) => void;
   onSubstituteItem: (mealId: string, item: MealItem) => void;
