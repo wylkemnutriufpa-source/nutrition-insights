@@ -150,10 +150,56 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       applyTemplate: (template) => {
+        const { patientTargets, patientId, availableClinicalRules } = get();
+        let adaptedMeals = JSON.parse(JSON.stringify(template.meals)) as Meal[];
+
+        // 1. Clinical Adaptation
+        if (template.clinical_condition) {
+          const condition = availableClinicalRules.find(r => r.condition_name === template.clinical_condition);
+          if (condition) {
+            const result = applyClinicalRules(adaptedMeals, condition.id);
+            adaptedMeals = result.meals;
+            set({ clinicalLog: result.log });
+          }
+        }
+
+        // 2. Goal Adaptation (Weight Loss / Hypertrophy)
+        const isHypertrophy = patientTargets?.calories && patientTargets.calories > 2500;
+        const isWeightLoss = patientTargets?.calories && patientTargets.calories < 1800;
+
+        adaptedMeals = adaptedMeals.map(meal => ({
+          ...meal,
+          items: meal.items.map(item => {
+            if (item.isMarmita) return item;
+            
+            let quantity = item.quantity;
+            
+            // Hypertrophy Rules
+            if (isHypertrophy) {
+              if (item.name.toLowerCase().includes('ovo')) quantity += 1;
+              if (item.protein > 15) quantity *= 1.2;
+              if (meal.name.includes('Café') || meal.name.includes('Almoço')) {
+                // Logic to add fruit if not present would go here, 
+                // but for now we adjust existing items
+              }
+            }
+
+            // Weight Loss Rules
+            if (isWeightLoss) {
+              if (item.name.toLowerCase().includes('leite') && !item.name.toLowerCase().includes('desnatado')) {
+                return { ...item, name: 'Leite Desnatado', calories: 35, fat: 0.1 };
+              }
+              if (item.carbs > 20) quantity *= 0.8;
+            }
+
+            return { ...item, quantity };
+          })
+        }));
+
         set({ 
-          meals: template.meals as Meal[], 
+          meals: adaptedMeals, 
           planStatus: 'draft',
-          lastActionInsight: `Template "${template.name}" aplicado com sucesso.`
+          lastActionInsight: `Template "${template.name}" aplicado e adaptado ao perfil do paciente.`
         });
       },
 
