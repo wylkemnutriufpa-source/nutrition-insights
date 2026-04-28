@@ -24,6 +24,8 @@ export interface GovernanceContext {
   user: any | null;
   profile: any | null;
   journeyStatus: string | null;
+  anamnesisStatus?: 'pending' | 'completed' | null;
+  hasActivePipeline?: boolean;
   mode: string;
   role: 'patient' | 'professional';
   isReady: boolean;
