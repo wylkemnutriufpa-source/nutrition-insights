@@ -147,6 +147,7 @@ const OperationalDashboard = lazy(() => import("./pages/OperationalDashboard"));
 const ClinicalBrainLegacy = lazy(() => import("./pages/ClinicalBrain"));
 const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const InOfficeWizard = lazy(() => import("./pages/InOfficeWizard"));
+const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
