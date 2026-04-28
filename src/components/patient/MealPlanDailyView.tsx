@@ -213,7 +213,7 @@ const MealItemCard = memo(function MealItemCard({
         opacity: 1, x: 0,
         boxShadow: isJustDone ? "0 0 20px rgba(16,185,129,0.3)" : "none",
       }}
-      className={`glass rounded-xl overflow-hidden transition-all ${statusColor}`}
+      className={`glass rounded-xl overflow-hidden transition-all w-full max-w-full ${statusColor}`}
     >
       {/* Visual image hero */}
       {resolvedImage && (
@@ -240,9 +240,9 @@ const MealItemCard = memo(function MealItemCard({
         </div>
       )}
 
-      <div className="p-4">
+      <div className="p-3 sm:p-4">
         <div
-          className="flex items-start gap-3 cursor-pointer"
+          className="flex items-start gap-2 sm:gap-3 cursor-pointer min-w-0"
           onClick={() => onOpenDetail({ ...item, metadata: (item as any).edit_metadata ?? (item as any).metadata })}
         >
           {!resolvedImage && (
@@ -346,45 +346,47 @@ const MealItemCard = memo(function MealItemCard({
             <div className="flex flex-col gap-2 mt-3">
               {isBasic ? (
                 status === "followed" ? (
-                  <div className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 font-bold text-sm">
-                    <CheckCircle2 className="w-5 h-5" />
-                    Refeição Concluída! 🎉
+                  <div className="flex items-center justify-center gap-2 py-3 px-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 font-bold text-sm text-center break-words">
+                    <CheckCircle2 className="w-5 h-5 shrink-0" />
+                    <span className="leading-tight">Refeição Concluída! 🎉</span>
                   </div>
                 ) : (
                   <Button
                     onClick={(e) => { e.stopPropagation(); onSetAdherence(item, "followed"); }}
-                    className="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                    className="w-full h-auto min-h-[3rem] py-3 px-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-sm sm:text-base shadow-lg shadow-primary/20 transition-all active:scale-[0.98] whitespace-normal leading-tight"
                   >
                     Marcar como concluído
                   </Button>
                 )
               ) : (
-                <div className="flex gap-1.5">
+                <div className="flex flex-wrap gap-1.5">
                   {ADHERENCE_OPTIONS.map(opt => (
                     <button
                       key={opt.status}
                       onClick={(e) => { e.stopPropagation(); onSetAdherence(item, opt.status); }}
-                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                      className={`flex items-center gap-1 px-2 py-1.5 rounded-lg border text-[11px] font-medium transition-all flex-1 min-w-0 justify-center ${
                         status === opt.status
                           ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
                           : "border-border/50 text-muted-foreground hover:border-border"
                       }`}
                     >
                       {opt.icon}
-                      {opt.label}
+                      <span className="truncate">{opt.label}</span>
                     </button>
                   ))}
                 </div>
               )}
-              {/* Substitution button */}
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}
-                className="flex items-center gap-1.5 mt-2 px-3 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary/10 transition-all w-full justify-center shadow-sm"
-              >
-                <ArrowRightLeft className="w-3.5 h-3.5" />
-                Trocar Opção
-              </button>
+              {/* Substitution button — escondido no modo básico para reduzir decisões */}
+              {!isBasic && (
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); onOpenSubstitution && onOpenSubstitution(item); }}
+                  className="flex items-center gap-1.5 mt-1 px-3 py-2 rounded-xl border border-primary/20 bg-primary/5 text-primary text-xs font-bold hover:bg-primary/10 transition-all w-full justify-center shadow-sm"
+                >
+                  <ArrowRightLeft className="w-3.5 h-3.5" />
+                  Trocar Opção
+                </button>
+              )}
             </div>
             <MealFeedbackButton mealPlanId={item.id} mealPlanItemId={item.id} mealType={item.meal_type} />
           </div>
