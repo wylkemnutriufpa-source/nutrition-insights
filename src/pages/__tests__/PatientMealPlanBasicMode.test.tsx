@@ -27,6 +27,11 @@ vi.mock("@/hooks/useExperienceUI", () => ({
   useExperienceUI: vi.fn(),
 }));
 
+vi.mock("@/components/layout/DashboardLayout", () => ({
+  default: ({ children }: { children: React.ReactNode }) => <div data-testid="dashboard-layout">{children}</div>,
+}));
+
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
     rpc: vi.fn(),
