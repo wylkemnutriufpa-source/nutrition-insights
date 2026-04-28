@@ -37,7 +37,8 @@ import {
   History,
   Activity,
   Layers,
-  SearchCode
+  SearchCode,
+  AlertCircle
 } from "lucide-react";
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
