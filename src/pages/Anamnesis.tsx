@@ -1377,6 +1377,11 @@ export default function Anamnesis() {
                   <Save className="w-3 h-3" /> Salvo
                 </span>
               )}
+              {autoSaveStatus === "error" && (
+                <span className="flex items-center gap-1 text-xs text-destructive">
+                  <AlertTriangle className="w-3 h-3" /> Erro ao salvar
+                </span>
+              )}
               <ProgressPulse trigger={step}>
                 <span className="text-sm font-medium text-primary">{Math.round(progress)}%</span>
               </ProgressPulse>
