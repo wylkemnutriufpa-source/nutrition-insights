@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Dumbbell, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
+import { useAppState } from "@/hooks/useAppState";
+
 import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import {
   OrbitalSingleSelect,
@@ -476,6 +478,8 @@ const questions: Question[] = [
 export default function FitnessAnamnesis() {
   const { user, isPersonal } = useAuth();
   const { tenantId } = useTenant();
+  const { isReady, isDegraded } = useAppState();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forStudentId = searchParams.get("studentId");
@@ -545,8 +549,8 @@ export default function FitnessAnamnesis() {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
     
     // BLOQUEIO DE AÇÃO CRÍTICA
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:FitnessAnamnesis] Autosave blocked: System not ready");
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:FitnessAnamnesis] Autosave blocked: System not ready or degraded", { isReady, isDegraded });
       return;
     }
 
@@ -592,9 +596,9 @@ export default function FitnessAnamnesis() {
     if (!user || !targetUserId) return;
     
     // BLOQUEIO DE AÇÃO CRÍTICA
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:FitnessAnamnesis] Submit blocked: System not ready");
-      toast.error("O sistema ainda está carregando dados vitais. Aguarde um momento.");
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:FitnessAnamnesis] Submit blocked: System not ready or degraded", { isReady, isDegraded });
+      toast.error("O sistema ainda está carregando dados vitais ou em modo limitado. Aguarde um momento.");
       return;
     }
 

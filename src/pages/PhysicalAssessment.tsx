@@ -1,4 +1,6 @@
 import { useEffect, useState, useMemo, useCallback } from "react";
+import { useAppState } from "@/hooks/useAppState";
+
 import { useSearchParams, useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useAuth } from "@/lib/auth";
@@ -99,6 +101,8 @@ function NumField({ label, value, onChange, unit, icon }: {
 
 export default function PhysicalAssessment() {
   const { user } = useAuth();
+  const { isReady, isDegraded } = useAppState();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const patientId = searchParams.get("patientId");
@@ -298,7 +302,13 @@ export default function PhysicalAssessment() {
 
   const handleSave = async () => {
     if (!user || !patientId) return;
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:PhysicalAssessment] Save blocked: System not ready or degraded", { isReady, isDegraded });
+      toast.error("O sistema ainda está carregando ou em modo limitado. Aguarde um momento.");
+      return;
+    }
     setSaving(true);
+
 
     const payload: any = {
       patient_id: patientId,

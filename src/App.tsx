@@ -13,6 +13,9 @@ import { supabase } from "@/integrations/supabase/client";
 import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
 import { lazy, Suspense, useEffect, useState } from "react";
+import { AppStateProvider } from "@/hooks/useAppState";
+import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
+
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { GlobalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
@@ -362,7 +365,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading: authLoading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista, roles } = useAuth();
+  const { user, loading: authLoading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
   const { tenantId, isLoading: tenantLoading, memberships } = useTenant();
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const location = useLocation();
@@ -390,72 +393,88 @@ function RootRoute() {
   }, [bootDone]);
 
   // 2. Log de estado final padronizado e detecção de inconsistência
+  const isCriticalLoading = authLoading || tenantLoading || (isPatient && journeyLoading);
+  
   useEffect(() => {
-    const isCriticalLoading = authLoading || tenantLoading || (isPatient && journeyLoading);
-    
     if (!isCriticalLoading && !bootDone) {
       setBootDone(true);
-      return;
     }
+  }, [isCriticalLoading, bootDone]);
 
+  // 3. Cálculo de estados globais reativos
+  const isConsistent = user ? (
+    (isPatient ? (tenantId !== null && memberships.length > 0) : true)
+  ) : true;
+  const isReady = bootDone && isConsistent && !timedOut && !isCriticalLoading;
+  const isDegraded = bootDone && (timedOut || (!isConsistent && !isCriticalLoading));
+  const isLoading = !bootDone || (isCriticalLoading && !timedOut);
+
+  useEffect(() => {
     if (bootDone) {
-      // READY = tudo carregado E consistente
-      const isConsistent = user ? (tenantId !== null || !isPatient) : true;
-      const ready = isConsistent && !timedOut && !authLoading && !tenantLoading;
-      
-      console.log("%c[FJ:FinalState]", "color: #3b82f6; font-weight: bold", {
+      console.log("%c[FJ:StateUpdate]", "color: #3b82f6; font-weight: bold", {
         user_id: user?.id || "anonymous",
         tenant_id: tenantId || "unresolved",
         membership: memberships.length > 0 ? `${memberships.length} active` : "NONE",
         journey_status: journeyStatus || "n/a",
-        READY: ready
+        isReady,
+        isDegraded,
+        isLoading
       });
       
-      // 4. Detecção de estado inconsistente
       if (user && !tenantId && !tenantLoading && isPatient) {
         console.error("%c[FJ:Critical] Inconsistent state: User exists but tenant_id is unresolved", "color: #ef4444; font-weight: bold");
       }
 
-      // Export status for critical actions blocking
-      (window as any).__FJ_READY__ = ready;
+      // Legacy support
+      (window as any).__FJ_READY__ = isReady;
     }
-  }, [bootDone, authLoading, tenantLoading, journeyLoading, user, tenantId, memberships, journeyStatus, timedOut, isPatient]);
+  }, [bootDone, user, tenantId, memberships, journeyStatus, isReady, isDegraded, isLoading, isPatient, tenantLoading]);
 
   const activeEditorRoute = !authLoading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
     : null;
 
-  // 3. Separação de bloqueio: Render UI, mas PageLoader até boot ou timeout
+  // 4. Bloqueio de carregamento inicial
   if (!bootDone) return <PageLoader />;
   if (!user) return <GatewayPage />;
 
-  // 1. Centralized Patient Decision
-  if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
-    const targetPath = getUserRouteByStatus(journeyStatus);
-    if (location.pathname === "/" || location.pathname === "") {
-      return <Navigate to={targetPath} replace />;
-    }
-  }
+  return (
+    <AppStateProvider value={{ isReady, isDegraded, isLoading }}>
+      {isDegraded && <DegradedModeBanner />}
+      <Suspense fallback={<PageLoader />}>
+        {(() => {
+          // 1. Centralized Patient Decision
+          if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
+            const targetPath = getUserRouteByStatus(journeyStatus);
+            if (location.pathname === "/" || location.pathname === "") {
+              return <Navigate to={targetPath} replace />;
+            }
+          }
 
-  // 2. Pro/Editor restoration
-  if (activeEditorRoute?.shouldRestore) {
-    return <Navigate to={activeEditorRoute.route} replace />;
-  }
+          // 2. Pro/Editor restoration
+          if (activeEditorRoute?.shouldRestore) {
+            return <Navigate to={activeEditorRoute.route} replace />;
+          }
 
-  // 3. Lojista
-  if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
-    return <Navigate to="/store" replace />;
-  }
+          // 3. Lojista
+          if (isLojista && !isNutritionist && !isPersonal && !isAdmin) {
+            return <Navigate to="/store" replace />;
+          }
 
-  // 4. Pure Patients
-  if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
-    return <Navigate to="/client/dashboard" replace />;
-  }
+          // 4. Pure Patients
+          if (isPatient && !isNutritionist && !isPersonal && !isAdmin) {
+            return <Navigate to="/client/dashboard" replace />;
+          }
 
-  // 5. Professionals
-  if (isPersonal && !isNutritionist && !isAdmin) return <Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense>;
-  return <Suspense fallback={<PageLoader />}><Index /></Suspense>;
+          // 5. Professionals
+          if (isPersonal && !isNutritionist && !isAdmin) return <PersonalDashboard />;
+          return <Index />;
+        })()}
+      </Suspense>
+    </AppStateProvider>
+  );
 }
+
 
 function LegacyMealPlanRedirect() {
   const { id } = useParams<{ id: string }>();

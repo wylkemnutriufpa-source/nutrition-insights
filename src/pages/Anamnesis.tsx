@@ -12,6 +12,8 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Sparkles, Check, Heart, Brain, Loader2, UserCheck, Save, Lock, AlertTriangle, ArrowRight } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
+import { useAppState } from "@/hooks/useAppState";
+
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
 import { getActiveAdaptiveBlocks, extractClinicalFlags, type AdaptiveBlock } from "@/lib/adaptiveAnamnesisBlocks";
@@ -530,6 +532,8 @@ function SliderInput({
 export default function Anamnesis() {
   const { user, isNutritionist, isPatient } = useAuth();
   const { tenantId } = useTenant();
+  const { isReady, isDegraded } = useAppState();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
@@ -748,9 +752,9 @@ export default function Anamnesis() {
   const performAutoSave = useCallback(async (currentAnswers: Record<string, any>) => {
     if (!targetUserId || !user || Object.keys(currentAnswers).length === 0) return;
 
-    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir salvamento se o estado não estiver pronto
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:Anamnesis] Autosave blocked: System not ready (state inconsistency or timeout)");
+    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir salvamento se o estado não estiver pronto ou em modo degradado
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:Anamnesis] Autosave blocked: System not ready or in degraded mode", { isReady, isDegraded });
       return;
     }
 
@@ -844,10 +848,10 @@ export default function Anamnesis() {
   const handleSubmit = async () => {
     if (!user || !targetUserId) return;
 
-    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir finalização se o estado não estiver pronto
-    if ((window as any).__FJ_READY__ === false) {
-      console.warn("[FJ:Anamnesis] Submit blocked: System not ready (state inconsistency or timeout)");
-      toast.error("O sistema ainda está carregando dados vitais. Aguarde um momento.");
+    // BLOQUEIO DE AÇÃO CRÍTICA: Impedir finalização se o estado não estiver pronto ou degradado
+    if (!isReady || isDegraded) {
+      console.warn("[FJ:Anamnesis] Submit blocked: System not ready or degraded", { isReady, isDegraded });
+      toast.error("O sistema está operando em modo limitado ou ainda carregando. Aguarde a sincronização completa.");
       return;
     }
 
