@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useDietStore } from '@/stores/diet-builder/useDietStore';
 import { MealCard } from '@/components/diet-builder/MealCard';
 import { PlanGenerationModal } from '@/components/diet-builder/PlanGenerationModal';
@@ -17,13 +17,42 @@ import {
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
+import { supabase } from '@/integrations/supabase/client';
+import { logAuditEvent } from '@/lib/diet/planGeneratorEngine';
 
 const DietBuilder: React.FC = () => {
-  const { meals, totals, calorieTarget, patientName, goal, isFallback } = useDietStore();
+  const { id: patientIdFromUrl } = useParams();
+  const { 
+    meals, 
+    totals, 
+    calorieTarget, 
+    patientName, 
+    goal, 
+    isFallback, 
+    loadFromBackend,
+    patientId,
+    setPatientData
+  } = useDietStore();
   const [isGenModalOpen, setIsGenModalOpen] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    async function init() {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      if (patientIdFromUrl) {
+        // Se mudou de paciente, carrega do backend
+        if (patientId !== patientIdFromUrl) {
+          await loadFromBackend(patientIdFromUrl);
+          await logAuditEvent(user.id, patientIdFromUrl, 'escolha_editor', { mode: 'V3' });
+        }
+      }
+    }
+    init();
+  }, [patientIdFromUrl, loadFromBackend, patientId]);
 
   const calPercentage = Math.min((totals.calories / calorieTarget) * 100, 100);
 
