@@ -9,6 +9,8 @@ import { toast } from "sonner";
 import { ChevronLeft, ChevronRight, Dumbbell, Loader2, UserCheck, Save } from "lucide-react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useTenant } from "@/lib/tenantContext";
+import { useAppState } from "@/hooks/useAppState";
+
 import { getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
 import {
   OrbitalSingleSelect,
