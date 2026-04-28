@@ -1,0 +1,20 @@
+# Netlify / Cloudflare Pages cache rules
+# Hashed assets — immutable
+/assets/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# Shell + manifest — never cache
+/
+  Cache-Control: no-store, no-cache, must-revalidate
+/index.html
+  Cache-Control: no-store, no-cache, must-revalidate
+/version.json
+  Cache-Control: no-store, no-cache, must-revalidate
+
+# Service workers — never cache
+/sw.js
+  Cache-Control: no-store, no-cache, must-revalidate
+/sw-push.js
+  Cache-Control: no-store, no-cache, must-revalidate
+/sw-kill.js
+  Cache-Control: no-store, no-cache, must-revalidate
