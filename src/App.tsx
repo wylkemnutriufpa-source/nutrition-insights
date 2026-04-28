@@ -176,7 +176,7 @@ const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
 const SystemPresentationLegacy = lazy(() => import("./pages/SystemPresentation"));
 const TechnicalSheetsLegacy = lazy(() => import("./pages/store/TechnicalSheets"));
 const AdminClinicalRules = lazy(() => import("./pages/admin/ClinicalRules"));
-const AnalyticsDashboard = lazy(() => import("./pages/AnalyticsDashboard"));
+
 const PersonalStudentsLegacy = lazy(() => import("./pages/PersonalStudents"));
 const PersonalWorkoutsLegacy = lazy(() => import("./pages/PersonalWorkouts"));
 const CheckinPanelLegacy = lazy(() => import("./pages/CheckinPanel"));
