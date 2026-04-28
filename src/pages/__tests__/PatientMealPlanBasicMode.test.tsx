@@ -6,6 +6,8 @@ import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { supabase } from "@/integrations/supabase/client";
 import { BrowserRouter } from "react-router-dom";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { TooltipProvider } from "@/components/ui/tooltip";
+
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -62,7 +64,10 @@ describe("PatientMealPlan - Basic Mode", () => {
     // Mock user
     (useAuth as any).mockReturnValue({
       user: { id: "test-user-id" },
+      roles: ["patient"],
+      subscription: { subscribed: true, is_trial: false },
     });
+
 
     // Mock basic mode
     (useExperienceUI as any).mockReturnValue({
@@ -93,11 +98,14 @@ describe("PatientMealPlan - Basic Mode", () => {
   it("should always start on today in basic mode", async () => {
     render(
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <PatientMealPlan />
-        </BrowserRouter>
+        <TooltipProvider>
+          <BrowserRouter>
+            <PatientMealPlan />
+          </BrowserRouter>
+        </TooltipProvider>
       </QueryClientProvider>
     );
+
 
 
     // Should show "Sua dieta de hoje"
@@ -110,11 +118,14 @@ describe("PatientMealPlan - Basic Mode", () => {
   it("should open 'Ver outros dias' modal when clicked", async () => {
     render(
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <PatientMealPlan />
-        </BrowserRouter>
+        <TooltipProvider>
+          <BrowserRouter>
+            <PatientMealPlan />
+          </BrowserRouter>
+        </TooltipProvider>
       </QueryClientProvider>
     );
+
 
 
     const openModalBtn = await screen.findByText(/Ver outros dias/i);
@@ -138,11 +149,14 @@ describe("PatientMealPlan - Basic Mode", () => {
 
     render(
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <PatientMealPlan />
-        </BrowserRouter>
+        <TooltipProvider>
+          <BrowserRouter>
+            <PatientMealPlan />
+          </BrowserRouter>
+        </TooltipProvider>
       </QueryClientProvider>
     );
+
 
 
     // Should show the empty state message
