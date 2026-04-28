@@ -100,9 +100,16 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0 overflow-hidden sm:rounded-2xl border-none shadow-2xl">
         <DialogHeader className="px-6 py-4 border-b bg-background/80 backdrop-blur-md sticky top-0 z-10">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            {onSelect ? <Star className="w-5 h-5 text-yellow-500" /> : <PlusCircle className="w-5 h-5 text-primary" />}
-            {onSelect ? 'Selecionar Substituição' : 'Adicionar Alimento'}
+          <DialogTitle className="text-xl font-bold flex items-center justify-between w-full pr-8">
+            <div className="flex items-center gap-2">
+              {onSelect ? <Star className="w-5 h-5 text-yellow-500" /> : <PlusCircle className="w-5 h-5 text-primary" />}
+              {onSelect ? 'Selecionar Substituições' : 'Adicionar Alimento'}
+            </div>
+            {onSelect && selectedForBatch.length > 0 && (
+              <Button onClick={confirmBatch} size="sm" className="h-8 font-bold px-4">
+                CONFIRMAR ({selectedForBatch.length})
+              </Button>
+            )}
           </DialogTitle>
         </DialogHeader>
 
