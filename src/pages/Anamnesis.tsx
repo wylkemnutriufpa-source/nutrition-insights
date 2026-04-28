@@ -579,7 +579,9 @@ export default function Anamnesis() {
   const [backupExpired, setBackupExpired] = useState(false);
   const [serverVersion, setServerVersion] = useState<{ answers: Record<string, any>, updated_at: string, id: string } | null>(null);
   const [localBackup, setLocalBackup] = useState<{ answers: Record<string, any>, updated_at: string } | null>(null);
+  const [lastServerUpdateAt, setLastServerUpdateAt] = useState<string | null>(null);
   const [showAdaptiveBlocks, setShowAdaptiveBlocks] = useState(false);
+
   const [adaptiveStep, setAdaptiveStep] = useState(0);
   const [onboardingBlocked, setOnboardingBlocked] = useState(false);
   const [resolvedTenantId, setResolvedTenantId] = useState<string | null>(tenantId ?? null);
@@ -739,17 +741,19 @@ export default function Anamnesis() {
         setHasActivePipeline(true);
       }
 
-      // CONFLICT DETECTION (Hardening V4.6)
+      // CONFLICT DETECTION (Hardening V4.6/V4.7)
       if (latestAnamnesis && localData && resolvedTenantId) {
         const serverUpdatedAt = latestAnamnesis.updated_at || latestAnamnesis.created_at;
         const localUpdatedAt = localData.updated_at;
+        
+        setLastServerUpdateAt(serverUpdatedAt);
         
         // Versioned Decision Key V4.6
         const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverUpdatedAt, localUpdatedAt);
         const resolution = localStorage.getItem(resolutionKey);
 
         if (resolution) {
-          addLog(`Conflito já resolvido via versão: ${resolution}`);
+          fjLog("SYNC", `Conflito já resolvido via versão: ${resolution}`);
           if (resolution === "restaurar_servidor") {
             setAnswers(latestAnamnesis.answers);
           } else {
@@ -759,10 +763,11 @@ export default function Anamnesis() {
           return;
         }
 
-        // If they differ by more than 2 seconds
+        // Stage 2 - Concurrency Detection: If they differ significantly
         const serverTS = new Date(serverUpdatedAt).getTime();
         const localTS = new Date(localUpdatedAt).getTime();
         if (Math.abs(serverTS - localTS) > 2000) {
+          fjLog("SYNC", "Conflito detectado no carregamento inicial.");
           setServerVersion({ 
             answers: latestAnamnesis.answers as Record<string, any>, 
             updated_at: serverUpdatedAt,
@@ -774,6 +779,7 @@ export default function Anamnesis() {
           return;
         }
       }
+
 
       // No conflict or no data scenarios
       if (!latestAnamnesis) {
@@ -845,16 +851,39 @@ export default function Anamnesis() {
       return;
     }
 
-    setAutoSaveStatus("syncing");
+    setAutoSaveStatus("syncing", "autosave");
 
     try {
+      // Stage 2 - Concurrency Guard before Update
+      if (draftId && lastServerUpdateAt) {
+        const { data: currentServer } = await supabase
+          .from("patient_anamnesis")
+          .select("updated_at, answers")
+          .eq("id", draftId)
+          .maybeSingle();
+          
+        if (currentServer?.updated_at && currentServer.updated_at !== lastServerUpdateAt) {
+          fjLog("SYNC", "Conflito de concorrência detectado durante autosave.");
+          setServerVersion({
+            answers: currentServer.answers as Record<string, any>,
+            updated_at: currentServer.updated_at,
+            id: draftId
+          });
+          setShowConflictModal(true);
+          setAutoSaveStatus("error", "autosave_conflict");
+          return;
+        }
+      }
+
       let error;
       if (draftId) {
+
         const { error: updateError } = await supabase
           .from("patient_anamnesis")
           .update({ 
             answers: currentAnswers, 
             updated_at: new Date().toISOString(),
+
             tenant_id: resolvedTenantId // Ensure tenant_id is always set
           })
           .eq("id", draftId);
@@ -891,7 +920,10 @@ export default function Anamnesis() {
       }
 
       retryCount.current = 0;
+      const newUpdateAt = new Date().toISOString();
+      setLastServerUpdateAt(newUpdateAt);
       setAutoSaveStatus("success", "autosave");
+
     } catch (e) {
       console.error("[FJ:Anamnesis] autosave threw:", e);
       setAutoSaveStatus("error");
