@@ -343,21 +343,39 @@ const MealItemCard = memo(function MealItemCard({
                 )}
               </div>
             )}
-            <div className="flex gap-1.5 mt-3">
-              {ADHERENCE_OPTIONS.map(opt => (
-                <button
-                  key={opt.status}
-                  onClick={(e) => { e.stopPropagation(); onSetAdherence(item, opt.status); }}
-                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
-                    status === opt.status
-                      ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
-                      : "border-border/50 text-muted-foreground hover:border-border"
-                  }`}
-                >
-                  {opt.icon}
-                  {opt.label}
-                </button>
-              ))}
+            <div className="flex flex-col gap-2 mt-3">
+              {isBasic ? (
+                status === "followed" ? (
+                  <div className="flex items-center justify-center gap-2 py-3 px-4 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 font-bold text-sm">
+                    <CheckCircle2 className="w-5 h-5" />
+                    Refeição Concluída! 🎉
+                  </div>
+                ) : (
+                  <Button
+                    onClick={(e) => { e.stopPropagation(); onSetAdherence(item, "followed"); }}
+                    className="w-full py-6 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-base shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]"
+                  >
+                    Marcar como concluído
+                  </Button>
+                )
+              ) : (
+                <div className="flex gap-1.5">
+                  {ADHERENCE_OPTIONS.map(opt => (
+                    <button
+                      key={opt.status}
+                      onClick={(e) => { e.stopPropagation(); onSetAdherence(item, opt.status); }}
+                      className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg border text-[11px] font-medium transition-all ${
+                        status === opt.status
+                          ? `${opt.bgColor} ${opt.color} ring-1 ring-current`
+                          : "border-border/50 text-muted-foreground hover:border-border"
+                      }`}
+                    >
+                      {opt.icon}
+                      {opt.label}
+                    </button>
+                  ))}
+                </div>
+              )}
               {/* Substitution button */}
               <button
                 type="button"
