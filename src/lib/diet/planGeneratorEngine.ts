@@ -97,6 +97,36 @@ export async function fetchPatientAnamnesis(userId?: string): Promise<PatientDat
 }
 
 export async function generateMealPlan(patientData: PatientData, type: PlanType): Promise<Meal[]> {
+  const MAX_ATTEMPTS = 3;
+  let attempts = 0;
+  let lastResult: { meals: Meal[]; score: number; errors: string[] } | null = null;
+
+  while (attempts < MAX_ATTEMPTS) {
+    attempts++;
+    const meals = await generateRawMealPlan(patientData, type);
+    const validation = validateMealPlan(meals, patientData, type);
+
+    console.log(`[FJ:PLAN_VALIDATION] Tentativa ${attempts}: Score ${validation.score}`);
+
+    if (validation.isValid) {
+      return meals;
+    }
+
+    lastResult = { meals, score: validation.score, errors: validation.errors };
+  }
+
+  // Se falhou após 3 tentativas
+  console.error(`[FJ:PLAN_VALIDATION] Falha crítica após ${MAX_ATTEMPTS} tentativas.`, lastResult?.errors);
+  
+  if (lastResult) {
+    // Retornamos o melhor esforço mas avisamos (o componente deve tratar)
+    return lastResult.meals;
+  }
+  
+  return [];
+}
+
+async function generateRawMealPlan(patientData: PatientData, type: PlanType): Promise<Meal[]> {
   console.log(`[Engine] Gerando plano ${type} para ${patientData.name} (${patientData.is_fallback ? 'Fallback' : 'Preciso'})`);
   
   // 1. Definir estrutura de refeições
