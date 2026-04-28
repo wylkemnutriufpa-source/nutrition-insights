@@ -26,7 +26,37 @@ export interface PatientData {
   is_fallback?: boolean;
 }
 
+export type AuditEventType = 
+  | 'escolha_editor'
+  | 'fallback_ativado'
+  | 'validacao_falhou'
+  | 'plano_gerado'
+  | 'plano_regenerado'
+  | 'troca_editor';
+
+export async function logAuditEvent(
+  userId: string, 
+  profileId: string | undefined, 
+  eventType: AuditEventType, 
+  metadata: any = {}
+) {
+  try {
+    const { error } = await supabase.from('audit_events').insert({
+      user_id: userId,
+      profile_id: profileId,
+      event_type: eventType,
+      metadata
+    });
+    if (error) console.error('[FJ:AUDIT] Erro ao salvar evento:', error);
+  } catch (e) {
+    console.error('[FJ:AUDIT] Falha crítica de log:', e);
+  }
+}
+
 export async function fetchPatientAnamnesis(userId?: string): Promise<PatientData | null> {
+  const { data: { user } } = await supabase.auth.getUser();
+  const currentUserId = user?.id || 'unknown';
+
   let query = supabase.from('patient_anamnesis').select('*');
   
   if (userId && userId !== 'dummy-user-id') {
@@ -38,12 +68,13 @@ export async function fetchPatientAnamnesis(userId?: string): Promise<PatientDat
   const { data, error } = await query.maybeSingle();
 
   if (error || !data) {
-    // FALLBACK: Tentar buscar no perfil básico se anamnese falhar
     if (userId && userId !== 'dummy-user-id') {
+      await logAuditEvent(currentUserId, userId, 'fallback_ativado', { reason: 'anamnesis_not_found', patient_id: userId });
+      
       const { data: profile } = await supabase
         .from('profiles')
         .select('full_name, goal, current_weight')
-        .eq('user_id', userId)
+        .eq('id', userId) // Usando ID do perfil/paciente
         .maybeSingle();
       
       if (profile) {
@@ -63,7 +94,6 @@ export async function fetchPatientAnamnesis(userId?: string): Promise<PatientDat
       }
     }
 
-    // SAFE DEFAULTS (Último recurso)
     return {
       id: userId || 'unknown',
       name: 'Paciente (Novo)',
@@ -97,6 +127,9 @@ export async function fetchPatientAnamnesis(userId?: string): Promise<PatientDat
 }
 
 export async function generateMealPlan(patientData: PatientData, type: PlanType): Promise<Meal[]> {
+  const { data: { user } } = await supabase.auth.getUser();
+  const currentUserId = user?.id || 'unknown';
+  
   const MAX_ATTEMPTS = 3;
   let attempts = 0;
   let lastResult: { meals: Meal[]; score: number; errors: string[] } | null = null;
@@ -108,22 +141,31 @@ export async function generateMealPlan(patientData: PatientData, type: PlanType)
 
     if (validation.isValid) {
       console.log(`[FJ:PLAN_VALIDATION] Plano VALIDADO na tentativa ${attempts} (Score 100)`);
+      await logAuditEvent(currentUserId, patientData.id, attempts === 1 ? 'plano_gerado' : 'plano_regenerado', { 
+        type, 
+        attempts, 
+        score: validation.score 
+      });
       return meals;
     }
 
+    await logAuditEvent(currentUserId, patientData.id, 'validacao_falhou', { 
+      type, 
+      attempt: attempts, 
+      score: validation.score, 
+      errors: validation.errors 
+    });
+    
     console.warn(`[FJ:PLAN_VALIDATION] Tentativa ${attempts} falhou (Score ${validation.score}). Erros:`, validation.errors);
     lastResult = { meals, score: validation.score, errors: validation.errors };
   }
 
-  // Se falhou após 3 tentativas
   console.error(`[FJ:PLAN_VALIDATION] Falha crítica: Impossível gerar plano perfeito após ${MAX_ATTEMPTS} tentativas.`);
   
   if (lastResult && lastResult.score >= 80) {
-    // Se o score for razoável, permite edição manual
     return lastResult.meals;
   }
   
-  // Se for realmente ruim, lança erro para a UI tratar
   throw new Error("Não foi possível gerar um plano nutricional seguro. Por favor, monte manualmente ou altere as restrições.");
 }
 
