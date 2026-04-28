@@ -1,1 +1,1 @@
-bun run schema:verify
+pnpm run schema:verify || (echo "\nSchema snapshot desatualizado.\nMigrations faltantes detectadas.\nExecute:\npnpm schema:update\n" && exit 1)
