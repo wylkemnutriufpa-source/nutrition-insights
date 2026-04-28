@@ -308,8 +308,8 @@ export default function Checkin() {
             <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold font-display">Avaliação & Check-in</h1>
-            <p className="text-sm text-muted-foreground">Sua evolução física e check-ins semanais</p>
+            <h1 className="text-2xl font-bold font-display">{isBasic ? "Enviar Feedback" : "Avaliação & Check-in"}</h1>
+            <p className="text-sm text-muted-foreground">{isBasic ? "Mande seu progresso e fotos para seu profissional" : "Sua evolução física e check-ins semanais"}</p>
           </div>
         </motion.div>
 
