@@ -117,28 +117,28 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   const isProRole = ctx.isNutritionist || ctx.isPersonal || ctx.isAdmin;
 
   // Admin access
-  if (isInList(pathname, ADMIN_ROUTES) && !ctx.isAdmin) {
+  if (isInList(safePathname, ADMIN_ROUTES) && !ctx.isAdmin) {
     return { type: 'REDIRECT', target: '/', reason: 'Non-admin accessing admin route' };
   }
 
   // Hybrid Context check
   if (ctx.isHybrid) {
-    if (ctx.isPatientContext && isInList(pathname, PROFESSIONAL_ONLY_ROUTES)) {
+    if (ctx.isPatientContext && isInList(safePathname, PROFESSIONAL_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Patient context accessing pro route' };
     }
-    if (ctx.isProfessionalContext && isInList(pathname, PATIENT_ONLY_ROUTES)) {
+    if (ctx.isProfessionalContext && isInList(safePathname, PATIENT_ONLY_ROUTES)) {
       // Exception for onboarding
       const isOnboarding = ['onboarding_active', 'lead_created', 'awaiting_consent'].includes(ctx.journeyStatus || '');
-      if (isOnboarding && pathname.startsWith('/anamnesis')) return { type: 'ALLOW', reason: 'Onboarding override' };
+      if (isOnboarding && safePathname.startsWith('/anamnesis')) return { type: 'ALLOW', reason: 'Onboarding override' };
       
       return { type: 'REDIRECT', target: '/', reason: 'Pro context accessing patient route' };
     }
   } else {
     // Pure Role Check
-    if (ctx.role === 'patient' && !isProRole && isInList(pathname, PROFESSIONAL_ONLY_ROUTES)) {
+    if (ctx.role === 'patient' && !isProRole && isInList(safePathname, PROFESSIONAL_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Patient role accessing pro route' };
     }
-    if (ctx.role === 'professional' && !ctx.profile?.is_patient && isInList(pathname, PATIENT_ONLY_ROUTES)) {
+    if (ctx.role === 'professional' && !ctx.profile?.is_patient && isInList(safePathname, PATIENT_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Pro role accessing patient route' };
     }
   }
@@ -146,11 +146,11 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   // 7. Patient Journey Specifics
   if (ctx.role === 'patient') {
     const isOnboarding = ['onboarding_active', 'lead_created', 'awaiting_consent'].includes(ctx.journeyStatus || '');
-    if (isOnboarding && pathname.startsWith('/anamnesis')) {
+    if (isOnboarding && safePathname.startsWith('/anamnesis')) {
       return { type: 'ALLOW', reason: 'Onboarding anamnesis override' };
     }
 
-    if (isOnboarding && !pathname.startsWith('/onboarding') && !pathname.startsWith('/consent') && !isInList(pathname, UNIVERSAL_ROUTES)) {
+    if (isOnboarding && !safePathname.startsWith('/onboarding') && !safePathname.startsWith('/consent') && !isInList(safePathname, UNIVERSAL_ROUTES)) {
       const target = ctx.journeyStatus === 'onboarding_active' ? '/onboarding' : '/consent';
       return { type: 'REDIRECT', target, reason: 'Enforcing patient onboarding' };
     }
