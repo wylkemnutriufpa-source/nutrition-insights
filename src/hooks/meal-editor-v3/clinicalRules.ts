@@ -3,35 +3,20 @@ import { QUICK_FOODS, MARMITAS } from './constants';
 
 export interface ClinicalCondition {
   id: string;
-  name: string;
+  condition_name: string; // Changed to match DB
+  description: string;
   restrictions: string[];
   recommendations: string[];
 }
 
+// Default conditions as fallback
 export const CLINICAL_CONDITIONS: ClinicalCondition[] = [
   {
     id: 'gastritis',
-    name: 'Gastrite',
+    condition_name: 'Gastrite',
+    description: 'Evitar irritantes',
     restrictions: ['q8', 'café forte', 'gordura excessiva'],
     recommendations: ['Alimentos cozidos', 'Frutas não ácidas']
-  },
-  {
-    id: 'triglycerides',
-    name: 'Triglicerídeos Altos',
-    restrictions: ['açúcar', 'farinha branca'],
-    recommendations: ['Fibras', 'Peixes', 'q10 integral']
-  },
-  {
-    id: 'liver_fat',
-    name: 'Gordura no Fígado',
-    restrictions: ['fritura', 'álcool', 'açúcar'],
-    recommendations: ['Vegetais verdes', 'Proteínas magras']
-  },
-  {
-    id: 'lactating',
-    name: 'Lactantes',
-    restrictions: [],
-    recommendations: ['Aumento calórico', 'Hidratação', 'q8', 'q6']
   }
 ];
 
