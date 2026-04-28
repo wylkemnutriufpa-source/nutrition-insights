@@ -571,20 +571,6 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         return true;
       },
 
-      validateConsistency: () => {
-        const { meals } = get();
-        // Verifica se todos os itens em daySubstitutions ainda existem na lista de itens
-        for (const meal of meals) {
-          if (meal.daySubstitutions) {
-            for (const [day, instanceId] of Object.entries(meal.daySubstitutions)) {
-              if (!meal.items.some(i => i.instanceId === instanceId)) {
-                return false;
-              }
-            }
-          }
-        }
-        return true;
-      },
 
       undo: () => {
         set((state) => {
