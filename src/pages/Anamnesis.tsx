@@ -1508,16 +1508,23 @@ export default function Anamnesis() {
               variant="outline"
               size="sm"
               onClick={() => {
+                if (backupExpired) {
+                  toast.error("Este backup expirou (>30 dias) e não pode ser restaurado.");
+                  return;
+                }
                 if (!localBackup) {
-                  toast.error("Nenhum backup local encontrado.");
+                  toast.error("Não há backup local disponível para restaurar.");
                   return;
                 }
                 setShowManualRestoreModal(true);
               }}
-              className="gap-1.5 text-muted-foreground"
+              disabled={backupExpired || !localBackup}
+              className={`gap-1.5 transition-all duration-300 ${backupExpired ? 'opacity-50 grayscale' : 'text-muted-foreground hover:text-primary'}`}
             >
-              <RefreshCcw className="w-4 h-4" /> Restaurar backup
+              <RefreshCcw className={`w-4 h-4 ${backupExpired ? '' : 'group-hover:rotate-180 transition-transform duration-500'}`} /> 
+              {backupExpired ? "Backup expirado" : "Restaurar backup"}
             </Button>
+            
             <Button
               variant="outline"
               size="sm"
@@ -1534,7 +1541,39 @@ export default function Anamnesis() {
             >
               <Save className="w-4 h-4" /> Salvar e sair
             </Button>
+
+            {/* Advanced Sync Indicator */}
+            <div className="hidden md:flex items-center gap-2 px-3 py-1.5 rounded-full bg-muted/30 border border-border/50 text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
+              {autoSaveStatus === "saving" ? (
+                <>
+                  <Loader2 className="w-3 h-3 animate-spin text-primary" />
+                  Sincronizando...
+                </>
+              ) : autoSaveStatus === "saved" ? (
+                <>
+                  <Check className="w-3 h-3 text-emerald-500" />
+                  Salvo automaticamente
+                </>
+              ) : autoSaveStatus === "error" ? (
+                <>
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  Erro ao sincronizar
+                </>
+              ) : (
+                <>
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-500/50" />
+                  Proteção de dados ativa
+                </>
+              )}
+            </div>
           </div>
+
+          {lastSafetyAction && (
+            <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground italic">
+              <History className="w-3 h-3" />
+              Última ação: {lastSafetyAction.type.replace(/_/g, ' ')} há {Math.round((new Date().getTime() - new Date(lastSafetyAction.timestamp).getTime()) / 60000)} min
+            </div>
+          )}
 
           {step < questions.length - 1 ? (
             <Button
