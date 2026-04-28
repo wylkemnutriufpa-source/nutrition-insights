@@ -173,6 +173,7 @@ export function startVersionSync(): void {
 
   try {
     (window as any).__APP_VERSION__ = LOCAL_VERSION;
+    (window as any).__FJ_VERSION_MISMATCH__ = false;
   } catch {}
 
   if (isPreviewOrIframe()) return;
