@@ -142,7 +142,8 @@ function selectItemsForMeal(mealName: string, type: PlanType, targetKcal: number
         calories: cand.calories,
         protein: cand.protein,
         carbs: cand.carbs,
-        fat: cand.fat
+        fat: cand.fat,
+        substitutions: generateSubstitutions(cand, baseFoods)
       });
       currentKcal += cand.calories;
     }
@@ -150,4 +151,22 @@ function selectItemsForMeal(mealName: string, type: PlanType, targetKcal: number
   }
 
   return selected;
+}
+
+function generateSubstitutions(baseFood: any, allFoods: any[]): Omit<Food, 'id'>[] {
+  // Busca alimentos do mesmo tipo (ex: café, almoço) e macros similares
+  return allFoods
+    .filter(f => 
+      f.name !== baseFood.name && 
+      f.types.some((t: string) => baseFood.types.includes(t)) &&
+      Math.abs(f.calories - baseFood.calories) < 100
+    )
+    .slice(0, 2)
+    .map(f => ({
+      name: f.name,
+      calories: f.calories,
+      protein: f.protein,
+      carbs: f.carbs,
+      fat: f.fat
+    }));
 }
