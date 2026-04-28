@@ -441,7 +441,7 @@ export default function PatientRegister() {
 
     const formattedWhatsapp = formatInternationalWhatsApp(whatsapp);
     
-    setLoading(true);
+    setSyncStatus("syncing", "PATIENT_REGISTER");
     addLog(`Iniciando registro para ${email}...`);
     try {
       const nutriId = selectedProfessional?.user_id || preselectedNutri || null;
@@ -450,7 +450,7 @@ export default function PatientRegister() {
       if (!nutriId && (preselectedNutri || invitationCode)) {
         addLog("BLOQUEIO: Cadastro sem vínculo profissional em link parametrizado.");
         toast.error("Vínculo de profissional não identificado. O cadastro de pacientes exige um convite válido.");
-        setLoading(false);
+        setSyncStatus("error", "PATIENT_REGISTER", "Vínculo não identificado");
         return;
       }
 
@@ -471,12 +471,13 @@ export default function PatientRegister() {
           addLog(`Erro ao criar lead: ${leadErr.message}`);
           toast.error("Selecione um profissional para concluir o cadastro.");
           setShowProfSearch(true);
+          setSyncStatus("error", "PATIENT_REGISTER", leadErr.message);
           return;
         }
 
         addLog("Lead criado com sucesso.");
         toast.success("Recebemos seu interesse!");
-        setDone(true);
+        setSyncStatus("success", "PATIENT_REGISTER");
         return;
       }
 
@@ -656,7 +657,7 @@ export default function PatientRegister() {
           type: linkageResult.reason || "unknown",
           message: "Ocorreu uma falha crítica ao vincular sua conta ao profissional nutricionista. Por favor, tente novamente ou fale com o suporte."
         });
-        setLoading(false);
+        setSyncStatus("error", "LINKAGE_VALIDATION", linkageResult.reason);
         return;
       }
 
@@ -667,7 +668,7 @@ export default function PatientRegister() {
         toast.success("Conta criada e vinculada com sucesso!");
         
         setTimeout(() => {
-          setLoading(false);
+          setSyncStatus("success", "PATIENT_REGISTER");
           navigate("/client/dashboard", { replace: true });
         }, 1000);
         return;
@@ -676,7 +677,7 @@ export default function PatientRegister() {
 
       setCurrentUserId(signUpData.user.id);
       toast.success("Conta criada! Verifique seu e-mail.");
-      setDone(true);
+      setSyncStatus("success", "PATIENT_REGISTER");
 
       if (nutriId) {
         promptWhatsAppNotification({
@@ -692,6 +693,7 @@ export default function PatientRegister() {
     } catch (err: any) {
       addLog(`Erro inesperado: ${err.message}`);
       toast.error("Erro ao criar conta. Tente novamente.");
+      setSyncStatus("error", "PATIENT_REGISTER", err.message);
     } finally {
       setLoading(false);
     }
