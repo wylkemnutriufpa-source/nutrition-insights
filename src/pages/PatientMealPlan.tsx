@@ -536,7 +536,7 @@ export default function PatientMealPlan() {
               allMarked={allMarked}
             />
 
-            <MacroSummary items={items} totalsStatus={plan?.totals_status} />
+            {!isBasic && <MacroSummary items={items} totalsStatus={plan?.totals_status} />}
 
             <div className="space-y-6">
               {groupedItems.map(({ key, label, icon, time, items: mealItems }) => (
