@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { TenantProvider } from "@/lib/tenantContext";
 import { supabase } from "@/integrations/supabase/client";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
 import { lazy, Suspense, useEffect, useState } from "react";
 import { Helmet, HelmetProvider } from "react-helmet-async";
@@ -375,9 +376,11 @@ function RootRoute() {
   if (!user) return <GatewayPage />;
 
   // 1. Check Onboarding MUST COMPLETE
+  const { status: journeyStatus } = usePatientJourneyStatus();
   if (requirement === "must_complete") {
-    console.log("[RootRoute] Redirecting to /onboarding due to requirement");
-    return <Navigate to="/onboarding" replace />;
+    const targetRoute = (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created") ? "/consent" : "/onboarding";
+    console.log(`[RootRoute] Mandatory state (${journeyStatus}) -> Redirecting to ${targetRoute}`);
+    return <Navigate to={targetRoute} replace />;
   }
 
   // 2. Pro/Editor restoration

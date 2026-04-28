@@ -300,21 +300,21 @@ export default function ClientDashboard() {
   }, [journeyStatus, journeyLoading, canAccessOnboarding, user?.id]);
 
   // AUTOMATIC REDIRECT: Ensure early onboarding states land on /consent immediately
-  // FIXED: Only redirect if actually on the dashboard to avoid infinite loops on /consent
   useEffect(() => {
-    const correlationId = `onboarding-redirect-${Date.now()}`;
-    const targetRoute = "/consent";
+    if (journeyLoading || isLoading || !isPatient) return;
+
+    const isLockedState = journeyStatus === "awaiting_consent" || journeyStatus === "lead_created" || journeyStatus === "onboarding_active";
     
-    // Prevent redirect loop: check if NOT on target route and if status warrants it
-    if (!journeyLoading && !isLoading && journeyStatus && (journeyStatus === "awaiting_consent" || journeyStatus === "lead_created")) {
-       if (window.location.pathname !== targetRoute && window.location.pathname !== "/onboarding") {
-         console.log(`[Dashboard:${correlationId}] Redirecting early onboarding state (${journeyStatus}) to ${targetRoute}`);
-         navigate(targetRoute, { replace: true });
-       } else {
-         console.log(`[Dashboard:${correlationId}] Already on ${targetRoute} or /onboarding, skipping redirect loop.`);
-       }
+    if (isLockedState) {
+      const targetRoute = journeyStatus === "onboarding_active" ? "/onboarding" : "/consent";
+      const isAllowed = window.location.pathname.startsWith("/onboarding") || window.location.pathname.startsWith("/consent");
+      
+      if (!isAllowed) {
+        console.log(`[Dashboard:Redirect] Status ${journeyStatus} detected on Dashboard. Redirecting to ${targetRoute}`);
+        navigate(targetRoute, { replace: true });
+      }
     }
-  }, [journeyStatus, journeyLoading, isLoading, navigate]);
+  }, [journeyStatus, journeyLoading, isLoading, navigate, isPatient]);
 
   // Mandatory block states only - using centralized logic
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
