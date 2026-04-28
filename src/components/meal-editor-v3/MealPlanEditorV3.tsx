@@ -5,8 +5,10 @@ import { ActiveMealContent } from './ActiveMealContent';
 import { MacroSummary } from './MacroSummary';
 import { ClinicalRulesPanel } from './ClinicalRulesPanel';
 import { ValidationModal } from './ValidationModal';
+import { TemplateLibrary } from './TemplateLibrary';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { 
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
@@ -42,7 +44,7 @@ export const MealPlanEditorV3: React.FC = () => {
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
     fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView
   } = useMealEditorV3Store();
-
+  
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [validationResults, setValidationResults] = useState<any>(null);
@@ -153,6 +155,19 @@ export const MealPlanEditorV3: React.FC = () => {
               MODO RÁPIDO
             </Label>
           </div>
+
+          <div className="hidden sm:flex items-center space-x-2 bg-muted/30 px-3 py-1.5 rounded-full border border-border/50">
+            <Switch 
+              id="patient-view" 
+              checked={isPatientView} 
+              onCheckedChange={setPatientView} 
+              className="data-[state=checked]:bg-emerald-500"
+            />
+            <Label htmlFor="patient-view" className="text-xs font-bold flex items-center gap-1.5 cursor-pointer">
+              <Apple className={cn("w-3 h-3 transition-colors", isPatientView ? "text-emerald-500" : "text-muted-foreground")} />
+              VER COMO PACIENTE
+            </Label>
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -224,10 +239,21 @@ export const MealPlanEditorV3: React.FC = () => {
         </main>
 
         <aside className="w-80 border-l bg-muted/20 p-6 hidden xl:block overflow-y-auto">
-          <MacroSummary />
-          <div className="mt-8 pt-8 border-t">
-            <ClinicalRulesPanel />
-          </div>
+          <Tabs defaultValue="summary">
+            <TabsList className="w-full bg-muted/30 p-1 mb-6">
+              <TabsTrigger value="summary" className="flex-1 text-[10px] font-bold">RESUMO</TabsTrigger>
+              <TabsTrigger value="templates" className="flex-1 text-[10px] font-bold">BIBLIOTECA</TabsTrigger>
+            </TabsList>
+            <TabsContent value="summary" className="m-0 space-y-8">
+              <MacroSummary />
+              <div className="pt-8 border-t">
+                <ClinicalRulesPanel />
+              </div>
+            </TabsContent>
+            <TabsContent value="templates" className="m-0">
+              <TemplateLibrary />
+            </TabsContent>
+          </Tabs>
         </aside>
       </div>
 
