@@ -1,9 +1,10 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, waitFor, act } from '@testing-library/react';
-import UpdateBanner from '../components/common/UpdateBanner';
+import { UpdateBanner } from '../components/common/UpdateBanner';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import '@testing-library/jest-dom';
-import * as pwa from 'virtual:pwa-register/react';
+// Removing pwa-register mock if not needed or keeping it if it's a dummy
+const pwa = { useRegisterSW: vi.fn(() => ({ needRefresh: [false, vi.fn()], offlineReady: [false, vi.fn()], updateServiceWorker: vi.fn() })) };
 
 const queryClient = new QueryClient();
 

@@ -112,6 +112,7 @@ export class CriticalErrorBoundary extends Component<Props, State> {
     // Auto-reload on ChunkLoadError
     if (/loading.*chunk/i.test(error.message)) {
       console.warn("[FitJourney:Crash] Falha de Chunk detectada, recarregando...");
+      // Forcing update here is safe because it's already crashed
       window.location.reload();
     }
   }

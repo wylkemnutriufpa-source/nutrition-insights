@@ -27,6 +27,7 @@ import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 import { AnimatePresence } from "framer-motion";
 import SafePage from "@/components/common/SafePage";
 import PatientReadyGuard from "@/components/common/PatientReadyGuard";
+import { UpdateBanner } from "@/components/common/UpdateBanner";
 
 // Eager
 import GatewayPage from "./pages/GatewayPage";
@@ -204,6 +205,7 @@ const App = () => (
           <Sonner />
           <MobileAutoFixer />
           <GlobalErrorBoundary />
+          <UpdateBanner />
           <BrowserRouter>
             <AuthProvider>
               <TenantProvider>
