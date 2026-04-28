@@ -73,7 +73,7 @@ export const MealPlanEditorV3: React.FC = () => {
             onClick={() => setIsGenerateModalOpen(true)} 
             className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 font-bold px-4"
           >
-            <Lightning className="w-3.5 h-3.5 mr-2" />
+            <Zap className="w-3.5 h-3.5 mr-2" />
             GERAR PLANO
           </Button>
           <Button size="sm" className="font-bold shadow-lg shadow-primary/20 px-6">
