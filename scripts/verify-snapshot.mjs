@@ -31,6 +31,8 @@ const migrations = fs.readdirSync(migrationsDir)
 
 const lastSnapshotMigration = current.lastMigration;
 const lastActualMigration = migrations[migrations.length - 1];
+const isOutdated = lastSnapshotMigration !== lastActualMigration;
+
 
 let hasDiff = false;
 const diffResults = [];
