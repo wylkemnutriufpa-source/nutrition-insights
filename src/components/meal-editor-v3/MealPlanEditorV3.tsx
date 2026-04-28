@@ -40,9 +40,9 @@ export const MealPlanEditorV3: React.FC = () => {
   const { 
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
-    fetchClinicalRules, patientTargets, meals, clinicalLog
+    fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView
   } = useMealEditorV3Store();
-  
+
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [validationResults, setValidationResults] = useState<any>(null);
