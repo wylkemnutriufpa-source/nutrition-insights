@@ -179,6 +179,7 @@ export const MobileMealEditorV3: React.FC = () => {
                 meal={meal}
                 defaultTime={DEFAULT_TIMES[meal.name.toLowerCase()]}
                 weekMode={view === 'week'}
+                activeDayId={activeDay}
                 onAddItem={(mealId) => setAddModalMealId(mealId)}
                 onEditItem={(mealId) => setAddModalMealId(mealId)}
                 onSubstituteItem={(mealId, item) =>
