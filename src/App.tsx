@@ -148,6 +148,19 @@ const ClinicalBrainLegacy = lazy(() => import("./pages/ClinicalBrain"));
 const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
 const InOfficeWizard = lazy(() => import("./pages/InOfficeWizard"));
 const SystemPresentation = lazy(() => import("./pages/SystemPresentation"));
+const QAChecklist = lazy(() => import("./pages/QAChecklistPage"));
+const InvitationAudit = lazy(() => import("./pages/InvitationAudit"));
+const TemplateNutritionAudit = lazy(() => import("./pages/admin/TemplateNutritionAudit.tsx"));
+const AIUsageDashboard = lazy(() => import("./pages/admin/AIUsageDashboard.tsx"));
+const AdminExperienceModeAudit = lazy(() => import("./pages/admin/AdminExperienceModeAudit.tsx"));
+const AdminExperienceModeReconcile = lazy(() => import("./pages/admin/AdminExperienceModeReconcile.tsx"));
+const AdminPlanLoadingDiagnostics = lazy(() => import("./pages/admin/AdminPlanLoadingDiagnostics.tsx"));
+const ImageFallbackAdmin = lazy(() => import("./pages/admin/ImageFallbackAdmin.tsx"));
+const MarmitaAudit = lazy(() => import("./pages/admin/MarmitaAudit.tsx"));
+const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard.tsx"));
+const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin.tsx"));
+const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit.tsx"));
+const TemplateMassReformulation = lazy(() => import("./pages/admin/TemplateMassReformulation.tsx"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
