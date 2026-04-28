@@ -4,10 +4,13 @@
  */
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
+import { useAppState } from "./useAppState";
+import { useExperienceMode } from "./useExperienceMode";
+import { getSystemDecision, type GovernanceContext } from "@/lib/governance";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading" | "error_no_link";
 
@@ -36,10 +39,11 @@ const redirectHistory: Record<string, { from: string, to: string, count: number 
 
 export function useOnboardingGuard() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
-  const { loading: authLoading, user } = useAuth();
+  const { loading: authLoading, user, profile, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { mode, role } = useExperienceMode();
+  const { isReady, isDegraded } = useAppState();
   const location = useLocation();
   const navigate = useNavigate();
-  const isRedirecting = useRef(false);
 
   useEffect(() => {
     // Stage 1: Wait for status
