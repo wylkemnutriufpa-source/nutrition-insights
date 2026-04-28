@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
-import { Plus, Trash2, Repeat, Save, ChevronDown, Utensils } from 'lucide-react';
+import { Plus, Trash2, Repeat, Save, ChevronDown, Utensils, Package, Lock } from 'lucide-react';
 import { Meal, useDietStore, Food } from '@/stores/diet-builder/useDietStore';
 import { Button } from '@/components/ui/button';
 import { AddFoodModal } from './AddFoodModal';
+import { MarmitaLibraryModal } from './MarmitaLibraryModal';
+import { toast } from 'sonner';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,20 +17,19 @@ interface MealCardProps {
 }
 
 const SUBSTITUTIONS: Record<string, Omit<Food, 'id'>[]> = {
-  'Frango Grelhado': [
-    { name: 'Carne Vermelha', calories: 220, protein: 28, carbs: 0, fat: 12 },
-    { name: 'Peixe Grelhado', calories: 140, protein: 25, carbs: 0, fat: 3 },
-    { name: 'Ovo Omelete', calories: 180, protein: 13, carbs: 2, fat: 14 },
+  'Peito de Frango Grelhado (USDA)': [
+    { name: 'Patinho Moído (USDA)', calories: 219, protein: 26, carbs: 0, fat: 12 },
+    { name: 'Ovo de Galinha (USDA)', calories: 155, protein: 13, carbs: 1, fat: 11 },
   ],
-  'Arroz Integral': [
-    { name: 'Batata Doce', calories: 86, protein: 2, carbs: 20, fat: 0 },
-    { name: 'Macarrão Integral', calories: 150, protein: 5, carbs: 30, fat: 1 },
-    { name: 'Quinoa', calories: 120, protein: 4, carbs: 21, fat: 2 },
+  'Arroz Integral Cozido (USDA)': [
+    { name: 'Batata Doce Cozida (USDA)', calories: 86, protein: 2, carbs: 20, fat: 0 },
+    { name: 'Quinoa Cozida (USDA)', calories: 120, protein: 4, carbs: 21, fat: 2 },
   ]
 };
 
 export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMarmitaModalOpen, setIsMarmitaModalOpen] = useState(false);
   const { removeFood, replaceFood, saveAsTemplate } = useDietStore();
 
   const mealTotals = meal.items.reduce((acc, item) => ({
@@ -65,11 +66,19 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
             </Button>
           )}
           <Button 
+            variant="outline"
+            onClick={() => setIsMarmitaModalOpen(true)}
+            className="rounded-xl border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+          >
+            <Package className="w-4 h-4 mr-2" />
+            Marmita
+          </Button>
+          <Button 
             onClick={() => setIsModalOpen(true)}
             className="rounded-xl bg-slate-900 hover:bg-emerald-600 text-white shadow-lg shadow-slate-200 transition-all px-4 py-2"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Adicionar
+            Alimento
           </Button>
         </div>
       </div>
@@ -77,11 +86,15 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
       <div className="space-y-3">
         {meal.items.length > 0 ? (
           meal.items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-white transition-all group/item">
+            <div 
+              key={item.id} 
+              className={`flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-white transition-all group/item ${item.locked ? 'bg-emerald-50/30' : ''}`}
+            >
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-700">{item.name}</span>
-                  {SUBSTITUTIONS[item.name] && (
+                  {item.locked && <Lock className="w-3 h-3 text-emerald-500" />}
+                  {SUBSTITUTIONS[item.name] && !item.locked && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-1 text-slate-300 hover:text-emerald-500 transition-colors">
@@ -105,14 +118,20 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
                   )}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  P: {item.protein}g • C: {item.carbs}g • G: {item.fat}g
+                  P: {item.protein}g • C: {item.carbs}g • G: {item.fat}g {item.locked && <span className="text-[10px] font-bold text-emerald-600 ml-2 uppercase">FIXO</span>}
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-bold text-slate-900 text-sm">{item.calories} kcal</span>
                 <button 
-                  onClick={() => removeFood(meal.id, item.id)}
-                  className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-all"
+                  onClick={() => {
+                    if (item.locked) {
+                      toast.error("Marmitas não podem ser alteradas. Substitua a marmita inteira.");
+                      return;
+                    }
+                    removeFood(meal.id, item.id);
+                  }}
+                  className={`p-2 transition-all ${item.locked ? 'text-slate-200 cursor-not-allowed' : 'text-slate-300 hover:text-red-500 opacity-0 group-hover/item:opacity-100'}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
@@ -129,6 +148,11 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
         )}
       </div>
 
+      <MarmitaLibraryModal
+        isOpen={isMarmitaModalOpen}
+        onClose={() => setIsMarmitaModalOpen(false)}
+        mealId={meal.id}
+      />
       <AddFoodModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
