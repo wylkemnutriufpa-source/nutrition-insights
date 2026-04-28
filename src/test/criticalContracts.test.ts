@@ -221,11 +221,23 @@ describe("Critical Contracts — Freeze Inteligente", () => {
   });
 
   describe("6. assertContract — bloqueio efetivo", () => {
-    it("lança ContractViolationError quando contrato é violado", () => {
+    it("lança ContractViolationError quando contrato é violado (Vazamento de ID)", () => {
       expect(() =>
         assertContract("patient_access", {
           requestingPatientId: "p1",
-          returnedPlans: [{ id: "x", patient_id: "p2", plan_status: "published" }],
+          requestingTenantId: "t1",
+          returnedPlans: [{ id: "x", patient_id: "p2", tenant_id: "t1", plan_status: "published" }],
+          route: "/my-diet",
+        }),
+      ).toThrow(ContractViolationError);
+    });
+
+    it("lança ContractViolationError quando contrato é violado (Vazamento de Tenant)", () => {
+      expect(() =>
+        assertContract("patient_access", {
+          requestingPatientId: "p1",
+          requestingTenantId: "t1",
+          returnedPlans: [{ id: "x", patient_id: "p1", tenant_id: "t2", plan_status: "published" }],
           route: "/my-diet",
         }),
       ).toThrow(ContractViolationError);
@@ -235,7 +247,8 @@ describe("Critical Contracts — Freeze Inteligente", () => {
       expect(() =>
         assertContract("patient_access", {
           requestingPatientId: "p1",
-          returnedPlans: [{ id: "x", patient_id: "p1", plan_status: "published_to_patient" }],
+          requestingTenantId: "t1",
+          returnedPlans: [{ id: "x", patient_id: "p1", tenant_id: "t1", plan_status: "published_to_patient" }],
           route: "/my-diet",
         }),
       ).not.toThrow();
