@@ -90,6 +90,64 @@ const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
 const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 
+// NOVOS LAZY IMPORTS RECONCILIADOS
+const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
+const GrowthDashboard = lazy(() => import("./pages/GrowthDashboard"));
+const AdminGuideEngine = lazy(() => import("./pages/AdminGuideEngine"));
+const AdminLandingPages = lazy(() => import("./pages/AdminLandingPages"));
+const AdminMarketingContent = lazy(() => import("./pages/AdminMarketingContent"));
+const AdminMenuConfig = lazy(() => import("./pages/AdminMenuConfig"));
+const AdminPatientFeatures = lazy(() => import("./pages/AdminPatientFeatures"));
+const AdminProtocolBiquiniBranco = lazy(() => import("./pages/AdminProtocolBiquiniBranco"));
+const AdminProtocolFitJourney = lazy(() => import("./pages/AdminProtocolFitJourney"));
+const ImportPatients = lazy(() => import("./pages/ImportPatients"));
+const ProfessionalClinicalAnalytics = lazy(() => import("./pages/ProfessionalClinicalAnalytics"));
+const ClinicalAutomation = lazy(() => import("./pages/ClinicalAutomation"));
+const ClinicalIntelligence = lazy(() => import("./pages/ClinicalIntelligence"));
+const ClinicalLab = lazy(() => import("./pages/ClinicalLab"));
+const ClinicalOrchestration = lazy(() => import("./pages/ClinicalOrchestration"));
+const ClinicalPredictions = lazy(() => import("./pages/ClinicalPredictions"));
+const ClinicalRiskDashboard = lazy(() => import("./pages/ClinicalRiskDashboard"));
+const ClinicalSimulation = lazy(() => import("./pages/ClinicalSimulation"));
+const ClinicalCRM = lazy(() => import("./pages/ClinicalCRM"));
+const PersonalStudents = lazy(() => import("./pages/PersonalStudents"));
+const PersonalWorkouts = lazy(() => import("./pages/PersonalWorkouts"));
+const CheckinPanel = lazy(() => import("./pages/CheckinPanel"));
+const Checklist = lazy(() => import("./pages/Checklist"));
+const Feedbacks = lazy(() => import("./pages/Feedbacks"));
+const FitnessAnamnesis = lazy(() => import("./pages/FitnessAnamnesis"));
+const GlobalTips = lazy(() => import("./pages/GlobalTips"));
+const HealthCheckQuiz = lazy(() => import("./pages/HealthCheckQuiz"));
+const HumanPerformance = lazy(() => import("./pages/HumanPerformance"));
+const InOfficeSelector = lazy(() => import("./pages/InOfficeSelector"));
+const InvitePatient = lazy(() => import("./pages/InvitePatient"));
+const Library = lazy(() => import("./pages/Library"));
+const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
+const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
+const MyReferrals = lazy(() => import("./pages/MyReferrals"));
+const OnboardingTracker = lazy(() => import("./pages/OnboardingTracker"));
+const Planner = lazy(() => import("./pages/Planner"));
+const PopulationIntelligence = lazy(() => import("./pages/PopulationIntelligence"));
+const PopulationNutritionIntelligence = lazy(() => import("./pages/PopulationNutritionIntelligence"));
+const ProfessionalGuide = lazy(() => import("./pages/ProfessionalGuide"));
+const Programs = lazy(() => import("./pages/Programs"));
+const ProtocolTransitions = lazy(() => import("./pages/ProtocolTransitions"));
+const PhytotherapyProtocols = lazy(() => import("./pages/PhytotherapyProtocols"));
+const Protocols = lazy(() => import("./pages/Protocols"));
+const RecipeBuilder = lazy(() => import("./pages/RecipeBuilder"));
+const SecurityDashboard = lazy(() => import("./pages/SecurityDashboard"));
+const TeamManagement = lazy(() => import("./pages/TeamManagement"));
+const TherapeuticIntelligence = lazy(() => import("./pages/TherapeuticIntelligence"));
+const UserGuide = lazy(() => import("./pages/UserGuide"));
+const WeeklyGoals = lazy(() => import("./pages/WeeklyGoals"));
+const WeeklyReport = lazy(() => import("./pages/WeeklyReport"));
+const WeightTrajectory = lazy(() => import("./pages/WeightTrajectory"));
+const AdminPrestige = lazy(() => import("./pages/AdminPrestige"));
+const OperationalDashboard = lazy(() => import("./pages/OperationalDashboard"));
+const ClinicalBrainLegacy = lazy(() => import("./pages/ClinicalBrain"));
+const AmbassadorDashboard = lazy(() => import("./pages/AmbassadorDashboard"));
+const InOfficeWizard = lazy(() => import("./pages/InOfficeWizard"));
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
