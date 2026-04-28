@@ -1491,6 +1491,20 @@ export default function Anamnesis() {
             <Button
               variant="outline"
               size="sm"
+              onClick={() => {
+                if (!localBackup) {
+                  toast.error("Nenhum backup local encontrado.");
+                  return;
+                }
+                setShowManualRestoreModal(true);
+              }}
+              className="gap-1.5 text-muted-foreground"
+            >
+              <RefreshCcw className="w-4 h-4" /> Restaurar backup
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
               onClick={async () => {
                 await performAutoSave(answers);
                 toast.success("Rascunho salvo! Você pode continuar depois 💾");
