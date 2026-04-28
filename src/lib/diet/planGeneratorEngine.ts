@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Food, Meal } from "@/stores/diet-builder/useDietStore";
+import { validateMealPlan } from "./planValidator";
 
 export type PlanType = 
   | 'hipertrofia' 
@@ -96,6 +97,37 @@ export async function fetchPatientAnamnesis(userId?: string): Promise<PatientDat
 }
 
 export async function generateMealPlan(patientData: PatientData, type: PlanType): Promise<Meal[]> {
+  const MAX_ATTEMPTS = 3;
+  let attempts = 0;
+  let lastResult: { meals: Meal[]; score: number; errors: string[] } | null = null;
+
+  while (attempts < MAX_ATTEMPTS) {
+    attempts++;
+    const meals = await generateRawMealPlan(patientData, type);
+    const validation = validateMealPlan(meals, patientData, type);
+
+    if (validation.isValid) {
+      console.log(`[FJ:PLAN_VALIDATION] Plano VALIDADO na tentativa ${attempts} (Score 100)`);
+      return meals;
+    }
+
+    console.warn(`[FJ:PLAN_VALIDATION] Tentativa ${attempts} falhou (Score ${validation.score}). Erros:`, validation.errors);
+    lastResult = { meals, score: validation.score, errors: validation.errors };
+  }
+
+  // Se falhou após 3 tentativas
+  console.error(`[FJ:PLAN_VALIDATION] Falha crítica: Impossível gerar plano perfeito após ${MAX_ATTEMPTS} tentativas.`);
+  
+  if (lastResult && lastResult.score >= 80) {
+    // Se o score for razoável, permite edição manual
+    return lastResult.meals;
+  }
+  
+  // Se for realmente ruim, lança erro para a UI tratar
+  throw new Error("Não foi possível gerar um plano nutricional seguro. Por favor, monte manualmente ou altere as restrições.");
+}
+
+async function generateRawMealPlan(patientData: PatientData, type: PlanType): Promise<Meal[]> {
   console.log(`[Engine] Gerando plano ${type} para ${patientData.name} (${patientData.is_fallback ? 'Fallback' : 'Preciso'})`);
   
   // 1. Definir estrutura de refeições
