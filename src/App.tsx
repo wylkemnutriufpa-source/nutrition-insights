@@ -195,35 +195,37 @@ function AppContent() {
 }
 
 const App = () => (
-  <HelmetProvider>
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Helmet><title>FitJourney</title></Helmet>
-        <Toaster />
-        <Sonner />
-        <MobileAutoFixer />
-        <GlobalErrorBoundary />
-        <BrowserRouter>
-          <AuthProvider>
-            <TenantProvider>
-              <ExperienceModeProvider>
-                <ExperienceThemeSync />
-                <ExperienceRouteGuard />
-                <WorkspaceRouteGuard />
-                <CelebrationProvider>
-                  <CommandPaletteProvider>
-                    <AppStateProvider>
-                      <AppContent />
-                    </AppStateProvider>
-                  </CommandPaletteProvider>
-                </CelebrationProvider>
-              </ExperienceModeProvider>
-            </TenantProvider>
-          </AuthProvider>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </HelmetProvider>
+  <CriticalErrorBoundary>
+    <HelmetProvider>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Helmet><title>FitJourney</title></Helmet>
+          <Toaster />
+          <Sonner />
+          <MobileAutoFixer />
+          <GlobalErrorBoundary />
+          <BrowserRouter>
+            <AuthProvider>
+              <TenantProvider>
+                <ExperienceModeProvider>
+                  <ExperienceThemeSync />
+                  <ExperienceRouteGuard />
+                  <WorkspaceRouteGuard />
+                  <CelebrationProvider>
+                    <CommandPaletteProvider>
+                      <AppStateProvider>
+                        <AppContent />
+                      </AppStateProvider>
+                    </CommandPaletteProvider>
+                  </CelebrationProvider>
+                </ExperienceModeProvider>
+              </TenantProvider>
+            </AuthProvider>
+          </BrowserRouter>
+        </TooltipProvider>
+      </QueryClientProvider>
+    </HelmetProvider>
+  </CriticalErrorBoundary>
 );
 
 export default App;
