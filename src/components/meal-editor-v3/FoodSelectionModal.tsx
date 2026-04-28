@@ -14,14 +14,19 @@ interface FoodSelectionModalProps {
   isOpen: boolean;
   onClose: () => void;
   mealId: string;
+  onSelect?: (food: Food) => void;
 }
 
-export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, onClose, mealId }) => {
+export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, onClose, mealId, onSelect }) => {
   const { addFoodToMeal } = useMealEditorV3Store();
   const [searchQuery, setSearchQuery] = useState('');
 
   const handleAdd = (food: Food) => {
-    addFoodToMeal(mealId, food);
+    if (onSelect) {
+      onSelect(food);
+    } else {
+      addFoodToMeal(mealId, food);
+    }
   };
 
   const filteredQuickFoods = QUICK_FOODS.filter(f => 
@@ -32,7 +37,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0 overflow-hidden">
         <DialogHeader className="px-6 py-4 border-b">
-          <DialogTitle>Adicionar Alimento</DialogTitle>
+          <DialogTitle>{onSelect ? 'Selecionar Substituição' : 'Adicionar Alimento'}</DialogTitle>
         </DialogHeader>
 
         <Tabs defaultValue="search" className="flex-1 flex flex-col">
