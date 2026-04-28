@@ -39,8 +39,12 @@ export interface GovernanceContext {
 
 // ── Route Classification ──────────────────────────────────────
 
-const PUBLIC_ROUTES = [
+export const PUBLIC_ROUTES = [
   "/landing", "/cadastro", "/register", "/auth", "/reset-password", "/confirm", "/p/", "/program/", "/pricing", "/politica-de-privacidade", "/termos-de-uso"
+];
+
+export const ONBOARDING_ALLOWED_ROUTES = [
+  "/onboarding", "/onboarding-pipeline", "/consent", "/auth", "/reset-password", "/settings", "/privacy-policy", "/termos-de-uso", "/support", "/erro-vinculo"
 ];
 
 const UNIVERSAL_ROUTES = [
