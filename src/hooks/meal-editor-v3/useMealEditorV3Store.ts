@@ -283,8 +283,17 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       addFoodToMeal: (mealId, food) => {
+        const { availableClinicalRules, patientId } = get();
         const instanceId = Math.random().toString(36).substring(7);
         const subs = getEquivalentFoods(food.id);
+        
+        // Bloqueio Preventivo: Se item fere regra clínica ativa, avisar
+        if (get().clinicalLog) {
+          const condition = availableClinicalRules.find(r => r.id === get().clinicalLog?.conditionId);
+          if (condition?.restrictions.some((r: string) => food.name.toLowerCase().includes(r.toLowerCase()))) {
+            toast.error(`Atenção: ${food.name} não é recomendado para ${condition.condition_name}`);
+          }
+        }
         
         set((state) => ({
           history: saveHistory(state),
