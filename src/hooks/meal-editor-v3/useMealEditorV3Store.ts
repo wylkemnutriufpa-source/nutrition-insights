@@ -53,6 +53,9 @@ interface MealPlanState {
   consistencyMessage: string | null;
   lastActionInsight: string | null;
   availableClinicalRules: any[];
+  isPatientView: boolean;
+  templates: any[];
+  favorites: any[];
 
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
@@ -104,6 +107,9 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       consistencyMessage: null,
       lastActionInsight: null,
       availableClinicalRules: [],
+      isPatientView: false,
+      templates: [],
+      favorites: [],
 
       setPatientId: (id) => {
         const storedFastMode = localStorage.getItem(`fastMode_${id}`);
@@ -121,6 +127,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }
         set({ fastMode: enabled });
       },
+      setPatientView: (enabled) => set({ isPatientView: enabled }),
 
       fetchClinicalRules: async () => {
         const { data } = await supabase
@@ -129,6 +136,49 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           .order('condition_name');
         
         if (data) set({ availableClinicalRules: data });
+      },
+
+      fetchTemplates: async () => {
+        const { data } = await supabase.from('meal_plan_templates').select('*');
+        if (data) set({ templates: data });
+      },
+
+      applyTemplate: (template) => {
+        set({ 
+          meals: template.meals, 
+          planStatus: 'draft',
+          lastActionInsight: `Template "${template.name}" aplicado com sucesso.`
+        });
+      },
+
+      saveAsFavorite: async (name, type) => {
+        const { meals, patientId } = get();
+        await supabase.from('meal_plan_favorites').insert({
+          name,
+          type,
+          data: type === 'full_plan' ? meals : meals.find(m => m.id === get().activeMealId),
+          user_id: (await supabase.auth.getUser()).data.user?.id
+        });
+        toast.success('Salvo nos favoritos');
+      },
+
+      clonePlan: (newPatientId, newTargets) => {
+        const { meals } = get();
+        // Simple adaptation: scale calories to new target
+        const currentCals = meals.reduce((acc, m) => acc + m.items.reduce((a, i) => acc + i.calories * i.quantity, 0), 0);
+        const ratio = newTargets.calories / (currentCals || 1);
+
+        const adaptedMeals = meals.map(m => ({
+          ...m,
+          items: m.items.map(i => i.isMarmita ? i : { ...i, quantity: i.quantity * ratio })
+        }));
+
+        set({ 
+          patientId: newPatientId, 
+          patientTargets: newTargets, 
+          meals: adaptedMeals,
+          lastActionInsight: 'Plano clonado e adaptado para o novo paciente.'
+        });
       },
 
       addFoodToMeal: (mealId, food) => {
