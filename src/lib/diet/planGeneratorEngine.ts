@@ -22,6 +22,7 @@ export interface PatientData {
   carbs_target: number;
   fat_target: number;
   routine_meals_count: number;
+  is_fallback?: boolean;
 }
 
 export async function fetchPatientAnamnesis(userId?: string): Promise<PatientData | null> {
@@ -30,13 +31,52 @@ export async function fetchPatientAnamnesis(userId?: string): Promise<PatientDat
   if (userId && userId !== 'dummy-user-id') {
     query = query.eq('user_id', userId);
   } else {
-    // Busca o primeiro disponível para demonstração se nenhum ID for passado
     query = query.limit(1);
   }
 
   const { data, error } = await query.maybeSingle();
 
-  if (error || !data) return null;
+  if (error || !data) {
+    // FALLBACK: Tentar buscar no perfil básico se anamnese falhar
+    if (userId && userId !== 'dummy-user-id') {
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, goal, current_weight')
+        .eq('user_id', userId)
+        .maybeSingle();
+      
+      if (profile) {
+        return {
+          id: userId,
+          name: profile.full_name || 'Paciente',
+          goal: profile.goal || 'maintenance',
+          restrictions: [],
+          preferences: [],
+          calories_target: profile.current_weight ? Number(profile.current_weight) * 30 : 2000,
+          protein_target: profile.current_weight ? Number(profile.current_weight) * 2 : 150,
+          carbs_target: 200,
+          fat_target: 60,
+          routine_meals_count: 4,
+          is_fallback: true
+        };
+      }
+    }
+
+    // SAFE DEFAULTS (Último recurso)
+    return {
+      id: userId || 'unknown',
+      name: 'Paciente (Novo)',
+      goal: 'maintenance',
+      restrictions: [],
+      preferences: [],
+      calories_target: 2000,
+      protein_target: 150,
+      carbs_target: 200,
+      fat_target: 60,
+      routine_meals_count: 4,
+      is_fallback: true
+    };
+  }
 
   const answers = data.answers as any || {};
   
@@ -51,11 +91,12 @@ export async function fetchPatientAnamnesis(userId?: string): Promise<PatientDat
     carbs_target: Number(data.computed_carbs) || 200,
     fat_target: Number(data.computed_fat) || 60,
     routine_meals_count: Number(answers.meals_count) || 4,
+    is_fallback: false
   };
 }
 
 export async function generateMealPlan(patientData: PatientData, type: PlanType): Promise<Meal[]> {
-  console.log(`[Engine] Gerando plano ${type} para ${patientData.name}`);
+  console.log(`[Engine] Gerando plano ${type} para ${patientData.name} (${patientData.is_fallback ? 'Fallback' : 'Preciso'})`);
   
   // 1. Definir estrutura de refeições
   const mealCount = patientData.routine_meals_count;
@@ -84,7 +125,6 @@ export async function generateMealPlan(patientData: PatientData, type: PlanType)
   }
 
   // 3. Buscar alimentos base (Simulado ou da biblioteca)
-  // No mundo real, buscaríamos da 'meal_library' filtrando por clinical_tags
   const baseFoods = await getBaseFoodsForType(type, patientData.restrictions);
 
   // 4. Distribuir macros entre refeições
@@ -108,8 +148,6 @@ export async function generateMealPlan(patientData: PatientData, type: PlanType)
 }
 
 async function getBaseFoodsForType(type: PlanType, restrictions: string[]) {
-  // Simulação de busca no banco. 
-  // Em produção, isso usaria a `meal_library`
   const foods = [
     { name: 'Ovo Mexido', calories: 150, protein: 12, carbs: 1, fat: 10, types: ['breakfast'] },
     { name: 'Pão Integral', calories: 120, protein: 5, carbs: 22, fat: 2, types: ['breakfast'] },
@@ -125,7 +163,6 @@ async function getBaseFoodsForType(type: PlanType, restrictions: string[]) {
 }
 
 function selectItemsForMeal(mealName: string, type: PlanType, targetKcal: number, baseFoods: any[]): Food[] {
-  // Lógica simples de preenchimento para atingir as calorias
   const mealType = mealName.toLowerCase().includes('café') ? 'breakfast' : 
                    (mealName.toLowerCase().includes('lanche') ? 'snack' : 'lunch');
   
@@ -133,7 +170,6 @@ function selectItemsForMeal(mealName: string, type: PlanType, targetKcal: number
   const selected: Food[] = [];
   let currentKcal = 0;
 
-  // Tenta pegar pelo menos 2-3 itens
   for (const cand of candidates) {
     if (currentKcal + cand.calories <= targetKcal * 1.2) {
       selected.push({
@@ -154,7 +190,6 @@ function selectItemsForMeal(mealName: string, type: PlanType, targetKcal: number
 }
 
 function generateSubstitutions(baseFood: any, allFoods: any[]): Omit<Food, 'id'>[] {
-  // Busca alimentos do mesmo tipo (ex: café, almoço) e macros similares
   return allFoods
     .filter(f => 
       f.name !== baseFood.name && 
