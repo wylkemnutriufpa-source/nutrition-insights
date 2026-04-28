@@ -48,6 +48,8 @@ interface MealPlanState {
   history: HistoryState;
   planStatus: 'draft' | 'validated' | 'optimized' | 'syncing' | 'error' | 'success';
   clinicalLog: ClinicalLog | null;
+  consistencyMessage: string | null;
+  lastActionInsight: string | null;
 
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
@@ -95,6 +97,8 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       history: { past: [], future: [] },
       planStatus: 'draft',
       clinicalLog: null,
+      consistencyMessage: null,
+      lastActionInsight: null,
 
       setPatientId: (id) => {
         const storedFastMode = localStorage.getItem(`fastMode_${id}`);
@@ -141,9 +145,14 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       updateFoodQuantity: (mealId, instanceId, quantity) => {
+        if (isNaN(quantity) || quantity < 0) {
+          set({ consistencyMessage: 'Quantidade inválida detectada' });
+          return;
+        }
         set((state) => ({
           history: saveHistory(state),
           planStatus: 'draft',
+          consistencyMessage: null,
           meals: state.meals.map((m) =>
             m.id === mealId
               ? {
@@ -223,10 +232,12 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           if (!meal || meal.items.length === 0) return state;
           
           const currentKcal = meal.items.reduce((acc, item) => acc + (item.calories * item.quantity), 0);
+          if (currentKcal === 0) return state;
           const ratio = targetKcal / currentKcal;
           
           return {
             history: saveHistory(state),
+            lastActionInsight: `Refeição ajustada para meta de ${targetKcal} kcal`,
             meals: state.meals.map(m => 
               m.id === mealId 
                 ? { ...m, items: m.items.map(item => item.isMarmita ? item : { ...item, quantity: item.quantity * ratio }) } 

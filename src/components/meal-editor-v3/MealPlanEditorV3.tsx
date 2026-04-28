@@ -38,7 +38,7 @@ const GENERATION_OPTIONS = [
 export const MealPlanEditorV3: React.FC = () => {
   const { 
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
-    planStatus, optimizePlan, validateAndSave 
+    planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
@@ -85,11 +85,11 @@ export const MealPlanEditorV3: React.FC = () => {
                     animate={{ opacity: 1, x: 0 }}
                     className={cn(
                       "flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold",
-                      planStatus === 'error' ? "bg-red-500/10 text-red-600" : "bg-green-500/10 text-green-600"
+                      planStatus === 'error' || consistencyMessage ? "bg-red-500/10 text-red-600" : "bg-green-500/10 text-green-600"
                     )}
                   >
                     <CheckCircle2 className="w-2.5 h-2.5" />
-                    {planStatus === 'validated' ? 'VALIDADO' : planStatus === 'error' ? 'FORA DA META' : 'OTIMIZADO'}
+                    {consistencyMessage ? 'AJUSTES NECESSÁRIOS' : (planStatus === 'validated' ? 'PLANO CONSISTENTE' : 'OTIMIZADO')}
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -163,6 +163,19 @@ export const MealPlanEditorV3: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
+            <AnimatePresence>
+              {lastActionInsight && (
+                <motion.div
+                  initial={{ opacity: 0, y: -20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -20 }}
+                  className="mb-4 p-3 bg-blue-500/5 border border-blue-500/20 rounded-xl flex items-center gap-2 text-xs text-blue-600 font-medium"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  {lastActionInsight}
+                </motion.div>
+              )}
+            </AnimatePresence>
             <ActiveMealContent />
           </motion.div>
         </main>

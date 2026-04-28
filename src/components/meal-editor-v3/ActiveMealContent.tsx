@@ -24,7 +24,7 @@ export const ActiveMealContent: React.FC = () => {
     meals, activeMealId, removeFoodFromMeal, updateFoodQuantity, 
     addSubstitution, removeSubstitution, fastMode,
     undo, redo, clearMeal, duplicateMeal, balanceMacros,
-    history
+    history, generateDeterministicPlan
   } = useMealEditorV3Store();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -129,10 +129,15 @@ export const ActiveMealContent: React.FC = () => {
             >
               <Card className="flex flex-col items-center justify-center p-12 bg-muted/20 border-dashed">
                 <Package className="w-12 h-12 text-muted-foreground/30 mb-4" />
-                <p className="text-muted-foreground font-medium">Nenhum alimento adicionado.</p>
-                <Button variant="link" onClick={() => setIsAddModalOpen(true)} className="text-primary mt-2">
-                   Clique aqui para adicionar
-                </Button>
+                <p className="text-muted-foreground font-medium">Plano vazio. Como deseja começar?</p>
+                <div className="flex gap-2 mt-4">
+                  <Button variant="outline" size="sm" onClick={() => generateDeterministicPlan('simple')} className="text-[10px] font-bold">
+                    <Zap className="w-3 h-3 mr-1" /> GERAR PLANO BÁSICO
+                  </Button>
+                  <Button variant="outline" size="sm" onClick={() => setIsAddModalOpen(true)} className="text-[10px] font-bold">
+                    <Plus className="w-3 h-3 mr-1" /> ADICIONAR CAFÉ PADRÃO
+                  </Button>
+                </div>
               </Card>
             </motion.div>
           ) : (
