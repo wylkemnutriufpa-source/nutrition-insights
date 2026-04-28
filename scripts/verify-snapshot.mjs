@@ -31,6 +31,8 @@ const migrations = fs.readdirSync(migrationsDir)
 
 const lastSnapshotMigration = current.lastMigration;
 const lastActualMigration = migrations[migrations.length - 1];
+const isOutdated = lastSnapshotMigration !== lastActualMigration;
+
 
 let hasDiff = false;
 const diffResults = [];
@@ -89,13 +91,21 @@ if (hasDiff) {
     console.table(diffResults);
   }
 
-  // Generate diff artifact
+  // Check for deterministic mismatch (same migration count/last migration but different content)
+  if (!isOutdated && hasDiff) {
+    console.error("\nDeterministic mismatch detected.");
+    console.error("Snapshot inconsistente.");
+  }
+
+  // Generate diff artifact (mandatory for CI)
   const diffFile = path.join(projectRoot, "schema.diff");
   const diffContent = JSON.stringify({
+    timestamp: new Date().toISOString(),
     lastSnapshotMigration,
     lastActualMigration,
     missingMigrations,
-    diffResults
+    diffResults,
+    message: isOutdated ? "Snapshot desatualizado." : "Deterministic mismatch detected."
   }, null, 2);
   fs.writeFileSync(diffFile, diffContent);
   console.log(`\nArtifact generated: ${diffFile}`);
@@ -115,13 +125,16 @@ if (hasDiff) {
 
   // NO CI: FAIL HARD
   if (IS_CI) {
-    console.error("\n[CI FAIL] Snapshot inconsistente detectado no CI.");
+    console.error("\n[CI FAIL] Schema inconsistente detectado no CI.");
     console.error("Não é permitido atualizar o snapshot no CI.");
     console.error("Execute 'pnpm schema:update' localmente e realize o commit do arquivo 'schema-snapshot.json'.");
     process.exit(1);
   }
 
-  console.error("\nExecute: pnpm schema:update\n");
+  console.error("\nSchema snapshot desatualizado.");
+  console.error("Migrations faltantes detectadas.");
+  console.error("Execute:");
+  console.error("pnpm schema:update\n");
   process.exit(1);
 } else {
   console.log("✓ Schema snapshot is up to date.");
