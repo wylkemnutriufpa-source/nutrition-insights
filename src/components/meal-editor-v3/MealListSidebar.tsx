@@ -12,7 +12,7 @@ const MEAL_ICONS: Record<string, any> = {
 };
 
 export const MealListSidebar: React.FC = () => {
-  const { meals, activeMealId, setActiveMeal, fastMode } = useMealEditorV3Store();
+  const { meals, activeMealId, setActiveMeal } = useMealEditorV3Store();
 
   const calculateMealCalories = (items: any[]) => {
     return items.reduce((acc, item) => acc + (item.calories * item.quantity), 0);
@@ -34,7 +34,7 @@ export const MealListSidebar: React.FC = () => {
               key={meal.id}
               onClick={() => setActiveMeal(meal.id)}
               className={cn(
-                "w-full flex items-center gap-4 px-4 py-4 rounded-2xl text-left transition-all relative group overflow-hidden",
+                "w-full flex items-center gap-3 sm:gap-4 px-3 sm:px-4 py-3 sm:py-4 rounded-2xl text-left transition-all relative group overflow-hidden",
                 isActive 
                   ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
                   : "hover:bg-muted/50 text-foreground"
@@ -67,12 +67,6 @@ export const MealListSidebar: React.FC = () => {
                   {meal.items.length} ITENS • {Math.round(calories)} KCAL
                 </p>
               </div>
-
-              {isActive && (
-                <div className="relative z-10">
-                  <div className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
-                </div>
-              )}
             </button>
           );
         })}
@@ -80,4 +74,3 @@ export const MealListSidebar: React.FC = () => {
     </div>
   );
 };
-
