@@ -762,7 +762,8 @@ export default function Anamnesis() {
         }
       } else {
         if (!resolvedTenantId) {
-          console.error("[FJ:Anamnesis] autosave INSERT blocked: tenant_id unresolved");
+          console.warn("[FJ:Anamnesis] Autosave deferred: tenant_id unresolved. Waiting for state synchronization.");
+          // No error status, just idle waiting for the next trigger once tenant is resolved
           setAutoSaveStatus("idle");
           return;
         }
