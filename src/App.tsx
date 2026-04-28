@@ -7,7 +7,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { AuthProvider, useAuth } from "@/lib/auth";
-import { TenantProvider } from "@/lib/tenantContext";
+import { TenantProvider, useTenant } from "@/lib/tenantContext";
 import { supabase } from "@/integrations/supabase/client";
 import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
