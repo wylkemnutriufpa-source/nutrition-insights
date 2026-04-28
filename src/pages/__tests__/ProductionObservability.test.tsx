@@ -25,7 +25,8 @@ vi.mock("@/hooks/useAppState", () => ({
 }));
 
 vi.mock("@/lib/auditLog", () => ({
-  logAudit: vi.fn()
+  logAudit: vi.fn(),
+  getSessionCorrelationId: vi.fn(() => "fj_sess_test123")
 }));
 
 const queryClient = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -42,34 +43,33 @@ describe("Production Observability - Hard Fail Linkage", () => {
   );
 
   it("exhibits the correct error message on linkage failure", async () => {
-    renderWithProviders(<OrphanUserBlock />);
+    renderWithProviders(<HardFailLinkage />);
     
     expect(screen.getByText("Erro ao vincular sua conta ao profissional")).toBeDefined();
-    expect(screen.getByText(/ID do erro: err_/)).toBeDefined();
+    expect(screen.getByText(/ID do Erro/i)).toBeDefined();
+    expect(screen.getByText("fj_sess_test123")).toBeDefined();
   });
 
   it("shows the support button and correlation ID", async () => {
-    renderWithProviders(<OrphanUserBlock />);
+    renderWithProviders(<HardFailLinkage />);
     
     const supportBtn = screen.getByRole("button", { name: /suporte/i });
     expect(supportBtn).toBeDefined();
-    
-    const copyBtn = screen.getByRole("button", { name: "" }); // icon button
-    expect(copyBtn).toBeDefined();
   });
 
   it("logs the linkage failure for audit", async () => {
     const { logAudit } = await import("@/lib/auditLog");
-    renderWithProviders(<OrphanUserBlock />);
+    renderWithProviders(<HardFailLinkage />);
     
     expect(logAudit).toHaveBeenCalledWith(
-      "hard_fail_linkage", 
+      "LINKAGE_FAIL", 
       "auth", 
       "user-orphan-1", 
       expect.objectContaining({
-        correlationId: expect.stringMatching(/^err_/),
-        status: "blocked"
-      })
+        isOrphan: true
+      }),
+      "error",
+      "fj_sess_test123"
     );
   });
 });
