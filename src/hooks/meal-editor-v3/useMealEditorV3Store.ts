@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { QUICK_FOODS, MARMITAS } from './constants';
+import { getEquivalentFoods, applyClinicalRules } from './clinicalRules';
 
 export interface Food {
   id: string;
@@ -39,6 +40,7 @@ interface MealPlanState {
   activeMealId: string | null;
   fastMode: boolean;
   history: HistoryState;
+  planStatus: 'draft' | 'validated' | 'optimized';
   
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
@@ -53,6 +55,7 @@ interface MealPlanState {
   duplicateMeal: (mealId: string) => void;
   clearMeal: (mealId: string) => void;
   balanceMacros: (mealId: string, targetKcal: number) => void;
+  optimizePlan: () => void;
   
   undo: () => void;
   redo: () => void;
@@ -81,6 +84,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       activeMealId: '1',
       fastMode: false,
       history: { past: [], future: [] },
+      planStatus: 'draft',
 
       setPatientId: (id) => set({ patientId: id }),
       setActiveMeal: (id) => set({ activeMealId: id }),
@@ -88,11 +92,15 @@ export const useMealEditorV3Store = create<MealPlanState>()(
 
       addFoodToMeal: (mealId, food) => {
         const instanceId = Math.random().toString(36).substring(7);
+        // Auto-generate substitutions
+        const subs = getEquivalentFoods(food.id);
+        
         set((state) => ({
           history: saveHistory(state),
+          planStatus: 'draft',
           meals: state.meals.map((m) =>
             m.id === mealId
-              ? { ...m, items: [...m.items, { ...food, instanceId, quantity: 1 }] }
+              ? { ...m, items: [...m.items, { ...food, instanceId, quantity: 1, substitutions: subs }] }
               : m
           ),
         }));
@@ -101,6 +109,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       removeFoodFromMeal: (mealId, instanceId) => {
         set((state) => ({
           history: saveHistory(state),
+          planStatus: 'draft',
           meals: state.meals.map((m) =>
             m.id === mealId
               ? { ...m, items: m.items.filter((item) => item.instanceId !== instanceId) }
@@ -112,6 +121,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       updateFoodQuantity: (mealId, instanceId, quantity) => {
         set((state) => ({
           history: saveHistory(state),
+          planStatus: 'draft',
           meals: state.meals.map((m) =>
             m.id === mealId
               ? {
@@ -204,6 +214,30 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         });
       },
 
+      optimizePlan: () => {
+        set((state) => {
+          // Rule-based optimization: ensure breakfast has protein, etc.
+          const optimizedMeals = state.meals.map(meal => {
+            // Simplified: if meal has < 10g protein, add an egg if not already there
+            const totalProt = meal.items.reduce((acc, i) => acc + (i.protein * i.quantity), 0);
+            if (totalProt < 10 && meal.id === '1') {
+               const egg = QUICK_FOODS.find(f => f.id === 'q1')!;
+               return {
+                 ...meal,
+                 items: [...meal.items, { ...egg, instanceId: Math.random().toString(36).substring(7), quantity: 1 }]
+               };
+            }
+            return meal;
+          });
+
+          return {
+            history: saveHistory(state),
+            meals: optimizedMeals,
+            planStatus: 'optimized'
+          };
+        });
+      },
+
       undo: () => {
         set((state) => {
           if (state.history.past.length === 0) return state;
@@ -232,7 +266,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         });
       },
 
-      resetPlan: () => set({ meals: DEFAULT_MEALS, history: { past: [], future: [] } }),
+      resetPlan: () => set({ meals: DEFAULT_MEALS, history: { past: [], future: [] }, planStatus: 'draft' }),
 
       generateDeterministicPlan: (goal, context) => {
         const meals: Meal[] = JSON.parse(JSON.stringify(DEFAULT_MEALS));
@@ -241,7 +275,8 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         const createItem = (foodId: string, quantity = 1): MealItem => ({
           ...foodMap[foodId],
           instanceId: Math.random().toString(36).substring(7),
-          quantity
+          quantity,
+          substitutions: getEquivalentFoods(foodId)
         });
 
         const breakfast = meals.find(m => m.id === '1')!;
@@ -249,6 +284,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         const snack = meals.find(m => m.id === '3')!;
         const dinner = meals.find(m => m.id === '4')!;
 
+        // Default rules
         breakfast.items.push(createItem('q2')); 
         breakfast.items.push(createItem('q1', goal === 'muscle-gain' ? 3 : 2));
         breakfast.items.push(createItem('q8'));
@@ -265,14 +301,21 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           dinner.items.push(createItem('q9', 1.0)); 
         }
 
+        // Apply Clinical Condition if provided in context
+        let finalMeals = meals;
+        if (context?.conditionId) {
+          finalMeals = applyClinicalRules(meals, context.conditionId);
+        }
+
         if (goal === 'muscle-gain') {
           snack.items.push(createItem('q7'));
         }
 
         set((state) => ({ 
           history: saveHistory(state),
-          meals, 
-          activeMealId: '1' 
+          meals: finalMeals, 
+          activeMealId: '1',
+          planStatus: 'validated'
         }));
       },
     }),
@@ -282,5 +325,6 @@ export const useMealEditorV3Store = create<MealPlanState>()(
     }
   )
 );
+
 
 
