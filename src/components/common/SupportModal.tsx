@@ -118,7 +118,7 @@ export function SupportModal({ isOpen, onClose, context, errorId }: SupportModal
 
         <div className="bg-muted/30 p-4 border-t text-center">
           <p className="text-[10px] text-muted-foreground font-medium">
-            FitJourney Clinical Engine • v4.8 • Production Ready
+            FitJourney Clinical Engine • v4.9 • Enterprise Ready
           </p>
         </div>
       </DialogContent>

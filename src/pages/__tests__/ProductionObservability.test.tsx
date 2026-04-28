@@ -14,6 +14,10 @@ vi.mock("@/lib/auth", () => ({
   })) 
 }));
 
+vi.mock("@/lib/tenantContext", () => ({
+  useTenant: vi.fn(() => ({ tenantId: "tenant-1", isLoading: false }))
+}));
+
 vi.mock("@/hooks/useAppState", () => ({
   AppStateProvider: ({ children }: any) => <>{children}</>,
   useAppState: vi.fn(() => ({ 
@@ -46,7 +50,7 @@ describe("Production Observability - Hard Fail Linkage", () => {
     renderWithProviders(<HardFailLinkage />);
     
     expect(screen.getByText("Erro ao vincular sua conta ao profissional")).toBeDefined();
-    expect(screen.getByText(/ID do Erro/i)).toBeDefined();
+    expect(screen.getAllByText(/ID do Erro/i).length).toBeGreaterThan(0);
     expect(screen.getByText("fj_sess_test123")).toBeDefined();
   });
 

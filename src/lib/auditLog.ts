@@ -5,6 +5,13 @@ import type { Json } from "@/integrations/supabase/types";
 const SESSION_CORRELATION_ID = `fj_sess_${Math.random().toString(36).substring(2, 11)}`;
 
 /**
+ * Generates a granular request-specific correlation ID linked to parent.
+ */
+export function generateRequestCorrelationId() {
+  return `${SESSION_CORRELATION_ID}_req_${Math.random().toString(36).substring(2, 7)}`;
+}
+
+/**
  * Log an auditable action for LGPD compliance and production tracing.
  * Fire-and-forget — never blocks the UI.
  */
@@ -16,28 +23,34 @@ export function logAudit(
   status: 'success' | 'error' | 'blocked' = 'success',
   correlationId?: string
 ) {
-  const finalCorrelationId = correlationId || SESSION_CORRELATION_ID;
+  const finalCorrelationId = correlationId || generateRequestCorrelationId();
   
   supabase
     .rpc("log_audit", {
       _action: action,
       _resource_type: resourceType,
       _resource_id: resourceId ?? null,
-      _metadata: (metadata ?? {}) as unknown as Json,
+      _metadata: { 
+        ...metadata, 
+        parent_correlation_id: SESSION_CORRELATION_ID 
+      } as unknown as Json,
       _correlation_id: finalCorrelationId,
       _status: status
     })
     .then(({ error }) => {
       if (error) {
         console.warn("[audit] Failed to persist log, attempting silent retry...", error.message);
-        // Minimal silent retry logic
         setTimeout(async () => {
           try {
             await supabase.rpc("log_audit", {
               _action: action,
               _resource_type: resourceType,
               _resource_id: resourceId ?? null,
-              _metadata: { ...metadata, retry: true } as unknown as Json,
+              _metadata: { 
+                ...metadata, 
+                parent_correlation_id: SESSION_CORRELATION_ID,
+                retry: true 
+              } as unknown as Json,
               _correlation_id: finalCorrelationId,
               _status: status
             });
@@ -52,4 +65,5 @@ export function logAudit(
 export function getSessionCorrelationId() {
   return SESSION_CORRELATION_ID;
 }
+
 
