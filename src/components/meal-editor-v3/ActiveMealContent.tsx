@@ -161,7 +161,7 @@ export const ActiveMealContent: React.FC = () => {
               >
                 <Card className={cn(
                   "p-4 flex items-center gap-4 group transition-all shadow-sm relative overflow-hidden rounded-2xl",
-                  item.isMarmita ? "border-orange-200 bg-orange-50/30" : "hover:border-primary/50"
+                  (item.isMarmita || item.locked) ? "border-orange-200 bg-orange-50/30" : "hover:border-primary/50"
                 )}>
                   {item.imageUrl && !fastMode && (
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0 border">
