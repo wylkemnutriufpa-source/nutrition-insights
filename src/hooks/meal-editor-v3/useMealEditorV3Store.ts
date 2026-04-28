@@ -678,6 +678,11 @@ export const useMealEditorV3Store = create<MealPlanState>()(
     {
       name: 'meal-editor-v3-storage',
       storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ 
+        meals: state.meals,
+        patientTargets: state.patientTargets,
+        fastMode: state.fastMode
+      }),
     }
   )
 );
