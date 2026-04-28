@@ -44,7 +44,7 @@ const PLAN_OPTIONS = [
 export const PlanGenerationModal: React.FC<PlanGenerationModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<PlanType | null>(null);
-  const { setMeals, setGoal, setCalorieTarget } = useDietStore();
+  const { setMeals, setGoal, setCalorieTarget, setIsFallback } = useDietStore();
 
   const handleGenerate = async () => {
     if (!selectedType) return;
@@ -63,6 +63,7 @@ export const PlanGenerationModal: React.FC<PlanGenerationModalProps> = ({ isOpen
       setMeals(generatedMeals);
       setGoal(selectedType.charAt(0).toUpperCase() + selectedType.slice(1));
       setCalorieTarget(patientData.calories_target);
+      setIsFallback(!!patientData.is_fallback);
       
       if (patientData.is_fallback) {
         toast.warning("Plano gerado com dados básicos. Complete a anamnese para maior precisão.", {
