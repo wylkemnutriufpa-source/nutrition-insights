@@ -52,7 +52,7 @@ interface MealPlanState {
   clinicalLog: ClinicalLog | null;
   consistencyMessage: string | null;
   lastActionInsight: string | null;
-  availableClinicalRules: ClinicalLog[] | any[]; // Added to store fetched rules
+  availableClinicalRules: any[];
 
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
@@ -103,6 +103,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       clinicalLog: null,
       consistencyMessage: null,
       lastActionInsight: null,
+      availableClinicalRules: [],
 
       setPatientId: (id) => {
         const storedFastMode = localStorage.getItem(`fastMode_${id}`);
@@ -122,7 +123,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       fetchClinicalRules: async () => {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('meal_clinical_rules')
           .select('*')
           .order('condition_name');
@@ -146,6 +147,15 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       removeFoodFromMeal: (mealId, instanceId) => {
+        const { meals } = get();
+        const meal = meals.find(m => m.id === mealId);
+        const item = meal?.items.find(i => i.instanceId === instanceId);
+        
+        if (item?.isMarmita) {
+          toast.error('Marmitas possuem composição fixa');
+          return;
+        }
+
         set((state) => ({
           history: saveHistory(state),
           planStatus: 'draft',
@@ -156,16 +166,22 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           ),
         }));
       },
-        if (item.isMarmita) {
+
+      updateFoodQuantity: (mealId, instanceId, quantity) => {
+        const { meals } = get();
+        const meal = meals.find(m => m.id === mealId);
+        const item = meal?.items.find(i => i.instanceId === instanceId);
+        
+        if (item?.isMarmita) {
           toast.error('Marmitas possuem composição fixa');
           return;
         }
 
-      updateFoodQuantity: (mealId, instanceId, quantity) => {
         if (isNaN(quantity) || quantity < 0) {
           set({ consistencyMessage: 'Quantidade inválida detectada' });
           return;
         }
+        
         set((state) => ({
           history: saveHistory(state),
           planStatus: 'draft',
@@ -175,7 +191,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
               ? {
                   ...m,
                   items: m.items.map((item) =>
-                    item.instanceId === instanceId && !item.isMarmita
+                    item.instanceId === instanceId
                       ? { ...item, quantity }
                       : item
                   ),
@@ -184,12 +200,17 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           ),
         }));
       },
-        if (item.isMarmita) {
+
+      addSubstitution: (mealId, instanceId, food) => {
+        const { meals } = get();
+        const meal = meals.find(m => m.id === mealId);
+        const item = meal?.items.find(i => i.instanceId === instanceId);
+        
+        if (item?.isMarmita) {
           toast.error('Marmitas não podem ser alteradas');
           return;
         }
 
-      addSubstitution: (mealId, instanceId, food) => {
         set((state) => ({
           history: saveHistory(state),
           meals: state.meals.map((m) =>
@@ -206,12 +227,17 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           ),
         }));
       },
-        if (item.isMarmita) {
+
+      removeSubstitution: (mealId, instanceId, foodId) => {
+        const { meals } = get();
+        const meal = meals.find(m => m.id === mealId);
+        const item = meal?.items.find(i => i.instanceId === instanceId);
+        
+        if (item?.isMarmita) {
           toast.error('Marmitas não podem ser alteradas');
           return;
         }
 
-      removeSubstitution: (mealId, instanceId, foodId) => {
         set((state) => ({
           history: saveHistory(state),
           meals: state.meals.map((m) =>
@@ -273,7 +299,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       optimizePlan: () => {
-        // Simple optimization logic
+        // Optimization logic
       },
 
       validateAndSave: async () => {
@@ -302,7 +328,6 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           return false;
         }
 
-        // Save Log
         if (clinicalLog) {
           await supabase.from('meal_clinical_decision_log').insert({
             patient_id: patientId,
