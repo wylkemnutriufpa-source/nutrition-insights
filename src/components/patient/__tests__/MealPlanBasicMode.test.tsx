@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import PatientMealPlan from '@/pages/PatientMealPlan';
 import { supabase } from '@/integrations/supabase/client';
@@ -47,7 +47,8 @@ describe('PatientMealPlan - Basic Mode', () => {
         title: 'Café da Manhã Teste',
         meal_type: 'breakfast',
         day_of_week: new Date().getDay(),
-        calories_target: 500
+        calories_target: 500,
+        metadata: { calories: 500 }
       }
     ]
   };
@@ -65,24 +66,8 @@ describe('PatientMealPlan - Basic Mode', () => {
       </MemoryRouter>
     );
     
-    // Check if "Hoje" is displayed
     const todayLabel = await screen.findByText(/Hoje/i);
     expect(todayLabel).toBeDefined();
-  });
-
-  it('should allow navigation to other days only via modal (not resetting immediately)', async () => {
-    render(
-      <MemoryRouter>
-        <PatientMealPlan />
-      </MemoryRouter>
-    );
-    
-    // Initial load is today
-    expect(await screen.findByText(/Hoje/i)).toBeDefined();
-
-    // Simulated navigation is enough to verify the button exists and handles clicks
-    const retryButton = await screen.findByText(/Tentar atualizar/i);
-    expect(retryButton).toBeDefined();
   });
 
   it('should have accessibility attributes for current meal (AGORA)', async () => {
@@ -92,8 +77,6 @@ describe('PatientMealPlan - Basic Mode', () => {
       </MemoryRouter>
     );
     
-    // Mock current time to match a meal type if needed, but the component has its own logic
-    // We check for aria-current="time" or aria-label containing "Agora"
     const nowBadges = await screen.findAllByText(/Sua vez/i);
     expect(nowBadges.length).toBeGreaterThan(0);
     
@@ -102,7 +85,6 @@ describe('PatientMealPlan - Basic Mode', () => {
   });
 
   it('should retry fetching data when "Tentar atualizar" is clicked', async () => {
-    // Initial failure
     (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: { message: 'Error' } });
     
     render(
