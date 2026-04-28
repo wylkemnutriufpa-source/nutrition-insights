@@ -478,6 +478,8 @@ const questions: Question[] = [
 export default function FitnessAnamnesis() {
   const { user, isPersonal } = useAuth();
   const { tenantId } = useTenant();
+  const { isReady, isDegraded } = useAppState();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const forStudentId = searchParams.get("studentId");
