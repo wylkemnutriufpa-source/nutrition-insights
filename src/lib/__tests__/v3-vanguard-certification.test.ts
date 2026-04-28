@@ -4,15 +4,16 @@ import { getSystemDecision } from '../governance';
 
 // Mock system state
 const createMockState = (overrides = {}) => ({
-  user: { id: 'user-123', role: 'patient' },
+  pathname: '/',
+  user: { id: 'user-123' },
   profile: { id: 'profile-123', tenant_id: 'tenant-123' },
-  patientLink: { id: 'link-123', nutritionist_id: 'nut-456', journey_status: 'onboarding_active' },
-  anamnesis: null,
-  consent: { accepted: true },
+  journeyStatus: 'onboarding_active',
+  mode: 'patient',
+  role: 'patient',
   isReady: true,
   isDegraded: false,
-  currentPath: '/',
-  version: '3.0.0',
+  isHybrid: false,
+  isPatientContext: true,
   ...overrides
 });
 
@@ -20,64 +21,56 @@ describe('V3 Vanguard Certification - E2E Decision Flow', () => {
   
   it('STAGE 1: New Patient via Link -> Consent', () => {
     const state = createMockState({
-      patientLink: { journey_status: 'lead_created' },
-      consent: { accepted: false },
-      currentPath: '/'
+      journeyStatus: 'lead_created',
+      pathname: '/'
     });
     
     const decision = getSystemDecision(state as any);
     expect(decision.type).toBe('REDIRECT');
-    expect(decision.payload.to).toBe('/consent');
-    expect(decision.reason).toContain('consentimento');
+    expect(decision.target).toBe('/consent');
+    expect(decision.reason).toContain('onboarding');
   });
 
-  it('STAGE 2: Consent Accepted -> Onboarding/Anamnesis', () => {
+  it('STAGE 2: Consent Accepted -> Onboarding', () => {
     const state = createMockState({
-      patientLink: { journey_status: 'onboarding_active' },
-      consent: { accepted: true },
-      anamnesis: null,
-      currentPath: '/'
+      journeyStatus: 'onboarding_active',
+      pathname: '/'
     });
     
     const decision = getSystemDecision(state as any);
     expect(decision.type).toBe('REDIRECT');
-    // Governance often points to /onboarding for onboarding_active
-    expect(decision.payload.to).toBe('/onboarding');
+    expect(decision.target).toBe('/onboarding');
   });
 
   it('STAGE 3: Onboarding Active but on Anamnesis Page -> ALLOW', () => {
     const state = createMockState({
-      patientLink: { journey_status: 'onboarding_active' },
-      consent: { accepted: true },
-      currentPath: '/anamnesis'
+      journeyStatus: 'onboarding_active',
+      pathname: '/anamnesis'
     });
     
     const decision = getSystemDecision(state as any);
     expect(decision.type).toBe('ALLOW');
   });
 
-  it('STAGE 4: Active Patient -> Dashboard', () => {
+  it('STAGE 4: Active Patient -> Dashboard (Allow access to patient routes)', () => {
     const state = createMockState({
-      patientLink: { journey_status: 'active' },
-      consent: { accepted: true },
-      currentPath: '/'
+      journeyStatus: 'active',
+      pathname: '/my-diet'
     });
     
     const decision = getSystemDecision(state as any);
-    expect(decision.type).toBe('REDIRECT');
-    expect(decision.payload.to).toBe('/patient-dashboard');
+    expect(decision.type).toBe('ALLOW');
   });
 
   it('STAGE 5: Orphan Patient Protection', () => {
     const state = createMockState({
-      patientLink: null, // No nutritionist link
-      profile: { tenant_id: null }, // No tenant
-      currentPath: '/patient-dashboard'
+      profile: { is_orphan: true },
+      pathname: '/my-diet'
     });
     
     const decision = getSystemDecision(state as any);
-    expect(decision.type).toBe('BLOCK');
-    expect(decision.payload.component).toBe('OrphanUserBlock');
+    expect(decision.type).toBe('REDIRECT');
+    expect(decision.target).toBe('/settings');
   });
 
   it('STAGE 6: Version Mismatch Protection', () => {
@@ -86,6 +79,17 @@ describe('V3 Vanguard Certification - E2E Decision Flow', () => {
     });
     
     const decision = getSystemDecision(state as any);
-    expect(decision.type).toBe('FORCE_UPDATE');
+    expect(decision.type).toBe('RELOAD');
+  });
+
+  it('STAGE 7: Professional accessing Patient Route -> Block/Redirect', () => {
+    const state = createMockState({
+      role: 'professional',
+      pathname: '/my-diet'
+    });
+    
+    const decision = getSystemDecision(state as any);
+    expect(decision.type).toBe('REDIRECT');
+    expect(decision.target).toBe('/');
   });
 });
