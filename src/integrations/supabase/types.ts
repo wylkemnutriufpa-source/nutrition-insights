@@ -6403,6 +6403,75 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_clinical_decision_log: {
+        Row: {
+          condition_applied: string | null
+          created_at: string
+          id: string
+          patient_id: string | null
+          plan_id: string | null
+          reasons: string[] | null
+          rules_applied: Json | null
+          substitutions: Json | null
+          user_id: string | null
+        }
+        Insert: {
+          condition_applied?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string | null
+          plan_id?: string | null
+          reasons?: string[] | null
+          rules_applied?: Json | null
+          substitutions?: Json | null
+          user_id?: string | null
+        }
+        Update: {
+          condition_applied?: string | null
+          created_at?: string
+          id?: string
+          patient_id?: string | null
+          plan_id?: string | null
+          reasons?: string[] | null
+          rules_applied?: Json | null
+          substitutions?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      meal_clinical_rules: {
+        Row: {
+          condition_name: string
+          created_at: string
+          description: string | null
+          id: string
+          recommendations: string[] | null
+          restrictions: string[] | null
+          updated_at: string
+          version: number | null
+        }
+        Insert: {
+          condition_name: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recommendations?: string[] | null
+          restrictions?: string[] | null
+          updated_at?: string
+          version?: number | null
+        }
+        Update: {
+          condition_name?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          recommendations?: string[] | null
+          restrictions?: string[] | null
+          updated_at?: string
+          version?: number | null
+        }
+        Relationships: []
+      }
       meal_feedback: {
         Row: {
           comment: string | null
