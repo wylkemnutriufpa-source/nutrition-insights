@@ -15,6 +15,7 @@ export interface Food {
   portionValue: number;
   portionUnit: string;
   isMarmita?: boolean;
+  locked?: boolean;
   imageUrl?: string;
   usageCount?: number;
 }
