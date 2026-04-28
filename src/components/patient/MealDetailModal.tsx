@@ -191,6 +191,13 @@ function generateSubstitutionsFromFoodLines(foodLines: string[], mealType: strin
 }
 
 export function MealDetailModal({ open, onOpenChange, meal, onRemoveFoodLine, onChangeImage, onUpdateItem }: MealDetailModalProps) {
+  // Garantir que o scroll do body não fique travado ao fechar e que cliques fora funcionem via radix-ui padrão
+  useEffect(() => {
+    if (!open) {
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [open]);
+
   const { showMacros, showTechnicalDetails, isBasic } = useExperienceUI();
   const [removedLines, setRemovedLines] = useState<Set<number>>(new Set());
   const [showImagePicker, setShowImagePicker] = useState(false);

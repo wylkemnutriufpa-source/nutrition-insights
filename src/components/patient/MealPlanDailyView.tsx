@@ -339,19 +339,25 @@ const MealItemCard = memo(function MealItemCard({
                 )}
               </div>
             )}
-            <div className="flex flex-col gap-2 mt-3">
+            <div className="flex flex-col gap-2 mt-3 w-full">
               {isBasic ? (
                 status === "followed" ? (
-                  <div className="flex items-center justify-center gap-2 py-3 px-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 font-bold text-sm text-center break-words">
+                  <div 
+                    className="flex items-center justify-center gap-2 py-3 px-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl text-emerald-600 font-bold text-sm text-center break-words w-full"
+                    role="status"
+                    aria-label="Refeição Concluída"
+                  >
                     <CheckCircle2 className="w-5 h-5 shrink-0" />
                     <span className="leading-tight">Refeição Concluída! 🎉</span>
                   </div>
                 ) : (
                   <Button
-                    onClick={(e) => { e.stopPropagation(); onSetAdherence(item, "followed"); }}
-                    className="w-full h-auto min-h-[3rem] py-3 px-3 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold text-sm sm:text-base shadow-lg shadow-primary/20 transition-all active:scale-[0.98] whitespace-normal leading-tight"
+                    className="w-full h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/20 active:scale-95 transition-transform"
+                    onClick={() => onSetAdherence(item, "followed")}
+                    aria-label={`Marcar ${item.title} como concluída`}
                   >
-                    Marcar como concluído
+                    <CheckCircle2 className="w-5 h-5 mr-2" />
+                    CONCLUIR AGORA
                   </Button>
                 )
               ) : (

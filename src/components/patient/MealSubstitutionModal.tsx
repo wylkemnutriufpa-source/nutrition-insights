@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
@@ -113,6 +113,13 @@ export default function MealSubstitutionModal({
       setConfirming(false);
     }
   };
+
+    // Garantir que o scroll do body não fique travado ao fechar e que cliques fora funcionem via radix-ui padrão
+  useEffect(() => {
+    if (!open) {
+      document.body.style.pointerEvents = "auto";
+    }
+  }, [open]);
 
   return (
     <Dialog open={open} onOpenChange={(o) => { if (!o) setSelected(null); onOpenChange(o); }}>

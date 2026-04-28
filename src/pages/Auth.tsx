@@ -95,18 +95,37 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
     e.preventDefault();
     if (!fullName.trim()) { toast.error("Informe seu nome completo"); return; }
     setLoading(true);
+    
+    // Capture referral data from localStorage
+    const refCode = localStorage.getItem("fitjourney_ref");
+    const invitationCode = localStorage.getItem("fitjourney_invite_code");
+    const nutriId = localStorage.getItem("fitjourney_nutri_id");
+
     const normalizedEmail = email.trim().toLowerCase();
+    
+    // Determine the role for the metadata - important for the trigger to bind correctly
+    const roleMetadata = selectedRole || "nutritionist";
+
     const { data, error } = await supabase.auth.signUp({
       email: normalizedEmail,
       password,
-      options: { data: { full_name: fullName, role: "nutritionist" } },
+      options: { 
+        data: { 
+          full_name: fullName, 
+          role: roleMetadata,
+          nutritionist_id: nutriId,
+          invitation_code: invitationCode,
+          ref_code: refCode
+        } 
+      },
     });
+
     setLoading(false);
     if (error) {
       toast.error(error.message);
     } else {
-      // Create tenant + profile + role atomically via RPC
-      if (data.user) {
+      // Create tenant + profile + role atomically via RPC ONLY for nutritionist
+      if (data.user && roleMetadata === "nutritionist") {
         await supabase.rpc("self_register_nutritionist" as any, {
           _user_id: data.user.id,
           _full_name: fullName,
@@ -253,8 +272,17 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground flex items-center gap-1.5 px-1">
-                      <Stethoscope className="w-3.5 h-3.5 shrink-0" /> 
-                      <span>Conta exclusiva para profissionais de saúde. Se você é paciente, use o link enviado pelo seu nutricionista.</span>
+                      {selectedRole === "patient" ? (
+                        <>
+                          <Users className="w-3.5 h-3.5 shrink-0" />
+                          <span>Você está criando sua conta de paciente vinculada ao seu profissional.</span>
+                        </>
+                      ) : (
+                        <>
+                          <Stethoscope className="w-3.5 h-3.5 shrink-0" /> 
+                          <span>Conta exclusiva para profissionais de saúde. Se você é paciente, use o link enviado pelo seu nutricionista.</span>
+                        </>
+                      )}
                     </p>
                     <Button type="submit" className="w-full" disabled={loading}>
                       {loading ? "Criando..." : <span className="flex items-center gap-2">Criar Conta <ArrowRight className="w-4 h-4" /></span>}
