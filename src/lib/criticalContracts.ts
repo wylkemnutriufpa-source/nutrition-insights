@@ -55,17 +55,20 @@ export function patientAccessContract(s: PatientAccessSnapshot): ContractResult 
     }
   }
 
+  // Regra: paciente só vê planos de seu próprio tenant
+  if (s.requestingTenantId) {
+    for (const p of s.returnedPlans) {
+      if (p.tenant_id !== s.requestingTenantId) {
+        v.push(`Vazamento de Tenant: Plano ${p.id} pertence ao tenant ${p.tenant_id} mas usuário solicitou de ${s.requestingTenantId}`);
+      }
+    }
+  }
+
   // Regra: paciente só vê planos publicados
   for (const p of s.returnedPlans) {
     if (!PUBLISHED_STATUSES.has(p.plan_status)) {
       v.push(`Plano ${p.id} não está publicado (status=${p.plan_status})`);
     }
-  }
-
-  // Regra: rota /my-diet nunca pode ser quebrada
-  if (s.route === "/my-diet" && s.returnedPlans.length === 0) {
-    // Não é violação — pode não ter plano ainda. Apenas registramos como warn.
-    // Caso queira tornar bloqueante, adicionar a `v` aqui.
   }
 
   return { ok: v.length === 0, contractId: "patient_access", violations: v };
