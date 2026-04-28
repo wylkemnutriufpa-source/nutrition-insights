@@ -439,19 +439,24 @@ const DateNavigator = memo(function DateNavigator({
   isToday: boolean;
   onChangeDate: (offset: number) => void;
 }) {
+  const { isBasic } = useExperienceUI();
+
   return (
     <div className="flex items-center justify-center gap-4">
-      <Button variant="ghost" size="icon" onClick={() => onChangeDate(-1)}>
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onChangeDate(-1)}>
         <ChevronLeft className="w-5 h-5" />
       </Button>
-      <div className="flex items-center gap-2">
-        <Calendar className="w-4 h-4 text-primary" />
-        <span className="font-medium">
-          {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { weekday: "long", day: "numeric", month: "short" })}
-        </span>
-        <Badge variant="outline" className="ml-1">{DAYS[dayOfWeek]}</Badge>
+      <div className="flex flex-col items-center">
+        <div className="flex items-center gap-2">
+          {!isBasic && <Calendar className="w-4 h-4 text-primary" />}
+          <span className="font-bold text-sm">
+            {isToday ? "Hoje" : new Date(date + "T12:00:00").toLocaleDateString("pt-BR", { day: "numeric", month: "long" })}
+          </span>
+          {!isBasic && <Badge variant="outline" className="ml-1 text-[10px]">{DAYS[dayOfWeek]}</Badge>}
+        </div>
+        {isBasic && <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{DAYS[dayOfWeek]}</span>}
       </div>
-      <Button variant="ghost" size="icon" onClick={() => onChangeDate(1)} disabled={isToday}>
+      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onChangeDate(1)} disabled={isToday}>
         <ChevronRight className="w-5 h-5" />
       </Button>
     </div>
