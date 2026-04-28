@@ -187,7 +187,7 @@ const MealItemCard = memo(function MealItemCard({
   onOpenDetail: (item: MealDetailData) => void;
   onOpenSubstitution?: (item: MealPlanItem) => void;
 }) {
-  const { showMacros } = useExperienceUI();
+  const { showMacros, isBasic } = useExperienceUI();
   const impacts = useMemo(() => getImpactTags(item), [item]);
   // Primary: use image_url directly from item (populated during generation)
   // Fallback: resolve from visual library if item.image_url is missing
