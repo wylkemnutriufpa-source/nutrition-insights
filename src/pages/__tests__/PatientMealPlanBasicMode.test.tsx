@@ -5,6 +5,16 @@ import { useAuth } from "@/lib/auth";
 import { useExperienceUI } from "@/hooks/useExperienceUI";
 import { supabase } from "@/integrations/supabase/client";
 import { BrowserRouter } from "react-router-dom";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      retry: false,
+    },
+  },
+});
+
 
 // Mocking hooks
 vi.mock("@/lib/auth", () => ({
@@ -82,10 +92,13 @@ describe("PatientMealPlan - Basic Mode", () => {
 
   it("should always start on today in basic mode", async () => {
     render(
-      <BrowserRouter>
-        <PatientMealPlan />
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <PatientMealPlan />
+        </BrowserRouter>
+      </QueryClientProvider>
     );
+
 
     // Should show "Sua dieta de hoje"
     expect(await screen.findByText(/Sua dieta de hoje/i)).toBeInTheDocument();
@@ -96,10 +109,13 @@ describe("PatientMealPlan - Basic Mode", () => {
 
   it("should open 'Ver outros dias' modal when clicked", async () => {
     render(
-      <BrowserRouter>
-        <PatientMealPlan />
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <PatientMealPlan />
+        </BrowserRouter>
+      </QueryClientProvider>
     );
+
 
     const openModalBtn = await screen.findByText(/Ver outros dias/i);
     fireEvent.click(openModalBtn);
@@ -121,10 +137,13 @@ describe("PatientMealPlan - Basic Mode", () => {
     });
 
     render(
-      <BrowserRouter>
-        <PatientMealPlan />
-      </BrowserRouter>
+      <QueryClientProvider client={queryClient}>
+        <BrowserRouter>
+          <PatientMealPlan />
+        </BrowserRouter>
+      </QueryClientProvider>
     );
+
 
     // Should show the empty state message
     expect(await screen.findByText(/Nada planejado para este dia/i)).toBeInTheDocument();
