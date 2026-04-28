@@ -585,6 +585,41 @@ export type Database = {
         }
         Relationships: []
       }
+      audit_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          profile_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          profile_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          profile_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_events_profile_id_fkey"
+            columns: ["profile_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_exports_log: {
         Row: {
           created_at: string | null
@@ -14145,7 +14180,9 @@ export type Database = {
           clinical_risk_level: string | null
           clinical_risk_score: number | null
           created_at: string
+          current_editor_mode: string | null
           current_weight: number | null
+          editor_state: Json | null
           engagement_index: number | null
           engagement_level: string | null
           experience_mode: string | null
@@ -14164,6 +14201,7 @@ export type Database = {
           historical_loss_rate: number | null
           id: string
           is_orphan: boolean | null
+          last_editor_step: number | null
           last_editor_version_used: string | null
           marmita_mode: boolean | null
           metabolic_confidence_score: number | null
@@ -14197,7 +14235,9 @@ export type Database = {
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
+          current_editor_mode?: string | null
           current_weight?: number | null
+          editor_state?: Json | null
           engagement_index?: number | null
           engagement_level?: string | null
           experience_mode?: string | null
@@ -14216,6 +14256,7 @@ export type Database = {
           historical_loss_rate?: number | null
           id?: string
           is_orphan?: boolean | null
+          last_editor_step?: number | null
           last_editor_version_used?: string | null
           marmita_mode?: boolean | null
           metabolic_confidence_score?: number | null
@@ -14249,7 +14290,9 @@ export type Database = {
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
           created_at?: string
+          current_editor_mode?: string | null
           current_weight?: number | null
+          editor_state?: Json | null
           engagement_index?: number | null
           engagement_level?: string | null
           experience_mode?: string | null
@@ -14268,6 +14311,7 @@ export type Database = {
           historical_loss_rate?: number | null
           id?: string
           is_orphan?: boolean | null
+          last_editor_step?: number | null
           last_editor_version_used?: string | null
           marmita_mode?: boolean | null
           metabolic_confidence_score?: number | null
