@@ -4,6 +4,7 @@ import { MealListSidebar } from './MealListSidebar';
 import { ActiveMealContent } from './ActiveMealContent';
 import { MacroSummary } from './MacroSummary';
 import { ClinicalRulesPanel } from './ClinicalRulesPanel';
+import { ValidationModal } from './ValidationModal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
@@ -38,18 +39,25 @@ const GENERATION_OPTIONS = [
 export const MealPlanEditorV3: React.FC = () => {
   const { 
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
-    planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight
+    planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
+    fetchClinicalRules, patientTargets, meals, clinicalLog
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
+  const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const [validationResults, setValidationResults] = useState<any>(null);
 
-  const handleGenerate = (optionId: string) => {
+  useEffect(() => {
+    fetchClinicalRules();
+  }, []);
+
+  const handleGenerate = async (optionId: string) => {
     const isClinical = GENERATION_OPTIONS.find(o => o.id === optionId)?.isClinical;
     
     if (isClinical) {
-      generateDeterministicPlan('simple', { conditionId: optionId });
+      await generateDeterministicPlan('simple', { conditionId: optionId });
     } else {
-      generateDeterministicPlan(optionId);
+      await generateDeterministicPlan(optionId);
     }
     
     setIsGenerateModalOpen(false);
@@ -61,12 +69,47 @@ export const MealPlanEditorV3: React.FC = () => {
     toast.success('Plano otimizado clinicamente!');
   };
 
-  const handleSave = () => {
-    const isValid = validateAndSave();
-    if (isValid) {
+  const handleSaveClick = () => {
+    const totals = meals.reduce((acc, meal) => {
+      meal.items.forEach(item => {
+        acc.calories += item.calories * item.quantity;
+        acc.protein += item.protein * item.quantity;
+      });
+      return acc;
+    }, { calories: 0, protein: 0 });
+
+    const targetCals = patientTargets?.calories || 2000;
+    const targetProt = patientTargets?.protein || 150;
+
+    const calDiff = Math.abs(totals.calories - targetCals) / targetCals;
+    const protDiff = Math.abs(totals.protein - targetProt) / targetProt;
+
+    const results = {
+      calories: {
+        target: targetCals,
+        current: totals.calories,
+        status: calDiff < 0.05 ? 'ok' : calDiff < 0.15 ? 'warn' : 'error'
+      },
+      protein: {
+        target: targetProt,
+        current: totals.protein,
+        status: protDiff < 0.05 ? 'ok' : protDiff < 0.15 ? 'warn' : 'error'
+      },
+      clinicalRules: {
+        status: consistencyMessage ? 'error' : clinicalLog ? 'ok' : 'ok',
+        message: consistencyMessage || (clinicalLog ? 'Regras clínicas respeitadas' : 'Nenhuma regra clínica ativa')
+      }
+    };
+
+    setValidationResults(results);
+    setIsValidationModalOpen(true);
+  };
+
+  const confirmSave = async () => {
+    const success = await validateAndSave();
+    if (success) {
+      setIsValidationModalOpen(false);
       toast.success('Plano validado e salvo com sucesso!');
-    } else {
-      toast.error('Plano fora da meta nutricional (limite 10%)');
     }
   };
 
@@ -163,7 +206,7 @@ export const MealPlanEditorV3: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.4 }}
           >
-            <AnimatePresence>
+             <AnimatePresence>
               {lastActionInsight && (
                 <motion.div
                   initial={{ opacity: 0, y: -20 }}
@@ -222,6 +265,7 @@ export const MealPlanEditorV3: React.FC = () => {
           </div>
         </DialogContent>
       </Dialog>
+
       {validationResults && (
         <ValidationModal 
           isOpen={isValidationModalOpen}
