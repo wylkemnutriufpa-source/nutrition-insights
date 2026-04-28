@@ -42,22 +42,64 @@ export const SUBSTITUTION_GROUPS: Record<string, string[]> = {
   'dairy': ['q8', 'q3'], // leite, queijo
 };
 
+export interface ClinicalLog {
+  timestamp: string;
+  conditionId: string;
+  appliedRules: string[];
+  changes: {
+    type: 'removal' | 'substitution';
+    foodName: string;
+    reason: string;
+  }[];
+}
+
 export function getEquivalentFoods(foodId: string): Food[] {
+  const sourceFood = QUICK_FOODS.find(f => f.id === foodId);
+  if (!sourceFood) return [];
+
   const group = Object.values(SUBSTITUTION_GROUPS).find(g => g.includes(foodId));
   if (!group) return [];
   
   return group
     .filter(id => id !== foodId)
     .map(id => QUICK_FOODS.find(f => f.id === id))
-    .filter((f): f is Food => !!f);
+    .filter((f): f is Food => !!f)
+    .filter(f => {
+      // Equivalência nutricional real: tolerância de 20% nas calorias e proteínas
+      const calDiff = Math.abs(f.calories - sourceFood.calories) / sourceFood.calories;
+      const protDiff = Math.abs(f.protein - sourceFood.protein) / (sourceFood.protein || 1);
+      return calDiff < 0.2 && protDiff < 0.2;
+    });
 }
 
-export function applyClinicalRules(meals: Meal[], conditionId: string): Meal[] {
+export function applyClinicalRules(meals: Meal[], conditionId: string): { meals: Meal[], log: ClinicalLog } {
   const condition = CLINICAL_CONDITIONS.find(c => c.id === conditionId);
-  if (!condition) return meals;
+  const log: ClinicalLog = {
+    timestamp: new Date().toISOString(),
+    conditionId,
+    appliedRules: condition ? [...condition.restrictions, ...condition.recommendations] : [],
+    changes: []
+  };
 
-  return meals.map(meal => ({
+  if (!condition) return { meals, log };
+
+  const finalMeals = meals.map(meal => ({
     ...meal,
-    items: meal.items.filter(item => !condition.restrictions.includes(item.id))
+    items: meal.items.filter(item => {
+      const isRestricted = condition.restrictions.some(r => 
+        item.id === r || item.name.toLowerCase().includes(r.toLowerCase())
+      );
+      if (isRestricted) {
+        log.changes.push({
+          type: 'removal',
+          foodName: item.name,
+          reason: `Restrição da condição: ${condition.name}`
+        });
+        return false;
+      }
+      return true;
+    })
   }));
+
+  return { meals: finalMeals, log };
 }

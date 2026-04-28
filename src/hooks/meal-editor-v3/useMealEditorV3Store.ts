@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { QUICK_FOODS, MARMITAS } from './constants';
-import { getEquivalentFoods, applyClinicalRules } from './clinicalRules';
+import { getEquivalentFoods, applyClinicalRules, ClinicalLog } from './clinicalRules';
 
 export interface Food {
   id: string;
@@ -47,6 +47,7 @@ interface MealPlanState {
   fastMode: boolean;
   history: HistoryState;
   planStatus: 'draft' | 'validated' | 'optimized' | 'syncing' | 'error' | 'success';
+  clinicalLog: ClinicalLog | null;
 
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
@@ -62,7 +63,8 @@ interface MealPlanState {
   clearMeal: (mealId: string) => void;
   balanceMacros: (mealId: string, targetKcal: number) => void;
   optimizePlan: () => void;
-  
+  validateAndSave: () => boolean;
+
   undo: () => void;
   redo: () => void;
   
@@ -92,6 +94,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       fastMode: false,
       history: { past: [], future: [] },
       planStatus: 'draft',
+      clinicalLog: null,
 
       setPatientId: (id) => {
         const storedFastMode = localStorage.getItem(`fastMode_${id}`);

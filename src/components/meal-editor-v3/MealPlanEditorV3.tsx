@@ -60,6 +60,14 @@ export const MealPlanEditorV3: React.FC = () => {
     optimizePlan();
     toast.success('Plano otimizado clinicamente!');
   };
+  const handleSave = () => {
+    const isValid = validateAndSave();
+    if (isValid) {
+      toast.success('Plano validado e salvo com sucesso!');
+    } else {
+      toast.error('Plano fora da meta nutricional (limite 10%)');
+    }
+  };
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] bg-background overflow-hidden selection:bg-primary/10">
