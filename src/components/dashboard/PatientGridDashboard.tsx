@@ -150,17 +150,17 @@ export default function PatientGridDashboard() {
   if (expUI.isBasic && !blockDashboard && !showOnboardingCard) {
     return (
       <div className="space-y-6 max-w-2xl mx-auto">
-        <ExperienceModeStatusSection />
+        {expUI.showExperienceToggle && <ExperienceModeStatusSection />}
         
         <div className="flex flex-col items-center gap-4 text-center">
-          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center">
+          <div className="w-16 h-16 rounded-2xl bg-primary/10 flex items-center justify-center shadow-sm">
             <UtensilsCrossed className="w-8 h-8 text-primary" />
           </div>
           <div className="space-y-1">
             <h2 className="text-2xl font-bold tracking-tight">Olá! 👋</h2>
-            <p className="text-muted-foreground text-sm">Seu dia simplificado em um só lugar.</p>
+            <p className="text-muted-foreground text-sm">Sua alimentação de hoje em um só lugar.</p>
           </div>
-          <InlineExperienceToggle />
+          {expUI.showExperienceToggle && <InlineExperienceToggle />}
         </div>
 
         <div className="space-y-4">

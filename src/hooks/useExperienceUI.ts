@@ -43,12 +43,17 @@ export function useExperienceUI() {
     showRiskAnalysis: minMode("pro"),
     /** Show revenue simulators, financial analytics */
     showFinancialTools: minMode("advanced"),
+    
+    // New visibility helpers for basic mode simplification
+    showTimeline: minMode("pro"),
+    showExperienceToggle: minMode("pro"),
+    showGuidedTour: minMode("pro"),
 
     // ── Text helpers ──
     /** Dashboard title by mode */
-    dashboardTitle: isBasic ? "Meu Painel" : isPro ? "Dashboard Pro" : "Comando Avançado",
+    dashboardTitle: isBasic ? "Meu Plano" : isPro ? "Dashboard Pro" : "Comando Avançado",
     dashboardSubtitle: isBasic
-      ? "Sua jornada diária simplificada"
+      ? "Sua alimentação de hoje"
       : isPro
       ? "Acompanhamento clínico e macros"
       : "Dados completos · Projeções · Performance",
