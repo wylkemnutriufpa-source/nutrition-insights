@@ -4,8 +4,10 @@
  */
 import { useMemo } from "react";
 import { useLocation } from "react-router-dom";
-import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { usePatientJourneyStatus, getUserRouteByStatus } from "@/hooks/usePatientJourneyStatus";
 import { useAuth } from "@/lib/auth";
+import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 
 export type OnboardingRequirement = "none" | "must_complete" | "loading" | "error_no_link";
 
@@ -19,7 +21,8 @@ const ONBOARDING_ALLOWED_ROUTES = [
   "/settings",
   "/privacy-policy",
   "/termos-de-uso",
-  "/support"
+  "/support",
+  "/erro-vinculo"
 ];
 
 export function isOnboardingAllowedRoute(pathname: string): boolean {
@@ -28,39 +31,62 @@ export function isOnboardingAllowedRoute(pathname: string): boolean {
   return ONBOARDING_ALLOWED_ROUTES.some(route => path.startsWith(route));
 }
 
+// Redirect tracker for Anti-Loop Hard Protection
+const redirectHistory: Record<string, { from: string, to: string, count: number }> = {};
+
 export function useOnboardingGuard() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
-  const { loading: authLoading } = useAuth();
+  const { loading: authLoading, user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
+  const isRedirecting = useRef(false);
+
+  useEffect(() => {
+    // Stage 1: Wait for status
+    if (journeyLoading || authLoading || !user) return;
+
+    // Stage 2: Centralized Decision
+    const targetPath = getUserRouteByStatus(journeyStatus);
+    const currentPath = location.pathname;
+
+    // Stage 3: Anti-Loop Protection
+    if (currentPath === targetPath || isOnboardingAllowedRoute(currentPath)) {
+      return;
+    }
+
+    // Loop Trava (Hard Protection)
+    const loopKey = `${user.id}:${currentPath}:${targetPath}`;
+    const history = redirectHistory[loopKey] || { from: currentPath, to: targetPath, count: 0 };
+    
+    if (history.count >= 2) {
+      console.warn("[OnboardingRedirect] LOOP DETECTED AND BLOCKED", { from: currentPath, to: targetPath, status: journeyStatus });
+      return;
+    }
+
+    // Stage 4: Execution
+    console.log("[OnboardingRedirect]", {
+      from: currentPath,
+      to: targetPath,
+      status: journeyStatus,
+      blocked: false,
+      reason: currentPath === targetPath ? "same_route" : "redirecting"
+    });
+
+    history.count++;
+    redirectHistory[loopKey] = history;
+    
+    navigate(targetPath, { replace: true });
+
+  }, [journeyStatus, journeyLoading, authLoading, location.pathname, user, navigate]);
 
   const requirement: OnboardingRequirement = useMemo(() => {
-    // Wait for BOTH auth (roles) and journey status to load
     if (journeyLoading || authLoading) return "loading";
+    if (isOnboardingAllowedRoute(location.pathname)) return "none";
+    if (journeyStatus === "no_link" || journeyStatus === null) return "error_no_link";
     
-    // REDIRECT PROTECTION: Do not suggest completion if we are already on an allowed route
-    // This prevents infinite loops
-    if (isOnboardingAllowedRoute(location.pathname)) {
-      console.log(`[OnboardingGuard] Path allowed, skipping redirect: ${location.pathname}`);
-      return "none";
-    }
-
-    // JOURNEY STATUS LOGGING
-    console.log(`[OnboardingGuard] Path: ${location.pathname} | Status: ${journeyStatus}`);
-
-    if (journeyStatus === "no_link" || journeyStatus === null) {
-      console.error("[OnboardingGuard] CRITICAL: Patient has no nutritionist link");
-      return "error_no_link";
-    }
-
-    // CRITICAL: Define states that MUST BE on onboarding/consent routes
-    const isLockedState = 
-      journeyStatus === "awaiting_consent" || 
-      journeyStatus === "lead_created" || 
-      journeyStatus === "onboarding_active";
-
-    if (isLockedState) {
-      console.log(`[OnboardingGuard] Locked state (${journeyStatus}) detected on ${location.pathname}. Redirect required.`);
-      return "must_complete";
+    const targetPath = getUserRouteByStatus(journeyStatus);
+    if (location.pathname !== targetPath && !isOnboardingAllowedRoute(location.pathname)) {
+        return "must_complete";
     }
 
     return "none";

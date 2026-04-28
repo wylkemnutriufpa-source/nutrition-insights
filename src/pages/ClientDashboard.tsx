@@ -46,6 +46,7 @@ import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
+import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
 import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
@@ -299,22 +300,9 @@ export default function ClientDashboard() {
     }
   }, [journeyStatus, journeyLoading, canAccessOnboarding, user?.id]);
 
-  // AUTOMATIC REDIRECT: Ensure early onboarding states land on /consent immediately
-  useEffect(() => {
-    if (journeyLoading || isLoading || !isPatient) return;
-
-    const isLockedState = journeyStatus === "awaiting_consent" || journeyStatus === "lead_created" || journeyStatus === "onboarding_active";
-    
-    if (isLockedState) {
-      const targetRoute = journeyStatus === "onboarding_active" ? "/onboarding" : "/consent";
-      const isAllowed = window.location.pathname.startsWith("/onboarding") || window.location.pathname.startsWith("/consent");
-      
-      if (!isAllowed) {
-        console.log(`[Dashboard:Redirect] Status ${journeyStatus} detected on Dashboard. Redirecting to ${targetRoute}`);
-        navigate(targetRoute, { replace: true });
-      }
-    }
-  }, [journeyStatus, journeyLoading, isLoading, navigate, isPatient]);
+  // AUTOMATIC REDIRECT: Centralized handling in useOnboardingGuard
+  // Removed local if/else logic to avoid conflicts with Source of Truth
+  const onboarding = useOnboardingGuard();
 
   // Mandatory block states only - using centralized logic
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
