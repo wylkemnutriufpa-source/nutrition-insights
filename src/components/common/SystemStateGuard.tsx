@@ -1,72 +1,81 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { validateSystemState, fjLog } from "@/utils/dataSafety";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { AlertTriangle, RefreshCw, ShieldAlert } from "lucide-react";
-import FitJourneyLogo from "@/components/common/FitJourneyLogo";
+import { useLocation, Navigate } from "react-router-dom";
+import { getSystemDecision, logDecision, GovernanceContext, PUBLIC_ROUTES, ONBOARDING_ALLOWED_ROUTES } from "@/lib/governance";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { HardFailLinkage } from "./HardFailLinkage";
+import { logAudit, getSessionCorrelationId } from "@/lib/auditLog";
 
 /**
  * Global Guard to ensure the system is in a consistent state.
- * Prevents access if tenant_id or other critical properties are missing.
+ * Implements Enterprise Governance V4.9
  */
 export function SystemStateGuard({ children }: { children: React.ReactNode }) {
-  const { user, loading: authLoading, isPatient } = useAuth();
+  const { user, profile, loading: authLoading, isPatient, isAdmin, isNutritionist, isPersonal } = useAuth();
   const { tenantId, isLoading: tenantLoading } = useTenant();
-  const [error, setError] = useState<{ reason: string } | null>(null);
+  const { mode, role } = useExperienceMode();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const location = useLocation();
 
+  const isReady = !authLoading && !tenantLoading && !journeyLoading;
+
+  const decision = useMemo(() => {
+    if (!isReady) return { type: 'ALLOW' as const, reason: 'System loading' };
+
+    const ctx: GovernanceContext = {
+      pathname: location.pathname,
+      user,
+      profile,
+      journeyStatus: journeyStatus as any,
+      mode,
+      role,
+      isReady,
+      isDegraded: false, // We'll handle this separately if needed
+      isNutritionist,
+      isPersonal,
+      isAdmin,
+      versionMismatch: (window as any).__FJ_VERSION_MISMATCH__
+    };
+
+    const d = getSystemDecision(ctx);
+    if (d.type !== 'ALLOW') logDecision(d);
+    return d;
+  }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isNutritionist, isPersonal, isAdmin]);
+
+  // Track blocked renders for audit
   useEffect(() => {
-    if (authLoading || tenantLoading || !user) return;
-
-    // We only strictly enforce for patients in this context
-    if (isPatient) {
-      const result = validateSystemState({ userId: user.id, tenantId });
-      if (!result.valid) {
-        fjLog("CRITICAL", `System state guard failed: ${result.reason}`);
-        setError({ reason: result.reason || "UNKNOWN" });
-      } else {
-        setError(null);
-      }
+    if (decision.type === 'BLOCK' || decision.type === 'REDIRECT') {
+      logAudit(
+        "GLOBAL_GUARD_BLOCK",
+        "navigation",
+        user?.id,
+        { 
+          path: location.pathname, 
+          decision: decision.type, 
+          reason: decision.reason,
+          target: decision.target 
+        },
+        "blocked"
+      );
     }
-  }, [user, tenantId, authLoading, tenantLoading, isPatient]);
+  }, [decision, location.pathname, user?.id]);
 
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <div className="w-full max-w-md text-center space-y-6 animate-in fade-in zoom-in-95">
-          <div className="mb-8 flex justify-center"><FitJourneyLogo size="lg" /></div>
-          <ShieldAlert className="w-16 h-16 text-destructive mx-auto" />
-          <Card className="border-destructive/20 bg-destructive/5 backdrop-blur-sm shadow-2xl">
-            <CardContent className="pt-8 pb-8 space-y-4">
-              <h2 className="text-2xl font-bold text-foreground">Acesso Bloqueado</h2>
-              <p className="text-muted-foreground text-sm leading-relaxed">
-                Detectamos uma inconsistência crítica no seu perfil de acesso. 
-                Isso pode acontecer se sua conta não estiver corretamente vinculada a um profissional.
-              </p>
-              
-              <div className="p-3 bg-background border border-border rounded-lg text-left">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1">Detalhes Técnicos</p>
-                <p className="text-xs font-mono break-all text-destructive">REASON: {error.reason}</p>
-                <p className="text-xs font-mono break-all text-muted-foreground mt-1">USER_ID: {user?.id}</p>
-              </div>
+  if (!isReady) return null;
 
-              <div className="grid gap-3 pt-4">
-                <Button onClick={() => window.location.reload()} className="w-full h-12 gap-2">
-                  <RefreshCw className="w-4 h-4" /> Recarregar Sistema
-                </Button>
-                <Button variant="outline" onClick={() => window.location.href = "/auth"} className="w-full h-12">
-                  Voltar ao Login
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-          <p className="text-xs text-muted-foreground">
-            Se o problema persistir, entre em contato com seu nutricionista.
-          </p>
-        </div>
-      </div>
-    );
+  if (decision.type === 'BLOCK' && decision.target === '/hard-fail-linkage') {
+    return <HardFailLinkage />;
+  }
+
+  if (decision.type === 'REDIRECT' && decision.target && decision.target !== location.pathname) {
+    return <Navigate to={decision.target} replace />;
+  }
+
+  if (decision.type === 'RELOAD') {
+    window.location.reload();
+    return null;
   }
 
   return <>{children}</>;
