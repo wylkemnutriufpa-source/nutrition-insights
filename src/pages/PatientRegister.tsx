@@ -701,39 +701,7 @@ export default function PatientRegister() {
 
   // ─── Linkage Error Screen ───
   if (linkageError) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background p-4">
-        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="w-full max-w-md text-center">
-          <div className="mb-6"><FitJourneyLogo size="lg" /></div>
-          <Card className="shadow-2xl border-destructive/20 bg-destructive/5 backdrop-blur-sm">
-            <CardContent className="pt-8 pb-8 space-y-6">
-              <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center mx-auto border-2 border-destructive/20">
-                <AlertTriangle className="w-8 h-8 text-destructive" />
-              </div>
-              <div className="space-y-2">
-                <h2 className="text-xl font-bold text-foreground">Erro Crítico de Vínculo 🛑</h2>
-                <p className="text-muted-foreground text-sm leading-relaxed">
-                  {linkageError.message}
-                </p>
-                <div className="p-3 bg-muted/50 rounded-lg text-[10px] font-mono text-muted-foreground mt-4 break-all">
-                  ERROR_CODE: {linkageError.type} | CID: {correlationId}
-                </div>
-              </div>
-              <div className="grid gap-3 pt-4">
-                <Button onClick={() => window.location.reload()} className="w-full h-12 gap-2">
-                  <RefreshCw className="w-4 h-4" /> Tentar Novamente
-                </Button>
-                <Button variant="outline" asChild className="w-full h-12">
-                  <a href="https://wa.me/suporte_fitjourney" target="_blank" rel="noopener noreferrer">
-                    Falar com Suporte
-                  </a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-      </div>
-    );
+    return <HardFailLinkage />;
   }
 
   // ─── Done Screen ───
