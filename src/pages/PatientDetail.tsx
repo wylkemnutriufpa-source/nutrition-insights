@@ -1369,7 +1369,7 @@ export default function PatientDetail() {
 
               {/* Editor Matrix Modal */}
               <EditorMatrixModal 
-                isOpen={matrixOpen}
+                isOpen={matrixOpen} patientId={resolvedPatientId}
                 onClose={() => setMatrixOpen(false)}
                 onSelect={(version) => {
                   setMatrixOpen(false);
