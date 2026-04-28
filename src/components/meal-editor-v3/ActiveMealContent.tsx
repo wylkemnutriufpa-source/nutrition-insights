@@ -33,7 +33,14 @@ export const ActiveMealContent: React.FC = () => {
 
   const activeMeal = meals.find((m) => m.id === activeMealId);
 
-  if (!activeMeal) return null;
+  if (!activeMeal) {
+    return (
+      <Card className="flex flex-col items-center justify-center p-12 bg-muted/10 border-dashed rounded-3xl border-2">
+        <Package className="w-12 h-12 text-muted-foreground/30 mb-4" />
+        <p className="text-muted-foreground font-medium text-center">Selecione uma refeição no menu lateral para começar a editar.</p>
+      </Card>
+    );
+  }
 
   const handleAddSubstitution = (instanceId: string, food: Food) => {
     addSubstitution(activeMeal.id, instanceId, food);
