@@ -152,6 +152,7 @@ export default function PatientDetail() {
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
+  const [matrixOpen, setMatrixOpen] = useState(false);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
