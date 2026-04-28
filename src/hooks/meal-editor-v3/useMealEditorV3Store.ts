@@ -21,7 +21,7 @@ export interface Food {
 
 export interface MealItem extends Food {
   instanceId: string;
-  quantity: number; // multiplier for portionValue
+  quantity: number; 
   substitutions?: Food[];
 }
 
@@ -60,8 +60,14 @@ interface MealPlanState {
   setPatientId: (id: string) => void;
   setActiveMeal: (id: string | null) => void;
   setFastMode: (enabled: boolean) => void;
+  setPatientView: (enabled: boolean) => void;
   
   fetchClinicalRules: () => Promise<void>;
+  fetchTemplates: () => Promise<void>;
+  applyTemplate: (template: any) => void;
+  saveAsFavorite: (name: string, type: 'meal' | 'full_plan') => Promise<void>;
+  clonePlan: (newPatientId: string, newTargets: any) => void;
+
   addFoodToMeal: (mealId: string, food: Food) => void;
   removeFoodFromMeal: (mealId: string, instanceId: string) => void;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
@@ -152,20 +158,22 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       saveAsFavorite: async (name, type) => {
-        const { meals, patientId } = get();
-        await supabase.from('meal_plan_favorites').insert({
+        const { meals } = get();
+        const userData = (await supabase.auth.getUser()).data.user;
+        if (!userData) return;
+
+        await supabase.from('meal_plan_favorites').insert([{
           name,
           type,
           data: type === 'full_plan' ? meals : meals.find(m => m.id === get().activeMealId),
-          user_id: (await supabase.auth.getUser()).data.user?.id
-        });
+          user_id: userData.id
+        }]);
         toast.success('Salvo nos favoritos');
       },
 
       clonePlan: (newPatientId, newTargets) => {
         const { meals } = get();
-        // Simple adaptation: scale calories to new target
-        const currentCals = meals.reduce((acc, m) => acc + m.items.reduce((a, i) => acc + i.calories * i.quantity, 0), 0);
+        const currentCals = meals.reduce((acc, m) => acc + m.items.reduce((a, i) => a + i.calories * i.quantity, 0), 0);
         const ratio = newTargets.calories / (currentCals || 1);
 
         const adaptedMeals = meals.map(m => ({
@@ -379,13 +387,13 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }
 
         if (clinicalLog) {
-          await supabase.from('meal_clinical_decision_log').insert({
+          await supabase.from('meal_clinical_decision_log').insert([{
             patient_id: patientId,
             condition_applied: clinicalLog.conditionId,
             rules_applied: clinicalLog.appliedRules,
             substitutions: clinicalLog.changes.filter(c => c.type === 'substitution'),
             reasons: clinicalLog.changes.map(c => c.reason)
-          });
+          }]);
         }
 
         set({ planStatus: 'validated', consistencyMessage: null });
