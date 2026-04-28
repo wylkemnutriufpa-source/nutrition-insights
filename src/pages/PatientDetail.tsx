@@ -61,6 +61,7 @@ import type { PatientSignals } from "@/components/dashboard/SmartRecommendations
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+import { EditorMatrixModal } from "@/components/diet/EditorMatrixModal";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
 import ClinicalFlagsSummary from "@/components/patient/ClinicalFlagsSummary";
@@ -151,6 +152,7 @@ export default function PatientDetail() {
   const [releaseOnboardingOpen, setReleaseOnboardingOpen] = useState(false);
   const [confirmingPayment, setConfirmingPayment] = useState(false);
   const [markingWithoutDiet, setMarkingWithoutDiet] = useState(false);
+  const [matrixOpen, setMatrixOpen] = useState(false);
 
   // Sync selectedPrestigePlanId when data loads asynchronously
   useEffect(() => {
@@ -884,6 +886,10 @@ export default function PatientDetail() {
                             notes: (profile as any)?.notes || "",
                           });
                         }
+                        if (s.key === "meal-plans") {
+                          setMatrixOpen(true);
+                          return;
+                        }
                         setOpenSection(s.key);
                       }}
                       className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-gradient-to-br ${s.color} hover:shadow-md transition-all group cursor-pointer text-center`}
@@ -1360,6 +1366,20 @@ export default function PatientDetail() {
                   <PatientChecklistView patientId={resolvedPatientId} editable={true} />
                 </DialogContent>
               </Dialog>
+
+              {/* Editor Matrix Modal */}
+              <EditorMatrixModal 
+                isOpen={matrixOpen}
+                onClose={() => setMatrixOpen(false)}
+                onSelect={(version) => {
+                  setMatrixOpen(false);
+                  if (version === "v2") {
+                    setOpenSection("meal-plans");
+                  } else {
+                    navigate(`/diet-builder?patientId=${resolvedPatientId}`);
+                  }
+                }}
+              />
 
               {/* Meal Plans Modal */}
               <Dialog open={openSection === "meal-plans"} onOpenChange={(v) => !v && setOpenSection(null)}>
