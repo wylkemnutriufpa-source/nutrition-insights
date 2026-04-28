@@ -59,6 +59,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       user,
       profile,
       journeyStatus: journeyStatus as any,
+      anamnesisStatus,
       mode,
       role,
       isReady,
