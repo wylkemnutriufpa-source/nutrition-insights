@@ -109,7 +109,10 @@ function MeasurementRow({ label, value, prev }: { label: string; value: number |
   );
 }
 
+import { useExperienceUI } from "@/hooks/useExperienceUI";
+
 export default function Checkin() {
+  const { isBasic } = useExperienceUI();
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
