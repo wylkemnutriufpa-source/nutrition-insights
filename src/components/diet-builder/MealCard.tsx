@@ -68,11 +68,19 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
             </Button>
           )}
           <Button 
+            variant="outline"
+            onClick={() => setIsMarmitaModalOpen(true)}
+            className="rounded-xl border-emerald-200 text-emerald-600 hover:bg-emerald-50"
+          >
+            <Package className="w-4 h-4 mr-2" />
+            Marmita
+          </Button>
+          <Button 
             onClick={() => setIsModalOpen(true)}
             className="rounded-xl bg-slate-900 hover:bg-emerald-600 text-white shadow-lg shadow-slate-200 transition-all px-4 py-2"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Adicionar
+            Alimento
           </Button>
         </div>
       </div>
