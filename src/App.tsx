@@ -402,7 +402,9 @@ function RootRoute() {
   }, [isCriticalLoading, bootDone]);
 
   // 3. Cálculo de estados globais reativos
-  const isConsistent = user ? (tenantId !== null || !isPatient) : true;
+  const isConsistent = user ? (
+    (isPatient ? (tenantId !== null && memberships.length > 0) : true)
+  ) : true;
   const isReady = bootDone && isConsistent && !timedOut && !isCriticalLoading;
   const isDegraded = bootDone && (timedOut || (!isConsistent && !isCriticalLoading));
   const isLoading = !bootDone || (isCriticalLoading && !timedOut);
