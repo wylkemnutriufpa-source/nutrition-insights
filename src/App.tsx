@@ -364,37 +364,59 @@ function RootRoute() {
   const { user, loading: authLoading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista, roles } = useAuth();
   const { tenantId, isLoading: tenantLoading, memberships } = useTenant();
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
-  const { requirement } = useOnboardingGuard();
   const location = useLocation();
   const [bootDone, setBootDone] = useState(false);
+  const [timedOut, setTimedOut] = useState(false);
 
-  // Single consistency log
+  // 1. Timeout de inicialização (Fail-safe)
   useEffect(() => {
-    if (!authLoading && !tenantLoading && !journeyLoading && user) {
-      console.log("%c[FJ:Consistency] State synchronization validated:", "color: #10b981; font-weight: bold", {
-        user_id: user?.id,
-        tenant_id: tenantId,
-        membership: memberships.length > 0 ? `${memberships.length} active` : "NONE",
-        journey_status: journeyStatus,
-        roles: roles,
-        path: location.pathname
-      });
+    const timer = setTimeout(() => {
+      if (!bootDone) {
+        console.error("%c[FJ:Boot] Initialization timeout reached (8s) - Unblocking UI in degraded mode", "color: #ef4444; font-weight: bold");
+        setTimedOut(true);
+        setBootDone(true);
+      }
+    }, 8000);
+    return () => clearTimeout(timer);
+  }, [bootDone]);
+
+  // 2. Log de estado final padronizado e detecção de inconsistência
+  useEffect(() => {
+    const isCriticalLoading = authLoading || tenantLoading || (isPatient && journeyLoading);
+    
+    if (!isCriticalLoading && !bootDone) {
+      setBootDone(true);
+      return;
     }
-  }, [authLoading, tenantLoading, journeyLoading, user, tenantId, memberships, journeyStatus, roles, location.pathname]);
+
+    if (bootDone) {
+      // READY = tudo carregado E consistente
+      const isConsistent = user ? (tenantId !== null || !isPatient) : true;
+      const ready = isConsistent && !timedOut && !authLoading && !tenantLoading;
+      
+      console.log("%c[FJ:FinalState]", "color: #3b82f6; font-weight: bold", {
+        user_id: user?.id || "anonymous",
+        tenant_id: tenantId || "unresolved",
+        membership: memberships.length > 0 ? `${memberships.length} active` : "NONE",
+        journey_status: journeyStatus || "n/a",
+        READY: ready
+      });
+      
+      // 4. Detecção de estado inconsistente
+      if (user && !tenantId && !tenantLoading && isPatient) {
+        console.error("%c[FJ:Critical] Inconsistent state: User exists but tenant_id is unresolved", "color: #ef4444; font-weight: bold");
+      }
+
+      // Export status for critical actions blocking
+      (window as any).__FJ_READY__ = ready;
+    }
+  }, [bootDone, authLoading, tenantLoading, journeyLoading, user, tenantId, memberships, journeyStatus, timedOut, isPatient]);
 
   const activeEditorRoute = !authLoading && user && (isNutritionist || isAdmin)
     ? readActiveEditorRoute()
     : null;
 
-  useEffect(() => {
-    // Gate de carregamento único: aguardar auth + tenant + journey (se paciente)
-    const isCriticalLoading = authLoading || tenantLoading || (isPatient && journeyLoading);
-    
-    if (!isCriticalLoading && !bootDone) {
-      setBootDone(true);
-    }
-  }, [authLoading, tenantLoading, journeyLoading, isPatient, bootDone]);
-
+  // 3. Separação de bloqueio: Render UI, mas PageLoader até boot ou timeout
   if (!bootDone) return <PageLoader />;
   if (!user) return <GatewayPage />;
 
