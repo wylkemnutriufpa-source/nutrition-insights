@@ -12,6 +12,7 @@
     "schema:missing": "node scripts/list-missing-migrations.mjs",
     "schema:status": "node scripts/schema-status.mjs",
     "schema:test": "node scripts/test-determinism.mjs",
+    "schema:check-diff": "node scripts/check-schema-diff.mjs",
     "schema:check-refs": "node scripts/check-schema-references.mjs",
     "lint": "eslint .",
     "preview": "vite preview",
