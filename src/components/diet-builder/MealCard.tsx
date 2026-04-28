@@ -88,11 +88,15 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
       <div className="space-y-3">
         {meal.items.length > 0 ? (
           meal.items.map((item) => (
-            <div key={item.id} className="flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-white transition-all group/item">
+            <div 
+              key={item.id} 
+              className={`flex items-center justify-between p-4 bg-slate-50/50 rounded-2xl border border-transparent hover:border-slate-100 hover:bg-white transition-all group/item ${item.locked ? 'bg-emerald-50/30' : ''}`}
+            >
               <div className="flex-1">
                 <div className="flex items-center gap-2">
                   <span className="font-bold text-slate-700">{item.name}</span>
-                  {SUBSTITUTIONS[item.name] && (
+                  {item.locked && <Lock className="w-3 h-3 text-emerald-500" />}
+                  {SUBSTITUTIONS[item.name] && !item.locked && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button className="p-1 text-slate-300 hover:text-emerald-500 transition-colors">
@@ -116,14 +120,20 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
                   )}
                 </div>
                 <div className="text-xs text-slate-500 mt-1">
-                  P: {item.protein}g • C: {item.carbs}g • G: {item.fat}g
+                  P: {item.protein}g • C: {item.carbs}g • G: {item.fat}g {item.locked && <span className="text-[10px] font-bold text-emerald-600 ml-2 uppercase">FIXO</span>}
                 </div>
               </div>
               <div className="flex items-center gap-4">
                 <span className="font-bold text-slate-900 text-sm">{item.calories} kcal</span>
                 <button 
-                  onClick={() => removeFood(meal.id, item.id)}
-                  className="p-2 text-slate-300 hover:text-red-500 opacity-0 group-hover/item:opacity-100 transition-all"
+                  onClick={() => {
+                    if (item.locked) {
+                      toast.error("Marmitas não podem ser alteradas. Substitua a marmita inteira.");
+                      return;
+                    }
+                    removeFood(meal.id, item.id);
+                  }}
+                  className={`p-2 transition-all ${item.locked ? 'text-slate-200 cursor-not-allowed' : 'text-slate-300 hover:text-red-500 opacity-0 group-hover/item:opacity-100'}`}
                 >
                   <Trash2 className="w-4 h-4" />
                 </button>
