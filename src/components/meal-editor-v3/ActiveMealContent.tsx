@@ -252,7 +252,7 @@ export const ActiveMealContent: React.FC = () => {
                   </div>
                 </Card>
 
-                {(item.substitutions || []).length > 0 && !item.isMarmita && (
+                {(item.substitutions || []).length > 0 && !(item.isMarmita || item.locked) && (
                   <div className="ml-8 space-y-1">
                     {item.substitutions?.map((sub) => (
                       <motion.div 
