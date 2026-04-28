@@ -53,14 +53,26 @@ const ClinicalRulesAdmin: React.FC = () => {
     if (id) {
       const { error } = await supabase
         .from('meal_clinical_rules')
-        .update({ ...payload, version: (editingRule.version || 1) + 1 })
+        .update({ 
+          condition_name: payload.condition_name || '',
+          description: payload.description,
+          restrictions: payload.restrictions,
+          recommendations: payload.recommendations,
+          version: (editingRule.version || 1) + 1 
+        })
         .eq('id', id);
       
       if (!error) toast.success('Regra atualizada (v' + ((editingRule.version || 1) + 1) + ')');
     } else {
       const { error } = await supabase
         .from('meal_clinical_rules')
-        .insert([payload]);
+        .insert([{
+          condition_name: payload.condition_name || '',
+          description: payload.description,
+          restrictions: payload.restrictions,
+          recommendations: payload.recommendations,
+          version: 1
+        }]);
       
       if (!error) toast.success('Nova regra criada');
     }
