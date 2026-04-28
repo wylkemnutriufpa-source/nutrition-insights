@@ -572,6 +572,8 @@ export default function MealPlans() {
                 className="rounded-md border border-input bg-background px-2 py-1 text-xs"
               >
                 <option value={STATUS_FILTER_ALL}>Todos ({plans.length})</option>
+                <option value="v3_only">Apenas Smart V3</option>
+                <option value="v2_only">Apenas Clássico V2</option>
                 {statusKeysPresent
                   .filter((k) => KNOWN_PLAN_STATUS_KEYS.includes(k))
                   .map((k) => {
