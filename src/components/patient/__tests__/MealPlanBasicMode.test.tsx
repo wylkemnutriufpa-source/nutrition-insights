@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import PatientMealPlan from '@/pages/PatientMealPlan';
 import { supabase } from '@/integrations/supabase/client';
 import { useExperienceUI } from '@/hooks/useExperienceUI';
@@ -37,6 +38,14 @@ vi.mock('@/lib/auth', () => ({
 }));
 
 describe('PatientMealPlan - Basic Mode', () => {
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        retry: false,
+      },
+    },
+  });
+
   const mockPlan = {
     id: 'plan-1',
     title: 'Test Plan',
@@ -61,9 +70,11 @@ describe('PatientMealPlan - Basic Mode', () => {
 
   it('should always open on today by default in basic mode', async () => {
     render(
-      <MemoryRouter>
-        <PatientMealPlan />
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <PatientMealPlan />
+        </MemoryRouter>
+      </QueryClientProvider>
     );
     
     const todayLabel = await screen.findByText(/Hoje/i);
@@ -72,9 +83,11 @@ describe('PatientMealPlan - Basic Mode', () => {
 
   it('should have accessibility attributes for current meal (AGORA)', async () => {
     render(
-      <MemoryRouter>
-        <PatientMealPlan />
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <PatientMealPlan />
+        </MemoryRouter>
+      </QueryClientProvider>
     );
     
     const nowBadges = await screen.findAllByText(/Sua vez/i);
@@ -88,9 +101,11 @@ describe('PatientMealPlan - Basic Mode', () => {
     (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: { message: 'Error' } });
     
     render(
-      <MemoryRouter>
-        <PatientMealPlan />
-      </MemoryRouter>
+      <QueryClientProvider client={queryClient}>
+        <MemoryRouter>
+          <PatientMealPlan />
+        </MemoryRouter>
+      </QueryClientProvider>
     );
     
     const retryButton = await screen.findByText(/Tentar atualizar/i);
