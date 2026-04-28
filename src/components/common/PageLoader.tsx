@@ -2,7 +2,7 @@ import { motion } from "framer-motion";
 
 export function PageLoader() {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center overflow-hidden bg-black">
+    <div className="fixed inset-0 z-[160] flex items-center justify-center overflow-hidden bg-black text-white">
       {/* Video background */}
       <video
         className="absolute inset-0 w-full h-full object-cover"

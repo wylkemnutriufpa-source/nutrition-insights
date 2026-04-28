@@ -118,7 +118,7 @@ export default function FitIntelligencePromptCard({
         duration: 0.7,
         ease: EASE,
       }}
-      className="fixed bottom-20 right-4 left-4 sm:left-auto sm:w-[380px] z-[9990] rounded-2xl overflow-hidden"
+      className="fixed bottom-20 right-4 left-4 sm:left-auto sm:w-[380px] z-[80] rounded-2xl overflow-hidden"
       style={{
         background: "linear-gradient(170deg, hsl(var(--card)) 0%, hsl(var(--background)) 60%, hsl(45 40% 12% / 0.3) 100%)",
         border: "1px solid hsl(45 80% 55% / 0.15)",

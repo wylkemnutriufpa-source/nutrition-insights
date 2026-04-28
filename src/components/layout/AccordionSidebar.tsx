@@ -108,7 +108,7 @@ function SideFlyout({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         transition={{ duration: 0.2 }}
-        className="fixed inset-0 z-[9998] bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[105] bg-black/60 backdrop-blur-sm"
         onClick={onClose}
       />
       {/* Centered modal */}
@@ -117,7 +117,7 @@ function SideFlyout({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
         transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-0 z-[9999] flex items-center justify-center p-4 pointer-events-none"
+        className="fixed inset-0 z-[106] flex items-center justify-center p-4 pointer-events-none"
       >
         <div className="pointer-events-auto w-full max-w-md bg-card/98 backdrop-blur-2xl border border-border/50 rounded-2xl shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5)] overflow-hidden">
           {/* Header */}

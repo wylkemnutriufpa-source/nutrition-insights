@@ -459,7 +459,7 @@ export default function FitIntelligenceAssistant() {
           // Long press hint
           toast("Segure para rever a apresentação ✨", { duration: 2000 });
         }}
-        className="fixed bottom-24 right-4 z-[9990] w-12 h-12 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
+        className="fixed bottom-24 right-4 z-[80] w-12 h-12 rounded-full flex items-center justify-center opacity-50 hover:opacity-100 transition-opacity"
         style={{
           background: "linear-gradient(135deg, hsl(var(--primary)), hsl(45 70% 40%))",
           boxShadow: "0 0 20px -5px hsl(45 80% 55% / 0.2)",
@@ -491,7 +491,7 @@ export default function FitIntelligenceAssistant() {
             mass: 1.2,
           }}
           onClick={() => setExpanded(true)}
-          className="fixed bottom-24 right-4 z-[9990] w-16 h-16 rounded-full flex items-center justify-center"
+          className="fixed bottom-24 right-4 z-[80] w-16 h-16 rounded-full flex items-center justify-center"
           style={{
             background: "linear-gradient(135deg, hsl(var(--primary)), hsl(45 70% 40%), hsl(var(--primary)))",
             boxShadow: "0 0 40px -5px hsl(45 80% 55% / 0.3), 0 0 80px -10px hsl(45 80% 55% / 0.15), 0 8px 30px -8px hsl(0 0% 0% / 0.4)",

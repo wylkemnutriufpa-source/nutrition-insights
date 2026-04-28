@@ -245,7 +245,7 @@ export default function FullscreenPresentationViewer({ slides, mode, onFinish, o
   return (
     <div
       ref={containerRef}
-      className="fixed inset-0 z-[9999] flex flex-col overflow-hidden select-none"
+      className="fixed inset-0 z-[115] flex flex-col overflow-hidden select-none"
       style={{ background: "linear-gradient(145deg, hsl(160 35% 3%) 0%, hsl(160 20% 7%) 35%, hsl(200 15% 5%) 100%)" }}
       onTouchStart={handleTouchStart}
       onTouchEnd={handleTouchEnd}

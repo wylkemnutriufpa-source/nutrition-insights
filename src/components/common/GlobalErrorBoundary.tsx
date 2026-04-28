@@ -37,7 +37,7 @@ export const GlobalErrorBoundary = () => {
   const friendlyMessage = friendlySupabaseError(error.message);
 
   return (
-    <div className="fixed bottom-4 right-4 z-[9999] max-w-md animate-in fade-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-4 right-4 z-[200] max-w-md animate-in fade-in slide-in-from-bottom-4 duration-300">
       <Alert variant="destructive" className="shadow-2xl border-2">
         <AlertCircle className="h-4 w-4" />
         <div className="flex justify-between items-start w-full">

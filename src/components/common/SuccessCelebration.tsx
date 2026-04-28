@@ -29,7 +29,7 @@ function CelebrationOverlay({ message, onDone }: { message: string; onDone: () =
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
       onAnimationComplete={onDone}
-      className="fixed inset-0 z-[9998] pointer-events-none flex items-center justify-center"
+      className="fixed inset-0 z-[125] pointer-events-none flex items-center justify-center"
     >
       {/* Particles */}
       {PARTICLES.map((p) => (

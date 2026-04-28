@@ -313,7 +313,7 @@ export default function BuildStatusPanel() {
   return (
     <div
       data-testid="build-status-panel"
-      className="fixed bottom-3 left-3 z-[9999] w-[260px] rounded-lg border border-border bg-background/95 p-3 text-xs shadow-2xl backdrop-blur-sm"
+      className="fixed bottom-3 left-3 z-[170] w-[260px] rounded-lg border border-border bg-background/95 p-3 text-xs shadow-2xl backdrop-blur-sm"
       style={{ pointerEvents: "auto" }}
     >
       <div className="flex items-center justify-between gap-2">

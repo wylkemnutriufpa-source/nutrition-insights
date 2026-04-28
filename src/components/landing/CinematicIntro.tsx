@@ -78,7 +78,7 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[99999] flex items-center justify-center overflow-hidden bg-black"
+      className="fixed inset-0 z-[140] flex items-center justify-center overflow-hidden bg-black"
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8, ease: EASE_PREMIUM }}
     >
