@@ -48,7 +48,6 @@ export function logAudit(
       }
     });
 }
-}
 
 export function getSessionCorrelationId() {
   return SESSION_CORRELATION_ID;
