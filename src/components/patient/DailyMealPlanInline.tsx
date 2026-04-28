@@ -166,7 +166,15 @@ export default function DailyMealPlanInline() {
       if (status === "followed" && !isBasic) {
         toast.success("✅ Refeição seguida! +10 XP");
       } else if (status === "followed") {
-        toast.success("✅ Refeição seguida!");
+        const messages = [
+          "✅ Refeição seguida! Continue assim!",
+          "💪 Excelente escolha! Seu corpo agradece.",
+          "✨ Mais um passo em direção ao seu objetivo!",
+          "🌟 Você está no caminho certo!",
+          "🚀 Foco total! Parabéns pela disciplina."
+        ];
+        const randomMessage = messages[Math.floor(Math.random() * messages.length)];
+        toast.success(randomMessage);
       }
   }, [user, plan, date, completions, fetchData]);
 
