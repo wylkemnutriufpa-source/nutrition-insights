@@ -583,6 +583,10 @@ export default function Anamnesis() {
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const retryCount = useRef(0);
 
+  const addLog = useCallback((msg: string) => {
+    console.log(`[FJ:Anamnesis] ${msg}`);
+  }, []);
+
   // The target user: either the patient themselves or the patient being filled by nutritionist
   const targetUserId = forPatientId || user?.id;
   const isNutritionistMode = isNutritionist && !!forPatientId;
