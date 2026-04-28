@@ -151,7 +151,7 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
       return { type: 'ALLOW', reason: 'Onboarding anamnesis override' };
     }
 
-    if (isOnboarding && !safePathname.startsWith('/onboarding') && !safePathname.startsWith('/consent') && !isInList(safePathname, UNIVERSAL_ROUTES)) {
+    if (isOnboarding && !safePathname.startsWith('/onboarding') && !safePathname.startsWith('/consent') && !safePathname.startsWith('/anamnesis')) {
       const target = ctx.journeyStatus === 'onboarding_active' ? '/onboarding' : '/consent';
       return { type: 'REDIRECT', target, reason: 'Enforcing patient onboarding' };
     }
