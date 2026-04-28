@@ -886,6 +886,10 @@ export default function PatientDetail() {
                             notes: (profile as any)?.notes || "",
                           });
                         }
+                        if (s.key === "meal-plans") {
+                          setMatrixOpen(true);
+                          return;
+                        }
                         setOpenSection(s.key);
                       }}
                       className={`relative flex flex-col items-center gap-2 p-4 rounded-xl border border-border bg-gradient-to-br ${s.color} hover:shadow-md transition-all group cursor-pointer text-center`}
