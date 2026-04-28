@@ -105,7 +105,11 @@ describe('PatientMealPlan - Basic Mode', () => {
     // Initial failure
     (supabase.rpc as any).mockResolvedValueOnce({ data: null, error: { message: 'Error' } });
     
-    render(<PatientMealPlan />);
+    render(
+      <MemoryRouter>
+        <PatientMealPlan />
+      </MemoryRouter>
+    );
     
     const retryButton = await screen.findByText(/Tentar atualizar/i);
     fireEvent.click(retryButton);
