@@ -18,6 +18,8 @@ export const TRACKED_TABLES = [
   "onboarding_pipelines",
   "patient_anamnesis",
   "system_alerts",
+  "audit_events",
+  "patient_settings",
 ];
 
 export function generateSnapshotData() {
@@ -91,7 +93,9 @@ export function generateSnapshotData() {
 
   return {
     "$schema": "./schema-snapshot.schema.json",
-    "generatedAt": new Date().toISOString().split("T")[0],
+    "generatedAt": new Date().toISOString(),
+    "lastMigration": migrations[migrations.length - 1] || null,
+    "migrationsCount": migrations.length,
     "tables": resultTables
   };
 }
