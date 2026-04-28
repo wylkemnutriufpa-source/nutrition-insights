@@ -29,10 +29,13 @@ export type ContractResult = {
 export interface PatientAccessSnapshot {
   /** id do paciente solicitante */
   requestingPatientId: string;
+  /** id do tenant do paciente solicitante */
+  requestingTenantId?: string;
   /** planos retornados para esse paciente */
   returnedPlans: Array<{
     id: string;
     patient_id: string;
+    tenant_id: string;
     plan_status: string;
     is_active?: boolean;
   }>;
