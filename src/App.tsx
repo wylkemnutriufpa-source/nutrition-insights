@@ -362,6 +362,20 @@ function AppContent() {
               <Route path="/admin/professionals" element={<NutritionistRoute><LP section="Profissionais"><AdminProfessionals /></LP></NutritionistRoute>} />
               <Route path="/admin/subscriptions" element={<NutritionistRoute><LP section="Assinaturas"><AdminSubscriptionMonitor /></LP></NutritionistRoute>} />
               <Route path="/admin/site-editor" element={<NutritionistRoute><LP section="Editor do Site"><AdminSiteEditor /></LP></NutritionistRoute>} />
+              <Route path="/admin/qa-checklist" element={<NutritionistRoute><LP section="Checklist QA"><QAChecklist /></LP></NutritionistRoute>} />
+              <Route path="/admin/invitation-audit" element={<NutritionistRoute><LP section="Auditoria de Convites"><InvitationAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/template-nutrition-audit" element={<NutritionistRoute><LP section="Auditoria de Templates"><TemplateNutritionAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/ai-usage" element={<NutritionistRoute><LP section="Uso de IA"><AIUsageDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-audit" element={<NutritionistRoute><LP section="Auditoria de Experiência"><AdminExperienceModeAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-reconcile" element={<NutritionistRoute><LP section="Reconciliação de Experiência"><AdminExperienceModeReconcile /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-diagnostics" element={<NutritionistRoute><LP section="Diagnóstico de Planos"><AdminPlanLoadingDiagnostics /></LP></NutritionistRoute>} />
+              <Route path="/admin/image-fallback" element={<NutritionistRoute><LP section="Fallbacks de Imagem"><ImageFallbackAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/marmita-audit" element={<NutritionistRoute><LP section="Auditoria de Marmitas"><MarmitaAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/meal-coverage" element={<NutritionistRoute><LP section="Cobertura de Refeições"><MealCoverageDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/visual-library" element={<NutritionistRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-batch-audit" element={<NutritionistRoute><LP section="Auditoria em Massa"><PlanBatchAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/template-reformulation" element={<NutritionistRoute><LP section="Reformulação de Templates"><TemplateMassReformulation /></LP></NutritionistRoute>} />
+
               <Route path="/admin/resource-center" element={<NutritionistRoute><LP section="Centro de Recursos"><AdminResourceCenter /></LP></NutritionistRoute>} />
               <Route path="/admin/testimonials" element={<NutritionistRoute><LP section="Depoimentos"><AdminTestimonials /></LP></NutritionistRoute>} />
               <Route path="/patient-intelligence" element={<NutritionistRoute><LP section="Inteligência do Paciente"><PatientIntelligence /></LP></NutritionistRoute>} />
