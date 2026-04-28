@@ -1709,6 +1709,10 @@ export default function Anamnesis() {
             <AlertDialogCancel 
               onClick={() => {
                 setShowConflictModal(false);
+                // Persist decision
+                const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
+                const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
+                localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
                 toast.success("Mantendo versão local! 🏠");
               }}
               className="sm:flex-1"
@@ -1721,6 +1725,10 @@ export default function Anamnesis() {
                   setAnswers(serverVersion.answers);
                   saveLocalBackup(serverVersion.answers);
                   setShowConflictModal(false);
+                  // Persist decision
+                  const localTS = localBackup ? new Date(localBackup.updated_at).getTime() : 0;
+                  const serverTS = serverVersion ? new Date(serverVersion.updated_at).getTime() : 0;
+                  localStorage.setItem(`fj_conflict_resolved_${targetUserId}`, `${serverTS}_${localTS}`);
                   toast.success("Versão do servidor restaurada! ☁️");
                 }
               }}
