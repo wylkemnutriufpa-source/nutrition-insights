@@ -694,8 +694,6 @@ export default function PatientRegister() {
       addLog(`Erro inesperado: ${err.message}`);
       toast.error("Erro ao criar conta. Tente novamente.");
       setSyncStatus("error", "PATIENT_REGISTER", err.message);
-    } finally {
-      setLoading(false);
     }
   };
 
