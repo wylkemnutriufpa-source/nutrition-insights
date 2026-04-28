@@ -81,7 +81,10 @@ export function logDecision(decision: SystemDecision) {
  * The Central Source of Truth for all navigation and state decisions.
  */
 export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
-  const { pathname, user, profile, isReady, isDegraded, versionMismatch } = ctx;
+  if (!ctx) return { type: 'ALLOW', reason: 'Empty context' };
+  
+  const { pathname = '/', user, profile, isReady, isDegraded, versionMismatch } = ctx;
+  const safePathname = typeof pathname === 'string' ? pathname : '/';
 
   // 1. Versioning Rule (Critical)
   if (versionMismatch && isReady) {
@@ -89,24 +92,25 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   }
 
   // 2. Degraded Mode Rule
-  if (isDegraded && !pathname.startsWith('/auth')) {
+  if (isDegraded && !safePathname.startsWith('/auth')) {
     return { type: 'BLOCK', reason: 'System in degraded mode', target: '/diagnostic' };
   }
 
   // 3. Public Path Access
-  if (isInList(pathname, PUBLIC_ROUTES)) {
+  if (isInList(safePathname, PUBLIC_ROUTES)) {
     return { type: 'ALLOW', reason: 'Public path access' };
   }
 
   // 4. Auth Guard
-  if (!user && !isInList(pathname, UNIVERSAL_ROUTES)) {
+  const isUniversal = isInList(safePathname, UNIVERSAL_ROUTES);
+  if (!user && !isUniversal) {
     return { type: 'REDIRECT', target: '/auth', reason: 'Unauthorized access' };
   }
 
   if (!user) return { type: 'ALLOW', reason: 'Public allowed' };
 
   // 5. Profile Readiness
-  if (profile?.is_orphan && !isInList(pathname, ["/settings", "/auth"])) {
+  if (profile?.is_orphan && !isInList(safePathname, ["/settings", "/auth"])) {
     return { type: 'REDIRECT', target: '/settings', reason: 'Orphan user profile incomplete' };
   }
 
@@ -114,28 +118,28 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   const isProRole = ctx.isNutritionist || ctx.isPersonal || ctx.isAdmin;
 
   // Admin access
-  if (isInList(pathname, ADMIN_ROUTES) && !ctx.isAdmin) {
+  if (isInList(safePathname, ADMIN_ROUTES) && !ctx.isAdmin) {
     return { type: 'REDIRECT', target: '/', reason: 'Non-admin accessing admin route' };
   }
 
   // Hybrid Context check
   if (ctx.isHybrid) {
-    if (ctx.isPatientContext && isInList(pathname, PROFESSIONAL_ONLY_ROUTES)) {
+    if (ctx.isPatientContext && isInList(safePathname, PROFESSIONAL_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Patient context accessing pro route' };
     }
-    if (ctx.isProfessionalContext && isInList(pathname, PATIENT_ONLY_ROUTES)) {
+    if (ctx.isProfessionalContext && isInList(safePathname, PATIENT_ONLY_ROUTES)) {
       // Exception for onboarding
       const isOnboarding = ['onboarding_active', 'lead_created', 'awaiting_consent'].includes(ctx.journeyStatus || '');
-      if (isOnboarding && pathname.startsWith('/anamnesis')) return { type: 'ALLOW', reason: 'Onboarding override' };
+      if (isOnboarding && safePathname.startsWith('/anamnesis')) return { type: 'ALLOW', reason: 'Onboarding override' };
       
       return { type: 'REDIRECT', target: '/', reason: 'Pro context accessing patient route' };
     }
   } else {
     // Pure Role Check
-    if (ctx.role === 'patient' && !isProRole && isInList(pathname, PROFESSIONAL_ONLY_ROUTES)) {
+    if (ctx.role === 'patient' && !isProRole && isInList(safePathname, PROFESSIONAL_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Patient role accessing pro route' };
     }
-    if (ctx.role === 'professional' && !ctx.profile?.is_patient && isInList(pathname, PATIENT_ONLY_ROUTES)) {
+    if (ctx.role === 'professional' && !ctx.profile?.is_patient && isInList(safePathname, PATIENT_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Pro role accessing patient route' };
     }
   }
@@ -143,11 +147,11 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   // 7. Patient Journey Specifics
   if (ctx.role === 'patient') {
     const isOnboarding = ['onboarding_active', 'lead_created', 'awaiting_consent'].includes(ctx.journeyStatus || '');
-    if (isOnboarding && pathname.startsWith('/anamnesis')) {
+    if (isOnboarding && safePathname.startsWith('/anamnesis')) {
       return { type: 'ALLOW', reason: 'Onboarding anamnesis override' };
     }
 
-    if (isOnboarding && !pathname.startsWith('/onboarding') && !pathname.startsWith('/consent') && !isInList(pathname, UNIVERSAL_ROUTES)) {
+    if (isOnboarding && !safePathname.startsWith('/onboarding') && !safePathname.startsWith('/consent') && !isInList(safePathname, UNIVERSAL_ROUTES)) {
       const target = ctx.journeyStatus === 'onboarding_active' ? '/onboarding' : '/consent';
       return { type: 'REDIRECT', target, reason: 'Enforcing patient onboarding' };
     }
