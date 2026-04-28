@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDietStore } from '@/stores/diet-builder/useDietStore';
 import { MealCard } from '@/components/diet-builder/MealCard';
+import { PlanGenerationModal } from '@/components/diet-builder/PlanGenerationModal';
 import { 
   Target, 
   Flame, 
@@ -10,7 +11,8 @@ import {
   ChevronLeft,
   Share2,
   MoreVertical,
-  Zap
+  Zap,
+  Sparkles
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -19,6 +21,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const DietBuilder: React.FC = () => {
   const { meals, totals, calorieTarget, patientName, goal } = useDietStore();
+  const [isGenModalOpen, setIsGenModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const calPercentage = Math.min((totals.calories / calorieTarget) * 100, 100);
