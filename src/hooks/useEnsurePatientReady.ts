@@ -87,7 +87,7 @@ async function runEnsureOnce(
   // 2) Validação final via ensure_patient_ready
   try {
     const { data, error } = await supabase.rpc(
-      "ensure_patient_ready" as any,
+      "ensure_patient_ready",
       { _patient_id: patientId }
     );
 
@@ -118,7 +118,9 @@ async function runEnsureOnce(
        return { status: "ok", issues: ["permission_bypass"], actions: [] };
     }
     // Specific error: User has no patient profile or journey status
-    if (err?.message?.includes('No nutritionist_patient link found') || err?.message?.includes('No nutritionist-patient link found')) {
+    if (err?.message?.includes('No nutritionist_patient link found') || 
+        err?.message?.includes('No nutritionist-patient link found') ||
+        err?.message?.includes('vínculo não encontrado')) {
        console.error(`[EnsurePatientReady] CRITICAL: Patient ${patientId} has no link`);
        
        // Log estruturado para rastreabilidade de erro de vínculo
