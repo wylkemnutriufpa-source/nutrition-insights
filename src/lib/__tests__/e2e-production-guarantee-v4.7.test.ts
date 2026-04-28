@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { getBackupValidity, getConflictVersionKey, validateSystemState } from '../dataSafety';
+import { getBackupValidity, getConflictVersionKey, validateSystemState } from '../../utils/dataSafety';
 
 // Mocking console to avoid cluttering test output
 global.console.log = vi.fn();
@@ -42,8 +42,8 @@ describe('E2E Production Guarantee V4.7 - Fail-Safe & Consistency', () => {
 
   describe('Stage 2: E2E CONFLITO REAL (CONCORRÊNCIA)', () => {
     it('should detect conflict when server updated_at changed since last load', () => {
-      const lastKnownServerT = '2026-04-28T10:00:00Z';
-      const actualServerT = '2026-04-28T10:05:00Z'; // Changed by another client
+      let lastKnownServerT: string = '2026-04-28T10:00:00Z';
+      let actualServerT: string = '2026-04-28T10:05:00Z'; // Changed by another client
       
       const isConflict = lastKnownServerT !== actualServerT;
       expect(isConflict).toBe(true);
