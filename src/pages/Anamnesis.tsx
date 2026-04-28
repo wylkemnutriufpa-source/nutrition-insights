@@ -663,29 +663,24 @@ export default function Anamnesis() {
     })();
   }, [targetUserId, isNutritionistMode]);
 
-  // Load existing draft, local backup and last safety action on mount
+  // Load existing draft, local backup and version on mount
   useEffect(() => {
     if (!targetUserId) return;
     (async () => {
-      // 1. Get last safety action
-      try {
-        const actionKey = `fj_anamnesis_action_${targetUserId}`;
-        const storedAction = localStorage.getItem(actionKey);
-        if (storedAction) setLastSafetyAction(JSON.parse(storedAction));
-      } catch (e) { console.warn("[FJ:Anamnesis] failed to read safety action:", e); }
-
-      // 2. Get local backup
+      // 1. Get local backup
       const backupKey = `fj_anamnesis_backup_${targetUserId}`;
       let localData: { answers: Record<string, any>, updated_at: string } | null = null;
       try {
         const stored = localStorage.getItem(backupKey);
         if (stored) {
           localData = JSON.parse(stored);
-          // TTL Check: Mark backups older than 30 days
-          const thirtyDays = 30 * 24 * 60 * 60 * 1000;
-          if (new Date().getTime() - new Date(localData!.updated_at).getTime() > thirtyDays) {
+          // Centralized TTL Check V4.6
+          const validity = getBackupValidity(localData!.updated_at);
+          if (validity === "expired") {
             setBackupExpired(true);
             localData = null; // Don't use expired data for auto-restore
+          } else if (validity === "invalid") {
+            localData = null;
           }
         }
       } catch (e) {
