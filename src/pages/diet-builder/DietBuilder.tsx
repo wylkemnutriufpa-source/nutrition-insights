@@ -12,7 +12,8 @@ import {
   Share2,
   MoreVertical,
   Zap,
-  Sparkles
+  Sparkles,
+  AlertCircle
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
 import { Button } from '@/components/ui/button';
@@ -20,7 +21,7 @@ import { useNavigate } from 'react-router-dom';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 
 const DietBuilder: React.FC = () => {
-  const { meals, totals, calorieTarget, patientName, goal } = useDietStore();
+  const { meals, totals, calorieTarget, patientName, goal, isFallback } = useDietStore();
   const [isGenModalOpen, setIsGenModalOpen] = useState(false);
   const navigate = useNavigate();
 
