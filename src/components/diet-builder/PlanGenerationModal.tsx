@@ -44,14 +44,14 @@ const PLAN_OPTIONS = [
 export const PlanGenerationModal: React.FC<PlanGenerationModalProps> = ({ isOpen, onClose }) => {
   const [loading, setLoading] = useState(false);
   const [selectedType, setSelectedType] = useState<PlanType | null>(null);
-  const { setMeals, setGoal, setCalorieTarget, setIsFallback } = useDietStore();
+  const { setMeals, setGoal, setCalorieTarget, setIsFallback, patientId } = useDietStore();
 
   const handleGenerate = async () => {
     if (!selectedType) return;
     
     setLoading(true);
     try {
-      const patientData = await fetchPatientAnamnesis();
+      const patientData = await fetchPatientAnamnesis(patientId || undefined);
       
       if (!patientData) {
         toast.error("Erro ao carregar dados do paciente.");
