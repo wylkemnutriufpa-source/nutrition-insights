@@ -532,6 +532,8 @@ function SliderInput({
 export default function Anamnesis() {
   const { user, isNutritionist, isPatient } = useAuth();
   const { tenantId } = useTenant();
+  const { isReady, isDegraded } = useAppState();
+
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
