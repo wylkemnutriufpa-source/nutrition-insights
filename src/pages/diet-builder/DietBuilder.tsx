@@ -68,6 +68,26 @@ const DietBuilder: React.FC = () => {
         </header>
 
         <main className="max-w-4xl mx-auto px-6 pt-8 space-y-8">
+          {/* Banner de Fallback */}
+          {isFallback && (
+            <div className="bg-amber-50 border border-amber-200 rounded-3xl p-4 flex items-center gap-4 text-amber-800 animate-in fade-in slide-in-from-top-4">
+              <div className="w-10 h-10 bg-amber-100 rounded-2xl flex items-center justify-center flex-shrink-0">
+                <AlertCircle className="w-5 h-5 text-amber-600" />
+              </div>
+              <div className="flex-1">
+                <p className="text-sm font-bold leading-tight">Plano gerado com dados básicos</p>
+                <p className="text-xs font-medium opacity-80">Complete a anamnese para maior precisão clínica.</p>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="rounded-xl border-amber-200 bg-white hover:bg-amber-100 text-amber-700 h-9 font-bold"
+                onClick={() => setIsGenModalOpen(true)}
+              >
+                Regerar
+              </Button>
+            </div>
+          )}
           {/* Dashboard de Macros */}
           <section className="bg-slate-900 rounded-[2.5rem] p-8 text-white shadow-2xl shadow-slate-200">
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-8">
