@@ -15,6 +15,7 @@ import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from
 import { lazy, Suspense, useEffect, useState } from "react";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
+import { OrphanUserBlock } from "@/components/common/OrphanUserBlock";
 
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
@@ -365,7 +366,7 @@ function PublicOnlyRoute({ children }: { children: React.ReactNode }) {
 }
 
 function RootRoute() {
-  const { user, loading: authLoading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
+  const { user, profile, loading: authLoading, isPersonal, isPatient, isNutritionist, isAdmin, isLojista } = useAuth();
   const { tenantId, isLoading: tenantLoading, memberships } = useTenant();
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const location = useLocation();
@@ -402,11 +403,12 @@ function RootRoute() {
   }, [isCriticalLoading, bootDone]);
 
   // 3. Cálculo de estados globais reativos
+  const isOrphan = Boolean(user && isPatient && profile?.is_orphan);
   const isConsistent = user ? (
-    (isPatient ? (tenantId !== null && memberships.length > 0) : true)
+    (isPatient ? (tenantId !== null && memberships.length > 0 && !isOrphan) : true)
   ) : true;
   const isReady = bootDone && isConsistent && !timedOut && !isCriticalLoading;
-  const isDegraded = bootDone && (timedOut || (!isConsistent && !isCriticalLoading));
+  const isDegraded = bootDone && (timedOut || (!isConsistent && !isCriticalLoading && !isOrphan));
   const isLoading = !bootDone || (isCriticalLoading && !timedOut);
 
   useEffect(() => {
@@ -418,7 +420,8 @@ function RootRoute() {
         journey_status: journeyStatus || "n/a",
         isReady,
         isDegraded,
-        isLoading
+        isLoading,
+        isOrphan
       });
       
       if (user && !tenantId && !tenantLoading && isPatient) {
@@ -439,8 +442,9 @@ function RootRoute() {
   if (!user) return <GatewayPage />;
 
   return (
-    <AppStateProvider value={{ isReady, isDegraded, isLoading }}>
-      {isDegraded && <DegradedModeBanner />}
+    <AppStateProvider value={{ isReady, isDegraded, isLoading, isOrphan }}>
+      {isOrphan && bootDone && <OrphanUserBlock />}
+      {isDegraded && !isOrphan && <DegradedModeBanner />}
       <Suspense fallback={<PageLoader />}>
         {(() => {
           // 1. Centralized Patient Decision

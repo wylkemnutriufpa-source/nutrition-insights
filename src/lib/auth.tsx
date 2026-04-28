@@ -18,6 +18,7 @@ interface Profile {
   experience_mode?: string;
   experience_mode_locked?: boolean;
   unlock_date?: string | null;
+  is_orphan?: boolean;
 }
 
 interface SubscriptionState {

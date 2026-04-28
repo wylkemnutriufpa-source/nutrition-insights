@@ -18346,6 +18346,7 @@ export type Database = {
           status: string
           tenant_id_resolved: string | null
           user_id: string
+          user_role: string | null
         }
         Insert: {
           created_at?: string | null
@@ -18358,6 +18359,7 @@ export type Database = {
           status: string
           tenant_id_resolved?: string | null
           user_id: string
+          user_role?: string | null
         }
         Update: {
           created_at?: string | null
@@ -18370,6 +18372,7 @@ export type Database = {
           status?: string
           tenant_id_resolved?: string | null
           user_id?: string
+          user_role?: string | null
         }
         Relationships: []
       }
