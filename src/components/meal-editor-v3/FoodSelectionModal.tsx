@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle } from 'lucide-react';
+import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle, X } from 'lucide-react';
 import { QUICK_FOODS, MARMITAS } from '@/hooks/meal-editor-v3/constants';
 import { useMealEditorV3Store, Food } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { Card } from '@/components/ui/card';
@@ -27,6 +27,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   const [history, setHistory] = useState<Food[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
+  const [selectedForBatch, setSelectedForBatch] = useState<Food[]>([]);
 
   useEffect(() => {
     const timer = setTimeout(() => setDebouncedSearch(searchQuery), 150);
@@ -36,21 +37,35 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   useEffect(() => {
     if (isOpen) {
       setTimeout(() => inputRef.current?.focus(), 100);
+      setSelectedForBatch([]);
     }
   }, [isOpen]);
 
   const handleAdd = (food: Food) => {
     if (onSelect) {
-      onSelect(food);
+      // If onSelect is provided, we might want to batch select for substitutions
+      if (selectedForBatch.find(f => f.id === food.id)) {
+        setSelectedForBatch(prev => prev.filter(f => f.id !== food.id));
+      } else {
+        setSelectedForBatch(prev => [...prev, food]);
+      }
     } else {
       addFoodToMeal(mealId, food);
       toast.success(`${food.name} adicionado`);
+      
+      setHistory(prev => {
+        const filtered = prev.filter(f => f.id !== food.id);
+        return [food, ...filtered].slice(0, 5);
+      });
     }
-    
-    setHistory(prev => {
-      const filtered = prev.filter(f => f.id !== food.id);
-      return [food, ...filtered].slice(0, 5);
-    });
+  };
+
+  const confirmBatch = () => {
+    if (onSelect && selectedForBatch.length > 0) {
+      selectedForBatch.forEach(food => onSelect(food));
+      toast.success(`${selectedForBatch.length} substituições adicionadas`);
+      onClose();
+    }
   };
 
   const filteredQuickFoods = QUICK_FOODS.filter(f => 
@@ -85,9 +100,16 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl h-[80vh] flex flex-col p-0 overflow-hidden sm:rounded-2xl border-none shadow-2xl">
         <DialogHeader className="px-6 py-4 border-b bg-background/80 backdrop-blur-md sticky top-0 z-10">
-          <DialogTitle className="text-xl font-bold flex items-center gap-2">
-            {onSelect ? <Star className="w-5 h-5 text-yellow-500" /> : <PlusCircle className="w-5 h-5 text-primary" />}
-            {onSelect ? 'Selecionar Substituição' : 'Adicionar Alimento'}
+          <DialogTitle className="text-xl font-bold flex items-center justify-between w-full pr-8">
+            <div className="flex items-center gap-2">
+              {onSelect ? <Star className="w-5 h-5 text-yellow-500" /> : <PlusCircle className="w-5 h-5 text-primary" />}
+              {onSelect ? 'Selecionar Substituições' : 'Adicionar Alimento'}
+            </div>
+            {onSelect && selectedForBatch.length > 0 && (
+              <Button onClick={confirmBatch} size="sm" className="h-8 font-bold px-4">
+                CONFIRMAR ({selectedForBatch.length})
+              </Button>
+            )}
           </DialogTitle>
         </DialogHeader>
 
@@ -161,6 +183,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                               food={food} 
                               onAdd={() => handleAdd(food)} 
                               isActive={idx === activeIndex}
+                              isSelected={selectedForBatch.some(f => f.id === food.id)}
                             />
                           </motion.div>
                         ))}
@@ -242,20 +265,21 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   );
 };
 
-const FoodRow = ({ food, onAdd, isRecent, isActive }: { food: Food, onAdd: () => void, isRecent?: boolean, isActive?: boolean }) => (
+const FoodRow = ({ food, onAdd, isRecent, isActive, isSelected }: { food: Food, onAdd: () => void, isRecent?: boolean, isActive?: boolean, isSelected?: boolean }) => (
   <button 
     className={cn(
       "w-full flex items-center justify-between p-3.5 rounded-xl border bg-card hover:bg-accent transition-all text-left group hover:border-primary/20 hover:shadow-sm",
-      isActive && "border-primary bg-primary/5 shadow-md ring-2 ring-primary/10"
+      isActive && "border-primary bg-primary/5 shadow-md ring-2 ring-primary/10",
+      isSelected && "border-primary bg-primary/10 shadow-inner"
     )}
     onClick={onAdd}
   >
     <div className="flex items-center gap-3">
       <div className={cn(
         "w-8 h-8 rounded-lg flex items-center justify-center transition-colors",
-        isRecent ? "bg-amber-100 text-amber-600" : "bg-muted group-hover:bg-primary/10 group-hover:text-primary"
+        isRecent ? "bg-amber-100 text-amber-600" : (isSelected ? "bg-primary text-white" : "bg-muted group-hover:bg-primary/10 group-hover:text-primary")
       )}>
-        {isRecent ? <History className="w-4 h-4" /> : <Package className="w-4 h-4" />}
+        {isSelected ? <PlusCircle className="w-4 h-4" /> : (isRecent ? <History className="w-4 h-4" /> : <Package className="w-4 h-4" />)}
       </div>
       <div>
         <h4 className="font-bold text-sm leading-none mb-1">{food.name}</h4>
@@ -268,8 +292,11 @@ const FoodRow = ({ food, onAdd, isRecent, isActive }: { food: Food, onAdd: () =>
         </div>
       </div>
     </div>
-    <div className="h-7 w-7 rounded-full bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-      <Plus className="w-4 h-4" />
+    <div className={cn(
+      "h-7 w-7 rounded-full flex items-center justify-center transition-all",
+      isSelected ? "bg-primary text-white" : "bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground"
+    )}>
+      {isSelected ? <X className="w-4 h-4" /> : <Plus className="w-4 h-4" />}
     </div>
   </button>
 );

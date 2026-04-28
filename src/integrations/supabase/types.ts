@@ -7038,30 +7038,36 @@ export type Database = {
       meal_plan_templates: {
         Row: {
           category: string
+          clinical_condition: string | null
           created_at: string
           description: string | null
           id: string
           is_premium: boolean | null
           meals: Json
           name: string
+          template_marmita: boolean | null
         }
         Insert: {
           category: string
+          clinical_condition?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_premium?: boolean | null
           meals?: Json
           name: string
+          template_marmita?: boolean | null
         }
         Update: {
           category?: string
+          clinical_condition?: string | null
           created_at?: string
           description?: string | null
           id?: string
           is_premium?: boolean | null
           meals?: Json
           name?: string
+          template_marmita?: boolean | null
         }
         Relationships: []
       }

@@ -43,6 +43,8 @@ interface MealPlanState {
     protein: number;
     carbs: number;
     fat: number;
+    isIntolerant?: boolean;
+    drinksCoffee?: boolean;
   } | null;
   meals: Meal[];
   activeMealId: string | null;
@@ -122,7 +124,14 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         set({ 
           patientId: id, 
           fastMode: storedFastMode === 'true',
-          patientTargets: { calories: 2000, protein: 150, carbs: 200, fat: 60 } 
+          patientTargets: { 
+            calories: 2000, 
+            protein: 150, 
+            carbs: 200, 
+            fat: 60,
+            isIntolerant: false,
+            drinksCoffee: true
+          } 
         });
       },
       setActiveMeal: (id) => set({ activeMealId: id }),
@@ -150,10 +159,90 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       applyTemplate: (template) => {
+        const { patientTargets, availableClinicalRules } = get();
+        let adaptedMeals = JSON.parse(JSON.stringify(template.meals)) as Meal[];
+
+        // Clinical Adaptation from Template
+        if (template.clinical_condition) {
+          const condition = availableClinicalRules.find(r => r.condition_name === template.clinical_condition);
+          if (condition) {
+            const result = applyClinicalRules(adaptedMeals, condition.id);
+            adaptedMeals = result.meals;
+            set({ clinicalLog: result.log });
+          }
+        }
+
+        const isHypertrophy = patientTargets?.calories && patientTargets.calories > 2500;
+        const isWeightLoss = patientTargets?.calories && patientTargets.calories < 1800;
+
+        adaptedMeals = adaptedMeals.map(meal => ({
+          ...meal,
+          items: meal.items.filter(item => {
+            // Rule: intolerância -> remover leite
+            if (patientTargets?.isIntolerant && item.name.toLowerCase().includes('leite')) return false;
+            // Rule: paciente não toma café -> substituir automaticamente (por chá)
+            if (patientTargets?.drinksCoffee === false && item.name.toLowerCase().includes('café')) {
+              // We'll handle replacement in the next map step or here
+              return true;
+            }
+            return true;
+          }).map(item => {
+            if (item.isMarmita) return item;
+            
+            let quantity = item.quantity;
+            let name = item.name;
+            let calories = item.calories;
+            let fat = item.fat;
+
+            // Rule: paciente não toma café -> trocar por Chá
+            if (patientTargets?.drinksCoffee === false && name.toLowerCase().includes('café')) {
+              name = 'Chá de Ervas';
+              calories = 0;
+              fat = 0;
+            }
+
+            // Rule: emagrecimento -> leite desnatado
+            if (isWeightLoss && name.toLowerCase().includes('leite') && !name.toLowerCase().includes('desnatado')) {
+              name = 'Leite Desnatado';
+              calories = 35;
+              fat = 0.1;
+            }
+
+            // Hypertrophy Rules
+            if (isHypertrophy) {
+              if (name.toLowerCase().includes('ovo')) quantity += 1;
+              if (item.protein > 15) quantity *= 1.2;
+            }
+
+            // Weight Loss Rules
+            if (isWeightLoss) {
+              if (item.carbs > 20) quantity *= 0.8;
+            }
+
+            return { ...item, name, calories, fat, quantity };
+          })
+        }));
+
+        // Rule: Hipertrofia -> Adicionar fruta no almoço/jantar se não existir
+        if (isHypertrophy) {
+          adaptedMeals = adaptedMeals.map(meal => {
+            if ((meal.name === 'Almoço' || meal.name === 'Jantar') && !meal.items.some(i => i.name.toLowerCase().includes('fruta'))) {
+              return {
+                ...meal,
+                items: [...meal.items, {
+                  id: 'q15', name: 'Fruta da Estação', calories: 60, protein: 0.5, carbs: 15, fat: 0.1,
+                  portionValue: 100, portionUnit: 'g', quantity: 1, instanceId: Math.random().toString(36).substring(7)
+                }]
+              };
+            }
+            return meal;
+          });
+        }
+
         set({ 
-          meals: template.meals as Meal[], 
+          meals: adaptedMeals, 
           planStatus: 'draft',
-          lastActionInsight: `Template "${template.name}" aplicado com sucesso.`
+          lastActionInsight: `Template "${template.name}" adaptado dinamicamente para o perfil do paciente.`
         });
       },
 
