@@ -81,7 +81,10 @@ export function logDecision(decision: SystemDecision) {
  * The Central Source of Truth for all navigation and state decisions.
  */
 export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
-  const { pathname, user, profile, isReady, isDegraded, versionMismatch } = ctx;
+  if (!ctx) return { type: 'ALLOW', reason: 'Empty context' };
+  
+  const { pathname = '/', user, profile, isReady, isDegraded, versionMismatch } = ctx;
+  const safePathname = typeof pathname === 'string' ? pathname : '/';
 
   // 1. Versioning Rule (Critical)
   if (versionMismatch && isReady) {
@@ -89,24 +92,24 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   }
 
   // 2. Degraded Mode Rule
-  if (isDegraded && !pathname.startsWith('/auth')) {
+  if (isDegraded && !safePathname.startsWith('/auth')) {
     return { type: 'BLOCK', reason: 'System in degraded mode', target: '/diagnostic' };
   }
 
   // 3. Public Path Access
-  if (isInList(pathname, PUBLIC_ROUTES)) {
+  if (isInList(safePathname, PUBLIC_ROUTES)) {
     return { type: 'ALLOW', reason: 'Public path access' };
   }
 
   // 4. Auth Guard
-  if (!user && !isInList(pathname, UNIVERSAL_ROUTES)) {
+  if (!user && !isInList(safePathname, UNIVERSAL_ROUTES)) {
     return { type: 'REDIRECT', target: '/auth', reason: 'Unauthorized access' };
   }
 
   if (!user) return { type: 'ALLOW', reason: 'Public allowed' };
 
   // 5. Profile Readiness
-  if (profile?.is_orphan && !isInList(pathname, ["/settings", "/auth"])) {
+  if (profile?.is_orphan && !isInList(safePathname, ["/settings", "/auth"])) {
     return { type: 'REDIRECT', target: '/settings', reason: 'Orphan user profile incomplete' };
   }
 
