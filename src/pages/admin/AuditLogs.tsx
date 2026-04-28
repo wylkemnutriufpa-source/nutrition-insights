@@ -208,6 +208,7 @@ export default function AuditLogs() {
                       placeholder="Buscar por Correlation ID..." 
                       className="pl-9 h-11 border-primary/20 focus-visible:ring-primary"
                       value={cidFilter}
+                      autoFocus
                       onChange={(e) => updateParam("cid", e.target.value)}
                       onKeyDown={(e) => e.key === 'Enter' && refetch()}
                     />
