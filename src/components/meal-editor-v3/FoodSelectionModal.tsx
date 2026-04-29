@@ -96,13 +96,14 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   };
 
   const filteredQuickFoods = QUICK_FOODS.filter(f => 
-    f.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const list = searchQuery.length >= 2 ? dbResults : filteredQuickFoods;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex(prev => Math.min(prev + 1, filteredQuickFoods.length - 1));
+      setActiveIndex(prev => Math.min(prev + 1, list.length - 1));
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -110,8 +111,8 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
     }
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredQuickFoods.length > 0) {
-        handleAdd(filteredQuickFoods[activeIndex]);
+      if (list.length > 0) {
+        handleAdd(list[activeIndex]);
       }
     }
     if (e.key === 'Escape') {
@@ -121,7 +122,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [debouncedSearch]);
+  }, [searchQuery]);
 
   const activeMeal = meals.find(m => m.id === mealId);
   const mealName = activeMeal?.name.toLowerCase() || "";
