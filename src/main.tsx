@@ -6,12 +6,13 @@ import { stampBuildIdentity } from "./lib/buildInfo";
 import { startVersionSync } from "./lib/versionCheck";
 
 // Diagnóstico de inicialização para depuração de ambiente (Preview vs Prod)
-console.log("[FitJourney:Boot] Iniciando sistema...", {
+console.log("%c[FitJourney:Boot] Iniciando sistema...", "color: #10b981; font-weight: bold; font-size: 12px;", {
   hostname: window.location.hostname,
   origin: window.location.origin,
   timestamp: new Date().toISOString(),
   env: import.meta.env.MODE,
-  isDev: import.meta.env.DEV
+  isDev: import.meta.env.DEV,
+  version: "2.4.0-hotfix-deploy-check"
 });
 
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
