@@ -198,59 +198,63 @@ export const ActiveMealContent: React.FC = () => {
               </Card>
             </motion.div>
           ) : (
-            activeMeal.items.map((item) => (
-              <motion.div 
-                key={item.instanceId} 
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, x: -50 }}
-                className="space-y-2"
-              >
-                <Card 
-                  onClick={() => setEditTarget({ mealId: activeMeal.id, item })}
-                  className={cn(
-                    "p-3 flex items-center gap-4 group transition-all shadow-none relative overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-[#0d0d0d] cursor-pointer hover:ring-2 hover:ring-primary/20",
-                    (item.isMarmita || item.locked) ? "border-orange-200/50 bg-orange-50/20" : "hover:border-primary/40 hover:shadow-md hover:shadow-primary/5"
-                  )}>
-                  {item.imageUrl && !fastMode && (
-                    <div className="w-16 h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0 border">
-                      <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
-                    </div>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-bold truncate text-sm">{item.name}</h3>
-                      {(item.isMarmita || item.locked) && (
-                        <div className="flex items-center gap-1.5">
-                          <Badge variant="secondary" className="bg-orange-500 text-white border-none text-[10px] h-4 uppercase font-black px-2 shadow-sm shadow-orange-500/20">
-                            COMPOSIÇÃO FIXA
-                          </Badge>
-                          <Lock className="w-3 h-3 text-orange-500" />
-                        </div>
-                      )}
-                    </div>
+            activeMeal.items.map((item) => {
+              const currentMeasure = item.householdMeasures?.find(m => m.unit === item.selectedUnit) || { unit: item.portionUnit, factor: 1 };
+              const itemFactor = item.quantity * currentMeasure.factor;
+              
+              return (
+                <motion.div 
+                  key={item.instanceId} 
+                  layout
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, x: -50 }}
+                  className="space-y-2"
+                >
+                  <Card 
+                    onClick={() => setEditTarget({ mealId: activeMeal.id, item })}
+                    className={cn(
+                      "p-3 flex items-center gap-4 group transition-all shadow-none relative overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-[#0d0d0d] cursor-pointer hover:ring-2 hover:ring-primary/20",
+                      (item.isMarmita || item.locked) ? "border-orange-200/50 bg-orange-50/20" : "hover:border-primary/40 hover:shadow-md hover:shadow-primary/5"
+                    )}>
+                    {item.imageUrl && !fastMode && (
+                      <div className="w-16 h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0 border">
+                        <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
+                      </div>
+                    )}
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1">
+                        <h3 className="font-bold truncate text-sm">{item.name}</h3>
+                        {(item.isMarmita || item.locked) && (
+                          <div className="flex items-center gap-1.5">
+                            <Badge variant="secondary" className="bg-orange-500 text-white border-none text-[10px] h-4 uppercase font-black px-2 shadow-sm shadow-orange-500/20">
+                              COMPOSIÇÃO FIXA
+                            </Badge>
+                            <Lock className="w-3 h-3 text-orange-500" />
+                          </div>
+                        )}
+                      </div>
                     
                     {!fastMode && (
                       <div className="flex gap-3 text-[10px] text-muted-foreground uppercase font-bold tracking-tight">
                         <span className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                          {Math.round(item.protein * item.quantity)}g P
+                          {Math.round(item.protein * itemFactor)}g P
                         </span>
                         <span className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-                          {Math.round(item.carbs * item.quantity)}g C
+                          {Math.round(item.carbs * itemFactor)}g C
                         </span>
                         <span className="flex items-center gap-1">
                           <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
-                          {Math.round(item.fat * item.quantity)}g G
+                          {Math.round(item.fat * itemFactor)}g G
                         </span>
                       </div>
                     )}
                     
                     <div className="mt-1 flex items-center gap-2">
                        <span className="text-primary font-black text-xs">
-                        {Math.round(item.calories * item.quantity)} kcal
+                        {Math.round(item.calories * itemFactor)} kcal
                       </span>
                     </div>
                   </div>
@@ -274,7 +278,7 @@ export const ActiveMealContent: React.FC = () => {
                         min="0"
                         step="0.1"
                       />
-                      <span className="text-[10px] text-muted-foreground w-8 truncate font-bold uppercase">{item.portionUnit}</span>
+                      <span className="text-[10px] text-muted-foreground w-12 truncate font-bold uppercase">{item.selectedUnit || item.portionUnit}</span>
                     </div>
 
                     <div className="flex items-center gap-1">
@@ -328,8 +332,9 @@ export const ActiveMealContent: React.FC = () => {
                     ))}
                   </div>
                 )}
-              </motion.div>
-            ))
+                  </motion.div>
+                );
+              })
           )}
         </AnimatePresence>
       </div>

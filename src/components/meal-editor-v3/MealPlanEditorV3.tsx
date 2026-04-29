@@ -10,6 +10,8 @@ import { MobileMealEditorV3 } from './MobileMealEditorV3';
 import { NewMealModal } from './NewMealModal';
 import { GenerateAIModal } from './GenerateAIModal';
 import { FocusModeView } from './FocusModeView';
+import { PatientViewModal } from './PatientViewModal';
+import { WeeklyGridView } from './WeeklyGridView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -20,7 +22,7 @@ import {
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
   Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search,
-  PlusCircle, Bot
+  PlusCircle, Bot, Calendar, Eye, Star
 } from 'lucide-react';
 import {
   Dialog,
@@ -51,7 +53,7 @@ export const MealPlanEditorV3: React.FC = () => {
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
     fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView,
-    viewMode, setViewMode, setPatientId, activeDay
+    viewMode, setViewMode, setPatientId, patientId, activeDay, saveAsFavorite
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
@@ -111,11 +113,19 @@ export const MealPlanEditorV3: React.FC = () => {
     toast.success('Plano otimizado clinicamente!');
   };
 
-  const handleSaveClick = () => {
+  const handleSaveClick = async () => {
+    if (!patientId) {
+      toast.error('Selecione um paciente antes de salvar o plano');
+      setIsPatientSearchOpen(true);
+      return;
+    }
+
     const totals = meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        acc.calories += item.calories * item.quantity;
-        acc.protein += item.protein * item.quantity;
+        const currentMeasure = item.householdMeasures?.find(m => m.unit === item.selectedUnit) || { unit: item.portionUnit, factor: 1 };
+        const factor = item.quantity * currentMeasure.factor;
+        acc.calories += item.calories * factor;
+        acc.protein += item.protein * factor;
       });
       return acc;
     }, { calories: 0, protein: 0 });
@@ -191,18 +201,21 @@ export const MealPlanEditorV3: React.FC = () => {
           
           <div className="h-8 w-px bg-border hidden sm:block" />
 
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2 relative">
             <Button
               variant="outline"
               size="sm"
-              className="h-9 px-3 rounded-xl border-dashed border-primary/30 hover:border-primary/50 text-primary font-bold text-xs gap-2"
-              onClick={() => setIsPatientSearchOpen(true)}
+              className={cn(
+                "h-9 px-3 rounded-xl border-dashed font-bold text-xs gap-2 transition-all",
+                patientId ? "border-emerald-500/50 text-emerald-600 bg-emerald-50" : "border-primary/30 text-primary hover:border-primary/50"
+              )}
+              onClick={() => setIsPatientSearchOpen(!isPatientSearchOpen)}
             >
               <UserPlus className="w-3.5 h-3.5" />
-              ATRIBUIR PACIENTE
+              {patientId ? patients.find(p => p.id === patientId)?.name || 'PACIENTE SELECIONADO' : 'ATRIBUIR PACIENTE'}
             </Button>
             {isPatientSearchOpen && (
-              <div className="w-64">
+              <div className="absolute top-full left-0 mt-2 w-64 z-50 shadow-2xl">
                 <PatientPickerDropdown 
                   patients={patients} 
                   onSelect={(id) => {
@@ -282,7 +295,14 @@ export const MealPlanEditorV3: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleOptimize}
+            onClick={() => {
+              if (!patientId) {
+                toast.error('Selecione um paciente antes de otimizar o plano');
+                setIsPatientSearchOpen(true);
+                return;
+              }
+              handleOptimize();
+            }}
             className="bg-purple-500/5 border-purple-500/20 text-purple-600 hover:bg-purple-500/10 font-bold"
           >
             <Sparkles className="w-3.5 h-3.5 mr-2" />
@@ -292,11 +312,18 @@ export const MealPlanEditorV3: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setIsGenerateAIModalOpen(true)} 
+            onClick={() => {
+              if (!patientId) {
+                toast.error('Selecione um paciente antes de gerar o plano');
+                setIsPatientSearchOpen(true);
+                return;
+              }
+              setIsGenerateAIModalOpen(true);
+            }} 
             className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 font-bold px-4"
           >
             <Bot className="w-3.5 h-3.5 mr-2" />
-            GERAR COM IA
+            GERAR PLANO
           </Button>
           
           <Button 
@@ -308,7 +335,17 @@ export const MealPlanEditorV3: React.FC = () => {
             )}
           >
             <Save className="w-3.5 h-3.5 mr-2" />
-            SALVAR
+            SALVAR NO PRONTUÁRIO
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => saveAsFavorite('Meu Novo Modelo', 'full_plan')}
+            className="text-muted-foreground hover:text-amber-500 font-bold"
+          >
+            <Star className="w-3.5 h-3.5 mr-2" />
+            Salvar na Biblioteca
           </Button>
         </div>
       </div>
@@ -337,7 +374,7 @@ export const MealPlanEditorV3: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-            <ActiveMealContent />
+            {viewMode === 'day' ? <ActiveMealContent /> : <WeeklyGridView />}
           </motion.div>
         </main>
 
@@ -418,6 +455,11 @@ export const MealPlanEditorV3: React.FC = () => {
         isOpen={isFocusModeOpen} 
         onClose={() => setIsFocusModeOpen(false)} 
         dayLabel={activeDay}
+      />
+
+      <PatientViewModal 
+        isOpen={isPatientView} 
+        onClose={() => setPatientView(false)} 
       />
     </div>
     </>

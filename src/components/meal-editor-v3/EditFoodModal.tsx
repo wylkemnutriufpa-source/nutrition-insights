@@ -3,9 +3,15 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
-import { Trash2, Utensils, ArrowLeft, SwitchCamera, Save } from 'lucide-react';
+import { Trash2, Utensils, ArrowLeft, SwitchCamera, Save, ChevronDown } from 'lucide-react';
 import { useMealEditorV3Store, MealItem } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { toast } from 'sonner';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 interface Props {
   isOpen: boolean;
@@ -16,20 +22,26 @@ interface Props {
 }
 
 export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, onSubstitute }) => {
-  const { updateFoodQuantity, removeFoodFromMeal } = useMealEditorV3Store();
+  const { updateFoodQuantity, removeFoodFromMeal, updateFoodUnit } = useMealEditorV3Store();
   const [quantity, setQuantity] = useState<number>(item?.quantity || 1);
+  const [selectedUnit, setSelectedUnit] = useState<string>(item?.selectedUnit || item?.portionUnit || 'g');
 
   useEffect(() => {
-    if (item) setQuantity(item.quantity);
+    if (item) {
+      setQuantity(item.quantity);
+      setSelectedUnit(item.selectedUnit || item.portionUnit);
+    }
   }, [item]);
 
   if (!item || !mealId) return null;
 
-  const totalGrams = Math.round(quantity * item.portionValue);
-  const factor = quantity;
+  const currentMeasure = item.householdMeasures?.find(m => m.unit === selectedUnit) || { unit: item.portionUnit, factor: 1 };
+  const factor = quantity * currentMeasure.factor;
+  const totalGrams = Math.round(factor * item.portionValue);
 
   const handleSave = () => {
     updateFoodQuantity(mealId, item.instanceId, quantity);
+    updateFoodUnit(mealId, item.instanceId, selectedUnit);
     toast.success('Alterações salvas');
     onClose();
   };
@@ -63,7 +75,6 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
         </DialogHeader>
 
         <div className="p-4 space-y-4">
-          {/* Imagem */}
           <div className="aspect-[16/10] rounded-2xl overflow-hidden bg-muted">
             {item.imageUrl ? (
               <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
@@ -76,12 +87,11 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
 
           <h2 className="text-xl font-black tracking-tight">{item.name}</h2>
 
-          {/* Quantidade */}
-          <div>
-            <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
-              Quantidade
-            </Label>
-            <div className="mt-1.5 flex items-center gap-2">
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                Quantidade
+              </Label>
               <Input
                 type="number"
                 min="0"
@@ -89,22 +99,45 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
                 value={quantity}
                 onChange={(e) => setQuantity(parseFloat(e.target.value) || 0)}
                 disabled={item.isMarmita || item.locked}
-                className="h-12 rounded-xl bg-muted/40 border-border/50 font-black text-base text-center"
+                className="mt-1.5 h-12 rounded-xl bg-muted/40 border-border/50 font-black text-base text-center"
               />
-              <span className="px-4 h-12 rounded-xl bg-muted/30 border border-border/50 flex items-center font-bold text-xs text-muted-foreground uppercase">
-                {item.portionUnit}
-              </span>
+            </div>
+            <div>
+              <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
+                Medida
+              </Label>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    className="mt-1.5 w-full h-12 rounded-xl bg-muted/30 border-border/50 font-bold text-xs uppercase"
+                    disabled={item.isMarmita || item.locked || !item.householdMeasures}
+                  >
+                    {selectedUnit}
+                    <ChevronDown className="w-3 h-3 ml-auto opacity-50" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-[140px] rounded-xl">
+                  <DropdownMenuItem onClick={() => setSelectedUnit(item.portionUnit)} className="text-xs font-bold uppercase">
+                    {item.portionUnit}
+                  </DropdownMenuItem>
+                  {item.householdMeasures?.map(m => (
+                    <DropdownMenuItem key={m.unit} onClick={() => setSelectedUnit(m.unit)} className="text-xs font-bold uppercase">
+                      {m.unit}
+                    </DropdownMenuItem>
+                  ))}
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
 
-          {/* Macros */}
           <div className="rounded-2xl border border-border/50 bg-muted/20 p-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Informações nutricionais
               </p>
               <p className="text-[10px] font-bold text-muted-foreground">
-                Por {totalGrams}{item.portionUnit}
+                Por {totalGrams}g
               </p>
             </div>
             <div className="space-y-1.5">
@@ -115,7 +148,6 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
             </div>
           </div>
 
-          {/* Ações */}
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"

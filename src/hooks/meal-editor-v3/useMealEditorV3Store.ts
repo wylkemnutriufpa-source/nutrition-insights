@@ -5,6 +5,11 @@ import { getEquivalentFoods, applyClinicalRules, ClinicalLog } from './clinicalR
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
+export interface HouseholdMeasure {
+  unit: string;
+  factor: number; // multiplier for the base quantity (usually grams)
+}
+
 export interface Food {
   id: string;
   name: string;
@@ -18,11 +23,13 @@ export interface Food {
   locked?: boolean;
   imageUrl?: string;
   usageCount?: number;
+  householdMeasures?: HouseholdMeasure[];
 }
 
 export interface MealItem extends Food {
   instanceId: string;
   quantity: number; 
+  selectedUnit?: string;
   substitutions?: Food[];
 }
 
@@ -102,6 +109,7 @@ interface MealPlanState {
   addMeal: (meal: { name: string; time?: string; icon?: string }) => void;
   renameMeal: (mealId: string, payload: { name?: string; time?: string; icon?: string }) => void;
   deleteMeal: (mealId: string) => void;
+  updateFoodUnit: (mealId: string, instanceId: string, unit: string) => void;
 }
 
 const DEFAULT_MEALS = [
@@ -405,6 +413,24 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }));
       },
 
+      updateFoodUnit: (mealId, instanceId, unit) => {
+        set((state) => ({
+          history: saveHistory(state),
+          meals: state.meals.map((m) =>
+            m.id === mealId
+              ? {
+                  ...m,
+                  items: m.items.map((item) =>
+                    item.instanceId === instanceId
+                      ? { ...item, selectedUnit: unit }
+                      : item
+                  ),
+                }
+              : m
+          ),
+        }));
+      },
+
       addSubstitution: (mealId, instanceId, food) => {
         const { meals } = get();
         const meal = meals.find(m => m.id === mealId);
@@ -524,8 +550,10 @@ export const useMealEditorV3Store = create<MealPlanState>()(
 
         const totals = meals.reduce((acc, meal) => {
           meal.items.forEach(item => {
-            acc.calories += item.calories * item.quantity;
-            acc.protein += item.protein * item.quantity;
+            const currentMeasure = item.householdMeasures?.find(m => m.unit === item.selectedUnit) || { unit: item.portionUnit, factor: 1 };
+            const factor = item.quantity * currentMeasure.factor;
+            acc.calories += item.calories * factor;
+            acc.protein += item.protein * factor;
           });
           return acc;
         }, { calories: 0, protein: 0 });

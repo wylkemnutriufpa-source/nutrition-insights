@@ -16,16 +16,16 @@ export const QUICK_FOODS = [
   { id: 'q20', name: 'Iogurte com Granola', calories: 240, protein: 12, carbs: 32, fat: 8, portionValue: 200, portionUnit: 'g', imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=200' } as Food,
   
   // Itens Básicos
-  { id: 'q1', name: 'Ovo Cozido', calories: 78, protein: 6, carbs: 0.6, fat: 5, portionValue: 50, portionUnit: 'unidade' } as Food,
-  { id: 'q2', name: 'Pão Integral', calories: 68, protein: 3, carbs: 12, fat: 1, portionValue: 25, portionUnit: 'g' } as Food,
-  { id: 'q3', name: 'Queijo Branco', calories: 60, protein: 4, carbs: 1, fat: 4, portionValue: 30, portionUnit: 'g' } as Food,
-  { id: 'q4', name: 'Tapioca', calories: 70, protein: 0, carbs: 17, fat: 0, portionValue: 30, portionUnit: 'g' },
-  { id: 'q5', name: 'Cuscuz', calories: 110, protein: 3, carbs: 24, fat: 0.5, portionValue: 100, portionUnit: 'g' },
-  { id: 'q6', name: 'Banana', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, portionValue: 100, portionUnit: 'g' },
-  { id: 'q7', name: 'Maçã', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, portionValue: 100, portionUnit: 'g' },
-  { id: 'q8', name: 'Leite Integral', calories: 60, protein: 3, carbs: 5, fat: 3, portionValue: 100, portionUnit: 'ml' },
-  { id: 'q9', name: 'Frango Grelhado', calories: 165, protein: 31, carbs: 0, fat: 3.6, portionValue: 100, portionUnit: 'g' },
-  { id: 'q10', name: 'Arroz Branco', calories: 130, protein: 2.7, carbs: 28, fat: 0.3, portionValue: 100, portionUnit: 'g' },
+  { id: 'q1', name: 'Ovo Cozido', calories: 78, protein: 6, carbs: 0.6, fat: 5, portionValue: 50, portionUnit: 'un', householdMeasures: [{ unit: 'un', factor: 1 }, { unit: 'grande', factor: 1.2 }] } as Food,
+  { id: 'q2', name: 'Pão Integral', calories: 68, protein: 3, carbs: 12, fat: 1, portionValue: 25, portionUnit: 'fatia', householdMeasures: [{ unit: 'fatia', factor: 1 }, { unit: 'g', factor: 0.04 }] } as Food,
+  { id: 'q3', name: 'Queijo Branco', calories: 60, protein: 4, carbs: 1, fat: 4, portionValue: 30, portionUnit: 'fatia', householdMeasures: [{ unit: 'fatia', factor: 1 }, { unit: 'g', factor: 0.033 }] } as Food,
+  { id: 'q4', name: 'Tapioca', calories: 70, protein: 0, carbs: 17, fat: 0, portionValue: 30, portionUnit: 'colher', householdMeasures: [{ unit: 'colher', factor: 1 }, { unit: 'g', factor: 0.033 }] },
+  { id: 'q5', name: 'Cuscuz', calories: 110, protein: 3, carbs: 24, fat: 0.5, portionValue: 100, portionUnit: 'g', householdMeasures: [{ unit: 'g', factor: 1 }, { unit: 'colher', factor: 15 }] },
+  { id: 'q6', name: 'Banana', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, portionValue: 100, portionUnit: 'un', householdMeasures: [{ unit: 'un', factor: 1 }, { unit: 'g', factor: 0.01 }] },
+  { id: 'q7', name: 'Maçã', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, portionValue: 100, portionUnit: 'un', householdMeasures: [{ unit: 'un', factor: 1 }, { unit: 'g', factor: 0.01 }] },
+  { id: 'q8', name: 'Leite Integral', calories: 60, protein: 3, carbs: 5, fat: 3, portionValue: 100, portionUnit: 'ml', householdMeasures: [{ unit: 'ml', factor: 1 }, { unit: 'copo', factor: 200 }] },
+  { id: 'q9', name: 'Frango Grelhado', calories: 165, protein: 31, carbs: 0, fat: 3.6, portionValue: 100, portionUnit: 'g', householdMeasures: [{ unit: 'g', factor: 1 }, { unit: 'filé', factor: 100 }, { unit: 'colher', factor: 25 }] } as Food,
+  { id: 'q10', name: 'Arroz Branco', calories: 130, protein: 2.7, carbs: 28, fat: 0.3, portionValue: 100, portionUnit: 'g', householdMeasures: [{ unit: 'g', factor: 1 }, { unit: 'colher', factor: 25 }] } as Food,
 ];
 
 export const MARMITAS = [
