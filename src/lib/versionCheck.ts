@@ -115,7 +115,17 @@ function hardReload(reason: string): void {
   console.info(`[FJ:Version] forcing reload. reason=${reason}`);
   const url = new URL(window.location.href);
   url.searchParams.set("v", String(Date.now()));
-  window.location.replace(url.toString());
+  
+  // Forçar atualização ignorando cache do navegador se possível
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.getRegistrations().then(registrations => {
+      for (const registration of registrations) {
+        registration.update();
+      }
+    });
+  }
+  
+  window.location.href = url.toString();
 }
 
 export function isUserActive(): boolean {
