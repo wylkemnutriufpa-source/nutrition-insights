@@ -33,12 +33,13 @@ import { ptBR } from "date-fns/locale";
 import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, UserPlus as UserPlusIcon } from "lucide-react";
 import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@/components/admin/AdminDrillDownDialogs";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
+import { HealthStatusIndicator } from "@/components/observability/HealthStatusIndicator";
 
 import { StabilityZone } from "@/components/common/StabilityZone";
 import { SafeRender } from "@/components/common/SafeRender";
 import { usePageState } from "@/hooks/usePageState";
 import { BrainLoaderCard } from "@/components/common/BrainLoader";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Activity } from "lucide-react";
 
 // ─── Types ───
 interface PlatformMetrics {
