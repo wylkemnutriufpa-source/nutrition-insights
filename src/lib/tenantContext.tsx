@@ -9,6 +9,7 @@
 import { createContext, useContext, useEffect, useState, useCallback, ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { ensureContext } from "@/components/common/SystemShield";
 import type { Database } from "@/integrations/supabase/types";
 
 type TenantRole = Database["public"]["Enums"]["tenant_role"];
@@ -240,10 +241,7 @@ export function TenantProvider({ children }: { children: ReactNode }) {
  */
 export function useTenant() {
   const context = useContext(TenantContext);
-  if (context === undefined) {
-    throw new Error("useTenant must be used within TenantProvider");
-  }
-  return context;
+  return ensureContext(context, "useTenant", "TenantProvider");
 }
 
 /**
