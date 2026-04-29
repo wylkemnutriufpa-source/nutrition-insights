@@ -110,15 +110,19 @@ export const ActiveMealContent: React.FC = () => {
               <Redo2 className="w-4 h-4" />
             </Button>
           </div>
+        </div>
 
-          <Button 
-            ref={addBtnRef}
-            onClick={() => setIsAddModalOpen(true)} 
-            className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 ml-1 font-bold px-6"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            ADICIONAR
-          </Button>
+        <div className="flex items-center gap-2">
+          {!fastMode && (
+            <Button 
+              ref={addBtnRef}
+              onClick={() => setIsAddModalOpen(true)} 
+              className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold px-6"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              ADICIONAR
+            </Button>
+          )}
 
           <Button 
             variant="ghost"
