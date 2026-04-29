@@ -634,8 +634,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
             .from('meal_plans')
             .select('id')
             .eq('patient_id', patientId)
-            .order('created_at', { ascending: false })
-            .limit(1)
+            .eq('plan_status', 'active')
             .maybeSingle();
 
           let planId = existingPlan?.id;
@@ -719,7 +718,9 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           }
 
           set({ planStatus: 'validated', consistencyMessage: null });
-          toast.success('Plano salvo no prontuário com sucesso!');
+          // Removida notificação duplicada aqui para centralizar no componente se necessário, 
+          // ou manter se preferir silêncio técnico. 
+          // O componente já chama validateAndSave e mostra toast.
           return true;
         } catch (error) {
           console.error('Erro ao salvar plano:', error);

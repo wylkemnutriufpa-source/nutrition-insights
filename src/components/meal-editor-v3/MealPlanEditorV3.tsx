@@ -11,6 +11,7 @@ import { NewMealModal } from './NewMealModal';
 import { GenerateAIModal } from './GenerateAIModal';
 import { FocusModeView } from './FocusModeView';
 import { PatientViewModal } from './PatientViewModal';
+import { ShoppingListModal } from './ShoppingListModal';
 import { WeeklyGridView } from './WeeklyGridView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +23,7 @@ import {
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
   Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search,
-  PlusCircle, Bot, Calendar, Eye, Star
+  PlusCircle, Bot, Calendar, Eye, Star, ShoppingCart
 } from 'lucide-react';
 import {
   Dialog,
@@ -62,6 +63,7 @@ export const MealPlanEditorV3: React.FC = () => {
   const [isNewMealModalOpen, setIsNewMealModalOpen] = useState(false);
   const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
   const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = useState(false);
+  const [isShoppingListOpen, setIsShoppingListOpen] = useState(false);
   const [patients, setPatients] = useState<any[]>([]);
   const [validationResults, setValidationResults] = useState<any>(null);
 
@@ -161,7 +163,8 @@ export const MealPlanEditorV3: React.FC = () => {
     const success = await validateAndSave();
     if (success) {
       setIsValidationModalOpen(false);
-      toast.success('Plano validado e salvo com sucesso!');
+      // Confirmação clara conforme solicitado
+      toast.success('Plano salvo com sucesso!');
     }
   };
 
@@ -341,6 +344,16 @@ export const MealPlanEditorV3: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm" 
+            onClick={() => setIsShoppingListOpen(true)}
+            className="text-muted-foreground hover:text-emerald-600 font-bold"
+          >
+            <ShoppingCart className="w-3.5 h-3.5 mr-2" />
+            Lista de Compras
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            size="sm" 
             onClick={() => saveAsFavorite('Meu Novo Modelo', 'full_plan')}
             className="text-muted-foreground hover:text-amber-500 font-bold"
           >
@@ -400,6 +413,10 @@ export const MealPlanEditorV3: React.FC = () => {
       <PatientViewModal 
         isOpen={isPatientView} 
         onClose={() => setPatientView(false)} 
+      />
+      <ShoppingListModal 
+        isOpen={isShoppingListOpen} 
+        onClose={() => setIsShoppingListOpen(false)} 
       />
 
       <Dialog open={isGenerateModalOpen} onOpenChange={setIsGenerateModalOpen}>
