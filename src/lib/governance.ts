@@ -50,19 +50,30 @@ export const ONBOARDING_ALLOWED_ROUTES = [
 ];
 
 const UNIVERSAL_ROUTES = [
-  "/", "/settings", "/notifications", "/chat", "/appointments", "/ranking"
+  "/", "/settings", "/notifications", "/chat", "/appointments", "/ranking", "/shopping-list", "/ambassador", "/apresentacao", 
+  "/checkin-panel", "/checklist", "/feedbacks", "/fitness-anamnesis", "/global-tips", "/health-quiz", "/human-performance", 
+  "/library", "/metabolic-twin", "/my-public-profile", "/my-referrals", "/onboarding", "/planner", "/protocolos-fitoterapicos", 
+  "/protocols", "/recipe-builder", "/security-dashboard", "/user-guide", "/weekly-goals", "/weekly-report", "/weight-trajectory", 
+  "/body-analysis", "/water-calculator", "/weight-calculator", "/hard-fail-linkage", "/consent", "/diagnostic", "/status"
 ];
 
 const PROFESSIONAL_ONLY_ROUTES = [
-  "/patients", "/diet-templates", "/onboarding-pipeline", "/meal-plans", "/editor-v2", "/meal-plan-editor-v2", "/dieta-v2", "/meal-plan-editor-v3", "/dieta-v3", "/protocols", "/programs", "/clinical-workspace", "/clinical-brain", "/clinical-pipeline", "/team"
+  "/patients", "/diet-templates", "/onboarding-pipeline", "/meal-plans", "/editor-v2", "/meal-plan-editor-v2", "/dieta-v2", 
+  "/meal-plan-editor-v3", "/dieta-v3", "/protocols", "/programs", "/clinical-workspace", "/clinical-brain", "/clinical-pipeline", 
+  "/team", "/meals", "/recipes", "/financial", "/integrations", "/branding", "/diet-builder", "/food-database", "/workspace",
+  "/operational", "/in-office", "/invite-patient", "/population-intelligence", "/population-nutrition", "/professional-guide",
+  "/professional/crm", "/protocol-transitions", "/therapeutic-intelligence", "/personal", "/store", "/automation", 
+  "/campaigns", "/lab-interpreter", "/mission-control", "/technical-sheets", "/admin"
 ];
 
 const PATIENT_ONLY_ROUTES = [
-  "/my-diet", "/my-workouts", "/body-projection", "/client/dashboard", "/checklist", "/anamnesis", "/onboarding", "/checkin", "/consent"
+  "/my-diet", "/my-workouts", "/body-projection", "/client/dashboard", "/journey", "/achievements", "/challenges", "/checkin", 
+  "/workouts", "/meal-plans", "/supplements", "/dieta", "/analyze"
 ];
 
 const ADMIN_ROUTES = [
-  "/admin", "/platform-governance", "/security-dashboard", "/system-diagnostics", "/system-health-live", "/qa-checklist"
+  "/admin", "/platform-governance", "/security-dashboard", "/system-diagnostics", "/system-health-live", "/qa-checklist", 
+  "/audit-logs", "/clinical-rules"
 ];
 
 function matchRoute(pathname: string, route: string): boolean {
@@ -137,22 +148,28 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
 
   // Hybrid Context check
   if (ctx.isHybrid) {
-    if (ctx.isPatientContext && isInList(safePathname, PROFESSIONAL_ONLY_ROUTES)) {
+    // Nutritionists and Admins have more freedom even in patient context
+    const isPro = ctx.isNutritionist || ctx.isAdmin;
+    
+    if (ctx.isPatientContext && isInList(safePathname, PROFESSIONAL_ONLY_ROUTES) && !isPro) {
       return { type: 'REDIRECT', target: '/', reason: 'Patient context accessing pro route' };
     }
     if (ctx.isProfessionalContext && isInList(safePathname, PATIENT_ONLY_ROUTES)) {
-      // Exception for onboarding
+      // Exception for onboarding and health professionals viewing patient data
       const isOnboarding = ['onboarding_active', 'lead_created', 'awaiting_consent'].includes(ctx.journeyStatus || '');
       if (isOnboarding && safePathname.startsWith('/anamnesis')) return { type: 'ALLOW', reason: 'Onboarding override' };
       
-      return { type: 'REDIRECT', target: '/', reason: 'Pro context accessing patient route' };
+      // Allow professionals to see patient routes if they are also patients OR if it's a shared route
+      if (!ctx.profile?.is_patient && !isPro) {
+        return { type: 'REDIRECT', target: '/', reason: 'Pro context accessing patient route' };
+      }
     }
   } else {
     // Pure Role Check
     if (ctx.role === 'patient' && !isProRole && isInList(safePathname, PROFESSIONAL_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Patient role accessing pro route' };
     }
-    if (ctx.role === 'professional' && !ctx.profile?.is_patient && isInList(safePathname, PATIENT_ONLY_ROUTES)) {
+    if (ctx.role === 'professional' && !ctx.profile?.is_patient && !isProRole && isInList(safePathname, PATIENT_ONLY_ROUTES)) {
       return { type: 'REDIRECT', target: '/', reason: 'Pro role accessing patient route' };
     }
   }
