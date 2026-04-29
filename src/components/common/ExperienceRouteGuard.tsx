@@ -29,7 +29,10 @@ export default function ExperienceRouteGuard() {
       mode,
       role,
       isReady,
-      isDegraded
+      isDegraded,
+      isNutritionist,
+      isAdmin,
+      isPersonal
     };
 
     const decision = getSystemDecision(ctx);
