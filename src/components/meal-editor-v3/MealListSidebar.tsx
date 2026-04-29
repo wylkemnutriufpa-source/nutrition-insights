@@ -6,16 +6,6 @@ import { motion } from 'framer-motion';
 import { MealDetailsModal } from './MealDetailsModal';
 import { Button } from '@/components/ui/button';
 import { NewMealModal } from './NewMealModal';
-import { motion } from 'framer-motion';
-import { MealDetailsModal } from './MealDetailsModal';
-import { Button } from '@/components/ui/button';
-
-const MEAL_ICONS: Record<string, any> = {
-  'Café da Manhã': Coffee,
-  'Almoço': Sun,
-  'Lanche da Tarde': Utensils,
-  'Jantar': Moon,
-};
 
 export const MealListSidebar: React.FC = () => {
   const { meals, activeMealId, setActiveMeal } = useMealEditorV3Store();
@@ -41,6 +31,12 @@ export const MealListSidebar: React.FC = () => {
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {meals.map((meal) => {
+          const MEAL_ICONS: Record<string, any> = {
+            'Café da Manhã': Coffee,
+            'Almoço': Sun,
+            'Lanche da Tarde': Utensils,
+            'Jantar': Moon,
+          };
           const Icon = MEAL_ICONS[meal.name] || Utensils;
           const isActive = activeMealId === meal.id;
           const calories = calculateMealCalories(meal.items);
