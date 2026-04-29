@@ -22,7 +22,7 @@ import {
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
   Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search,
-  PlusCircle, Bot, Calendar, Eye
+  PlusCircle, Bot, Calendar, Eye, Star
 } from 'lucide-react';
 import {
   Dialog,
@@ -53,7 +53,7 @@ export const MealPlanEditorV3: React.FC = () => {
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
     fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView,
-    viewMode, setViewMode, setPatientId, patientId, activeDay
+    viewMode, setViewMode, setPatientId, patientId, activeDay, saveAsFavorite
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
