@@ -182,7 +182,7 @@ const HealthCheckQuiz = lazy(() => import("./pages/HealthCheckQuiz"));
 const HumanPerformance = lazy(() => import("./pages/HumanPerformance"));
 const InOfficeSelector = lazy(() => import("./pages/InOfficeSelector"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
-const Library = lazy(() => import("./pages/Library"));
+// Library already defined above with lazyDebug
 const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
 const MyReferrals = lazy(() => import("./pages/MyReferrals"));
