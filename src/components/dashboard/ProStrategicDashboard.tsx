@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import {
   Users, ClipboardCheck, AlertTriangle, Trophy,
   TrendingUp, Activity, ArrowRight, Brain,
-  Calendar, MessageSquare, BarChart3, Zap, FlaskConical,
+  Calendar, MessageSquare, BarChart3, Zap, FlaskConical, Sparkles,
 } from "lucide-react";
 
 const STRATEGIC_CARDS = [
