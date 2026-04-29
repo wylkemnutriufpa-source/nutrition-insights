@@ -576,9 +576,10 @@ function AppContent() {
               <Route path="/personal-landing" element={<PersonalLanding />} />
               <Route path="/booking/:id" element={<PublicBooking />} />
               <Route path="/p/:slug" element={<PublicProfile />} />
-              <Route path="/p/:slug/plans" element={<PublicPlans planType="patient_prestige" />} />
-              <Route path="/professional/plans/:slug" element={<PublicPlans planType="professional" />} />
-              <Route path="/public-program/:id" element={<PublicProgram />} />
+              <Route path="/p/:slug/paciente" element={<PublicPlans planType="patient_prestige" />} />
+              <Route path="/p/:slug/profissional" element={<PublicPlans planType="professional" />} />
+              <Route path="/public-program/:programId" element={<PublicProgram />} />
+
 
               <Route path="/ql/:id" element={<QuickLink />} />
               <Route path="/status-page" element={<StatusPage />} />
