@@ -308,15 +308,8 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           return;
         }
         
-        // --- ETAPA 1: CORREÇÃO DE MARMITAS ---
-        if (food.isMarmita) {
-          const meal = meals.find(m => m.id === mealId);
-          const mealName = meal?.name.toLowerCase() || "";
-          if (!mealName.includes('almoço') && !mealName.includes('jantar')) {
-            toast.error('Marmitas só podem ser adicionadas no Almoço ou Jantar');
-            return;
-          }
-        }
+        // Marmitas podem ser adicionadas em qualquer refeição se o profissional assim desejar
+        // Removida restrição anterior por solicitação do usuário
 
         const instanceId = Math.random().toString(36).substring(7);
         const subs = getEquivalentFoods(food.id);
