@@ -110,6 +110,7 @@ interface MealPlanState {
   renameMeal: (mealId: string, payload: { name?: string; time?: string; icon?: string }) => void;
   deleteMeal: (mealId: string) => void;
   updateFoodUnit: (mealId: string, instanceId: string, unit: string) => void;
+  addQuickMeal: (mealTemplate: any) => void;
 }
 
 const DEFAULT_MEALS = [
