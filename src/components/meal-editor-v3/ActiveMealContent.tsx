@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useMealEditorV3Store, Food } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { Card } from '@/components/ui/card';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { 
@@ -25,7 +26,7 @@ export const ActiveMealContent: React.FC = () => {
     meals, activeMealId, removeFoodFromMeal, updateFoodQuantity, 
     addSubstitution, removeSubstitution, fastMode,
     undo, redo, clearMeal, duplicateMeal, balanceMacros,
-    history, generateDeterministicPlan, saveAsFavorite
+    history, generateDeterministicPlan, saveAsFavorite, updateFoodUnit
   } = useMealEditorV3Store();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
@@ -278,7 +279,24 @@ export const ActiveMealContent: React.FC = () => {
                         min="0"
                         step="0.1"
                       />
-                      <span className="text-[10px] text-muted-foreground w-12 truncate font-bold uppercase">{item.selectedUnit || item.portionUnit}</span>
+                      {item.householdMeasures && item.householdMeasures.length > 0 ? (
+                        <Select
+                          value={item.selectedUnit || item.portionUnit}
+                          onValueChange={(unit) => updateFoodUnit(activeMeal.id, item.instanceId, unit)}
+                        >
+                          <SelectTrigger className="h-9 w-24 text-[10px] font-bold border-none bg-muted/50 focus:ring-0">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value={item.portionUnit} className="text-[10px] uppercase font-bold">{item.portionUnit}</SelectItem>
+                            {item.householdMeasures.map(m => (
+                              <SelectItem key={m.unit} value={m.unit} className="text-[10px] uppercase font-bold">{m.unit}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      ) : (
+                        <span className="text-[10px] text-muted-foreground w-12 truncate font-bold uppercase">{item.selectedUnit || item.portionUnit}</span>
+                      )}
                     </div>
 
                     <div className="flex items-center gap-1">

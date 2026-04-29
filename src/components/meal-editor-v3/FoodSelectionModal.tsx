@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle, X } from 'lucide-react';
+import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle, X, Loader2 } from 'lucide-react';
 import { QUICK_FOODS, MARMITAS } from '@/hooks/meal-editor-v3/constants';
 import { useMealEditorV3Store, Food } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { Card } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FoodSelectionModalProps {
   isOpen: boolean;
@@ -24,14 +25,45 @@ interface FoodSelectionModalProps {
 export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, onClose, mealId, onSelect, defaultTab = 'quick' }) => {
   const { addFoodToMeal, meals } = useMealEditorV3Store();
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [dbResults, setDbResults] = useState<Food[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState<Food[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
   const [selectedForBatch, setSelectedForBatch] = useState<Food[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 150);
+    const fetchDbFoods = async () => {
+      if (searchQuery.length < 2) {
+        setDbResults([]);
+        return;
+      }
+      
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('food_database')
+        .select('*')
+        .ilike('name', `%${searchQuery}%`)
+        .limit(20);
+
+      if (data && !error) {
+        const formatted = data.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          calories: Number(f.calories),
+          protein: Number(f.protein),
+          carbs: Number(f.carbs),
+          fat: Number(f.fat),
+          portionValue: parseFloat(f.serving_size) || 100,
+          portionUnit: f.serving_size.replace(/[0-9.]/g, '') || 'g',
+          category: f.category
+        }));
+        setDbResults(formatted);
+      }
+      setIsLoading(false);
+    };
+
+    const timer = setTimeout(fetchDbFoods, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
@@ -64,13 +96,14 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   };
 
   const filteredQuickFoods = QUICK_FOODS.filter(f => 
-    f.name.toLowerCase().includes(debouncedSearch.toLowerCase())
+    f.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
+    const list = searchQuery.length >= 2 ? dbResults : filteredQuickFoods;
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setActiveIndex(prev => Math.min(prev + 1, filteredQuickFoods.length - 1));
+      setActiveIndex(prev => Math.min(prev + 1, list.length - 1));
     }
     if (e.key === 'ArrowUp') {
       e.preventDefault();
@@ -78,8 +111,8 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
     }
     if (e.key === 'Enter') {
       e.preventDefault();
-      if (filteredQuickFoods.length > 0) {
-        handleAdd(filteredQuickFoods[activeIndex]);
+      if (list.length > 0) {
+        handleAdd(list[activeIndex]);
       }
     }
     if (e.key === 'Escape') {
@@ -89,7 +122,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
   useEffect(() => {
     setActiveIndex(0);
-  }, [debouncedSearch]);
+  }, [searchQuery]);
 
   const activeMeal = meals.find(m => m.id === mealId);
   const mealName = activeMeal?.name.toLowerCase() || "";
@@ -150,7 +183,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
               <ScrollArea className="flex-1">
                 <div className="p-4 space-y-6">
-                  {history.length > 0 && !debouncedSearch && (
+                  {history.length > 0 && !searchQuery && (
                     <div className="space-y-3">
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                         <History className="w-3 h-3" />
@@ -165,12 +198,13 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                   )}
 
                   <div className="space-y-3">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      {debouncedSearch ? 'Resultados da Busca' : 'Sugestões para Você'}
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+                      <span>{searchQuery.length >= 2 ? 'Resultados da Busca (TACO/USDA)' : 'Alimentos Sugeridos'}</span>
+                      {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
                     </h4>
                     <div className="grid gap-2">
                       <AnimatePresence mode="popLayout">
-                        {filteredQuickFoods.map((food, idx) => (
+                        {(searchQuery.length >= 2 ? dbResults : filteredQuickFoods).map((food, idx) => (
                           <motion.div
                             key={food.id}
                             initial={{ opacity: 0, y: 10 }}
@@ -186,6 +220,11 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                           </motion.div>
                         ))}
                       </AnimatePresence>
+                      {searchQuery.length >= 2 && dbResults.length === 0 && !isLoading && (
+                        <div className="text-center py-8 text-muted-foreground text-xs italic">
+                          Nenhum alimento encontrado no banco de dados.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
