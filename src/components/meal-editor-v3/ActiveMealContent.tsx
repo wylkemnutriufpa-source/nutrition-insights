@@ -112,7 +112,15 @@ export const ActiveMealContent: React.FC = () => {
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-9 px-3 text-muted-foreground hover:text-primary rounded-xl font-bold text-xs"
+            onClick={() => setIsAddModalOpen(true)}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            BUSCAR
+          </Button>
           {!fastMode && (
             <Button 
               ref={addBtnRef}
