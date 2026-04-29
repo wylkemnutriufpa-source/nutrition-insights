@@ -203,7 +203,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     const saved = localStorage.getItem(STORAGE_KEY) as ExperienceMode;
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
   });
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true); // Start loading during hydration
   const [failedMode, setFailedMode] = useState<ExperienceMode | null>(() => {
     const saved = sessionStorage.getItem(`${STORAGE_KEY}_failed`);
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved as ExperienceMode : null;
@@ -266,22 +266,40 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
   // Hydrate from DB on mount
   useEffect(() => {
     if (hydratedFromDb.current) return;
-    supabase.auth.getUser().then(({ data: { user } }) => {
-      if (!user) return;
-      supabase
-        .from("profiles")
-        .select("experience_mode")
-        .eq("user_id", user.id)
-        .maybeSingle()
-        .then(({ data }) => {
-          const dbMode = data?.experience_mode as ExperienceMode;
-          if (dbMode && ["basic", "pro", "advanced"].includes(dbMode)) {
+    
+    const hydrate = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        setIsLoading(false);
+        hydratedFromDb.current = true;
+        return;
+      }
+
+      try {
+        const { data, error } = await withTimeout(
+          supabase
+            .from("profiles")
+            .select("experience_mode")
+            .eq("user_id", user.id)
+            .maybeSingle()
+        );
+
+        if (!error && data?.experience_mode) {
+          const dbMode = data.experience_mode as ExperienceMode;
+          if (["basic", "pro", "advanced"].includes(dbMode)) {
             setModeState(dbMode);
             localStorage.setItem(STORAGE_KEY, dbMode);
           }
-          hydratedFromDb.current = true;
-        });
-    });
+        }
+      } catch (e) {
+        console.warn("[ExperienceMode] Falha na hidratação inicial:", e);
+      } finally {
+        setIsLoading(false);
+        hydratedFromDb.current = true;
+      }
+    };
+
+    hydrate();
   }, []);
 
   /** Internal: perform the actual DB write for a given mode (no state writes).
