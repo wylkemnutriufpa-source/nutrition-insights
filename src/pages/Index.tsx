@@ -331,7 +331,6 @@ function NutritionistDashboardContent() {
         setAiSummary(data.summary || null);
       }
     } catch (err) {
-      console.error("AI insights error:", err);
       const localInsights = generateLocalInsights(patientData);
       setAiInsights(localInsights.insights);
       setAttentionPatients(localInsights.attention);
