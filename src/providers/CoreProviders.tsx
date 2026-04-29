@@ -14,6 +14,7 @@ import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
 import { BuildVersionTag } from "@/components/common/BuildVersionTag";
+import { BrowserRouter } from "react-router-dom";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -61,20 +62,22 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
             <GlobalErrorBoundary />
             <UpdateBanner />
             <BuildVersionTag />
-            <AuthProvider>
-              <TenantProvider>
-                <ExperienceModeProvider>
-                  <ExperienceThemeSync />
-                  <CelebrationProvider>
-                    <CommandPaletteProvider>
-                      <AppStateProvider>
-                        {children}
-                      </AppStateProvider>
-                    </CommandPaletteProvider>
-                  </CelebrationProvider>
-                </ExperienceModeProvider>
-              </TenantProvider>
-            </AuthProvider>
+            <BrowserRouter>
+              <AuthProvider>
+                <TenantProvider>
+                  <ExperienceModeProvider>
+                    <ExperienceThemeSync />
+                    <CelebrationProvider>
+                      <CommandPaletteProvider>
+                        <AppStateProvider>
+                          {children}
+                        </AppStateProvider>
+                      </CommandPaletteProvider>
+                    </CelebrationProvider>
+                  </ExperienceModeProvider>
+                </TenantProvider>
+              </AuthProvider>
+            </BrowserRouter>
           </TooltipProvider>
         </QueryClientProvider>
       </HelmetProvider>
