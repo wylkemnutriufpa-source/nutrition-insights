@@ -12,8 +12,10 @@ import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { GlobalErrorBoundary, CriticalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
+import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
+import { lazyDebug } from "@/lib/lazyDebug";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
@@ -36,9 +38,9 @@ const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
 const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
-const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
-const MealPlanEditorV2Entry = lazy(() => import("./pages/MealPlanEditorV2Entry"));
-const MealPlanEditorV3Experimental = lazy(() => import("./pages/MealPlanEditorV3Page"));
+const MealPlanEditorV2 = lazyDebug(() => import("./pages/MealPlanEditorV2"), "MealPlanEditorV2");
+const MealPlanEditorV2Entry = lazyDebug(() => import("./pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
+const MealPlanEditorV3Experimental = lazyDebug(() => import("./pages/MealPlanEditorV3Page"), "MealPlanEditorV3 (Beta)");
 const DietBuilder = lazy(() => import("./pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("./pages/GlobalRanking"));
 
@@ -65,7 +67,7 @@ const AdminPlanLoadingDiagnostics = lazy(() => import("./pages/admin/AdminPlanLo
 const ImageFallbackAdmin = lazy(() => import("./pages/admin/ImageFallbackAdmin.tsx"));
 const MarmitaAudit = lazy(() => import("./pages/admin/MarmitaAudit.tsx"));
 const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard.tsx"));
-const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin.tsx"));
+const MealVisualLibraryAdmin = lazyDebug(() => import("./pages/admin/MealVisualLibraryAdmin.tsx"), "Biblioteca Visual Admin");
 const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit.tsx"));
 const TemplateMassReformulation = lazy(() => import("./pages/admin/TemplateMassReformulation.tsx"));
 
@@ -98,6 +100,8 @@ const WeightCalculator = lazy(() => import("./pages/WeightCalculator"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
 const Supplements = lazy(() => import("./pages/Supplements"));
 const Reports = lazy(() => import("./pages/Reports"));
+const Library = lazyDebug(() => import("./pages/Library"), "Biblioteca");
+
 const AccountDeletion = lazy(() => import("./pages/AccountDeletion"));
 const DietTemplates = lazy(() => import("./pages/DietTemplates"));
 const FoodDatabase = lazy(() => import("./pages/FoodDatabase"));
