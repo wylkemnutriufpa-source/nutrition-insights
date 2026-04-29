@@ -31,7 +31,7 @@ export const BUILD_INFO: BuildInfo = {
   timestamp: safeTimestamp,
   mode: safeMode,
   shortHash: String(safeHash).slice(0, 8),
-  version: "2.4.0-hotfix-deploy-check"
+  version: "2.4.1-deploy-debug-ui"
 };
 
 /**

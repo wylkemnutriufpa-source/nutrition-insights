@@ -13,7 +13,7 @@ console.log("%c[FitJourney:Boot] Iniciando sistema...", "color: #10b981; font-we
   timestamp: new Date().toISOString(),
   env: import.meta.env.MODE,
   isDev: import.meta.env.DEV,
-  version: "2.4.0-hotfix-deploy-check"
+  version: "2.4.1-deploy-debug-ui"
 });
 
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
