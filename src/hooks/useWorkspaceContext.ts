@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { ensureContext } from "@/components/common/SystemShield";
 
 export type WorkspaceContextType = "professional" | "patient";
 
@@ -26,7 +27,8 @@ export const WorkspaceContext = createContext<WorkspaceContextValue>({
 });
 
 export function useWorkspaceContext() {
-  return useContext(WorkspaceContext);
+  const context = useContext(WorkspaceContext);
+  return ensureContext(context, "useWorkspaceContext", "TenantProvider / WorkspaceContext.Provider");
 }
 
 export function useWorkspaceContextState(isProRole: boolean, isPatient: boolean, authLoading: boolean) {

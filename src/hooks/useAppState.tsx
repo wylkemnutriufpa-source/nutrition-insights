@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useEffect, useMemo } from "react";
+import { ensureContext } from "@/components/common/SystemShield";
 import { useAuth } from "@/lib/auth";
 import { getSystemDecision, GovernanceContext, logDecision } from "@/lib/governance";
 import { useExperienceMode } from "./useExperienceMode";
@@ -96,6 +97,5 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
 export function useAppState() {
   const context = useContext(AppStateContext);
-  if (!context) throw new Error("useAppState must be used within AppStateProvider");
-  return context;
+  return ensureContext(context, "useAppState", "AppStateProvider");
 }
