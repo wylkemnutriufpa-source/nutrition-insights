@@ -335,7 +335,10 @@ function AppContent() {
             <Routes>
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
               <Route path="/dashboard" element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="/professional" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/professional/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+
 
               <Route path="/auth" element={<Auth />} />
               <Route path="/auth/confirm" element={<AuthConfirm />} />
