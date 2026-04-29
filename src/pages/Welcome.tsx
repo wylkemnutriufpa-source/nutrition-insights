@@ -32,7 +32,6 @@ export default function Welcome() {
 
       // 2. Se não é convite, aguardamos roles se estiverem carregando (apenas se user existir)
       if (loading && user) {
-        console.log("[Welcome] Aguardando metadados (roles)...");
         return;
       }
 
