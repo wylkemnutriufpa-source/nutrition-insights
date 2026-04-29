@@ -51,7 +51,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, Navigate, useNavigate, useLocation } from "react-router-dom";
 
 const container = {
   hidden: { opacity: 0 },
@@ -1182,6 +1182,10 @@ export default function Index() {
   const isProRole = isNutritionist || isPersonal || isAdmin;
   // For hybrid users, respect workspace context; for pure roles, use role check
   const isPatient = isHybridUser ? isPatientContext : (!isProRole && !isAdmin);
+
+  if (!loading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   const tourKey = isProRole ? "tour_professional_completed" : "tour_patient_completed";
   const onboardingKey = isProRole ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
