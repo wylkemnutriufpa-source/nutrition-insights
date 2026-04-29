@@ -566,7 +566,36 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       optimizePlan: () => {
-        // Optimization logic
+        const { meals, patientTargets } = get();
+        if (!patientTargets) {
+          toast.error('Impossível otimizar sem alvos nutricionais do paciente');
+          return;
+        }
+
+        const currentTotals = meals.reduce((acc, meal) => {
+          meal.items.forEach(item => {
+            const currentMeasure = item.householdMeasures?.find(m => m.unit === item.selectedUnit) || { unit: item.portionUnit, factor: 1 };
+            acc.calories += item.calories * item.quantity * currentMeasure.factor;
+          });
+          return acc;
+        }, { calories: 0 });
+
+        if (currentTotals.calories === 0) return;
+
+        const ratio = patientTargets.calories / currentTotals.calories;
+
+        set((state) => ({
+          history: saveHistory(state),
+          planStatus: 'optimized',
+          lastActionInsight: `Plano recalibrado para atingir ${Math.round(patientTargets.calories)} kcal`,
+          meals: state.meals.map(meal => ({
+            ...meal,
+            items: meal.items.map(item => item.isMarmita || item.locked 
+              ? item 
+              : { ...item, quantity: Number((item.quantity * ratio).toFixed(1)) }
+            )
+          }))
+        }));
       },
 
       validateAndSave: async () => {
