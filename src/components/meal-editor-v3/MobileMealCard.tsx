@@ -142,7 +142,7 @@ export const MobileMealCard: React.FC<Props> = ({
                     </p>
                     {weekMode && item.substitutions && item.substitutions.length > 0 && (
                       <div className="mt-1.5 flex flex-wrap gap-1">
-                        {item.substitutions.slice(0, 3).map((s) => (
+                        {item.substitutions.map((s) => (
                           <span
                             key={s.id}
                             className="text-[9px] font-bold px-1.5 py-0.5 rounded bg-muted text-muted-foreground"

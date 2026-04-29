@@ -92,7 +92,6 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
   const activeMeal = meals.find(m => m.id === mealId);
   const mealName = activeMeal?.name.toLowerCase() || "";
-  const isLunchOrDinner = mealName.includes('almoço') || mealName.includes('jantar');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -195,7 +194,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
             <TabsContent value="quick" className="h-full m-0">
                <ScrollArea className="h-full p-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {QUICK_FOODS.slice(0, 12).map((food, idx) => (
+                  {QUICK_FOODS.map((food, idx) => (
                     <motion.div
                       key={food.id}
                       initial={{ scale: 0.9, opacity: 0 }}
@@ -221,7 +220,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
             <TabsContent value="templates" className="h-full p-6 m-0">
               <ScrollArea className="h-full">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
-                  {isLunchOrDinner ? (
+                  {true ? (
                     MARMITAS.map((food, idx) => (
                       <motion.div
                         key={food.id}
@@ -254,17 +253,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                         </Card>
                       </motion.div>
                     ))
-                  ) : (
-                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                      <div className="p-4 bg-muted/30 rounded-full mb-4">
-                        <Package className="w-12 h-12 text-muted-foreground/30" />
-                      </div>
-                      <h3 className="text-sm font-bold text-muted-foreground">Marmitas indisponíveis</h3>
-                      <p className="text-xs text-muted-foreground/60 max-w-[200px] mt-2">
-                        Marmitas só podem ser adicionadas no Almoço ou Jantar.
-                      </p>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </ScrollArea>
             </TabsContent>
