@@ -16,6 +16,7 @@ import { UpdateBanner } from "@/components/common/UpdateBanner";
 import { BuildVersionTag } from "@/components/common/BuildVersionTag";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { SystemShieldProvider, useSystemShield } from "@/components/common/SystemShield";
+import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -73,6 +74,7 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
               <BrowserRouter>
                 <RouterBootTracker />
                 <AuthProvider>
+                  {/* Tenant and Experience are dependent on Auth, so they must be nested inside */}
                   <TenantProvider>
                     <ExperienceModeProvider>
                       <AppStateProvider>
@@ -88,7 +90,13 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                             <Helmet>
                               <title>FitJourney</title>
                             </Helmet>
-                            {children}
+                            {/* 
+                              Bootloader Pattern: Children are only rendered 
+                              when the environment is stable enough.
+                            */}
+                            <SectionalErrorBoundary name="Aplicação">
+                              {children}
+                            </SectionalErrorBoundary>
                           </CommandPaletteProvider>
                         </CelebrationProvider>
                       </AppStateProvider>
