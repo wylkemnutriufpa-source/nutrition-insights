@@ -35,6 +35,8 @@ import Index from "./pages/Index";
 const Patients = lazy(() => import("./pages/Patients"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const MealPlanEditorV3 = lazy(() => import("./pages/MealPlanEditorV3Page"));
+const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
+const MealPlanEditorV2Entry = lazy(() => import("./pages/MealPlanEditorV2Entry"));
 const DietBuilder = lazy(() => import("./pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("./pages/GlobalRanking"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
