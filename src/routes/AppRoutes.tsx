@@ -321,13 +321,14 @@ export const AppRoutes = () => {
                 <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
                 <Route path="/physical-assessment" element={<ProtectedRoute><LP section="Avaliação Física"><PhysicalAssessment /></LP></ProtectedRoute>} />
                 <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas Globais"><GlobalTips /></LP></ProtectedRoute>} />
-                <Route path="/consent" element={<LP section="Consentimento"><ConsentRequired /></LP>} />
+                 <Route path="/consent" element={<LP section="Consentimento"><ConsentRequired /></LP>} />
+                 <Route path="/hard-fail-linkage" element={<HardFailLinkage />} />
                 <Route path="/audit-logs" element={<NutritionistRoute><LP section="Logs do Sistema"><SystemAuditLogs /></LP></NutritionistRoute>} />
                 <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
                 <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
                 <Route path="/gateway" element={<LP section="Portal"><GatewayPage /></LP>} />
                 <Route path="/global-adaptive" element={<ProtectedRoute><LP section="IA Adaptativa"><GlobalAdaptiveIntelligence /></LP></ProtectedRoute>} />
-                <Route path="/in-office-wizard" element={<NutritionistRoute><LP section="Assistente de Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
+                <Route path="/in-office-wizard" element={<Navigate to="/in-office" replace />} />
                 <Route path="/intake" element={<LP section="Onboarding de Entrada"><IntakeOnboarding /></LP>} />
                 <Route path="/invitation/:code" element={<LP section="Convite"><Invitation /></LP>} />
                 <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
