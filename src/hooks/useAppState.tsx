@@ -33,7 +33,10 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   const isOrphan = useMemo(() => profile?.is_orphan === true, [profile]);
 
   useEffect(() => {
-    if (authLoading || journeyLoading) return;
+    if (authLoading || journeyLoading) {
+      setIsLoading(true);
+      return;
+    }
 
     if (user && profile) {
       setIsReady(true);
@@ -42,14 +45,15 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     } else if (!user) {
       setIsReady(true);
       setIsLoading(false);
+      setIsDegraded(false);
     } else {
-      const timeout = setTimeout(() => {
-        setIsDegraded(true);
-        setIsLoading(false);
-      }, 5000);
-      return () => clearTimeout(timeout);
+      // O sistema aguarda indefinidamente pelos dados reais.
+      // Se demorar muito, o usuário verá o PageLoader infinito ou erro de rede.
+      // Sem timeouts de fallback para evitar estados inconsistentes.
+      setIsLoading(true);
     }
   }, [user, profile, authLoading, journeyLoading]);
+
 
   // Governance Effect
   useEffect(() => {
