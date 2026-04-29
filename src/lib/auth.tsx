@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { invalidateMenuCache } from "@/hooks/useSmartMenu";
 import type { Database } from "@/integrations/supabase/types";
 import { logAudit } from "@/lib/auditLog";
+import { ensureContext } from "@/components/common/SystemShield";
+import { useSystemShield } from "@/components/common/SystemShield";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -77,6 +79,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [roles, setRoles] = useState<AppRole[]>([]);
   const [loading, setLoading] = useState(true);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
+  const shield = useSystemShield();
+
+  useEffect(() => {
+    if (!loading && shield) {
+      shield.reportBootStatus("isAuthLoaded", true);
+    }
+  }, [loading, shield]);
 
   const fetchProfile = async (userId: string) => {
     const { data } = await supabase
@@ -342,6 +351,5 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  if (!context) throw new Error("useAuth must be used within AuthProvider");
-  return context;
+  return ensureContext(context, "useAuth", "AuthProvider");
 }

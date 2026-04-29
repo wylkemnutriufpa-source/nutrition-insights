@@ -14,7 +14,8 @@ import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
 import { BuildVersionTag } from "@/components/common/BuildVersionTag";
-import { BrowserRouter } from "react-router-dom";
+import { BrowserRouter, useLocation } from "react-router-dom";
+import { SystemShieldProvider, useSystemShield } from "@/components/common/SystemShield";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -49,40 +50,56 @@ function ExperienceThemeSync() {
   return null;
 }
 
+function RouterBootTracker() {
+  const shield = useSystemShield();
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (shield && location.pathname) {
+      shield.reportBootStatus("isRouterActive", true);
+    }
+  }, [location, shield]);
+  
+  return null;
+}
+
 export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
   return (
     <CriticalErrorBoundary>
-      <HelmetProvider>
-        <QueryClientProvider client={queryClient}>
-          <TooltipProvider>
-            <BrowserRouter>
-              <AuthProvider>
-                <TenantProvider>
-                  <ExperienceModeProvider>
-                    <AppStateProvider>
-                      <CelebrationProvider>
-                        <CommandPaletteProvider>
-                          <ExperienceThemeSync />
-                          <Toaster />
-                          <Sonner />
-                          <MobileAutoFixer />
-                          <GlobalErrorBoundary />
-                          <UpdateBanner />
-                          <BuildVersionTag />
-                          <Helmet>
-                            <title>FitJourney</title>
-                          </Helmet>
-                          {children}
-                        </CommandPaletteProvider>
-                      </CelebrationProvider>
-                    </AppStateProvider>
-                  </ExperienceModeProvider>
-                </TenantProvider>
-              </AuthProvider>
-            </BrowserRouter>
-          </TooltipProvider>
-        </QueryClientProvider>
-      </HelmetProvider>
+      <SystemShieldProvider>
+        <HelmetProvider>
+          <QueryClientProvider client={queryClient}>
+            <TooltipProvider>
+              <BrowserRouter>
+                <RouterBootTracker />
+                <AuthProvider>
+                  <TenantProvider>
+                    <ExperienceModeProvider>
+                      <AppStateProvider>
+                        <CelebrationProvider>
+                          <CommandPaletteProvider>
+                            <ExperienceThemeSync />
+                            <Toaster />
+                            <Sonner />
+                            <MobileAutoFixer />
+                            <GlobalErrorBoundary />
+                            <UpdateBanner />
+                            <BuildVersionTag />
+                            <Helmet>
+                              <title>FitJourney</title>
+                            </Helmet>
+                            {children}
+                          </CommandPaletteProvider>
+                        </CelebrationProvider>
+                      </AppStateProvider>
+                    </ExperienceModeProvider>
+                  </TenantProvider>
+                </AuthProvider>
+              </BrowserRouter>
+            </TooltipProvider>
+          </QueryClientProvider>
+        </HelmetProvider>
+      </SystemShieldProvider>
     </CriticalErrorBoundary>
   );
 };
