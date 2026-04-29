@@ -157,6 +157,7 @@ export default function QuickLink() {
       // Salvar estado final de onboarding
       localStorage.setItem("fj_invited", "true");
       localStorage.setItem("fj_user_type", "patient");
+      localStorage.setItem("fj_signup_complete", "true");
 
       // Redirecionamento determinístico (Regra 2)
       if (authData.session) {
