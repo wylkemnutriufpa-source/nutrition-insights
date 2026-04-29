@@ -117,55 +117,81 @@ export const MobileMealEditorV3: React.FC = () => {
               </Badge>
             )}
           </div>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <button className="p-2 -mr-2 rounded-lg text-muted-foreground hover:bg-muted active:scale-95 transition-transform">
-                <MoreHorizontal className="w-5 h-5" />
-              </button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-none bg-background/95 backdrop-blur-xl">
-              <DropdownMenuLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-2">
-                Ferramentas V3
-              </DropdownMenuLabel>
-              
-              <DropdownMenuItem onClick={() => setGenerateOpen(true)} className="rounded-xl py-2.5 px-3 focus:bg-primary/5 focus:text-primary cursor-pointer">
-                <Zap className="w-4 h-4 mr-3 text-primary" />
-                <span className="text-xs font-bold">Gerar Plano IA</span>
-              </DropdownMenuItem>
-              
-              <DropdownMenuItem onClick={() => { optimizePlan(); toast.success('Otimizado clinicamente'); }} className="rounded-xl py-2.5 px-3 focus:bg-purple-500/5 focus:text-purple-600 cursor-pointer">
-                <Sparkles className="w-4 h-4 mr-3 text-purple-500" />
-                <span className="text-xs font-bold">Otimizar Plano</span>
-              </DropdownMenuItem>
+          <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-9 px-2 text-muted-foreground hover:text-orange-500 rounded-xl font-bold text-[10px]"
+              onClick={() => {
+                setModalTab('templates');
+                setAddModalMealId(meals[0]?.id || 'default');
+              }}
+            >
+              <Package className="w-3.5 h-3.5 mr-1" />
+              MARMITAS
+            </Button>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              className="h-9 px-2 text-muted-foreground hover:text-primary rounded-xl font-bold text-[10px]"
+              onClick={() => {
+                setModalTab('search');
+                setAddModalMealId(meals[0]?.id || 'default');
+              }}
+            >
+              <Plus className="w-3.5 h-3.5 mr-1" />
+              BUSCAR
+            </Button>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="p-2 -mr-2 rounded-lg text-muted-foreground hover:bg-muted active:scale-95 transition-transform">
+                  <MoreHorizontal className="w-5 h-5" />
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-none bg-background/95 backdrop-blur-xl">
+                <DropdownMenuLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-2">
+                  Ferramentas V3
+                </DropdownMenuLabel>
+                
+                <DropdownMenuItem onClick={() => setGenerateOpen(true)} className="rounded-xl py-2.5 px-3 focus:bg-primary/5 focus:text-primary cursor-pointer">
+                  <Zap className="w-4 h-4 mr-3 text-primary" />
+                  <span className="text-xs font-bold">Gerar Plano IA</span>
+                </DropdownMenuItem>
+                
+                <DropdownMenuItem onClick={() => { optimizePlan(); toast.success('Otimizado clinicamente'); }} className="rounded-xl py-2.5 px-3 focus:bg-purple-500/5 focus:text-purple-600 cursor-pointer">
+                  <Sparkles className="w-4 h-4 mr-3 text-purple-500" />
+                  <span className="text-xs font-bold">Otimizar Plano</span>
+                </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="my-1 bg-border/50" />
-              
-              <DropdownMenuItem onClick={() => setFastMode(!fastMode)} className="rounded-xl py-2.5 px-3 cursor-pointer">
-                <Settings2 className={cn("w-4 h-4 mr-3", fastMode ? "text-primary" : "text-muted-foreground")} />
-                <span className="text-xs font-bold">{fastMode ? "Desativar" : "Ativar"} Modo Rápido</span>
-              </DropdownMenuItem>
+                <DropdownMenuSeparator className="my-1 bg-border/50" />
+                
+                <DropdownMenuItem onClick={() => setFastMode(!fastMode)} className="rounded-xl py-2.5 px-3 cursor-pointer">
+                  <Settings2 className={cn("w-4 h-4 mr-3", fastMode ? "text-primary" : "text-muted-foreground")} />
+                  <span className="text-xs font-bold">{fastMode ? "Desativar" : "Ativar"} Modo Rápido</span>
+                </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => setPatientView(!isPatientView)} className="rounded-xl py-2.5 px-3 cursor-pointer">
-                <ShieldCheck className={cn("w-4 h-4 mr-3", isPatientView ? "text-emerald-500" : "text-muted-foreground")} />
-                <span className="text-xs font-bold">{isPatientView ? "Sair da" : "Ver como"} Paciente</span>
-              </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setPatientView(!isPatientView)} className="rounded-xl py-2.5 px-3 cursor-pointer">
+                  <ShieldCheck className={cn("w-4 h-4 mr-3", isPatientView ? "text-emerald-500" : "text-muted-foreground")} />
+                  <span className="text-xs font-bold">{isPatientView ? "Sair da" : "Ver como"} Paciente</span>
+                </DropdownMenuItem>
 
-              <DropdownMenuSeparator className="my-1 bg-border/50" />
+                <DropdownMenuSeparator className="my-1 bg-border/50" />
 
-              <DropdownMenuItem onClick={async () => { 
-                const ok = await validateAndSave(); 
-                if (ok) toast.success('Plano salvo!'); 
-              }} className="rounded-xl py-2.5 px-3 focus:bg-primary focus:text-white cursor-pointer">
-                <Save className="w-4 h-4 mr-3" />
-                <span className="text-xs font-bold">Salvar Plano</span>
-              </DropdownMenuItem>
+                <DropdownMenuItem onClick={async () => { 
+                  const ok = await validateAndSave(); 
+                  if (ok) toast.success('Plano salvo!'); 
+                }} className="rounded-xl py-2.5 px-3 focus:bg-primary focus:text-white cursor-pointer">
+                  <Save className="w-4 h-4 mr-3" />
+                  <span className="text-xs font-bold">Salvar Plano</span>
+                </DropdownMenuItem>
 
-              <DropdownMenuItem onClick={() => { resetPlan(); toast.info('Plano limpo'); }} className="rounded-xl py-2.5 px-3 focus:bg-destructive/5 focus:text-destructive cursor-pointer">
-                <Eraser className="w-4 h-4 mr-3 text-destructive" />
-                <span className="text-xs font-bold text-destructive">Limpar Tudo</span>
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+                <DropdownMenuItem onClick={() => { resetPlan(); toast.info('Plano limpo'); }} className="rounded-xl py-2.5 px-3 focus:bg-destructive/5 focus:text-destructive cursor-pointer">
+                  <Eraser className="w-4 h-4 mr-3 text-destructive" />
+                  <span className="text-xs font-bold text-destructive">Limpar Tudo</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
 
         {/* Macros chips */}
