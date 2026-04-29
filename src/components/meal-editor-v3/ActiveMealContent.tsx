@@ -126,6 +126,18 @@ export const ActiveMealContent: React.FC = () => {
             BUSCAR
           </Button>
           <Button 
+            variant="ghost" 
+            size="sm" 
+            className="h-9 px-3 text-muted-foreground hover:text-orange-500 rounded-xl font-bold text-xs"
+            onClick={() => {
+              setModalTab('templates');
+              setIsAddModalOpen(true);
+            }}
+          >
+            <Package className="w-4 h-4 mr-2" />
+            MARMITAS
+          </Button>
+          <Button 
             ref={addBtnRef}
             onClick={() => {
               setModalTab('quick');
@@ -136,7 +148,6 @@ export const ActiveMealContent: React.FC = () => {
             <Zap className="w-4 h-4 mr-2" />
             RÁPIDO
           </Button>
-
           <Button 
             variant="ghost"
             size="icon"
