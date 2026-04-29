@@ -40,13 +40,13 @@ export default function Welcome() {
       // 3. Decisão baseada em Roles
       if (roles.includes("nutritionist") || roles.includes("personal") || (roles as string[]).includes("admin")) {
         console.log("[Welcome] Perfil profissional/admin detectado.");
-        navigate("/admin/dashboard", { replace: true });
+        navigate(nextPath || "/admin/dashboard", { replace: true });
         return;
       }
 
       if (roles.includes("patient")) {
         console.log("[Welcome] Perfil paciente detectado.");
-        navigate("/client/dashboard", { replace: true });
+        navigate(nextPath || "/client/dashboard", { replace: true });
         return;
       }
 
