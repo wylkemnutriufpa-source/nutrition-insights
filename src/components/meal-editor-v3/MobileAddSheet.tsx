@@ -28,7 +28,7 @@ const ITEMS: {
 }[] = [
   { id: 'new-meal', label: 'Nova refeição', desc: 'Criar uma nova refeição', icon: PlusSquare },
   { id: 'add-food', label: 'Adicionar alimento', desc: 'Buscar e adicionar alimento', icon: Plus },
-  { id: 'add-marmita', label: 'Adicionar marmita', desc: 'Apenas almoço e jantar', icon: Package },
+  { id: 'add-marmita', label: 'Adicionar marmita', desc: 'Refeições completas prontas', icon: Package },
   {
     id: 'generate-ai',
     label: 'Gerar Plano Inteligente',
