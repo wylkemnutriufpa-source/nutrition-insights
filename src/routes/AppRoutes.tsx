@@ -6,6 +6,7 @@ import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
 import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
+import { StabilityZone } from "@/components/common/StabilityZone";
 import { lazyDebug } from "@/lib/lazyDebug";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { AnimatePresence } from "framer-motion";
@@ -351,7 +352,7 @@ export const AppRoutes = () => {
           <SystemStateGuard>
             <ExperienceRouteGuard />
             <WorkspaceRouteGuard />
-            <SectionalErrorBoundary name="Navegação Principal">
+            <StabilityZone name="Navegação Principal">
               <Routes>
                 {/* Home */}
                 <Route path="/" element={<LP section="Início"><Index /></LP>} />
@@ -389,7 +390,7 @@ export const AppRoutes = () => {
                 <Route path="/shopping-list" element={<ProtectedRoute><LP section="Lista de Compras"><ShoppingList /></LP></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><LP section="Notificações"><Notifications /></LP></ProtectedRoute>} />
                 <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
-                <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><ErrorBoundaryDebug name="Biblioteca"><Library /></ErrorBoundaryDebug></LP></ProtectedRoute>} />
+                <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><StabilityZone name="Biblioteca"><Library /></StabilityZone></LP></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><LP section="Relatórios"><Reports /></LP></ProtectedRoute>} />
                 <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
                 <Route path="/body-analysis" element={<ProtectedRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></ProtectedRoute>} />
@@ -421,8 +422,8 @@ export const AppRoutes = () => {
                 <Route path="/debug" element={<NutritionistRoute><LP section="Centro de Debug"><RealtimeDebugCenter /></LP></NutritionistRoute>} />
                 <Route path="/schema" element={<NutritionistRoute><LP section="Monitor de Schema"><SchemaMonitor /></LP></NutritionistRoute>} />
                 <Route path="/weekly-goals" element={<ProtectedRoute><LP section="Metas Semanais"><WeeklyGoals /></LP></ProtectedRoute>} />
-                <Route path="/onboarding/paciente" element={<LP section="Onboarding Paciente"><OnboardingPaciente /></LP>} />
-                <Route path="/onboarding/pipeline" element={<NutritionistRoute><LP section="Pipeline de Onboarding"><OnboardingPipeline /></LP></NutritionistRoute>} />
+                <Route path="/onboarding/paciente" element={<StabilityZone name="Onboarding"><LP section="Onboarding Paciente"><OnboardingPaciente /></LP></StabilityZone>} />
+                <Route path="/onboarding/pipeline" element={<NutritionistRoute><StabilityZone name="Onboarding Pipeline"><LP section="Pipeline de Onboarding"><OnboardingPipeline /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/payment-required" element={<ProtectedRoute><LP section="Pagamento Pendente"><PaymentRequired /></LP></ProtectedRoute>} />
                 <Route path="/payment-success" element={<ProtectedRoute><LP section="Pagamento Confirmado"><PaymentSuccess /></LP></ProtectedRoute>} />
 
@@ -432,7 +433,7 @@ export const AppRoutes = () => {
                 <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
                 <Route path="/integrations" element={<NutritionistRoute><LP section="Integrações"><Integrations /></LP></NutritionistRoute>} />
                 <Route path="/branding" element={<NutritionistRoute><LP section="Marca"><Branding /></LP></NutritionistRoute>} />
-                <Route path="/diet-builder" element={<NutritionistRoute><LP section="Diet Builder"><DietBuilder /></LP></NutritionistRoute>} />
+                <Route path="/diet-builder" element={<NutritionistRoute><StabilityZone name="Diet Builder"><LP section="Diet Builder"><DietBuilder /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates de Dieta"><DietTemplates /></LP></NutritionistRoute>} />
                 <Route path="/food-database" element={<NutritionistRoute><LP section="Banco de Alimentos"><FoodDatabase /></LP></NutritionistRoute>} />
                 <Route path="/admin/nutrition-protocols" element={<NutritionistRoute><LP section="Protocolos de Nutrição"><AdminNutritionProtocols /></LP></NutritionistRoute>} />
@@ -451,7 +452,7 @@ export const AppRoutes = () => {
                 <Route path="/clinical-brain" element={<NutritionistRoute><LP section="Cérebro Clínico"><ClinicalBrain /></LP></NutritionistRoute>} />
                 <Route path="/lab-interpreter" element={<NutritionistRoute><LP section="Intérprete de Exames"><LabInterpreter /></LP></NutritionistRoute>} />
                 <Route path="/mission-control" element={<NutritionistRoute><LP section="Controle de Missão"><MissionControl /></LP></NutritionistRoute>} />
-                <Route path="/workspace" element={<NutritionistRoute><LP section="Workspace"><WorkspaceEditor /></LP></NutritionistRoute>} />
+                <Route path="/workspace" element={<NutritionistRoute><StabilityZone name="Workspace Editor"><LP section="Workspace"><WorkspaceEditor /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/control-tower" element={<NutritionistRoute><LP section="Torre de Controle"><ClinicalControlTower /></LP></NutritionistRoute>} />
                 <Route path="/programs" element={<NutritionistRoute><LP section="Programas"><Programs /></LP></NutritionistRoute>} />
                 <Route path="/programs/:id" element={<NutritionistRoute><LP section="Detalhes do Programa"><ProgramDetail /></LP></NutritionistRoute>} />
@@ -470,7 +471,7 @@ export const AppRoutes = () => {
                 <Route path="/clinical-predictions" element={<NutritionistRoute><LP section="Predições Clínicas"><ClinicalPredictions /></LP></NutritionistRoute>} />
                 <Route path="/clinical-simulation" element={<NutritionistRoute><LP section="Simulação Clínica"><ClinicalSimulation /></LP></NutritionistRoute>} />
                 <Route path="/clinical-crm" element={<NutritionistRoute><LP section="CRM Clínico"><ClinicalCRM /></LP></NutritionistRoute>} />
-                <Route path="/personal/dashboard" element={<NutritionistRoute><LP section="Dashboard Personal"><PersonalDashboard /></LP></NutritionistRoute>} />
+                <Route path="/personal/dashboard" element={<NutritionistRoute><StabilityZone name="Dashboard Personal"><LP section="Dashboard Personal"><PersonalDashboard /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/personal/students" element={<NutritionistRoute><LP section="Alunos Personal"><PersonalStudents /></LP></NutritionistRoute>} />
                 <Route path="/personal/workouts" element={<NutritionistRoute><LP section="Treinos Personal"><PersonalWorkouts /></LP></NutritionistRoute>} />
                 <Route path="/import-patients" element={<NutritionistRoute><LP section="Importar Pacientes"><ImportPatients /></LP></NutritionistRoute>} />
@@ -478,7 +479,7 @@ export const AppRoutes = () => {
                 <Route path="/clinical-pipeline" element={<NutritionistRoute><LP section="Pipeline Clínico"><ClinicalPipeline /></LP></NutritionistRoute>} />
                 <Route path="/clinical-enterprise" element={<NutritionistRoute><LP section="Empresa Clínica"><ClinicalEnterprise /></LP></NutritionistRoute>} />
                 <Route path="/coach-bodybuilder" element={<NutritionistRoute><LP section="Coach Bodybuilder"><CoachBodybuilder /></LP></NutritionistRoute>} />
-                <Route path="/recipe-builder" element={<NutritionistRoute><LP section="Editor de Receitas"><RecipeBuilder /></LP></NutritionistRoute>} />
+                <Route path="/recipe-builder" element={<NutritionistRoute><StabilityZone name="Recipe Builder"><LP section="Editor de Receitas"><RecipeBuilder /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/protocols" element={<NutritionistRoute><LP section="Protocolos"><Protocols /></LP></NutritionistRoute>} />
                 <Route path="/therapeutic-intelligence" element={<NutritionistRoute><LP section="Inteligência Terapêutica"><TherapeuticIntelligence /></LP></NutritionistRoute>} />
                 <Route path="/weight-trajectory" element={<NutritionistRoute><LP section="Trajetória de Peso"><WeightTrajectory /></LP></NutritionistRoute>} />
@@ -510,7 +511,7 @@ export const AppRoutes = () => {
                 <Route path="/clinical-analytics" element={<NutritionistRoute><LP section="Analytics Clínico"><ClinicalHealthDashboard /></LP></NutritionistRoute>} />
 
                 {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={<NutritionistRoute><LP section="Admin Dashboard"><AdminDashboard /></LP></NutritionistRoute>} />
+                <Route path="/admin/dashboard" element={<NutritionistRoute><StabilityZone name="Dashboard Admin"><LP section="Admin Dashboard"><AdminDashboard /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/admin/audit-logs" element={<NutritionistRoute><LP section="Audit Logs"><AuditLogs /></LP></NutritionistRoute>} />
                 <Route path="/admin/clinical-rules" element={<NutritionistRoute><LP section="Regras Clínicas"><ClinicalRulesAdmin /></LP></NutritionistRoute>} />
                 <Route path="/admin/affiliates" element={<NutritionistRoute><LP section="Afiliados"><AdminAffiliates /></LP></NutritionistRoute>} />
@@ -519,7 +520,7 @@ export const AppRoutes = () => {
                 <Route path="/admin/pricing" element={<NutritionistRoute><LP section="Preços"><AdminPricing /></LP></NutritionistRoute>} />
                 <Route path="/admin/professionals" element={<NutritionistRoute><LP section="Profissionais"><AdminProfessionals /></LP></NutritionistRoute>} />
                 <Route path="/admin/subscriptions" element={<NutritionistRoute><LP section="Assinaturas"><AdminSubscriptionMonitor /></LP></NutritionistRoute>} />
-                <Route path="/admin/site-editor" element={<NutritionistRoute><LP section="Editor do Site"><AdminSiteEditor /></LP></NutritionistRoute>} />
+                <Route path="/admin/site-editor" element={<NutritionistRoute><StabilityZone name="Site Editor"><LP section="Editor do Site"><AdminSiteEditor /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/admin/qa-checklist" element={<NutritionistRoute><LP section="Checklist QA"><QAChecklist /></LP></NutritionistRoute>} />
                 <Route path="/admin/invitation-audit" element={<NutritionistRoute><LP section="Auditoria de Convites"><InvitationAudit /></LP></NutritionistRoute>} />
                 <Route path="/admin/ai-usage" element={<NutritionistRoute><LP section="Uso de IA"><AIUsageDashboard /></LP></NutritionistRoute>} />
@@ -552,7 +553,7 @@ export const AppRoutes = () => {
                 <Route path="/admin/template-nutrition-audit" element={<NutritionistRoute><LP section="Auditoria Nutricional de Templates"><TemplateNutritionAudit /></LP></NutritionistRoute>} />
 
                 {/* Patient Routes */}
-                <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
+                <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><StabilityZone name="Dashboard Cliente"><LP section="Dashboard"><ClientDashboard /></LP></StabilityZone></PaymentGuardedPatientRoute>} />
                 <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
                 <Route path="/achievements" element={<PaymentGuardedPatientRoute><LP section="Conquistas"><Achievements /></LP></PaymentGuardedPatientRoute>} />
                 <Route path="/challenges" element={<PaymentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></PaymentGuardedPatientRoute>} />
@@ -569,23 +570,23 @@ export const AppRoutes = () => {
                 <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
                 
                 {/* Editor Routes */}
-                <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+                <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                  <Route path="/v2" element={<Navigate to="/editor-v2" replace />} />
                  <Route path="/v2/:id" element={<RedirectWithParams to="/editor-v2/:id" />} />
-                <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                 
-                <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+                <Route path="/editor" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/dieta-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
 
                 {/* Public / Landing */}
                 <Route path="/landing-paciente" element={<LP section="Para Pacientes"><PatientLanding /></LP>} />
@@ -603,7 +604,7 @@ export const AppRoutes = () => {
                 <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </SectionalErrorBoundary>
+            </StabilityZone>
           </SystemStateGuard>
         </Suspense>
       </AnimatePresence>

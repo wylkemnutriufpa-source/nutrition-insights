@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -59,6 +59,9 @@ import PatientAIInsightsWidget from "@/components/patient/PatientAIInsightsWidge
 import { PatientIntelligenceBanner } from "@/components/premium/PremiumBanners";
 import MyTeamTab from "@/components/patient/MyTeamTab";
 import { ErrorBoundary } from "@/components/common/ErrorBoundary";
+import { usePageState } from "@/hooks/usePageState";
+import { SafeRender } from "@/components/common/SafeRender";
+import { StabilityZone } from "@/components/common/StabilityZone";
 interface ProgramInfo {
   id: string;
   title: string;
@@ -127,6 +130,7 @@ interface BiquiniEnrollment {
 
 export default function ClientDashboard() {
   const { user, profile, isPatient } = useAuth();
+  const page = usePageState({ initialStatus: "loading" });
   
   const handleSupabaseError = (error: any, context: string) => {
     console.error(`[Dashboard Error] ${context}:`, error);
@@ -147,7 +151,7 @@ export default function ClientDashboard() {
     (safeNum(lifecycle.plan?.total_calories) === 0 && (lifecycle.planId));
 
   // Single React Query for all dashboard data — cached, deduped, auto-refreshed
-  const { data: dashData, isLoading: loading } = useQuery({
+  const { data: dashData, isLoading: queryLoading, isError: queryError, error: queryErrorObj } = useQuery({
     queryKey: ["client-dashboard", user?.id],
     enabled: !!user,
     staleTime: 30 * 1000, // 30s cache — prevents re-fetch on tab switch
@@ -271,6 +275,16 @@ export default function ClientDashboard() {
   const workoutInfo = dashData?.workoutInfo || { planTitle: "", routineCount: 0, recentCompletions: [], hasPersonal: false };
 
   useEffect(() => {
+    if (!queryLoading && !journeyLoading && !isLoading) {
+      if (queryError) {
+        page.setPageError(queryErrorObj);
+      } else {
+        page.setReady();
+      }
+    }
+  }, [queryLoading, journeyLoading, isLoading, queryError, queryErrorObj, page]);
+
+  useEffect(() => {
     if (biquiniEnrollment?.status === "pending_onboarding") {
       setShowOnboarding(true);
     }
@@ -316,7 +330,7 @@ export default function ClientDashboard() {
     catch { return []; }
   };
 
-  if (loading || journeyLoading || isLoading) {
+  if (page.isLoading) {
     return (
       <DashboardLayout>
         <div className="p-6">
@@ -326,8 +340,26 @@ export default function ClientDashboard() {
     );
   }
 
+  if (page.isError) {
+    return (
+      <DashboardLayout>
+        <StabilityZone name="Dashboard Cliente" fallback={null}>
+          <div className="hidden">{/* Force trigger boundary if needed */}</div>
+          {/* StabilityZone will handle the error UI since we are returning null here but the zone is above */}
+          <div className="p-12 text-center space-y-4">
+             <AlertCircle className="w-12 h-12 text-destructive mx-auto" />
+             <h2 className="text-xl font-bold">Erro ao carregar Dashboard</h2>
+             <p className="text-zinc-400">{page.error?.message}</p>
+             <Button onClick={page.handleRetry}>Tentar Novamente</Button>
+          </div>
+        </StabilityZone>
+      </DashboardLayout>
+    );
+  }
+
     return (
     <DashboardLayout>
+      <SafeRender name="Conteúdo do Dashboard" data={[user, profile, dashData]}>
       {shouldBlock && journeyStatus !== "awaiting_onboarding_release" ? (
         <div className="max-w-7xl mx-auto px-4 py-12">
           <OnboardingGateScreen status={journeyStatus!} />
@@ -969,6 +1001,7 @@ export default function ClientDashboard() {
       </motion.div>
         </>
       )}
+      </SafeRender>
     </DashboardLayout>
   );
 }
