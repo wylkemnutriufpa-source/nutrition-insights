@@ -130,9 +130,11 @@ const PreviewPatient = lazy(() => import("./pages/PreviewPatient"));
 const ProgramDetail = lazy(() => import("./pages/ProgramDetail"));
 const PublicBooking = lazy(() => import("./pages/PublicBooking"));
 const PublicPlans = lazy(() => import("./pages/PublicPlans"));
+const PublicProfile = lazy(() => import("./pages/PublicProfile"));
 const PublicProgram = lazy(() => import("./pages/PublicProgram"));
 const QuickLink = lazy(() => import("./pages/QuickLink"));
 const StatusPage = lazy(() => import("./pages/StatusPage"));
+
 const WhatsAppSettings = lazy(() => import("./pages/WhatsAppSettings"));
 const StoreDashboard = lazy(() => import("./pages/store/StoreDashboard"));
 const StoreProducts = lazy(() => import("./pages/store/StoreProducts"));
@@ -573,8 +575,11 @@ function AppContent() {
               <Route path="/patient-landing" element={<PatientLanding />} />
               <Route path="/personal-landing" element={<PersonalLanding />} />
               <Route path="/booking/:id" element={<PublicBooking />} />
-              <Route path="/public-plans" element={<PublicPlans />} />
+              <Route path="/p/:slug" element={<PublicProfile />} />
+              <Route path="/p/:slug/plans" element={<PublicPlans planType="patient_prestige" />} />
+              <Route path="/professional/plans/:slug" element={<PublicPlans planType="professional" />} />
               <Route path="/public-program/:id" element={<PublicProgram />} />
+
               <Route path="/ql/:id" element={<QuickLink />} />
               <Route path="/status-page" element={<StatusPage />} />
 
