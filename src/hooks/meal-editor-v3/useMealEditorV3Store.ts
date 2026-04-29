@@ -144,21 +144,53 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       templates: [],
       favorites: [],
 
-      setPatientId: (id) => {
+      setPatientId: async (id) => {
         const storedFastMode = localStorage.getItem(`fastMode_${id}`);
-        // Simulando dados reais de anamnese para testes
-        set({ 
-          patientId: id, 
-          fastMode: storedFastMode === 'true',
-          patientTargets: { 
-            calories: 2200, 
-            protein: 160, 
-            carbs: 220, 
-            fat: 70,
-            isIntolerant: false,
-            drinksCoffee: true
-          } 
-        });
+        
+        set({ patientId: id, fastMode: storedFastMode === 'true', planStatus: 'syncing' });
+
+        try {
+          // Buscar dados reais da anamnese do paciente
+          const { data: anamnesis, error } = await supabase
+            .from('patient_anamnesis')
+            .select('*')
+            .eq('user_id', id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          if (anamnesis && !error) {
+            set({ 
+              patientTargets: { 
+                calories: Number(anamnesis.computed_kcal_target) || 2000, 
+                protein: Number(anamnesis.computed_protein) || 150, 
+                carbs: Number(anamnesis.computed_carbs) || 200, 
+                fat: Number(anamnesis.computed_fat) || 60,
+                isIntolerant: anamnesis.answers?.restrictions?.toLowerCase().includes('leite') || false,
+                drinksCoffee: !anamnesis.answers?.restrictions?.toLowerCase().includes('café')
+              },
+              planStatus: 'draft'
+            });
+            toast.success('Dados do paciente carregados com sucesso');
+          } else {
+            // Fallback se não houver anamnese
+            set({ 
+              patientTargets: { 
+                calories: 2000, 
+                protein: 150, 
+                carbs: 200, 
+                fat: 60,
+                isIntolerant: false,
+                drinksCoffee: true
+              },
+              planStatus: 'draft'
+            });
+            toast.info('Paciente sem anamnese. Usando alvos padrão.');
+          }
+        } catch (err) {
+          console.error('Erro ao carregar paciente:', err);
+          set({ planStatus: 'error' });
+        }
       },
       setActiveMeal: (id) => set({ activeMealId: id }),
       setFastMode: (enabled) => {
