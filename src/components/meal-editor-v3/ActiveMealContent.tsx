@@ -148,15 +148,16 @@ export const ActiveMealContent: React.FC = () => {
             <Zap className="w-4 h-4 mr-2" />
             RÁPIDO
           </Button>
+          {/* Botão + Compacto de Segurança */}
           <button 
             onClick={() => {
               setModalTab('search');
               setIsAddModalOpen(true);
             }}
-            className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all shrink-0"
+            className="flex items-center justify-center h-9 w-9 min-w-[36px] rounded-xl bg-primary/10 text-primary hover:bg-primary hover:text-white transition-all shrink-0"
             title="Adicionar alimento"
           >
-            <Plus className="w-5 h-5" />
+            <Plus className="w-4 h-4" />
           </button>
           <Button 
             variant="ghost"
