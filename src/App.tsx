@@ -309,7 +309,7 @@ function AppContent() {
               <Route path="/shopping-list" element={<ProtectedRoute><LP section="Lista de Compras"><ShoppingList /></LP></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><LP section="Notificações"><Notifications /></LP></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
-              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
+              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><ErrorBoundaryDebug name="Biblioteca"><Library /></ErrorBoundaryDebug></LP></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><LP section="Relatórios"><Reports /></LP></ProtectedRoute>} />
               <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
               <Route path="/body-analysis" element={<ProtectedRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></ProtectedRoute>} />
