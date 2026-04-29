@@ -1,7 +1,8 @@
 import { motion } from "framer-motion";
 import { forwardRef, useMemo, useCallback } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import logoPng from "@/assets/logo.png";
+
 
 
 const STORAGE_KEY = "fj_intro_seen";
@@ -60,20 +61,21 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
 ) {
   const s = sizes[size];
   const location = useLocation();
+  const navigate = useNavigate();
 
   const handleClick = useCallback(() => {
     if (typeof window === "undefined") return;
 
     sessionStorage.removeItem(STORAGE_KEY);
-    const targetUrl = "/?intro=1";
-
-    if (location.pathname === "/" && window.location.search === "?intro=1") {
-      // Already on intro, just return without reloading
-      return;
+    
+    if (location.pathname === "/") {
+      // Just refresh the intro state if already on /
+      window.location.href = "/?intro=1";
+    } else {
+      navigate("/?intro=1");
     }
+  }, [location.pathname, navigate]);
 
-    window.location.assign(targetUrl);
-  }, [location.pathname]);
 
   const particles = useMemo(
     () =>
