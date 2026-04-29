@@ -247,14 +247,26 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 }
 
 function DashboardRedirect() {
-  const { isNutritionist, isPersonal, isAdmin, authStatus } = useAuth();
+  const { isNutritionist, isPersonal, isAdmin, authStatus, user } = useAuth();
   
-  if (authStatus === "loading") return <PageLoader />;
-  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
+  if (authStatus === "loading") {
+    console.log("[DashboardRedirect] Auth Loading...");
+    return <PageLoader />;
+  }
   
+  if (authStatus === "unauthenticated") {
+    console.warn("[DashboardRedirect] Não autenticado. Volta para /auth");
+    return <Navigate to="/auth" replace />;
+  }
+  
+  console.log(`[DashboardRedirect] Usuário: ${user?.id} | Roles: Nutri=${isNutritionist}, Personal=${isPersonal}, Admin=${isAdmin}`);
+
   if (isNutritionist || isPersonal || isAdmin) {
+    console.log("[DashboardRedirect] Redirecionando para /admin/dashboard");
     return <Navigate to="/admin/dashboard" replace />;
   }
+  
+  console.log("[DashboardRedirect] Redirecionando para /client/dashboard");
   return <Navigate to="/client/dashboard" replace />;
 }
 
