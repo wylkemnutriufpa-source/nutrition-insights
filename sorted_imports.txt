@@ -1,7 +1,11 @@
+AIUsageDashboard
 AccountDeletion
 Achievements
 AdminAffiliates
 AdminBookingSettings
+AdminDashboard
+AdminExperienceModeAudit
+AdminExperienceModeReconcile
 AdminFeatureControl
 AdminGuideEngine
 AdminLandingPages
@@ -10,6 +14,7 @@ AdminMenuConfig
 AdminNutritionProtocols
 AdminOperationalCosts
 AdminPatientFeatures
+AdminPlanLoadingDiagnostics
 AdminPrestige
 AdminPricing
 AdminProfessionals
@@ -52,6 +57,7 @@ ClinicalOrchestration
 ClinicalPipeline
 ClinicalPredictions
 ClinicalRiskDashboard
+ClinicalRulesAdmin
 ClinicalSimulation
 ClinicalWorkspace
 CoachBodybuilder
@@ -59,6 +65,7 @@ CockpitPremium
 ConsentRequired
 Curiosidades
 DiagnosticStatus
+DietBuilder
 DietTemplates
 Feedbacks
 Financial
@@ -72,6 +79,7 @@ GrowthDashboard
 HealthCheckQuiz
 HumanPerformance
 HybridPlanBuilder
+ImageFallbackAdmin
 ImportPatients
 InOfficeSelector
 InOfficeWizard
@@ -86,11 +94,9 @@ InvitePatient
 Journey
 LabInterpreter
 Landing
-Library
 MagicJourneyStory
-MealPlanEditorV2
-MealPlanEditorV2Entry
-MealPlanEditorV3Page
+MarmitaAudit
+MealCoverageDashboard
 MealPlans
 Meals
 MetabolicTwin
@@ -124,6 +130,7 @@ PhysicalAssessment
 PhysiologicalIntelligence
 PhytotherapyProtocols
 PlanAudit
+PlanBatchAudit
 Planner
 PlatformGovernance
 PopulationIntelligence
@@ -142,6 +149,7 @@ PublicDemo
 PublicPlans
 PublicProfile
 PublicProgram
+QAChecklist
 QuickLink
 RealtimeDebugCenter
 RecipeBuilder
@@ -153,11 +161,17 @@ SecurityDashboard
 Settings
 ShoppingList
 StatusPage
+StoreDashboard
+StoreProducts
 Supplements
+SystemAuditLogs
 SystemDiagnostics
 SystemHealthLive
 SystemPresentation
 TeamManagement
+TechnicalSheets
+TemplateMassReformulation
+TemplateNutritionAudit
 TermsOfUse
 TestDeploy
 TherapeuticIntelligence
