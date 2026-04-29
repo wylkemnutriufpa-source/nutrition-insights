@@ -495,7 +495,7 @@ function DynamicSidebar({
       {isAdmin && (
         <div className="px-3 mb-2">
           <Link
-            to="/system-diagnostics"
+            to="/admin/diagnostics"
             onClick={onLinkClick}
             className={`flex items-center gap-2 w-full rounded-xl border border-cyan-500/30 bg-cyan-500/10 hover:bg-cyan-500/20 transition-all px-3 py-2.5 ${collapsed ? "justify-center" : ""}`}
           >
