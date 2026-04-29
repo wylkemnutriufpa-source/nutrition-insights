@@ -14,8 +14,6 @@ import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
 import { BuildVersionTag } from "@/components/common/BuildVersionTag";
-import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
-import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -67,8 +65,6 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
               <TenantProvider>
                 <ExperienceModeProvider>
                   <ExperienceThemeSync />
-                  <ExperienceRouteGuard />
-                  <WorkspaceRouteGuard />
                   <CelebrationProvider>
                     <CommandPaletteProvider>
                       <AppStateProvider>
