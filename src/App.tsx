@@ -282,6 +282,8 @@ function AppContent() {
               <Route path="/professional" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/professional/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
+              <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
+              <Route path="/pacientes/:id" element={<Navigate to="/patients/:id" replace />} />
 
               {/* Auth */}
               <Route path="/auth" element={<Auth />} />
