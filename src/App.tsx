@@ -442,6 +442,11 @@ function AppContent() {
               <Route path="/weight-calculator" element={<ProtectedRoute><LP section="Calculadora de Peso"><WeightCalculator /></LP></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
               
+              <Route path="/my-diet" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/dieta" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/my-workouts" element={<PaymentGuardedPatientRoute><LP section="Meus Treinos"><PatientWorkouts /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/body-projection" element={<PaymentGuardedPatientRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></PaymentGuardedPatientRoute>} />
+              
               {/* Admin & Intelligence Routes */}
               <Route path="/admin/dashboard" element={<NutritionistRoute><LP section="Admin Dashboard"><AdminDashboard /></LP></NutritionistRoute>} />
               <Route path="/admin/audit-logs" element={<NutritionistRoute><LP section="Audit Logs"><AuditLogs /></LP></NutritionistRoute>} />
