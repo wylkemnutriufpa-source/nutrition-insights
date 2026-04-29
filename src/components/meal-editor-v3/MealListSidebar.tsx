@@ -1,7 +1,11 @@
 import React, { useState } from 'react';
 import { useMealEditorV3Store } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { cn } from '@/lib/utils';
-import { Utensils, Coffee, Sun, Moon, Eye } from 'lucide-react';
+import { Utensils, Coffee, Sun, Moon, Eye, Plus } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { MealDetailsModal } from './MealDetailsModal';
+import { Button } from '@/components/ui/button';
+import { NewMealModal } from './NewMealModal';
 import { motion } from 'framer-motion';
 import { MealDetailsModal } from './MealDetailsModal';
 import { Button } from '@/components/ui/button';
@@ -16,6 +20,7 @@ const MEAL_ICONS: Record<string, any> = {
 export const MealListSidebar: React.FC = () => {
   const { meals, activeMealId, setActiveMeal } = useMealEditorV3Store();
   const [viewingMealId, setViewingMealId] = useState<string | null>(null);
+  const [isNewMealModalOpen, setIsNewMealModalOpen] = useState(false);
 
   const calculateMealCalories = (items: any[]) => {
     return items.reduce((acc, item) => acc + (item.calories * item.quantity), 0);
@@ -23,8 +28,16 @@ export const MealListSidebar: React.FC = () => {
 
   return (
     <div className="flex flex-col h-full">
-      <div className="px-6 py-4 border-b bg-muted/5">
+      <div className="px-6 py-4 border-b bg-muted/5 flex items-center justify-between">
         <h2 className="text-[10px] font-bold uppercase tracking-[0.2em] text-muted-foreground/60">Estrutura do Plano</h2>
+        <Button 
+          variant="ghost" 
+          size="icon" 
+          className="h-6 w-6 rounded-lg hover:bg-primary/10 hover:text-primary transition-all"
+          onClick={() => setIsNewMealModalOpen(true)}
+        >
+          <Plus className="w-3.5 h-3.5" />
+        </Button>
       </div>
       <div className="flex-1 overflow-y-auto p-3 space-y-1">
         {meals.map((meal) => {
@@ -95,6 +108,11 @@ export const MealListSidebar: React.FC = () => {
         isOpen={!!viewingMealId} 
         onClose={() => setViewingMealId(null)} 
         mealId={viewingMealId} 
+      />
+
+      <NewMealModal 
+        isOpen={isNewMealModalOpen} 
+        onClose={() => setIsNewMealModalOpen(false)} 
       />
     </div>
   );
