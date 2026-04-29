@@ -14,9 +14,9 @@ export const QUICK_FOODS = [
   { id: 'q20', name: 'Iogurte com Granola', calories: 240, protein: 12, carbs: 32, fat: 8, portionValue: 200, portionUnit: 'g', imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=200' },
   
   // Itens Básicos
-  { id: 'q1', name: 'Ovo Cozido', calories: 78, protein: 6, carbs: 0.6, fat: 5, portionValue: 50, portionUnit: 'unidade' },
-  { id: 'q2', name: 'Pão Integral', calories: 68, protein: 3, carbs: 12, fat: 1, portionValue: 25, portionUnit: 'g' },
-  { id: 'q3', name: 'Queijo Branco', calories: 60, protein: 4, carbs: 1, fat: 4, portionValue: 30, portionUnit: 'g' },
+  { id: 'q1', name: 'Ovo Cozido', calories: 78, protein: 6, carbs: 0.6, fat: 5, portionValue: 50, portionUnit: 'unidade', imageUrl: undefined },
+  { id: 'q2', name: 'Pão Integral', calories: 68, protein: 3, carbs: 12, fat: 1, portionValue: 25, portionUnit: 'g', imageUrl: undefined },
+  { id: 'q3', name: 'Queijo Branco', calories: 60, protein: 4, carbs: 1, fat: 4, portionValue: 30, portionUnit: 'g', imageUrl: undefined },
   { id: 'q4', name: 'Tapioca', calories: 70, protein: 0, carbs: 17, fat: 0, portionValue: 30, portionUnit: 'g' },
   { id: 'q5', name: 'Cuscuz', calories: 110, protein: 3, carbs: 24, fat: 0.5, portionValue: 100, portionUnit: 'g' },
   { id: 'q6', name: 'Banana', calories: 89, protein: 1.1, carbs: 23, fat: 0.3, portionValue: 100, portionUnit: 'g' },
