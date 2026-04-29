@@ -477,10 +477,12 @@ export const AppRoutes = () => {
                 <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
                 
                 {/* Editor Routes */}
+                <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+                <Route path="/v2" element={<Navigate to="/editor-v2" replace />} />
                 <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
