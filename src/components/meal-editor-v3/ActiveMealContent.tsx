@@ -119,8 +119,8 @@ export const ActiveMealContent: React.FC = () => {
               onClick={() => setIsAddModalOpen(true)} 
               className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold px-6"
             >
-              <Plus className="w-4 h-4 mr-2" />
-              ADICIONAR
+              <Zap className="w-4 h-4 mr-2" />
+              RÁPIDO
             </Button>
           )}
 
