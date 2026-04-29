@@ -214,6 +214,7 @@ const BiquiniBrancoLanding = lazy(() => import("./pages/BiquiniBrancoLanding"));
 const PublicDemo = lazy(() => import("./pages/PublicDemo"));
 const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
 const TestDeploy = lazy(() => import("./pages/TestDeploy"));
+const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
