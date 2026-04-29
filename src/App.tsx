@@ -283,8 +283,8 @@ function AppContent() {
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
               
               {/* Redirects */}
-              <Route path="/dashboard" element={<Navigate to="/client/dashboard" replace />} />
-              <Route path="/dashboard/*" element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardRedirect />} />
+              <Route path="/dashboard/*" element={<DashboardRedirect />} />
               <Route path="/professional" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/professional/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -292,6 +292,7 @@ function AppContent() {
               <Route path="/pacientes/:id" element={<Navigate to="/patients/:id" replace />} />
               <Route path="/pacientes/*" element={<Navigate to="/patients" replace />} />
               <Route path="/biblioteca" element={<Navigate to="/library" replace />} />
+              <Route path="/landing" element={<Navigate to="/" replace />} />
 
               {/* Auth */}
               <Route path="/auth" element={<Auth />} />
