@@ -276,13 +276,13 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       }
 
       try {
-        const { data, error } = await withTimeout(
-          supabase
-            .from("profiles")
-            .select("experience_mode")
-            .eq("user_id", user.id)
-            .maybeSingle()
-        );
+        const fetchPromise = supabase
+          .from("profiles")
+          .select("experience_mode")
+          .eq("user_id", user.id)
+          .maybeSingle();
+
+        const { data, error } = await withTimeout(fetchPromise as unknown as Promise<any>);
 
         if (!error && data?.experience_mode) {
           const dbMode = data.experience_mode as ExperienceMode;
