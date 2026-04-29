@@ -219,6 +219,11 @@ const PublicDemo = lazy(() => import("./pages/PublicDemo"));
 const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
 const TestDeploy = lazy(() => import("./pages/TestDeploy"));
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
+const SystemAuditLogs = lazy(() => import("./pages/AuditLogs"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Landing = lazy(() => import("./pages/Landing"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -291,6 +296,7 @@ function AppContent() {
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
               
               {/* Redirects */}
+              {/* Redirects & Aliases */}
               <Route path="/dashboard" element={<DashboardRedirect />} />
               <Route path="/dashboard/*" element={<DashboardRedirect />} />
               <Route path="/professional" element={<Navigate to="/admin/dashboard" replace />} />
@@ -299,8 +305,11 @@ function AppContent() {
               <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
               <Route path="/pacientes/:id" element={<Navigate to="/patients/:id" replace />} />
               <Route path="/pacientes/*" element={<Navigate to="/patients" replace />} />
+              <Route path="/paciente" element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="/paciente/dashboard" element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="/paciente/*" element={<Navigate to="/client/dashboard" replace />} />
               <Route path="/biblioteca" element={<Navigate to="/library" replace />} />
-              <Route path="/landing" element={<Navigate to="/" replace />} />
+              <Route path="/landing" element={<Landing />} />
 
               {/* Auth */}
               <Route path="/auth" element={<Auth />} />
@@ -326,6 +335,32 @@ function AppContent() {
               <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
               <Route path="/physical-assessment" element={<ProtectedRoute><LP section="Avaliação Física"><PhysicalAssessment /></LP></ProtectedRoute>} />
               <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas Globais"><GlobalTips /></LP></ProtectedRoute>} />
+              <Route path="/consent" element={<LP section="Consentimento"><ConsentRequired /></LP>} />
+              <Route path="/audit-logs" element={<NutritionistRoute><LP section="Logs do Sistema"><SystemAuditLogs /></LP></NutritionistRoute>} />
+              <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
+              <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
+              <Route path="/gateway" element={<LP section="Portal"><GatewayPage /></LP>} />
+              <Route path="/global-adaptive" element={<ProtectedRoute><LP section="IA Adaptativa"><GlobalAdaptiveIntelligence /></LP></ProtectedRoute>} />
+              <Route path="/in-office-wizard" element={<NutritionistRoute><LP section="Assistente de Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
+              <Route path="/intake" element={<LP section="Onboarding de Entrada"><IntakeOnboarding /></LP>} />
+              <Route path="/invitation-status/:id" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
+              <Route path="/magic-journey" element={<ProtectedRoute><LP section="Jornada Mágica"><MagicJourneyStory /></LP></ProtectedRoute>} />
+              <Route path="/mobile-qa" element={<NutritionistRoute><LP section="QA Mobile"><MobileQA /></LP></NutritionistRoute>} />
+              <Route path="/operational" element={<NutritionistRoute><LP section="Painel Operacional"><OperationalDashboard /></LP></NutritionistRoute>} />
+              <Route path="/patient-diagnostic" element={<NutritionistRoute><LP section="Diagnóstico de Paciente"><PatientDiagnostic /></LP></NutritionistRoute>} />
+              <Route path="/preview-patient" element={<NutritionistRoute><LP section="Preview de Paciente"><PreviewPatient /></LP></NutritionistRoute>} />
+              <Route path="/pricing" element={<LP section="Preços"><Pricing /></LP>} />
+              <Route path="/privacy" element={<LP section="Privacidade"><PrivacyPolicy /></LP>} />
+              <Route path="/terms" element={<LP section="Termos de Uso"><TermsOfUse /></LP>} />
+              <Route path="/demo" element={<LP section="Demonstração"><PublicDemo /></LP>} />
+              <Route path="/q/:id" element={<LP section="Link Rápido"><QuickLink /></LP>} />
+              <Route path="/debug" element={<NutritionistRoute><LP section="Centro de Debug"><RealtimeDebugCenter /></LP></NutritionistRoute>} />
+              <Route path="/schema" element={<NutritionistRoute><LP section="Monitor de Schema"><SchemaMonitor /></LP></NutritionistRoute>} />
+              <Route path="/weekly-goals" element={<ProtectedRoute><LP section="Metas Semanais"><WeeklyGoals /></LP></ProtectedRoute>} />
+              <Route path="/onboarding/paciente" element={<LP section="Onboarding Paciente"><OnboardingPaciente /></LP>} />
+              <Route path="/onboarding/pipeline" element={<NutritionistRoute><LP section="Pipeline de Onboarding"><OnboardingPipeline /></LP></NutritionistRoute>} />
+              <Route path="/payment-required" element={<ProtectedRoute><LP section="Pagamento Pendente"><PaymentRequired /></LP></ProtectedRoute>} />
+              <Route path="/payment-success" element={<ProtectedRoute><LP section="Pagamento Confirmado"><PaymentSuccess /></LP></ProtectedRoute>} />
 
               {/* Professional Routes */}
               <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
@@ -454,7 +489,17 @@ function AppContent() {
               <Route path="/admin/biblioteca" element={<NutritionistRoute><LP section="Biblioteca Admin"><Library /></LP></NutritionistRoute>} />
               <Route path="/admin-operational-costs" element={<NutritionistRoute><LP section="Custos Operacionais Admin"><AdminOperationalCosts /></LP></NutritionistRoute>} />
               <Route path="/admin/marketing-content" element={<NutritionistRoute><LP section="Marketing Admin"><AdminMarketingContent /></LP></NutritionistRoute>} />
-              
+              <Route path="/admin/marmitas" element={<NutritionistRoute><LP section="Auditoria de Marmitas"><MarmitaAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/image-fallback" element={<NutritionistRoute><LP section="Fallback de Imagem"><ImageFallbackAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/mass-reformulation" element={<NutritionistRoute><LP section="Reformulação em Massa"><TemplateMassReformulation /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-batch-audit" element={<NutritionistRoute><LP section="Auditoria de Planos em Lote"><PlanBatchAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/meal-coverage" element={<NutritionistRoute><LP section="Cobertura de Refeições"><MealCoverageDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/meal-visual-library" element={<NutritionistRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-audit" element={<NutritionistRoute><LP section="Auditoria de Experiência"><AdminExperienceModeAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-reconcile" element={<NutritionistRoute><LP section="Reconciliação de Experiência"><AdminExperienceModeReconcile /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-diagnostics" element={<NutritionistRoute><LP section="Diagnóstico de Carregamento"><AdminPlanLoadingDiagnostics /></LP></NutritionistRoute>} />
+              <Route path="/admin/template-nutrition-audit" element={<NutritionistRoute><LP section="Auditoria Nutricional de Templates"><TemplateNutritionAudit /></LP></NutritionistRoute>} />
+
               {/* Patient Routes */}
               <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
