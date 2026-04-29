@@ -1,10 +1,2 @@
-import { CoreProviders } from "./providers/CoreProviders";
-import { AppRoutes } from "./routes/AppRoutes";
-
-const App = () => (
-  <CoreProviders>
-    <AppRoutes />
-  </CoreProviders>
-);
-
+const App = () => <div>Hello World</div>;
 export default App;
