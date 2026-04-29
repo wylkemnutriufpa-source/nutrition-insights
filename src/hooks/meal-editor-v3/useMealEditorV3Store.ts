@@ -706,7 +706,6 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           return false;
         }
       },
-      },
 
       validateConsistency: () => {
         const { meals } = get();
