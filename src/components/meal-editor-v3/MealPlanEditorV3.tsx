@@ -51,12 +51,15 @@ export const MealPlanEditorV3: React.FC = () => {
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
     fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView,
-    viewMode, setViewMode, setPatientId
+    viewMode, setViewMode, setPatientId, activeDay
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [isNewMealModalOpen, setIsNewMealModalOpen] = useState(false);
+  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+  const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = useState(false);
   const [patients, setPatients] = useState<any[]>([]);
   const [validationResults, setValidationResults] = useState<any>(null);
 
