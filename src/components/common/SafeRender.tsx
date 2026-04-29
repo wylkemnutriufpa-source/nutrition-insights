@@ -2,6 +2,7 @@
 import React, { ReactNode } from "react";
 import { StabilityZone } from "./StabilityZone";
 import { ShieldAlert } from "lucide-react";
+import { logError } from "@/lib/monitoring";
 
 interface SafeRenderProps {
   children: ReactNode;
@@ -18,7 +19,8 @@ export function SafeRender({ children, data, name, fallback }: SafeRenderProps) 
   const isDataValid = data.every(item => item !== undefined && item !== null);
 
   if (!isDataValid) {
-    console.error(`[FitJourney:SafeRender] Dados inválidos para: ${name}`, { data });
+    logError("data_error", name, `Dados inválidos ou ausentes para renderização de ${name}`, { data });
+    // ... keep existing code
     
     if (fallback) return <>{fallback}</>;
 

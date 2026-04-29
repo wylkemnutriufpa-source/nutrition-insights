@@ -6,6 +6,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { logAudit } from "@/lib/auditLog";
 import { ensureContext } from "@/components/common/SystemShield";
 import { useSystemShield } from "@/components/common/SystemShield";
+import { logError } from "@/lib/monitoring";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -114,7 +115,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           trial_end: data.trial_end ?? null,
         });
       }
-    } catch (e) {
+    } catch (e: any) {
+      logError("auth_error", "subscription", "Erro ao verificar assinatura", { error: e.message });
       console.error("Error checking subscription:", e);
     } finally {
       subCheckRef.current = false;
@@ -174,7 +176,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           }
         }
       } catch (err: any) {
+        logError("auth_error", "initialization", err.message, { correlationId }, err.stack);
         console.error(`[Auth:${correlationId}] FALHA NA INICIALIZAÇÃO:`, err);
+        // ... keep existing code
         if (mounted) {
           setError(err instanceof Error ? err : new Error(String(err)));
           setLoading(false);

@@ -3,6 +3,7 @@ import React, { Component, ErrorInfo, ReactNode } from "react";
 import { AlertCircle, RefreshCcw, Home, ShieldAlert, ChevronLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { logError } from "@/lib/monitoring";
 
 interface Props {
   children: ReactNode;
@@ -35,12 +36,14 @@ export class StabilityZone extends Component<Props, State> {
   }
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
-    // Log estruturado para produção
-    console.group(`%c[StabilityZone:${this.props.name}] FALHA DETECTADA`, "color: #ff0000; font-weight: bold;");
-    console.error("Erro:", error.message);
-    console.error("Caminho:", window.location.pathname);
-    console.error("Component Stack:", errorInfo.componentStack);
-    console.groupEnd();
+    // Log estruturado para produção (Observabilidade)
+    logError(
+      "render_error",
+      this.props.name,
+      error.message,
+      { componentStack: errorInfo.componentStack },
+      error.stack
+    );
 
     this.setState({ errorInfo });
   }
