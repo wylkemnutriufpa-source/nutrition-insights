@@ -32,6 +32,7 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
 // Lazy
+const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
 const Patients = lazy(() => import("./pages/Patients"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const MealPlanEditorV3 = lazy(() => import("./pages/MealPlanEditorV3Page"));
