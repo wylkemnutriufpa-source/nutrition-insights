@@ -47,7 +47,27 @@ export default function QuickLink() {
     }
     
     const fetchProf = async () => {
-...
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", nutriId)
+        .maybeSingle();
+        
+      const { data: profProfile } = await supabase
+        .from("professional_profiles")
+        .select("clinic_name")
+        .eq("user_id", nutriId)
+        .maybeSingle();
+        
+      if (profile) {
+        setProfessional({
+          full_name: profile.full_name,
+          clinic_name: profProfile?.clinic_name || null
+        });
+      }
+      setLoadingProf(false);
+    };
+    
     fetchProf();
   }, [nutriId]);
 
