@@ -111,11 +111,19 @@ export const MealPlanEditorV3: React.FC = () => {
     toast.success('Plano otimizado clinicamente!');
   };
 
-  const handleSaveClick = () => {
+  const handleSaveClick = async () => {
+    if (!patientId) {
+      toast.error('Selecione um paciente antes de salvar o plano');
+      setIsPatientSearchOpen(true);
+      return;
+    }
+
     const totals = meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        acc.calories += item.calories * item.quantity;
-        acc.protein += item.protein * item.quantity;
+        const currentMeasure = item.householdMeasures?.find(m => m.unit === item.selectedUnit) || { unit: item.portionUnit, factor: 1 };
+        const factor = item.quantity * currentMeasure.factor;
+        acc.calories += item.calories * factor;
+        acc.protein += item.protein * factor;
       });
       return acc;
     }, { calories: 0, protein: 0 });
@@ -282,7 +290,14 @@ export const MealPlanEditorV3: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={handleOptimize}
+            onClick={() => {
+              if (!patientId) {
+                toast.error('Selecione um paciente antes de otimizar o plano');
+                setIsPatientSearchOpen(true);
+                return;
+              }
+              handleOptimize();
+            }}
             className="bg-purple-500/5 border-purple-500/20 text-purple-600 hover:bg-purple-500/10 font-bold"
           >
             <Sparkles className="w-3.5 h-3.5 mr-2" />
@@ -292,11 +307,18 @@ export const MealPlanEditorV3: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setIsGenerateAIModalOpen(true)} 
+            onClick={() => {
+              if (!patientId) {
+                toast.error('Selecione um paciente antes de gerar o plano');
+                setIsPatientSearchOpen(true);
+                return;
+              }
+              setIsGenerateAIModalOpen(true);
+            }} 
             className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 font-bold px-4"
           >
             <Bot className="w-3.5 h-3.5 mr-2" />
-            GERAR COM IA
+            GERAR PLANO
           </Button>
           
           <Button 
