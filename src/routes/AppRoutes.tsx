@@ -528,7 +528,7 @@ export const AppRoutes = () => {
                 <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </ErrorBoundaryDebug>
+            </SectionalErrorBoundary>
           </SystemStateGuard>
         </Suspense>
       </AnimatePresence>
