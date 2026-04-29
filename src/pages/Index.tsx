@@ -1183,6 +1183,20 @@ export default function Index() {
   // For hybrid users, respect workspace context; for pure roles, use role check
   const isPatient = isHybridUser ? isPatientContext : (!isProRole && !isAdmin);
 
+  // Regra Determinística: Redirecionar para o Hub de Boas-Vindas se não tivermos roles definidas
+  // ou se houver intenção de convite pendente.
+  const isInvited = localStorage.getItem("fj_invited") === "true";
+  
+  useEffect(() => {
+    if (!loading && user && (isInvited || !isProRole)) {
+      // Se não temos roles, deixamos o /welcome decidir (pode ser um paciente novo)
+      // Se isProRole é falso, e não temos a role de patient confirmada no AuthProvider, 
+      // o /welcome fará a triagem segura.
+      console.log("[Index] Redirecionando para Welcome Hub para triagem de fluxo.");
+      navigate("/welcome", { replace: true });
+    }
+  }, [loading, user, isInvited, isProRole, navigate]);
+
   if (!loading && !user) {
     return <Navigate to="/auth" replace />;
   }
