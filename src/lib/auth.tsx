@@ -56,10 +56,11 @@ const defaultSubscription: SubscriptionState = {
   trial_end: null,
 };
 
-function withAuthTimeout<T>(promise: Promise<T>, label: string, timeoutMs = 3500): Promise<T> {
+function withAuthTimeout<T>(promise: Promise<T>, label: string, fallback: T, timeoutMs = 3500): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = window.setTimeout(() => {
-      reject(new Error(`[Auth] Timeout ao carregar ${label}`));
+      console.warn(`[Auth] Timeout ao carregar ${label}; seguindo em modo seguro`);
+      resolve(fallback);
     }, timeoutMs);
 
     promise
@@ -131,7 +132,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.log(`%c[Auth:${correlationId}] Initializing session...`, "color: #3b82f6; font-weight: bold");
         const { data: { session }, error: sessionError } = await withAuthTimeout(
           supabase.auth.getSession(),
-          "sessão inicial"
+          "sessão inicial",
+          { data: { session: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getSession>>
         );
 
         if (sessionError) {
@@ -146,8 +148,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           console.log(`[Auth:${correlationId}] Fetching data for user:`, session.user.id);
           const [profileResult, rolesResult] = await Promise.allSettled([
-            withAuthTimeout(fetchProfile(session.user.id), "perfil"),
-            withAuthTimeout(fetchRoles(session.user.id), "permissões"),
+            withAuthTimeout(fetchProfile(session.user.id), "perfil", undefined),
+            withAuthTimeout(fetchRoles(session.user.id), "permissões", undefined),
           ]);
           
           console.log(`[Auth:${correlationId}] Initial fetch complete. Profile:`, 
