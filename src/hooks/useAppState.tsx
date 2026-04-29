@@ -20,7 +20,7 @@ const AppStateContext = createContext<AppStateContextType>({
 });
 
 export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  const { user, profile, loading: authLoading } = useAuth();
+  const { user, profile, loading: authLoading, isNutritionist, isAdmin, isPersonal } = useAuth();
   const { mode, role } = useExperienceMode();
   const { status: journeyStatus, anamnesisStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const location = useLocation();
