@@ -419,6 +419,7 @@ export const AppRoutes = () => {
                 <Route path="/patient-intelligence" element={<ProtectedRoute><LP section="Inteligência do Paciente"><PatientIntelligence /></LP></ProtectedRoute>} />
                 <Route path="/human-performance" element={<ProtectedRoute><LP section="Performance Humana"><HumanPerformance /></LP></ProtectedRoute>} />
                 <Route path="/protocolos-fitoterapicos" element={<NutritionistRoute><LP section="Protocolos Fitoterápicos"><PhytotherapyProtocols /></LP></NutritionistRoute>} />
+                <Route path="/portfolio-analytics" element={<NutritionistRoute><LP section="Analytics de Portfolio"><ProfessionalClinicalAnalytics /></LP></NutritionistRoute>} />
                 <Route path="/clinical-analytics" element={<NutritionistRoute><LP section="Analytics Clínico"><ClinicalHealthDashboard /></LP></NutritionistRoute>} />
 
                 {/* Admin Routes */}
