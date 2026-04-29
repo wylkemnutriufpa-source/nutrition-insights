@@ -43,25 +43,51 @@
         .fade-out { opacity: 0; transition: opacity 0.5s ease-out; pointer-events: none; }
       </style>
       <script>
-        // Stability Guard: Se o app não montar em 8s, mostra botão de recuperação.
-        setTimeout(function() {
-          if (!window.__FJ_READY__) {
-            var btn = document.getElementById('fj-recovery-btn');
-            if (btn) {
-              btn.style.display = 'block';
-              btn.onclick = function() { 
-                if ('serviceWorker' in navigator) {
-                  navigator.serviceWorker.getRegistrations().then(function(regs) {
-                    regs.forEach(function(r) { r.unregister(); });
-                    window.location.reload(true);
-                  });
-                } else {
-                  window.location.reload(true);
-                }
-              };
-            }
+        // --- EMERGENCY PWA RECOVERY SYSTEM ---
+        (function() {
+          var BUILD_VERSION = "%BUILD_VERSION%";
+          var lastVersion = localStorage.getItem('fj_last_version');
+          
+          // Se a versão mudou, podemos estar em um estado de transição de SW.
+          if (lastVersion && lastVersion !== BUILD_VERSION) {
+            console.warn("[FitJourney:PWA] Versão detectada mudou: " + lastVersion + " -> " + BUILD_VERSION);
+            // Se detectarmos que acabamos de atualizar, damos um tempo para o SW respirar
           }
-        }, 8000);
+          localStorage.setItem('fj_last_version', BUILD_VERSION);
+
+          // Watchdog: Se o app não montar em 6s, força limpeza e reload.
+          var watchdog = setTimeout(function() {
+            if (!window.__FJ_READY__) {
+              console.error("[FitJourney:PWA] Boot Timeout! Iniciando recuperação automática...");
+              
+              // Tenta limpar caches e SW antes do reload
+              if ('caches' in window) {
+                caches.keys().then(function(keys) {
+                  keys.forEach(function(k) { caches.delete(k); });
+                });
+              }
+              
+              if ('serviceWorker' in navigator) {
+                navigator.serviceWorker.getRegistrations().then(function(regs) {
+                  regs.forEach(function(r) { r.unregister(); });
+                  window.location.reload(true);
+                });
+              } else {
+                window.location.reload(true);
+              }
+            }
+          }, 6000);
+
+          window.__FJ_MARK_READY__ = function() {
+            window.__FJ_READY__ = true;
+            clearTimeout(watchdog);
+            var loader = document.getElementById('fj-initial-loader');
+            if (loader) {
+              loader.classList.add('fade-out');
+              setTimeout(function() { loader.remove(); }, 500);
+            }
+          };
+        })();
 
         // Version logger for debugging
         console.log("System Version: %BUILD_VERSION%");

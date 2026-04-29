@@ -81,7 +81,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     versionJsonPlugin(),
     mode === "development" && componentTagger(),
-    VitePWA({
+    mode === "production" && VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
       includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-512x512.png"],
@@ -95,6 +95,15 @@ export default defineConfig(({ mode }) => ({
         importScripts: ["/sw-push.js"],
         cleanupOutdatedCaches: true,
         runtimeCaching: [
+          {
+            // / and /index.html — NetworkFirst to ensure we get the latest bundle hashes
+            urlPattern: ({ url }) => url.pathname === "/" || url.pathname === "/index.html",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "html-cache",
+              expiration: { maxEntries: 1, maxAgeSeconds: 60 * 60 },
+            },
+          },
           {
             // /version.json — must ALWAYS be fresh for the version-sync poller
             urlPattern: ({ url }) => url.pathname === "/version.json",

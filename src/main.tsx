@@ -7,14 +7,37 @@ import { stampBuildIdentity } from "./lib/buildInfo";
 import { startVersionSync } from "./lib/versionCheck";
 
 // Boot silent
+const VERSION = "2.4.3-pwa-stable";
 if (import.meta.env.DEV) {
   console.log("%c[FitJourney:Boot] Iniciando sistema...", "color: #10b981; font-weight: bold; font-size: 12px;", {
-    version: "2.4.2-stable"
+    version: VERSION
   });
 }
 
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
 stampBuildIdentity();
+
+// Verificação imediata de versão para evitar boot com bundle desatualizado
+if (!isPreviewHost() && !isInIframe()) {
+  fetch("/version.json?t=" + Date.now())
+    .then(r => r.json())
+    .then(remote => {
+      const localVersion = (window as any).__BUILD_VERSION__;
+      if (remote && remote.version && localVersion && remote.version !== localVersion) {
+        console.warn("[FitJourney:Stability] Bundle Desatualizado Detectado no Boot. Forçando atualização...");
+        if ("caches" in window) caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(r => r.unregister());
+            window.location.reload();
+          });
+        } else {
+          window.location.reload();
+        }
+      }
+    })
+    .catch(() => { /* silent */ });
+}
 
 /**
  * Global Stability Guard: Captura erros críticos de carregamento (ChunkLoadError)
@@ -138,13 +161,23 @@ if (isPreviewHost() || isInIframe()) {
   }
 })();
 
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundaryDebug name="Root">
-    <App />
-  </ErrorBoundaryDebug>
-);
+const root = document.getElementById("root");
+
+if (root) {
+  const reactRoot = createRoot(root);
+  reactRoot.render(
+    <ErrorBoundaryDebug name="Root">
+      <App />
+    </ErrorBoundaryDebug>
+  );
+
+  // Sinaliza ao index.html que o app montou com sucesso
+  setTimeout(() => {
+    if (typeof (window as any).__FJ_MARK_READY__ === "function") {
+      (window as any).__FJ_MARK_READY__();
+    }
+  }, 100);
+}
 
 // Start the version sync loop AFTER the app mounts.
-// Self-disables in preview/iframe; in production it polls /version.json
-// every 2 minutes and forces a clean reload when a new deploy is detected.
 startVersionSync();

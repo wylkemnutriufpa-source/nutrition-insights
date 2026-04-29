@@ -57,6 +57,7 @@ async function fetchRemoteVersion(): Promise<RemoteVersion | null> {
 }
 
 async function nukeCachesAndSW(): Promise<void> {
+  console.info("[FJ:Version] Nuking caches and service workers for clean boot...");
   const tasks: Promise<unknown>[] = [];
 
   if ("caches" in window) {
@@ -76,21 +77,24 @@ async function nukeCachesAndSW(): Promise<void> {
           Promise.all(
             regs.map((r) =>
               r
-                .update()
+                .unregister()
                 .catch(() => {})
-                .then(() => {
-                  if (r.waiting) {
-                    try {
-                      r.waiting.postMessage({ type: "SKIP_WAITING" });
-                    } catch {}
-                  }
-                })
             )
           )
         )
         .catch(() => {})
     );
   }
+
+  // Limpa estados temporários que podem causar loops
+  try {
+    sessionStorage.clear();
+    // Removemos flags de intenção e estados de onboarding se houver mudança de versão
+    // para garantir que o fluxo recalcule o caminho correto.
+    localStorage.removeItem('fj_onboarding_step');
+    localStorage.removeItem('fj_last_path');
+    localStorage.removeItem('fj:rescue-boot');
+  } catch {}
 
   await Promise.allSettled(tasks);
 }
