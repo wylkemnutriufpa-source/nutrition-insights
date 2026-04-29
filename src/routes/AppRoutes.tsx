@@ -225,18 +225,18 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading } = useAuth();
+  const { authStatus } = useAuth();
   
-  // Reactive Loading: don't block if we already have a user from a previous session
-  if (loading && !user) return <PageLoader />;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (authStatus === "loading") return <PageLoader />;
+  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
 function DashboardRedirect() {
-  const { isNutritionist, isPersonal, isAdmin, loading, user } = useAuth();
+  const { isNutritionist, isPersonal, isAdmin, authStatus } = useAuth();
   
-  if (loading && !user) return <PageLoader />;
+  if (authStatus === "loading") return <PageLoader />;
+  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
   
   if (isNutritionist || isPersonal || isAdmin) {
     return <Navigate to="/admin/dashboard" replace />;
@@ -245,26 +245,30 @@ function DashboardRedirect() {
 }
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isNutritionist, isAdmin } = useAuth();
-  if (loading && !user) return <PageLoader />;
-  if (!user || (!isNutritionist && !isAdmin)) return <Navigate to="/" replace />;
+  const { authStatus, isNutritionist, isAdmin } = useAuth();
+  
+  if (authStatus === "loading") return <PageLoader />;
+  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
+  if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
+  
   return <>{children}</>;
 }
 
 function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
-  const { user, loading, isPatient, isNutritionist, isAdmin } = useAuth();
+  const { authStatus, isPatient, isNutritionist, isAdmin } = useAuth();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
   const location = useLocation();
 
   // Onboarding Determinístico: Intenção prevalece sobre roles do backend (Regra 3)
   const isInvitedPatient = localStorage.getItem("fj_invited") === "true";
 
-  if (loading || consentLoading) return <PageLoader />;
-  if (!user) return <Navigate to="/auth" replace />;
+  if (authStatus === "loading" || consentLoading) return <PageLoader />;
+  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
+  
   if (isNutritionist || isAdmin) return <>{children}</>;
 
   // Se for paciente (por role ou intenção) e não tiver consentimento
-  if ((isPatient || isInvitedPatient) && !hasConsent && !["/consent", "/auth", "/settings"].some(r => location.pathname.startsWith(r))) {
+  if ((isPatient || isInvitedPatient) && !hasConsent && !["/consent", "/auth", "/settings", "/welcome"].some(r => location.pathname.startsWith(r))) {
     return <Navigate to="/consent" replace />;
   }
   return <>{children}</>;
