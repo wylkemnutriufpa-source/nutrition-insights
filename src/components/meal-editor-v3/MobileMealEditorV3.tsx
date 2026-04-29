@@ -235,9 +235,16 @@ export const MobileMealEditorV3: React.FC = () => {
                   <span className="text-xs font-bold">{isPatientView ? "Sair da" : "Ver como"} Paciente</span>
                 </DropdownMenuItem>
 
-                <DropdownMenuSeparator className="my-1 bg-border/50" />
+                <DropdownMenuItem onClick={() => setFocusOpen(true)} className="rounded-xl py-2.5 px-3 focus:bg-primary/5 focus:text-primary cursor-pointer">
+                  <Eye className="w-4 h-4 mr-3 text-primary" />
+                  <span className="text-xs font-bold">Modo Foco</span>
+                </DropdownMenuItem>
 
-                <DropdownMenuItem onClick={async () => { 
+                <DropdownMenuItem onClick={() => setNewMealOpen(true)} className="rounded-xl py-2.5 px-3 focus:bg-emerald-500/5 focus:text-emerald-600 cursor-pointer">
+                  <Plus className="w-4 h-4 mr-3 text-emerald-500" />
+                  <span className="text-xs font-bold">Nova Refeição</span>
+                </DropdownMenuItem>
+
                   const ok = await validateAndSave(); 
                   if (ok) toast.success('Plano salvo!'); 
                 }} className="rounded-xl py-2.5 px-3 focus:bg-primary focus:text-white cursor-pointer">
