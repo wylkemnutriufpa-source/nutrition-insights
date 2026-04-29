@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle, X } from 'lucide-react';
+import { Search, Zap, LayoutTemplate, Package, Plus, History, Star, PlusCircle, X, Loader2 } from 'lucide-react';
 import { QUICK_FOODS, MARMITAS } from '@/hooks/meal-editor-v3/constants';
 import { useMealEditorV3Store, Food } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { Card } from '@/components/ui/card';
@@ -12,6 +12,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { supabase } from '@/integrations/supabase/client';
 
 interface FoodSelectionModalProps {
   isOpen: boolean;
@@ -24,7 +25,8 @@ interface FoodSelectionModalProps {
 export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, onClose, mealId, onSelect, defaultTab = 'quick' }) => {
   const { addFoodToMeal, meals } = useMealEditorV3Store();
   const [searchQuery, setSearchQuery] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [dbResults, setDbResults] = useState<Food[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
   const [history, setHistory] = useState<Food[]>([]);
   const inputRef = useRef<HTMLInputElement>(null);
   const [activeIndex, setActiveIndex] = useState(0);
