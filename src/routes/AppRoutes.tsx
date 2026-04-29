@@ -280,7 +280,7 @@ export const AppRoutes = () => {
                 <Route path="/professional/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
-                <Route path="/pacientes/:id" element={<Navigate to="/patients/:id" replace />} />
+                <Route path="/pacientes/:patientId" element={<RedirectWithParams to="/patients/:patientId" />} />
                 <Route path="/pacientes/*" element={<Navigate to="/patients" replace />} />
                 <Route path="/paciente" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/paciente/dashboard" element={<Navigate to="/client/dashboard" replace />} />
