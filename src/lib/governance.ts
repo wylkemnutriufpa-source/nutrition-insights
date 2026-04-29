@@ -131,7 +131,7 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   const isProRole = ctx.isNutritionist || ctx.isPersonal || ctx.isAdmin;
 
   // Admin access
-  if (isInList(safePathname, ADMIN_ROUTES) && !ctx.isAdmin) {
+  if (isInList(safePathname, ADMIN_ROUTES) && !ctx.isAdmin && !ctx.isNutritionist) {
     return { type: 'REDIRECT', target: '/', reason: 'Non-admin accessing admin route' };
   }
 
