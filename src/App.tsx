@@ -32,9 +32,12 @@ import NotFound from "./pages/NotFound";
 import Index from "./pages/Index";
 
 // Lazy
+const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
 const Patients = lazy(() => import("./pages/Patients"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const MealPlanEditorV3 = lazy(() => import("./pages/MealPlanEditorV3Page"));
+const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
+const MealPlanEditorV2Entry = lazy(() => import("./pages/MealPlanEditorV2Entry"));
 const DietBuilder = lazy(() => import("./pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("./pages/GlobalRanking"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
@@ -63,6 +66,9 @@ const PatientWorkouts = lazy(() => import("./pages/PatientWorkouts"));
 const PersonalDashboard = lazy(() => import("./pages/PersonalDashboard"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const BodyAnalysis = lazy(() => import("./pages/BodyAnalysis"));
+const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
+const ConsentRequired = lazy(() => import("./pages/ConsentRequired"));
+const PatientMealPlan = lazy(() => import("./pages/PatientMealPlan"));
 const WaterCalculator = lazy(() => import("./pages/WaterCalculator"));
 const WeightCalculator = lazy(() => import("./pages/WeightCalculator"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
@@ -416,6 +422,12 @@ function AppContent() {
               <Route path="/dieta-v3/:patientId" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
               <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
               
+              {/* Editor V2 Routes */}
+              <Route path="/meal-plan-editor-v2/:patientId" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
+              <Route path="/dieta-v2/:patientId" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
+              
               {/* Patient/Client Routes */}
               <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
@@ -431,6 +443,12 @@ function AppContent() {
               <Route path="/water-calculator" element={<ProtectedRoute><LP section="Calculadora de Água"><WaterCalculator /></LP></ProtectedRoute>} />
               <Route path="/weight-calculator" element={<ProtectedRoute><LP section="Calculadora de Peso"><WeightCalculator /></LP></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
+              
+              <Route path="/my-diet" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/dieta" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/my-workouts" element={<PaymentGuardedPatientRoute><LP section="Meus Treinos"><PatientWorkouts /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/body-projection" element={<PaymentGuardedPatientRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/analyze" element={<PaymentGuardedPatientRoute><LP section="Análise IA"><AnalyzeMeal /></LP></PaymentGuardedPatientRoute>} />
               
               {/* Admin & Intelligence Routes */}
               <Route path="/admin/dashboard" element={<NutritionistRoute><LP section="Admin Dashboard"><AdminDashboard /></LP></NutritionistRoute>} />
@@ -482,6 +500,9 @@ function AppContent() {
               <Route path="/privacy-policy" element={<LP section="Privacidade"><PrivacyPolicy /></LP>} />
               <Route path="/terms-of-use" element={<LP section="Termos de Uso"><TermsOfUse /></LP>} />
               
+              <Route path="/hard-fail-linkage" element={<LP section="Erro de Vínculo"><HardFailLinkage /></LP>} />
+              <Route path="/consent" element={<ProtectedRoute><LP section="Consentimento"><ConsentRequired /></LP></ProtectedRoute>} />
+              <Route path="/diagnostic" element={<LP section="Status"><DiagnosticStatus /></LP>} />
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>

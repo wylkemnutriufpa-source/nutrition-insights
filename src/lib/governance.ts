@@ -54,7 +54,7 @@ const UNIVERSAL_ROUTES = [
 ];
 
 const PROFESSIONAL_ONLY_ROUTES = [
-  "/patients", "/diet-templates", "/onboarding-pipeline", "/meal-plans", "/editor-v2", "/protocols", "/programs", "/clinical-workspace", "/clinical-brain", "/clinical-pipeline", "/team"
+  "/patients", "/diet-templates", "/onboarding-pipeline", "/meal-plans", "/editor-v2", "/meal-plan-editor-v2", "/dieta-v2", "/meal-plan-editor-v3", "/dieta-v3", "/protocols", "/programs", "/clinical-workspace", "/clinical-brain", "/clinical-pipeline", "/team"
 ];
 
 const PATIENT_ONLY_ROUTES = [
@@ -131,7 +131,7 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   const isProRole = ctx.isNutritionist || ctx.isPersonal || ctx.isAdmin;
 
   // Admin access
-  if (isInList(safePathname, ADMIN_ROUTES) && !ctx.isAdmin) {
+  if (isInList(safePathname, ADMIN_ROUTES) && !ctx.isAdmin && !ctx.isNutritionist) {
     return { type: 'REDIRECT', target: '/', reason: 'Non-admin accessing admin route' };
   }
 
