@@ -11,6 +11,8 @@ import { AnimatePresence } from "framer-motion";
 import SafePage from "@/components/common/SafePage";
 import PageLoader from "@/components/common/PageLoader";
 import { SystemStateGuard } from "@/components/common/SystemStateGuard";
+import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
+import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 
 // Eager
 import Auth from "../pages/Auth";
@@ -262,6 +264,8 @@ export const AppRoutes = () => {
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <SystemStateGuard>
+            <ExperienceRouteGuard />
+            <WorkspaceRouteGuard />
             <ErrorBoundaryDebug name="AppRoutes">
               <Routes>
                 {/* Home */}
