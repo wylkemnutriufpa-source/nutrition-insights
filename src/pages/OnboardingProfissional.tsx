@@ -185,8 +185,8 @@ function CTASlide({ dir, onComplete, onNavigate }: { dir: number; onComplete: ()
           <Users className="w-4 h-4 mr-2" /> Criar Primeiro Paciente
         </Button>
       </div>
-      <Button onClick={() => onNavigate("/editor-v2")} variant="ghost" className="text-white/40 hover:text-white/70 text-xs">
-        <Sparkles className="w-3 h-3 mr-1" /> Explorar Editor Premium
+      <Button onClick={() => onNavigate("/meal-plan-editor")} variant="ghost" className="text-white/40 hover:text-white/70 text-xs">
+        <Sparkles className="w-3 h-3 mr-1" /> Explorar Editor de Planos
       </Button>
     </motion.div>
   );
