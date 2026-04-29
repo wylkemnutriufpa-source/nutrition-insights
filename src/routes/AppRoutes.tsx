@@ -200,6 +200,7 @@ const AmbassadorDashboard = lazy(() => import("../pages/AmbassadorDashboard"));
 const InOfficeWizard = lazy(() => import("../pages/InOfficeWizard"));
 const SystemPresentation = lazy(() => import("../pages/SystemPresentation"));
 const PlatformGovernance = lazy(() => import("../pages/PlatformGovernance"));
+const SystemAudit = lazy(() => import("../pages/SystemAudit"));
 const SystemDiagnostics = lazy(() => import("../pages/SystemDiagnostics"));
 const SystemHealthLive = lazy(() => import("../pages/SystemHealthLive"));
 const RealtimeDebugCenter = lazy(() => import("../pages/RealtimeDebugCenter"));
