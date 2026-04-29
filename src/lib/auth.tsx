@@ -145,6 +145,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       
       try {
+        console.log(`[Auth:${correlationId}] Buscando sessão inicial do Supabase...`);
         const { data: { session }, error: sessionError } = await withAuthTimeout(
           supabase.auth.getSession(),
           "sessão inicial"
@@ -154,32 +155,45 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.error(`[Auth:${correlationId}] Erro ao recuperar sessão:`, sessionError);
         }
 
-        if (!mounted) return;
+        if (!mounted) {
+          console.warn(`[Auth:${correlationId}] Componente desmontado durante inicialização. Abortando.`);
+          return;
+        }
 
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log(`[Auth:${correlationId}] Usuário autenticado: ${session.user.id}. Carregando dados complementares...`);
-          // Carregar perfil e roles em paralelo sem travar caso um demore
-          await Promise.allSettled([
+          console.log(`[Auth:${correlationId}] Usuário autenticado: ${session.user.id}. E-mail: ${session.user.email}. Carregando dados complementares...`);
+          
+          // Carregar perfil e roles em paralelo
+          const results = await Promise.allSettled([
             fetchProfile(session.user.id),
             fetchRoles(session.user.id),
           ]);
           
+          results.forEach((res, idx) => {
+            if (res.status === 'rejected') {
+              console.error(`[Auth:${correlationId}] Falha ao carregar ${idx === 0 ? 'Perfil' : 'Roles'}:`, res.reason);
+            }
+          });
+
           if (mounted) {
             setLoading(false);
             checkSubscription();
-            console.log(`[Auth:${correlationId}] Inicialização concluída com sucesso.`);
+            console.log(`[Auth:${correlationId}] Inicialização concluída. Profile carregado:`, !!profile);
           }
         } else {
-          console.log(`[Auth:${correlationId}] Nenhum usuário encontrado.`);
+          console.log(`[Auth:${correlationId}] Nenhum usuário encontrado (sessão nula).`);
           if (mounted) setLoading(false);
         }
       } catch (err) {
-        console.error(`[Auth:${correlationId}] Falha crítica na inicialização:`, err);
-        // Em caso de erro real (não timeout), permitimos liberar o loading para não travar a UI
-        if (mounted) setLoading(false);
+        console.error(`[Auth:${correlationId}] FALHA CRÍTICA na inicialização:`, err);
+        // Não deixamos o erro morrer silenciosamente
+        if (mounted) {
+          setLoading(false);
+          // Opcional: toast.error("Erro ao inicializar autenticação");
+        }
       }
     };
 
