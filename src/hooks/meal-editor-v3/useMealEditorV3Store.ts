@@ -821,6 +821,24 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           activeMealId: state.activeMealId === mealId ? state.meals[0]?.id || null : state.activeMealId
         }));
       },
+      addQuickMeal: (template) => {
+        set((state) => {
+          const newId = Math.random().toString(36).substring(7);
+          const newMeal: Meal = { 
+            id: newId, 
+            name: template.name, 
+            items: [{ ...template, instanceId: Math.random().toString(36).substring(7), quantity: 1 }],
+            time: '08:00',
+            icon: 'zap'
+          };
+          return {
+            history: saveHistory(state),
+            meals: [...state.meals, newMeal],
+            activeMealId: newId,
+            lastActionInsight: `Refeição rápida "${template.name}" adicionada`
+          };
+        });
+      },
     }),
     {
       name: 'meal-editor-v3-storage',
