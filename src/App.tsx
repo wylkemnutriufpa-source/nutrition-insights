@@ -568,7 +568,7 @@ function AppContent() {
               <Route path="/biquini-branco" element={<LP section="Biquíni Branco"><BiquiniBrancoLanding /></LP>} />
               <Route path="/demo" element={<LP section="Demo"><PublicDemo /></LP>} />
               <Route path="/status" element={<LP section="Status"><DiagnosticStatus /></LP>} />
-              <Route path="/affiliate/:id" element={<AffiliateLanding />} />
+              <Route path="/affiliate" element={<AffiliateLanding />} />
               <Route path="/gateway" element={<GatewayPage />} />
               <Route path="/intake" element={<IntakeOnboarding />} />
               <Route path="/invitation-status" element={<InvitationStatus />} />
