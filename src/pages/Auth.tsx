@@ -86,8 +86,6 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
         });
       }
       // Fluxo Determinístico: Redirecionar sempre para /welcome após login
-      // O /welcome decidirá o destino final com base em profile/roles/intenção
-      console.log(`[Auth] Redirecting to Welcome Hub...`);
       const target = nextPath && nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : "";
       navigate(`/welcome${target}`, { replace: true });
     }
