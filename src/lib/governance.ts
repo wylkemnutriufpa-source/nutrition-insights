@@ -54,7 +54,7 @@ const UNIVERSAL_ROUTES = [
 ];
 
 const PROFESSIONAL_ONLY_ROUTES = [
-  "/patients", "/diet-templates", "/onboarding-pipeline", "/meal-plans", "/editor-v2", "/protocols", "/programs", "/clinical-workspace", "/clinical-brain", "/clinical-pipeline", "/team"
+  "/patients", "/diet-templates", "/onboarding-pipeline", "/meal-plans", "/editor-v2", "/meal-plan-editor-v2", "/dieta-v2", "/meal-plan-editor-v3", "/dieta-v3", "/protocols", "/programs", "/clinical-workspace", "/clinical-brain", "/clinical-pipeline", "/team"
 ];
 
 const PATIENT_ONLY_ROUTES = [
