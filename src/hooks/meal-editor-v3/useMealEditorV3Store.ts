@@ -602,12 +602,9 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       validateAndSave: async () => {
         const { meals, patientTargets, patientId, clinicalLog, viewMode } = get();
         
-        if (viewMode === 'week') {
-          toast.error('Retorne ao Modo Dia para validar e salvar o plano estrutural');
+        if (!patientId) {
+          toast.error('Selecione um paciente antes de salvar');
           return false;
-        }
-        if (!patientTargets) {
-          toast.warning('Baseado em dados parciais (falta anamnese)');
         }
 
         const totals = meals.reduce((acc, meal) => {
@@ -616,34 +613,99 @@ export const useMealEditorV3Store = create<MealPlanState>()(
             const factor = item.quantity * currentMeasure.factor;
             acc.calories += item.calories * factor;
             acc.protein += item.protein * factor;
+            acc.carbs += item.carbs * factor;
+            acc.fat += item.fat * factor;
           });
           return acc;
-        }, { calories: 0, protein: 0 });
+        }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
-        const targetCals = patientTargets?.calories || 2000;
-        const targetProt = patientTargets?.protein || 150;
+        try {
+          // 1. Garantir que o plano exista ou criar um novo
+          let { data: existingPlan } = await supabase
+            .from('meal_plans')
+            .select('id')
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
 
-        const calDiff = Math.abs(totals.calories - targetCals) / targetCals;
-        const protDiff = Math.abs(totals.protein - targetProt) / targetProt;
+          let planId = existingPlan?.id;
 
-        if (calDiff > 0.15 || protDiff > 0.15) {
-          set({ planStatus: 'error', consistencyMessage: 'Plano inválido: macros fora da meta (>15%)' });
-          toast.error('Plano inválido para este paciente');
+          if (!planId) {
+            const { data: newPlan, error: createError } = await supabase
+              .from('meal_plans')
+              .insert([{
+                patient_id: patientId,
+                title: 'Plano Alimentar Ativo',
+                total_target_calories: totals.calories,
+                total_target_protein: totals.protein,
+                total_target_carbs: totals.carbs,
+                total_target_fat: totals.fat,
+                status: 'active'
+              }])
+              .select()
+              .single();
+            
+            if (createError) throw createError;
+            planId = newPlan.id;
+          } else {
+            // Atualizar plano existente
+            await supabase
+              .from('meal_plans')
+              .update({
+                total_target_calories: totals.calories,
+                total_target_protein: totals.protein,
+                total_target_carbs: totals.carbs,
+                total_target_fat: totals.fat,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', planId);
+          }
+
+          // 2. Limpar itens antigos (para simplicidade nesta v3)
+          await supabase.from('meal_plan_items').delete().eq('meal_plan_id', planId);
+
+          // 3. Inserir novos itens
+          const itemsToInsert = meals.flatMap(meal => 
+            meal.items.map(item => ({
+              meal_plan_id: planId,
+              meal_type: meal.name.toLowerCase().includes('café') ? 'breakfast' : 
+                         meal.name.toLowerCase().includes('almoço') ? 'lunch' : 
+                         meal.name.toLowerCase().includes('lanche') ? 'snack' : 'dinner',
+              title: item.name,
+              description: `Quantidade: ${item.quantity} ${item.selectedUnit || item.portionUnit}`,
+              calories_target: item.calories * item.quantity,
+              protein_target: item.protein * item.quantity,
+              carbs_target: item.carbs * item.quantity,
+              fat_target: item.fat * item.quantity,
+              day_of_week: null // Plano geral por enquanto
+            }))
+          );
+
+          if (itemsToInsert.length > 0) {
+            const { error: insertError } = await supabase.from('meal_plan_items').insert(itemsToInsert);
+            if (insertError) throw insertError;
+          }
+
+          if (clinicalLog) {
+            await supabase.from('meal_clinical_decision_log').insert([{
+              patient_id: patientId,
+              condition_applied: clinicalLog.conditionId,
+              rules_applied: clinicalLog.appliedRules,
+              substitutions: clinicalLog.changes.filter(c => c.type === 'substitution'),
+              reasons: clinicalLog.changes.map(c => c.reason)
+            }]);
+          }
+
+          set({ planStatus: 'validated', consistencyMessage: null });
+          toast.success('Plano salvo no prontuário com sucesso!');
+          return true;
+        } catch (error) {
+          console.error('Erro ao salvar plano:', error);
+          toast.error('Erro ao sincronizar com o servidor');
           return false;
         }
-
-        if (clinicalLog) {
-          await supabase.from('meal_clinical_decision_log').insert([{
-            patient_id: patientId,
-            condition_applied: clinicalLog.conditionId,
-            rules_applied: clinicalLog.appliedRules,
-            substitutions: clinicalLog.changes.filter(c => c.type === 'substitution'),
-            reasons: clinicalLog.changes.map(c => c.reason)
-          }]);
-        }
-
-        set({ planStatus: 'validated', consistencyMessage: null });
-        return true;
+      },
       },
 
       validateConsistency: () => {
