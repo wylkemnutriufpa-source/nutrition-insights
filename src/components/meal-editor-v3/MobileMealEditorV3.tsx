@@ -49,8 +49,19 @@ export const MobileMealEditorV3: React.FC = () => {
     meals, patientTargets, generateDeterministicPlan, planStatus,
     viewMode, setViewMode, activeDay, setActiveDay,
     resetPlan, optimizePlan, validateAndSave, fastMode, setFastMode,
-    isPatientView, setPatientView
+    isPatientView, setPatientView, setPatientId
   } = useMealEditorV3Store();
+
+  const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [patients, setPatients] = useState<any[]>([]);
+
+  React.useEffect(() => {
+    const fetchPatients = async () => {
+      const { data } = await supabase.from('profiles').select('user_id, full_name, email').eq('role', 'patient');
+      if (data) setPatients(data.map(p => ({ id: p.user_id, name: p.full_name, email: p.email })));
+    };
+    fetchPatients();
+  }, []);
 
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [addModalMealId, setAddModalMealId] = useState<string | null>(null);
@@ -118,6 +129,28 @@ export const MobileMealEditorV3: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-1">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              className="h-9 w-9 text-muted-foreground hover:text-primary rounded-xl"
+              onClick={() => setIsPatientSearchOpen(!isPatientSearchOpen)}
+            >
+              <Search className="w-4 h-4" />
+            </Button>
+            {isPatientSearchOpen && (
+              <div className="absolute top-16 left-0 right-0 px-4 z-50">
+                <div className="bg-background border rounded-2xl shadow-2xl p-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                  <PatientPickerDropdown 
+                    patients={patients} 
+                    onSelect={(id) => {
+                      setPatientId(id);
+                      setIsPatientSearchOpen(false);
+                      toast.success('Paciente selecionado');
+                    }} 
+                  />
+                </div>
+              </div>
+            )}
             <Button 
               variant="ghost" 
               size="sm" 
