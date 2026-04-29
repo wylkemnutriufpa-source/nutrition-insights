@@ -56,6 +56,19 @@ const defaultSubscription: SubscriptionState = {
   trial_end: null,
 };
 
+function withAuthTimeout<T>(promise: Promise<T>, label: string, timeoutMs = 3500): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = window.setTimeout(() => {
+      reject(new Error(`[Auth] Timeout ao carregar ${label}`));
+    }, timeoutMs);
+
+    promise
+      .then(resolve)
+      .catch(reject)
+      .finally(() => window.clearTimeout(timer));
+  });
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -116,7 +129,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const correlationId = `auth-init-${Date.now()}`;
       try {
         console.log(`%c[Auth:${correlationId}] Initializing session...`, "color: #3b82f6; font-weight: bold");
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await withAuthTimeout(
+          supabase.auth.getSession(),
+          "sessão inicial"
+        );
 
         if (sessionError) {
           console.error(`%c[Auth:${correlationId}] getSession error:`, "color: #ef4444", sessionError);
@@ -130,8 +146,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (session?.user) {
           console.log(`[Auth:${correlationId}] Fetching data for user:`, session.user.id);
           const [profileResult, rolesResult] = await Promise.allSettled([
-            fetchProfile(session.user.id),
-            fetchRoles(session.user.id),
+            withAuthTimeout(fetchProfile(session.user.id), "perfil"),
+            withAuthTimeout(fetchRoles(session.user.id), "permissões"),
           ]);
           
           console.log(`[Auth:${correlationId}] Initial fetch complete. Profile:`, 
