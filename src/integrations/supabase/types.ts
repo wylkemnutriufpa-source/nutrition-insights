@@ -20207,10 +20207,13 @@ export type Database = {
       }
       system_health_summary: {
         Row: {
+          active_p0: number | null
+          active_p1: number | null
           critical_errors: number | null
           errors_last_hour: number | null
           status: string | null
           total_errors: number | null
+          total_incidents: number | null
         }
         Relationships: []
       }
