@@ -374,6 +374,19 @@ function AppContent() {
               <Route path="/admin/governance" element={<NutritionistRoute><LP section="Governança"><PlatformGovernance /></LP></NutritionistRoute>} />
               <Route path="/admin/diagnostics" element={<NutritionistRoute><LP section="Diagnóstico do Sistema"><SystemDiagnostics /></LP></NutritionistRoute>} />
               <Route path="/admin/health-live" element={<NutritionistRoute><LP section="Status em Tempo Real"><SystemHealthLive /></LP></NutritionistRoute>} />
+              <Route path="/admin/growth" element={<NutritionistRoute><LP section="Growth Dashboard"><GrowthDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/resources" element={<NutritionistRoute><LP section="Recursos Admin"><AdminResourceCenter /></LP></NutritionistRoute>} />
+              <Route path="/admin/landing-pages" element={<NutritionistRoute><LP section="Landing Pages Admin"><AdminLandingPages /></LP></NutritionistRoute>} />
+              <Route path="/admin/features" element={<NutritionistRoute><LP section="Recursos Admin"><AdminFeatureControl /></LP></NutritionistRoute>} />
+              <Route path="/admin/patient-features" element={<NutritionistRoute><LP section="Features Paciente"><AdminPatientFeatures /></LP></NutritionistRoute>} />
+              <Route path="/admin/protocol-fitjourney" element={<NutritionistRoute><LP section="Protocolo FitJourney"><AdminProtocolFitJourney /></LP></NutritionistRoute>} />
+              <Route path="/admin/protocol-biquini-branco" element={<NutritionistRoute><LP section="Protocolo Biquini Branco"><AdminProtocolBiquiniBranco /></LP></NutritionistRoute>} />
+              <Route path="/admin/guide-engine" element={<NutritionistRoute><LP section="Guide Engine Admin"><AdminGuideEngine /></LP></NutritionistRoute>} />
+              <Route path="/admin/menu-config" element={<NutritionistRoute><LP section="Config Menu Admin"><AdminMenuConfig /></LP></NutritionistRoute>} />
+              <Route path="/admin/testimonials" element={<NutritionistRoute><LP section="Depoimentos Admin"><AdminTestimonials /></LP></NutritionistRoute>} />
+              <Route path="/admin/prestige" element={<NutritionistRoute><LP section="Prestigio Admin"><AdminPrestige /></LP></NutritionistRoute>} />
+              <Route path="/admin/biblioteca" element={<NutritionistRoute><LP section="Biblioteca Admin"><Library /></LP></NutritionistRoute>} />
+              <Route path="/admin-operational-costs" element={<NutritionistRoute><LP section="Custos Operacionais Admin"><AdminOperationalCosts /></LP></NutritionistRoute>} />
               
               {/* Patient Routes */}
               <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
