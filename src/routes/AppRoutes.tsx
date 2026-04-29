@@ -6,6 +6,7 @@ import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
 import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
+import { StabilityZone } from "@/components/common/StabilityZone";
 import { lazyDebug } from "@/lib/lazyDebug";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { AnimatePresence } from "framer-motion";
@@ -351,7 +352,7 @@ export const AppRoutes = () => {
           <SystemStateGuard>
             <ExperienceRouteGuard />
             <WorkspaceRouteGuard />
-            <SectionalErrorBoundary name="Navegação Principal">
+            <StabilityZone name="Navegação Principal">
               <Routes>
                 {/* Home */}
                 <Route path="/" element={<LP section="Início"><Index /></LP>} />
@@ -389,7 +390,7 @@ export const AppRoutes = () => {
                 <Route path="/shopping-list" element={<ProtectedRoute><LP section="Lista de Compras"><ShoppingList /></LP></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><LP section="Notificações"><Notifications /></LP></ProtectedRoute>} />
                 <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
-                <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><ErrorBoundaryDebug name="Biblioteca"><Library /></ErrorBoundaryDebug></LP></ProtectedRoute>} />
+                <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><StabilityZone name="Biblioteca"><Library /></StabilityZone></LP></ProtectedRoute>} />
                 <Route path="/reports" element={<ProtectedRoute><LP section="Relatórios"><Reports /></LP></ProtectedRoute>} />
                 <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
                 <Route path="/body-analysis" element={<ProtectedRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></ProtectedRoute>} />
@@ -421,8 +422,8 @@ export const AppRoutes = () => {
                 <Route path="/debug" element={<NutritionistRoute><LP section="Centro de Debug"><RealtimeDebugCenter /></LP></NutritionistRoute>} />
                 <Route path="/schema" element={<NutritionistRoute><LP section="Monitor de Schema"><SchemaMonitor /></LP></NutritionistRoute>} />
                 <Route path="/weekly-goals" element={<ProtectedRoute><LP section="Metas Semanais"><WeeklyGoals /></LP></ProtectedRoute>} />
-                <Route path="/onboarding/paciente" element={<LP section="Onboarding Paciente"><OnboardingPaciente /></LP>} />
-                <Route path="/onboarding/pipeline" element={<NutritionistRoute><LP section="Pipeline de Onboarding"><OnboardingPipeline /></LP></NutritionistRoute>} />
+                <Route path="/onboarding/paciente" element={<StabilityZone name="Onboarding"><LP section="Onboarding Paciente"><OnboardingPaciente /></LP></StabilityZone>} />
+                <Route path="/onboarding/pipeline" element={<NutritionistRoute><StabilityZone name="Onboarding Pipeline"><LP section="Pipeline de Onboarding"><OnboardingPipeline /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/payment-required" element={<ProtectedRoute><LP section="Pagamento Pendente"><PaymentRequired /></LP></ProtectedRoute>} />
                 <Route path="/payment-success" element={<ProtectedRoute><LP section="Pagamento Confirmado"><PaymentSuccess /></LP></ProtectedRoute>} />
 
