@@ -4,6 +4,10 @@ import { MobileWeekTabs } from './MobileWeekTabs';
 import { MobileMealCard } from './MobileMealCard';
 import { MobileAddSheet, AddAction } from './MobileAddSheet';
 import { FoodSelectionModal } from './FoodSelectionModal';
+import { NewMealModal } from './NewMealModal';
+import { EditFoodModal } from './EditFoodModal';
+import { GenerateAIModal } from './GenerateAIModal';
+import { FocusModeView } from './FocusModeView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import PatientPickerDropdown from '../common/PatientPickerDropdown';
 import {
-  Plus, ChevronLeft, MoreHorizontal, Sparkles, Flame, Beef, Wheat, Droplet, Target,
+  Plus, ChevronLeft, MoreHorizontal, Sparkles, Flame, Beef, Wheat, Droplet, Target, Eye,
   RefreshCw, Save, Zap, Dumbbell, Salad, Package, Settings2, ShieldCheck, Eraser, Star, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -89,7 +93,10 @@ export const MobileMealEditorV3: React.FC = () => {
     mealId: string;
     item: MealItem;
   } | null>(null);
+  const [editTarget, setEditTarget] = useState<{ mealId: string; item: MealItem } | null>(null);
   const [generateOpen, setGenerateOpen] = useState(false);
+  const [newMealOpen, setNewMealOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
 
   const totals = meals.reduce(
     (acc, m) => {
