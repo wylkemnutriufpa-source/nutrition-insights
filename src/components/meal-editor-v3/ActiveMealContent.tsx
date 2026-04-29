@@ -26,7 +26,7 @@ export const ActiveMealContent: React.FC = () => {
     meals, activeMealId, removeFoodFromMeal, updateFoodQuantity, 
     addSubstitution, removeSubstitution, fastMode,
     undo, redo, clearMeal, duplicateMeal, balanceMacros,
-    history, generateDeterministicPlan, saveAsFavorite
+    history, generateDeterministicPlan, saveAsFavorite, updateFoodUnit
   } = useMealEditorV3Store();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
