@@ -1,0 +1,17 @@
+{
+  "summary": "Summary:",
+  "details": {
+    "timestamp": "2026-04-29T01:14:19.333Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260428171309_125aadca-206f-436e-8bb4-d78fde4b93d0.sql",
+    "lastActualMigration": "20260428222811_47392211-1373-4bf8-9dd7-6ed0a043897b.sql",
+    "missingMigrations": [
+      "20260428192954_9a410bc4-3aaa-4276-90da-8f7ff22deda1.sql",
+      "20260428193433_7bd737c7-c1c7-4008-a29e-8a03a3f98a5e.sql",
+      "20260428195611_6dbd2f71-6ed4-488a-b18f-f7836ab7c930.sql",
+      "20260428200731_f492de6d-1d2a-4386-ae4b-6ef39b137b24.sql",
+      "20260428222811_47392211-1373-4bf8-9dd7-6ed0a043897b.sql"
+    ],
+    "diffResults": []
+  }
+}

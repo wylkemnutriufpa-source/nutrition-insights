@@ -7,6 +7,9 @@ import { ClinicalRulesPanel } from './ClinicalRulesPanel';
 import { ValidationModal } from './ValidationModal';
 import { TemplateLibrary } from './TemplateLibrary';
 import { MobileMealEditorV3 } from './MobileMealEditorV3';
+import { NewMealModal } from './NewMealModal';
+import { GenerateAIModal } from './GenerateAIModal';
+import { FocusModeView } from './FocusModeView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,7 +19,8 @@ import PatientPickerDropdown from '../common/PatientPickerDropdown';
 import { 
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
-  Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search
+  Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search,
+  PlusCircle, Bot
 } from 'lucide-react';
 import {
   Dialog,
@@ -47,35 +51,38 @@ export const MealPlanEditorV3: React.FC = () => {
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
     fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView,
-    viewMode, setViewMode, setPatientId
+    viewMode, setViewMode, setPatientId, activeDay
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [isNewMealModalOpen, setIsNewMealModalOpen] = useState(false);
+  const [isFocusModeOpen, setIsFocusModeOpen] = useState(false);
+  const [isGenerateAIModalOpen, setIsGenerateAIModalOpen] = useState(false);
   const [patients, setPatients] = useState<any[]>([]);
   const [validationResults, setValidationResults] = useState<any>(null);
 
   useEffect(() => {
     const fetchPatients = async () => {
-      // Usando query com join para buscar pacientes reais via user_roles
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('nutritionist_patients')
         .select(`
-          user_id,
-          profiles:profiles!user_roles_user_id_fkey (
+          patient_id,
+          profiles:profiles!inner (
             full_name
           )
         `)
-        .eq('role', 'patient');
+        .eq('nutritionist_id', userData.user.id);
         
       if (data && !error) {
-        const patientList = data
-          .filter((item: any) => item.profiles)
-          .map((item: any) => ({
-            id: item.user_id,
-            name: item.profiles.full_name || 'Sem nome'
-          }));
+        const patientList = data.map((item: any) => ({
+          id: item.patient_id,
+          name: item.profiles.full_name || 'Sem nome'
+        }));
         setPatients(patientList);
       }
     };
@@ -257,7 +264,17 @@ export const MealPlanEditorV3: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="sm" onClick={resetPlan} className="text-muted-foreground hover:text-foreground">
+          <Button variant="ghost" size="sm" onClick={() => setIsFocusModeOpen(true)} className="text-muted-foreground hover:text-primary">
+            <Search className="w-3.5 h-3.5 mr-2" />
+            Modo Foco
+          </Button>
+
+          <Button variant="ghost" size="sm" onClick={() => setIsNewMealModalOpen(true)} className="text-muted-foreground hover:text-emerald-500">
+            <PlusCircle className="w-3.5 h-3.5 mr-2 text-emerald-500" />
+            Nova Refeição
+          </Button>
+
+          <Button variant="ghost" size="sm" onClick={resetPlan} className="text-muted-foreground hover:text-destructive">
             <RefreshCw className="w-3.5 h-3.5 mr-2" />
             Limpar
           </Button>
@@ -275,11 +292,11 @@ export const MealPlanEditorV3: React.FC = () => {
           <Button 
             variant="outline" 
             size="sm" 
-            onClick={() => setIsGenerateModalOpen(true)} 
+            onClick={() => setIsGenerateAIModalOpen(true)} 
             className="bg-primary/5 border-primary/20 text-primary hover:bg-primary/10 font-bold px-4"
           >
-            <Zap className="w-3.5 h-3.5 mr-2" />
-            GERAR PLANO
+            <Bot className="w-3.5 h-3.5 mr-2" />
+            GERAR COM IA
           </Button>
           
           <Button 
@@ -386,6 +403,22 @@ export const MealPlanEditorV3: React.FC = () => {
           results={validationResults}
         />
       )}
+
+      <NewMealModal 
+        isOpen={isNewMealModalOpen} 
+        onClose={() => setIsNewMealModalOpen(false)} 
+      />
+
+      <GenerateAIModal 
+        isOpen={isGenerateAIModalOpen} 
+        onClose={() => setIsGenerateAIModalOpen(false)} 
+      />
+
+      <FocusModeView 
+        isOpen={isFocusModeOpen} 
+        onClose={() => setIsFocusModeOpen(false)} 
+        dayLabel={activeDay}
+      />
     </div>
     </>
   );

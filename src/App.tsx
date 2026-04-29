@@ -487,10 +487,12 @@ function AppContent() {
 
               
               {/* Editor V3 Routes */}
-              <Route path="/meal-plan-editor-v3/:patientId" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/dieta-v3/:patientId" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor-v3/:patientId" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
+              <Route path="/dieta-v3/:patientId" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
+              <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
+              <Route path="/editor/:patientId" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
+              <Route path="/editor" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
               
               {/* Editor V2 Routes */}
               <Route path="/meal-plan-editor-v2/:patientId" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
