@@ -55,11 +55,15 @@ export default function OnboardingPaciente() {
 
   const complete = useCallback(() => {
     localStorage.setItem(ONBOARDING_KEY, "true");
+    localStorage.removeItem("fj_invited");
+    localStorage.removeItem("fj_user_type");
     navigate("/paciente/dashboard");
   }, [navigate]);
 
   const skip = useCallback(() => {
     localStorage.setItem(ONBOARDING_KEY, "true");
+    localStorage.removeItem("fj_invited");
+    localStorage.removeItem("fj_user_type");
     navigate("/paciente/dashboard");
   }, [navigate]);
 
