@@ -5,13 +5,13 @@
  */
 
 export const QUICK_FOODS = [
-  // Refeições Prontas / Pratos
-  { id: 'q15', name: 'Omelete de Frango', calories: 280, protein: 32, carbs: 4, fat: 18, portionValue: 1, portionUnit: 'unidade' },
-  { id: 'q16', name: 'Panqueca de Banana Fit', calories: 190, protein: 8, carbs: 24, fat: 6, portionValue: 1, portionUnit: 'unidade' },
-  { id: 'q17', name: 'Crepioca Fit', calories: 210, protein: 12, carbs: 18, fat: 9, portionValue: 1, portionUnit: 'unidade' },
-  { id: 'q18', name: 'Vitamina de Frutas', calories: 250, protein: 10, carbs: 45, fat: 4, portionValue: 300, portionUnit: 'ml' },
-  { id: 'q19', name: 'Sanduíche Natural', calories: 320, protein: 18, carbs: 35, fat: 12, portionValue: 1, portionUnit: 'unidade' },
-  { id: 'q20', name: 'Iogurte com Granola', calories: 240, protein: 12, carbs: 32, fat: 8, portionValue: 200, portionUnit: 'g' },
+  // Refeições Prontas / Pratos (com imagem)
+  { id: 'q15', name: 'Omelete de Frango', calories: 280, protein: 32, carbs: 4, fat: 18, portionValue: 1, portionUnit: 'unidade', imageUrl: 'https://images.unsplash.com/photo-1510627489930-0c1b0ba8fa19?q=80&w=200' },
+  { id: 'q16', name: 'Panqueca de Banana Fit', calories: 190, protein: 8, carbs: 24, fat: 6, portionValue: 1, portionUnit: 'unidade', imageUrl: 'https://images.unsplash.com/photo-1528207776546-365bb710ee93?q=80&w=200' },
+  { id: 'q17', name: 'Crepioca Fit', calories: 210, protein: 12, carbs: 18, fat: 9, portionValue: 1, portionUnit: 'unidade', imageUrl: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=200' },
+  { id: 'q18', name: 'Vitamina de Frutas', calories: 250, protein: 10, carbs: 45, fat: 4, portionValue: 300, portionUnit: 'ml', imageUrl: 'https://images.unsplash.com/photo-1553530666-ba11a7da3888?q=80&w=200' },
+  { id: 'q19', name: 'Sanduíche Natural', calories: 320, protein: 18, carbs: 35, fat: 12, portionValue: 1, portionUnit: 'unidade', imageUrl: 'https://images.unsplash.com/photo-1525351484163-7529414344d8?q=80&w=200' },
+  { id: 'q20', name: 'Iogurte com Granola', calories: 240, protein: 12, carbs: 32, fat: 8, portionValue: 200, portionUnit: 'g', imageUrl: 'https://images.unsplash.com/photo-1488477181946-6428a0291777?q=80&w=200' },
   
   // Itens Básicos
   { id: 'q1', name: 'Ovo Cozido', calories: 78, protein: 6, carbs: 0.6, fat: 5, portionValue: 50, portionUnit: 'unidade' },
