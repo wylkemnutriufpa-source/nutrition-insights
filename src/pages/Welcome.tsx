@@ -26,7 +26,6 @@ export default function Welcome() {
       const invitedUserType = localStorage.getItem("fj_user_type");
 
       if (isInvited && invitedUserType === "patient") {
-        console.log("[Welcome] Intenção de paciente detectada. Indo para consentimento.");
         navigate("/consent", { replace: true });
         return;
       }
