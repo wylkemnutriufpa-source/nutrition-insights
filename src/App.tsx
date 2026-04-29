@@ -248,6 +248,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function DashboardRedirect() {
+  const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  if (isNutritionist || isPersonal || isAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  return <Navigate to="/client/dashboard" replace />;
+}
+
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isAdmin } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
