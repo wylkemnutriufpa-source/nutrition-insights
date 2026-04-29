@@ -397,6 +397,11 @@ export const MealPlanEditorV3: React.FC = () => {
         </aside>
       </div>
 
+      <PatientViewModal 
+        isOpen={isPatientView} 
+        onClose={() => setPatientView(false)} 
+      />
+
       <Dialog open={isGenerateModalOpen} onOpenChange={setIsGenerateModalOpen}>
         <DialogContent className="max-w-3xl sm:rounded-3xl border-none shadow-2xl">
           <DialogHeader>
