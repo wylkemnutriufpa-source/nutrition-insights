@@ -2,6 +2,8 @@
 <html lang="pt-BR" class="dark">
   <head>
     <meta charset="UTF-8" />
+    <meta name="build-version" content="%BUILD_VERSION%" />
+    <meta name="build-timestamp" content="%BUILD_TIMESTAMP%" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover" />
     <title>FitJourney— Nutrição Inteligente &amp; Gamificada</title>
     <meta name="description" content="FitJourney: plataforma premium de nutrição com gamificação, análise por IA e gestão completa.">
@@ -57,6 +59,10 @@
             }
           }
         }, 8000);
+
+        // Version logger for debugging
+        console.log("System Version: %BUILD_VERSION%");
+        console.log("Built at: %BUILD_TIMESTAMP%");
       </script>
     </div>
     <script type="module" src="/src/main.tsx"></script>
