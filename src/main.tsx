@@ -87,6 +87,20 @@ if (isPreviewHost() || isInIframe()) {
     });
   }
 } else {
+  // Em produção, se o Service Worker estiver travado, skipWaiting + clients.claim
+  if ("serviceWorker" in navigator) {
+    navigator.serviceWorker.ready.then((registration) => {
+      if (registration.waiting) {
+        registration.waiting.postMessage({ type: "SKIP_WAITING" });
+      }
+    });
+    
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      console.log("[FitJourney:SW] Novo Service Worker assumiu o controle. Recarregando...");
+      window.location.reload();
+    });
+  }
+
   // Em produção, se detectamos inconsistência grave, limpamos tudo
   if (window.location.search.includes("clear_cache=1")) {
     if ("caches" in window) {
@@ -95,6 +109,9 @@ if (isPreviewHost() || isInIframe()) {
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
     }
+    // Também limpa o storage para garantir limpeza total
+    localStorage.clear();
+    sessionStorage.clear();
     const url = new URL(window.location.href);
     url.searchParams.delete("clear_cache");
     window.location.replace(url.toString());
