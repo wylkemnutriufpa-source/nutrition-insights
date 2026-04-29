@@ -1,3 +1,5 @@
+import { Food } from './useMealEditorV3Store';
+
 /**
  * FitJourney V3 - Base de Dados Nutricionais
  * Referência: USDA (United States Department of Agriculture) FoodData Central
