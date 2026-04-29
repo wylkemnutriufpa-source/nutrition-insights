@@ -45,6 +45,12 @@ export default function QuickLink() {
     if (nutriId) {
       localStorage.setItem("fitjourney_nutri_id", nutriId);
     }
+
+    // Se já completou o signup mas está aguardando confirmação, mostra sucesso
+    if (localStorage.getItem("fj_signup_complete") === "true") {
+      setDone(true);
+      return;
+    }
     
     const fetchProf = async () => {
       // Se já está logado, redireciona para Welcome para triagem
