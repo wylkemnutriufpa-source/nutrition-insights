@@ -4,51 +4,75 @@ import { useAuth } from "@/lib/auth";
 import BrainLoader from "@/components/common/BrainLoader";
 
 export default function Welcome() {
-  const { user, roles, loading } = useAuth();
+  const { user, roles, authStatus, profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next");
 
   useEffect(() => {
-    // Se ainda está carregando o auth básico (usuário/sessão), espera
-    if (loading && !user) return;
+    // Regra 1: Se está carregando, não faz nada
+    if (authStatus === "loading") {
+      console.log("[Welcome] Auth pendente. Aguardando...");
+      return;
+    }
 
-    // Se não tem usuário após carregar, volta pro login
-    if (!loading && !user) {
+    // Regra 2: Sem usuário após carregar auth -> Login
+    if (authStatus === "unauthenticated") {
+      console.log("[Welcome] Usuário não autenticado. Redirecionando para /auth");
       navigate("/auth", { replace: true });
       return;
     }
 
-    // Se temos usuário, decidimos o destino
+    // Regra 3: Se temos usuário, decidimos o destino de forma determinística
     const checkRedirection = () => {
-      // 1. Verificar Intenção Capturada (Regra de Ouro do Onboarding)
+      // 3.1. Prioridade Máxima: Onboarding Intencional (localStorage)
       const isInvited = localStorage.getItem("fj_invited") === "true";
       const invitedUserType = localStorage.getItem("fj_user_type");
 
       if (isInvited && invitedUserType === "patient") {
+        console.log("[Welcome] Intenção de convite detectada. Indo para /consent");
         navigate("/consent", { replace: true });
         return;
       }
 
-      // 2. Se não é convite, aguardamos roles se estiverem carregando (apenas se user existir)
-      if (loading && user) {
-        return;
+      // 3.2. Se não há intenção de convite, aguardamos o perfil/roles carregar totalmente
+      // Se user existe mas profile ainda é null, e não somos convidados, esperamos um pouco
+      if (!profile && authStatus === "authenticated") {
+        console.log("[Welcome] Usuário logado sem perfil carregado ainda. Aguardando sincronização do banco...");
+        return; 
       }
 
-      // 3. Decisão baseada em Roles
+      // 3.3. Limpeza de estado se já temos profile + roles
+      if (profile && roles.length > 0) {
+        localStorage.removeItem("fj_invited");
+        localStorage.removeItem("fj_user_type");
+      }
+
+      // 3.4. Decisão baseada em Roles (Profissional/Admin)
       if (roles.includes("nutritionist") || roles.includes("personal") || (roles as string[]).includes("admin")) {
+        console.log("[Welcome] Role Profissional/Admin detectada.");
         navigate(nextPath || "/admin/dashboard", { replace: true });
         return;
       }
 
+      // 3.5. Decisão baseada em Role (Paciente)
       if (roles.includes("patient")) {
+        console.log("[Welcome] Role Paciente detectada.");
         navigate(nextPath || "/client/dashboard", { replace: true });
         return;
+      }
+
+      // 3.6. Fallback de Segurança: Se logado mas sem role definida no banco e sem convite
+      // Provavelmente um usuário que acabou de criar conta mas não veio via link de convite
+      console.log("[Welcome] Usuário logado sem role ou intenção. Verificando perfil...");
+      if (profile) {
+        // Se já tem perfil, assume dashboard de cliente por padrão
+        navigate("/client/dashboard", { replace: true });
       }
     };
 
     checkRedirection();
-  }, [user, roles, loading, navigate]);
+  }, [user, roles, authStatus, profile, navigate, nextPath]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
