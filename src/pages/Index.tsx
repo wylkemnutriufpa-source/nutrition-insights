@@ -52,8 +52,6 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Link, useNavigate, useLocation } from "react-router-dom";
 
-
-
 const container = {
   hidden: { opacity: 0 },
   show: { opacity: 1, transition: { staggerChildren: 0.08 } },
@@ -1171,11 +1169,14 @@ function generateLocalInsights(patients: any[]) {
 }
 
 export default function Index() {
-  const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const { user, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
   const { isPatientContext, isHybridUser } = useWorkspaceContext();
   const { minMode } = useExperienceMode();
   const [showTour, setShowTour] = useState(false);
   const { proView, setProView } = useLayoutPreference();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [showIntro, setShowIntro] = useState(false);
 
   const isProRole = isNutritionist || isPersonal || isAdmin;
   // For hybrid users, respect workspace context; for pure roles, use role check
@@ -1183,10 +1184,21 @@ export default function Index() {
 
   const tourKey = isProRole ? "tour_professional_completed" : "tour_patient_completed";
   const onboardingKey = isProRole ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
+  const INTRO_STORAGE_KEY = "fj_intro_seen";
+
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search);
+    const forceIntro = searchParams.get("intro") === "1";
+    const hasSeenIntro = sessionStorage.getItem(INTRO_STORAGE_KEY) === "1";
+    
+    if (forceIntro || (!hasSeenIntro && !loading && user)) {
+      setShowIntro(true);
+    }
+  }, [location.search, loading, user]);
 
   // Auto-trigger tour after onboarding — with 30min cooldown
   useEffect(() => {
-    if (loading) return;
+    if (loading || showIntro) return;
     const onboardingDone = localStorage.getItem(onboardingKey) === "true";
     const tourDone = localStorage.getItem(tourKey) === "true";
     if (tourDone || !onboardingDone) return;
@@ -1199,7 +1211,21 @@ export default function Index() {
 
     const timer = setTimeout(() => setShowTour(true), 1500);
     return () => clearTimeout(timer);
-  }, [loading, onboardingKey, tourKey]);
+  }, [loading, onboardingKey, tourKey, showIntro]);
+
+  if (showIntro) {
+    return (
+      <CinematicIntro 
+        onComplete={() => {
+          setShowIntro(false);
+          sessionStorage.setItem(INTRO_STORAGE_KEY, "1");
+          if (location.search.includes("intro=1")) {
+            navigate("/", { replace: true });
+          }
+        }} 
+      />
+    );
+  }
 
   if (loading) {
     return (
