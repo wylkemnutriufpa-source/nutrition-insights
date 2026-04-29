@@ -29,10 +29,10 @@ if (!isPreviewHost() && !isInIframe()) {
         if ("serviceWorker" in navigator) {
           navigator.serviceWorker.getRegistrations().then(regs => {
             regs.forEach(r => r.unregister());
-            window.location.reload(true);
+            window.location.reload();
           });
         } else {
-          window.location.reload(true);
+          window.location.reload();
         }
       }
     })
