@@ -183,7 +183,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
               <ScrollArea className="flex-1">
                 <div className="p-4 space-y-6">
-                  {history.length > 0 && !debouncedSearch && (
+                  {history.length > 0 && !searchQuery && (
                     <div className="space-y-3">
                       <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-1.5">
                         <History className="w-3 h-3" />
@@ -198,12 +198,13 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                   )}
 
                   <div className="space-y-3">
-                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                      {debouncedSearch ? 'Resultados da Busca' : 'Sugestões para Você'}
+                    <h4 className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center justify-between">
+                      <span>{searchQuery.length >= 2 ? 'Resultados da Busca (TACO/USDA)' : 'Alimentos Sugeridos'}</span>
+                      {isLoading && <Loader2 className="w-3 h-3 animate-spin" />}
                     </h4>
                     <div className="grid gap-2">
                       <AnimatePresence mode="popLayout">
-                        {filteredQuickFoods.map((food, idx) => (
+                        {(searchQuery.length >= 2 ? dbResults : filteredQuickFoods).map((food, idx) => (
                           <motion.div
                             key={food.id}
                             initial={{ opacity: 0, y: 10 }}
@@ -219,6 +220,11 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                           </motion.div>
                         ))}
                       </AnimatePresence>
+                      {searchQuery.length >= 2 && dbResults.length === 0 && !isLoading && (
+                        <div className="text-center py-8 text-muted-foreground text-xs italic">
+                          Nenhum alimento encontrado no banco de dados.
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
