@@ -64,6 +64,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       role,
       isReady,
       isDegraded,
+      isNutritionist,
+      isAdmin,
+      isPersonal,
       versionMismatch: (window as any).__FJ_VERSION_MISMATCH__
     };
 
