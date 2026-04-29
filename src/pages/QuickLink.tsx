@@ -39,28 +39,15 @@ export default function QuickLink() {
   useEffect(() => {
     if (!nutriId) return;
     
-    const fetchProf = async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name")
-        .eq("user_id", nutriId)
-        .maybeSingle();
-        
-      const { data: profProfile } = await supabase
-        .from("professional_profiles")
-        .select("clinic_name")
-        .eq("user_id", nutriId)
-        .maybeSingle();
-        
-      if (profile) {
-        setProfessional({
-          full_name: profile.full_name,
-          clinic_name: profProfile?.clinic_name || null
-        });
-      }
-      setLoadingProf(false);
-    };
+    // Captura de intenção determinística (Regra 1 do Onboarding)
+    localStorage.setItem("fj_invited", "true");
+    localStorage.setItem("fj_user_type", "patient");
+    if (nutriId) {
+      localStorage.setItem("fitjourney_nutri_id", nutriId);
+    }
     
+    const fetchProf = async () => {
+...
     fetchProf();
   }, [nutriId]);
 
