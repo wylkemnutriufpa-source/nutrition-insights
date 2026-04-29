@@ -1,11 +1,13 @@
 import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import BrainLoader from "@/components/common/BrainLoader";
 
 export default function Welcome() {
   const { user, roles, loading } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const nextPath = searchParams.get("next");
 
   useEffect(() => {
     // Se ainda está carregando o auth básico (usuário/sessão), espera
