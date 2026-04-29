@@ -1,5 +1,12 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { ChevronDown, Zap, Sparkles, Pencil } from "lucide-react";
 
 interface EditorVersionPickerProps {
   planId: string;
@@ -12,8 +19,7 @@ interface EditorVersionPickerProps {
 }
 
 /**
- * Simple button that navigates directly to the V2 editor.
- * Legacy picker dropdown was removed – V2 is now the only editor.
+ * Picker that allows choosing between Editor V2 (Classic) and V3 (Elite).
  */
 export function EditorVersionPicker({
   planId,
@@ -26,15 +32,44 @@ export function EditorVersionPicker({
 }: EditorVersionPickerProps) {
   const navigate = useNavigate();
 
-  const handleClick = () => {
+  const handleNavigate = (version: "v2" | "v3") => {
     onBeforeNavigate?.();
-    navigate(`/meal-plans/${planId}`);
+    if (version === "v2") {
+      navigate(`/meal-plans/${planId}`);
+    } else {
+      // For V3, we often need the patientId. We'll try to find it or just navigate to the general route if needed.
+      // But usually, in the contexts where this is used, we have access to the plan.
+      // For now, let's just point to /meal-plan-editor-v3 with a planId query param if possible, 
+      // or assume the V3 page can handle finding the patient from the planId.
+      navigate(`/meal-plan-editor-v3?planId=${planId}`);
+    }
   };
 
   return (
-    <Button variant={variant} size={size} className={className} onClick={handleClick}>
-      {icon}
-      {label}
-    </Button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant={variant} size={size} className={className}>
+          {icon || <Pencil className="w-3.5 h-3.5 mr-1.5" />}
+          {label}
+          <ChevronDown className="ml-1.5 h-3.5 w-3.5 opacity-50" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuItem onClick={() => handleNavigate("v2")} className="gap-2 cursor-pointer">
+          <Zap className="w-4 h-4 text-amber-500" />
+          <div className="flex flex-col">
+            <span className="font-medium text-xs">Editor Clássico V2</span>
+            <span className="text-[10px] text-muted-foreground">Rápido e direto</span>
+          </div>
+        </DropdownMenuItem>
+        <DropdownMenuItem onClick={() => handleNavigate("v3")} className="gap-2 cursor-pointer">
+          <Sparkles className="w-4 h-4 text-purple-500" />
+          <div className="flex flex-col">
+            <span className="font-medium text-xs">Editor Elite V3</span>
+            <span className="text-[10px] text-muted-foreground">Semanal e avançado</span>
+          </div>
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

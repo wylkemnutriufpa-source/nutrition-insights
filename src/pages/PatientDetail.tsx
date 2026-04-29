@@ -628,6 +628,13 @@ export default function PatientDetail() {
             >
               🏥 Modo Consultório
             </Button>
+            <Button
+              variant="outline"
+              className="gap-2 border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
+              onClick={() => navigate(`/meal-plan-editor-v3/${resolvedPatientId}`)}
+            >
+              <Sparkles className="w-4 h-4" /> Editor Elite V3
+            </Button>
             {patientId && (
               <UnblockPatientDialog
                 patientId={resolvedPatientId}

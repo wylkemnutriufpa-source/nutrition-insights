@@ -46,7 +46,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { toast } from "sonner";
-import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap, RefreshCw } from "lucide-react";
+import { ClipboardList, Plus, Calendar, ToggleLeft, ToggleRight, PencilLine, Trash2, Zap, RefreshCw, Sparkles } from "lucide-react";
 import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import type { Tables } from "@/integrations/supabase/types";
 import GenerationModeSelector from "@/components/hybrid-builder/GenerationModeSelector";
@@ -618,7 +618,11 @@ export default function MealPlans() {
                         onClick={(e) => { e.stopPropagation(); navigate(`/plan-builder/${p.id}`); }}>
                         <Zap className="w-4 h-4 text-primary" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor"
+                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor V3 (Premium)"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor-v3/${p.patient_id}?planId=${p.id}`); }}>
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor Clássico V2"
                         onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}>
                         <PencilLine className="w-4 h-4" />
                       </Button>
