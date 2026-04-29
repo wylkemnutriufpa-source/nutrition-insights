@@ -600,7 +600,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       validateAndSave: async () => {
-        const { meals, patientTargets, patientId, clinicalLog, viewMode } = get();
+        const { meals, patientTargets, patientId, clinicalLog } = get();
         
         if (!patientId) {
           toast.error('Selecione um paciente antes de salvar');
@@ -620,6 +620,15 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
         try {
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData?.user) throw new Error('Usuário não autenticado');
+
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('tenant_id')
+            .eq('user_id', userData.user.id)
+            .single();
+
           // 1. Garantir que o plano exista ou criar um novo
           let { data: existingPlan } = await supabase
             .from('meal_plans')
@@ -636,6 +645,9 @@ export const useMealEditorV3Store = create<MealPlanState>()(
               .from('meal_plans')
               .insert([{
                 patient_id: patientId,
+                nutritionist_id: userData.user.id,
+                tenant_id: profile?.tenant_id,
+                start_date: new Date().toISOString().split('T')[0],
                 title: 'Plano Alimentar Ativo',
                 total_target_calories: totals.calories,
                 total_target_protein: totals.protein,
@@ -662,28 +674,37 @@ export const useMealEditorV3Store = create<MealPlanState>()(
               .eq('id', planId);
           }
 
-          // 2. Limpar itens antigos (para simplicidade nesta v3)
+          // 2. Limpar itens antigos
           await supabase.from('meal_plan_items').delete().eq('meal_plan_id', planId);
 
           // 3. Inserir novos itens
           const itemsToInsert = meals.flatMap(meal => 
-            meal.items.map(item => ({
-              meal_plan_id: planId,
-              meal_type: meal.name.toLowerCase().includes('café') ? 'breakfast' : 
-                         meal.name.toLowerCase().includes('almoço') ? 'lunch' : 
-                         meal.name.toLowerCase().includes('lanche') ? 'snack' : 'dinner',
-              title: item.name,
-              description: `Quantidade: ${item.quantity} ${item.selectedUnit || item.portionUnit}`,
-              calories_target: item.calories * item.quantity,
-              protein_target: item.protein * item.quantity,
-              carbs_target: item.carbs * item.quantity,
-              fat_target: item.fat * item.quantity,
-              day_of_week: null // Plano geral por enquanto
-            }))
+            meal.items.map(item => {
+              let mType: "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack" = "lunch";
+              const name = meal.name.toLowerCase();
+              if (name.includes('café') || name.includes('desjejum')) mType = 'breakfast';
+              else if (name.includes('lanche') && name.includes('manhã')) mType = 'morning_snack';
+              else if (name.includes('almoço')) mType = 'lunch';
+              else if (name.includes('lanche') && (name.includes('tarde') || name.includes('merenda'))) mType = 'afternoon_snack';
+              else if (name.includes('jantar')) mType = 'dinner';
+              else if (name.includes('ceia') || name.includes('lanche') && name.includes('noite')) mType = 'evening_snack';
+
+              return {
+                meal_plan_id: planId,
+                meal_type: mType,
+                title: item.name,
+                description: `Quantidade: ${item.quantity} ${item.selectedUnit || item.portionUnit}`,
+                calories_target: Math.round(item.calories * item.quantity),
+                protein_target: item.protein * item.quantity,
+                carbs_target: item.carbs * item.quantity,
+                fat_target: item.fat * item.quantity,
+                day_of_week: null
+              };
+            })
           );
 
           if (itemsToInsert.length > 0) {
-            const { error: insertError } = await supabase.from('meal_plan_items').insert(itemsToInsert);
+            const { error: insertError } = await supabase.from('meal_plan_items').insert(itemsToInsert as any);
             if (insertError) throw insertError;
           }
 
