@@ -1248,8 +1248,8 @@ export default function AdminDashboard() {
               <AuditLogsEmbed />
             </TabsContent>
           </Tabs>
-        </SafeRender>
-      </div>
+        </div>
+      </SafeRender>
 
       <CreateProfessionalDialog
         open={createDialogOpen}
