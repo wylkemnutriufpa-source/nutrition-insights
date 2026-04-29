@@ -8,6 +8,7 @@ import {
   Copy, Eraser, Scale, Undo2, Redo2, Zap, MoreHorizontal, Star, Lock
 } from 'lucide-react';
 import { FoodSelectionModal } from './FoodSelectionModal';
+import { EditFoodModal } from './EditFoodModal';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
@@ -30,6 +31,7 @@ export const ActiveMealContent: React.FC = () => {
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [modalTab, setModalTab] = useState<'quick' | 'search' | 'templates'>('search');
   const [substitutionModalData, setSubstitutionModalData] = useState<{ instanceId: string } | null>(null);
+  const [editTarget, setEditTarget] = useState<{ mealId: string; item: any } | null>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
   const activeMeal = meals.find((m) => m.id === activeMealId);
@@ -340,6 +342,19 @@ export const ActiveMealContent: React.FC = () => {
         mealId={activeMeal.id}
         defaultTab={modalTab}
         onSelect={substitutionModalData ? (food) => handleAddSubstitution(substitutionModalData.instanceId, food) : undefined}
+      />
+
+      <EditFoodModal 
+        isOpen={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        mealId={editTarget?.mealId || null}
+        item={editTarget?.item || null}
+        onSubstitute={() => {
+          if (editTarget) {
+            setSubstitutionModalData({ instanceId: editTarget.item.instanceId });
+            setEditTarget(null);
+          }
+        }}
       />
     </div>
   );

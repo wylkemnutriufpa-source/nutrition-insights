@@ -63,23 +63,24 @@ export const MobileMealEditorV3: React.FC = () => {
 
   React.useEffect(() => {
     const fetchPatients = async () => {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) return;
+
       const { data, error } = await supabase
-        .from('user_roles')
+        .from('nutritionist_patients')
         .select(`
-          user_id,
-          profiles:profiles!user_roles_user_id_fkey (
+          patient_id,
+          profiles:profiles!inner (
             full_name
           )
         `)
-        .eq('role', 'patient');
+        .eq('nutritionist_id', userData.user.id);
         
       if (data && !error) {
-        const patientList = data
-          .filter((item: any) => item.profiles)
-          .map((item: any) => ({
-            id: item.user_id,
-            name: item.profiles.full_name || 'Sem nome'
-          }));
+        const patientList = data.map((item: any) => ({
+          id: item.patient_id,
+          name: item.profiles.full_name || 'Sem nome'
+        }));
         setPatients(patientList);
       }
     };
