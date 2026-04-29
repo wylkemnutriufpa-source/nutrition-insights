@@ -33,6 +33,16 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const [selectedRole, setSelectedRole] = useState<SelectedRole>(null);
   const nextPath = searchParams.get("next") || searchParams.get("redirect") || "/";
 
+  // Check if already authenticated and redirect
+  const { authStatus } = useAuth();
+  
+  useEffect(() => {
+    if (authStatus === "authenticated") {
+      console.log("[Auth] Usuário já autenticado. Redirecionando para /welcome...");
+      navigate("/welcome", { replace: true });
+    }
+  }, [authStatus, navigate]);
+
   // Show error if redirected from no-role sign-out
   useEffect(() => {
     const error = searchParams.get("error");
