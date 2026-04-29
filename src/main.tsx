@@ -124,7 +124,11 @@ if (isPreviewHost() || isInIframe()) {
   }
 })();
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundaryDebug name="Root">
+    <App />
+  </ErrorBoundaryDebug>
+);
 
 // Start the version sync loop AFTER the app mounts.
 // Self-disables in preview/iframe; in production it polls /version.json
