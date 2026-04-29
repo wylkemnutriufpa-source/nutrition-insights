@@ -148,7 +148,6 @@ export const ActiveMealContent: React.FC = () => {
             <Zap className="w-4 h-4 mr-2" />
             RÁPIDO
           </Button>
-
           <Button 
             variant="ghost"
             size="icon"
