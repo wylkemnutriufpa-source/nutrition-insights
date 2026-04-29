@@ -28,6 +28,7 @@ import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
 import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import CinematicIntro from "@/components/landing/CinematicIntro";
+import BrainLoader from "@/components/common/BrainLoader";
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PortfolioIntelligencePanel from "@/components/dashboard/PortfolioIntelligencePanel";
