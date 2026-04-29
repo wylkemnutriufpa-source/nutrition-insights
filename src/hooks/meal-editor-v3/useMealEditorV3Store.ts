@@ -674,6 +674,33 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           };
         });
       },
+      addMeal: ({ name, time, icon }) => {
+        set((state) => {
+          const newId = Math.random().toString(36).substring(7);
+          const newMeal: Meal = { id: newId, name, time, icon, items: [] };
+          return {
+            history: saveHistory(state),
+            meals: [...state.meals, newMeal],
+            activeMealId: newId,
+            lastActionInsight: `Refeição "${name}" adicionada`
+          };
+        });
+      },
+      renameMeal: (mealId, payload) => {
+        set((state) => ({
+          history: saveHistory(state),
+          meals: state.meals.map((m) =>
+            m.id === mealId ? { ...m, ...payload } : m
+          )
+        }));
+      },
+      deleteMeal: (mealId) => {
+        set((state) => ({
+          history: saveHistory(state),
+          meals: state.meals.filter((m) => m.id !== mealId),
+          activeMealId: state.activeMealId === mealId ? state.meals[0]?.id || null : state.activeMealId
+        }));
+      },
     }),
     {
       name: 'meal-editor-v3-storage',
