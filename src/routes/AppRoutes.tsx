@@ -570,17 +570,17 @@ export const AppRoutes = () => {
                 <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
                 
                 {/* Editor Routes */}
-                <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+                <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                  <Route path="/v2" element={<Navigate to="/editor-v2" replace />} />
                  <Route path="/v2/:id" element={<RedirectWithParams to="/editor-v2/:id" />} />
-                <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
+                <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                 
                 <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
