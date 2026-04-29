@@ -310,31 +310,35 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         </div>
         <ScoreRing score={score} />
         <div className="flex items-center gap-1">
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor/${p.patient_id}`); }}
-            className="text-muted-foreground hover:text-primary p-1" title="Montar Plano (V2)"
-          >
-            <UtensilsCrossed className="w-4 h-4" />
-          </button>
-          <button
+          <Button
             onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}`); }}
-            className="text-purple-600 hover:text-purple-500 p-1" title="Editor V3 (Beta)"
+            size="sm"
+            className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20"
           >
-            <Sparkles className="w-4 h-4" />
-          </button>
-          <button
-            onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
-            className="text-muted-foreground hover:text-primary p-1" title="Adicionar a programa"
-          >
-            <Target className="w-4 h-4" />
-          </button>
-          <button
-              onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
-              className="text-muted-foreground hover:text-foreground p-1" title={!isInactive ? "Desativar" : "Ativar"}
-          >
-              {!isInactive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
-          </button>
-          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+            <Sparkles className="w-3.5 h-3.5" />
+            CRIAR PLANO
+          </Button>
+          <div className="flex items-center gap-0.5 ml-2">
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor/${p.patient_id}`); }}
+              className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Editor V2"
+            >
+              <UtensilsCrossed className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}
+              className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Adicionar a programa"
+            >
+              <Target className="w-4 h-4" />
+            </button>
+            <button
+                onClick={(e) => { e.stopPropagation(); toggleStatus(p.id, p.status); }}
+                className="text-muted-foreground hover:text-foreground p-1.5 transition-colors" title={!isInactive ? "Desativar" : "Ativar"}
+            >
+                {!isInactive ? <UserX className="w-4 h-4" /> : <UserCheck className="w-4 h-4" />}
+            </button>
+          </div>
+          <ChevronRight className="w-4 h-4 text-muted-foreground ml-1" />
         </div>
       </div>
 
