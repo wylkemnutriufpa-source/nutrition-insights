@@ -1191,6 +1191,7 @@ export default function Index() {
     const forceIntro = searchParams.get("intro") === "1";
     const hasSeenIntro = sessionStorage.getItem(INTRO_STORAGE_KEY) === "1";
     
+    // Mostramos a intro se for forçado VIA URL ou se for o primeiro acesso logado do usuário nesta sessão
     if (forceIntro || (!hasSeenIntro && !loading && user)) {
       setShowIntro(true);
     }
@@ -1227,7 +1228,7 @@ export default function Index() {
     );
   }
 
-  if (loading) {
+  if (loading && !showIntro) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">

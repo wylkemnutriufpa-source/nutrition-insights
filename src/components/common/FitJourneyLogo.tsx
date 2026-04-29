@@ -66,13 +66,15 @@ const FitJourneyLogo = forwardRef<HTMLButtonElement, FitJourneyLogoProps>(functi
   const handleClick = useCallback(() => {
     if (typeof window === "undefined") return;
 
+    // Clear session storage to force intro trigger
     sessionStorage.removeItem(STORAGE_KEY);
     
+    // Navigate to root with intro flag
+    navigate("/?intro=1", { replace: true });
+    
+    // Force a full reload if already on root to ensure Index.tsx re-runs all effects
     if (location.pathname === "/") {
-      // Just refresh the intro state if already on /
-      window.location.href = "/?intro=1";
-    } else {
-      navigate("/?intro=1");
+      window.location.reload();
     }
   }, [location.pathname, navigate]);
 
