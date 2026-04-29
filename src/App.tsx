@@ -65,6 +65,8 @@ const PatientWorkouts = lazy(() => import("./pages/PatientWorkouts"));
 const PersonalDashboard = lazy(() => import("./pages/PersonalDashboard"));
 const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
 const BodyAnalysis = lazy(() => import("./pages/BodyAnalysis"));
+const BodyProjectionExperience = lazy(() => import("./pages/BodyProjectionExperience"));
+const PatientMealPlan = lazy(() => import("./pages/PatientMealPlan"));
 const WaterCalculator = lazy(() => import("./pages/WaterCalculator"));
 const WeightCalculator = lazy(() => import("./pages/WeightCalculator"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
