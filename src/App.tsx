@@ -323,7 +323,10 @@ function AppContent() {
               <Route path="/reports" element={<ProtectedRoute><LP section="Relatórios"><Reports /></LP></ProtectedRoute>} />
               <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
               <Route path="/body-analysis" element={<ProtectedRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></ProtectedRoute>} />
-              
+              <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
+              <Route path="/physical-assessment" element={<ProtectedRoute><LP section="Avaliação Física"><PhysicalAssessment /></LP></ProtectedRoute>} />
+              <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas Globais"><GlobalTips /></LP></ProtectedRoute>} />
+
               {/* Professional Routes */}
               <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
               <Route path="/patients/:id" element={<NutritionistRoute><LP section="Detalhes do Paciente"><PatientDetail /></LP></NutritionistRoute>} />
