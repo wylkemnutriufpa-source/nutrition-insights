@@ -16,6 +16,7 @@ import { UpdateBanner } from "@/components/common/UpdateBanner";
 import { BuildVersionTag } from "@/components/common/BuildVersionTag";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { SystemShieldProvider, useSystemShield } from "@/components/common/SystemShield";
+import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
 
 const queryClient = new QueryClient({
   defaultOptions: {
