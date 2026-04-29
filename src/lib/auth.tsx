@@ -31,12 +31,15 @@ interface SubscriptionState {
   trial_end: string | null;
 }
 
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
   roles: AppRole[];
   loading: boolean;
+  authStatus: AuthStatus;
   isNutritionist: boolean;
   isPersonal: boolean;
   isPatient: boolean;
@@ -58,11 +61,12 @@ const defaultSubscription: SubscriptionState = {
   trial_end: null,
 };
 
-function withAuthTimeout<T>(promise: Promise<T>, label: string, fallback: T, timeoutMs = 3500): Promise<T> {
+function withAuthTimeout<T>(promise: Promise<T>, label: string, timeoutMs = 5000): Promise<T> {
   return new Promise((resolve, reject) => {
     const timer = window.setTimeout(() => {
-      console.warn(`[Auth] Timeout ao carregar ${label}; seguindo em modo seguro`);
-      resolve(fallback);
+      console.warn(`[Auth] Latência detectada em ${label}. Mantendo estado pendente...`);
+      // Não resolvemos com fallback, deixamos a promise original decidir.
+      // Isso evita assumir que o usuário não existe quando há apenas lentidão.
     }, timeoutMs);
 
     promise
@@ -137,17 +141,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       const correlationId = `auth-init-${Date.now()}`;
-      setLoading(true); // Only block when initialization actually starts
+      console.log(`[Auth:${correlationId}] Iniciando inicialização determinística...`);
+      setLoading(true);
+      
       try {
-        // Silencio na inicialização
         const { data: { session }, error: sessionError } = await withAuthTimeout(
           supabase.auth.getSession(),
-          "sessão inicial",
-          { data: { session: null }, error: null } as Awaited<ReturnType<typeof supabase.auth.getSession>>
+          "sessão inicial"
         );
 
         if (sessionError) {
-          console.error(`%c[Auth:${correlationId}] getSession error:`, "color: #ef4444", sessionError);
+          console.error(`[Auth:${correlationId}] Erro ao recuperar sessão:`, sessionError);
         }
 
         if (!mounted) return;
@@ -156,20 +160,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
+          console.log(`[Auth:${correlationId}] Usuário autenticado: ${session.user.id}. Carregando dados complementares...`);
+          // Carregar perfil e roles em paralelo sem travar caso um demore
           await Promise.allSettled([
-            withAuthTimeout(fetchProfile(session.user.id), "perfil", undefined),
-            withAuthTimeout(fetchRoles(session.user.id), "permissões", undefined),
+            fetchProfile(session.user.id),
+            fetchRoles(session.user.id),
           ]);
           
           if (mounted) {
             setLoading(false);
             checkSubscription();
+            console.log(`[Auth:${correlationId}] Inicialização concluída com sucesso.`);
           }
         } else {
+          console.log(`[Auth:${correlationId}] Nenhum usuário encontrado.`);
           if (mounted) setLoading(false);
         }
       } catch (err) {
-        console.error(`[Auth:${correlationId}] initializeAuth failed:`, err);
+        console.error(`[Auth:${correlationId}] Falha crítica na inicialização:`, err);
+        // Em caso de erro real (não timeout), permitimos liberar o loading para não travar a UI
         if (mounted) setLoading(false);
       }
     };
@@ -263,6 +272,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await supabase.auth.signOut();
   };
 
+  const getAuthStatus = (): AuthStatus => {
+    if (loading) return "loading";
+    return user ? "authenticated" : "unauthenticated";
+  };
+
+  const authStatus = getAuthStatus();
+
   return (
     <AuthContext.Provider
       value={{
@@ -271,6 +287,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         profile,
         roles,
         loading,
+        authStatus,
         isNutritionist: roles.includes("nutritionist"),
         isPersonal: roles.includes("personal"),
         isPatient: roles.includes("patient"),
@@ -298,6 +315,7 @@ export function useAuth() {
       profile: null,
       roles: [],
       loading: false,
+      authStatus: "loading" as AuthStatus,
       isNutritionist: false,
       isPersonal: false,
       isPatient: false,
