@@ -1,15 +1,17 @@
 /**
  * FitJourney — Structured Monitoring & Error Tracking
  * 
- * Centralized error logging with structured metadata.
- * All critical errors flow through here for consistency.
+ * Centralized error logging with structured metadata, batching, and retries.
  */
+import { supabase } from "@/integrations/supabase/client";
 
 export type ErrorCategory = "auth_error" | "data_error" | "render_error" | "routing_error" | "global" | "logic_error";
+export type Severity = "CRITICAL" | "HIGH" | "MEDIUM" | "LOW";
 
 interface ErrorLog {
   level: "error" | "warn" | "info";
   category: ErrorCategory;
+  severity: Severity;
   section: string;
   message: string;
   stack?: string;
@@ -22,6 +24,11 @@ interface ErrorLog {
 
 const ERROR_BUFFER: ErrorLog[] = [];
 const MAX_BUFFER = 100;
+const BATCH_SIZE = 5;
+const FLUSH_INTERVAL = 10000; // 10 seconds
+const RETRY_DELAY = 30000; // 30 seconds for local retries
+
+let flushTimeout: ReturnType<typeof setTimeout> | null = null;
 
 // Persistent session correlation ID
 const SESSION_CORRELATION_ID = (() => {
@@ -34,6 +41,15 @@ const SESSION_CORRELATION_ID = (() => {
   return id;
 })();
 
+const CATEGORY_SEVERITY: Record<ErrorCategory, Severity> = {
+  auth_error: "CRITICAL",
+  routing_error: "HIGH",
+  render_error: "MEDIUM",
+  data_error: "LOW",
+  global: "MEDIUM",
+  logic_error: "LOW",
+};
+
 function createLog(
   level: ErrorLog["level"], 
   category: ErrorCategory,
@@ -42,7 +58,6 @@ function createLog(
   metadata?: Record<string, unknown>,
   stack?: string
 ): ErrorLog {
-  // Try to get userId from localStorage or other sync source if available
   const userId = localStorage.getItem('sb-vkrcobprntictsxqmjjl-auth-token') 
     ? JSON.parse(localStorage.getItem('sb-vkrcobprntictsxqmjjl-auth-token') || '{}')?.user?.id 
     : undefined;
@@ -50,6 +65,7 @@ function createLog(
   return {
     level,
     category,
+    severity: CATEGORY_SEVERITY[category] || "LOW",
     section,
     message,
     stack,
@@ -60,6 +76,55 @@ function createLog(
     timestamp: new Date().toISOString(),
   };
 }
+
+async function flushLogs() {
+  if (ERROR_BUFFER.length === 0) return;
+
+  const logsToSend = [...ERROR_BUFFER];
+  ERROR_BUFFER.length = 0;
+
+  try {
+    const { error } = await supabase.from('system_logs').insert(
+      logsToSend.map(log => ({
+        level: log.level,
+        category: log.category,
+        severity: log.severity,
+        section: log.section,
+        message: log.message,
+        stack: log.stack,
+        route: log.route,
+        user_id: log.userId,
+        correlation_id: log.correlationId,
+        metadata: (log.metadata as any), // Cast for Json compatibility
+        created_at: log.timestamp
+      }))
+    );
+
+    if (error) throw error;
+  } catch (err) {
+    console.warn("[Monitoring] Failed to flush logs, storing in localStorage for retry", err);
+    const existingRetries = JSON.parse(localStorage.getItem('fj_failed_logs') || '[]');
+    localStorage.setItem('fj_failed_logs', JSON.stringify([...existingRetries, ...logsToSend].slice(-200)));
+  }
+}
+
+function scheduleFlush() {
+  if (flushTimeout) return;
+  flushTimeout = setTimeout(async () => {
+    flushTimeout = null;
+    await flushLogs();
+  }, FLUSH_INTERVAL);
+}
+
+// Initial retry of failed logs
+setTimeout(async () => {
+  const failed = JSON.parse(localStorage.getItem('fj_failed_logs') || '[]');
+  if (failed.length > 0) {
+    localStorage.removeItem('fj_failed_logs');
+    ERROR_BUFFER.push(...failed);
+    await flushLogs();
+  }
+}, 5000);
 
 /** Log a structured error */
 export function logError(
@@ -75,16 +140,13 @@ export function logError(
   let metadata: Record<string, unknown> | undefined;
   let stack: string | undefined;
 
-  // Handle overloaded signatures
   if (typeof category_or_section === "string" && ["auth_error", "data_error", "render_error", "routing_error", "global", "logic_error"].includes(category_or_section)) {
-    // New signature: logError(category, section, message, metadata, stack)
     category = category_or_section as ErrorCategory;
     section = section_or_message;
     message = message_or_metadata as string;
     metadata = metadata_or_stack as Record<string, unknown>;
     stack = maybe_stack;
   } else {
-    // Legacy signature: logError(section, message, metadata)
     section = category_or_section;
     message = section_or_message;
     metadata = message_or_metadata as Record<string, unknown>;
@@ -95,19 +157,20 @@ export function logError(
   ERROR_BUFFER.push(entry);
   if (ERROR_BUFFER.length > MAX_BUFFER) ERROR_BUFFER.shift();
   
-  // Console logging (only for non-production or explicitly allowed)
   console.error(`[FJ:${category}:${section}]`, message, {
     correlationId: entry.correlationId,
     route: entry.route,
     metadata,
-    stack: stack?.split('\n').slice(0, 3).join('\n') // Short stack in console
+    stack: stack?.split('\n').slice(0, 3).join('\n')
   });
 
-  // SEND TO EXTERNAL MONITORING (Future Sentry/Endpoint Integration)
-  // For now, we dispatch to a custom event that can be picked up by a listener
-  window.dispatchEvent(new CustomEvent('fj-telemetry-log', { 
-    detail: entry 
-  }));
+  if (ERROR_BUFFER.length >= BATCH_SIZE) {
+    flushLogs();
+  } else {
+    scheduleFlush();
+  }
+
+  window.dispatchEvent(new CustomEvent('fj-telemetry-log', { detail: entry }));
 }
 
 /** Log a structured warning */
@@ -137,6 +200,7 @@ export function logWarn(
   ERROR_BUFFER.push(entry);
   if (ERROR_BUFFER.length > MAX_BUFFER) ERROR_BUFFER.shift();
   console.warn(`[FJ:${category}:${section}]`, message, metadata ?? "");
+  scheduleFlush();
 }
 
 /** Get recent error logs for debugging */

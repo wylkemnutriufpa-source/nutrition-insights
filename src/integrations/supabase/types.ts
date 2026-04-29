@@ -17399,6 +17399,54 @@ export type Database = {
         }
         Relationships: []
       }
+      system_logs: {
+        Row: {
+          category: string
+          correlation_id: string
+          created_at: string | null
+          id: string
+          is_resolved: boolean | null
+          level: string
+          message: string
+          metadata: Json | null
+          route: string | null
+          section: string
+          severity: string
+          stack: string | null
+          user_id: string | null
+        }
+        Insert: {
+          category: string
+          correlation_id: string
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          level: string
+          message: string
+          metadata?: Json | null
+          route?: string | null
+          section: string
+          severity: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          category?: string
+          correlation_id?: string
+          created_at?: string | null
+          id?: string
+          is_resolved?: boolean | null
+          level?: string
+          message?: string
+          metadata?: Json | null
+          route?: string | null
+          section?: string
+          severity?: string
+          stack?: string | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       system_performance_logs: {
         Row: {
           api_calls_count: number | null
@@ -20100,6 +20148,15 @@ export type Database = {
           slug?: string | null
           specialties?: string[] | null
           updated_at?: string | null
+        }
+        Relationships: []
+      }
+      system_health_summary: {
+        Row: {
+          critical_errors: number | null
+          errors_last_hour: number | null
+          status: string | null
+          total_errors: number | null
         }
         Relationships: []
       }

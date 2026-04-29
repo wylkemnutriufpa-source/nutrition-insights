@@ -33,6 +33,7 @@ import { ptBR } from "date-fns/locale";
 import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, UserPlus as UserPlusIcon } from "lucide-react";
 import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@/components/admin/AdminDrillDownDialogs";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
+import { HealthStatusIndicator } from "@/components/observability/HealthStatusIndicator";
 
 import { StabilityZone } from "@/components/common/StabilityZone";
 import { SafeRender } from "@/components/common/SafeRender";
@@ -950,6 +951,27 @@ export default function AdminDashboard() {
     <DashboardLayout>
       <SafeRender name="Dashboard Administrativo" data={[user, profile, professionals, metrics]}>
         <div className="space-y-6">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-zinc-900/40 p-6 rounded-2xl border border-zinc-800/50">
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <h1 className="text-3xl font-black font-display tracking-tight text-foreground uppercase italic">
+                  Painel Admin
+                </h1>
+                <HealthStatusIndicator />
+              </div>
+              <p className="text-muted-foreground text-sm font-medium">Gestão estratégica e monitoramento de estabilidade</p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-2 bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800 transition-all shadow-sm group"
+              onClick={() => navigate("/SystemHealthLive")}
+            >
+              <Activity className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+              <span className="font-bold tracking-tighter uppercase text-[10px]">Health Control Tower</span>
+            </Button>
+          </div>
+
           <Tabs defaultValue="metrics" className="w-full">
             <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
               <TabsTrigger value="metrics"><BarChart3 className="w-3.5 h-3.5 mr-1" /> Métricas</TabsTrigger>
