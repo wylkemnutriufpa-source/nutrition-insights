@@ -25,13 +25,15 @@ const safeTimestamp =
     : new Date().toISOString();
 const safeMode =
   typeof __BUILD_MODE__ !== "undefined" ? __BUILD_MODE__ : "development";
+const safeVersion =
+  typeof __BUILD_VERSION__ !== "undefined" ? __BUILD_VERSION__ : "dev-version";
 
 export const BUILD_INFO: BuildInfo = {
   hash: safeHash,
   timestamp: safeTimestamp,
   mode: safeMode,
   shortHash: String(safeHash).slice(0, 8),
-  version: "2.4.1-deploy-debug-ui"
+  version: safeVersion
 };
 
 /**

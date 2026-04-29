@@ -53,6 +53,11 @@ function versionJsonPlugin(): Plugin {
         fs.writeFileSync(out, payload(), "utf8");
       } catch {}
     },
+    transformIndexHtml(html) {
+      return html
+        .replace(/%BUILD_VERSION%/g, BUILD_VERSION)
+        .replace(/%BUILD_TIMESTAMP%/g, BUILD_TIMESTAMP);
+    },
   };
 }
 
