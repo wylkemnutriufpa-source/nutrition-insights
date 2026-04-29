@@ -17,6 +17,28 @@ if (import.meta.env.DEV) {
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
 stampBuildIdentity();
 
+// Verificação imediata de versão para evitar boot com bundle desatualizado
+if (!isPreviewHost() && !isInIframe()) {
+  fetch("/version.json?t=" + Date.now())
+    .then(r => r.json())
+    .then(remote => {
+      const localVersion = (window as any).__BUILD_VERSION__;
+      if (remote && remote.version && localVersion && remote.version !== localVersion) {
+        console.warn("[FitJourney:Stability] Bundle Desatualizado Detectado no Boot. Forçando atualização...");
+        if ("caches" in window) caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+        if ("serviceWorker" in navigator) {
+          navigator.serviceWorker.getRegistrations().then(regs => {
+            regs.forEach(r => r.unregister());
+            window.location.reload(true);
+          });
+        } else {
+          window.location.reload(true);
+        }
+      }
+    })
+    .catch(() => { /* silent */ });
+}
+
 /**
  * Global Stability Guard: Captura erros críticos de carregamento (ChunkLoadError)
  * e re-renders infinitos (React #310) antes mesmo do React montar.
