@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import "./i18n";
 import App from "./App.tsx";
 import "./index.css";
+import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
 import { stampBuildIdentity } from "./lib/buildInfo";
 import { startVersionSync } from "./lib/versionCheck";
 
