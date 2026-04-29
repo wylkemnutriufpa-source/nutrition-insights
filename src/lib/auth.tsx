@@ -295,7 +295,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
-      if (loadingWatchdog) clearTimeout(loadingWatchdog);
       authSubscription.unsubscribe();
     };
   }, []);
