@@ -487,20 +487,19 @@ function AppContent() {
               <Route path="/store/technical-sheets" element={<NutritionistRoute><LP section="Fichas Técnicas"><TechnicalSheets /></LP></NutritionistRoute>} />
 
               
-              {/* Standard Meal Planning (V2) - Official Stable */}
-              <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Planos"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
-              <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Planos"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
-              <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Planos"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
-              <Route path="/meal-plans" element={<NutritionistRoute><LP section="Planos Alimentares"><MealPlans /></LP></NutritionistRoute>} />
+              {/* Official Editor (V2) - Default Standard */}
+              <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
+              <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
               <Route path="/dieta/:id" element={<NutritionistRoute><LP section="Editor de Dieta"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
 
-              {/* Experimental Editor V3 - Opt-in Only */}
+              {/* Experimental Editor (V3) - Beta / Optional */}
               <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
               <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
               <Route path="/editor/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
               <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
               
-              {/* Force V2 specifically if needed */}
+              {/* Legacy V2 Explicit Routes */}
               <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
               <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
               
