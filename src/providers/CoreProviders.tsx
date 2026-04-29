@@ -65,6 +65,12 @@ function RouterBootTracker() {
 }
 
 export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
+  console.log("[CoreProviders] Inicializando árvore de componentes.");
+  
+  if (!children) {
+    console.error("[CoreProviders] CRÍTICO: Children está NULO!");
+  }
+
   return (
     <CriticalErrorBoundary>
       <SystemShieldProvider>
@@ -90,7 +96,21 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                               <title>FitJourney</title>
                             </Helmet>
                             <SectionalErrorBoundary name="Aplicação">
-                              {children}
+                              {children || (
+                                <div className="min-h-screen flex items-center justify-center bg-black text-red-500 font-mono p-10 text-center border-4 border-red-600">
+                                  <div>
+                                    <h1 className="text-3xl font-bold mb-4 underline">FALHA CRÍTICA DE RENDERIZAÇÃO</h1>
+                                    <p>O aplicativo tentou renderizar um conteúdo vazio (null).</p>
+                                    <p className="mt-4 text-xs opacity-70">Verifique os logs do console para mais detalhes.</p>
+                                    <button 
+                                      onClick={() => window.location.reload()}
+                                      className="mt-8 px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
+                                    >
+                                      RECARREGAR FORÇADO
+                                    </button>
+                                  </div>
+                                </div>
+                              )}
                             </SectionalErrorBoundary>
                           </CommandPaletteProvider>
                         </CelebrationProvider>
