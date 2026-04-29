@@ -39,6 +39,7 @@ const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
 const MealPlanEditorV3 = lazy(() => import("./pages/MealPlanEditorV3Page"));
 const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
 const MealPlanEditorV2Entry = lazy(() => import("./pages/MealPlanEditorV2Entry"));
+const MealPlanEditorV3Experimental = lazy(() => import("./pages/MealPlanEditorV3Page"));
 const DietBuilder = lazy(() => import("./pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("./pages/GlobalRanking"));
 const AuditLogs = lazy(() => import("./pages/admin/AuditLogs"));
@@ -486,19 +487,21 @@ function AppContent() {
               <Route path="/store/technical-sheets" element={<NutritionistRoute><LP section="Fichas Técnicas"><TechnicalSheets /></LP></NutritionistRoute>} />
 
               
-              {/* Editor V3 Routes */}
-              <Route path="/meal-plan-editor-v3/:patientId" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/dieta-v3/:patientId" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/editor/:patientId" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
-              <Route path="/editor" element={<NutritionistRoute><LP section="Editor Elite"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
+              {/* Official Editor (V2) - Default Standard */}
+              <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
+              <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              <Route path="/dieta/:id" element={<NutritionistRoute><LP section="Editor de Dieta"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+
+              {/* Experimental Editor (V3) - Beta / Optional */}
+              <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
+              <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
+              <Route path="/editor/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
+              <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
               
-              {/* Editor V2 Routes */}
-              <Route path="/meal-plan-editor-v2/:patientId" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              {/* Legacy V2 Explicit Routes */}
+              <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
               <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
-              <Route path="/dieta-v2/:patientId" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
-              <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
               
               {/* Patient/Client Routes */}
               <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
