@@ -51,7 +51,7 @@ export const MealPlanEditorV3: React.FC = () => {
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
     fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView,
-    viewMode, setViewMode, setPatientId, activeDay
+    viewMode, setViewMode, setPatientId, patientId, activeDay
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
@@ -199,18 +199,21 @@ export const MealPlanEditorV3: React.FC = () => {
           
           <div className="h-8 w-px bg-border hidden sm:block" />
 
-          <div className="hidden lg:flex items-center gap-2">
+          <div className="hidden lg:flex items-center gap-2 relative">
             <Button
               variant="outline"
               size="sm"
-              className="h-9 px-3 rounded-xl border-dashed border-primary/30 hover:border-primary/50 text-primary font-bold text-xs gap-2"
-              onClick={() => setIsPatientSearchOpen(true)}
+              className={cn(
+                "h-9 px-3 rounded-xl border-dashed font-bold text-xs gap-2 transition-all",
+                patientId ? "border-emerald-500/50 text-emerald-600 bg-emerald-50" : "border-primary/30 text-primary hover:border-primary/50"
+              )}
+              onClick={() => setIsPatientSearchOpen(!isPatientSearchOpen)}
             >
               <UserPlus className="w-3.5 h-3.5" />
-              ATRIBUIR PACIENTE
+              {patientId ? patients.find(p => p.id === patientId)?.name || 'PACIENTE SELECIONADO' : 'ATRIBUIR PACIENTE'}
             </Button>
             {isPatientSearchOpen && (
-              <div className="w-64">
+              <div className="absolute top-full left-0 mt-2 w-64 z-50 shadow-2xl">
                 <PatientPickerDropdown 
                   patients={patients} 
                   onSelect={(id) => {
