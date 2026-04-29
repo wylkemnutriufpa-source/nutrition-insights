@@ -393,7 +393,18 @@ function AppContent() {
               <Route path="/clinical-enterprise" element={<NutritionistRoute><LP section="Empresa Clínica"><ClinicalEnterprise /></LP></NutritionistRoute>} />
               <Route path="/coach-bodybuilder" element={<NutritionistRoute><LP section="Coach Bodybuilder"><CoachBodybuilder /></LP></NutritionistRoute>} />
               <Route path="/recipe-builder" element={<NutritionistRoute><LP section="Editor de Receitas"><RecipeBuilder /></LP></NutritionistRoute>} />
-              
+              <Route path="/analyze-meal" element={<NutritionistRoute><LP section="Análise de Refeição"><AnalyzeMeal /></LP></NutritionistRoute>} />
+              <Route path="/patient-intelligence" element={<ProtectedRoute><LP section="Inteligência do Paciente"><PatientIntelligence /></LP></ProtectedRoute>} />
+              <Route path="/human-performance" element={<ProtectedRoute><LP section="Performance Humana"><HumanPerformance /></LP></ProtectedRoute>} />
+              <Route path="/protocolos-fitoterapicos" element={<NutritionistRoute><LP section="Protocolos Fitoterápicos"><PhytotherapyProtocols /></LP></NutritionistRoute>} />
+              <Route path="/clinical-analytics" element={<NutritionistRoute><LP section="Analytics Clínico"><ClinicalHealthDashboard /></LP></NutritionistRoute>} />
+              <Route path="/clinical-predictions" element={<NutritionistRoute><LP section="Predições Clínicas"><ClinicalPredictions /></LP></NutritionistRoute>} />
+              <Route path="/therapeutic-intelligence" element={<NutritionistRoute><LP section="Inteligência Terapêutica"><TherapeuticIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/metabolic-twin" element={<NutritionistRoute><LP section="Gêmeo Metabólico"><MetabolicTwin /></LP></NutritionistRoute>} />
+              <Route path="/physiological-intelligence" element={<NutritionistRoute><LP section="Inteligência Fisiológica"><PhysiologicalIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/population-intelligence" element={<NutritionistRoute><LP section="Inteligência Populacional"><PopulationIntelligence /></LP></NutritionistRoute>} />
+              <Route path="/population-nutrition" element={<NutritionistRoute><LP section="Nutrição Populacional"><PopulationNutritionIntelligence /></LP></NutritionistRoute>} />
+
               {/* Admin Routes */}
               <Route path="/admin/dashboard" element={<NutritionistRoute><LP section="Admin Dashboard"><AdminDashboard /></LP></NutritionistRoute>} />
               <Route path="/admin/audit-logs" element={<NutritionistRoute><LP section="Audit Logs"><AuditLogs /></LP></NutritionistRoute>} />
