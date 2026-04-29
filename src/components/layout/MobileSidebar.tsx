@@ -133,7 +133,7 @@ export default function MobileSidebar({
       {
         id: "diagnostics",
         label: "System Diagnostics",
-        route: "/system-diagnostics",
+        route: "/admin/diagnostics",
         icon: Shield,
         colorClass: "text-cyan-500",
         bgClass: "bg-cyan-500/10",

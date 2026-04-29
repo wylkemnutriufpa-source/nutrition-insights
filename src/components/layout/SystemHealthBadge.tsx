@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useAuth } from "@/lib/auth";
 import { CheckCircle2, AlertTriangle, ShieldCheck, Activity, AlertOctagon } from "lucide-react";
 import { motion } from "framer-motion";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -10,9 +11,12 @@ import { supabase } from "@/integrations/supabase/client";
 type HealthStatus = "ok" | "warning" | "critical";
 
 export default function SystemHealthBadge() {
+  const { isPatient, loading } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [latency, setLatency] = useState<number | null>(null);
   const navigate = useNavigate();
+
+  if (loading || isPatient) return null;
 
   const { data: lastDiag } = useQuery({
     queryKey: ["latest-system-diagnostic"],
@@ -101,7 +105,7 @@ export default function SystemHealthBadge() {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
-          onClick={() => navigate("/system-diagnostics")}
+          onClick={() => navigate("/admin/diagnostics")}
           className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-card border border-border hover:bg-muted transition-all"
         >
           <div className="relative">

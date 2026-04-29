@@ -26,35 +26,25 @@ export default function Welcome() {
       const invitedUserType = localStorage.getItem("fj_user_type");
 
       if (isInvited && invitedUserType === "patient") {
-        console.log("[Welcome] Intenção de paciente detectada. Indo para consentimento.");
         navigate("/consent", { replace: true });
         return;
       }
 
       // 2. Se não é convite, aguardamos roles se estiverem carregando (apenas se user existir)
       if (loading && user) {
-        console.log("[Welcome] Aguardando metadados (roles)...");
         return;
       }
 
       // 3. Decisão baseada em Roles
       if (roles.includes("nutritionist") || roles.includes("personal") || (roles as string[]).includes("admin")) {
-        console.log("[Welcome] Perfil profissional/admin detectado.");
         navigate(nextPath || "/admin/dashboard", { replace: true });
         return;
       }
 
       if (roles.includes("patient")) {
-        console.log("[Welcome] Perfil paciente detectado.");
         navigate(nextPath || "/client/dashboard", { replace: true });
         return;
       }
-
-      // 4. Fallback de Segurança (Regra 5: Não redirecionar para "/" se logado)
-      // Se chegamos aqui, o usuário está logado mas o sistema ainda não processou as roles.
-      // Em vez de "/" (que causaria loop), mantemos no loading até que as roles apareçam
-      // ou o timeout de 10s do AuthProvider resolva.
-      console.log("[Welcome] Usuário logado sem roles definidas. Aguardando sincronização...");
     };
 
     checkRedirection();

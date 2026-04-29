@@ -45,8 +45,21 @@ export default function QuickLink() {
     if (nutriId) {
       localStorage.setItem("fitjourney_nutri_id", nutriId);
     }
+
+    // Se já completou o signup mas está aguardando confirmação, mostra sucesso
+    if (localStorage.getItem("fj_signup_complete") === "true") {
+      setDone(true);
+      return;
+    }
     
     const fetchProf = async () => {
+      // Se já está logado, redireciona para Welcome para triagem
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        navigate("/welcome", { replace: true });
+        return;
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
@@ -121,7 +134,7 @@ export default function QuickLink() {
       } as any);
 
       if (rpcError) {
-        console.error("RPC Error:", rpcError);
+        // Silent RPC Error fallback handled below
         // Fallback for profile creation if RPC fails (though it shouldn't)
         await supabase.from("profiles").update({ 
           full_name: name,
@@ -140,11 +153,17 @@ export default function QuickLink() {
       } as any);
 
       toast.success("Cadastro realizado com sucesso!");
-      setDone(true);
       
-      // If auto-logged in, we can redirect. Otherwise, wait for email confirm.
+      // Salvar estado final de onboarding
+      localStorage.setItem("fj_invited", "true");
+      localStorage.setItem("fj_user_type", "patient");
+      localStorage.setItem("fj_signup_complete", "true");
+
+      // Redirecionamento determinístico (Regra 2)
       if (authData.session) {
-        setTimeout(() => navigate("/consent"), 1500);
+        navigate("/welcome", { replace: true });
+      } else {
+        setDone(true);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao realizar cadastro.");

@@ -192,7 +192,7 @@ export function startVersionSync(): void {
   try {
     (window as any).__APP_VERSION__ = LOCAL_VERSION;
     (window as any).__FJ_VERSION_MISMATCH__ = false;
-    console.log(`%c[FJ:Version] Local: ${LOCAL_VERSION}`, "background: #1e293b; color: #38bdf8; padding: 2px 5px; border-radius: 3px;");
+    // Sincronização de versão silenciada
   } catch {}
 
   if (isPreviewOrIframe()) return;

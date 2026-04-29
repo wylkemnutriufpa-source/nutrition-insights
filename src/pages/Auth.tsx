@@ -86,8 +86,6 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
         });
       }
       // Fluxo Determinístico: Redirecionar sempre para /welcome após login
-      // O /welcome decidirá o destino final com base em profile/roles/intenção
-      console.log(`[Auth] Redirecting to Welcome Hub...`);
       const target = nextPath && nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : "";
       navigate(`/welcome${target}`, { replace: true });
     }
@@ -151,13 +149,11 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   };
 
   const handleSocialLogin = async (provider: "google" | "apple") => {
-    console.log(`%c[Auth] Starting OAuth login with ${provider}...`, "color: #3b82f6; font-weight: bold");
     setSocialLoading(provider);
     try {
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
       });
-      console.log(`[Auth] OAuth ${provider} trigger result:`, result);
       if (result && 'error' in result && result.error) {
         toast.error(t("auth.socialError"));
       }

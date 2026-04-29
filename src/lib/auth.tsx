@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const correlationId = `auth-init-${Date.now()}`;
       setLoading(true); // Only block when initialization actually starts
       try {
-        console.log(`%c[Auth:${correlationId}] Initializing session...`, "color: #3b82f6; font-weight: bold");
+        // Silencio na inicialização
         const { data: { session }, error: sessionError } = await withAuthTimeout(
           supabase.auth.getSession(),
           "sessão inicial",
@@ -156,7 +156,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log(`[Auth:${correlationId}] Fetching data for user:`, session.user.id);
           await Promise.allSettled([
             withAuthTimeout(fetchProfile(session.user.id), "perfil", undefined),
             withAuthTimeout(fetchRoles(session.user.id), "permissões", undefined),
@@ -188,7 +187,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
-          console.log(`%c[Auth] User SIGNED_IN: ${session.user.email} (${session.user.id})`, "color: #10b981; font-weight: bold");
           
           // Log estruturado conforme regra anti-regressão
           logAudit("login", "auth", session.user.id, { 
@@ -206,7 +204,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("fitjourney_nutri_id");
         }
         if (event === "SIGNED_OUT") {
-          console.log("%c[Auth] User SIGNED_OUT", "color: #f59e0b; font-weight: bold");
           logAudit("logout", "auth");
         }
 
@@ -240,13 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (mounted) {
               setLoading(false);
               checkSubscription();
-              console.log(`%c[Auth:${authEventId}] Final Auth State:`, "color: #10b981; font-weight: bold", {
-                user_id: session.user.id,
-                email: session.user.email,
-                profile_exists: !!profileResult.data,
-                roles: userRoles,
-                subscription_active: subscription.subscribed
-              });
+              // Log final silenciado
             }
           } catch (e) {
             console.error(`[Auth:${authEventId}] Error fetching user data on auth change:`, e);

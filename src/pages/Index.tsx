@@ -331,7 +331,6 @@ function NutritionistDashboardContent() {
         setAiSummary(data.summary || null);
       }
     } catch (err) {
-      console.error("AI insights error:", err);
       const localInsights = generateLocalInsights(patientData);
       setAiInsights(localInsights.insights);
       setAttentionPatients(localInsights.attention);
@@ -1189,10 +1188,6 @@ export default function Index() {
   
   useEffect(() => {
     if (!loading && user && (isInvited || !isProRole)) {
-      // Se não temos roles, deixamos o /welcome decidir (pode ser um paciente novo)
-      // Se isProRole é falso, e não temos a role de patient confirmada no AuthProvider, 
-      // o /welcome fará a triagem segura.
-      console.log("[Index] Redirecionando para Welcome Hub para triagem de fluxo.");
       navigate("/welcome", { replace: true });
     }
   }, [loading, user, isInvited, isProRole, navigate]);
