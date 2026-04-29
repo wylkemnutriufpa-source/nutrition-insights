@@ -420,6 +420,7 @@ function AppContent() {
               <Route path="/admin/prestige" element={<NutritionistRoute><LP section="Prestigio Admin"><AdminPrestige /></LP></NutritionistRoute>} />
               <Route path="/admin/biblioteca" element={<NutritionistRoute><LP section="Biblioteca Admin"><Library /></LP></NutritionistRoute>} />
               <Route path="/admin-operational-costs" element={<NutritionistRoute><LP section="Custos Operacionais Admin"><AdminOperationalCosts /></LP></NutritionistRoute>} />
+              <Route path="/admin/marketing-content" element={<NutritionistRoute><LP section="Marketing Admin"><AdminMarketingContent /></LP></NutritionistRoute>} />
               
               {/* Patient Routes */}
               <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
