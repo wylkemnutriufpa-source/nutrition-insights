@@ -4023,6 +4023,60 @@ export type Database = {
           },
         ]
       }
+      error_incidents: {
+        Row: {
+          action_taken: string | null
+          assigned_to: string | null
+          category: string
+          created_at: string | null
+          event_count: number | null
+          fingerprint: string
+          first_occurrence: string | null
+          id: string
+          impact_score: number | null
+          last_occurrence: string | null
+          message: string
+          priority: string
+          route: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          assigned_to?: string | null
+          category: string
+          created_at?: string | null
+          event_count?: number | null
+          fingerprint: string
+          first_occurrence?: string | null
+          id?: string
+          impact_score?: number | null
+          last_occurrence?: string | null
+          message: string
+          priority?: string
+          route?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          event_count?: number | null
+          fingerprint?: string
+          first_occurrence?: string | null
+          id?: string
+          impact_score?: number | null
+          last_occurrence?: string | null
+          message?: string
+          priority?: string
+          route?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       exercise_video_library: {
         Row: {
           created_at: string
