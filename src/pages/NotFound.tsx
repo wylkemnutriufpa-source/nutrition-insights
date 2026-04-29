@@ -32,7 +32,6 @@ export default function NotFound() {
   const [diagOpen, setDiagOpen] = useState(false);
 
   useEffect(() => {
-    console.error(`[Router] 404 Not Found: ${location.pathname}`);
     logRoute404({ source: "spa-notfound" });
   }, [location.pathname]);
 
