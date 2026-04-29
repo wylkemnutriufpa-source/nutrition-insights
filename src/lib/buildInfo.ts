@@ -23,6 +23,8 @@ const safeTimestamp =
   typeof __BUILD_TIMESTAMP__ !== "undefined"
     ? __BUILD_TIMESTAMP__
     : new Date().toISOString();
+const safeMode =
+  typeof __BUILD_MODE__ !== "undefined" ? __BUILD_MODE__ : "development";
 const safeVersion =
   typeof __BUILD_VERSION__ !== "undefined" ? __BUILD_VERSION__ : "dev-version";
 
