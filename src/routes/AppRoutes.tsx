@@ -320,6 +320,8 @@ export const AppRoutes = () => {
                 <Route path="/global-adaptive" element={<ProtectedRoute><LP section="IA Adaptativa"><GlobalAdaptiveIntelligence /></LP></ProtectedRoute>} />
                 <Route path="/in-office-wizard" element={<NutritionistRoute><LP section="Assistente de Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
                 <Route path="/intake" element={<LP section="Onboarding de Entrada"><IntakeOnboarding /></LP>} />
+                <Route path="/invitation/:code" element={<LP section="Convite"><Invitation /></LP>} />
+                <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
                 <Route path="/invitation-status/:id" element={<LP section="Status do Convite"><InvitationStatus /></LP>} />
                 <Route path="/magic-journey" element={<ProtectedRoute><LP section="Jornada Mágica"><MagicJourneyStory /></LP></ProtectedRoute>} />
                 <Route path="/mobile-qa" element={<NutritionistRoute><LP section="QA Mobile"><MobileQA /></LP></NutritionistRoute>} />
