@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CheckCircle2, XCircle, Loader2, AlertCircle, RefreshCw, Activity } from "lucide-react";
-import { motion } from "framer-motion";
 
 interface RouteAudit {
   path: string;
@@ -19,13 +18,13 @@ const ALL_ROUTES: RouteAudit[] = [
   { path: "/", component: "Index", status: "IDLE" },
   { path: "/client/dashboard", component: "ClientDashboard", status: "IDLE" },
   { path: "/admin/dashboard", component: "AdminDashboard", status: "IDLE" },
-  { path: "/editor", component: "MealPlanEditorV2", status: "IDLE" },
+  { path: "/editor", component: "MealPlanEditorV3Experimental", status: "IDLE" },
+  { path: "/editor-v2", component: "MealPlanEditorV2Entry", status: "IDLE" },
   { path: "/library", component: "Library", status: "IDLE" },
   { path: "/welcome", component: "Welcome", status: "IDLE" },
   { path: "/consent", component: "ConsentRequired", status: "IDLE" },
   { path: "/onboarding/paciente", component: "OnboardingPaciente", status: "IDLE" },
   { path: "/q/:id", component: "QuickLink", status: "IDLE" },
-  // ... Outras rotas podem ser adicionadas dinamicamente ou via script
 ];
 
 export default function SystemAudit() {
@@ -42,7 +41,7 @@ export default function SystemAudit() {
       setRoutes([...updatedRoutes]);
 
       try {
-        // Simulação de verificação de rota (em um ambiente real, poderíamos tentar dar fetch no chunk ou verificar no AppRoutes)
+        // Simulação de verificação de rota
         await new Promise(resolve => setTimeout(resolve, 300));
         
         const loadTime = Math.round(performance.now() - startTime);
