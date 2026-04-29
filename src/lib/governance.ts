@@ -62,7 +62,7 @@ const PATIENT_ONLY_ROUTES = [
 ];
 
 const ADMIN_ROUTES = [
-  "/admin", "/platform-governance", "/security-dashboard", "/system-diagnostics", "/system-health-live"
+  "/admin", "/platform-governance", "/security-dashboard", "/system-diagnostics", "/system-health-live", "/qa-checklist"
 ];
 
 function matchRoute(pathname: string, route: string): boolean {
@@ -113,7 +113,7 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
 
   // 5. Hard Fail Guard: Profile Consistency (Critical)
   if (isReady && !isInList(safePathname, PUBLIC_ROUTES) && !isInList(safePathname, ONBOARDING_ALLOWED_ROUTES)) {
-    if (!profile?.tenant_id && !ctx.isAdmin) {
+    if (!profile?.tenant_id && !ctx.isAdmin && !ctx.isNutritionist) {
       return { 
         type: 'BLOCK', 
         reason: 'Critical: Access blocked due to inconsistent profile (missing tenant)', 
