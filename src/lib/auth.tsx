@@ -156,7 +156,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log(`[Auth:${correlationId}] Fetching data for user:`, session.user.id);
           await Promise.allSettled([
             withAuthTimeout(fetchProfile(session.user.id), "perfil", undefined),
             withAuthTimeout(fetchRoles(session.user.id), "permissões", undefined),
