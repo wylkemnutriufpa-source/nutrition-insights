@@ -127,10 +127,11 @@ export const MobileMealEditorV3: React.FC = () => {
         setGenerateOpen(true);
         break;
       case 'new-meal':
-        toast.info('Use o painel desktop para criar refeições adicionais');
+        setNewMealOpen(true);
         break;
       case 'apply-template':
-        toast.info('Abra a aba Templates no modo desktop');
+        setModalTab('templates');
+        setAddModalMealId(meals[0]?.id);
         break;
     }
   };
