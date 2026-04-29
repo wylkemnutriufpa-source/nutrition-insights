@@ -91,6 +91,17 @@ export default defineConfig(({ mode }) => ({
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/, /^\/convite/, /^\/cadastro/, /^\/auth\/confirm/, /^\/intake/, /^\/api/, /^\/version\.json/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        // Don't cache the index.html with a long TTL, prefer network-first for the shell
+        // to ensure we always get the latest version info.
+        runtimeCaching: [
+          {
+            urlPattern: ({ url }) => url.pathname === "/" || url.pathname === "/index.html",
+            handler: "NetworkFirst",
+            options: {
+              cacheName: "html-cache",
+              expiration: { maxEntries: 1, maxAgeSeconds: 60 * 60 }, // 1 hour
+            },
+          },
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         importScripts: ["/sw-push.js"],
         cleanupOutdatedCaches: true,
