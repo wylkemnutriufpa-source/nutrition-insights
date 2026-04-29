@@ -351,10 +351,10 @@ function AppContent() {
               <Route path="/settings" element={<ProtectedRoute><LP section="Configurações"><Settings /></LP></ProtectedRoute>} />
               <Route path="/settings/account-deletion" element={<ProtectedRoute><LP section="Excluir Conta"><AccountDeletion /></LP></ProtectedRoute>} />
               <Route path="/chat" element={<ProtectedRoute><LP section="Chat"><Chat /></LP></ProtectedRoute>} />
-              <Route path="/appointments" element={<NutritionistRoute><LP section="Agenda"><Appointments /></LP></NutritionistRoute>} />
-              <Route path="/anamnesis" element={<NutritionistRoute><LP section="Anamnese"><Anamnesis /></LP></NutritionistRoute>} />
-              <Route path="/meals" element={<NutritionistRoute><LP section="Refeições"><Meals /></LP></NutritionistRoute>} />
-              <Route path="/recipes" element={<NutritionistRoute><LP section="Receitas"><Recipes /></LP></NutritionistRoute>} />
+              <Route path="/appointments" element={<ProtectedRoute><LP section="Agenda"><Appointments /></LP></ProtectedRoute>} />
+              <Route path="/anamnesis" element={<ProtectedRoute><LP section="Anamnese"><Anamnesis /></LP></ProtectedRoute>} />
+              <Route path="/meals" element={<ProtectedRoute><LP section="Refeições"><Meals /></LP></ProtectedRoute>} />
+              <Route path="/recipes" element={<ProtectedRoute><LP section="Receitas"><Recipes /></LP></ProtectedRoute>} />
               <Route path="/shopping-list" element={<ProtectedRoute><LP section="Lista de Compras"><ShoppingList /></LP></ProtectedRoute>} />
               <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
               <Route path="/integrations" element={<NutritionistRoute><LP section="Integrações"><Integrations /></LP></NutritionistRoute>} />
@@ -363,6 +363,7 @@ function AppContent() {
               <Route path="/diet-builder" element={<NutritionistRoute><LP section="Diet Builder"><DietBuilder /></LP></NutritionistRoute>} />
               <Route path="/diet-templates" element={<NutritionistRoute><LP section="Templates de Dieta"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/food-database" element={<NutritionistRoute><LP section="Banco de Alimentos"><FoodDatabase /></LP></NutritionistRoute>} />
+
               <Route path="/admin/import-patients" element={<NutritionistRoute><LP section="Importar Pacientes"><ImportPatients /></LP></NutritionistRoute>} />
               <Route path="/admin/menu-config" element={<NutritionistRoute><LP section="Config Menu"><AdminMenuConfig /></LP></NutritionistRoute>} />
               <Route path="/admin/prestige" element={<NutritionistRoute><LP section="Prestígio"><AdminPrestige /></LP></NutritionistRoute>} />
