@@ -305,6 +305,7 @@ export const AppRoutes = () => {
                 <Route path="/landing" element={<Landing />} />
 
                 {/* Auth */}
+                <Route path="/welcome" element={<Welcome />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/confirm" element={<AuthConfirm />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
