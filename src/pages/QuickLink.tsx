@@ -47,6 +47,13 @@ export default function QuickLink() {
     }
     
     const fetchProf = async () => {
+      // Se já está logado, redireciona para Welcome para triagem
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        navigate("/welcome", { replace: true });
+        return;
+      }
+
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name")
