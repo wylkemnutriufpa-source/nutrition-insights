@@ -92,8 +92,6 @@ export function logError(
   }
 
   const entry = createLog("error", category, section, message, metadata, stack);
-  // ... keep existing code
-  const entry = createLog("error", category, section, message, metadata, stack);
   ERROR_BUFFER.push(entry);
   if (ERROR_BUFFER.length > MAX_BUFFER) ERROR_BUFFER.shift();
   
