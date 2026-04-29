@@ -32,6 +32,8 @@ export interface Meal {
   items: MealItem[];
   daySubstitutions?: Record<string, string>; // dayId -> instanceId
   selectionMode?: 'day' | 'week';
+  time?: string; // HH:MM
+  icon?: string; // sun | coffee | utensils | moon | star | apple
 }
 
 interface HistoryState {
@@ -95,6 +97,11 @@ interface MealPlanState {
   resetPlan: () => void;
   generateDeterministicPlan: (goal: string, context?: any) => Promise<void>;
   setDaySubstitution: (mealId: string, dayId: string, instanceId: string) => void;
+  
+  // Novas ações
+  addMeal: (meal: { name: string; time?: string; icon?: string }) => void;
+  renameMeal: (mealId: string, payload: { name?: string; time?: string; icon?: string }) => void;
+  deleteMeal: (mealId: string) => void;
 }
 
 const DEFAULT_MEALS = [
