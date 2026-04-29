@@ -490,6 +490,7 @@ function AppContent() {
               <Route path="/privacy-policy" element={<LP section="Privacidade"><PrivacyPolicy /></LP>} />
               <Route path="/terms-of-use" element={<LP section="Termos de Uso"><TermsOfUse /></LP>} />
               
+              <Route path="/hard-fail-linkage" element={<LP section="Erro de Vínculo"><HardFailLinkage /></LP>} />
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
               <Route path="*" element={<Navigate to="/404" replace />} />
             </Routes>
