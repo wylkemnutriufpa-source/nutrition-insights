@@ -207,10 +207,12 @@ export const ActiveMealContent: React.FC = () => {
                 exit={{ opacity: 0, x: -50 }}
                 className="space-y-2"
               >
-                <Card className={cn(
-                  "p-3 flex items-center gap-4 group transition-all shadow-none relative overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-[#0d0d0d]",
-                  (item.isMarmita || item.locked) ? "border-orange-200/50 bg-orange-50/20" : "hover:border-primary/40 hover:shadow-md hover:shadow-primary/5"
-                )}>
+                <Card 
+                  onClick={() => setEditTarget({ mealId: activeMeal.id, item })}
+                  className={cn(
+                    "p-3 flex items-center gap-4 group transition-all shadow-none relative overflow-hidden rounded-xl border border-border/60 bg-white dark:bg-[#0d0d0d] cursor-pointer hover:ring-2 hover:ring-primary/20",
+                    (item.isMarmita || item.locked) ? "border-orange-200/50 bg-orange-50/20" : "hover:border-primary/40 hover:shadow-md hover:shadow-primary/5"
+                  )}>
                   {item.imageUrl && !fastMode && (
                     <div className="w-16 h-16 rounded-xl overflow-hidden bg-muted flex-shrink-0 border">
                       <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
