@@ -11,6 +11,7 @@ import { NewMealModal } from './NewMealModal';
 import { GenerateAIModal } from './GenerateAIModal';
 import { FocusModeView } from './FocusModeView';
 import { PatientViewModal } from './PatientViewModal';
+import { WeeklyGridView } from './WeeklyGridView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -363,7 +364,7 @@ export const MealPlanEditorV3: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-            {viewMode === 'day' ? <ActiveMealContent /> : <div className="text-center py-20 opacity-40"><Calendar className="w-12 h-12 mx-auto mb-4" /> <p className="font-bold">Grid Semanal em desenvolvimento - Em breve</p></div>}
+            {viewMode === 'day' ? <ActiveMealContent /> : <WeeklyGridView />}
           </motion.div>
         </main>
 
