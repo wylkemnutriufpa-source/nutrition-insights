@@ -105,7 +105,7 @@ export default function SystemHealthBadge() {
     <Tooltip>
       <TooltipTrigger asChild>
         <button
-          onClick={() => navigate("/system-diagnostics")}
+          onClick={() => navigate("/admin/diagnostics")}
           className="flex items-center gap-1.5 px-2 py-1 rounded-full bg-card border border-border hover:bg-muted transition-all"
         >
           <div className="relative">
