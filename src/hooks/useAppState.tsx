@@ -97,5 +97,14 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
 export function useAppState() {
   const context = useContext(AppStateContext);
-  return ensureContext(context, "useAppState", "AppStateProvider");
+  // Independent access: if context is missing, return a default state
+  if (!context) {
+    return {
+      isReady: false,
+      isDegraded: false,
+      isLoading: true,
+      isOrphan: false,
+    };
+  }
+  return context;
 }
