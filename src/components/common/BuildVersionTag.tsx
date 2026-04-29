@@ -5,7 +5,7 @@ export const BuildVersionTag = () => {
   // Apenas visível em modo debug ou para admins
   const isDebug = localStorage.getItem("fj-debug") === "true";
   
-  if (!isDebug && BUILD_INFO.mode === "production") return null;
+  if (!isDebug && BUILD_INFO.mode === "production" && !window.location.search.includes("debug=1")) return null;
 
   return (
     <div className="fixed bottom-2 right-2 z-[9999] pointer-events-none">
