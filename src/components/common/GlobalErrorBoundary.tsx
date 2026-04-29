@@ -38,24 +38,34 @@ export const GlobalErrorBoundary = () => {
   if (!error) return null;
 
   const friendlyMessage = friendlySupabaseError(error.message);
+  
+  const getActionSuggestion = (message: string) => {
+    if (message.includes("session")) return "Tente fazer login novamente.";
+    if (message.includes("network") || message.includes("fetch")) return "Verifique sua conexão com a internet.";
+    if (message.includes("column") || message.includes("relation")) return "O sistema está sendo atualizado. Recarregue em alguns instantes.";
+    return "Recarregue a página para tentar novamente.";
+  };
 
   return (
     <div className="fixed bottom-4 right-4 z-[200] max-w-md animate-in fade-in slide-in-from-bottom-4 duration-300">
-      <Alert variant="destructive" className="shadow-2xl border-2">
-        <AlertCircle className="h-4 w-4" />
-        <div className="flex justify-between items-start w-full">
-          <div className="pr-4">
-            <AlertTitle className="font-bold flex items-center gap-2">
-              Erro de Sistema Detectado
+      <Alert variant="destructive" className="shadow-2xl border-2 bg-slate-900 border-destructive/50 text-white">
+        <ShieldAlert className="h-5 w-5 text-destructive" />
+        <div className="flex justify-between items-start w-full ml-2">
+          <div className="pr-4 space-y-1">
+            <AlertTitle className="font-bold text-sm flex items-center gap-2">
+              Erro Detectado na Camada: {error.section}
             </AlertTitle>
-            <AlertDescription className="mt-2 text-xs opacity-90">
-              <p className="font-semibold mb-1">{friendlyMessage}</p>
-              <p className="text-[10px] opacity-70">Seção: {error.section}</p>
-              <div className="mt-3 flex gap-2">
+            <AlertDescription className="text-xs space-y-2">
+              <p className="font-medium text-slate-200">{friendlyMessage}</p>
+              <div className="p-2 rounded bg-destructive/10 border border-destructive/20">
+                <p className="text-[10px] font-bold text-destructive uppercase tracking-tighter mb-1">Ação Sugerida:</p>
+                <p className="text-[11px] text-slate-300">{getActionSuggestion(error.message)}</p>
+              </div>
+              <div className="flex gap-2 mt-3">
                 <Button 
                   size="sm" 
                   variant="outline" 
-                  className="h-7 text-[10px] bg-white/10 hover:bg-white/20 border-white/20"
+                  className="h-7 text-[10px] bg-white/5 hover:bg-white/10 border-white/10"
                   onClick={() => window.location.reload()}
                 >
                   <RefreshCcw className="mr-1 h-3 w-3" /> Atualizar App
@@ -63,7 +73,7 @@ export const GlobalErrorBoundary = () => {
                 <Button 
                   size="sm" 
                   variant="ghost" 
-                  className="h-7 text-[10px] hover:bg-white/10"
+                  className="h-7 text-[10px] hover:bg-white/5"
                   onClick={() => setError(null)}
                 >
                   Ignorar
@@ -73,7 +83,7 @@ export const GlobalErrorBoundary = () => {
           </div>
           <button 
             onClick={() => setError(null)}
-            className="text-white/50 hover:text-white"
+            className="text-white/30 hover:text-white transition-colors"
           >
             <X className="h-4 w-4" />
           </button>
