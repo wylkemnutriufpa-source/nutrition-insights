@@ -68,47 +68,49 @@ export default function NotFound() {
           </Link>
         </div>
 
-        <div className="mt-8 pt-6 border-t border-border/50">
-          <p className="text-xs text-muted-foreground mb-3">
-            Caso o problema persista, é provável que seu navegador esteja com uma versão antiga em cache.
-          </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
-            <Button
-              variant="default"
-              size="sm"
-              onClick={() => setDiagOpen(true)}
-              className="gap-2 text-xs"
-            >
-              <Stethoscope className="w-3.5 h-3.5" />
-              Diagnosticar e tentar correção
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={handleHardReset}
-              disabled={resetting}
-              className="gap-2 text-xs"
-            >
-              {resetting ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <RefreshCw className="w-3.5 h-3.5" />
-              )}
-              {resetting ? "Limpando..." : "Limpar cache e recarregar"}
-            </Button>
-          </div>
-
-          {isIosSafari && (
-            <div className="mt-4 text-left text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-3 leading-relaxed">
-              <p className="font-semibold text-foreground mb-1">No Safari (iPhone), se ainda falhar:</p>
-              <ol className="list-decimal pl-4 space-y-1">
-                <li>Toque em <strong>aA</strong> na barra de endereço</li>
-                <li>Selecione <strong>“Recarregar sem conteúdo”</strong> ou abra em <strong>aba privada</strong></li>
-                <li>Se mantiver o erro, abra <strong>Ajustes &gt; Safari &gt; Avançado &gt; Dados de sites</strong> e remova “fitjourney.com.br”</li>
-              </ol>
+        {localStorage.getItem("fj_debug") === "true" && (
+          <div className="mt-8 pt-6 border-t border-border/50">
+            <p className="text-xs text-muted-foreground mb-3">
+              Caso o problema persista, é provável que seu navegador esteja com uma versão antiga em cache.
+            </p>
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-2">
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setDiagOpen(true)}
+                className="gap-2 text-xs"
+              >
+                <Stethoscope className="w-3.5 h-3.5" />
+                Diagnosticar e tentar correção
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleHardReset}
+                disabled={resetting}
+                className="gap-2 text-xs"
+              >
+                {resetting ? (
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                ) : (
+                  <RefreshCw className="w-3.5 h-3.5" />
+                )}
+                {resetting ? "Limpando..." : "Limpar cache e recarregar"}
+              </Button>
             </div>
-          )}
-        </div>
+
+            {isIosSafari && (
+              <div className="mt-4 text-left text-[11px] text-muted-foreground bg-muted/40 rounded-lg p-3 leading-relaxed">
+                <p className="font-semibold text-foreground mb-1">No Safari (iPhone), se ainda falhar:</p>
+                <ol className="list-decimal pl-4 space-y-1">
+                  <li>Toque em <strong>aA</strong> na barra de endereço</li>
+                  <li>Selecione <strong>“Recarregar sem conteúdo”</strong> ou abra em <strong>aba privada</strong></li>
+                  <li>Se mantiver o erro, abra <strong>Ajustes &gt; Safari &gt; Avançado &gt; Dados de sites</strong> e remova “fitjourney.com.br”</li>
+                </ol>
+              </div>
+            )}
+          </div>
+        )}
       </motion.div>
 
       <NotFoundDiagnosticsModal
