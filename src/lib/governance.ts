@@ -54,7 +54,7 @@ const UNIVERSAL_ROUTES = [
   "/checkin-panel", "/checklist", "/feedbacks", "/fitness-anamnesis", "/global-tips", "/health-quiz", "/human-performance", 
   "/library", "/metabolic-twin", "/my-public-profile", "/my-referrals", "/onboarding", "/planner", "/protocolos-fitoterapicos", 
   "/protocols", "/recipe-builder", "/security-dashboard", "/user-guide", "/weekly-goals", "/weekly-report", "/weight-trajectory", 
-  "/body-analysis", "/water-calculator", "/weight-calculator", "/hard-fail-linkage", "/consent", "/diagnostic", "/status"
+  "/body-analysis", "/water-calculator", "/weight-calculator", "/hard-fail-linkage", "/consent", "/status"
 ];
 
 const PROFESSIONAL_ONLY_ROUTES = [
@@ -108,7 +108,7 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
 
   // 2. Degraded Mode Rule
   if (isDegraded && !safePathname.startsWith('/auth')) {
-    return { type: 'BLOCK', reason: 'System in degraded mode', target: '/diagnostic' };
+    return { type: 'BLOCK', reason: 'System in degraded mode', target: '/status' };
   }
 
   // 3. Public Path Access

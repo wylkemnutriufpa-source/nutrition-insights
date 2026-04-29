@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { lazy, Suspense } from "react";
 import { useAppState } from "@/hooks/useAppState";
@@ -256,6 +256,15 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
   return <>{children}</>;
 }
 
+function RedirectWithParams({ to }: { to: string }) {
+  const params = useParams();
+  let target = to;
+  Object.entries(params).forEach(([key, value]) => {
+    target = target.replace(`:${key}`, value || "");
+  });
+  return <Navigate to={target} replace />;
+}
+
 export const AppRoutes = () => {
   const { isDegraded, isOrphan } = useAppState();
   
@@ -280,7 +289,7 @@ export const AppRoutes = () => {
                 <Route path="/professional/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
                 <Route path="/pacientes" element={<Navigate to="/patients" replace />} />
-                <Route path="/pacientes/:id" element={<Navigate to="/patients/:id" replace />} />
+                <Route path="/pacientes/:patientId" element={<RedirectWithParams to="/patients/:patientId" />} />
                 <Route path="/pacientes/*" element={<Navigate to="/patients" replace />} />
                 <Route path="/paciente" element={<Navigate to="/client/dashboard" replace />} />
                 <Route path="/paciente/dashboard" element={<Navigate to="/client/dashboard" replace />} />
@@ -312,13 +321,14 @@ export const AppRoutes = () => {
                 <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
                 <Route path="/physical-assessment" element={<ProtectedRoute><LP section="Avaliação Física"><PhysicalAssessment /></LP></ProtectedRoute>} />
                 <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas Globais"><GlobalTips /></LP></ProtectedRoute>} />
-                <Route path="/consent" element={<LP section="Consentimento"><ConsentRequired /></LP>} />
+                 <Route path="/consent" element={<LP section="Consentimento"><ConsentRequired /></LP>} />
+                 <Route path="/hard-fail-linkage" element={<HardFailLinkage />} />
                 <Route path="/audit-logs" element={<NutritionistRoute><LP section="Logs do Sistema"><SystemAuditLogs /></LP></NutritionistRoute>} />
                 <Route path="/curiosidades" element={<ProtectedRoute><LP section="Curiosidades"><Curiosidades /></LP></ProtectedRoute>} />
                 <Route path="/feedbacks" element={<ProtectedRoute><LP section="Feedbacks"><Feedbacks /></LP></ProtectedRoute>} />
                 <Route path="/gateway" element={<LP section="Portal"><GatewayPage /></LP>} />
                 <Route path="/global-adaptive" element={<ProtectedRoute><LP section="IA Adaptativa"><GlobalAdaptiveIntelligence /></LP></ProtectedRoute>} />
-                <Route path="/in-office-wizard" element={<NutritionistRoute><LP section="Assistente de Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
+                <Route path="/in-office-wizard" element={<Navigate to="/in-office" replace />} />
                 <Route path="/intake" element={<LP section="Onboarding de Entrada"><IntakeOnboarding /></LP>} />
                 <Route path="/invitation/:code" element={<LP section="Convite"><Invitation /></LP>} />
                 <Route path="/convite/:code" element={<LP section="Convite"><Invitation /></LP>} />
@@ -343,7 +353,7 @@ export const AppRoutes = () => {
 
                 {/* Professional Routes */}
                 <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
-                <Route path="/patients/:id" element={<NutritionistRoute><LP section="Detalhes do Paciente"><PatientDetail /></LP></NutritionistRoute>} />
+                <Route path="/patients/:patientId" element={<NutritionistRoute><LP section="Detalhes do Paciente"><PatientDetail /></LP></NutritionistRoute>} />
                 <Route path="/financial" element={<NutritionistRoute><LP section="Financeiro"><Financial /></LP></NutritionistRoute>} />
                 <Route path="/integrations" element={<NutritionistRoute><LP section="Integrações"><Integrations /></LP></NutritionistRoute>} />
                 <Route path="/branding" element={<NutritionistRoute><LP section="Marca"><Branding /></LP></NutritionistRoute>} />
@@ -360,6 +370,7 @@ export const AppRoutes = () => {
                 <Route path="/patient-overview" element={<NutritionistRoute><LP section="Visão Geral do Paciente"><PatientOverview /></LP></NutritionistRoute>} />
                 <Route path="/plan-audit" element={<NutritionistRoute><LP section="Auditoria de Planos"><PlanAudit /></LP></NutritionistRoute>} />
                 <Route path="/in-office" element={<NutritionistRoute><LP section="Modo Consultório"><InOfficeSelector /></LP></NutritionistRoute>} />
+                <Route path="/in-office/:patientId" element={<NutritionistRoute><LP section="Assistente de Consultório"><InOfficeWizard /></LP></NutritionistRoute>} />
                 <Route path="/invite-patient" element={<NutritionistRoute><LP section="Convidar Paciente"><InvitePatient /></LP></NutritionistRoute>} />
                 <Route path="/automation" element={<NutritionistRoute><LP section="Automação"><AutomationCenter /></LP></NutritionistRoute>} />
                 <Route path="/clinical-brain" element={<NutritionistRoute><LP section="Cérebro Clínico"><ClinicalBrain /></LP></NutritionistRoute>} />
@@ -487,7 +498,8 @@ export const AppRoutes = () => {
                 <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
-                <Route path="/v2" element={<Navigate to="/editor-v2" replace />} />
+                 <Route path="/v2" element={<Navigate to="/editor-v2" replace />} />
+                 <Route path="/v2/:id" element={<RedirectWithParams to="/editor-v2/:id" />} />
                 <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
                 <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
