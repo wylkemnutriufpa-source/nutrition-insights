@@ -32,6 +32,8 @@ export interface Meal {
   items: MealItem[];
   daySubstitutions?: Record<string, string>; // dayId -> instanceId
   selectionMode?: 'day' | 'week';
+  time?: string; // HH:MM
+  icon?: string; // sun | coffee | utensils | moon | star | apple
 }
 
 interface HistoryState {
@@ -95,6 +97,11 @@ interface MealPlanState {
   resetPlan: () => void;
   generateDeterministicPlan: (goal: string, context?: any) => Promise<void>;
   setDaySubstitution: (mealId: string, dayId: string, instanceId: string) => void;
+  
+  // Novas ações
+  addMeal: (meal: { name: string; time?: string; icon?: string }) => void;
+  renameMeal: (mealId: string, payload: { name?: string; time?: string; icon?: string }) => void;
+  deleteMeal: (mealId: string) => void;
 }
 
 const DEFAULT_MEALS = [
@@ -666,6 +673,33 @@ export const useMealEditorV3Store = create<MealPlanState>()(
             lastActionInsight: `Variação de cardápio salva para ${dayId}`
           };
         });
+      },
+      addMeal: ({ name, time, icon }) => {
+        set((state) => {
+          const newId = Math.random().toString(36).substring(7);
+          const newMeal: Meal = { id: newId, name, time, icon, items: [] };
+          return {
+            history: saveHistory(state),
+            meals: [...state.meals, newMeal],
+            activeMealId: newId,
+            lastActionInsight: `Refeição "${name}" adicionada`
+          };
+        });
+      },
+      renameMeal: (mealId, payload) => {
+        set((state) => ({
+          history: saveHistory(state),
+          meals: state.meals.map((m) =>
+            m.id === mealId ? { ...m, ...payload } : m
+          )
+        }));
+      },
+      deleteMeal: (mealId) => {
+        set((state) => ({
+          history: saveHistory(state),
+          meals: state.meals.filter((m) => m.id !== mealId),
+          activeMealId: state.activeMealId === mealId ? state.meals[0]?.id || null : state.activeMealId
+        }));
       },
     }),
     {

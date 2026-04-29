@@ -4,6 +4,10 @@ import { MobileWeekTabs } from './MobileWeekTabs';
 import { MobileMealCard } from './MobileMealCard';
 import { MobileAddSheet, AddAction } from './MobileAddSheet';
 import { FoodSelectionModal } from './FoodSelectionModal';
+import { NewMealModal } from './NewMealModal';
+import { EditFoodModal } from './EditFoodModal';
+import { GenerateAIModal } from './GenerateAIModal';
+import { FocusModeView } from './FocusModeView';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -11,7 +15,7 @@ import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import PatientPickerDropdown from '../common/PatientPickerDropdown';
 import {
-  Plus, ChevronLeft, MoreHorizontal, Sparkles, Flame, Beef, Wheat, Droplet, Target,
+  Plus, ChevronLeft, MoreHorizontal, Sparkles, Flame, Beef, Wheat, Droplet, Target, Eye,
   RefreshCw, Save, Zap, Dumbbell, Salad, Package, Settings2, ShieldCheck, Eraser, Star, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -89,7 +93,10 @@ export const MobileMealEditorV3: React.FC = () => {
     mealId: string;
     item: MealItem;
   } | null>(null);
+  const [editTarget, setEditTarget] = useState<{ mealId: string; item: MealItem } | null>(null);
   const [generateOpen, setGenerateOpen] = useState(false);
+  const [newMealOpen, setNewMealOpen] = useState(false);
+  const [focusOpen, setFocusOpen] = useState(false);
 
   const totals = meals.reduce(
     (acc, m) => {
@@ -120,10 +127,11 @@ export const MobileMealEditorV3: React.FC = () => {
         setGenerateOpen(true);
         break;
       case 'new-meal':
-        toast.info('Use o painel desktop para criar refeições adicionais');
+        setNewMealOpen(true);
         break;
       case 'apply-template':
-        toast.info('Abra a aba Templates no modo desktop');
+        setModalTab('templates');
+        setAddModalMealId(meals[0]?.id);
         break;
     }
   };
@@ -227,6 +235,16 @@ export const MobileMealEditorV3: React.FC = () => {
                   <span className="text-xs font-bold">{isPatientView ? "Sair da" : "Ver como"} Paciente</span>
                 </DropdownMenuItem>
 
+                <DropdownMenuItem onClick={() => setFocusOpen(true)} className="rounded-xl py-2.5 px-3 focus:bg-primary/5 focus:text-primary cursor-pointer">
+                  <Eye className="w-4 h-4 mr-3 text-primary" />
+                  <span className="text-xs font-bold">Modo Foco</span>
+                </DropdownMenuItem>
+
+                <DropdownMenuItem onClick={() => setNewMealOpen(true)} className="rounded-xl py-2.5 px-3 focus:bg-emerald-500/5 focus:text-emerald-600 cursor-pointer">
+                  <Plus className="w-4 h-4 mr-3 text-emerald-500" />
+                  <span className="text-xs font-bold">Nova Refeição</span>
+                </DropdownMenuItem>
+
                 <DropdownMenuSeparator className="my-1 bg-border/50" />
 
                 <DropdownMenuItem onClick={async () => { 
@@ -317,8 +335,11 @@ export const MobileMealEditorV3: React.FC = () => {
                 defaultTime={DEFAULT_TIMES[meal.name.toLowerCase()]}
                 weekMode={viewMode === 'week'}
                 activeDayId={activeDay}
-                onAddItem={(mealId) => setAddModalMealId(mealId)}
-                onEditItem={(mealId) => setAddModalMealId(mealId)}
+                onAddItem={(mealId) => {
+                  setModalTab('search');
+                  setAddModalMealId(mealId);
+                }}
+                onEditItem={(mealId, item) => setEditTarget({ mealId, item })}
                 onSubstituteItem={(mealId, item) =>
                   setSubstitutionTarget({ mealId, item })
                 }
@@ -393,36 +414,28 @@ export const MobileMealEditorV3: React.FC = () => {
         />
       )}
 
-      <Dialog open={generateOpen} onOpenChange={setGenerateOpen}>
-        <DialogContent className="rounded-2xl max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Gerar Plano Inteligente
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Motor clínico determinístico FitJourney baseado em anamnese, objetivo, restrições e
-              preferências.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            {GENERATION_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={async () => {
-                  await generateDeterministicPlan(opt.id);
-                  setGenerateOpen(false);
-                  toast.success('Plano gerado pelo motor FitJourney');
-                }}
-                className="p-4 rounded-xl border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-              >
-                <Target className="w-4 h-4 text-primary mb-2" />
-                <p className="text-xs font-bold">{opt.label}</p>
-              </button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <GenerateAIModal isOpen={generateOpen} onClose={() => setGenerateOpen(false)} />
+
+      <NewMealModal isOpen={newMealOpen} onClose={() => setNewMealOpen(false)} />
+
+      <FocusModeView 
+        isOpen={focusOpen} 
+        onClose={() => setFocusOpen(false)}
+        dayLabel={activeDay}
+      />
+
+      <EditFoodModal
+        isOpen={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        mealId={editTarget?.mealId || null}
+        item={editTarget?.item || null}
+        onSubstitute={() => {
+          if (editTarget) {
+            setSubstitutionTarget({ mealId: editTarget.mealId, item: editTarget.item });
+            setEditTarget(null);
+          }
+        }}
+      />
     </div>
   );
 };
