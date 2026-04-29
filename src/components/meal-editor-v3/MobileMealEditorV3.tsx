@@ -7,8 +7,10 @@ import { FoodSelectionModal } from './FoodSelectionModal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useNavigate } from 'react-router-dom';
 import {
   Plus, ChevronLeft, MoreHorizontal, Sparkles, Flame, Beef, Wheat, Droplet, Target,
+  RefreshCw, Save, Zap, Dumbbell, Salad, Package, Settings2, ShieldCheck, Eraser, Star
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -16,6 +18,14 @@ import { toast } from 'sonner';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
 } from '@/components/ui/dialog';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 const DEFAULT_TIMES: Record<string, string> = {
   'café da manhã': '07:00',
@@ -34,9 +44,12 @@ const GENERATION_OPTIONS = [
 ];
 
 export const MobileMealEditorV3: React.FC = () => {
+  const navigate = useNavigate();
   const {
     meals, patientTargets, generateDeterministicPlan, planStatus,
-    viewMode, setViewMode, activeDay, setActiveDay
+    viewMode, setViewMode, activeDay, setActiveDay,
+    resetPlan, optimizePlan, validateAndSave, fastMode, setFastMode,
+    isPatientView, setPatientView
   } = useMealEditorV3Store();
 
   const [addSheetOpen, setAddSheetOpen] = useState(false);
@@ -89,7 +102,10 @@ export const MobileMealEditorV3: React.FC = () => {
       {/* Top bar compacto */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b">
         <div className="flex items-center justify-between px-4 py-3">
-          <button className="p-2 -ml-2 rounded-lg text-muted-foreground hover:bg-muted">
+          <button 
+            onClick={() => navigate(-1)}
+            className="p-2 -ml-2 rounded-lg text-muted-foreground hover:bg-muted active:scale-95 transition-transform"
+          >
             <ChevronLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
@@ -100,9 +116,55 @@ export const MobileMealEditorV3: React.FC = () => {
               </Badge>
             )}
           </div>
-          <button className="p-2 -mr-2 rounded-lg text-muted-foreground hover:bg-muted">
-            <MoreHorizontal className="w-5 h-5" />
-          </button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <button className="p-2 -mr-2 rounded-lg text-muted-foreground hover:bg-muted active:scale-95 transition-transform">
+                <MoreHorizontal className="w-5 h-5" />
+              </button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 shadow-2xl border-none bg-background/95 backdrop-blur-xl">
+              <DropdownMenuLabel className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-3 py-2">
+                Ferramentas V3
+              </DropdownMenuLabel>
+              
+              <DropdownMenuItem onClick={() => setGenerateOpen(true)} className="rounded-xl py-2.5 px-3 focus:bg-primary/5 focus:text-primary cursor-pointer">
+                <Zap className="w-4 h-4 mr-3 text-primary" />
+                <span className="text-xs font-bold">Gerar Plano IA</span>
+              </DropdownMenuItem>
+              
+              <DropdownMenuItem onClick={() => { optimizePlan(); toast.success('Otimizado clinicamente'); }} className="rounded-xl py-2.5 px-3 focus:bg-purple-500/5 focus:text-purple-600 cursor-pointer">
+                <Sparkles className="w-4 h-4 mr-3 text-purple-500" />
+                <span className="text-xs font-bold">Otimizar Plano</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1 bg-border/50" />
+              
+              <DropdownMenuItem onClick={() => setFastMode(!fastMode)} className="rounded-xl py-2.5 px-3 cursor-pointer">
+                <Settings2 className={cn("w-4 h-4 mr-3", fastMode ? "text-primary" : "text-muted-foreground")} />
+                <span className="text-xs font-bold">{fastMode ? "Desativar" : "Ativar"} Modo Rápido</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => setPatientView(!isPatientView)} className="rounded-xl py-2.5 px-3 cursor-pointer">
+                <ShieldCheck className={cn("w-4 h-4 mr-3", isPatientView ? "text-emerald-500" : "text-muted-foreground")} />
+                <span className="text-xs font-bold">{isPatientView ? "Sair da" : "Ver como"} Paciente</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuSeparator className="my-1 bg-border/50" />
+
+              <DropdownMenuItem onClick={async () => { 
+                const ok = await validateAndSave(); 
+                if (ok) toast.success('Plano salvo!'); 
+              }} className="rounded-xl py-2.5 px-3 focus:bg-primary focus:text-white cursor-pointer">
+                <Save className="w-4 h-4 mr-3" />
+                <span className="text-xs font-bold">Salvar Plano</span>
+              </DropdownMenuItem>
+
+              <DropdownMenuItem onClick={() => { resetPlan(); toast.info('Plano limpo'); }} className="rounded-xl py-2.5 px-3 focus:bg-destructive/5 focus:text-destructive cursor-pointer">
+                <Eraser className="w-4 h-4 mr-3 text-destructive" />
+                <span className="text-xs font-bold text-destructive">Limpar Tudo</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
         </div>
 
         {/* Macros chips */}
