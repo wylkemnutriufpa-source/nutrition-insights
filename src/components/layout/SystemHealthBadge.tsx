@@ -10,9 +10,12 @@ import { supabase } from "@/integrations/supabase/client";
 type HealthStatus = "ok" | "warning" | "critical";
 
 export default function SystemHealthBadge() {
+  const { isPatient, loading } = useAuth();
   const [isOnline, setIsOnline] = useState(navigator.onLine);
   const [latency, setLatency] = useState<number | null>(null);
   const navigate = useNavigate();
+
+  if (loading || isPatient) return null;
 
   const { data: lastDiag } = useQuery({
     queryKey: ["latest-system-diagnostic"],
