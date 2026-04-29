@@ -219,6 +219,11 @@ const PublicDemo = lazy(() => import("./pages/PublicDemo"));
 const DiagnosticStatus = lazy(() => import("./pages/DiagnosticStatus"));
 const TestDeploy = lazy(() => import("./pages/TestDeploy"));
 const AdminOperationalCosts = lazy(() => import("./pages/AdminOperationalCosts"));
+const PrivacyPolicy = lazy(() => import("./pages/PrivacyPolicy"));
+const TermsOfUse = lazy(() => import("./pages/TermsOfUse"));
+const SystemAuditLogs = lazy(() => import("./pages/AuditLogs"));
+const Pricing = lazy(() => import("./pages/Pricing"));
+const Landing = lazy(() => import("./pages/Landing"));
 
 const queryClient = new QueryClient({
   defaultOptions: {
