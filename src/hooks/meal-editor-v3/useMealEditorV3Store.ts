@@ -550,8 +550,10 @@ export const useMealEditorV3Store = create<MealPlanState>()(
 
         const totals = meals.reduce((acc, meal) => {
           meal.items.forEach(item => {
-            acc.calories += item.calories * item.quantity;
-            acc.protein += item.protein * item.quantity;
+            const currentMeasure = item.householdMeasures?.find(m => m.unit === item.selectedUnit) || { unit: item.portionUnit, factor: 1 };
+            const factor = item.quantity * currentMeasure.factor;
+            acc.calories += item.calories * factor;
+            acc.protein += item.protein * factor;
           });
           return acc;
         }, { calories: 0, protein: 0 });
