@@ -460,11 +460,11 @@ function AppContent() {
               <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
               
               {/* Editor Routes */}
-              <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
-              <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
-              <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
-              <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
-              <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
 
               {/* Public / Landing */}
               <Route path="/status" element={<LP section="Status"><DiagnosticStatus /></LP>} />
