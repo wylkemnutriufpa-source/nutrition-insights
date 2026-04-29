@@ -641,7 +641,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
                 total_target_protein: totals.protein,
                 total_target_carbs: totals.carbs,
                 total_target_fat: totals.fat,
-                status: 'active'
+                plan_status: 'active'
               }])
               .select()
               .single();
