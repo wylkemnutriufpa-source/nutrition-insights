@@ -110,16 +110,16 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="search" className="flex-1 flex flex-col">
+        <Tabs defaultValue="quick" className="flex-1 flex flex-col">
           <div className="px-6 py-2 bg-muted/20 border-b overflow-x-auto no-scrollbar">
             <TabsList className="grid grid-cols-3 w-full max-w-md bg-transparent">
-              <TabsTrigger value="search" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Search className="w-3.5 h-3.5 mr-2" />
-                Busca
-              </TabsTrigger>
               <TabsTrigger value="quick" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Zap className="w-3.5 h-3.5 mr-2" />
                 Rápido
+              </TabsTrigger>
+              <TabsTrigger value="search" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Search className="w-3.5 h-3.5 mr-2" />
+                Busca
               </TabsTrigger>
               <TabsTrigger value="templates" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <LayoutTemplate className="w-3.5 h-3.5 mr-2" />
