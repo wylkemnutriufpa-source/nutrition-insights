@@ -21,6 +21,7 @@ const STRATEGIC_CARDS = [
   { key: "analytics", label: "Analytics Avançado", description: "Métricas e tendências", icon: BarChart3, route: "/reports", gradient: "from-indigo-500/10 to-indigo-600/5" },
   { key: "lab-interpreter", label: "Interpretador de Exames", description: "Análise bioquímica com IA", icon: FlaskConical, route: "/lab-interpreter", gradient: "from-teal-500/10 to-emerald-500/5", badge: "Premium" },
   { key: "editor", label: "Editor Premium V2", description: "Criar e editar planos", icon: Zap, route: "/editor-v2", gradient: "from-primary/10 to-primary/5" },
+  { key: "editor-v3", label: "Editor Elite V3", description: "Modo avançado (Semana/Dia)", icon: Sparkles, route: "/meal-plan-editor-v3", gradient: "from-purple-500/10 to-purple-600/5", badge: "Elite" },
   { key: "automations", label: "Automações", description: "Regras e gatilhos", icon: Zap, route: "/automation", gradient: "from-cyan-500/10 to-cyan-600/5" },
 ];
 
