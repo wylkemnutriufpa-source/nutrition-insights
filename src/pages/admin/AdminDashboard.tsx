@@ -838,7 +838,8 @@ function CreateProfessionalDialog({
 
 // ─── Main Admin Dashboard ───
 export default function AdminDashboard() {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
+  const page = usePageState({ initialStatus: "loading" });
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [metrics, setMetrics] = useState<PlatformMetrics>({
