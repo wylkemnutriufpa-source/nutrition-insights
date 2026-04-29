@@ -6,15 +6,12 @@ import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
 import { stampBuildIdentity } from "./lib/buildInfo";
 import { startVersionSync } from "./lib/versionCheck";
 
-// Diagnóstico de inicialização para depuração de ambiente (Preview vs Prod)
-console.log("%c[FitJourney:Boot] Iniciando sistema...", "color: #10b981; font-weight: bold; font-size: 12px;", {
-  hostname: window.location.hostname,
-  origin: window.location.origin,
-  timestamp: new Date().toISOString(),
-  env: import.meta.env.MODE,
-  isDev: import.meta.env.DEV,
-  version: "2.4.1-deploy-debug-ui"
-});
+// Boot silent
+if (import.meta.env.DEV) {
+  console.log("%c[FitJourney:Boot] Iniciando sistema...", "color: #10b981; font-weight: bold; font-size: 12px;", {
+    version: "2.4.2-stable"
+  });
+}
 
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
 stampBuildIdentity();
