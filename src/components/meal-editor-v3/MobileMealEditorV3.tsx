@@ -245,6 +245,9 @@ export const MobileMealEditorV3: React.FC = () => {
                   <span className="text-xs font-bold">Nova Refeição</span>
                 </DropdownMenuItem>
 
+                <DropdownMenuSeparator className="my-1 bg-border/50" />
+
+                <DropdownMenuItem onClick={async () => { 
                   const ok = await validateAndSave(); 
                   if (ok) toast.success('Plano salvo!'); 
                 }} className="rounded-xl py-2.5 px-3 focus:bg-primary focus:text-white cursor-pointer">
