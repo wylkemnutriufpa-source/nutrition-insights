@@ -8,9 +8,11 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useNavigate } from 'react-router-dom';
+import { supabase } from '@/integrations/supabase/client';
+import PatientPickerDropdown from '../common/PatientPickerDropdown';
 import {
   Plus, ChevronLeft, MoreHorizontal, Sparkles, Flame, Beef, Wheat, Droplet, Target,
-  RefreshCw, Save, Zap, Dumbbell, Salad, Package, Settings2, ShieldCheck, Eraser, Star
+  RefreshCw, Save, Zap, Dumbbell, Salad, Package, Settings2, ShieldCheck, Eraser, Star, Search
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { motion, AnimatePresence } from 'framer-motion';
