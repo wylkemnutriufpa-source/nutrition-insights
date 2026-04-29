@@ -136,39 +136,52 @@ export class CriticalErrorBoundary extends Component<Props, State> {
   public render() {
     if (this.state.hasError) {
       return (
-        <div className="min-h-screen w-full flex items-center justify-center p-4 bg-background">
-          <div className="max-w-md w-full p-8 rounded-2xl border border-destructive/20 bg-destructive/5 text-center space-y-6">
-            <div className="mx-auto w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
-              <ShieldAlert className="w-8 h-8 text-destructive" />
-            </div>
-            <div className="space-y-2">
-              <h1 className="text-2xl font-bold tracking-tight">Ocorreu um erro inesperado</h1>
-              <p className="text-muted-foreground">
-                Tivemos um problema técnico ao carregar esta parte do sistema. 
-                Não se preocupe, seus dados estão seguros.
-              </p>
+        <div className="min-h-screen w-full flex items-center justify-center p-6 bg-slate-950 text-slate-50">
+          <div className="max-w-xl w-full p-8 rounded-3xl border border-destructive/20 bg-destructive/5 space-y-8 animate-in fade-in zoom-in duration-500">
+            <div className="text-center space-y-4">
+              <div className="mx-auto w-20 h-20 rounded-2xl bg-destructive/10 border border-destructive/20 flex items-center justify-center">
+                <ShieldAlert className="w-10 h-10 text-destructive" />
+              </div>
+              <div className="space-y-2">
+                <h1 className="text-3xl font-bold tracking-tight">Interrupção Crítica Detectada</h1>
+                <p className="text-slate-400">
+                  O motor de renderização encontrou uma falha que impede a exibição desta tela.
+                </p>
+              </div>
             </div>
             
-            <div className="p-4 rounded-lg bg-black/40 text-left overflow-auto max-h-32">
-              <code className="text-[10px] text-destructive-foreground font-mono">
-                {this.state.error?.message || "Erro desconhecido"}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Origem do Erro</p>
+                <p className="text-sm font-semibold text-slate-200 truncate">Render/Layout Engine</p>
+              </div>
+              <div className="p-4 rounded-2xl bg-slate-900 border border-slate-800">
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-1">Ação Sugerida</p>
+                <p className="text-sm font-semibold text-blue-400">Limpeza de cache & Reinício</p>
+              </div>
+            </div>
+
+            <div className="p-5 rounded-2xl bg-black/40 border border-white/5 font-mono">
+              <p className="text-[10px] text-slate-500 mb-2 font-bold uppercase tracking-wider">Assinatura Técnica:</p>
+              <code className="text-xs text-destructive-foreground break-all leading-relaxed">
+                {this.state.error?.name}: {this.state.error?.message || "Erro de memória ou renderização"}
               </code>
             </div>
 
-            <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-3">
               <Button 
                 onClick={this.handleReload}
-                className="w-full gap-2 gradient-primary shadow-glow"
+                className="flex-1 gap-2 bg-blue-600 hover:bg-blue-700 h-12 text-sm font-bold shadow-lg shadow-blue-900/20"
               >
                 <RefreshCcw className="w-4 h-4" />
-                Recarregar Sistema
+                Recarregar e Limpar
               </Button>
               <Button 
-                variant="ghost" 
+                variant="outline" 
                 onClick={() => window.location.href = "/"}
-                className="w-full"
+                className="flex-1 h-12 border-slate-700 hover:bg-slate-800"
               >
-                Ir para o Início
+                Voltar ao Início
               </Button>
             </div>
           </div>
