@@ -76,11 +76,12 @@ export const PatientViewModal: React.FC<Props> = ({ isOpen, onClose }) => {
                         </div>
                         
                         {(item.substitutions || []).length > 0 && (
-                          <div className="ml-4 space-y-1">
+                          <div className="ml-4 mt-1 space-y-1 bg-amber-50/30 p-2 rounded-lg border border-dashed border-amber-200/50">
+                            <p className="text-[8px] font-bold text-amber-600 uppercase mb-1">Substituições:</p>
                             {item.substitutions?.map((sub) => (
-                              <div key={sub.id} className="flex items-center gap-2 text-[10px] text-muted-foreground italic">
+                              <div key={sub.id} className="flex items-center gap-2 text-[10px] text-muted-foreground">
                                 <span className="text-[8px] font-black opacity-30">OU</span>
-                                <span>{sub.name}</span>
+                                <span className="font-medium">{sub.name}</span>
                               </div>
                             ))}
                           </div>
