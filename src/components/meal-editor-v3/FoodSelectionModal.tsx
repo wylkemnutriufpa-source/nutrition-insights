@@ -110,16 +110,16 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="search" className="flex-1 flex flex-col">
+        <Tabs defaultValue="quick" className="flex-1 flex flex-col">
           <div className="px-6 py-2 bg-muted/20 border-b overflow-x-auto no-scrollbar">
             <TabsList className="grid grid-cols-3 w-full max-w-md bg-transparent">
-              <TabsTrigger value="search" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                <Search className="w-3.5 h-3.5 mr-2" />
-                Busca
-              </TabsTrigger>
               <TabsTrigger value="quick" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <Zap className="w-3.5 h-3.5 mr-2" />
                 Rápido
+              </TabsTrigger>
+              <TabsTrigger value="search" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                <Search className="w-3.5 h-3.5 mr-2" />
+                Busca
               </TabsTrigger>
               <TabsTrigger value="templates" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
                 <LayoutTemplate className="w-3.5 h-3.5 mr-2" />
@@ -193,24 +193,31 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
             <TabsContent value="quick" className="h-full m-0">
                <ScrollArea className="h-full p-6">
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {QUICK_FOODS.map((food, idx) => (
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
+                  {QUICK_FOODS.filter(f => !!f.imageUrl).map((food, idx) => (
                     <motion.div
                       key={food.id}
-                      initial={{ scale: 0.9, opacity: 0 }}
-                      animate={{ scale: 1, opacity: 1 }}
-                      transition={{ delay: idx * 0.02 }}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.05 }}
                     >
-                      <Button 
-                        variant="outline" 
-                        className="h-24 w-full flex flex-col items-center justify-center gap-2 hover:border-primary hover:bg-primary/5 transition-all rounded-2xl border-muted/50 shadow-sm hover:shadow-md"
+                      <Card 
+                        className="overflow-hidden cursor-pointer hover:border-primary transition-all group rounded-2xl border-muted/50 shadow-sm hover:shadow-xl"
                         onClick={() => handleAdd(food)}
                       >
-                        <span className="text-xs font-bold leading-tight px-2">{food.name}</span>
-                        <Badge variant="secondary" className="text-[10px] font-bold bg-muted/50 border-none px-1.5 h-4">
-                          {food.calories} kcal
-                        </Badge>
-                      </Button>
+                        <div className="aspect-[16/10] bg-muted relative">
+                          <img src={food.imageUrl} alt={food.name} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                          <Badge className="absolute top-2 right-2 bg-primary border-none font-bold text-[9px] h-4">PRONTO</Badge>
+                        </div>
+                        <div className="p-3">
+                          <h4 className="font-bold text-sm mb-1 line-clamp-1">{food.name}</h4>
+                          <div className="flex gap-2 text-[9px] font-bold text-muted-foreground uppercase">
+                            <span className="text-blue-500">{food.protein}g P</span>
+                            <span className="text-green-500">{food.carbs}g C</span>
+                            <span>{food.calories} kcal</span>
+                          </div>
+                        </div>
+                      </Card>
                     </motion.div>
                   ))}
                 </div>
