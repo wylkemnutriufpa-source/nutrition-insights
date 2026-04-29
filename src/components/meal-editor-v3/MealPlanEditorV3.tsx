@@ -58,8 +58,8 @@ export const MealPlanEditorV3: React.FC = () => {
 
   useEffect(() => {
     const fetchPatients = async () => {
-      const { data } = await supabase.from('profiles').select('user_id, full_name, email').eq('role', 'patient');
-      if (data) setPatients(data.map(p => ({ id: p.user_id, name: p.full_name, email: p.email })));
+      const { data } = await (supabase.from('profiles') as any).select('user_id, full_name').eq('role', 'patient');
+      if (data) setPatients(data.map((p: any) => ({ id: p.user_id, name: p.full_name })));
     };
     fetchPatients();
   }, []);
