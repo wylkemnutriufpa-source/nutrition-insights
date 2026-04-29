@@ -248,6 +248,14 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
+function DashboardRedirect() {
+  const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  if (isNutritionist || isPersonal || isAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  return <Navigate to="/client/dashboard" replace />;
+}
+
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isAdmin } = useAuth();
   if (loading) return user ? <>{children}</> : <PageLoader />;
@@ -283,8 +291,8 @@ function AppContent() {
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
               
               {/* Redirects */}
-              <Route path="/dashboard" element={<Navigate to="/client/dashboard" replace />} />
-              <Route path="/dashboard/*" element={<Navigate to="/client/dashboard" replace />} />
+              <Route path="/dashboard" element={<DashboardRedirect />} />
+              <Route path="/dashboard/*" element={<DashboardRedirect />} />
               <Route path="/professional" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/professional/dashboard" element={<Navigate to="/admin/dashboard" replace />} />
               <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
@@ -292,6 +300,7 @@ function AppContent() {
               <Route path="/pacientes/:id" element={<Navigate to="/patients/:id" replace />} />
               <Route path="/pacientes/*" element={<Navigate to="/patients" replace />} />
               <Route path="/biblioteca" element={<Navigate to="/library" replace />} />
+              <Route path="/landing" element={<Navigate to="/" replace />} />
 
               {/* Auth */}
               <Route path="/auth" element={<Auth />} />
@@ -314,7 +323,10 @@ function AppContent() {
               <Route path="/reports" element={<ProtectedRoute><LP section="Relatórios"><Reports /></LP></ProtectedRoute>} />
               <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
               <Route path="/body-analysis" element={<ProtectedRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></ProtectedRoute>} />
-              
+              <Route path="/body-projection" element={<ProtectedRoute><LP section="Projeção Corporal"><BodyProjectionExperience /></LP></ProtectedRoute>} />
+              <Route path="/physical-assessment" element={<ProtectedRoute><LP section="Avaliação Física"><PhysicalAssessment /></LP></ProtectedRoute>} />
+              <Route path="/global-tips" element={<ProtectedRoute><LP section="Dicas Globais"><GlobalTips /></LP></ProtectedRoute>} />
+
               {/* Professional Routes */}
               <Route path="/patients" element={<NutritionistRoute><LP section="Pacientes"><Patients /></LP></NutritionistRoute>} />
               <Route path="/patients/:id" element={<NutritionistRoute><LP section="Detalhes do Paciente"><PatientDetail /></LP></NutritionistRoute>} />
@@ -463,15 +475,30 @@ function AppContent() {
               {/* Editor Routes */}
               <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
               <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              
               <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
               <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
               <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
 
               {/* Public / Landing */}
+              <Route path="/landing-paciente" element={<LP section="Para Pacientes"><PatientLanding /></LP>} />
+              <Route path="/landing-personal" element={<LP section="Para Personals"><PersonalLanding /></LP>} />
+              <Route path="/landing-afiliado" element={<LP section="Para Afiliados"><AffiliateLanding /></LP>} />
+              <Route path="/biquini-branco" element={<LP section="Biquíni Branco"><BiquiniBrancoLanding /></LP>} />
+              <Route path="/biquini-branco/:id" element={<LP section="Detalhes Biquíni Branco"><BiquiniBrancoDetail /></LP>} />
               <Route path="/status" element={<LP section="Status"><DiagnosticStatus /></LP>} />
+              <Route path="/status-page" element={<LP section="Status do Sistema"><StatusPage /></LP>} />
               <Route path="/p/:slug" element={<PublicProfile />} />
               <Route path="/booking/:id" element={<PublicBooking />} />
-              
+
               {/* System */}
               <Route path="/teste123" element={<TestDeploy />} />
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
