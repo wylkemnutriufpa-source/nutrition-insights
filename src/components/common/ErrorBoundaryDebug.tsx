@@ -1,4 +1,5 @@
 import React, { Component, ErrorInfo, ReactNode } from "react";
+import { useAuth } from "@/lib/auth";
 import { AlertTriangle, ChevronDown, ChevronUp, Copy, RefreshCcw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
