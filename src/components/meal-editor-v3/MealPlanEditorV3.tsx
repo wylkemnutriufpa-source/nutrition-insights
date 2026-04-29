@@ -10,6 +10,7 @@ import { MobileMealEditorV3 } from './MobileMealEditorV3';
 import { NewMealModal } from './NewMealModal';
 import { GenerateAIModal } from './GenerateAIModal';
 import { FocusModeView } from './FocusModeView';
+import { PatientViewModal } from './PatientViewModal';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -442,7 +443,12 @@ export const MealPlanEditorV3: React.FC = () => {
       <FocusModeView 
         isOpen={isFocusModeOpen} 
         onClose={() => setIsFocusModeOpen(false)} 
-        dayLabel={activeDay}
+        activeLabel={activeDay}
+      />
+
+      <PatientViewModal 
+        isOpen={isPatientView} 
+        onClose={() => setPatientView(false)} 
       />
     </div>
     </>
