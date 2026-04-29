@@ -418,6 +418,12 @@ function AppContent() {
               <Route path="/dieta-v3/:patientId" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
               <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor V3"><MealPlanEditorV3 /></LP></NutritionistRoute>} />
               
+              {/* Editor V2 Routes */}
+              <Route path="/meal-plan-editor-v2/:patientId" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor-v2" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
+              <Route path="/dieta-v2/:patientId" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
+              <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor V2"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
+              
               {/* Patient/Client Routes */}
               <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
