@@ -335,8 +335,11 @@ export const MobileMealEditorV3: React.FC = () => {
                 defaultTime={DEFAULT_TIMES[meal.name.toLowerCase()]}
                 weekMode={viewMode === 'week'}
                 activeDayId={activeDay}
-                onAddItem={(mealId) => setAddModalMealId(mealId)}
-                onEditItem={(mealId) => setAddModalMealId(mealId)}
+                onAddItem={(mealId) => {
+                  setModalTab('search');
+                  setAddModalMealId(mealId);
+                }}
+                onEditItem={(mealId, item) => setEditTarget({ mealId, item })}
                 onSubstituteItem={(mealId, item) =>
                   setSubstitutionTarget({ mealId, item })
                 }
@@ -411,36 +414,28 @@ export const MobileMealEditorV3: React.FC = () => {
         />
       )}
 
-      <Dialog open={generateOpen} onOpenChange={setGenerateOpen}>
-        <DialogContent className="rounded-2xl max-w-sm">
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-primary" />
-              Gerar Plano Inteligente
-            </DialogTitle>
-            <DialogDescription className="text-xs">
-              Motor clínico determinístico FitJourney baseado em anamnese, objetivo, restrições e
-              preferências.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-2 pt-2">
-            {GENERATION_OPTIONS.map((opt) => (
-              <button
-                key={opt.id}
-                onClick={async () => {
-                  await generateDeterministicPlan(opt.id);
-                  setGenerateOpen(false);
-                  toast.success('Plano gerado pelo motor FitJourney');
-                }}
-                className="p-4 rounded-xl border bg-card hover:border-primary hover:bg-primary/5 transition-all text-left"
-              >
-                <Target className="w-4 h-4 text-primary mb-2" />
-                <p className="text-xs font-bold">{opt.label}</p>
-              </button>
-            ))}
-          </div>
-        </DialogContent>
-      </Dialog>
+      <GenerateAIModal isOpen={generateOpen} onClose={() => setGenerateOpen(false)} />
+
+      <NewMealModal isOpen={newMealOpen} onClose={() => setNewMealOpen(false)} />
+
+      <FocusModeView 
+        isOpen={focusOpen} 
+        onClose={() => setFocusOpen(false)}
+        dayLabel={activeDay}
+      />
+
+      <EditFoodModal
+        isOpen={!!editTarget}
+        onClose={() => setEditTarget(null)}
+        mealId={editTarget?.mealId || null}
+        item={editTarget?.item || null}
+        onSubstitute={() => {
+          if (editTarget) {
+            setSubstitutionTarget({ mealId: editTarget.mealId, item: editTarget.item });
+            setEditTarget(null);
+          }
+        }}
+      />
     </div>
   );
 };
