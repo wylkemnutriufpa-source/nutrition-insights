@@ -89,14 +89,17 @@ export const MobileMealCard: React.FC<Props> = ({
 
       {/* Lista de itens */}
       <div className="divide-y divide-border/40">
+        <button
+          onClick={() => onAddItem(meal.id)}
+          className="w-full px-4 py-4 flex items-center justify-center gap-2 text-xs font-bold text-primary bg-primary/5 hover:bg-primary/10 transition-colors border-b border-dashed border-primary/20"
+        >
+          <Plus className="w-4 h-4" />
+          ADICIONAR ALIMENTO
+        </button>
         {meal.items.length === 0 ? (
-          <button
-            onClick={() => onAddItem(meal.id)}
-            className="w-full px-4 py-6 flex items-center justify-center gap-2 text-xs font-bold text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors"
-          >
-            <Plus className="w-4 h-4" />
-            Adicionar alimento
-          </button>
+          <div className="px-4 py-6 text-center text-[10px] font-medium text-muted-foreground italic">
+            Nenhum alimento nesta refeição
+          </div>
         ) : (
           meal.items.map((item) => {
             const isSelectedSub = weekMode && activeDayId && meal.daySubstitutions?.[activeDayId] === item.instanceId;

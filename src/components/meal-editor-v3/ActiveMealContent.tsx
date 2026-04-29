@@ -112,11 +112,11 @@ export const ActiveMealContent: React.FC = () => {
             </Button>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar">
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-9 px-3 text-muted-foreground hover:text-primary rounded-xl font-bold text-xs"
+            className="h-9 px-3 text-muted-foreground hover:text-primary rounded-xl font-bold text-xs shrink-0"
             onClick={() => {
               setModalTab('search');
               setIsAddModalOpen(true);
@@ -128,7 +128,7 @@ export const ActiveMealContent: React.FC = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            className="h-9 px-3 text-muted-foreground hover:text-orange-500 rounded-xl font-bold text-xs"
+            className="h-9 px-3 text-muted-foreground hover:text-orange-500 rounded-xl font-bold text-xs shrink-0"
             onClick={() => {
               setModalTab('templates');
               setIsAddModalOpen(true);
@@ -143,16 +143,26 @@ export const ActiveMealContent: React.FC = () => {
               setModalTab('quick');
               setIsAddModalOpen(true);
             }} 
-            className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold px-6"
+            className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold px-6 shrink-0"
           >
             <Zap className="w-4 h-4 mr-2" />
             RÁPIDO
           </Button>
+          <button 
+            onClick={() => {
+              setModalTab('search');
+              setIsAddModalOpen(true);
+            }}
+            className="flex items-center justify-center h-10 w-10 rounded-xl bg-primary text-white shadow-lg shadow-primary/20 hover:scale-105 active:scale-95 transition-all shrink-0"
+            title="Adicionar alimento"
+          >
+            <Plus className="w-5 h-5" />
+          </button>
           <Button 
             variant="ghost"
             size="icon"
             onClick={() => saveAsFavorite(activeMeal.name, 'meal')}
-            className="h-9 w-9 text-muted-foreground hover:text-yellow-500 rounded-xl"
+            className="h-9 w-9 text-muted-foreground hover:text-yellow-500 rounded-xl shrink-0"
           >
             <Star className="w-4 h-4" />
           </Button>

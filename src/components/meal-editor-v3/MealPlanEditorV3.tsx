@@ -10,10 +10,13 @@ import { MobileMealEditorV3 } from './MobileMealEditorV3';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/lib/auth';
+import { supabase } from '@/integrations/supabase/client';
+import PatientPickerDropdown from '../common/PatientPickerDropdown';
 import { 
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
-  Stethoscope, Baby, HeartPulse, Activity
+  Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search
 } from 'lucide-react';
 import {
   Dialog,
@@ -44,12 +47,22 @@ export const MealPlanEditorV3: React.FC = () => {
     generateDeterministicPlan, resetPlan, fastMode, setFastMode, 
     planStatus, optimizePlan, validateAndSave, consistencyMessage, lastActionInsight,
     fetchClinicalRules, patientTargets, meals, clinicalLog, isPatientView, setPatientView,
-    viewMode, setViewMode
+    viewMode, setViewMode, setPatientId
   } = useMealEditorV3Store();
   
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
+  const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
+  const [patients, setPatients] = useState<any[]>([]);
   const [validationResults, setValidationResults] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchPatients = async () => {
+      const { data } = await (supabase.from('profiles') as any).select('user_id, full_name').eq('role', 'patient');
+      if (data) setPatients(data.map((p: any) => ({ id: p.user_id, name: p.full_name })));
+    };
+    fetchPatients();
+  }, []);
 
   useEffect(() => {
     fetchClinicalRules();
@@ -149,6 +162,32 @@ export const MealPlanEditorV3: React.FC = () => {
                 )}
               </AnimatePresence>
             </div>
+          </div>
+          
+          <div className="h-8 w-px bg-border hidden sm:block" />
+
+          <div className="hidden lg:flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-9 px-3 rounded-xl border-dashed border-primary/30 hover:border-primary/50 text-primary font-bold text-xs gap-2"
+              onClick={() => setIsPatientSearchOpen(true)}
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              ATRIBUIR PACIENTE
+            </Button>
+            {isPatientSearchOpen && (
+              <div className="w-64">
+                <PatientPickerDropdown 
+                  patients={patients} 
+                  onSelect={(id) => {
+                    setPatientId(id);
+                    setIsPatientSearchOpen(false);
+                    toast.success('Paciente selecionado');
+                  }} 
+                />
+              </div>
+            )}
           </div>
           
           <div className="h-8 w-px bg-border hidden sm:block" />
