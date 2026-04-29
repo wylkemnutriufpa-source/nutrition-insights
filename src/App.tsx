@@ -477,6 +477,7 @@ function AppContent() {
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
+            </ErrorBoundaryDebug>
           </SystemStateGuard>
         </Suspense>
       </AnimatePresence>
