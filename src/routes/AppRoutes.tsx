@@ -254,10 +254,16 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
   const { user, loading, isPatient, isNutritionist, isAdmin } = useAuth();
   const { hasConsent, loading: consentLoading } = useConsentGuard();
   const location = useLocation();
+
+  // Onboarding Determinístico: Intenção prevalece sobre roles do backend (Regra 3)
+  const isInvitedPatient = localStorage.getItem("fj_invited") === "true";
+
   if (loading || consentLoading) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   if (isNutritionist || isAdmin) return <>{children}</>;
-  if (isPatient && !hasConsent && !["/consent", "/auth", "/settings"].some(r => location.pathname.startsWith(r))) {
+
+  // Se for paciente (por role ou intenção) e não tiver consentimento
+  if ((isPatient || isInvitedPatient) && !hasConsent && !["/consent", "/auth", "/settings"].some(r => location.pathname.startsWith(r))) {
     return <Navigate to="/consent" replace />;
   }
   return <>{children}</>;
