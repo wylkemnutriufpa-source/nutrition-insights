@@ -905,7 +905,8 @@ export default function AdminDashboard() {
     setProfessionals(profs);
     setPlans((plansData as PricingPlan[]) || []);
     setLoading(false);
-  }, [user]);
+    page.setReady();
+  }, [user, page]);
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
@@ -921,34 +922,33 @@ export default function AdminDashboard() {
     }
   };
 
+  if (page.isLoading) {
+    return (
+      <DashboardLayout>
+        <div className="p-12">
+          <BrainLoaderCard text="Acessando Camada de Controle..." />
+        </div>
+      </DashboardLayout>
+    );
+  }
+
+  if (page.isError) {
+    return (
+      <DashboardLayout>
+        <div className="p-12 text-center space-y-6 max-w-md mx-auto">
+          <AlertCircle className="w-16 h-16 text-destructive mx-auto" />
+          <h1 className="text-2xl font-bold">Falha Crítica no Admin</h1>
+          <p className="text-zinc-400">{page.error?.message}</p>
+          <Button onClick={page.handleRetry} className="w-full">Tentar Recuperação</Button>
+        </div>
+      </DashboardLayout>
+    );
+  }
+
   return (
     <DashboardLayout>
-      <div className="space-y-6">
-        {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-3">
-          <div className="flex items-center gap-3">
-            <Shield className="w-8 h-8 text-primary" />
-            <div>
-              <h1 className="font-display text-2xl font-bold">Painel Administrativo</h1>
-              <p className="text-muted-foreground text-sm">Controle da plataforma SaaS</p>
-            </div>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" size="sm" onClick={() => navigate("/admin/resources")} className="gap-1.5">
-              <Settings className="w-4 h-4" /> Central de Recursos
-            </Button>
-            <Button variant="outline" size="sm" onClick={() => window.open("/landing", "_blank")} className="gap-1.5">
-              <Eye className="w-4 h-4" /> Landing Page
-            </Button>
-            <MagicSlideButton className="h-9 text-sm" />
-          </div>
-        </div>
-
-        {loading ? (
-          <div className="flex items-center justify-center h-40">
-            <Loader2 className="w-8 h-8 animate-spin text-primary" />
-          </div>
-        ) : (
+      <SafeRender name="Dashboard Administrativo" data={[user, profile, professionals, metrics]}>
+        <div className="space-y-6">
           <Tabs defaultValue="metrics" className="w-full">
             <TabsList className="w-full justify-start bg-card border border-border overflow-x-auto">
               <TabsTrigger value="metrics"><BarChart3 className="w-3.5 h-3.5 mr-1" /> Métricas</TabsTrigger>
@@ -1248,7 +1248,7 @@ export default function AdminDashboard() {
               <AuditLogsEmbed />
             </TabsContent>
           </Tabs>
-        )}
+        </SafeRender>
       </div>
 
       <CreateProfessionalDialog
