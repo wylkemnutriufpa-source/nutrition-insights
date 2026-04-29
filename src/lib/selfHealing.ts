@@ -11,6 +11,8 @@ import { normalizeLifecycleStatus } from "@/lib/compatibilityGuard";
 
 // ========== Route Recovery ==========
 
+const isDev = process.env.NODE_ENV === "development";
+
 /** Map of old/broken routes → correct routes */
 const ROUTE_REDIRECTS: Record<string, string> = {
   "/home": "/dashboard",
@@ -45,7 +47,12 @@ const ROUTE_REDIRECTS: Record<string, string> = {
 export function resolveRoute(path: string): string | null {
   const normalized = path.toLowerCase().replace(/\/+$/, "");
   const redirect = ROUTE_REDIRECTS[normalized];
+  
   if (redirect) {
+    if (isDev) {
+      console.warn("[SELF-HEALING DESATIVADO] Rota não encontrada (redirecionamento interceptado):", path);
+      return null;
+    }
     logWarn("SelfHealing:Route", `Rota "${path}" redirecionada para "${redirect}"`);
     return redirect;
   }
