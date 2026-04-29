@@ -224,13 +224,18 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth();
-  if (loading) return user ? <>{children}</> : <PageLoader />;
+  
+  // Reactive Loading: don't block if we already have a user from a previous session
+  if (loading && !user) return <PageLoader />;
   if (!user) return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
 function DashboardRedirect() {
-  const { isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { isNutritionist, isPersonal, isAdmin, loading, user } = useAuth();
+  
+  if (loading && !user) return <PageLoader />;
+  
   if (isNutritionist || isPersonal || isAdmin) {
     return <Navigate to="/admin/dashboard" replace />;
   }
@@ -239,7 +244,7 @@ function DashboardRedirect() {
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { user, loading, isNutritionist, isAdmin } = useAuth();
-  if (loading) return user ? <>{children}</> : <PageLoader />;
+  if (loading && !user) return <PageLoader />;
   if (!user || (!isNutritionist && !isAdmin)) return <Navigate to="/" replace />;
   return <>{children}</>;
 }

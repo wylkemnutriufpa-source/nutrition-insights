@@ -241,7 +241,22 @@ export function TenantProvider({ children }: { children: ReactNode }) {
  */
 export function useTenant() {
   const context = useContext(TenantContext);
-  return ensureContext(context, "useTenant", "TenantProvider");
+  // Independent access: if context is missing, return a default guest state
+  if (!context) {
+    return {
+      tenantId: null,
+      tenantName: null,
+      tenant: null,
+      userTenantRole: null,
+      memberships: [],
+      isLoading: false,
+      error: null,
+      hasMultipleTenants: false,
+      switchTenant: () => {},
+      refreshTenant: async () => {},
+    };
+  }
+  return context;
 }
 
 /**

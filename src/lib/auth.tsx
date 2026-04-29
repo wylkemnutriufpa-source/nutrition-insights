@@ -77,7 +77,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
   const shield = useSystemShield();
 
@@ -137,6 +137,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     const initializeAuth = async () => {
       const correlationId = `auth-init-${Date.now()}`;
+      setLoading(true); // Only block when initialization actually starts
       try {
         console.log(`%c[Auth:${correlationId}] Initializing session...`, "color: #3b82f6; font-weight: bold");
         const { data: { session }, error: sessionError } = await withAuthTimeout(
@@ -156,16 +157,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (session?.user) {
           console.log(`[Auth:${correlationId}] Fetching data for user:`, session.user.id);
-          const [profileResult, rolesResult] = await Promise.allSettled([
+          await Promise.allSettled([
             withAuthTimeout(fetchProfile(session.user.id), "perfil", undefined),
             withAuthTimeout(fetchRoles(session.user.id), "permissões", undefined),
           ]);
           
-          console.log(`[Auth:${correlationId}] Initial fetch complete. Profile:`, 
-            profileResult.status === 'fulfilled' ? 'OK' : 'Error',
-            'Roles:', rolesResult.status === 'fulfilled' ? 'OK' : 'Error'
-          );
-
           if (mounted) {
             setLoading(false);
             checkSubscription();
@@ -178,20 +174,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) setLoading(false);
       }
     };
-    // Safety net: if loading stays true for >8s, force it off so the UI never gets stuck on a blank/spinner screen
-    let loadingWatchdog: ReturnType<typeof setTimeout> | null = null;
-    const armWatchdog = () => {
-      if (loadingWatchdog) clearTimeout(loadingWatchdog);
-      loadingWatchdog = setTimeout(() => {
-        if (mounted) {
-          console.warn("[Auth] Loading watchdog tripped — forcing loading=false");
-          setLoading(false);
-        }
-      }, 8000);
-    };
-
-    // Arm immediately at mount to protect the very first load too
-    armWatchdog();
 
     initializeAuth();
 
@@ -200,11 +182,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       (event, session) => {
         if (event === "INITIAL_SESSION") return;
 
-        // Only flip loading=true on SIGNED_IN. TOKEN_REFRESHED should NOT block UI —
-        // refreshing tokens silently in background is normal and shouldn't trigger a splash.
+        // TOKEN_REFRESHED should NOT block UI
         if (event === "SIGNED_IN") {
           setLoading(true);
-          armWatchdog();
         }
 
         if (event === "SIGNED_IN" && session?.user) {
@@ -315,7 +295,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     return () => {
       mounted = false;
-      if (loadingWatchdog) clearTimeout(loadingWatchdog);
       authSubscription.unsubscribe();
     };
   }, []);
@@ -351,5 +330,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
 export function useAuth() {
   const context = useContext(AuthContext);
-  return ensureContext(context, "useAuth", "AuthProvider");
+  // Independent access: if context is missing, return a default guest state
+  // to avoid crashing other providers.
+  if (!context) {
+    return {
+      user: null,
+      session: null,
+      profile: null,
+      roles: [],
+      loading: false,
+      isNutritionist: false,
+      isPersonal: false,
+      isPatient: false,
+      isAdmin: false,
+      isLojista: false,
+      subscription: defaultSubscription,
+      signOut: async () => {},
+      refreshProfile: async () => {},
+      checkSubscription: async () => {},
+    };
+  }
+  return context;
 }

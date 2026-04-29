@@ -166,7 +166,28 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
 });
 
 export function useExperienceMode() {
-  return useContext(ExperienceModeContext);
+  const context = useContext(ExperienceModeContext);
+  // Independent access: if context is missing, return a default guest state
+  if (!context) {
+    return {
+      mode: "pro" as ExperienceMode,
+      setMode: async () => {},
+      isRouteAllowed: () => true,
+      isBasic: false,
+      isPro: true,
+      isAdvanced: false,
+      isLoading: false,
+      retryLastMode: () => {},
+      failedMode: null,
+      lastError: null,
+      isOffline: false,
+      pendingQueueSize: 0,
+      queueStats: { size: 0, isFull: false, hasExpired: false, oldestQueuedAt: null },
+      minMode: () => true,
+      role: "professional" as ExperienceRole,
+    };
+  }
+  return context;
 }
 
 const MODE_LEVEL: Record<ExperienceMode, number> = { basic: 0, pro: 1, advanced: 2 };
