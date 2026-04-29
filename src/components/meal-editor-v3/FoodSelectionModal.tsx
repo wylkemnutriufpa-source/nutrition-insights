@@ -18,9 +18,10 @@ interface FoodSelectionModalProps {
   onClose: () => void;
   mealId: string;
   onSelect?: (food: Food) => void;
+  defaultTab?: 'quick' | 'search' | 'templates';
 }
 
-export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, onClose, mealId, onSelect }) => {
+export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, onClose, mealId, onSelect, defaultTab = 'quick' }) => {
   const { addFoodToMeal, meals } = useMealEditorV3Store();
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearch, setDebouncedSearch] = useState('');
@@ -110,7 +111,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
           </DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="quick" className="flex-1 flex flex-col">
+        <Tabs defaultValue={defaultTab} className="flex-1 flex flex-col">
           <div className="px-6 py-2 bg-muted/20 border-b overflow-x-auto no-scrollbar">
             <TabsList className="grid grid-cols-3 w-full max-w-md bg-transparent">
               <TabsTrigger value="quick" className="data-[state=active]:bg-background data-[state=active]:shadow-sm">
