@@ -42,8 +42,14 @@ export const WeeklyGridView: React.FC = () => {
               <ChevronRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
             </div>
             
-            <div className="flex-1 p-2 space-y-2">
-              {meals.slice(0, 4).map(meal => {
+            <div className="flex-1 p-2 space-y-3">
+              {meals.map(meal => {
+                // Se houver uma substituição específica para este dia, usamos ela para o cálculo
+                const selectedInstanceId = meal.daySubstitutions?.[day.id];
+                const activeItem = selectedInstanceId 
+                  ? meal.items.find(i => i.instanceId === selectedInstanceId) 
+                  : meal.items[0]; // Fallback para o primeiro item se não houver escolha
+
                 const totalKcal = meal.items.reduce((acc, item) => {
                    const currentMeasure = item.householdMeasures?.find(m => m.unit === item.selectedUnit) || { unit: item.portionUnit, factor: 1 };
                    return acc + (item.calories * item.quantity * currentMeasure.factor);
@@ -51,16 +57,25 @@ export const WeeklyGridView: React.FC = () => {
                 
                 return (
                   <div key={meal.id} className="p-1.5 rounded-lg bg-muted/10 border border-transparent group-hover:border-primary/5 transition-all">
-                    <div className="flex items-center justify-between gap-1">
-                      <span className="text-[9px] font-bold truncate flex-1">{meal.name}</span>
+                    <div className="flex items-center justify-between gap-1 mb-1">
+                      <span className="text-[9px] font-bold truncate flex-1 uppercase">{meal.name}</span>
                       <span className="text-[8px] font-black text-primary">{Math.round(totalKcal)}k</span>
                     </div>
+                    {meal.items.length > 0 && (
+                      <div className="space-y-0.5">
+                        <p className="text-[8px] text-muted-foreground truncate font-medium">
+                          {activeItem?.name || meal.items[0].name}
+                        </p>
+                        {meal.items.length > 1 && (
+                          <Badge variant="secondary" className="h-3 px-1 text-[7px] bg-primary/5 text-primary border-none font-bold">
+                            +{meal.items.length - 1} OPÇÕES
+                          </Badge>
+                        )}
+                      </div>
+                    )}
                   </div>
                 );
               })}
-              {meals.length > 4 && (
-                <p className="text-[8px] text-center text-muted-foreground font-bold">+{meals.length - 4} REFEIÇÕES</p>
-              )}
             </div>
           </Card>
         </motion.div>
