@@ -13,7 +13,7 @@ import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { GlobalErrorBoundary, CriticalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
-import { BrainLoaderScreen } from "@/components/common/BrainLoader";
+// BrainLoaderScreen removed
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
