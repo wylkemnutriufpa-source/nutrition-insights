@@ -28,6 +28,7 @@ import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
 import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
 import CinematicIntro from "@/components/landing/CinematicIntro";
+import BrainLoader from "@/components/common/BrainLoader";
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PortfolioIntelligencePanel from "@/components/dashboard/PortfolioIntelligencePanel";
@@ -1231,8 +1232,8 @@ export default function Index() {
   if (loading && !showIntro) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <BrainLoader text="Iniciando FitJourney..." />
         </div>
       </DashboardLayout>
     );
