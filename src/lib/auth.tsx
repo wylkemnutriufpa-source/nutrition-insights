@@ -31,7 +31,7 @@ interface SubscriptionState {
   trial_end: string | null;
 }
 
-export type AuthStatus = "loading" | "authenticated" | "unauthenticated";
+export type AuthStatus = "loading" | "authenticated" | "unauthenticated" | "error";
 
 interface AuthContextType {
   user: User | null;
@@ -49,6 +49,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   checkSubscription: () => Promise<void>;
+  error: Error | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,7 +82,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true); // Começa como true para evitar flickers
+  const [error, setError] = useState<Error | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
   const shield = useSystemShield();
 
@@ -143,7 +145,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const correlationId = `auth-init-${Date.now()}`;
       console.log(`[Auth:${correlationId}] Iniciando inicialização determinística...`);
       setLoading(true);
+      setError(null);
       
+      // Timer de segurança para evitar loading infinito (12 segundos)
+      const bootTimeout = setTimeout(() => {
+        if (loading) {
+          console.error(`[Auth:${correlationId}] TIME OUT CRÍTICO: Inicialização demorou mais de 12s.`);
+          setError(new Error("O sistema demorou muito para responder. Por favor, verifique sua conexão."));
+          setLoading(false);
+        }
+      }, 12000);
+
       try {
         console.log(`[Auth:${correlationId}] Buscando sessão inicial do Supabase...`);
         const { data: { session }, error: sessionError } = await withAuthTimeout(
@@ -152,47 +164,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         );
 
         if (sessionError) {
-          console.error(`[Auth:${correlationId}] Erro ao recuperar sessão:`, sessionError);
+          throw sessionError;
         }
 
-        if (!mounted) {
-          console.warn(`[Auth:${correlationId}] Componente desmontado durante inicialização. Abortando.`);
-          return;
-        }
+        if (!mounted) return;
 
         setSession(session);
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          console.log(`[Auth:${correlationId}] Usuário autenticado: ${session.user.id}. E-mail: ${session.user.email}. Carregando dados complementares...`);
+          console.log(`[Auth:${correlationId}] Usuário autenticado: ${session.user.id}. Carregando dados...`);
           
-          // Carregar perfil e roles em paralelo
-          const results = await Promise.allSettled([
+          await Promise.all([
             fetchProfile(session.user.id),
             fetchRoles(session.user.id),
           ]);
-          
-          results.forEach((res, idx) => {
-            if (res.status === 'rejected') {
-              console.error(`[Auth:${correlationId}] Falha ao carregar ${idx === 0 ? 'Perfil' : 'Roles'}:`, res.reason);
-            }
-          });
 
           if (mounted) {
             setLoading(false);
+            clearTimeout(bootTimeout);
             checkSubscription();
-            console.log(`[Auth:${correlationId}] Inicialização concluída. Profile carregado:`, !!profile);
+            console.log(`[Auth:${correlationId}] Inicialização concluída com sucesso.`);
           }
         } else {
-          console.log(`[Auth:${correlationId}] Nenhum usuário encontrado (sessão nula).`);
-          if (mounted) setLoading(false);
+          console.log(`[Auth:${correlationId}] Nenhum usuário encontrado.`);
+          if (mounted) {
+            setLoading(false);
+            clearTimeout(bootTimeout);
+          }
         }
-      } catch (err) {
-        console.error(`[Auth:${correlationId}] FALHA CRÍTICA na inicialização:`, err);
-        // Não deixamos o erro morrer silenciosamente
+      } catch (err: any) {
+        console.error(`[Auth:${correlationId}] FALHA NA INICIALIZAÇÃO:`, err);
         if (mounted) {
+          setError(err instanceof Error ? err : new Error(String(err)));
           setLoading(false);
-          // Opcional: toast.error("Erro ao inicializar autenticação");
+          clearTimeout(bootTimeout);
         }
       }
     };
@@ -285,6 +291,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const getAuthStatus = (): AuthStatus => {
     if (loading) return "loading";
+    if (error) return "error";
     return user ? "authenticated" : "unauthenticated";
   };
 
@@ -308,6 +315,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         refreshProfile,
         checkSubscription,
+        error,
       }}
     >
       {children}
@@ -336,6 +344,7 @@ export function useAuth() {
       signOut: async () => {},
       refreshProfile: async () => {},
       checkSubscription: async () => {},
+      error: null,
     };
   }
   return context;

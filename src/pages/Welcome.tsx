@@ -16,6 +16,12 @@ export default function Welcome() {
       return;
     }
 
+    // Regra 1.1: Erro na autenticação
+    if (authStatus === "error") {
+      console.error("[Welcome] Erro de autenticação detectado.");
+      return; // O AuthProvider ou AppRoutes já devem lidar com a UI de erro
+    }
+
     // Regra 2: Sem usuário após carregar auth -> Login
     if (authStatus === "unauthenticated") {
       console.log("[Welcome] Usuário não autenticado. Redirecionando para /auth");

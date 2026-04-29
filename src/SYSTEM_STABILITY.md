@@ -1,27 +1,29 @@
-# FitJourney System Stability Policy
+# FitJourney - Manifesto de Estabilidade Total 🚀
 
-Este documento define os princípios de arquitetura para manter o sistema FitJourney estável e evitar quebras globais (White Screen of Death).
+Este documento define os guardiões e regras para garantir que o sistema FitJourney opere sem travamentos, telas pretas ou loops de redirecionamento.
 
-## 1. Independência de Camadas (Sandboxing)
-- **Providers Isolados**: Nunca coloque lógica pesada ou que possa falhar no `CoreProviders` sem um Error Boundary específico.
-- **Sectional Boundaries**: Use `<SectionalErrorBoundary name="NomeDaSecao">` ao redor de componentes grandes (Sidebar, Main Content, Editores). Se um quebrar, o resto do app sobrevive.
-- **Lazy Loading**: Use `lazy()` para páginas. Se um chunk falhar ao carregar, o `CriticalErrorBoundary` detectará e forçará um reload limpo.
+## 1. Guardiões de Runtime
 
-## 2. Hooks Resilientes (Safe Hooks)
-- **Bootloader Detection**: Hooks como `useAuth` e `useAppState` devem ser consumidos via `useSafeContext` ou retornar estados de "carregamento" ou "seguro" se o provider estiver ausente, em vez de crashar.
-- **ensureContext**: Use apenas quando a ausência do contexto for um erro fatal e irrecuperável que requer intervenção do desenvolvedor.
+### 🛡️ Auth Safety Net (Implementado)
+O `AuthProvider` agora possui um **Time-out Crítico de 12s**. Se o Supabase ou a rede falharem em inicializar a sessão, o sistema sai do estado de `loading` e entra em `error`, exibindo uma tela de recuperação clara em vez de uma tela preta infinita.
 
-## 3. Fluxo de Boot Protegido
-- **Watchdog Timer**: O `SystemShield` monitora se o app "travou" em um estado de loading infinito por mais de 10 segundos.
-- **Diagnostic Screen**: Se o boot falhar, mostramos uma tela de diagnóstico interativa com opção de "Limpar Cache e Sair".
+### 🛡️ Hydration Guard (Implementado)
+O `useExperienceMode` agora inicializa em `loading: true`. Isso garante que o dashboard e outras rotas protegidas aguardem a sincronização do banco de dados antes de decidirem o que renderizar, eliminando flickers de permissão negada.
 
-## 4. Regras para Edição de Estrutura
-- **App.tsx**: Quase nunca deve ser editado. Ele é o ponto de montagem fixo.
-- **CoreProviders.tsx**: Ordem de nesting importa. Providers de dados (QueryClient) > Infra (Router) > Segurança (Auth) > Estado App.
-- **AppRoutes.tsx**: Agrupe rotas por domínio e proteja cada grupo com um Error Boundary.
+### 🛡️ Critical Error Boundary (Implementado)
+A aplicação é envolvida por um `CriticalErrorBoundary` que captura falhas de renderização (React Crashes) e falhas de carregamento de Chunk (JS corrompido). Ele oferece um botão de "Limpeza e Reinício" que limpa o `sessionStorage`.
 
-## 5. Detecção Precoce
-- **GlobalErrorBoundary**: Escuta eventos de erro customizados (`fj-runtime-error`) para exibir toasts de aviso antes que o sistema todo apresente falha.
+## 2. Regras de Ouro para Desenvolvedores
+
+1. **PROIBIDO `return null` sem Loader**: Nunca use `if (loading) return null` em páginas. Use `<PageLoader />` ou esqueletos.
+2. **Determinismo no `/welcome`**: A página de boas-vindas é o único orquestrador de destino pós-login. Nenhuma outra página deve forçar redirecionamentos de "entry-point".
+3. **Versão do Bundle**: O sistema detecta se o usuário está rodando uma versão antiga do JS e força um reload se houver incompatibilidade detectada no `CoreProviders`.
+
+## 3. Próximos Passos de Estabilidade
+
+- [ ] **Heartbeat Monitor**: Detectar se o router não montou após 30s e sugerir reparo automático.
+- [ ] **Data Persistence Check**: Validar se o `localStorage` está corrompido em dispositivos móveis.
+- [ ] **Network Retry Layer**: Adicionar retentativas exponenciais para todas as chamadas críticas de perfil.
 
 ---
-*FitJourney Stability Core v1.0*
+*Status Atual: ESTÁVEL | Monitoramento de Runtime Ativo*

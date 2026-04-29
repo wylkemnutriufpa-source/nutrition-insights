@@ -1,6 +1,7 @@
 import { forwardRef, useState, useEffect } from "react";
 import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable/index";
 import { Button } from "@/components/ui/button";
@@ -32,6 +33,16 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const [registerSuccess, setRegisterSuccess] = useState(false);
   const [selectedRole, setSelectedRole] = useState<SelectedRole>(null);
   const nextPath = searchParams.get("next") || searchParams.get("redirect") || "/";
+
+  // Check if already authenticated and redirect
+  const { authStatus } = useAuth();
+  
+  useEffect(() => {
+    if (authStatus === "authenticated") {
+      console.log("[Auth] Usuário já autenticado. Redirecionando para /welcome...");
+      navigate("/welcome", { replace: true });
+    }
+  }, [authStatus, navigate]);
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {
