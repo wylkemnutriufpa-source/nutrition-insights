@@ -618,7 +618,11 @@ export default function MealPlans() {
                         onClick={(e) => { e.stopPropagation(); navigate(`/plan-builder/${p.id}`); }}>
                         <Zap className="w-4 h-4 text-primary" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor"
+                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor V3 (Premium)"
+                        onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor-v3/${p.patient_id}?planId=${p.id}`); }}>
+                        <Sparkles className="w-4 h-4 text-purple-600" />
+                      </Button>
+                      <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor Clássico V2"
                         onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}>
                         <PencilLine className="w-4 h-4" />
                       </Button>
