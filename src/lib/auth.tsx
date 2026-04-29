@@ -204,7 +204,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("fitjourney_nutri_id");
         }
         if (event === "SIGNED_OUT") {
-          console.log("%c[Auth] User SIGNED_OUT", "color: #f59e0b; font-weight: bold");
           logAudit("logout", "auth");
         }
 
