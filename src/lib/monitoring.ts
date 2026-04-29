@@ -5,7 +5,7 @@
  * All critical errors flow through here for consistency.
  */
 
-export type ErrorCategory = "auth_error" | "data_error" | "render_error" | "routing_error" | "global";
+export type ErrorCategory = "auth_error" | "data_error" | "render_error" | "routing_error" | "global" | "logic_error";
 
 interface ErrorLog {
   level: "error" | "warn" | "info";
@@ -63,12 +63,36 @@ function createLog(
 
 /** Log a structured error */
 export function logError(
-  category: ErrorCategory,
-  section: string, 
-  message: string, 
-  metadata?: Record<string, unknown>,
-  stack?: string
+  category_or_section: ErrorCategory | string,
+  section_or_message: string, 
+  message_or_metadata?: string | Record<string, unknown>, 
+  metadata_or_stack?: Record<string, unknown> | string,
+  maybe_stack?: string
 ) {
+  let category: ErrorCategory = "logic_error";
+  let section: string;
+  let message: string;
+  let metadata: Record<string, unknown> | undefined;
+  let stack: string | undefined;
+
+  // Handle overloaded signatures
+  if (typeof category_or_section === "string" && ["auth_error", "data_error", "render_error", "routing_error", "global", "logic_error"].includes(category_or_section)) {
+    // New signature: logError(category, section, message, metadata, stack)
+    category = category_or_section as ErrorCategory;
+    section = section_or_message;
+    message = message_or_metadata as string;
+    metadata = metadata_or_stack as Record<string, unknown>;
+    stack = maybe_stack;
+  } else {
+    // Legacy signature: logError(section, message, metadata)
+    section = category_or_section;
+    message = section_or_message;
+    metadata = message_or_metadata as Record<string, unknown>;
+    stack = metadata_or_stack as string;
+  }
+
+  const entry = createLog("error", category, section, message, metadata, stack);
+  // ... keep existing code
   const entry = createLog("error", category, section, message, metadata, stack);
   ERROR_BUFFER.push(entry);
   if (ERROR_BUFFER.length > MAX_BUFFER) ERROR_BUFFER.shift();
@@ -89,7 +113,28 @@ export function logError(
 }
 
 /** Log a structured warning */
-export function logWarn(category: ErrorCategory, section: string, message: string, metadata?: Record<string, unknown>) {
+export function logWarn(
+  category_or_section: ErrorCategory | string, 
+  section_or_message: string, 
+  message_or_metadata?: string | Record<string, unknown>, 
+  maybe_metadata?: Record<string, unknown>
+) {
+  let category: ErrorCategory = "logic_error";
+  let section: string;
+  let message: string;
+  let metadata: Record<string, unknown> | undefined;
+
+  if (typeof category_or_section === "string" && ["auth_error", "data_error", "render_error", "routing_error", "global", "logic_error"].includes(category_or_section)) {
+    category = category_or_section as ErrorCategory;
+    section = section_or_message;
+    message = message_or_metadata as string;
+    metadata = maybe_metadata;
+  } else {
+    section = category_or_section;
+    message = section_or_message;
+    metadata = message_or_metadata as Record<string, unknown>;
+  }
+
   const entry = createLog("warn", category, section, message, metadata);
   ERROR_BUFFER.push(entry);
   if (ERROR_BUFFER.length > MAX_BUFFER) ERROR_BUFFER.shift();
