@@ -623,6 +623,7 @@ const App = () => (
           <MobileAutoFixer />
           <GlobalErrorBoundary />
           <UpdateBanner />
+          <BuildVersionTag />
           <BrowserRouter>
             <AuthProvider>
               <TenantProvider>
