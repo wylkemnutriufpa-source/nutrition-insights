@@ -77,15 +77,12 @@ export default defineConfig(({ mode }) => ({
     versionJsonPlugin(),
     mode === "development" && componentTagger(),
     VitePWA({
-        // autoUpdate makes the new worker download/activate quickly; UI still controls hard reload.
-        registerType: "autoUpdate",
-      // We register manually via useRegisterSW in UpdateBanner
-      injectRegister: false,
+      registerType: "autoUpdate",
+      injectRegister: "auto",
       includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-512x512.png"],
       workbox: {
-        // Let the new SW claim clients only after user clicks "Atualizar agora"
-          clientsClaim: true,
-          skipWaiting: true,
+        clientsClaim: true,
+        skipWaiting: true,
         navigateFallback: "/index.html",
         navigateFallbackDenylist: [/^\/~oauth/, /^\/convite/, /^\/cadastro/, /^\/auth\/confirm/, /^\/intake/, /^\/api/, /^\/version\.json/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
