@@ -139,13 +139,23 @@ if (isPreviewHost() || isInIframe()) {
   }
 })();
 
-createRoot(document.getElementById("root")!).render(
-  <ErrorBoundaryDebug name="Root">
-    <App />
-  </ErrorBoundaryDebug>
-);
+const root = document.getElementById("root");
+
+if (root) {
+  const reactRoot = createRoot(root);
+  reactRoot.render(
+    <ErrorBoundaryDebug name="Root">
+      <App />
+    </ErrorBoundaryDebug>
+  );
+
+  // Sinaliza ao index.html que o app montou com sucesso
+  setTimeout(() => {
+    if (typeof (window as any).__FJ_MARK_READY__ === "function") {
+      (window as any).__FJ_MARK_READY__();
+    }
+  }, 100);
+}
 
 // Start the version sync loop AFTER the app mounts.
-// Self-disables in preview/iframe; in production it polls /version.json
-// every 2 minutes and forces a clean reload when a new deploy is detected.
 startVersionSync();
