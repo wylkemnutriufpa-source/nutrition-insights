@@ -581,7 +581,7 @@ function AppContent() {
               <Route path="/public-program/:programId" element={<PublicProgram />} />
 
 
-              <Route path="/ql/:id" element={<QuickLink />} />
+              <Route path="/ql/:nutriId" element={<QuickLink />} />
               <Route path="/status-page" element={<StatusPage />} />
 
 
