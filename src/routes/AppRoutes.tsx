@@ -5,6 +5,7 @@ import { useAppState } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
+import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
 import { lazyDebug } from "@/lib/lazyDebug";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { AnimatePresence } from "framer-motion";
@@ -277,7 +278,7 @@ export const AppRoutes = () => {
           <SystemStateGuard>
             <ExperienceRouteGuard />
             <WorkspaceRouteGuard />
-            <ErrorBoundaryDebug name="AppRoutes">
+            <SectionalErrorBoundary name="Navegação Principal">
               <Routes>
                 {/* Home */}
                 <Route path="/" element={<LP section="Início"><Index /></LP>} />

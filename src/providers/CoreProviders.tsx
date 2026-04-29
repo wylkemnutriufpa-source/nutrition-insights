@@ -73,6 +73,7 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
               <BrowserRouter>
                 <RouterBootTracker />
                 <AuthProvider>
+                  {/* Tenant and Experience are dependent on Auth, so they must be nested inside */}
                   <TenantProvider>
                     <ExperienceModeProvider>
                       <AppStateProvider>
@@ -88,7 +89,13 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                             <Helmet>
                               <title>FitJourney</title>
                             </Helmet>
-                            {children}
+                            {/* 
+                              Bootloader Pattern: Children are only rendered 
+                              when the environment is stable enough.
+                            */}
+                            <SectionalErrorBoundary name="Aplicação">
+                              {children}
+                            </SectionalErrorBoundary>
                           </CommandPaletteProvider>
                         </CelebrationProvider>
                       </AppStateProvider>
