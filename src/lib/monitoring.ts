@@ -95,7 +95,7 @@ async function flushLogs() {
         route: log.route,
         user_id: log.userId,
         correlation_id: log.correlationId,
-        metadata: log.metadata,
+        metadata: (log.metadata as any), // Cast for Json compatibility
         created_at: log.timestamp
       }))
     );
