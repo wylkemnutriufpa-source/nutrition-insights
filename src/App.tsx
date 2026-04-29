@@ -6,7 +6,7 @@ import { BrowserRouter, Routes, Route, Navigate, useLocation } from "react-route
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { TenantProvider } from "@/lib/tenantContext";
 import { ExperienceModeContext, useExperienceModeState } from "@/hooks/useExperienceMode";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense } from "react";
 import { AppStateProvider, useAppState } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
@@ -110,6 +110,7 @@ const WorkspaceEditor = lazy(() => import("./pages/WorkspaceEditor"));
 const PatientIntelligence = lazy(() => import("./pages/PatientIntelligence"));
 const ClinicalControlTower = lazy(() => import("./pages/ClinicalControlTower"));
 const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
+const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
 const BiquiniBrancoDetail = lazy(() => import("./pages/BiquiniBrancoDetail"));
 const ClinicalEnterprise = lazy(() => import("./pages/ClinicalEnterprise"));
@@ -379,6 +380,26 @@ function AppContent() {
   );
 }
 
+function ExperienceModeProvider({ children }: { children: React.ReactNode }) {
+  const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const isProRole = isNutritionist || isPersonal || isAdmin;
+  const role = (isPatient && !isProRole) ? "patient" : "professional";
+  const value = useExperienceModeState(role);
+  return <ExperienceModeContext.Provider value={value}>{children}</ExperienceModeContext.Provider>;
+}
+
+function ExperienceThemeSync() {
+  const { mode } = useExperienceMode();
+  const { isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  useEffect(() => {
+    if (loading) return;
+    const role = (isNutritionist || isPersonal || isAdmin) ? "professional" : "patient";
+    document.documentElement.setAttribute("data-experience-mode", mode);
+    document.documentElement.setAttribute("data-experience-role", role);
+  }, [mode, isNutritionist, isPersonal, isAdmin, loading]);
+  return null;
+}
+
 const App = () => (
   <CriticalErrorBoundary>
     <HelmetProvider>
@@ -394,13 +415,18 @@ const App = () => (
           <BrowserRouter>
             <AuthProvider>
               <TenantProvider>
-                <CelebrationProvider>
-                  <CommandPaletteProvider>
-                    <AppStateProvider>
-                      <AppContent />
-                    </AppStateProvider>
-                  </CommandPaletteProvider>
-                </CelebrationProvider>
+                <ExperienceModeProvider>
+                  <ExperienceThemeSync />
+                  <ExperienceRouteGuard />
+                  <WorkspaceRouteGuard />
+                  <CelebrationProvider>
+                    <CommandPaletteProvider>
+                      <AppStateProvider>
+                        <AppContent />
+                      </AppStateProvider>
+                    </CommandPaletteProvider>
+                  </CelebrationProvider>
+                </ExperienceModeProvider>
               </TenantProvider>
             </AuthProvider>
           </BrowserRouter>
