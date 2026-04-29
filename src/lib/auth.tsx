@@ -139,7 +139,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const correlationId = `auth-init-${Date.now()}`;
       setLoading(true); // Only block when initialization actually starts
       try {
-        console.log(`%c[Auth:${correlationId}] Initializing session...`, "color: #3b82f6; font-weight: bold");
+        // Silencio na inicialização
         const { data: { session }, error: sessionError } = await withAuthTimeout(
           supabase.auth.getSession(),
           "sessão inicial",
