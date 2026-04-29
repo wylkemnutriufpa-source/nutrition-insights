@@ -2,6 +2,7 @@ import { createRoot } from "react-dom/client";
 import "./i18n";
 import App from "./App.tsx";
 import "./index.css";
+import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
 import { stampBuildIdentity } from "./lib/buildInfo";
 import { startVersionSync } from "./lib/versionCheck";
 
@@ -123,7 +124,11 @@ if (isPreviewHost() || isInIframe()) {
   }
 })();
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <ErrorBoundaryDebug name="Root">
+    <App />
+  </ErrorBoundaryDebug>
+);
 
 // Start the version sync loop AFTER the app mounts.
 // Self-disables in preview/iframe; in production it polls /version.json

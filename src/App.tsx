@@ -12,8 +12,10 @@ import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { GlobalErrorBoundary, CriticalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
+import { ErrorBoundaryDebug } from "@/components/common/ErrorBoundaryDebug";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
+import { lazyDebug } from "@/lib/lazyDebug";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
@@ -36,9 +38,9 @@ const AnalyzeMeal = lazy(() => import("./pages/AnalyzeMeal"));
 const Patients = lazy(() => import("./pages/Patients"));
 const PatientDetail = lazy(() => import("./pages/PatientDetail"));
 const ClientDashboard = lazy(() => import("./pages/ClientDashboard"));
-const MealPlanEditorV2 = lazy(() => import("./pages/MealPlanEditorV2"));
-const MealPlanEditorV2Entry = lazy(() => import("./pages/MealPlanEditorV2Entry"));
-const MealPlanEditorV3Experimental = lazy(() => import("./pages/MealPlanEditorV3Page"));
+const MealPlanEditorV2 = lazyDebug(() => import("./pages/MealPlanEditorV2"), "MealPlanEditorV2");
+const MealPlanEditorV2Entry = lazyDebug(() => import("./pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
+const MealPlanEditorV3Experimental = lazyDebug(() => import("./pages/MealPlanEditorV3Page"), "MealPlanEditorV3 (Beta)");
 const DietBuilder = lazy(() => import("./pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("./pages/GlobalRanking"));
 
@@ -65,7 +67,7 @@ const AdminPlanLoadingDiagnostics = lazy(() => import("./pages/admin/AdminPlanLo
 const ImageFallbackAdmin = lazy(() => import("./pages/admin/ImageFallbackAdmin.tsx"));
 const MarmitaAudit = lazy(() => import("./pages/admin/MarmitaAudit.tsx"));
 const MealCoverageDashboard = lazy(() => import("./pages/admin/MealCoverageDashboard.tsx"));
-const MealVisualLibraryAdmin = lazy(() => import("./pages/admin/MealVisualLibraryAdmin.tsx"));
+const MealVisualLibraryAdmin = lazyDebug(() => import("./pages/admin/MealVisualLibraryAdmin.tsx"), "Biblioteca Visual Admin");
 const PlanBatchAudit = lazy(() => import("./pages/admin/PlanBatchAudit.tsx"));
 const TemplateMassReformulation = lazy(() => import("./pages/admin/TemplateMassReformulation.tsx"));
 
@@ -98,6 +100,8 @@ const WeightCalculator = lazy(() => import("./pages/WeightCalculator"));
 const MealPlans = lazy(() => import("./pages/MealPlans"));
 const Supplements = lazy(() => import("./pages/Supplements"));
 const Reports = lazy(() => import("./pages/Reports"));
+const Library = lazyDebug(() => import("./pages/Library"), "Biblioteca");
+
 const AccountDeletion = lazy(() => import("./pages/AccountDeletion"));
 const DietTemplates = lazy(() => import("./pages/DietTemplates"));
 const FoodDatabase = lazy(() => import("./pages/FoodDatabase"));
@@ -178,7 +182,7 @@ const HealthCheckQuiz = lazy(() => import("./pages/HealthCheckQuiz"));
 const HumanPerformance = lazy(() => import("./pages/HumanPerformance"));
 const InOfficeSelector = lazy(() => import("./pages/InOfficeSelector"));
 const InvitePatient = lazy(() => import("./pages/InvitePatient"));
-const Library = lazy(() => import("./pages/Library"));
+// Library already defined above with lazyDebug
 const MetabolicTwin = lazy(() => import("./pages/MetabolicTwin"));
 const MyPublicProfile = lazy(() => import("./pages/MyPublicProfile"));
 const MyReferrals = lazy(() => import("./pages/MyReferrals"));
@@ -273,6 +277,7 @@ function AppContent() {
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <SystemStateGuard>
+            <ErrorBoundaryDebug name="AppRoutes">
             <Routes>
               {/* Home */}
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
@@ -305,7 +310,7 @@ function AppContent() {
               <Route path="/shopping-list" element={<ProtectedRoute><LP section="Lista de Compras"><ShoppingList /></LP></ProtectedRoute>} />
               <Route path="/notifications" element={<ProtectedRoute><LP section="Notificações"><Notifications /></LP></ProtectedRoute>} />
               <Route path="/ranking" element={<ProtectedRoute><LP section="Ranking"><GlobalRanking /></LP></ProtectedRoute>} />
-              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><Library /></LP></ProtectedRoute>} />
+              <Route path="/library" element={<ProtectedRoute><LP section="Biblioteca"><ErrorBoundaryDebug name="Biblioteca"><Library /></ErrorBoundaryDebug></LP></ProtectedRoute>} />
               <Route path="/reports" element={<ProtectedRoute><LP section="Relatórios"><Reports /></LP></ProtectedRoute>} />
               <Route path="/supplements" element={<ProtectedRoute><LP section="Suplementos"><Supplements /></LP></ProtectedRoute>} />
               <Route path="/body-analysis" element={<ProtectedRoute><LP section="Análise Corporal"><BodyAnalysis /></LP></ProtectedRoute>} />
@@ -456,11 +461,11 @@ function AppContent() {
               <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
               
               {/* Editor Routes */}
-              <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
-              <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2Entry /></LP></NutritionistRoute>} />
-              <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
-              <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
-              <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2"><MealPlanEditorV2 /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><ErrorBoundaryDebug name="MealPlanEditorV2Entry"><MealPlanEditorV2Entry /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/editor" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/v3/:patientId" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
+              <Route path="/v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
 
               {/* Public / Landing */}
               <Route path="/status" element={<LP section="Status"><DiagnosticStatus /></LP>} />
@@ -470,8 +475,9 @@ function AppContent() {
               {/* System */}
               <Route path="/teste123" element={<TestDeploy />} />
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
+            </ErrorBoundaryDebug>
           </SystemStateGuard>
         </Suspense>
       </AnimatePresence>

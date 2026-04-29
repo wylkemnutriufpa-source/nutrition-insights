@@ -52,7 +52,7 @@ export default function NotFound() {
         <div className="w-24 h-24 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
           <span className="text-5xl font-display font-bold text-primary">404</span>
         </div>
-        <h1 className="font-display text-2xl font-bold mb-2">Página não encontrada</h1>
+        <h1 className="font-display text-2xl font-bold mb-2">Rota não encontrada: {location.pathname}</h1>
         <p className="text-muted-foreground mb-6">
           A página que você procura não existe ou foi movida.
           <br />
