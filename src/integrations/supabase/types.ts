@@ -4023,6 +4023,60 @@ export type Database = {
           },
         ]
       }
+      error_incidents: {
+        Row: {
+          action_taken: string | null
+          assigned_to: string | null
+          category: string
+          created_at: string | null
+          event_count: number | null
+          fingerprint: string
+          first_occurrence: string | null
+          id: string
+          impact_score: number | null
+          last_occurrence: string | null
+          message: string
+          priority: string
+          route: string | null
+          status: string
+          updated_at: string | null
+        }
+        Insert: {
+          action_taken?: string | null
+          assigned_to?: string | null
+          category: string
+          created_at?: string | null
+          event_count?: number | null
+          fingerprint: string
+          first_occurrence?: string | null
+          id?: string
+          impact_score?: number | null
+          last_occurrence?: string | null
+          message: string
+          priority?: string
+          route?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Update: {
+          action_taken?: string | null
+          assigned_to?: string | null
+          category?: string
+          created_at?: string | null
+          event_count?: number | null
+          fingerprint?: string
+          first_occurrence?: string | null
+          id?: string
+          impact_score?: number | null
+          last_occurrence?: string | null
+          message?: string
+          priority?: string
+          route?: string | null
+          status?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       exercise_video_library: {
         Row: {
           created_at: string
@@ -20153,10 +20207,13 @@ export type Database = {
       }
       system_health_summary: {
         Row: {
+          active_p0: number | null
+          active_p1: number | null
           critical_errors: number | null
           errors_last_hour: number | null
           status: string | null
           total_errors: number | null
+          total_incidents: number | null
         }
         Relationships: []
       }
