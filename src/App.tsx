@@ -277,6 +277,7 @@ function AppContent() {
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           <SystemStateGuard>
+            <ErrorBoundaryDebug name="AppRoutes">
             <Routes>
               {/* Home */}
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
