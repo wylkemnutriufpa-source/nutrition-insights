@@ -166,8 +166,8 @@ export const useMealEditorV3Store = create<MealPlanState>()(
                 protein: Number(anamnesis.computed_protein) || 150, 
                 carbs: Number(anamnesis.computed_carbs) || 200, 
                 fat: Number(anamnesis.computed_fat) || 60,
-                isIntolerant: anamnesis.answers?.restrictions?.toLowerCase().includes('leite') || false,
-                drinksCoffee: !anamnesis.answers?.restrictions?.toLowerCase().includes('café')
+                isIntolerant: (anamnesis.answers as any)?.restrictions?.toLowerCase().includes('leite') || false,
+                drinksCoffee: !(anamnesis.answers as any)?.restrictions?.toLowerCase().includes('café')
               },
               planStatus: 'draft'
             });
