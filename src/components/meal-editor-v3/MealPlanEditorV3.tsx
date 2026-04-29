@@ -363,7 +363,7 @@ export const MealPlanEditorV3: React.FC = () => {
                 </motion.div>
               )}
             </AnimatePresence>
-            <ActiveMealContent />
+            {viewMode === 'day' ? <ActiveMealContent /> : <div className="text-center py-20 opacity-40"><Calendar className="w-12 h-12 mx-auto mb-4" /> <p className="font-bold">Grid Semanal em desenvolvimento - Em breve</p></div>}
           </motion.div>
         </main>
 
@@ -443,7 +443,7 @@ export const MealPlanEditorV3: React.FC = () => {
       <FocusModeView 
         isOpen={isFocusModeOpen} 
         onClose={() => setIsFocusModeOpen(false)} 
-        activeLabel={activeDay}
+        dayLabel={activeDay}
       />
 
       <PatientViewModal 
