@@ -110,6 +110,7 @@ interface MealPlanState {
   renameMeal: (mealId: string, payload: { name?: string; time?: string; icon?: string }) => void;
   deleteMeal: (mealId: string) => void;
   updateFoodUnit: (mealId: string, instanceId: string, unit: string) => void;
+  addQuickMeal: (mealTemplate: any) => void;
 }
 
 const DEFAULT_MEALS = [
@@ -599,14 +600,11 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       },
 
       validateAndSave: async () => {
-        const { meals, patientTargets, patientId, clinicalLog, viewMode } = get();
+        const { meals, patientTargets, patientId, clinicalLog } = get();
         
-        if (viewMode === 'week') {
-          toast.error('Retorne ao Modo Dia para validar e salvar o plano estrutural');
+        if (!patientId) {
+          toast.error('Selecione um paciente antes de salvar');
           return false;
-        }
-        if (!patientTargets) {
-          toast.warning('Baseado em dados parciais (falta anamnese)');
         }
 
         const totals = meals.reduce((acc, meal) => {
@@ -615,34 +613,119 @@ export const useMealEditorV3Store = create<MealPlanState>()(
             const factor = item.quantity * currentMeasure.factor;
             acc.calories += item.calories * factor;
             acc.protein += item.protein * factor;
+            acc.carbs += item.carbs * factor;
+            acc.fat += item.fat * factor;
           });
           return acc;
-        }, { calories: 0, protein: 0 });
+        }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
-        const targetCals = patientTargets?.calories || 2000;
-        const targetProt = patientTargets?.protein || 150;
+        try {
+          const { data: userData } = await supabase.auth.getUser();
+          if (!userData?.user) throw new Error('Usuário não autenticado');
 
-        const calDiff = Math.abs(totals.calories - targetCals) / targetCals;
-        const protDiff = Math.abs(totals.protein - targetProt) / targetProt;
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('tenant_id')
+            .eq('user_id', userData.user.id)
+            .single();
 
-        if (calDiff > 0.15 || protDiff > 0.15) {
-          set({ planStatus: 'error', consistencyMessage: 'Plano inválido: macros fora da meta (>15%)' });
-          toast.error('Plano inválido para este paciente');
+          // 1. Garantir que o plano exista ou criar um novo
+          let { data: existingPlan } = await supabase
+            .from('meal_plans')
+            .select('id')
+            .eq('patient_id', patientId)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .maybeSingle();
+
+          let planId = existingPlan?.id;
+
+          if (!planId) {
+            const { data: newPlan, error: createError } = await supabase
+              .from('meal_plans')
+              .insert([{
+                patient_id: patientId,
+                nutritionist_id: userData.user.id,
+                tenant_id: profile?.tenant_id,
+                start_date: new Date().toISOString().split('T')[0],
+                title: 'Plano Alimentar Ativo',
+                total_target_calories: totals.calories,
+                total_target_protein: totals.protein,
+                total_target_carbs: totals.carbs,
+                total_target_fat: totals.fat,
+                plan_status: 'active'
+              }])
+              .select()
+              .single();
+            
+            if (createError) throw createError;
+            planId = newPlan.id;
+          } else {
+            // Atualizar plano existente
+            await supabase
+              .from('meal_plans')
+              .update({
+                total_target_calories: totals.calories,
+                total_target_protein: totals.protein,
+                total_target_carbs: totals.carbs,
+                total_target_fat: totals.fat,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', planId);
+          }
+
+          // 2. Limpar itens antigos
+          await supabase.from('meal_plan_items').delete().eq('meal_plan_id', planId);
+
+          // 3. Inserir novos itens
+          const itemsToInsert = meals.flatMap(meal => 
+            meal.items.map(item => {
+              let mType: "breakfast" | "morning_snack" | "lunch" | "afternoon_snack" | "dinner" | "evening_snack" = "lunch";
+              const name = meal.name.toLowerCase();
+              if (name.includes('café') || name.includes('desjejum')) mType = 'breakfast';
+              else if (name.includes('lanche') && name.includes('manhã')) mType = 'morning_snack';
+              else if (name.includes('almoço')) mType = 'lunch';
+              else if (name.includes('lanche') && (name.includes('tarde') || name.includes('merenda'))) mType = 'afternoon_snack';
+              else if (name.includes('jantar')) mType = 'dinner';
+              else if (name.includes('ceia') || name.includes('lanche') && name.includes('noite')) mType = 'evening_snack';
+
+              return {
+                meal_plan_id: planId,
+                meal_type: mType,
+                title: item.name,
+                description: `Quantidade: ${item.quantity} ${item.selectedUnit || item.portionUnit}`,
+                calories_target: Math.round(item.calories * item.quantity),
+                protein_target: item.protein * item.quantity,
+                carbs_target: item.carbs * item.quantity,
+                fat_target: item.fat * item.quantity,
+                day_of_week: null
+              };
+            })
+          );
+
+          if (itemsToInsert.length > 0) {
+            const { error: insertError } = await supabase.from('meal_plan_items').insert(itemsToInsert as any);
+            if (insertError) throw insertError;
+          }
+
+          if (clinicalLog) {
+            await supabase.from('meal_clinical_decision_log').insert([{
+              patient_id: patientId,
+              condition_applied: clinicalLog.conditionId,
+              rules_applied: clinicalLog.appliedRules,
+              substitutions: clinicalLog.changes.filter(c => c.type === 'substitution'),
+              reasons: clinicalLog.changes.map(c => c.reason)
+            }]);
+          }
+
+          set({ planStatus: 'validated', consistencyMessage: null });
+          toast.success('Plano salvo no prontuário com sucesso!');
+          return true;
+        } catch (error) {
+          console.error('Erro ao salvar plano:', error);
+          toast.error('Erro ao sincronizar com o servidor');
           return false;
         }
-
-        if (clinicalLog) {
-          await supabase.from('meal_clinical_decision_log').insert([{
-            patient_id: patientId,
-            condition_applied: clinicalLog.conditionId,
-            rules_applied: clinicalLog.appliedRules,
-            substitutions: clinicalLog.changes.filter(c => c.type === 'substitution'),
-            reasons: clinicalLog.changes.map(c => c.reason)
-          }]);
-        }
-
-        set({ planStatus: 'validated', consistencyMessage: null });
-        return true;
       },
 
       validateConsistency: () => {
@@ -692,15 +775,13 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       resetPlan: () => set({ meals: DEFAULT_MEALS, history: { past: [], future: [] }, planStatus: 'draft' }),
 
       generateDeterministicPlan: async (goal, context) => {
-        const { patientTargets, patientId } = get();
+        const { patientTargets, patientId, addMeal } = get();
         if (!patientId) {
           toast.error('Selecione um paciente primeiro');
           return;
         }
 
-        const meals: Meal[] = JSON.parse(JSON.stringify(DEFAULT_MEALS));
         const foodMap = QUICK_FOODS.reduce((acc, f) => ({ ...acc, [f.id]: f }), {} as any);
-        
         const createItem = (foodId: string, quantity = 1): MealItem => ({
           ...foodMap[foodId],
           instanceId: Math.random().toString(36).substring(7),
@@ -708,62 +789,59 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           substitutions: getEquivalentFoods(foodId)
         });
 
-        const breakfast = meals.find(m => m.id === '1')!;
-        const lunch = meals.find(m => m.id === '2')!;
-        const snack = meals.find(m => m.id === '3')!;
-        const dinner = meals.find(m => m.id === '4')!;
-
-        // Fator de ajuste baseado nas calorias alvo
         const targetCals = patientTargets?.calories || 2000;
         const calRatio = targetCals / 2000;
-
-        // Café da manhã determinístico
-        breakfast.items.push(createItem('q2', Math.max(1, Math.round(calRatio)))); // Pão
-        breakfast.items.push(createItem('q1', goal === 'muscle-gain' ? 3 : 2)); // Ovos
         
+        // Estrutura base de refeições
+        const meals: Meal[] = [
+          { id: '1', name: 'Café da Manhã', items: [], time: '07:30', icon: 'coffee' },
+          { id: '2', name: 'Almoço', items: [], time: '12:30', icon: 'utensils' },
+          { id: '3', name: 'Lanche da Tarde', items: [], time: '16:00', icon: 'apple' },
+          { id: '4', name: 'Jantar', items: [], time: '20:00', icon: 'moon' }
+        ];
+
+        const breakfast = meals[0];
+        const lunch = meals[1];
+        const snack = meals[2];
+        const dinner = meals[3];
+
+        // 1. CAFÉ DA MANHÃ
+        breakfast.items.push(createItem('q2', Math.max(1, Math.round(2 * calRatio)))); // Pão Integral
+        breakfast.items.push(createItem('q1', goal === 'muscle-gain' ? 3 : 2)); // Ovos
         if (patientTargets?.drinksCoffee) {
-          breakfast.items.push(createItem('q8', 1)); // Leite/Café
-        } else {
-          breakfast.items.push({
-            id: 'fruit-tea', name: 'Chá de Ervas', calories: 2, protein: 0, carbs: 0.5, fat: 0,
-            portionValue: 200, portionUnit: 'ml', instanceId: Math.random().toString(36).substring(7), quantity: 1
-          });
+          breakfast.items.push(createItem('q8', 1)); // Leite
         }
 
-        // Almoço e Jantar
+        // 2. ALMOÇO
         if (goal === 'marmitas') {
           lunch.items.push({ ...MARMITAS[0], instanceId: Math.random().toString(36).substring(7), quantity: 1 });
+        } else {
+          const carbMult = goal === 'low-carb' ? 0.4 : (goal === 'muscle-gain' ? 1.5 : 1.0);
+          lunch.items.push(createItem('q10', Math.round(4 * calRatio * carbMult))); // Arroz (colheres)
+          lunch.items.push(createItem('q9', Math.round(1.2 * (goal === 'muscle-gain' ? 1.4 : 1.0)))); // Frango
+        }
+
+        // 3. LANCHE
+        snack.items.push(createItem('q6', 1)); // Banana
+        if (goal === 'muscle-gain') {
+          snack.items.push(createItem('q20', 1)); // Iogurte com Granola
+        }
+
+        // 4. JANTAR
+        if (goal === 'marmitas') {
           dinner.items.push({ ...MARMITAS[1], instanceId: Math.random().toString(36).substring(7), quantity: 1 });
         } else {
-          // Ajuste fino baseado no objetivo
-          const carbMultiplier = goal === 'low-carb' ? 0.5 : (goal === 'muscle-gain' ? 1.5 : 1.0);
-          const protMultiplier = goal === 'muscle-gain' ? 1.3 : 1.0;
-
-          lunch.items.push(createItem('q10', 1.5 * calRatio * carbMultiplier)); // Arroz
-          lunch.items.push(createItem('q9', 1.2 * protMultiplier)); // Frango
-          
-          dinner.items.push(createItem('q10', 1.2 * calRatio * carbMultiplier)); 
-          dinner.items.push(createItem('q9', 1.0 * protMultiplier)); 
+          const carbMult = goal === 'low-carb' ? 0.2 : (goal === 'muscle-gain' ? 1.2 : 0.8);
+          dinner.items.push(createItem('q10', Math.round(3 * calRatio * carbMult))); 
+          dinner.items.push(createItem('q9', Math.round(1.0 * (goal === 'muscle-gain' ? 1.3 : 1.0)))); 
         }
 
-        snack.items.push(createItem('q6', 1)); // Fruta
-
-        // Aplicar restrições da anamnese se existirem
-        if (patientTargets?.isIntolerant) {
-          meals.forEach(m => {
-            m.items = m.items.map(item => {
-              if (item.name.toLowerCase().includes('leite')) {
-                return { ...item, name: item.name + ' (Sem Lactose)', calories: item.calories * 0.9 };
-              }
-              return item;
-            });
-          });
-        }
-
+        // Adaptações clínicas (Stage 2)
         let finalMeals = meals;
         let finalLog = null;
-        if (context?.conditionId) {
-          const result = applyClinicalRules(meals, context.conditionId);
+        if (context?.conditionId || goal.includes('clinical')) {
+          const conditionId = context?.conditionId || goal;
+          const result = applyClinicalRules(meals, conditionId);
           finalMeals = result.meals;
           finalLog = result.log;
         }
@@ -774,7 +852,7 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           activeMealId: '1',
           planStatus: 'validated',
           clinicalLog: finalLog,
-          lastActionInsight: `Plano gerado deterministicamente para ${goal} (${Math.round(targetCals)} kcal)`
+          lastActionInsight: `Plano gerado com sucesso: ${goal} (${Math.round(targetCals)} kcal)`
         }));
       },
       setDaySubstitution: (mealId, dayId, instanceId) => {
@@ -824,6 +902,24 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           meals: state.meals.filter((m) => m.id !== mealId),
           activeMealId: state.activeMealId === mealId ? state.meals[0]?.id || null : state.activeMealId
         }));
+      },
+      addQuickMeal: (template) => {
+        set((state) => {
+          const newId = Math.random().toString(36).substring(7);
+          const newMeal: Meal = { 
+            id: newId, 
+            name: template.name, 
+            items: [{ ...template, instanceId: Math.random().toString(36).substring(7), quantity: 1 }],
+            time: '08:00',
+            icon: 'zap'
+          };
+          return {
+            history: saveHistory(state),
+            meals: [...state.meals, newMeal],
+            activeMealId: newId,
+            lastActionInsight: `Refeição rápida "${template.name}" adicionada`
+          };
+        });
       },
     }),
     {
