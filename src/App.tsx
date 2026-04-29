@@ -489,10 +489,16 @@ function AppContent() {
               <Route path="/dieta-v3" element={<NutritionistRoute><LP section="Editor V3 (Beta)"><ErrorBoundaryDebug name="MealPlanEditorV3"><MealPlanEditorV3Experimental /></ErrorBoundaryDebug></LP></NutritionistRoute>} />
 
               {/* Public / Landing */}
+              <Route path="/landing-paciente" element={<LP section="Para Pacientes"><PatientLanding /></LP>} />
+              <Route path="/landing-personal" element={<LP section="Para Personals"><PersonalLanding /></LP>} />
+              <Route path="/landing-afiliado" element={<LP section="Para Afiliados"><AffiliateLanding /></LP>} />
+              <Route path="/biquini-branco" element={<LP section="Biquíni Branco"><BiquiniBrancoLanding /></LP>} />
+              <Route path="/biquini-branco/:id" element={<LP section="Detalhes Biquíni Branco"><BiquiniBrancoDetail /></LP>} />
               <Route path="/status" element={<LP section="Status"><DiagnosticStatus /></LP>} />
+              <Route path="/status-page" element={<LP section="Status do Sistema"><StatusPage /></LP>} />
               <Route path="/p/:slug" element={<PublicProfile />} />
               <Route path="/booking/:id" element={<PublicBooking />} />
-              
+
               {/* System */}
               <Route path="/teste123" element={<TestDeploy />} />
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
