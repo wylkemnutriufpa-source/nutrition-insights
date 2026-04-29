@@ -33,7 +33,37 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
   const [selectedForBatch, setSelectedForBatch] = useState<Food[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => setDebouncedSearch(searchQuery), 150);
+    const fetchDbFoods = async () => {
+      if (searchQuery.length < 2) {
+        setDbResults([]);
+        return;
+      }
+      
+      setIsLoading(true);
+      const { data, error } = await supabase
+        .from('food_database')
+        .select('*')
+        .ilike('name', `%${searchQuery}%`)
+        .limit(20);
+
+      if (data && !error) {
+        const formatted = data.map((f: any) => ({
+          id: f.id,
+          name: f.name,
+          calories: Number(f.calories),
+          protein: Number(f.protein),
+          carbs: Number(f.carbs),
+          fat: Number(f.fat),
+          portionValue: parseFloat(f.serving_size) || 100,
+          portionUnit: f.serving_size.replace(/[0-9.]/g, '') || 'g',
+          category: f.category
+        }));
+        setDbResults(formatted);
+      }
+      setIsLoading(false);
+    };
+
+    const timer = setTimeout(fetchDbFoods, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
 
