@@ -27,6 +27,7 @@ import ChurnRiskPanel from "@/components/dashboard/ChurnRiskPanel";
 import StagnationAlerts from "@/components/dashboard/StagnationAlerts";
 import ClinicalRiskDashboardContent from "@/components/dashboard/ClinicalRiskDashboardContent";
 import PendingApprovalsModal, { usePendingApprovals } from "@/components/patient/PendingApprovalsModal";
+import CinematicIntro from "@/components/landing/CinematicIntro";
 
 import PatientProgressSimulation from "@/components/dashboard/PatientProgressSimulation";
 import PortfolioIntelligencePanel from "@/components/dashboard/PortfolioIntelligencePanel";
@@ -49,7 +50,8 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
+
 
 
 const container = {

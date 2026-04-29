@@ -377,7 +377,7 @@ function AppContent() {
       {isDegraded && <DegradedModeBanner />}
       {isOrphan && <HardFailLinkage />}
       <AnimatePresence mode="wait">
-        <Suspense fallback={<BrainLoaderScreen />}>
+        <Suspense fallback={<PageLoader />}>
           <SystemStateGuard>
             <Routes>
               <Route path="/" element={<LP section="Início"><Index /></LP>} />
