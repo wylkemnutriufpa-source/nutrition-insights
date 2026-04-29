@@ -253,17 +253,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
                         </Card>
                       </motion.div>
                     ))
-                  ) : (
-                    <div className="col-span-full flex flex-col items-center justify-center py-20 text-center">
-                      <div className="p-4 bg-muted/30 rounded-full mb-4">
-                        <Package className="w-12 h-12 text-muted-foreground/30" />
-                      </div>
-                      <h3 className="text-sm font-bold text-muted-foreground">Marmitas indisponíveis</h3>
-                      <p className="text-xs text-muted-foreground/60 max-w-[200px] mt-2">
-                        Marmitas só podem ser adicionadas no Almoço ou Jantar.
-                      </p>
-                    </div>
-                  )}
+                  ) : null}
                 </div>
               </ScrollArea>
             </TabsContent>
