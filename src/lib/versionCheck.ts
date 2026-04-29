@@ -17,7 +17,7 @@ const LOCAL_VERSION =
     ? __BUILD_VERSION__
     : `${BUILD_INFO.hash}-${Date.parse(BUILD_INFO.timestamp) || 0}`;
 
-const POLL_INTERVAL_MS = 2 * 60 * 1000; // every 2 minutes
+const POLL_INTERVAL_MS = 60 * 1000; // a cada 1 minuto para maior sensibilidade
 const RELOAD_LOCK_KEY = "fj:version-reload-ts";
 const RELOAD_LOCK_MS = 30 * 1000; // never reload twice in 30s
 
@@ -162,6 +162,9 @@ async function checkOnce(forceReload = false): Promise<void> {
     }));
     return;
   }
+
+  // Se o usuário não está digitando/ativo ou foi forçado (clique), atualizamos imediatamente
+  console.info("[FJ:Version] Inactive or forced. Purging caches and reloading...");
 
   markReload();
   await nukeCachesAndSW();

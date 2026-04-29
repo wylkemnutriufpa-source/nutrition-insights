@@ -84,8 +84,18 @@ if (isPreviewHost() || isInIframe()) {
       regs.forEach((r) => r.unregister());
     });
   }
-  if ("caches" in window) {
-    caches.keys().then((keys) => keys.forEach((k) => caches.delete(k)));
+} else {
+  // Em produção, se detectamos inconsistência grave, limpamos tudo
+  if (window.location.search.includes("clear_cache=1")) {
+    if ("caches" in window) {
+      caches.keys().then(keys => keys.forEach(k => caches.delete(k)));
+    }
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.getRegistrations().then(regs => regs.forEach(r => r.unregister()));
+    }
+    const url = new URL(window.location.href);
+    url.searchParams.delete("clear_cache");
+    window.location.replace(url.toString());
   }
 }
 
