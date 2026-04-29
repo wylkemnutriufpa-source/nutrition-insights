@@ -15,6 +15,7 @@ import PageLoader from "@/components/common/PageLoader";
 import { SystemStateGuard } from "@/components/common/SystemStateGuard";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
+import { logError } from "@/lib/monitoring";
 
 // Eager
 import Auth from "../pages/Auth";
@@ -234,7 +235,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   }
 
   if (authStatus === "error") {
+    logError("auth_error", "ProtectedRoute", error?.message || "Erro desconhecido de autenticação", { error });
     console.error("[ProtectedRoute] Estado: ERRO.", error);
+    // ... keep existing code
     return (
       <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white p-6">
         <div className="max-w-md w-full text-center space-y-6">
