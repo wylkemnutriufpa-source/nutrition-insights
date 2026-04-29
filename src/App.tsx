@@ -532,6 +532,7 @@ function AppContent() {
               <Route path="/lab-interpreter" element={<NutritionistRoute><LP section="Intérprete de Exames"><LabInterpreter /></LP></NutritionistRoute>} />
               <Route path="/mission-control" element={<NutritionistRoute><LP section="Controle de Missão"><MissionControl /></LP></NutritionistRoute>} />
               <Route path="/workspace" element={<NutritionistRoute><LP section="Workspace"><WorkspaceEditor /></LP></NutritionistRoute>} />
+              <Route path="/biblioteca" element={<NutritionistRoute><LP section="Biblioteca"><DietTemplates /></LP></NutritionistRoute>} />
               <Route path="/admin/affiliates" element={<NutritionistRoute><LP section="Afiliados"><AdminAffiliates /></LP></NutritionistRoute>} />
               <Route path="/admin/booking-settings" element={<NutritionistRoute><LP section="Config. Agenda"><AdminBookingSettings /></LP></NutritionistRoute>} />
               <Route path="/admin/feature-control" element={<NutritionistRoute><LP section="Controle de Recursos"><AdminFeatureControl /></LP></NutritionistRoute>} />
