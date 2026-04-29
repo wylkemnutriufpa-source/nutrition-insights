@@ -225,10 +225,24 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus } = useAuth();
+  const { authStatus, user } = useAuth();
   
-  if (authStatus === "loading") return <PageLoader />;
-  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
+  if (authStatus === "loading") {
+    console.log("[ProtectedRoute] Estado: LOADING. Renderizando PageLoader.");
+    return <PageLoader />;
+  }
+  
+  if (authStatus === "unauthenticated") {
+    console.warn("[ProtectedRoute] Estado: NÃO AUTENTICADO. Redirecionando para /auth.");
+    return <Navigate to="/auth" replace />;
+  }
+
+  if (!children) {
+    console.error("[ProtectedRoute] ERRO: Children está vazio (null/undefined).");
+    return <div className="p-10 text-red-500 font-bold border-2 border-red-500">ERRO DE ROTA: Conteúdo Protegido Vazio</div>;
+  }
+
+  console.log(`[ProtectedRoute] AUTENTICADO (${user?.id}). Renderizando conteúdo.`);
   return <>{children}</>;
 }
 
