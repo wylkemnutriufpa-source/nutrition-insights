@@ -147,11 +147,16 @@ export default function QuickLink() {
       } as any);
 
       toast.success("Cadastro realizado com sucesso!");
-      setDone(true);
       
-      // If auto-logged in, we can redirect. Otherwise, wait for email confirm.
+      // Salvar estado final de onboarding
+      localStorage.setItem("fj_invited", "true");
+      localStorage.setItem("fj_user_type", "patient");
+
+      // Redirecionamento determinístico (Regra 2)
       if (authData.session) {
-        setTimeout(() => navigate("/consent"), 1500);
+        navigate("/welcome", { replace: true });
+      } else {
+        setDone(true);
       }
     } catch (err: any) {
       toast.error(err.message || "Erro ao realizar cadastro.");
