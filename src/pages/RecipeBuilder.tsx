@@ -22,7 +22,7 @@ import RecipeSearchDialog from "@/components/recipe/RecipeSearchDialog";
 import {
   RecipeIngredient, calculateRecipeMacros, perServingMacros, getAvailableUnits,
 } from "@/lib/recipeCalculator";
-import { uploadWithRetry } from "@/lib/uploadWithRetry";
+import { uploadFile } from "@/lib/upload";
 
 export default function RecipeBuilder() {
   const { user } = useAuth();
@@ -80,12 +80,13 @@ export default function RecipeBuilder() {
     if (!file || !user) return;
     setUploading(true);
     try {
-      const path = await uploadWithRetry({
+      const path = await uploadFile({
         bucket: "meal-images",
         path: `${user.id}/recipes`,
         file,
         returnPath: true,
       });
+
       if (path) {
         setImagePath(path);
         const { data } = supabase.storage.from("meal-images").getPublicUrl(path);
