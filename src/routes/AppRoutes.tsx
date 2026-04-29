@@ -471,7 +471,7 @@ export const AppRoutes = () => {
                 <Route path="/clinical-predictions" element={<NutritionistRoute><LP section="Predições Clínicas"><ClinicalPredictions /></LP></NutritionistRoute>} />
                 <Route path="/clinical-simulation" element={<NutritionistRoute><LP section="Simulação Clínica"><ClinicalSimulation /></LP></NutritionistRoute>} />
                 <Route path="/clinical-crm" element={<NutritionistRoute><LP section="CRM Clínico"><ClinicalCRM /></LP></NutritionistRoute>} />
-                <Route path="/personal/dashboard" element={<NutritionistRoute><LP section="Dashboard Personal"><PersonalDashboard /></LP></NutritionistRoute>} />
+                <Route path="/personal/dashboard" element={<NutritionistRoute><StabilityZone name="Dashboard Personal"><LP section="Dashboard Personal"><PersonalDashboard /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/personal/students" element={<NutritionistRoute><LP section="Alunos Personal"><PersonalStudents /></LP></NutritionistRoute>} />
                 <Route path="/personal/workouts" element={<NutritionistRoute><LP section="Treinos Personal"><PersonalWorkouts /></LP></NutritionistRoute>} />
                 <Route path="/import-patients" element={<NutritionistRoute><LP section="Importar Pacientes"><ImportPatients /></LP></NutritionistRoute>} />
@@ -511,7 +511,7 @@ export const AppRoutes = () => {
                 <Route path="/clinical-analytics" element={<NutritionistRoute><LP section="Analytics Clínico"><ClinicalHealthDashboard /></LP></NutritionistRoute>} />
 
                 {/* Admin Routes */}
-                <Route path="/admin/dashboard" element={<NutritionistRoute><LP section="Admin Dashboard"><AdminDashboard /></LP></NutritionistRoute>} />
+                <Route path="/admin/dashboard" element={<NutritionistRoute><StabilityZone name="Dashboard Admin"><LP section="Admin Dashboard"><AdminDashboard /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/admin/audit-logs" element={<NutritionistRoute><LP section="Audit Logs"><AuditLogs /></LP></NutritionistRoute>} />
                 <Route path="/admin/clinical-rules" element={<NutritionistRoute><LP section="Regras Clínicas"><ClinicalRulesAdmin /></LP></NutritionistRoute>} />
                 <Route path="/admin/affiliates" element={<NutritionistRoute><LP section="Afiliados"><AdminAffiliates /></LP></NutritionistRoute>} />
@@ -553,7 +553,7 @@ export const AppRoutes = () => {
                 <Route path="/admin/template-nutrition-audit" element={<NutritionistRoute><LP section="Auditoria Nutricional de Templates"><TemplateNutritionAudit /></LP></NutritionistRoute>} />
 
                 {/* Patient Routes */}
-                <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
+                <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><StabilityZone name="Dashboard Cliente"><LP section="Dashboard"><ClientDashboard /></LP></StabilityZone></PaymentGuardedPatientRoute>} />
                 <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
                 <Route path="/achievements" element={<PaymentGuardedPatientRoute><LP section="Conquistas"><Achievements /></LP></PaymentGuardedPatientRoute>} />
                 <Route path="/challenges" element={<PaymentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></PaymentGuardedPatientRoute>} />
