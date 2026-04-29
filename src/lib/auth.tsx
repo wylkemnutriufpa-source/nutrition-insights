@@ -187,7 +187,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
-          console.log(`%c[Auth] User SIGNED_IN: ${session.user.email} (${session.user.id})`, "color: #10b981; font-weight: bold");
           
           // Log estruturado conforme regra anti-regressão
           logAudit("login", "auth", session.user.id, { 
