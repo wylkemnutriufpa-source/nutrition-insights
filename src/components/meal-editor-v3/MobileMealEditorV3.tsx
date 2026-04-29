@@ -54,6 +54,7 @@ export const MobileMealEditorV3: React.FC = () => {
 
   const [addSheetOpen, setAddSheetOpen] = useState(false);
   const [addModalMealId, setAddModalMealId] = useState<string | null>(null);
+  const [modalTab, setModalTab] = useState<'quick' | 'search' | 'templates'>('search');
   const [substitutionTarget, setSubstitutionTarget] = useState<{
     mealId: string;
     item: MealItem;
@@ -78,11 +79,11 @@ export const MobileMealEditorV3: React.FC = () => {
   const handleAddAction = (action: AddAction) => {
     switch (action) {
       case 'add-food':
-        // abre modal no almoço por padrão (refeição mais comum)
+        setModalTab('search');
         setAddModalMealId(meals[1]?.id || meals[0]?.id);
         break;
       case 'add-marmita':
-        // abre direto no almoço (marmitas só funcionam em almoço/jantar)
+        setModalTab('templates');
         setAddModalMealId(meals.find((m) => m.name.toLowerCase() === 'almoço')?.id || meals[0]?.id);
         break;
       case 'generate-ai':
@@ -295,6 +296,7 @@ export const MobileMealEditorV3: React.FC = () => {
           isOpen={!!addModalMealId}
           onClose={() => setAddModalMealId(null)}
           mealId={addModalMealId}
+          defaultTab={modalTab}
         />
       )}
 

@@ -28,6 +28,7 @@ export const ActiveMealContent: React.FC = () => {
   } = useMealEditorV3Store();
   
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [modalTab, setModalTab] = useState<'quick' | 'search' | 'templates'>('search');
   const [substitutionModalData, setSubstitutionModalData] = useState<{ instanceId: string } | null>(null);
   const addBtnRef = useRef<HTMLButtonElement>(null);
 
@@ -116,14 +117,20 @@ export const ActiveMealContent: React.FC = () => {
             variant="ghost" 
             size="sm" 
             className="h-9 px-3 text-muted-foreground hover:text-primary rounded-xl font-bold text-xs"
-            onClick={() => setIsAddModalOpen(true)}
+            onClick={() => {
+              setModalTab('search');
+              setIsAddModalOpen(true);
+            }}
           >
             <Plus className="w-4 h-4 mr-2" />
             BUSCAR
           </Button>
           <Button 
             ref={addBtnRef}
-            onClick={() => setIsAddModalOpen(true)} 
+            onClick={() => {
+              setModalTab('quick');
+              setIsAddModalOpen(true);
+            }} 
             className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold px-6"
           >
             <Zap className="w-4 h-4 mr-2" />
@@ -309,6 +316,7 @@ export const ActiveMealContent: React.FC = () => {
           addBtnRef.current?.focus();
         }} 
         mealId={activeMeal.id}
+        defaultTab={modalTab}
         onSelect={substitutionModalData ? (food) => handleAddSubstitution(substitutionModalData.instanceId, food) : undefined}
       />
     </div>
