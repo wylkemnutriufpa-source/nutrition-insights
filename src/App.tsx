@@ -463,7 +463,17 @@ function AppContent() {
               <Route path="/admin/biblioteca" element={<NutritionistRoute><LP section="Biblioteca Admin"><Library /></LP></NutritionistRoute>} />
               <Route path="/admin-operational-costs" element={<NutritionistRoute><LP section="Custos Operacionais Admin"><AdminOperationalCosts /></LP></NutritionistRoute>} />
               <Route path="/admin/marketing-content" element={<NutritionistRoute><LP section="Marketing Admin"><AdminMarketingContent /></LP></NutritionistRoute>} />
-              
+              <Route path="/admin/marmitas" element={<NutritionistRoute><LP section="Auditoria de Marmitas"><MarmitaAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/image-fallback" element={<NutritionistRoute><LP section="Fallback de Imagem"><ImageFallbackAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/mass-reformulation" element={<NutritionistRoute><LP section="Reformulação em Massa"><TemplateMassReformulation /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-batch-audit" element={<NutritionistRoute><LP section="Auditoria de Planos em Lote"><PlanBatchAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/meal-coverage" element={<NutritionistRoute><LP section="Cobertura de Refeições"><MealCoverageDashboard /></LP></NutritionistRoute>} />
+              <Route path="/admin/meal-visual-library" element={<NutritionistRoute><LP section="Biblioteca Visual"><MealVisualLibraryAdmin /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-audit" element={<NutritionistRoute><LP section="Auditoria de Experiência"><AdminExperienceModeAudit /></LP></NutritionistRoute>} />
+              <Route path="/admin/experience-reconcile" element={<NutritionistRoute><LP section="Reconciliação de Experiência"><AdminExperienceModeReconcile /></LP></NutritionistRoute>} />
+              <Route path="/admin/plan-diagnostics" element={<NutritionistRoute><LP section="Diagnóstico de Carregamento"><AdminPlanLoadingDiagnostics /></LP></NutritionistRoute>} />
+              <Route path="/admin/template-nutrition-audit" element={<NutritionistRoute><LP section="Auditoria Nutricional de Templates"><TemplateNutritionAudit /></LP></NutritionistRoute>} />
+
               {/* Patient Routes */}
               <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><LP section="Dashboard"><ClientDashboard /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
