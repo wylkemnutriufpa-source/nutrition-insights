@@ -1,8 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useMealEditorV3Store } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { cn } from '@/lib/utils';
-import { Utensils, Coffee, Sun, Moon } from 'lucide-react';
+import { Utensils, Coffee, Sun, Moon, Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { MealDetailsModal } from './MealDetailsModal';
+import { Button } from '@/components/ui/button';
 
 const MEAL_ICONS: Record<string, any> = {
   'Café da Manhã': Coffee,
@@ -13,6 +15,7 @@ const MEAL_ICONS: Record<string, any> = {
 
 export const MealListSidebar: React.FC = () => {
   const { meals, activeMealId, setActiveMeal } = useMealEditorV3Store();
+  const [viewingMealId, setViewingMealId] = useState<string | null>(null);
 
   const calculateMealCalories = (items: any[]) => {
     return items.reduce((acc, item) => acc + (item.calories * item.quantity), 0);
