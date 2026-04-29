@@ -58,8 +58,26 @@ export const MealPlanEditorV3: React.FC = () => {
 
   useEffect(() => {
     const fetchPatients = async () => {
-      const { data } = await (supabase.from('profiles') as any).select('user_id, full_name').eq('role', 'patient');
-      if (data) setPatients(data.map((p: any) => ({ id: p.user_id, name: p.full_name })));
+      // Usando query com join para buscar pacientes reais via user_roles
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select(`
+          user_id,
+          profiles:profiles!user_roles_user_id_fkey (
+            full_name
+          )
+        `)
+        .eq('role', 'patient');
+        
+      if (data && !error) {
+        const patientList = data
+          .filter((item: any) => item.profiles)
+          .map((item: any) => ({
+            id: item.user_id,
+            name: item.profiles.full_name || 'Sem nome'
+          }));
+        setPatients(patientList);
+      }
     };
     fetchPatients();
   }, []);
