@@ -98,6 +98,7 @@ const TechnicalSheets = lazy(() => import("./pages/store/TechnicalSheets"));
 
 const AdminNutritionProtocols = lazy(() => import("./pages/AdminNutritionProtocols"));
 const AffiliateLanding = lazy(() => import("./pages/AffiliateLanding"));
+const TestDeploy = lazy(() => import("./pages/TestDeploy"));
 const BiquiniBrancoDetail = lazy(() => import("./pages/BiquiniBrancoDetail"));
 const ClinicalEnterprise = lazy(() => import("./pages/ClinicalEnterprise"));
 const ClinicalHealthDashboard = lazy(() => import("./pages/ClinicalHealthDashboard"));
@@ -598,6 +599,7 @@ function AppContent() {
               
               <Route path="/hard-fail-linkage" element={<LP section="Erro de Vínculo"><HardFailLinkage /></LP>} />
               <Route path="/consent" element={<ProtectedRoute><LP section="Consentimento"><ConsentRequired /></LP></ProtectedRoute>} />
+              <Route path="/teste123" element={<TestDeploy />} />
               <Route path="/diagnostic" element={<LP section="Status"><DiagnosticStatus /></LP>} />
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
               <Route path="*" element={<Navigate to="/404" replace />} />

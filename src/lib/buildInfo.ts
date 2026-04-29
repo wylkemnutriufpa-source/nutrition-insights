@@ -14,6 +14,7 @@ export interface BuildInfo {
   timestamp: string;
   mode: string;
   shortHash: string;
+  version: string;
 }
 
 const safeHash =
@@ -30,6 +31,7 @@ export const BUILD_INFO: BuildInfo = {
   timestamp: safeTimestamp,
   mode: safeMode,
   shortHash: String(safeHash).slice(0, 8),
+  version: "2.4.0-hotfix-deploy-check"
 };
 
 /**
