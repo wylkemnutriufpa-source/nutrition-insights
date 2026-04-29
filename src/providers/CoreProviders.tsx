@@ -55,25 +55,27 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
       <HelmetProvider>
         <QueryClientProvider client={queryClient}>
           <TooltipProvider>
-            <Helmet><title>FitJourney</title></Helmet>
-            <Toaster />
-            <Sonner />
-            <MobileAutoFixer />
-            <GlobalErrorBoundary />
-            <UpdateBanner />
-            <BuildVersionTag />
             <BrowserRouter>
               <AuthProvider>
                 <TenantProvider>
                   <ExperienceModeProvider>
-                    <ExperienceThemeSync />
-                    <CelebrationProvider>
-                      <CommandPaletteProvider>
-                        <AppStateProvider>
+                    <AppStateProvider>
+                      <CelebrationProvider>
+                        <CommandPaletteProvider>
+                          <ExperienceThemeSync />
+                          <Toaster />
+                          <Sonner />
+                          <MobileAutoFixer />
+                          <GlobalErrorBoundary />
+                          <UpdateBanner />
+                          <BuildVersionTag />
+                          <Helmet>
+                            <title>FitJourney</title>
+                          </Helmet>
                           {children}
-                        </AppStateProvider>
-                      </CommandPaletteProvider>
-                    </CelebrationProvider>
+                        </CommandPaletteProvider>
+                      </CelebrationProvider>
+                    </AppStateProvider>
                   </ExperienceModeProvider>
                 </TenantProvider>
               </AuthProvider>
