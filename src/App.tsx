@@ -24,6 +24,7 @@ import SafePage from "@/components/common/SafePage";
 import PageLoader from "@/components/common/PageLoader";
 import { SystemStateGuard } from "@/components/common/SystemStateGuard";
 import { UpdateBanner } from "@/components/common/UpdateBanner";
+import { BuildVersionTag } from "@/components/common/BuildVersionTag";
 
 // Eager
 import Auth from "./pages/Auth";
