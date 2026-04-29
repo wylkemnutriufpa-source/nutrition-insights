@@ -39,6 +39,13 @@ export default function QuickLink() {
   useEffect(() => {
     if (!nutriId) return;
     
+    // Captura de intenção determinística (Regra 1 do Onboarding)
+    localStorage.setItem("fj_invited", "true");
+    localStorage.setItem("fj_user_type", "patient");
+    if (nutriId) {
+      localStorage.setItem("fitjourney_nutri_id", nutriId);
+    }
+    
     const fetchProf = async () => {
       const { data: profile } = await supabase
         .from("profiles")

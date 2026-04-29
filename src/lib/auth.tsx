@@ -230,41 +230,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const userRoles = rolesResult.data?.map((r) => r.role) || [];
             
             if (event === "SIGNED_IN" && userRoles.length === 0) {
-              console.warn(`[Auth:${authEventId}] User has no roles yet, starting aggressive retry for:`, session.user.email);
-              
-              const maxRetries = 4;
-              let currentRetry = 0;
-              
-              const retryFetch = async () => {
-                currentRetry++;
-                console.log(`[Auth:${authEventId}] Retry ${currentRetry}/${maxRetries} to fetch roles...`);
-                
-                try {
-                  const { data: retryRoles } = await (supabase.from("user_roles") as any).select("role").eq("user_id", session.user.id);
-                  const retried = retryRoles?.map((r: any) => r.role) || [];
-                  
-                  if (mounted && retried.length > 0) {
-                    setRoles(retried);
-                    setLoading(false);
-                    checkSubscription();
-                    console.log(`[Auth:${authEventId}] Roles found on retry:`, retried);
-                    return;
-                  }
-                  
-                  if (currentRetry < maxRetries) {
-                    setTimeout(retryFetch, 1000);
-                  } else {
-                    console.warn(`[Auth:${authEventId}] All role retries exhausted.`);
-                    setRoles([]);
-                    if (mounted) setLoading(false);
-                  }
-                } catch (err) {
-                  console.error(`[Auth:${authEventId}] Role retry failed:`, err);
-                  if (mounted && currentRetry >= maxRetries) setLoading(false);
-                }
-              };
-              
-              setTimeout(retryFetch, 500);
+              console.log(`[Auth:${authEventId}] Novo usuário detectado. O fluxo de Onboarding / Welcome assumirá a partir daqui.`);
+              setRoles([]);
+              if (mounted) setLoading(false);
               return;
             }
 

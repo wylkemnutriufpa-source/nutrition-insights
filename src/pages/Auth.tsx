@@ -85,9 +85,11 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           _metadata: {},
         });
       }
-      const target = nextPath.startsWith("/") ? nextPath : "/";
-      console.log(`[Auth] Redirecting to post-login target: ${target}`);
-      navigate(target, { replace: true });
+      // Fluxo Determinístico: Redirecionar sempre para /welcome após login
+      // O /welcome decidirá o destino final com base em profile/roles/intenção
+      console.log(`[Auth] Redirecting to Welcome Hub...`);
+      const target = nextPath && nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : "";
+      navigate(`/welcome${target}`, { replace: true });
     }
   };
 
