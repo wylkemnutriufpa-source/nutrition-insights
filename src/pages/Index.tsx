@@ -1232,8 +1232,8 @@ export default function Index() {
   if (loading && !showIntro) {
     return (
       <DashboardLayout>
-        <div className="flex items-center justify-center h-64">
-          <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <BrainLoader text="Iniciando FitJourney..." />
         </div>
       </DashboardLayout>
     );
