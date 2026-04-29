@@ -59,11 +59,13 @@ const UNIVERSAL_ROUTES = [
 
 const PROFESSIONAL_ONLY_ROUTES = [
   "/patients", "/diet-templates", "/onboarding-pipeline", "/meal-plans", "/editor-v2", "/meal-plan-editor-v2", "/dieta-v2", 
-  "/meal-plan-editor-v3", "/dieta-v3", "/protocols", "/programs", "/clinical-workspace", "/clinical-brain", "/clinical-pipeline", 
-  "/team", "/meals", "/recipes", "/financial", "/integrations", "/branding", "/diet-builder", "/food-database", "/workspace",
-  "/operational", "/in-office", "/invite-patient", "/population-intelligence", "/population-nutrition", "/professional-guide",
-  "/professional/crm", "/protocol-transitions", "/therapeutic-intelligence", "/personal", "/store", "/automation", 
-  "/campaigns", "/lab-interpreter", "/mission-control", "/technical-sheets", "/admin"
+  "/meal-plan-editor-v3", "/dieta-v3", "/protocols", "/programs", "/clinical", "/clinical-workspace", "/clinical-brain", 
+  "/clinical-pipeline", "/team", "/meals", "/recipes", "/financial", "/integrations", "/branding", "/diet-builder", 
+  "/food-database", "/workspace", "/operational", "/in-office", "/invite-patient", "/population-intelligence", 
+  "/population-nutrition", "/professional-guide", "/professional/crm", "/protocol-transitions", "/therapeutic-intelligence", 
+  "/personal", "/store", "/automation", "/campaigns", "/lab-interpreter", "/mission-control", "/technical-sheets", "/admin",
+  "/coach", "/cockpit-premium", "/global-ai", "/hybrid-plan-builder", "/intelligence-settings", "/mobile-qa", 
+  "/patient-diagnostic", "/patient-overview", "/plan-audit", "/preview-patient"
 ];
 
 const PATIENT_ONLY_ROUTES = [
