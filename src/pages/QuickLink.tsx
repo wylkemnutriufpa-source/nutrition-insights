@@ -134,7 +134,7 @@ export default function QuickLink() {
       } as any);
 
       if (rpcError) {
-        console.error("RPC Error:", rpcError);
+        // Silent RPC Error fallback handled below
         // Fallback for profile creation if RPC fails (though it shouldn't)
         await supabase.from("profiles").update({ 
           full_name: name,
