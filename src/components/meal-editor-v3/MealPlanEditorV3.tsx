@@ -21,7 +21,7 @@ import {
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
   Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search,
-  PlusCircle, Bot
+  PlusCircle, Bot, Calendar, Eye
 } from 'lucide-react';
 import {
   Dialog,
