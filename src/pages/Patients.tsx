@@ -310,8 +310,14 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         <ScoreRing score={score} />
         <div className="flex items-center gap-1">
           <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor-v3/${p.patient_id}`); }}
-            className="text-purple-600 hover:text-purple-500 p-1" title="Editor Elite V3"
+            onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor/${p.patient_id}`); }}
+            className="text-muted-foreground hover:text-primary p-1" title="Montar Plano (V2)"
+          >
+            <UtensilsCrossed className="w-4 h-4" />
+          </button>
+          <button
+            onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}`); }}
+            className="text-purple-600 hover:text-purple-500 p-1" title="Editor V3 (Beta)"
           >
             <Sparkles className="w-4 h-4" />
           </button>
