@@ -39,7 +39,7 @@ import { StabilityZone } from "@/components/common/StabilityZone";
 import { SafeRender } from "@/components/common/SafeRender";
 import { usePageState } from "@/hooks/usePageState";
 import { BrainLoaderCard } from "@/components/common/BrainLoader";
-import { AlertCircle, Activity } from "lucide-react";
+import { AlertCircle } from "lucide-react";
 
 // ─── Types ───
 interface PlatformMetrics {
