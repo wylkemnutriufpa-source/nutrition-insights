@@ -20,6 +20,7 @@ import Auth from "../pages/Auth";
 import AuthConfirm from "../pages/AuthConfirm";
 import NotFound from "../pages/NotFound";
 import Index from "../pages/Index";
+import Welcome from "../pages/Welcome";
 
 // Lazy - Core
 const AnalyzeMeal = lazy(() => import("../pages/AnalyzeMeal"));
