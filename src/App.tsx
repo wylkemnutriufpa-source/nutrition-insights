@@ -399,6 +399,12 @@ function AppContent() {
               <Route path="/meal-plans" element={<PaymentGuardedPatientRoute><LP section="Meus Planos"><MealPlans /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/my-diet" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
               <Route path="/dieta" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/paciente/plano" element={<PaymentGuardedPatientRoute><LP section="Plano de Refeição"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/my-workouts" element={<PaymentGuardedPatientRoute><LP section="Meus Treinos"><PatientWorkouts /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/weight-calculator" element={<PaymentGuardedPatientRoute><LP section="Calculadora de Peso"><WeightCalculator /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/water-calculator" element={<PaymentGuardedPatientRoute><LP section="Calculadora de Água"><WaterCalculator /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/health-quiz" element={<PaymentGuardedPatientRoute><LP section="Health Check"><HealthCheckQuiz /></LP></PaymentGuardedPatientRoute>} />
+              <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
               
               {/* Editor Routes */}
               <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><MealPlanEditorV2 /></LP></NutritionistRoute>} />
