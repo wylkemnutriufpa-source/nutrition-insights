@@ -121,16 +121,14 @@ export const ActiveMealContent: React.FC = () => {
             <Plus className="w-4 h-4 mr-2" />
             BUSCAR
           </Button>
-          {!fastMode && (
-            <Button 
-              ref={addBtnRef}
-              onClick={() => setIsAddModalOpen(true)} 
-              className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold px-6"
-            >
-              <Zap className="w-4 h-4 mr-2" />
-              RÁPIDO
-            </Button>
-          )}
+          <Button 
+            ref={addBtnRef}
+            onClick={() => setIsAddModalOpen(true)} 
+            className="rounded-xl shadow-lg shadow-primary/20 bg-primary hover:bg-primary/90 font-bold px-6"
+          >
+            <Zap className="w-4 h-4 mr-2" />
+            RÁPIDO
+          </Button>
 
           <Button 
             variant="ghost"
