@@ -1228,7 +1228,7 @@ export default function Index() {
     );
   }
 
-  if (loading) {
+  if (loading && !showIntro) {
     return (
       <DashboardLayout>
         <div className="flex items-center justify-center h-64">
