@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Trash2, Utensils, ArrowLeft, SwitchCamera, Save, ChevronDown } from 'lucide-react';
-import { useMealEditorV3Store, MealItem, HouseholdMeasure } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
+import { useMealEditorV3Store, MealItem } from '@/hooks/meal-editor-v3/useMealEditorV3Store';
 import { toast } from 'sonner';
 import {
   DropdownMenu,
@@ -12,7 +12,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { toast } from 'sonner';
 
 interface Props {
   isOpen: boolean;
@@ -36,11 +35,13 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
 
   if (!item || !mealId) return null;
 
-  const totalGrams = Math.round(quantity * item.portionValue);
-  const factor = quantity;
+  const currentMeasure = item.householdMeasures?.find(m => m.unit === selectedUnit) || { unit: item.portionUnit, factor: 1 };
+  const factor = quantity * currentMeasure.factor;
+  const totalGrams = Math.round(factor * item.portionValue);
 
   const handleSave = () => {
     updateFoodQuantity(mealId, item.instanceId, quantity);
+    updateFoodUnit(mealId, item.instanceId, selectedUnit);
     toast.success('Alterações salvas');
     onClose();
   };
@@ -74,7 +75,6 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
         </DialogHeader>
 
         <div className="p-4 space-y-4">
-          {/* Imagem */}
           <div className="aspect-[16/10] rounded-2xl overflow-hidden bg-muted">
             {item.imageUrl ? (
               <img src={item.imageUrl} alt={item.name} className="w-full h-full object-cover" />
@@ -87,7 +87,6 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
 
           <h2 className="text-xl font-black tracking-tight">{item.name}</h2>
 
-          {/* Quantidade */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider">
@@ -132,14 +131,13 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
             </div>
           </div>
 
-          {/* Macros */}
           <div className="rounded-2xl border border-border/50 bg-muted/20 p-4 space-y-2.5">
             <div className="flex items-center justify-between">
               <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
                 Informações nutricionais
               </p>
               <p className="text-[10px] font-bold text-muted-foreground">
-                Por {totalGrams}{item.portionUnit}
+                Por {totalGrams}g
               </p>
             </div>
             <div className="space-y-1.5">
@@ -150,7 +148,6 @@ export const EditFoodModal: React.FC<Props> = ({ isOpen, onClose, mealId, item, 
             </div>
           </div>
 
-          {/* Ações */}
           <div className="grid grid-cols-2 gap-2">
             <Button
               variant="outline"
