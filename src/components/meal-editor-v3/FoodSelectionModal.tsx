@@ -92,7 +92,6 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
 
   const activeMeal = meals.find(m => m.id === mealId);
   const mealName = activeMeal?.name.toLowerCase() || "";
-  const isLunchOrDinner = mealName.includes('almoço') || mealName.includes('jantar');
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -195,7 +194,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
             <TabsContent value="quick" className="h-full m-0">
                <ScrollArea className="h-full p-6">
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                  {QUICK_FOODS.slice(0, 12).map((food, idx) => (
+                  {QUICK_FOODS.map((food, idx) => (
                     <motion.div
                       key={food.id}
                       initial={{ scale: 0.9, opacity: 0 }}
@@ -221,7 +220,7 @@ export const FoodSelectionModal: React.FC<FoodSelectionModalProps> = ({ isOpen, 
             <TabsContent value="templates" className="h-full p-6 m-0">
               <ScrollArea className="h-full">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pb-10">
-                  {isLunchOrDinner ? (
+                  {true ? (
                     MARMITAS.map((food, idx) => (
                       <motion.div
                         key={food.id}
