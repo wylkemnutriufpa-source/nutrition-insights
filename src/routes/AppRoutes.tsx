@@ -200,6 +200,7 @@ const AmbassadorDashboard = lazy(() => import("../pages/AmbassadorDashboard"));
 const InOfficeWizard = lazy(() => import("../pages/InOfficeWizard"));
 const SystemPresentation = lazy(() => import("../pages/SystemPresentation"));
 const PlatformGovernance = lazy(() => import("../pages/PlatformGovernance"));
+const SystemAudit = lazy(() => import("../pages/SystemAudit"));
 const SystemDiagnostics = lazy(() => import("../pages/SystemDiagnostics"));
 const SystemHealthLive = lazy(() => import("../pages/SystemHealthLive"));
 const RealtimeDebugCenter = lazy(() => import("../pages/RealtimeDebugCenter"));
@@ -442,6 +443,7 @@ export const AppRoutes = () => {
                 <Route path="/user-guide" element={<LP section="Guia do Usuário"><UserGuide /></LP>} />
                 <Route path="/analyze-meal" element={<NutritionistRoute><LP section="Análise de Refeição"><AnalyzeMeal /></LP></NutritionistRoute>} />
                 <Route path="/patient-intelligence" element={<ProtectedRoute><LP section="Inteligência do Paciente"><PatientIntelligence /></LP></ProtectedRoute>} />
+                <Route path="/system-audit" element={<NutritionistRoute><LP section="Auditoria do Sistema"><SystemAudit /></LP></NutritionistRoute>} />
                 <Route path="/human-performance" element={<ProtectedRoute><LP section="Performance Humana"><HumanPerformance /></LP></ProtectedRoute>} />
                 <Route path="/protocolos-fitoterapicos" element={<NutritionistRoute><LP section="Protocolos Fitoterápicos"><PhytotherapyProtocols /></LP></NutritionistRoute>} />
                 <Route path="/portfolio-analytics" element={<NutritionistRoute><LP section="Analytics de Portfolio"><ProfessionalClinicalAnalytics /></LP></NutritionistRoute>} />
