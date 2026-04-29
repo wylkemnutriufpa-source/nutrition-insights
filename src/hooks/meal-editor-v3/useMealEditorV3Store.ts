@@ -663,6 +663,12 @@ export const useMealEditorV3Store = create<MealPlanState>()(
       resetPlan: () => set({ meals: DEFAULT_MEALS, history: { past: [], future: [] }, planStatus: 'draft' }),
 
       generateDeterministicPlan: async (goal, context) => {
+        const { patientTargets, patientId } = get();
+        if (!patientId) {
+          toast.error('Selecione um paciente primeiro');
+          return;
+        }
+
         const meals: Meal[] = JSON.parse(JSON.stringify(DEFAULT_MEALS));
         const foodMap = QUICK_FOODS.reduce((acc, f) => ({ ...acc, [f.id]: f }), {} as any);
         
@@ -678,19 +684,51 @@ export const useMealEditorV3Store = create<MealPlanState>()(
         const snack = meals.find(m => m.id === '3')!;
         const dinner = meals.find(m => m.id === '4')!;
 
-        breakfast.items.push(createItem('q2')); 
-        breakfast.items.push(createItem('q1', goal === 'muscle-gain' ? 3 : 2));
-        breakfast.items.push(createItem('q8'));
-        snack.items.push(createItem('q6'));
+        // Fator de ajuste baseado nas calorias alvo
+        const targetCals = patientTargets?.calories || 2000;
+        const calRatio = targetCals / 2000;
 
+        // Café da manhã determinístico
+        breakfast.items.push(createItem('q2', Math.max(1, Math.round(calRatio)))); // Pão
+        breakfast.items.push(createItem('q1', goal === 'muscle-gain' ? 3 : 2)); // Ovos
+        
+        if (patientTargets?.drinksCoffee) {
+          breakfast.items.push(createItem('q8', 1)); // Leite/Café
+        } else {
+          breakfast.items.push({
+            id: 'fruit-tea', name: 'Chá de Ervas', calories: 2, protein: 0, carbs: 0.5, fat: 0,
+            portionValue: 200, portionUnit: 'ml', instanceId: Math.random().toString(36).substring(7), quantity: 1
+          });
+        }
+
+        // Almoço e Jantar
         if (goal === 'marmitas') {
           lunch.items.push({ ...MARMITAS[0], instanceId: Math.random().toString(36).substring(7), quantity: 1 });
           dinner.items.push({ ...MARMITAS[1], instanceId: Math.random().toString(36).substring(7), quantity: 1 });
         } else {
-          lunch.items.push(createItem('q10', 1.5)); 
-          lunch.items.push(createItem('q9', 1.2)); 
-          dinner.items.push(createItem('q10', 1.2)); 
-          dinner.items.push(createItem('q9', 1.0)); 
+          // Ajuste fino baseado no objetivo
+          const carbMultiplier = goal === 'low-carb' ? 0.5 : (goal === 'muscle-gain' ? 1.5 : 1.0);
+          const protMultiplier = goal === 'muscle-gain' ? 1.3 : 1.0;
+
+          lunch.items.push(createItem('q10', 1.5 * calRatio * carbMultiplier)); // Arroz
+          lunch.items.push(createItem('q9', 1.2 * protMultiplier)); // Frango
+          
+          dinner.items.push(createItem('q10', 1.2 * calRatio * carbMultiplier)); 
+          dinner.items.push(createItem('q9', 1.0 * protMultiplier)); 
+        }
+
+        snack.items.push(createItem('q6', 1)); // Fruta
+
+        // Aplicar restrições da anamnese se existirem
+        if (patientTargets?.isIntolerant) {
+          meals.forEach(m => {
+            m.items = m.items.map(item => {
+              if (item.name.toLowerCase().includes('leite')) {
+                return { ...item, name: item.name + ' (Sem Lactose)', calories: item.calories * 0.9 };
+              }
+              return item;
+            });
+          });
         }
 
         let finalMeals = meals;
@@ -701,16 +739,13 @@ export const useMealEditorV3Store = create<MealPlanState>()(
           finalLog = result.log;
         }
 
-        if (goal === 'muscle-gain') {
-          snack.items.push(createItem('q7'));
-        }
-
         set((state) => ({ 
           history: saveHistory(state),
           meals: finalMeals, 
           activeMealId: '1',
           planStatus: 'validated',
-          clinicalLog: finalLog
+          clinicalLog: finalLog,
+          lastActionInsight: `Plano gerado deterministicamente para ${goal} (${Math.round(targetCals)} kcal)`
         }));
       },
       setDaySubstitution: (mealId, dayId, instanceId) => {
