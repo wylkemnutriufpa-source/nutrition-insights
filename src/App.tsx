@@ -474,7 +474,7 @@ function AppContent() {
               {/* System */}
               <Route path="/teste123" element={<TestDeploy />} />
               <Route path="/404" element={<LP section="404"><NotFound /></LP>} />
-              <Route path="*" element={<Navigate to="/404" replace />} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </SystemStateGuard>
         </Suspense>
