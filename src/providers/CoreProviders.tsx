@@ -5,7 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { TenantProvider } from "@/lib/tenantContext";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { GlobalErrorBoundary, CriticalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
@@ -20,7 +20,9 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 2 * 60 * 1000,
       retry: (failureCount, error: any) => {
+        // Fail fast on auth errors
         if (error?.status === 401 || error?.status === 403) return false;
+        // Limited retries to avoid loops
         return failureCount < 2;
       },
       refetchOnWindowFocus: true,
@@ -61,11 +63,8 @@ function RouterBootTracker() {
   return null;
 }
 
-// StabilityMonitor removido para garantir comportamento fail-fast e previsível.
-
-
 export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
-  console.log("[CoreProviders] Inicializando árvore de componentes.");
+  console.log("[CoreProviders] Inicializando árvore de componentes determinística.");
   
   if (!children) {
     console.error("[CoreProviders] CRÍTICO: Children está NULO!");
@@ -88,9 +87,6 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                             <ExperienceThemeSync />
                             <Toaster />
                             <Sonner />
-                            <GlobalErrorBoundary />
-                            <UpdateBanner />
-                            <BuildVersionTag />
                             <Helmet>
                               <title>FitJourney</title>
                             </Helmet>
@@ -100,17 +96,18 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                                   <div>
                                     <h1 className="text-3xl font-bold mb-4 underline">FALHA CRÍTICA DE RENDERIZAÇÃO</h1>
                                     <p>O aplicativo tentou renderizar um conteúdo vazio (null).</p>
-                                    <p className="mt-4 text-xs opacity-70">Verifique os logs do console para mais detalhes.</p>
+                                    <p className="mt-4 text-xs opacity-70">O sistema falhou rápido para evitar estados inconsistentes.</p>
                                     <button 
                                       onClick={() => window.location.reload()}
                                       className="mt-8 px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
                                     >
-                                      RECARREGAR FORÇADO
+                                      RECARREGAR MANUAL
                                     </button>
                                   </div>
                                 </div>
                               )}
                             </SectionalErrorBoundary>
+                            <GlobalErrorBoundary />
                           </CommandPaletteProvider>
                         </CelebrationProvider>
                       </ExperienceModeProvider>
