@@ -335,7 +335,17 @@ export const MealPlanEditorV3: React.FC = () => {
             )}
           >
             <Save className="w-3.5 h-3.5 mr-2" />
-            SALVAR
+            SALVAR NO PRONTUÁRIO
+          </Button>
+
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => saveAsFavorite('Meu Novo Modelo', 'full_plan')}
+            className="text-muted-foreground hover:text-amber-500 font-bold"
+          >
+            <Star className="w-3.5 h-3.5 mr-2" />
+            Salvar na Biblioteca
           </Button>
         </div>
       </div>
