@@ -81,7 +81,7 @@ export default defineConfig(({ mode }) => ({
     react(),
     versionJsonPlugin(),
     mode === "development" && componentTagger(),
-    VitePWA({
+    mode === "production" && VitePWA({
       registerType: "autoUpdate",
       injectRegister: "auto",
       includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-512x512.png"],
