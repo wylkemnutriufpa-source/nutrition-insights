@@ -237,13 +237,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             if (mounted) {
               setLoading(false);
               checkSubscription();
-              console.log(`%c[Auth:${authEventId}] Final Auth State:`, "color: #10b981; font-weight: bold", {
-                user_id: session.user.id,
-                email: session.user.email,
-                profile_exists: !!profileResult.data,
-                roles: userRoles,
-                subscription_active: subscription.subscribed
-              });
+              // Log final silenciado
             }
           } catch (e) {
             console.error(`[Auth:${authEventId}] Error fetching user data on auth change:`, e);
