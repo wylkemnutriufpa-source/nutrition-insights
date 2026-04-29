@@ -34,6 +34,12 @@ import { Clock, User, Activity, LogIn, LogOut, RefreshCw, Trash2 as Trash2Icon, 
 import { ProfessionalsDrillDown, PatientsDrillDown, SubscriptionsDrillDown, RevenueDrillDown } from "@/components/admin/AdminDrillDownDialogs";
 import { MagicSlideButton } from "@/components/common/MagicSlideGenerator";
 
+import { StabilityZone } from "@/components/common/StabilityZone";
+import { SafeRender } from "@/components/common/SafeRender";
+import { usePageState } from "@/hooks/usePageState";
+import { BrainLoaderCard } from "@/components/common/BrainLoader";
+import { AlertCircle } from "lucide-react";
+
 // ─── Types ───
 interface PlatformMetrics {
   totalProfessionals: number;
