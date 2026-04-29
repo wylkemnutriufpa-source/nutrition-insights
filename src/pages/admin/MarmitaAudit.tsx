@@ -214,7 +214,7 @@ export default function MarmitaAudit() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => window.open(`/meal-plan-editor-v2/${plan.patient_id}?planId=${plan.id}`, "_blank")}
+                      onClick={() => window.open(`/meal-plan-editor/${plan.id}`, "_blank")}
                     >
                       Corrigir no Editor
                       <ArrowRight className="w-3.5 h-3.5 ml-1" />
