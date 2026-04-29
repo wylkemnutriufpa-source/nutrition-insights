@@ -62,7 +62,7 @@ export function getEquivalentFoods(foodId: string): Food[] {
   return group
     .filter(id => id !== foodId)
     .map(id => QUICK_FOODS.find(f => f.id === id))
-    .filter((f): f is Food => !!f)
+    .filter((f): f is any => !!f)
     .filter(f => {
       // Regra 1 do Motor de Substituição: Mesma categoria (já garantido pelo group)
       // Regra 2: Calorias e Proteínas próximas (tolerância 25%)
