@@ -5,16 +5,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { TenantProvider } from "@/lib/tenantContext";
 import { ExperienceModeContext, useExperienceModeState, useExperienceMode } from "@/hooks/useExperienceMode";
-import { useEffect, useState } from "react";
-import { useStabilityHeartbeat } from "@/hooks/useStabilityHeartbeat";
+import { useEffect } from "react";
 import { AppStateProvider } from "@/hooks/useAppState";
 import { Helmet, HelmetProvider } from "react-helmet-async";
 import { GlobalErrorBoundary, CriticalErrorBoundary } from "@/components/common/GlobalErrorBoundary";
 import { CelebrationProvider } from "@/components/common/SuccessCelebration";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
-import { MobileAutoFixer } from "@/components/common/MobileAutoFixer";
-import { UpdateBanner } from "@/components/common/UpdateBanner";
-import { BuildVersionTag } from "@/components/common/BuildVersionTag";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { SystemShieldProvider, useSystemShield } from "@/components/common/SystemShield";
 import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
@@ -24,7 +20,9 @@ const queryClient = new QueryClient({
     queries: {
       staleTime: 2 * 60 * 1000,
       retry: (failureCount, error: any) => {
+        // Fail fast on auth errors
         if (error?.status === 401 || error?.status === 403) return false;
+        // Limited retries to avoid loops
         return failureCount < 2;
       },
       refetchOnWindowFocus: true,
@@ -65,45 +63,8 @@ function RouterBootTracker() {
   return null;
 }
 
-function StabilityMonitor() {
-  const { authStatus } = useAuth();
-  const { isStuck, recover } = useStabilityHeartbeat(authStatus === "loading", 15000);
-
-  if (!isStuck) return null;
-
-  return (
-    <div className="fixed inset-0 z-[9999] bg-black/90 flex items-center justify-center p-6 text-center animate-in fade-in duration-500">
-      <div className="max-w-md space-y-6">
-        <div className="w-20 h-20 bg-amber-500/20 border border-amber-500/40 rounded-3xl mx-auto flex items-center justify-center">
-          <span className="text-4xl">⏳</span>
-        </div>
-        <div className="space-y-2">
-          <h2 className="text-2xl font-bold text-white">O sistema está demorando a responder</h2>
-          <p className="text-zinc-400">
-            A sincronização parece estar travada. Isso pode ocorrer devido a uma conexão instável ou cache corrompido.
-          </p>
-        </div>
-        <div className="flex flex-col gap-3">
-          <button 
-            onClick={() => window.location.reload()}
-            className="w-full py-4 bg-white text-black font-bold rounded-2xl hover:bg-zinc-200 transition-all active:scale-95"
-          >
-            Tentar Recarregar
-          </button>
-          <button 
-            onClick={recover}
-            className="w-full py-3 bg-zinc-900 text-zinc-400 text-sm font-medium rounded-2xl hover:bg-zinc-800 transition-all"
-          >
-            Limpar Dados e Reiniciar
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-}
-
 export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
-  console.log("[CoreProviders] Inicializando árvore de componentes.");
+  console.log("[CoreProviders] Inicializando árvore de componentes determinística.");
   
   if (!children) {
     console.error("[CoreProviders] CRÍTICO: Children está NULO!");
@@ -118,7 +79,6 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
               <BrowserRouter>
                 <RouterBootTracker />
                 <AuthProvider>
-                  <StabilityMonitor />
                   <TenantProvider>
                     <AppStateProvider>
                       <ExperienceModeProvider>
@@ -127,10 +87,6 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                             <ExperienceThemeSync />
                             <Toaster />
                             <Sonner />
-                            <MobileAutoFixer />
-                            <GlobalErrorBoundary />
-                            <UpdateBanner />
-                            <BuildVersionTag />
                             <Helmet>
                               <title>FitJourney</title>
                             </Helmet>
@@ -140,17 +96,18 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                                   <div>
                                     <h1 className="text-3xl font-bold mb-4 underline">FALHA CRÍTICA DE RENDERIZAÇÃO</h1>
                                     <p>O aplicativo tentou renderizar um conteúdo vazio (null).</p>
-                                    <p className="mt-4 text-xs opacity-70">Verifique os logs do console para mais detalhes.</p>
+                                    <p className="mt-4 text-xs opacity-70">O sistema falhou rápido para evitar estados inconsistentes.</p>
                                     <button 
                                       onClick={() => window.location.reload()}
                                       className="mt-8 px-6 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors"
                                     >
-                                      RECARREGAR FORÇADO
+                                      RECARREGAR MANUAL
                                     </button>
                                   </div>
                                 </div>
                               )}
                             </SectionalErrorBoundary>
+                            <GlobalErrorBoundary />
                           </CommandPaletteProvider>
                         </CelebrationProvider>
                       </ExperienceModeProvider>

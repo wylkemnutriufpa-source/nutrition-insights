@@ -1,21 +1,12 @@
 /**
- * FitJourney — Runtime Guard de Paciente v2.0.0 (Hardened)
+ * FitJourney — Runtime Guard de Paciente v3.0.0 (Deterministic)
  *
- * Hook centralizado que valida e auto-corrige o estado do paciente
- * ANTES de qualquer tela crítica renderizar.
- *
- * Recursos v2.0.0:
- *  - Retry automático até 2x com intervalo de 500ms
- *  - Lock global por paciente (anti race-condition)
- *  - Log detalhado em onboarding_runtime_errors
- *  - Hard validation: lifecycle + pipeline obrigatórios
- *
- * Retorna status: "loading" | "ok" | "fixed" | "error" | "no_link"
+ * Hook centralizado que valida o estado do paciente de forma determinística.
+ * Sem auto-cura, sem retries, sem timeouts arbitrários.
  */
 
 import { useEffect, useState, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { logRegression } from "@/lib/regressionGuard";
 
 export type EnsureStatus = "loading" | "ok" | "fixed" | "error" | "no_link";
 
@@ -32,59 +23,14 @@ interface Options {
   enabled?: boolean;
 }
 
-const MAX_ATTEMPTS = 3; // 1 inicial + 2 retries
-const RETRY_DELAY_MS = 500;
-
 /** Lock global em memória — evita execução concorrente para o mesmo paciente. */
 const inflightLocks = new Map<string, Promise<EnsureResult>>();
-/** Cache de resultado bem-sucedido recente (evita re-checks dentro do mesmo "ciclo"). */
-const recentSuccess = new Map<string, { result: EnsureResult; at: number }>();
-const SUCCESS_TTL_MS = 30_000;
-
-async function logRuntimeError(
-  patientId: string,
-  context: string,
-  attempt: number,
-  errorMessage: string,
-  payload: unknown
-) {
-  try {
-    await supabase.from("onboarding_runtime_errors" as any).insert({
-      patient_id: patientId,
-      context,
-      attempt,
-      error_message: errorMessage,
-      error_payload: payload as any,
-    } as any);
-  } catch {
-    // best-effort — nunca quebrar o fluxo por causa de log
-  }
-}
 
 async function runEnsureOnce(
   patientId: string,
   context: string
 ): Promise<EnsureResult> {
-  // 1) Runtime fix primeiro (rápido, com cache de 5min no DB)
-  const { data: fixData, error: fixError } = await supabase.rpc(
-    "run_patient_realtime_fix" as any,
-    { _patient_id: patientId }
-  );
-
-  if (!fixError && fixData) {
-    const fixPayload = fixData as Record<string, unknown>;
-    const fixed = (fixPayload.fixed as number) ?? 0;
-    const success = (fixPayload.success as boolean) ?? false;
-    if (success && fixed > 0) {
-      return {
-        status: "fixed",
-        issues: [`runtime_fix:${fixed}`],
-        actions: [fixPayload],
-      };
-    }
-  }
-
-  // 2) Validação final via ensure_patient_ready
+  // Apenas validação direta. Sem rpc de "fix" automático.
   try {
     const { data, error } = await supabase.rpc(
       "ensure_patient_ready",
@@ -92,7 +38,7 @@ async function runEnsureOnce(
     );
 
     if (error) {
-      console.error(`[EnsurePatientReady:RPCError] Patient: ${patientId}`, error);
+      console.error(`[EnsurePatientReady:FailFast] Patient: ${patientId}`, error);
       return {
         status: "error",
         issues: ["rpc_failed"],
@@ -106,140 +52,15 @@ async function runEnsureOnce(
     const issues = (payload.issues as string[]) ?? [];
     const actions = (payload.actions as unknown[]) ?? [];
 
-    console.log(`%c[EnsurePatientReady:Result] Patient: ${patientId} Status: ${status}`, "color: #8b5cf6; font-weight: bold", {
-      issues,
-      actions,
-      payload
-    });
-
     return { status, issues, actions };
   } catch (err: any) {
     if (err?.message?.includes('permission denied')) {
        return { status: "ok", issues: ["permission_bypass"], actions: [] };
     }
-    // Specific error: User has no patient profile or journey status
-    if (err?.message?.includes('No nutritionist_patient link found') || 
-        err?.message?.includes('No nutritionist-patient link found') ||
-        err?.message?.includes('vínculo não encontrado')) {
-       console.error(`[EnsurePatientReady] CRITICAL: Patient ${patientId} has no link`);
-       
-       // Log estruturado para rastreabilidade de erro de vínculo
-       try {
-         const { data: { user } } = await supabase.auth.getUser();
-         supabase.rpc("log_audit", {
-           _action: "no_link_detected",
-           _resource_type: "auth_binding",
-           _resource_id: patientId,
-           _metadata: { 
-             email: user?.email ?? "unknown",
-             flow: "onboarding_guard",
-             context: context,
-             result: "no_link"
-           }
-         }).then();
-       } catch (e) {
-         console.warn("[EnsurePatientReady] Failed to log binding error audit", e);
-       }
-       
+    if (err?.message?.includes('vínculo não encontrado')) {
        return { status: "no_link", issues: ["missing_link"], actions: [] };
     }
     throw err;
-  }
-}
-
-async function ensureWithRetry(
-  patientId: string,
-  context: string
-): Promise<EnsureResult> {
-  // Cache curto de sucesso
-  const cached = recentSuccess.get(patientId);
-  if (cached && Date.now() - cached.at < SUCCESS_TTL_MS) {
-    return cached.result;
-  }
-
-  // Lock: se já há execução em andamento, espera por ela
-  const existing = inflightLocks.get(patientId);
-  if (existing) return existing;
-
-  const promise = (async (): Promise<EnsureResult> => {
-    let last: EnsureResult = {
-      status: "error",
-      issues: ["not_executed"],
-      actions: [],
-    };
-
-    const timeoutPromise = new Promise<EnsureResult>((_, reject) =>
-      setTimeout(() => reject(new Error("Timeout: A validação de acesso demorou demais.")), 15000)
-    );
-
-    const mainPromise = (async (): Promise<EnsureResult> => {
-      for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
-        try {
-          const r = await runEnsureOnce(patientId, context);
-          last = { ...r, attempts: attempt };
-
-          if (r.status === "ok" || r.status === "fixed") {
-            if (r.status === "fixed") {
-              logRegression({
-                affected_flow: `runtime_guard:${context}`,
-                detected_issue: `auto-fixed: ${r.issues.join(",")}`,
-                severity: "low",
-                source_layer: "database",
-                auto_fallback_applied: true,
-                metadata: { issues: r.issues, actions: r.actions, attempt },
-              });
-            }
-            recentSuccess.set(patientId, { result: last, at: Date.now() });
-            return last;
-          }
-
-          // erro → log + retry
-          await logRuntimeError(
-            patientId,
-            context,
-            attempt,
-            r.errorMessage ?? `status=${r.status}`,
-            { issues: r.issues, actions: r.actions }
-          );
-        } catch (err) {
-          const msg = err instanceof Error ? err.message : String(err);
-          last = {
-            status: "error",
-            issues: ["exception"],
-            actions: [],
-            errorMessage: msg,
-            attempts: attempt,
-          };
-          await logRuntimeError(patientId, context, attempt, msg, null);
-        }
-
-        if (attempt < MAX_ATTEMPTS) {
-          await new Promise((r) => setTimeout(r, RETRY_DELAY_MS));
-        }
-      }
-      return last;
-    })();
-
-    try {
-      return await Promise.race([mainPromise, timeoutPromise]);
-    } catch (err: any) {
-      logRegression({
-        affected_flow: `runtime_guard:${context}`,
-        detected_issue: `unrecoverable/timeout: ${err.message}`,
-        severity: "critical",
-        source_layer: "database",
-        auto_fallback_applied: false,
-        metadata: { issues: last.issues, actions: last.actions },
-      });
-      return { ...last, status: "error", errorMessage: err.message };
-    }
-  })();
-
-  inflightLocks.set(patientId, promise);
-  try {
-    return await promise;
-  } finally {
-    inflightLocks.delete(patientId);
   }
 }
 
@@ -256,7 +77,6 @@ export function useEnsurePatientReady(
   const lastCheckedRef = useRef<string | null>(null);
 
   useEffect(() => {
-    // If not enabled or no patientId, reset to loading but don't check
     if (!enabled || !patientId) {
       setResult({ status: "loading", issues: [], actions: [] });
       lastCheckedRef.current = null;
@@ -264,19 +84,28 @@ export function useEnsurePatientReady(
     }
     
     const key = `${patientId}:${context}`;
-    // Skip if already checked for this key in this component instance
     if (lastCheckedRef.current === key) return;
     lastCheckedRef.current = key;
 
     let cancelled = false;
     setResult({ status: "loading", issues: [], actions: [] });
 
-    console.log(`%c[EnsurePatientReady] Starting check | Patient: ${patientId} | Context: ${context}`, "color: #3b82f6");
-    ensureWithRetry(patientId, context).then((r) => {
+    // Lock local para evitar chamadas duplicadas
+    const existing = inflightLocks.get(patientId);
+    if (existing) {
+      existing.then(r => { if (!cancelled) setResult(r); });
+      return;
+    }
+
+    const promise = runEnsureOnce(patientId, context);
+    inflightLocks.set(patientId, promise);
+
+    promise.then((r) => {
       if (!cancelled) {
-        console.log(`[EnsurePatientReady] Result for ${patientId}: ${r.status}`, r.issues);
         setResult(r);
       }
+    }).finally(() => {
+      inflightLocks.delete(patientId);
     });
 
     return () => {

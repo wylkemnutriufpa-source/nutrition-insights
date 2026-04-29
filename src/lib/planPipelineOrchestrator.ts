@@ -139,10 +139,8 @@ export async function runPlanPipeline(input: PipelineInput): Promise<PipelineRes
         isPipeline: false,
         templateSlug: input.templateSlug,
       },
-    }, {
-      maxRetries: 3,
-      initialDelay: 2000,
     });
+
 
     if (error) {
       const msg = await friendlyEdgeFunctionError(error, "Erro ao gerar plano via engine central");

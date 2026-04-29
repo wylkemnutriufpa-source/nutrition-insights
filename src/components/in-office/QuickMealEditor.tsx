@@ -12,7 +12,7 @@ import {
   Loader2, Calendar, BookTemplate, GripVertical, Flame, Beef, Wheat, Droplets,
   Download, Eye, ArrowRight, RefreshCw, ClipboardCheck, X, AlertTriangle, Info, ShieldCheck, Check
 } from "lucide-react";
-import { withRetry } from "@/lib/retry";
+// withRetry removido para garantir comportamento fail-fast
 import type { Database } from "@/integrations/supabase/types";
 import { cn } from "@/lib/utils";
 import { validatePlanSubstitutions } from "@/lib/mealPlanSubstitutionValidator";
@@ -198,29 +198,29 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
     const finalGroupId = substitutionGroupId || (isPrimary ? crypto.randomUUID() : null);
     
     enqueuePersistence(async () => {
-      await withRetry(async () => {
-        const { error } = await supabase
-          .from("meal_plan_items")
-          .upsert({
-            id: itemId,
-            meal_plan_id: mealPlanId,
-            meal_type: blockType,
-            title: food.name,
-            description: `${food.serving_size || 100}${food.serving_unit || "g"}`,
-            calories_target: food.calories || 0,
-            protein_target: food.protein || 0,
-            carbs_target: food.carbs || 0,
-            fat_target: food.fat || 0,
-            day_of_week: 0,
-            item_origin: "in_office_manual",
-            tenant_id: tenantId,
-            is_primary: isPrimary,
-            substitution_group_id: finalGroupId,
-          });
-        if (error) throw error;
-      }, {
-        onRetry: (attempt) => toast.info(`Tentativa ${attempt} de adicionar item...`),
-      });
+      const { error } = await supabase
+        .from("meal_plan_items")
+        .upsert({
+          id: itemId,
+          meal_plan_id: mealPlanId,
+          meal_type: blockType,
+          title: food.name,
+          description: `${food.serving_size || 100}${food.serving_unit || "g"}`,
+          calories_target: food.calories || 0,
+          protein_target: food.protein || 0,
+          carbs_target: food.carbs || 0,
+          fat_target: food.fat || 0,
+          day_of_week: 0,
+          item_origin: "in_office_manual",
+          tenant_id: tenantId,
+          is_primary: isPrimary,
+          substitution_group_id: finalGroupId,
+        });
+      if (error) {
+        console.error("[QuickMealEditor] Erro ao adicionar item:", error);
+        throw error;
+      }
+
     });
   };
 
@@ -314,25 +314,22 @@ export default function QuickMealEditor({ mealPlanId, patientId, sessionId, tena
 
     enqueuePersistence(async () => {
       try {
-        await withRetry(async () => {
-          // Delete existing items
-          if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
-            throw new Error("DELETE bloqueado: mealPlanId inválido");
-          }
-          
-          await supabase
-            .from("meal_plan_items")
-            .delete()
-            .eq("meal_plan_id", mealPlanId)
-            .eq("day_of_week", 0);
+        // Delete existing items
+        if (!mealPlanId || typeof mealPlanId !== 'string' || mealPlanId.trim() === "") {
+          throw new Error("DELETE bloqueado: mealPlanId inválido");
+        }
+        
+        await supabase
+          .from("meal_plan_items")
+          .delete()
+          .eq("meal_plan_id", mealPlanId)
+          .eq("day_of_week", 0);
 
-          if (inserts.length > 0) {
-            const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
-            if (insErr) throw insErr;
-          }
-        }, {
-          onRetry: (attempt) => toast.info(`Tentativa ${attempt} de aplicar template...`),
-        });
+        if (inserts.length > 0) {
+          const { error: insErr } = await supabase.from("meal_plan_items").upsert(inserts);
+          if (insErr) throw insErr;
+        }
+
 
         setShowTemplateLoad(false);
         setPreviewTemplate(null);

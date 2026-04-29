@@ -4,7 +4,7 @@ import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import { useTenant } from "@/lib/tenantContext";
 import { withTenantFilter, getTenantIdForInsert } from "@/lib/tenantQueryHelpers";
-import { uploadWithRetry } from "@/lib/uploadWithRetry";
+import { uploadFile } from "@/lib/upload";
 import { useFormDraft } from "@/hooks/useFormDraft";
 import DashboardLayout from "@/components/layout/DashboardLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -93,17 +93,14 @@ export default function BodyAnalysis() {
   useEffect(() => { fetchAnalyses(); }, [patientId]);
 
   const uploadImage = async (file: File, path: string): Promise<string | null> => {
-    return uploadWithRetry({
+    return uploadFile({
       bucket: "body-images",
       path,
       file,
-      maxRetries: 3,
-      returnPath: true, // Store path in DB, not signed URL
-      onProgress: (attempt, max) => {
-        if (attempt > 1) toast.info(`Retry upload (${attempt}/${max})...`);
-      },
+      returnPath: true,
     });
   };
+
 
   const handleSubmit = async () => {
     if (!user || !patientId) return;

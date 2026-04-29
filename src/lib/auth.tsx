@@ -62,20 +62,9 @@ const defaultSubscription: SubscriptionState = {
   trial_end: null,
 };
 
-function withAuthTimeout<T>(promise: Promise<T>, label: string, timeoutMs = 5000): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = window.setTimeout(() => {
-      console.warn(`[Auth] Latência detectada em ${label}. Mantendo estado pendente...`);
-      // Não resolvemos com fallback, deixamos a promise original decidir.
-      // Isso evita assumir que o usuário não existe quando há apenas lentidão.
-    }, timeoutMs);
+// withAuthTimeout removido. O sistema agora deve aguardar a resposta real do backend
+// para garantir previsibilidade e evitar estados falsos.
 
-    promise
-      .then(resolve)
-      .catch(reject)
-      .finally(() => window.clearTimeout(timer));
-  });
-}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -147,21 +136,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       
-      // Timer de segurança para evitar loading infinito (12 segundos)
-      const bootTimeout = setTimeout(() => {
-        if (loading) {
-          console.error(`[Auth:${correlationId}] TIME OUT CRÍTICO: Inicialização demorou mais de 12s.`);
-          setError(new Error("O sistema demorou muito para responder. Por favor, verifique sua conexão."));
-          setLoading(false);
-        }
-      }, 12000);
+      // Timer de segurança removido para evitar auto-cura. 
+      // O sistema deve falhar via ErrorBoundary ou timeout nativo do navegador.
+
 
       try {
         console.log(`[Auth:${correlationId}] Buscando sessão inicial do Supabase...`);
-        const { data: { session }, error: sessionError } = await withAuthTimeout(
-          supabase.auth.getSession(),
-          "sessão inicial"
-        );
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
 
         if (sessionError) {
           throw sessionError;
@@ -182,7 +164,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
           if (mounted) {
             setLoading(false);
-            clearTimeout(bootTimeout);
             checkSubscription();
             console.log(`[Auth:${correlationId}] Inicialização concluída com sucesso.`);
           }
@@ -190,7 +171,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           console.log(`[Auth:${correlationId}] Nenhum usuário encontrado.`);
           if (mounted) {
             setLoading(false);
-            clearTimeout(bootTimeout);
           }
         }
       } catch (err: any) {
@@ -198,7 +178,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setError(err instanceof Error ? err : new Error(String(err)));
           setLoading(false);
-          clearTimeout(bootTimeout);
         }
       }
     };

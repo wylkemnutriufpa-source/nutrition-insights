@@ -8,7 +8,7 @@
  * - Experience Mode & Workspace Governance
  */
 
-import { APP_VERSION } from "./versionCheck";
+// APP_VERSION removido para evitar lógica de version mismatch auto-healing
 
 export type SystemDecisionType = 'ALLOW' | 'REDIRECT' | 'BLOCK' | 'RELOAD';
 
@@ -101,10 +101,8 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   const { pathname = '/', user, profile, isReady, isDegraded, versionMismatch } = ctx;
   const safePathname = typeof pathname === 'string' ? pathname : '/';
 
-  // 1. Versioning Rule (Critical)
-  if (versionMismatch && isReady) {
-    return { type: 'RELOAD', reason: 'Version mismatch detected', metadata: { local: APP_VERSION } };
-  }
+  // Regra de Versioning removida para garantir estabilidade por previsibilidade.
+
 
   // 2. Degraded Mode Rule
   if (isDegraded && !safePathname.startsWith('/auth')) {
