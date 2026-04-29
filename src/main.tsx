@@ -7,9 +7,10 @@ import { stampBuildIdentity } from "./lib/buildInfo";
 import { startVersionSync } from "./lib/versionCheck";
 
 // Boot silent
+const VERSION = "2.4.3-pwa-stable";
 if (import.meta.env.DEV) {
   console.log("%c[FitJourney:Boot] Iniciando sistema...", "color: #10b981; font-weight: bold; font-size: 12px;", {
-    version: "2.4.2-stable"
+    version: VERSION
   });
 }
 
