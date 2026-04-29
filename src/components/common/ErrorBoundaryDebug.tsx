@@ -54,47 +54,66 @@ Component Stack: ${this.state.errorInfo?.componentStack}
 
   render() {
     if (this.state.hasError) {
-      const isDebug = localStorage.getItem("fj_debug") === "true";
-
+      console.log(`[ErrorBoundaryDebug] Renderizando tela de erro para: ${this.props.name || "Global"}`);
+      
       return (
-        <div className="p-6 m-4 border-2 border-destructive/50 bg-destructive/5 rounded-xl shadow-lg animate-in fade-in slide-in-from-top-4 duration-500">
-          <div className="flex items-center gap-4 mb-4">
-            <div className="p-3 bg-destructive rounded-full">
-              <AlertTriangle className="w-6 h-6 text-destructive-foreground" />
+        <div className="p-6 m-4 border-2 border-destructive bg-destructive/10 rounded-xl shadow-2xl animate-in fade-in slide-in-from-top-4 duration-500 overflow-auto max-w-[95vw] mx-auto my-10">
+          <div className="flex items-center gap-4 mb-6">
+            <div className="p-4 bg-destructive rounded-full shrink-0">
+              <AlertTriangle className="w-8 h-8 text-destructive-foreground" />
             </div>
             <div>
-              <h2 className="text-xl font-bold text-destructive">Ocorreu um erro inesperado</h2>
-              <p className="text-sm text-muted-foreground">
-                Estamos trabalhando para resolver. Por favor, tente recarregar a página.
+              <h2 className="text-2xl font-bold text-destructive">CRASH DETECTADO: {this.props.name || "App"}</h2>
+              <p className="text-sm text-muted-foreground font-medium">
+                Um componente quebrou e impediu a renderização normal.
               </p>
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-2 mb-4">
-            <Button variant="default" size="sm" onClick={() => window.location.reload()} className="gap-2">
-              <RefreshCcw className="w-4 h-4" /> Recarregar Página
-            </Button>
+          <div className="bg-black/80 text-white p-4 rounded-lg mb-6 font-mono text-xs overflow-auto border border-white/10">
+            <p className="text-red-400 font-bold mb-2 underline">MENSAGEM DE ERRO:</p>
+            <p className="mb-4">{this.state.error?.message}</p>
             
-            {isDebug && (
-              <Button 
-                variant="outline" 
-                size="sm" 
-                onClick={() => this.setState(s => ({ showDetails: !s.showDetails }))}
-                className="gap-2"
-              >
-                {this.state.showDetails ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                Detalhes Técnicos
-              </Button>
-            )}
+            <p className="text-red-400 font-bold mb-2 underline">STACK TRACE:</p>
+            <pre className="whitespace-pre-wrap mb-4 opacity-80 leading-relaxed">
+              {this.state.error?.stack}
+            </pre>
+
+            <p className="text-red-400 font-bold mb-2 underline">COMPONENT STACK:</p>
+            <pre className="whitespace-pre-wrap opacity-60 leading-relaxed">
+              {this.state.errorInfo?.componentStack}
+            </pre>
           </div>
 
-          {isDebug && this.state.showDetails && (
-            <div className="animate-in zoom-in-95 duration-200">
-              <pre className="text-[10px] p-3 bg-muted rounded border border-border overflow-auto max-h-[300px] leading-tight">
-                {this.state.error?.stack}
-              </pre>
-            </div>
-          )}
+          <div className="flex flex-wrap gap-3">
+            <Button variant="default" size="lg" onClick={() => window.location.reload()} className="gap-2 bg-destructive hover:bg-destructive/90 text-white">
+              <RefreshCcw className="w-5 h-5" /> RECARREGAR APP
+            </Button>
+            
+            <Button 
+              variant="outline" 
+              size="lg" 
+              onClick={this.handleCopyError}
+              className="gap-2 border-destructive text-destructive hover:bg-destructive/10"
+            >
+              <Copy className="w-5 h-5" /> COPIAR LOG DE ERRO
+            </Button>
+
+            <Button 
+              variant="ghost" 
+              size="lg" 
+              onClick={() => window.location.assign("/")}
+              className="gap-2"
+            >
+              IR PARA HOME
+            </Button>
+          </div>
+
+          <div className="mt-6 pt-6 border-t border-destructive/20 text-[10px] text-muted-foreground">
+            ID do Erro: {Math.random().toString(36).substr(2, 9).toUpperCase()} | 
+            Timestamp: {new Date().toISOString()} | 
+            Navegador: {navigator.userAgent}
+          </div>
         </div>
       );
     }
