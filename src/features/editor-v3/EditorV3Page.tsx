@@ -593,20 +593,6 @@ const EditorV3Page = () => {
               <Layers className="w-3.5 h-3.5" />
               Templates
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-white/20 hover:text-white/60 rounded-xl"
-            >
-              <History className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-white/20 hover:text-white/60 rounded-xl"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </Button>
           </div>
 
           <Button
@@ -617,37 +603,6 @@ const EditorV3Page = () => {
           >
             <Users className="w-3.5 h-3.5" />
             {patientId ? 'Paciente' : 'Escolher'}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isGeneratingGlobal}
-            onClick={() => {
-              const hasItems = meals.some(m => m.items.length > 0);
-              if (hasItems) {
-                setShowAIGenerateConfirm(true);
-              } else {
-                handleGlobalGenerate(false);
-              }
-            }}
-            className="gap-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-[11px] font-black tracking-wide transition-all rounded-lg min-w-[140px]"
-          >
-            {isGeneratingGlobal ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
-            )}
-            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO (ENGINE V3)'}
-          </Button>
-          <Button
-            size="sm"
-            onClick={handlePromotionRequest}
-            disabled={promoting || !draftId}
-            className="gap-2 font-black text-[11px] tracking-wide bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] rounded-lg px-5"
-          >
-            {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {promoting ? 'SALVANDO...' : 'SALVAR PLANO'}
           </Button>
         </div>
       </header>
