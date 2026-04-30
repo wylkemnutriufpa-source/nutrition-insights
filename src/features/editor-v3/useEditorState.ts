@@ -16,6 +16,7 @@ interface EditorState {
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
   removeFood: (mealId: string, instanceId: string) => void;
+  updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
   generatePlan: (goal: string) => void;
   savePlan: () => Promise<void>;
   resetEditor: () => void;
