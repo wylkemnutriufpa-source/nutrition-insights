@@ -68,10 +68,10 @@ export const searchMarmitas = async (nutritionistId: string | null): Promise<Foo
 
 export const searchTemplates = async (): Promise<MealTemplate[]> => {
   const { data, error } = await supabase
-    .from("diet_templates")
+    .from("nutritionist_meal_templates")
     .select("*")
-    .eq("is_active", true)
-    .limit(10);
+    .order("name")
+    .limit(20);
 
   if (error) {
     console.error("Error searching templates:", error);
@@ -79,29 +79,25 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
   }
 
   return (data || []).map((t: any) => {
-    // Map template meals to V3 format if possible
-    // This is a complex mapping as diet_templates might have different structures
-    // For now, let's just return a basic structure
-    const meals = Array.isArray(t.meals) ? t.meals : [];
-    const firstMeal = meals[0];
+    const foods = Array.isArray(t.foods_structure) ? t.foods_structure : [];
     
     return {
       id: t.id,
       name: t.name,
-      description: t.description || "",
-      items: (firstMeal?.foods || []).map((f: any) => ({
+      description: t.goal_tags ? t.goal_tags.join(", ") : (t.meal_type || ""),
+      items: foods.map((f: any) => ({
         id: Math.random().toString(36).substring(2, 9),
         name: f.name,
-        kcal: f.calories || 0,
-        calories: f.calories || 0,
+        kcal: f.kcal || 0,
+        calories: f.kcal || 0,
         protein: f.protein || 0,
         carbs: f.carbs || 0,
         fat: f.fat || 0,
         portionValue: 1,
-        portionUnitLabel: "g",
-        portionUnit: "g",
+        portionUnitLabel: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
+        portionUnit: f.portion?.includes("g") ? "g" : (f.portion?.includes("ml") ? "ml" : "unidade"),
         portionLabel: f.portion || "100g",
-        measurementType: "gram"
+        measurementType: f.portion?.includes("g") ? "gram" : (f.portion?.includes("ml") ? "ml" : "unit")
       }))
     };
   });
