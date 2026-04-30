@@ -433,9 +433,7 @@ const EditorV3Page = () => {
                         Adicionar
                       </Button>
                     </PopoverTrigger>
-                  </Popover>
-                </div>
-                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
+                    <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
                     {/* Alimentos */}
                     <div className="p-4 border-b border-emerald-500/10">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
