@@ -403,6 +403,73 @@ const EditorV3Page = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
+      {/* Gráfico de Macros Global - Topo */}
+      <div className="bg-black/40 border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+             <div className="flex flex-col">
+               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Status Nutricional</span>
+               <div className="flex items-center gap-6">
+                  <div className="flex flex-col">
+                    <span className="text-xl font-black text-white">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-white/40 font-bold ml-1 uppercase">kcal</span></span>
+                  </div>
+                  <div className="h-8 w-px bg-white/10" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-emerald-400">{Math.round(totalMacros.protein)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Prot</span></span>
+                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (totalMacros.protein * 4 / totalMacros.kcal) * 100 || 0)}%` }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-blue-400">{Math.round(totalMacros.carbs)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Carb</span></span>
+                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (totalMacros.carbs * 4 / totalMacros.kcal) * 100 || 0)}%` }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-amber-400">{Math.round(totalMacros.fat)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Gord</span></span>
+                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: `${Math.min(100, (totalMacros.fat * 9 / totalMacros.kcal) * 100 || 0)}%` }} />
+                    </div>
+                  </div>
+               </div>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowResetConfirm(true)}
+              className="h-9 border-white/5 bg-white/5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-2" /> Resetar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isGeneratingGlobal}
+              onClick={() => {
+                const hasItems = meals.some(m => m.items.length > 0);
+                if (hasItems) setShowAIGenerateConfirm(true);
+                else handleGlobalGenerate(false);
+              }}
+              className="h-9 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Gerar Plano
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePromotionRequest}
+              disabled={promoting || !draftId}
+              className="h-9 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-black uppercase tracking-widest rounded-xl transition-all px-6 shadow-lg shadow-emerald-500/20"
+            >
+              <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {isSandbox && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 px-6 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top duration-500">
           <div className="flex h-5 w-5 rounded-full bg-amber-500/20 items-center justify-center">
