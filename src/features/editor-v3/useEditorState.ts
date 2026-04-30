@@ -114,7 +114,7 @@ export const useEditorState = create<EditorState>()(
       },
       
       updateFoodQuantity: (mealId, instanceId, quantity) => {
-        if (quantity < 1) return;
+        if (quantity < 0) return;
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
