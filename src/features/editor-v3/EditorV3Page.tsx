@@ -210,7 +210,7 @@ const EditorV3Page = () => {
           <Button 
             variant="ghost" 
             size="sm" 
-            onClick={() => navigate('/patients')}
+            onClick={() => setShowPatientSelector(true)}
             className="h-6 text-[9px] font-black text-amber-500/60 hover:text-amber-500 hover:bg-amber-500/10 uppercase tracking-tighter"
           >
             Selecionar Paciente para Salvar
