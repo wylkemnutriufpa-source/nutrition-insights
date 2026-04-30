@@ -41,38 +41,53 @@ export default function Welcome() {
         return;
       }
 
-      // 3.2. Se não há intenção de convite, aguardamos o perfil/roles carregar totalmente
-      // Se user existe mas profile ainda é null, e não somos convidados, esperamos um pouco
+      // 3.2. Hint dos metadados (para novos usuários)
+      const metaRole = user?.user_metadata?.role;
+      const isProHint = metaRole === "nutritionist" || metaRole === "personal";
+
+      // 3.3. Aguardar carregamento completo de roles e perfil
+      // Se não temos profile ou roles ainda, mas somos pro hint, esperamos
+      if ((!profile || roles.length === 0) && isProHint) {
+        console.log("[Welcome] Profissional detectado via metadata. Aguardando sincronização do banco...");
+        return;
+      }
+
+      // Se temos usuário mas nada carregou e não temos hint, aguardamos um pouco mais
       if (!profile && authStatus === "authenticated") {
-        console.log("[Welcome] Usuário logado sem perfil carregado ainda. Aguardando sincronização do banco...");
+        console.log("[Welcome] Aguardando perfil...");
         return; 
       }
 
-      // 3.3. Limpeza de estado se já temos profile + roles
+      // 3.4. Limpeza de estado se já temos profile + roles
       if (profile && roles.length > 0) {
         localStorage.removeItem("fj_invited");
         localStorage.removeItem("fj_user_type");
       }
 
-      // 3.4. Decisão baseada em Roles (Profissional/Admin)
+      // 3.5. Decisão baseada em Roles (Profissional/Admin)
       if (roles.includes("nutritionist") || roles.includes("personal") || (roles as string[]).includes("admin")) {
         console.log("[Welcome] Role Profissional/Admin detectada.");
         navigate(nextPath || "/admin/dashboard", { replace: true });
         return;
       }
 
-      // 3.5. Decisão baseada em Role (Paciente)
+      // 3.6. Decisão baseada em Role (Paciente)
       if (roles.includes("patient")) {
         console.log("[Welcome] Role Paciente detectada.");
         navigate(nextPath || "/client/dashboard", { replace: true });
         return;
       }
 
-      // 3.6. Fallback de Segurança: Se logado mas sem role definida no banco e sem convite
-      // Provavelmente um usuário que acabou de criar conta mas não veio via link de convite
-      console.log("[Welcome] Usuário logado sem role ou intenção. Verificando perfil...");
+      // 3.7. Fallback Determinístico para Profissional (Regra de Ouro)
+      // Se o usuário veio pelo fluxo de registro profissional (metaRole), NUNCA vai para o fluxo de paciente
+      if (isProHint) {
+        console.log("[Welcome] Redirecionando profissional via metadata hint.");
+        navigate("/admin/dashboard", { replace: true });
+        return;
+      }
+
+      // 3.8. Fallback de Segurança: Se logado mas sem role definida no banco e sem convite
       if (profile) {
-        // Se já tem perfil, assume dashboard de cliente por padrão
         navigate("/client/dashboard", { replace: true });
       }
     };
