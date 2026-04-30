@@ -57,10 +57,14 @@ export const useEditorState = create<EditorState>()(
       },
 
       addFoodToMeal: (mealId, food) => {
+        let initialQuantity = 1;
+        if (food.measurementType === 'gram') initialQuantity = 100;
+        if (food.measurementType === 'ml') initialQuantity = 200;
+
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
-              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: 1, locked: false }] }
+              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: initialQuantity, locked: false }] }
               : m
           ),
           planStatus: 'draft',
@@ -69,12 +73,18 @@ export const useEditorState = create<EditorState>()(
       },
 
       applyTemplateToMeal: (mealId, template) => {
-        const newItems: MealItem[] = template.items.map((f) => ({
-          ...f,
-          instanceId: makeInstanceId(),
-          quantity: 1,
-          locked: false,
-        }));
+        const newItems: MealItem[] = template.items.map((f) => {
+          let initialQuantity = 1;
+          if (f.measurementType === 'gram') initialQuantity = 100;
+          if (f.measurementType === 'ml') initialQuantity = 200;
+          
+          return {
+            ...f,
+            instanceId: makeInstanceId(),
+            quantity: initialQuantity,
+            locked: false,
+          };
+        });
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId ? { ...m, items: [...m.items, ...newItems] } : m
@@ -104,7 +114,7 @@ export const useEditorState = create<EditorState>()(
       },
       
       updateFoodQuantity: (mealId, instanceId, quantity) => {
-        if (quantity < 1) return;
+        if (quantity < 0) return;
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId

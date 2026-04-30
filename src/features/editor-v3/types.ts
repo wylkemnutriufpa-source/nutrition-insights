@@ -13,6 +13,7 @@ export interface Food {
   portionValue: number;
   portionUnit: string;
   portionLabel: string;
+  measurementType?: 'unit' | 'gram' | 'spoon' | 'ml';
   isMarmita?: boolean;
   locked?: boolean;
   imageUrl?: string;

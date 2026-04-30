@@ -11,6 +11,7 @@ export const mockMarmitas: Food[] = [
     portionValue: 350, 
     portionUnit: 'marmita', 
     portionLabel: '1 marmita',
+    measurementType: 'unit',
     isMarmita: true, 
     locked: true,
     imageUrl: 'https://images.unsplash.com/photo-1543339308-43e59d6b73a6?q=80&w=200' 
@@ -25,6 +26,7 @@ export const mockMarmitas: Food[] = [
     portionValue: 350, 
     portionUnit: 'marmita', 
     portionLabel: '1 marmita',
+    measurementType: 'unit',
     isMarmita: true, 
     locked: true,
     imageUrl: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?q=80&w=200' 
@@ -39,6 +41,7 @@ export const mockMarmitas: Food[] = [
     portionValue: 300, 
     portionUnit: 'marmita', 
     portionLabel: '1 marmita',
+    measurementType: 'unit',
     isMarmita: true, 
     locked: true,
     imageUrl: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=200' 
@@ -46,12 +49,14 @@ export const mockMarmitas: Food[] = [
 ];
 
 export const mockFoods: Food[] = [
-  { id: 'f1', name: 'Ovo cozido', calories: 70, protein: 6, carbs: 0, fat: 5, portionValue: 50, portionUnit: 'unidade', portionLabel: '1 unidade' },
-  { id: 'f2', name: 'Banana', calories: 90, protein: 1, carbs: 23, fat: 0, portionValue: 100, portionUnit: 'unidade', portionLabel: '1 unidade' },
-  { id: 'f3', name: 'Pão integral', calories: 70, protein: 3, carbs: 13, fat: 1, portionValue: 25, portionUnit: 'fatia', portionLabel: '1 fatia' },
-  { id: 'f4', name: 'Iogurte natural', calories: 80, protein: 7, carbs: 9, fat: 2, portionValue: 170, portionUnit: 'pote', portionLabel: '1 pote' },
-  { id: 'f5', name: 'Whey protein', calories: 120, protein: 25, carbs: 3, fat: 1, portionValue: 30, portionUnit: 'medida', portionLabel: '1 medida' },
-  { id: 'f6', name: 'Aveia em flocos', calories: 56, protein: 2, carbs: 10, fat: 1, portionValue: 15, portionUnit: 'colher', portionLabel: '1 colher' },
+  { id: 'f1', name: 'Ovo cozido', calories: 70, protein: 6, carbs: 0, fat: 5, portionValue: 50, portionUnit: 'unidade', portionLabel: '1 unidade', measurementType: 'unit' },
+  { id: 'f2', name: 'Banana', calories: 90, protein: 1, carbs: 23, fat: 0, portionValue: 100, portionUnit: 'unidade', portionLabel: '1 unidade', measurementType: 'unit' },
+  { id: 'f3', name: 'Pão integral', calories: 70, protein: 3, carbs: 13, fat: 1, portionValue: 25, portionUnit: 'fatia', portionLabel: '1 fatia', measurementType: 'unit' },
+  { id: 'f4', name: 'Arroz branco', calories: 1.3, protein: 0.02, carbs: 0.28, fat: 0, portionValue: 1, portionUnit: 'g', portionLabel: 'gramas', measurementType: 'gram' },
+  { id: 'f5', name: 'Frango grelhado', calories: 1.6, protein: 0.31, carbs: 0, fat: 0.03, portionValue: 1, portionUnit: 'g', portionLabel: 'gramas', measurementType: 'gram' },
+  { id: 'f6', name: 'Aveia em flocos', calories: 56, protein: 2, carbs: 10, fat: 1, portionValue: 15, portionUnit: 'colher', portionLabel: '1 colher', measurementType: 'spoon' },
+  { id: 'f7', name: 'Leite desnatado', calories: 0.35, protein: 0.03, carbs: 0.05, fat: 0, portionValue: 1, portionUnit: 'ml', portionLabel: 'ml', measurementType: 'ml' },
+  { id: 'f8', name: 'Whey protein', calories: 120, protein: 25, carbs: 3, fat: 1, portionValue: 30, portionUnit: 'medida', portionLabel: '1 medida', measurementType: 'unit' },
 ];
 
 export interface MealTemplate {
