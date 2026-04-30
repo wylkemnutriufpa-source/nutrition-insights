@@ -45,7 +45,7 @@ function computeMacros(meals: Meal[]) {
   for (const meal of meals) {
     for (const item of meal.items) {
       const q = item.quantity ?? 1;
-      kcal += (item.calories ?? 0) * q;
+      kcal += (item.kcal ?? item.calories ?? 0) * q;
       protein += (item.protein ?? 0) * q;
       carbs += (item.carbs ?? 0) * q;
       fat += (item.fat ?? 0) * q;
