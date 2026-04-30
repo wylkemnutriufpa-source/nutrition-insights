@@ -288,6 +288,15 @@ const EditorV3Page = () => {
           <Button
             variant="ghost"
             size="sm"
+            onClick={() => setShowPatientSelector(true)}
+            className="text-[11px] font-bold text-emerald-500/80 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors rounded-lg gap-2"
+          >
+            <Users className="w-3.5 h-3.5" />
+            {patientId ? 'Mudar Paciente' : 'Escolher Paciente'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
             onClick={() => setShowRevertConfirm(true)}
             className="text-[11px] font-bold text-white/40 hover:text-amber-400 hover:bg-amber-400/10 transition-colors rounded-lg gap-2"
           >
