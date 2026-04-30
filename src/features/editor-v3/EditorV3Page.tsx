@@ -397,7 +397,3 @@ const EditorV3Page = () => {
 };
 
 export default EditorV3Page;
-  );
-};
-
-export default EditorV3Page;
