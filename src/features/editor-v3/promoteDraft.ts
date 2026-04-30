@@ -45,7 +45,23 @@ function buildItemTitle(meal: Meal): string {
 
 function buildItemDescription(meal: Meal): string {
   return meal.items
-    .map((i) => `${i.name} — ${i.quantity * (i.portionValue ?? 1)}${i.portionUnit ?? 'g'}`)
+    .map((i) => {
+      const unit = i.portionUnit || 'unidade';
+      const quantity = i.quantity || 1;
+      let displayUnit = unit;
+      if (quantity > 1) {
+        const plurals: Record<string, string> = {
+          fatia: 'fatias', 
+          unidade: 'unidades', 
+          colher: 'colheres',
+          pote: 'potes', 
+          medida: 'medidas', 
+          marmita: 'marmitas'
+        };
+        displayUnit = plurals[unit] || unit + 's';
+      }
+      return `${i.name} — ${quantity} ${displayUnit}`;
+    })
     .join('; ');
 }
 
