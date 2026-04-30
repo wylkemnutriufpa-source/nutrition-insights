@@ -11,6 +11,7 @@ interface EditorState {
   planStatus: 'draft' | 'saving' | 'saved';
 
   setPatientId: (id: string) => void;
+  addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[]) => void;
   addMeal: () => void;
   removeMeal: (mealId: string) => void;
