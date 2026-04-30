@@ -1,5 +1,5 @@
 import fs from 'fs';
-import path from 'fs';
+import { execSync } from 'child_process';
 
 const validRoutesRaw = fs.readFileSync('/tmp/valid_routes.txt', 'utf8').split('\n').filter(Boolean);
 
@@ -19,7 +19,6 @@ function isRouteValid(route) {
     return false;
 }
 
-const exec = require('child_process').execSync;
 const searchCommands = [
     'rg -o "navigate\\([\'\\"][^\\\'\\"]+[\'\\"]\\)" src',
     'rg -o "to=[\'\\"][^\\\'\\"]+[\'\\"]" src',
@@ -30,12 +29,15 @@ const foundLinks = new Set();
 
 for (const cmd of searchCommands) {
     try {
-        const output = exec(cmd, { encoding: 'utf8' });
+        const output = execSync(cmd, { encoding: 'utf8' });
         const matches = output.split('\n').filter(Boolean);
         for (const m of matches) {
-            const link = m.match(/[\'\\"]([^\\\'\\"]+)[\'\\"]/)[1];
-            if (link.startsWith('/')) {
-                foundLinks.add(link);
+            const linkMatch = m.match(/[\'\\"]([^\\\'\\"]+)[\'\\"]/);
+            if (linkMatch) {
+                const link = linkMatch[1];
+                if (link.startsWith('/')) {
+                    foundLinks.add(link);
+                }
             }
         }
     } catch (e) {
@@ -44,10 +46,15 @@ for (const cmd of searchCommands) {
 }
 
 console.log('--- POTENTIALLY BROKEN ROUTES ---');
+const broken = [];
 for (const link of Array.from(foundLinks).sort()) {
     if (!isRouteValid(link)) {
-        // Ignore some obviously dynamic ones that weren't captured well
-        if (link.includes('${') || link.includes('`')) continue; 
-        console.log(link);
+        broken.push(link);
     }
+}
+
+if (broken.length === 0) {
+    console.log('No broken routes found (from static analysis).');
+} else {
+    broken.forEach(b => console.log(b));
 }
