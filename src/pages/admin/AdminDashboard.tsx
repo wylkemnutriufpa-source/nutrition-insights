@@ -965,7 +965,7 @@ export default function AdminDashboard() {
               variant="outline"
               size="sm"
               className="gap-2 bg-zinc-900/50 border-zinc-800 hover:bg-zinc-800 transition-all shadow-sm group"
-              onClick={() => navigate("/SystemHealthLive")}
+              onClick={() => navigate("/admin/health-live")}
             >
               <Activity className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
               <span className="font-bold tracking-tighter uppercase text-[10px]">Health Control Tower</span>
