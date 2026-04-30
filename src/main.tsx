@@ -14,7 +14,7 @@ if (import.meta.env.DEV) {
 }
 
 // Estampa hash/timestamp do build em <html>, window.__BUILD_INFO__ e console.
-stampBuildIdentity();
+// stampBuildIdentity();
 
 /**
  * Global Error Handler: Garante que erros não sejam silenciados.

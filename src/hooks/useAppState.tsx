@@ -42,14 +42,17 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
       setIsReady(true);
       setIsLoading(false);
       setIsDegraded(false);
+    } else if (user && !profile) {
+      // User without profile (possibly error loading profile)
+      // Allow ready state but mark as potentially degraded
+      setIsReady(true);
+      setIsLoading(false);
+      setIsDegraded(true);
     } else if (!user) {
       setIsReady(true);
       setIsLoading(false);
       setIsDegraded(false);
     } else {
-      // O sistema aguarda indefinidamente pelos dados reais.
-      // Se demorar muito, o usuário verá o PageLoader infinito ou erro de rede.
-      // Sem timeouts de fallback para evitar estados inconsistentes.
       setIsLoading(true);
     }
   }, [user, profile, authLoading, journeyLoading]);
