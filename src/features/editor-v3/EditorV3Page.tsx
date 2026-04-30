@@ -85,6 +85,12 @@ const EditorV3Page = () => {
   const [generatingMealId, setGeneratingMealId] = useState<string | null>(null);
   const [isGeneratingGlobal, setIsGeneratingGlobal] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
+  
+  // Modal de Detalhes do Item
+  const [selectedItem, setSelectedItem] = useState<{ mealId: string, item: MealItem } | null>(null);
+  const [substitutionSearch, setSubstitutionSearch] = useState('');
+  const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
+  const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
 
   // Estados para busca de dados reais
   const [foodSearch, setFoodSearch] = useState('');
