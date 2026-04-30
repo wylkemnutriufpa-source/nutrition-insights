@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useEditorState } from './useEditorState';
-import { mockMarmitas } from './constants';
+import { mockMarmitas, mockFoods, mockTemplates } from './constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, UserX, Plus, Trash2, Lock, 
-  Sparkles, Save, Package, ChefHat, Clock 
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  ArrowLeft, UserX, Plus, Trash2, Lock,
+  Sparkles, Save, Package, ChefHat, Clock,
+  Apple, Layers, Utensils
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
