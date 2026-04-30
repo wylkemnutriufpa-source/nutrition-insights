@@ -1028,7 +1028,7 @@ const EditorV3Page = () => {
               className="h-auto py-4 flex flex-col items-start gap-1 border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-left"
             >
               <span className="font-black text-rose-400 uppercase tracking-widest text-[10px]">Substituir Tudo</span>
-              <span className="text-xs text-white/40 font-bold">Aviso: Isso removerá todos os alimentos atuais e criará um novo plano do zero.</span>
+              <span className="text-xs text-white/40 font-bold">Aviso: O Motor V3 removerá todos os alimentos atuais e criará um novo plano do zero.</span>
             </Button>
           </div>
           <DialogFooter>
