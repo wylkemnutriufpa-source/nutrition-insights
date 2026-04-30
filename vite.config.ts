@@ -183,7 +183,7 @@ export default defineConfig(({ mode }) => ({
   // Versionamento de assets via content hash — garante que o navegador NUNCA
   // sirva chunk antigo após publicar (cache busting determinístico).
   build: {
-    sourcemap: mode !== "production",
+    sourcemap: false,
     rollupOptions: {
       output: {
         entryFileNames: `assets/[name]-[hash].js`,
