@@ -84,7 +84,7 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
   }, [loadDraft]);
 
   const scheduleSave = (meals: Meal[]) => {
-    if (!patientId) return;
+    pendingMealsRef.current = meals;
     pendingMealsRef.current = meals;
 
     try {
