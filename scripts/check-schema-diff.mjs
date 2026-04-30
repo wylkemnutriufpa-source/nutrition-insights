@@ -32,10 +32,10 @@ if (verifyPassed) {
 // Schema is inconsistent — diff file MUST exist
 if (!fs.existsSync(diffFile)) {
   console.error("\n✗ schema.diff inválido ou ausente.");
-  console.error("Execute:\npnpm schema:verify");
+  console.error("Execute:\nnpm run schema:verify");
   process.exit(1);
 }
 
 console.error("\n✗ Schema inconsistente detectado.");
-console.error("Revise schema.diff e execute:\npnpm schema:update");
+console.error("Revise schema.diff e execute:\nnpm run schema:update");
 process.exit(1);

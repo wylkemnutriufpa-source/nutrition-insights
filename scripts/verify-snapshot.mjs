@@ -157,7 +157,7 @@ if (hasDiff) {
   }
 
   console.error("\n🚫 Build bloqueado: schema inválido");
-  console.error("Execute:\npnpm schema:update\n");
+  console.error("Execute:\nnpm run schema:update\n");
   process.exit(1);
 } else {
   console.log(`✓ Schema snapshot is up to date. (${duration}s)`);
