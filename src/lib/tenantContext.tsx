@@ -122,14 +122,23 @@ export function TenantProvider({ children }: { children: ReactNode }) {
       }
 
       if (!userTenants || userTenants.length === 0) {
-        // No tenant — graceful fallback (user might be legacy or not yet assigned)
+        // No tenant — check if we should auto-create for professional
+        const userRole = (user.user_metadata as any)?.role || "patient";
+        const isProfessional = userRole === "nutritionist" || userRole === "personal";
+
+        if (isProfessional) {
+          console.log("[Tenant] Profissional sem tenant detectado. O sistema deve ter disparado o gatilho. Aguardando...");
+          // Em vez de falhar, podemos esperar um pouco ou tentar resolver novamente em 2 segundos
+          setTimeout(() => resolveTenant(), 2000);
+          return;
+        }
+
         console.warn("User has no active tenant memberships:", user.id);
         setTenantId(null);
         setTenant(null);
         setUserTenantRole(null);
         setMemberships([]);
         setIsLoading(false);
-        // NOT setting error — absence of tenant is valid during migration
         return;
       }
 

@@ -162,6 +162,13 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const handleSocialLogin = async (provider: "google" | "apple") => {
     setSocialLoading(provider);
     try {
+      // Salvar intenção de role para o fluxo pós-login (Google/Apple)
+      if (selectedRole) {
+        localStorage.setItem("fj_selected_role", selectedRole);
+        localStorage.setItem("fj_invited", "true");
+        localStorage.setItem("fj_user_type", selectedRole);
+      }
+
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
       });
