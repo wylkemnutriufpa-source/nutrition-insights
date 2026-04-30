@@ -105,8 +105,9 @@ describe("EditorV3Page module exposes a safe fallback for missing patient contex
     expect(PAGE_SRC).toMatch(/Voltar para Pacientes/);
   });
 
-  it("exports the canonical MealPlanEditorV3 component, not the experimental one", () => {
-    expect(PAGE_SRC).toMatch(/from ['"]@\/components\/meal-editor-v3\/MealPlanEditorV3['"]/);
-    expect(PAGE_SRC).not.toMatch(/MealPlanEditorV3Experimental/);
+  it("uses the new Editor V3 core (useEditorState, mockMarmitas, engine)", () => {
+    expect(PAGE_SRC).toMatch(/useEditorState/);
+    expect(PAGE_SRC).toMatch(/mockMarmitas/);
+    expect(PAGE_SRC).toMatch(/generatePlan/);
   });
 });

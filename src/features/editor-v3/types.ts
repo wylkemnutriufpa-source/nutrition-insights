@@ -1,6 +1,6 @@
 export interface HouseholdMeasure {
   unit: string;
-  factor: number; // multiplier for the base quantity (usually grams)
+  factor: number;
 }
 
 export interface Food {
@@ -30,24 +30,8 @@ export interface Meal {
   id: string;
   name: string;
   items: MealItem[];
-  daySubstitutions?: Record<string, string>; // dayId -> instanceId
+  daySubstitutions?: Record<string, string>;
   selectionMode?: 'day' | 'week';
-  time?: string; // HH:MM
-  icon?: string; // sun | coffee | utensils | moon | star | apple
-}
-
-export interface HistoryState {
-  past: Meal[][];
-  future: Meal[][];
-}
-
-export interface ClinicalLog {
-  timestamp: string;
-  conditionId: string;
-  appliedRules: string[];
-  changes: {
-    type: 'removal' | 'substitution';
-    foodName: string;
-    reason: string;
-  }[];
+  time?: string;
+  icon?: string;
 }
