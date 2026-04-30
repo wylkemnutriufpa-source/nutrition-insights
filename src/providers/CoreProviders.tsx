@@ -14,6 +14,7 @@ import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { BrowserRouter, useLocation } from "react-router-dom";
 import { SystemShieldProvider, useSystemShield } from "@/components/common/SystemShield";
 import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
+import { PWAUpdateBanner } from "@/components/common/PWAUpdateBanner";
 
 const queryClient = new QueryClient({
   defaultOptions: {
