@@ -1236,9 +1236,10 @@ const EditorV3Page = () => {
                           </Button>
                           <Input 
                             type="number"
-                            value={selectedItem.item.quantity}
+                            value={selectedItem.item.quantity || 0}
                             onChange={(e) => {
                               const val = Number(e.target.value);
+                              if (isNaN(val)) return;
                               updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, val);
                               setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: val } } : null);
                             }}
