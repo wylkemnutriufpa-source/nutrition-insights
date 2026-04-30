@@ -1143,7 +1143,7 @@ export default function AdminDashboard() {
             {/* ─── Admin Tools ─── */}
             <TabsContent value="admin" className="mt-4 space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/image-fallbacks")}>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/image-fallback")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="font-display text-lg flex items-center gap-2">
                       <ImageIcon className="w-5 h-5 text-primary" />
@@ -1158,7 +1158,7 @@ export default function AdminDashboard() {
                   </CardContent>
                 </Card>
 
-                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/template-mass-reformulation")}>
+                <Card className="glass shadow-card cursor-pointer hover:bg-muted/30 transition-all" onClick={() => navigate("/admin/mass-reformulation")}>
                   <CardHeader className="pb-2">
                     <CardTitle className="font-display text-lg flex items-center gap-2">
                       <Zap className="w-5 h-5 text-primary" />
