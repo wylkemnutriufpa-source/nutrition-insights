@@ -53,6 +53,7 @@ const EditorV3Page = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const planId = searchParams.get('planId');
+  const isSandbox = !patientId && !planId;
 
   const {
     meals, setPatientId, hydrateMeals,
