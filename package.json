@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "pnpm run schema:verify && pnpm run schema:check-refs && vite build",
+    "build": "npm run schema:verify && npm run schema:check-refs && vite build",
     "build:dev": "vite build --mode development",
     "schema:update": "node scripts/generate-schema-snapshot.mjs",
     "schema:verify": "node scripts/verify-snapshot.mjs",
