@@ -1143,28 +1143,42 @@ const EditorV3Page = () => {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40">Unidade / Medida</Label>
-                        <div className="flex flex-wrap gap-2">
-                          <Button 
-                            variant={selectedItem.item.measurementType === 'gram' ? 'default' : 'outline'}
-                            onClick={() => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { measurementType: 'gram', portionUnit: 'g' })}
-                            className={cn(
-                              "h-12 flex-1 text-[11px] font-black uppercase",
-                              selectedItem.item.measurementType === 'gram' ? "bg-emerald-500 text-black" : "border-white/10 text-white/40"
-                            )}
-                          >
-                            Gramas
-                          </Button>
-                          <Button 
-                            variant={selectedItem.item.measurementType === 'unit' ? 'default' : 'outline'}
-                            onClick={() => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { measurementType: 'unit', portionUnit: selectedItem.item.portionUnitLabel || 'unidade' })}
-                            className={cn(
-                              "h-12 flex-1 text-[11px] font-black uppercase",
-                              selectedItem.item.measurementType === 'unit' ? "bg-emerald-500 text-black" : "border-white/10 text-white/40"
-                            )}
-                          >
-                            Caseira
-                          </Button>
-                        </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant="outline"
+                              className="h-12 w-full justify-between border-white/10 text-white font-bold bg-white/5 hover:bg-white/10 rounded-xl transition-all"
+                            >
+                              <span className="uppercase text-[11px] tracking-widest font-black">
+                                {selectedItem.item.portionUnitLabel || (selectedItem.item.measurementType === 'gram' ? 'Gramas' : 'Selecionar Medida')}
+                              </span>
+                              <ChevronDown className="w-4 h-4 text-emerald-500" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-72 p-2 bg-black/95 border-emerald-500/20 backdrop-blur-3xl shadow-2xl z-[150]">
+                            <div className="grid grid-cols-1 gap-1">
+                              {MEASURE_OPTIONS.map((opt) => (
+                                <Button
+                                  key={opt.label}
+                                  variant="ghost"
+                                  onClick={() => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
+                                    measurementType: opt.type, 
+                                    portionUnit: opt.unit,
+                                    portionUnitLabel: opt.label
+                                  })}
+                                  className={cn(
+                                    "h-10 justify-start px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                                    (selectedItem.item.portionUnitLabel === opt.label) 
+                                      ? "bg-emerald-500 text-black hover:bg-emerald-400" 
+                                      : "text-white/60 hover:text-white hover:bg-emerald-500/10"
+                                  )}
+                                >
+                                  {opt.label}
+                                </Button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
 
