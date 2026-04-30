@@ -40,10 +40,15 @@ export const SystemShieldProvider = ({ children }: { children: React.ReactNode }
   // Mark providers as mounted immediately
   useEffect(() => {
     reportBootStatus("isProvidersMounted", true);
-  }, []);
+  }, [reportBootStatus]);
+
+  const contextValue = React.useMemo(() => ({ 
+    bootState, 
+    reportBootStatus 
+  }), [bootState, reportBootStatus]);
 
   return (
-    <SystemShieldContext.Provider value={{ bootState, reportBootStatus }}>
+    <SystemShieldContext.Provider value={contextValue}>
       {children}
     </SystemShieldContext.Provider>
   );
