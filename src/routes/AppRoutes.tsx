@@ -585,16 +585,16 @@ export const AppRoutes = () => {
                 <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
                 <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                 
-                <Route path="/editor" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/editor" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 {/* Editor V3 Aliases */}
-                <Route path="/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/diet/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/editor-v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/experimental/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/elite/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/dieta-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3 (Beta)"><MealPlanEditorV3Experimental /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/diet/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/editor-v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/experimental/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/elite/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/dieta-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><MealPlanEditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
 
                 {/* Public / Landing */}
                 <Route path="/landing-paciente" element={<LP section="Para Pacientes"><PatientLanding /></LP>} />
