@@ -370,7 +370,10 @@ const EditorV3Page = () => {
                             onClick={() => addFoodToMeal(meal.id, f)}
                             className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
                           >
-                            <span className="font-bold text-white/80 group-hover/item:text-white">{f.name}</span>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-white/80 group-hover/item:text-white">{f.name}</span>
+                              <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{f.portionLabel}</span>
+                            </div>
                             <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase">
                               {f.calories} kcal
                             </span>
