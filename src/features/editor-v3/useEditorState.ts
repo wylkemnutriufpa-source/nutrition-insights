@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { Meal, Food, MealItem } from '@/hooks/meal-editor-v3/types';
+import { Meal, Food, MealItem } from './types';
 import { generatePlanWithEngine } from './engine';
 import { toast } from 'sonner';
 

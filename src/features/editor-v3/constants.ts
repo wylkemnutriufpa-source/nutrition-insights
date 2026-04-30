@@ -1,4 +1,4 @@
-import { Food } from '@/hooks/meal-editor-v3/types';
+import { Food } from './types';
 
 export const mockMarmitas: Food[] = [
   { 

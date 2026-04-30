@@ -1,4 +1,4 @@
-import { Meal, Food } from '@/hooks/meal-editor-v3/types';
+import { Meal, Food } from './types';
 
 /**
  * Engine V3 - Geração de planos controlada
