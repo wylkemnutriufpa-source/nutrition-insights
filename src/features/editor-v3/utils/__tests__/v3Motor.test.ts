@@ -42,26 +42,26 @@ describe('Motor V3 Determinístico - Categorização', () => {
 
 describe('Motor V3 Determinístico - Sugestões Inteligentes', () => {
   it('deve sugerir proteínas para um item de proteína', () => {
-    const suggestions = getDeterministicSuggestions('Frango Grelhado', mockAvailableFoods, 'gram');
+    const suggestions = getDeterministicSuggestions('Frango Grelhado', mockAvailableFoods, 'gram', '100g');
     expect(suggestions.some(s => s.name === 'Carne Vermelha')).toBe(true);
     expect(suggestions.every(s => isProtein(s.name))).toBe(true);
   });
 
   it('deve sugerir carboidratos para um item de carboidrato', () => {
-    const suggestions = getDeterministicSuggestions('Arroz Branco', mockAvailableFoods, 'gram');
+    const suggestions = getDeterministicSuggestions('Arroz Branco', mockAvailableFoods, 'gram', '100g');
     expect(suggestions.some(s => s.name === 'Batata Doce')).toBe(true);
     expect(suggestions.every(s => isCarb(s.name))).toBe(true);
   });
 
   it('deve priorizar mesma unidade de medida', () => {
-    const suggestions = getDeterministicSuggestions('Banana', mockAvailableFoods, 'unit');
+    const suggestions = getDeterministicSuggestions('Banana', mockAvailableFoods, 'unit', '1 unidade');
     expect(suggestions[0].measurementType).toBe('unit');
     expect(suggestions[0].name).toBe('Maçã');
   });
 
   it('deve ser totalmente determinístico (mesmo input sempre gera mesmo output)', () => {
-    const call1 = getDeterministicSuggestions('Frango', mockAvailableFoods, 'gram');
-    const call2 = getDeterministicSuggestions('Frango', mockAvailableFoods, 'gram');
+    const call1 = getDeterministicSuggestions('Frango', mockAvailableFoods, 'gram', '100g');
+    const call2 = getDeterministicSuggestions('Frango', mockAvailableFoods, 'gram', '100g');
     expect(call1).toEqual(call2);
   });
 });
