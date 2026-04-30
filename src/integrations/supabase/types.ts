@@ -18868,6 +18868,57 @@ export type Database = {
           },
         ]
       }
+      v3_drafts: {
+        Row: {
+          created_at: string
+          draft_status: string
+          id: string
+          meta_carbs: number | null
+          meta_fat: number | null
+          meta_kcal: number | null
+          meta_protein: number | null
+          nutritionist_id: string
+          patient_id: string
+          payload: Json
+          promoted_at: string | null
+          promoted_meal_plan_id: string | null
+          tenant_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          draft_status?: string
+          id?: string
+          meta_carbs?: number | null
+          meta_fat?: number | null
+          meta_kcal?: number | null
+          meta_protein?: number | null
+          nutritionist_id: string
+          patient_id: string
+          payload?: Json
+          promoted_at?: string | null
+          promoted_meal_plan_id?: string | null
+          tenant_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          draft_status?: string
+          id?: string
+          meta_carbs?: number | null
+          meta_fat?: number | null
+          meta_kcal?: number | null
+          meta_protein?: number | null
+          nutritionist_id?: string
+          patient_id?: string
+          payload?: Json
+          promoted_at?: string | null
+          promoted_meal_plan_id?: string | null
+          tenant_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       wearable_devices: {
         Row: {
           connected_at: string | null

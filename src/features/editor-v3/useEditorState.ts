@@ -11,6 +11,7 @@ interface EditorState {
   planStatus: 'draft' | 'saving' | 'saved';
 
   setPatientId: (id: string) => void;
+  hydrateMeals: (meals: Meal[]) => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => void;
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
@@ -39,6 +40,8 @@ export const useEditorState = create<EditorState>()(
       planStatus: 'draft',
 
       setPatientId: (id) => set({ patientId: id }),
+
+      hydrateMeals: (meals) => set({ meals, planStatus: 'saved' }),
 
       addMarmitaToMeal: (mealId, marmita) => {
         set((state) => ({

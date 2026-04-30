@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useEditorState } from './useEditorState';
+import { useDraftSync } from './useDraftSync';
+import { promoteDraftToMealPlan } from './promoteDraft';
+import { loadOrCreateDraft } from './draftService';
 import { mockMarmitas, mockFoods, mockTemplates } from './constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   ArrowLeft, UserX, Plus, Trash2, Lock,
   Sparkles, Save, Package, ChefHat, Clock,
-  Apple, Layers, Utensils
+  Apple, Layers, Utensils, CloudOff, Cloud, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -19,18 +22,71 @@ const EditorV3Page = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const planId = searchParams.get('planId');
-  
+
   const {
-    meals, setPatientId, addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
+    meals, setPatientId, hydrateMeals,
+    addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, generatePlan, savePlan, planStatus,
     resetEditor
   } = useEditorState();
 
+  const {
+    draftId, syncState, initialMeals, scheduleSave, resetDraft
+  } = useDraftSync(patientId ?? null, meals);
+
+  const hydratedRef = useRef(false);
+  const [promoting, setPromoting] = useState(false);
+
   useEffect(() => {
-    if (patientId) {
-      setPatientId(patientId);
-    }
+    if (patientId) setPatientId(patientId);
   }, [patientId, setPatientId]);
+
+  // Hidrata o store com o conteúdo do draft remoto (uma única vez)
+  useEffect(() => {
+    if (!hydratedRef.current && initialMeals && initialMeals.length > 0) {
+      hydrateMeals(initialMeals);
+      hydratedRef.current = true;
+    }
+  }, [initialMeals, hydrateMeals]);
+
+  // Auto-save: dispara após cada mudança em meals (depois da hidratação)
+  useEffect(() => {
+    if (hydratedRef.current && draftId) {
+      scheduleSave(meals);
+    }
+  }, [meals, draftId, scheduleSave]);
+
+  const handleSavePlan = async () => {
+    if (!draftId) {
+      toast.error('Rascunho não está sincronizado com o servidor.');
+      return;
+    }
+    setPromoting(true);
+    try {
+      const fresh = await loadOrCreateDraft(patientId!, meals);
+      if (!fresh) {
+        toast.error('Não foi possível recuperar o rascunho.');
+        return;
+      }
+      const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1 } });
+      if (result.ok) {
+        toast.success('Plano salvo no sistema clínico (rascunho oficial).');
+        await savePlan();
+      } else {
+        toast.error(`Falha ao salvar plano: ${result.error}`);
+      }
+    } finally {
+      setPromoting(false);
+    }
+  };
+
+  const handleReset = async () => {
+    await resetDraft();
+    resetEditor();
+    hydratedRef.current = false;
+    toast.success('Rascunho resetado.');
+  };
+
 
   if (!patientId && !planId) {
     return (
@@ -65,39 +121,50 @@ const EditorV3Page = () => {
             </p>
           </div>
           <Badge variant="outline" className={cn(
-            "ml-2 text-[10px] font-bold",
-            planStatus === 'saved' ? "bg-green-500/10 text-green-600 border-green-500/20" : "bg-amber-500/10 text-amber-600 border-amber-500/20"
+            "ml-2 text-[10px] font-bold gap-1",
+            syncState === 'saved' && "bg-green-500/10 text-green-600 border-green-500/20",
+            syncState === 'saving' && "bg-blue-500/10 text-blue-600 border-blue-500/20",
+            syncState === 'loading' && "bg-blue-500/10 text-blue-600 border-blue-500/20",
+            (syncState === 'offline' || syncState === 'error') && "bg-amber-500/10 text-amber-700 border-amber-500/20",
+            syncState === 'idle' && "bg-muted text-muted-foreground"
           )}>
-            {planStatus === 'saved' ? 'SINCRONIZADO' : 'PENDENTE'}
+            {syncState === 'saving' && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
+            {syncState === 'saved' && <Cloud className="w-2.5 h-2.5" />}
+            {(syncState === 'offline' || syncState === 'error') && <CloudOff className="w-2.5 h-2.5" />}
+            {syncState === 'loading' ? 'CARREGANDO' :
+             syncState === 'saving' ? 'SALVANDO' :
+             syncState === 'saved' ? 'SINCRONIZADO' :
+             syncState === 'offline' ? 'OFFLINE' :
+             syncState === 'error' ? 'ERRO' : 'IDLE'}
           </Badge>
         </div>
 
         <div className="flex items-center gap-3">
-          <Button 
-            variant="ghost" 
-            size="sm" 
-            onClick={resetEditor}
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={handleReset}
             className="text-xs text-muted-foreground hover:text-destructive"
           >
             Resetar
           </Button>
-          <Button 
-            variant="outline" 
-            size="sm" 
+          <Button
+            variant="outline"
+            size="sm"
             onClick={() => generatePlan('muscle-gain')}
             className="gap-2 border-primary/20 text-primary hover:bg-primary/5 font-bold"
           >
             <Sparkles className="w-3.5 h-3.5" />
             GERAR V3
           </Button>
-          <Button 
-            size="sm" 
-            onClick={savePlan}
-            disabled={planStatus === 'saving'}
+          <Button
+            size="sm"
+            onClick={handleSavePlan}
+            disabled={promoting || !draftId}
             className="gap-2 font-bold shadow-lg shadow-primary/20"
           >
-            <Save className="w-3.5 h-3.5" />
-            {planStatus === 'saving' ? 'SALVANDO...' : 'SALVAR PLANO'}
+            {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
+            {promoting ? 'SALVANDO...' : 'SALVAR PLANO'}
           </Button>
         </div>
       </header>
