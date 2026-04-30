@@ -157,6 +157,20 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [substitutionSearch]);
+  // Busca de Trocas (Swap)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (swapSearch.length >= 2) {
+        setIsSearchingSwap(true);
+        const results = await searchFoods(swapSearch);
+        setSwapResults(results);
+        setIsSearchingSwap(false);
+      } else if (swapSearch.length === 0) {
+        setSwapResults([]);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [swapSearch]);
   // Busca de Marmitas e Templates
   useEffect(() => {
     const loadData = async () => {
