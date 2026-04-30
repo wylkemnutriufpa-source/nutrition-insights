@@ -118,7 +118,20 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [foodSearch]);
-
+  // Busca de Substituições
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (substitutionSearch.length >= 2) {
+        setIsSearchingSubstitutions(true);
+        const results = await searchFoods(substitutionSearch);
+        setSubstitutionResults(results);
+        setIsSearchingSubstitutions(false);
+      } else if (substitutionSearch.length === 0) {
+        setSubstitutionResults([]);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [substitutionSearch]);
   // Busca de Marmitas e Templates
   useEffect(() => {
     const loadData = async () => {
