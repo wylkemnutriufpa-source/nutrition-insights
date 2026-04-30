@@ -35,7 +35,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Meal, MealItem, Food } from './types';
-import { MealTemplate } from './constants';
+import { MealTemplate, mockFoods } from './constants';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
 import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
 import { supabase } from '@/integrations/supabase/client';
@@ -116,6 +116,8 @@ const EditorV3Page = () => {
   const [swapSearch, setSwapSearch] = useState('');
   const [swapResults, setSwapResults] = useState<Food[]>([]);
   const [isSearchingSwap, setIsSearchingSwap] = useState(false);
+  const [smartSubstitutions, setSmartSubstitutions] = useState<Food[]>([]);
+  const [isLoadingSmartSubs, setIsLoadingSmartSubs] = useState(false);
 
   // Estados para Modais Premium
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -198,6 +200,65 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [swapSearch]);
+  // Carregar sugestões inteligentes ao abrir o modal
+  useEffect(() => {
+    const loadSmartSuggestions = async () => {
+      if (selectedItem) {
+        setIsLoadingSmartSubs(true);
+        const name = selectedItem.item.name.toLowerCase();
+        let suggestions: Food[] = [];
+        
+        // Regras do Motor V3 para compatibilidade inteligente
+        if (name.includes('frango') || name.includes('carne') || name.includes('peixe') || name.includes('ovo')) {
+          // Grupo de Proteínas
+          suggestions = mockFoods.filter(f => 
+            (f.name.toLowerCase().includes('frango') || 
+             f.name.toLowerCase().includes('carne') || 
+             f.name.toLowerCase().includes('peixe') || 
+             f.name.toLowerCase().includes('ovo') || 
+             f.name.toLowerCase().includes('patinho') ||
+             f.name.toLowerCase().includes('whey')) && 
+            f.name.toLowerCase() !== name
+          );
+        } else if (name.includes('arroz') || name.includes('batata') || name.includes('macarrão') || name.includes('feijão') || name.includes('pão') || name.includes('aveia') || name.includes('tapioca')) {
+          // Grupo de Carboidratos
+          suggestions = mockFoods.filter(f => 
+            (f.name.toLowerCase().includes('arroz') || 
+             f.name.toLowerCase().includes('batata') || 
+             f.name.toLowerCase().includes('macarrão') || 
+             f.name.toLowerCase().includes('feijão') || 
+             f.name.toLowerCase().includes('pão') || 
+             f.name.toLowerCase().includes('aveia') || 
+             f.name.toLowerCase().includes('tapioca') ||
+             f.name.toLowerCase().includes('granola')) && 
+            f.name.toLowerCase() !== name
+          );
+        } else if (name.includes('fruta') || name.includes('banana') || name.includes('maçã') || name.includes('morango') || name.includes('suco')) {
+          // Grupo de Frutas/Vitamins
+          suggestions = mockFoods.filter(f => 
+            (f.name.toLowerCase().includes('banana') || 
+             f.name.toLowerCase().includes('maçã') || 
+             f.name.toLowerCase().includes('suco') ||
+             f.name.toLowerCase().includes('iogurte')) && 
+            f.name.toLowerCase() !== name
+          );
+        }
+
+        // Se não achou nada específico, pega aleatórios do mesmo tipo de medida
+        if (suggestions.length === 0) {
+          suggestions = mockFoods.filter(f => 
+            f.measurementType === selectedItem.item.measurementType && 
+            f.name.toLowerCase() !== name
+          ).slice(0, 5);
+        }
+
+        setSmartSubstitutions(suggestions.slice(0, 6));
+        setIsLoadingSmartSubs(false);
+      }
+    };
+    loadSmartSuggestions();
+  }, [selectedItem]);
+
   // Busca de Marmitas e Templates
   useEffect(() => {
     const loadData = async () => {
@@ -752,7 +813,10 @@ const EditorV3Page = () => {
                       "p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all hover:translate-x-1 duration-300 rounded-2xl group/card relative overflow-hidden cursor-pointer",
                       item.locked ? "border-amber-500/50" : "border-emerald-500/50"
                     )}
-                    onClick={() => setSelectedItem({ mealId: meal.id, item })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedItem({ mealId: meal.id, item });
+                    }}
                   >
                     {/* Glossy overlay */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent pointer-events-none" />
@@ -1265,7 +1329,7 @@ const EditorV3Page = () => {
                 </div>
               </DialogHeader>
 
-              <Tabs defaultValue="swap" className="w-full">
+              <Tabs defaultValue="substitutions" className="w-full">
                 <div className="px-6 border-b border-white/5">
                   <TabsList className="bg-transparent h-auto p-0 gap-6">
                     <TabsTrigger value="swap" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
@@ -1302,44 +1366,91 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="space-y-2">
-                      {swapResults.map((food) => (
-                        <Button
-                          key={food.id}
-                          variant="ghost"
-                          onClick={() => {
-                            const currentItem = selectedItem.item;
-                            // Troca imediata mantendo a instância e a quantidade base se compatível
-                            updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                              name: food.name,
-                              kcal: food.kcal,
-                              calories: food.kcal,
-                              protein: food.protein,
-                              carbs: food.carbs,
-                              fat: food.fat,
-                              portionLabel: food.portionLabel,
-                              imageUrl: food.imageUrl,
-                              ingredients: food.ingredients,
-                              isMarmita: food.isMarmita
-                            });
-                            setSwapSearch('');
-                            setSwapResults([]);
-                            setSelectedItem(null); // Fecha para aplicar
-                            toast.success(`Alimento trocado para ${food.name}`);
-                          }}
-                          className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group"
-                        >
-                          <div className="text-left">
-                            <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
-                            <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
-                          </div>
-                          <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
-                        </Button>
-                      ))}
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-2">Sugestões Inteligentes (Motor V3)</p>
                       
-                      {swapSearch.length < 2 && (
+                      {isLoadingSmartSubs ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
+                        </div>
+                      ) : smartSubstitutions.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-2">
+                          {smartSubstitutions.map((food) => (
+                            <Button
+                              key={`smart-${food.id}`}
+                              variant="ghost"
+                              onClick={() => {
+                                const currentItem = selectedItem.item;
+                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                                  name: food.name,
+                                  kcal: food.kcal,
+                                  calories: food.kcal,
+                                  protein: food.protein,
+                                  carbs: food.carbs,
+                                  fat: food.fat,
+                                  portionLabel: food.portionLabel,
+                                  imageUrl: food.imageUrl,
+                                  ingredients: food.ingredients,
+                                  isMarmita: food.isMarmita,
+                                  measurementType: food.measurementType
+                                });
+                                setSelectedItem(null);
+                                toast.success(`Trocado inteligentemente para ${food.name}`);
+                              }}
+                              className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
+                            >
+                              <div className="text-left">
+                                <p className="font-bold text-white group-hover:text-emerald-400 text-xs">{food.name}</p>
+                                <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                              </div>
+                              <Zap className="w-3.5 h-3.5 text-emerald-500" />
+                            </Button>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {swapResults.length > 0 && (
+                        <div className="pt-4 border-t border-white/5 mt-4">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Resultados da Busca</p>
+                          {swapResults.map((food) => (
+                            <Button
+                              key={food.id}
+                              variant="ghost"
+                              onClick={() => {
+                                const currentItem = selectedItem.item;
+                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                                  name: food.name,
+                                  kcal: food.kcal,
+                                  calories: food.kcal,
+                                  protein: food.protein,
+                                  carbs: food.carbs,
+                                  fat: food.fat,
+                                  portionLabel: food.portionLabel,
+                                  imageUrl: food.imageUrl,
+                                  ingredients: food.ingredients,
+                                  isMarmita: food.isMarmita,
+                                  measurementType: food.measurementType
+                                });
+                                setSwapSearch('');
+                                setSwapResults([]);
+                                setSelectedItem(null);
+                                toast.success(`Alimento trocado para ${food.name}`);
+                              }}
+                              className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group mb-2"
+                            >
+                              <div className="text-left">
+                                <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
+                                <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                              </div>
+                              <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {swapSearch.length < 2 && smartSubstitutions.length === 0 && (
                         <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-2xl">
                           <Search className="w-8 h-8 text-white/5 mx-auto mb-2" />
-                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest">Digite para buscar substitutos</p>
+                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest">Digite para buscar outros alimentos</p>
                         </div>
                       )}
                     </div>
