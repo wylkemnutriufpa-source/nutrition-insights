@@ -38,6 +38,19 @@ import { Meal, MealItem, Food } from './types';
 import { MealTemplate } from './constants';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
 
+const MEASURE_OPTIONS = [
+  { label: 'Gramas', unit: 'g', type: 'gram' as const },
+  { label: 'Colheres', unit: 'colher(es)', type: 'spoon' as const },
+  { label: 'Porção', unit: 'porção', type: 'unit' as const },
+  { label: 'Copos', unit: 'copo(s)', type: 'unit' as const },
+  { label: 'Prato Raso', unit: 'prato raso', type: 'unit' as const },
+  { label: 'Prato Fundo', unit: 'prato fundo', type: 'unit' as const },
+  { label: 'Prato Médio', unit: 'prato médio', type: 'unit' as const },
+  { label: 'Unid. P', unit: 'unid P', type: 'unit' as const },
+  { label: 'Unid. M', unit: 'unid M', type: 'unit' as const },
+  { label: 'Unid. G', unit: 'unid G', type: 'unit' as const },
+];
+
 const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 'spoon' | 'ml') => {
   if (type === 'gram') return `${quantity}g`;
   if (type === 'ml') return `${quantity}ml`;
