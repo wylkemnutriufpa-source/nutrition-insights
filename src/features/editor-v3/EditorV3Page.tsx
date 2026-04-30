@@ -469,7 +469,7 @@ const EditorV3Page = () => {
                       <div>
                         <div className="flex items-center gap-3 mb-1.5">
                           <p className="font-black text-[15px] tracking-tight text-white group-hover/card:text-emerald-400 transition-colors">
-                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name}
+                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name} — {Math.round((item.quantity ?? 1) * (item.calories ?? 0))} kcal
                           </p>
                           {item.locked && (
                             <Badge variant="outline" className="h-5 text-[8px] font-black bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1 uppercase tracking-wider px-2">
