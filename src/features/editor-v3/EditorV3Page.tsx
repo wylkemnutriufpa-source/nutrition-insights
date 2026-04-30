@@ -58,7 +58,7 @@ const EditorV3Page = () => {
   const {
     meals, setPatientId, hydrateMeals,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
-    removeFood, generatePlan, savePlan, planStatus,
+    removeFood, updateFoodQuantity, generatePlan, savePlan, planStatus,
     resetEditor
   } = useEditorState();
 
