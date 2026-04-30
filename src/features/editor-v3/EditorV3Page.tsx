@@ -690,6 +690,84 @@ const EditorV3Page = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+      
+      {/* Seletor de Paciente */}
+      <Dialog open={showPatientSelector} onOpenChange={setShowPatientSelector}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
+          <DialogHeader className="p-6 pb-2">
+            <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-xl">
+              <Users className="w-6 h-6 text-emerald-500" />
+              Selecionar Paciente
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              Escolha um paciente para vincular este plano.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="px-6 pb-2">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <Input
+                placeholder="Buscar paciente pelo nome..."
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-emerald-500/50 transition-all h-11"
+              />
+            </div>
+          </div>
+
+          <ScrollArea className="h-[400px] px-2 py-4">
+            <div className="px-4 space-y-1">
+              {isLoadingPatients ? (
+                <div className="flex flex-col items-center justify-center py-12 gap-3">
+                  <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                  <p className="text-[10px] font-black text-emerald-500/40 uppercase tracking-widest">Acessando Base de Dados...</p>
+                </div>
+              ) : patientsData?.patients.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-12 text-center">
+                  <UserX className="w-12 h-12 text-white/10 mb-3" />
+                  <p className="text-sm font-bold text-white/40">Nenhum paciente encontrado.</p>
+                </div>
+              ) : (
+                patientsData?.patients.map((patient) => (
+                  <button
+                    key={patient.patient_id}
+                    onClick={() => {
+                      setShowPatientSelector(false);
+                      navigate(`/v3/${patient.patient_id}${planId ? `?planId=${planId}` : ''}`);
+                    }}
+                    className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-emerald-500/10 transition-all group border border-transparent hover:border-emerald-500/20"
+                  >
+                    <Avatar className="h-10 w-10 border border-white/10 group-hover:border-emerald-500/40 transition-colors">
+                      <AvatarImage src={patient.profile?.avatar_url || ''} />
+                      <AvatarFallback className="bg-emerald-500/20 text-emerald-500 font-black">
+                        {patient.profile?.full_name?.substring(0, 2).toUpperCase() || 'P'}
+                      </AvatarFallback>
+                    </Avatar>
+                    <div className="flex flex-col items-start text-left">
+                      <span className="text-sm font-bold text-white group-hover:text-emerald-400 transition-colors">
+                        {patient.profile?.full_name}
+                      </span>
+                      <span className="text-[10px] font-bold text-white/30 uppercase tracking-tight">
+                        {patient.status === 'active' ? 'Ativo' : 'Inativo'} • Criado em {new Date(patient.created_at).toLocaleDateString()}
+                      </span>
+                    </div>
+                  </button>
+                ))
+              )}
+            </div>
+          </ScrollArea>
+
+          <DialogFooter className="p-4 border-t border-white/5 bg-white/5">
+            <Button 
+              variant="ghost" 
+              onClick={() => setShowPatientSelector(false)}
+              className="text-white/40 font-bold hover:text-white"
+            >
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
 
       {/* Footer Info */}
       <footer className="p-8 text-center border-t border-emerald-500/5 bg-black/40 backdrop-blur-md">
