@@ -1,18 +1,12 @@
 {
   "summary": "Summary:",
   "details": {
-    "timestamp": "2026-04-30T12:24:48.756Z",
+    "timestamp": "2026-04-30T19:13:24.160Z",
     "duration": "0.0s",
-    "lastSnapshotMigration": "20260428222811_47392211-1373-4bf8-9dd7-6ed0a043897b.sql",
-    "lastActualMigration": "20260430121028_1dd46e3f-8c3c-45d8-ae41-acc273133e38.sql",
+    "lastSnapshotMigration": "20260430121028_1dd46e3f-8c3c-45d8-ae41-acc273133e38.sql",
+    "lastActualMigration": "20260430184036_be5cd1eb-1c4a-4d79-b628-e0da71a5e509.sql",
     "missingMigrations": [
-      "20260429151857_0056c7e0-415d-4b85-b02a-0723522a6f66.sql",
-      "20260429152016_1aea0a04-b4eb-43fd-af9a-4278cc980bce.sql",
-      "20260429153846_148a3a26-3c91-48aa-bf8e-7269c9be1991.sql",
-      "20260429154013_17f9ce5d-0227-45a9-9cdc-e26831f8f351.sql",
-      "20260429154143_b6bd8c8f-2ee3-46bb-9ca8-b4c3f4a12f7f.sql",
-      "20260430102053_47d74bca-ffaa-4bad-87c4-e98a39e4abdf.sql",
-      "20260430121028_1dd46e3f-8c3c-45d8-ae41-acc273133e38.sql"
+      "20260430184036_be5cd1eb-1c4a-4d79-b628-e0da71a5e509.sql"
     ],
     "diffResults": []
   }
