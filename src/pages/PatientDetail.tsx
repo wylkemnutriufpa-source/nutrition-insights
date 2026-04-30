@@ -1655,6 +1655,7 @@ export default function PatientDetail() {
                                   {isPending && (
                                     <EditorVersionPicker
                                       planId={plan.id}
+                                      patientId={resolvedPatientId}
                                       onBeforeNavigate={() => setOpenSection(null)}
                                       label="Revisar e Aprovar"
                                       variant="default"
@@ -1664,6 +1665,7 @@ export default function PatientDetail() {
                                   )}
                                   <EditorVersionPicker
                                     planId={plan.id}
+                                    patientId={resolvedPatientId}
                                     onBeforeNavigate={() => setOpenSection(null)}
                                     label={isPending ? "Ver" : "Ver Plano"}
                                     variant="outline"
