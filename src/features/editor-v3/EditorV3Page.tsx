@@ -1313,6 +1313,59 @@ const EditorV3Page = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Adicionar Refeição Modal */}
+      <Dialog open={showAddMealModal} onOpenChange={setShowAddMealModal}>
+        <DialogContent className="sm:max-w-[425px] border-emerald-500/20 bg-black/95 backdrop-blur-2xl text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tight">
+              <Plus className="w-5 h-5 text-emerald-500" />
+              Nova Refeição
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              Defina o nome e horário da nova refeição.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-white/40 px-1">Nome da Refeição</Label>
+              <Input
+                id="name"
+                placeholder="Ex: Almoço de Domingo, Lanche Pré-Treino..."
+                value={newMealName}
+                onChange={(e) => setNewMealName(e.target.value)}
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-emerald-500/50 h-11 rounded-xl"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="time" className="text-[10px] font-black uppercase tracking-widest text-white/40 px-1">Horário</Label>
+              <Input
+                id="time"
+                type="time"
+                value={newMealTime}
+                onChange={(e) => setNewMealTime(e.target.value)}
+                className="bg-white/5 border-white/10 text-white focus:border-emerald-500/50 h-11 rounded-xl"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                if (!newMealName) {
+                  toast.error("Dê um nome para a refeição");
+                  return;
+                }
+                addMealWithHeader(newMealName, newMealTime);
+                setShowAddMealModal(false);
+                setNewMealName('');
+              }}
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl w-full h-11"
+            >
+              Criar Refeição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Templates Modal */}
       <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
         <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-amber-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
@@ -1336,17 +1389,18 @@ const EditorV3Page = () => {
                 <button
                   key={t.id}
                   onClick={() => {
-                    if (activeMealId) applyTemplateToMeal(activeMealId, t);
-                    else {
-                      // Se não tem activeMealId, podemos adicionar uma nova refeição com o template?
-                      // Para simplificar, neste contexto exigimos uma refeição ativa se aberto pelo card
-                      // Mas no header podemos permitir aplicar no plano? 
-                      // Por enquanto vamos tratar como seleção para a última refeição ou nova
-                      if (meals.length > 0) applyTemplateToMeal(meals[meals.length-1].id, t);
-                      else {
-                        addMeal('Nova Refeição', '08:00');
-                        // Aguarda o state atualizar não é ideal aqui, ideal seria dispatch específico
-                      }
+                    if (activeMealId) {
+                      applyTemplateToMeal(activeMealId, t);
+                    } else {
+                      // Se aberto pelo header, cria uma nova refeição com o nome do template
+                      addMealWithHeader(t.name, "08:00");
+                      // Como o state é async e não temos o ID da nova refeição aqui, 
+                      // o ideal seria uma action atômica no store, mas vamos aplicar na última.
+                      setTimeout(() => {
+                        const state = useEditorState.getState();
+                        const lastMeal = state.meals[state.meals.length - 1];
+                        if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
+                      }, 50);
                     }
                     setShowTemplatesModal(false);
                     toast.success(`Template ${t.name} aplicado!`);
