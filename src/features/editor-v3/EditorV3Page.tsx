@@ -387,21 +387,28 @@ const EditorV3Page = () => {
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
                     <ChefHat className="w-6 h-6 text-emerald-500" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <h2 className="font-black text-xl tracking-tight text-white group-hover:text-emerald-400 transition-colors">
-                        {meal.name}
-                      </h2>
+                      <input
+                        className="bg-transparent border-none font-black text-xl tracking-tight text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-full max-w-[300px]"
+                        value={meal.name}
+                        onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')}
+                      />
                       {mealMacros.kcal > 0 && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 shrink-0">
                            <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black border-0">{Math.round(mealMacros.kcal)} kcal</Badge>
                            <Badge className="bg-white/5 text-white/40 text-[10px] font-black border-0">{Math.round(mealMacros.p)}g P</Badge>
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider mt-1">
                       <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
-                      {meal.time}
+                      <input
+                        type="time"
+                        className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-20"
+                        value={meal.time || '00:00'}
+                        onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
