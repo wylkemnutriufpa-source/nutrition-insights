@@ -20,7 +20,8 @@ const EditorV3Page = () => {
   
   const { 
     meals, setPatientId, addMarmitaToMeal, 
-    removeFood, generatePlan, savePlan, planStatus 
+    removeFood, generatePlan, savePlan, planStatus,
+    resetEditor 
   } = useEditorState();
 
   useEffect(() => {
@@ -70,6 +71,14 @@ const EditorV3Page = () => {
         </div>
 
         <div className="flex items-center gap-3">
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={resetEditor}
+            className="text-xs text-muted-foreground hover:text-destructive"
+          >
+            Resetar
+          </Button>
           <Button 
             variant="outline" 
             size="sm" 
@@ -167,7 +176,11 @@ const EditorV3Page = () => {
                         variant="ghost" 
                         size="icon" 
                         onClick={() => removeFood(meal.id, item.instanceId)}
-                        className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-full"
+                        disabled={item.locked}
+                        className={cn(
+                          "h-8 w-8 text-muted-foreground rounded-full",
+                          item.locked ? "opacity-30 cursor-not-allowed" : "hover:text-destructive hover:bg-destructive/10"
+                        )}
                       >
                         <Trash2 className="w-4 h-4" />
                       </Button>
