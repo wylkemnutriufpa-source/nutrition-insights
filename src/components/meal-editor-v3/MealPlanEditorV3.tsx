@@ -18,12 +18,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 import PatientPickerDropdown from '../common/PatientPickerDropdown';
 import { 
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
   Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search,
-  PlusCircle, Bot, Calendar, Eye, Star, ShoppingCart
+  PlusCircle, Bot, Calendar, Eye, Star, ShoppingCart, ArrowLeft
 } from 'lucide-react';
 import {
   Dialog,
@@ -57,6 +58,7 @@ export const MealPlanEditorV3: React.FC = () => {
     viewMode, setViewMode, setPatientId, patientId, activeDay, saveAsFavorite
   } = useMealEditorV3Store();
   
+  const navigate = useNavigate();
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
@@ -180,6 +182,14 @@ export const MealPlanEditorV3: React.FC = () => {
 
       <div className="flex items-center justify-between px-6 py-4 border-b bg-background/50 backdrop-blur-xl z-20">
         <div className="flex items-center gap-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => window.history.back()} 
+            className="h-8 w-8 rounded-full hover:bg-muted"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Editor V3</h1>
             <div className="flex items-center gap-2">
