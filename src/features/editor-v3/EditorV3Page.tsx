@@ -333,11 +333,23 @@ const EditorV3Page = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => generatePlan('muscle-gain')}
-            className="gap-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-[11px] font-black tracking-wide transition-all rounded-lg"
+            disabled={isGeneratingGlobal}
+            onClick={() => {
+              const hasItems = meals.some(m => m.items.length > 0);
+              if (hasItems) {
+                setShowAIGenerateConfirm(true);
+              } else {
+                handleGlobalGenerate(false);
+              }
+            }}
+            className="gap-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-[11px] font-black tracking-wide transition-all rounded-lg min-w-[140px]"
           >
-            <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
-            GERAR COM IA
+            {isGeneratingGlobal ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
+            )}
+            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO COM IA'}
           </Button>
           <Button
             size="sm"
