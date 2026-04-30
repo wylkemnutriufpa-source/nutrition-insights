@@ -64,7 +64,7 @@ const PRO_ADVANCED_ROUTES = new Set([
   "/control-tower", "/intelligence-settings",
   "/integrations", "/team", "/settings/whatsapp",
   "/branding",
-  "/admin/import-patients",
+  "/import-patients",
 ]);
 
 // ─── PACIENTE ───

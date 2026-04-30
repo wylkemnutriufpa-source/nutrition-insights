@@ -60,7 +60,7 @@ const allRoutes = [
   { to: "/therapeutic-intelligence", icon: Brain, label: "Inteligência Terapêutica", keywords: "terapeutica inteligencia intervencao ajuste sugestao estrategia", roles: ["nutritionist", "admin"], desc: "Sugestões terapêuticas" },
   { to: "/clinical-orchestration", icon: Activity, label: "Orquestração Clínica", keywords: "orquestracao clinica pipeline motor processamento", roles: ["nutritionist", "admin"], desc: "Orquestração de motores clínicos" },
   { to: "/weight-trajectory", icon: TrendingUp, label: "Trajetória de Peso", keywords: "trajetoria peso evolucao grafico tendencia projecao", roles: ["nutritionist", "admin"], desc: "Análise de trajetória" },
-  { to: "/admin/import-patients", icon: Users, label: "Importar Pacientes", keywords: "importar pacientes csv planilha excel upload massa bulk", roles: ["nutritionist", "admin"], desc: "Importar via CSV" },
+  { to: "/import-patients", icon: Users, label: "Importar Pacientes", keywords: "importar pacientes csv planilha excel upload massa bulk", roles: ["nutritionist", "admin"], desc: "Importar via CSV" },
   { to: "/integrations", icon: Globe, label: "Integrações", keywords: "integracoes integrar api webhook zapier stripe", roles: ["nutritionist", "admin", "personal"], desc: "Integrações externas" },
   { to: "/team", icon: Users, label: "Equipe Clínica", keywords: "equipe team funcionario colaborador permissoes hierarquia clinical employee", roles: ["nutritionist", "personal", "admin"], desc: "Gerenciar equipe clínica" },
   { to: "/physical-assessment", icon: Calculator, label: "Avaliação Física", keywords: "avaliacao fisica medidas antropometria dobras cutaneas perimetros composicao", roles: ["nutritionist", "admin"], desc: "Avaliação física" },

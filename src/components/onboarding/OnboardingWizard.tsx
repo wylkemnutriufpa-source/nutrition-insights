@@ -308,7 +308,7 @@ export default function OnboardingWizard() {
             {isProfessional && currentStep.id === "first-patient" && (
               <div className="space-y-3">
                 <ChecklistItem icon={Users} label="Cadastrar paciente manualmente" desc="Com email e nome" path="/patients" completed={false} />
-                <ChecklistItem icon={FileText} label="Importar pacientes via CSV" desc="Migre de outros sistemas" path="/admin/import-patients" completed={false} />
+                <ChecklistItem icon={FileText} label="Importar pacientes via CSV" desc="Migre de outros sistemas" path="/import-patients" completed={false} />
               </div>
             )}
 
