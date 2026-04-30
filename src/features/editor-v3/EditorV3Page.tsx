@@ -132,6 +132,12 @@ const EditorV3Page = () => {
   };
 
   const handleConfirmPromotion = async () => {
+    if (isSandbox) {
+      toast.info("No modo Sandbox, as alterações são salvas apenas localmente no seu navegador.");
+      setShowValidation(false);
+      return;
+    }
+
     if (!validation.isValid) {
       toast.error("Corrija os erros antes de salvar.");
       return;
