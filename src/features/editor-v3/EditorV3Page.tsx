@@ -31,11 +31,13 @@ import { Meal, MealItem } from './types';
 const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 'spoon' | 'ml') => {
   if (type === 'gram') return `${quantity}g`;
   if (type === 'ml') return `${quantity}ml`;
+  if (type === 'spoon') {
+    return `${quantity} ${quantity === 1 ? 'colher' : 'colheres'}`;
+  }
   
   if (quantity === 1) {
     if (unit === 'fatia') return '1 fatia';
     if (unit === 'unidade') return '1 unidade';
-    if (unit === 'colher') return '1 colher';
     if (unit === 'pote') return '1 pote';
     if (unit === 'medida') return '1 medida';
     if (unit === 'marmita') return '1 marmita';
@@ -45,7 +47,6 @@ const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 
   const plurals: Record<string, string> = {
     fatia: 'fatias',
     unidade: 'unidades',
-    colher: 'colheres',
     pote: 'potes',
     medida: 'medidas',
     marmita: 'marmitas'
@@ -468,7 +469,7 @@ const EditorV3Page = () => {
                       <div>
                         <div className="flex items-center gap-3 mb-1.5">
                           <p className="font-black text-[15px] tracking-tight text-white group-hover/card:text-emerald-400 transition-colors">
-                            {item.name}
+                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name}
                           </p>
                           {item.locked && (
                             <Badge variant="outline" className="h-5 text-[8px] font-black bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1 uppercase tracking-wider px-2">
@@ -507,7 +508,7 @@ const EditorV3Page = () => {
                           size="icon"
                           disabled={item.locked || (item.quantity ?? 1) <= 0}
                           onClick={() => {
-                            const step = item.measurementType === 'gram' ? 25 : item.measurementType === 'ml' ? 50 : 1;
+                            const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
                             updateFoodQuantity(meal.id, item.instanceId, Math.max(0, (item.quantity ?? 1) - step));
                           }}
                           className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
@@ -526,7 +527,7 @@ const EditorV3Page = () => {
                           size="icon"
                           disabled={item.locked}
                           onClick={() => {
-                            const step = item.measurementType === 'gram' ? 25 : item.measurementType === 'ml' ? 50 : 1;
+                            const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
                             updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) + step);
                           }}
                           className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"

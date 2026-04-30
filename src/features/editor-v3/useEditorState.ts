@@ -60,6 +60,8 @@ export const useEditorState = create<EditorState>()(
         let initialQuantity = 1;
         if (food.measurementType === 'gram') initialQuantity = 100;
         if (food.measurementType === 'ml') initialQuantity = 200;
+        if (food.measurementType === 'spoon') initialQuantity = 1;
+        if (food.measurementType === 'unit') initialQuantity = 1;
 
         set((state) => ({
           meals: state.meals.map((m) =>
@@ -77,6 +79,8 @@ export const useEditorState = create<EditorState>()(
           let initialQuantity = 1;
           if (f.measurementType === 'gram') initialQuantity = 100;
           if (f.measurementType === 'ml') initialQuantity = 200;
+          if (f.measurementType === 'spoon') initialQuantity = 1;
+          if (f.measurementType === 'unit') initialQuantity = 1;
           
           return {
             ...f,
