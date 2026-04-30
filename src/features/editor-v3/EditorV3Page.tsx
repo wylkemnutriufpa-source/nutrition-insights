@@ -123,8 +123,14 @@ const EditorV3Page = () => {
   // Estados para Modais Premium
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showFoodsModal, setShowFoodsModal] = useState(false);
+  const [showMarmitasModal, setShowMarmitasModal] = useState(false);
+  const [activeMealId, setActiveMealId] = useState<string | null>(null);
   const [newMealName, setNewMealName] = useState('');
   const [newMealTime, setNewMealTime] = useState('00:00');
+
+  // Categorias de Alimentos para o Modal
+  const [activeFoodCategory, setActiveFoodCategory] = useState<string>('all');
 
   // Estados para busca de dados reais
   const [foodSearch, setFoodSearch] = useState('');
