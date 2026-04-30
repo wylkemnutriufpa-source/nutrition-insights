@@ -98,7 +98,7 @@ export const generatePlanWithEngine = (currentMeals: Meal[], goal: string, baseC
     if (meal.items.length === 0) {
       return {
         ...meal,
-        items: generateMealWithEngine(meal, goal)
+        items: generateMealWithEngine(meal, goal, baseCalories)
       };
     }
     return meal;
