@@ -37,6 +37,8 @@ import { cn } from '@/lib/utils';
 import { Meal, MealItem, Food } from './types';
 import { MealTemplate } from './constants';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
+import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
+import { supabase } from '@/integrations/supabase/client';
 
 const MEASURE_OPTIONS = [
   { label: 'Gramas', unit: 'g', type: 'gram' as const },
