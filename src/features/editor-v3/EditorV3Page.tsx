@@ -428,7 +428,20 @@ const EditorV3Page = () => {
                     )}
                     Gerar Refeição
                   </Button>
-                  
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (confirm(`Remover "${meal.name}"?`)) {
+                        removeMeal(meal.id);
+                      }
+                    }}
+                    className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
