@@ -672,8 +672,44 @@ const EditorV3Page = () => {
                     ) : (
                       <Sparkles className="w-3.5 h-3.5" />
                     )}
-                    Gerar com IA
+                    Otimizar
                   </Button>
+
+                  <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setActiveMealId(meal.id);
+                        setShowFoodsModal(true);
+                      }}
+                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all gap-1.5"
+                    >
+                      <Apple className="w-3 h-3" /> Alimento
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setActiveMealId(meal.id);
+                        setShowMarmitasModal(true);
+                      }}
+                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all gap-1.5"
+                    >
+                      <Utensils className="w-3 h-3" /> Marmita
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setActiveMealId(meal.id);
+                        setShowTemplatesModal(true);
+                      }}
+                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all gap-1.5"
+                    >
+                      <Layers className="w-3 h-3" /> Template
+                    </Button>
+                  </div>
 
                   <Button
                     variant="ghost"
@@ -687,111 +723,6 @@ const EditorV3Page = () => {
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        Adicionar
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
-                    {/* Alimentos */}
-                    <div className="p-4 border-b border-emerald-500/10">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Apple className="w-3 h-3" /> Alimentos (TACO/USDA)
-                      </p>
-                      <div className="relative mb-3">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" />
-                        <Input 
-                          placeholder="Buscar no banco..." 
-                          value={foodSearch}
-                          onChange={(e) => setFoodSearch(e.target.value)}
-                          className="h-8 pl-8 text-[10px] bg-white/5 border-white/10 rounded-lg focus:ring-emerald-500/50"
-                        />
-                        {isSearchingFoods && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-500 animate-spin" />}
-                      </div>
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                        {foods.length > 0 ? (
-                          foods.map((f) => (
-                            <button
-                              key={f.id}
-                              onClick={() => addFoodToMeal(meal.id, f)}
-                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-bold text-white/80 group-hover/item:text-white line-clamp-1">{f.name}</span>
-                                <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{f.portionLabel}</span>
-                              </div>
-                              <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0 ml-2">
-                                {f.kcal} kcal
-                              </span>
-                            </button>
-                          ))
-                        ) : foodSearch.length >= 2 && !isSearchingFoods ? (
-                          <p className="text-[10px] text-center py-4 text-white/20 font-bold uppercase tracking-widest">Nenhum alimento encontrado</p>
-                        ) : foodSearch.length < 2 && (
-                          <p className="text-[10px] text-center py-4 text-white/20 font-bold uppercase tracking-widest">Digite para buscar</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Marmitas */}
-                    <div className="p-4 border-b border-emerald-500/10">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Utensils className="w-3 h-3" /> Minhas Marmitas
-                      </p>
-                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                        {marmitas.length > 0 ? (
-                          marmitas.map((m) => (
-                            <button
-                              key={m.id}
-                              onClick={() => addMarmitaToMeal(meal.id, m)}
-                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                            >
-                              <div className="flex flex-col truncate pr-2">
-                                <span className="font-bold text-white/80 group-hover/item:text-white truncate">{m.name}</span>
-                                <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{m.portionLabel}</span>
-                              </div>
-                              <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
-                                {m.kcal} kcal
-                              </span>
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-[10px] text-center py-2 text-white/20 font-bold uppercase tracking-widest">Sem marmitas cadastradas</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Templates */}
-                    <div className="p-4 bg-emerald-500/[0.02]">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Layers className="w-3 h-3" /> Templates de Refeição
-                      </p>
-                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                        {templates.length > 0 ? (
-                          templates.map((t) => (
-                            <button
-                              key={t.id}
-                              onClick={() => applyTemplateToMeal(meal.id, t)}
-                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all group/item"
-                            >
-                              <p className="font-bold text-white/80 group-hover/item:text-white line-clamp-1">{t.name}</p>
-                              <p className="text-[10px] text-white/30 group-hover/item:text-white/50 leading-relaxed mt-0.5 line-clamp-2">{t.description}</p>
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-[10px] text-center py-2 text-white/20 font-bold uppercase tracking-widest">Carregando templates...</p>
-                        )}
-                      </div>
-                    </div>
-                    </PopoverContent>
-                  </Popover>
               </div>
             </div>
 
