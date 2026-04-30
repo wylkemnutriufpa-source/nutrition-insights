@@ -31,7 +31,7 @@ const PatientDetail = lazy(() => import("../pages/PatientDetail"));
 const ClientDashboard = lazy(() => import("../pages/ClientDashboard"));
 const MealPlanEditorV2 = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
 const MealPlanEditorV2Entry = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
-const MealPlanEditorV3Experimental = lazyDebug(() => import("../pages/MealPlanEditorV3Page"), "MealPlanEditorV3 (Beta)");
+// const MealPlanEditorV3Experimental = lazyDebug(() => import("../pages/MealPlanEditorV3Page"), "MealPlanEditorV3 (Beta)");
 const DietBuilder = lazy(() => import("../pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
