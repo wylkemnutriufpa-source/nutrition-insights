@@ -1374,7 +1374,11 @@ const EditorV3Page = () => {
                     <Textarea 
                       placeholder="Escreva algo especial sobre este alimento para o paciente..."
                       value={selectedItem.item.description || ''}
-                      onChange={(e) => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { description: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { description: val });
+                        setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, description: val } } : null);
+                      }}
                       className="min-h-[200px] bg-white/5 border-white/10 text-white rounded-xl focus:ring-emerald-500/50 p-4 leading-relaxed"
                     />
                   </TabsContent>
