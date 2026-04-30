@@ -493,10 +493,11 @@ const EditorV3Page = () => {
           const mealMacros = meal.items.reduce((acc, item) => {
             const q = item.quantity ?? 1;
             const calories = item.calories || item.kcal || 0;
-            acc.kcal += calories * q;
-            acc.p += (item.protein ?? 0) * q;
-            acc.c += (item.carbs ?? 0) * q;
-            acc.f += (item.fat ?? 0) * q;
+            const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') ? q / 100 : q;
+            acc.kcal += calories * factor;
+            acc.p += (item.protein ?? 0) * factor;
+            acc.c += (item.carbs ?? 0) * factor;
+            acc.f += (item.fat ?? 0) * factor;
             return acc;
           }, { kcal: 0, p: 0, c: 0, f: 0 });
 
@@ -709,7 +710,7 @@ const EditorV3Page = () => {
                       <div>
                         <div className="flex items-center gap-3 mb-1.5">
                           <p className="font-black text-[15px] tracking-tight text-white group-hover/card:text-emerald-400 transition-colors">
-                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name} — {Math.round((item.quantity ?? 1) * (item.calories ?? 0))} kcal
+                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name} — {Math.round((item.quantity ?? 1) * (item.calories ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))} kcal
                           </p>
                           {item.locked && (
                             <Badge variant="outline" className="h-5 text-[8px] font-black bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1 uppercase tracking-wider px-2">
@@ -722,19 +723,19 @@ const EditorV3Page = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {Math.round((item.quantity ?? 1) * (item.calories ?? 0))} <span className="text-white/20">kcal</span>
+                              {Math.round((item.quantity ?? 1) * (item.calories ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))} <span className="text-white/20">kcal</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {Math.round((item.quantity ?? 1) * (item.protein ?? 0))}g <span className="text-white/20">Prot</span>
+                              {Math.round((item.quantity ?? 1) * (item.protein ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))}g <span className="text-white/20">Prot</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {Math.round((item.quantity ?? 1) * (item.carbs ?? 0))}g <span className="text-white/20">Carb</span>
+                              {Math.round((item.quantity ?? 1) * (item.carbs ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))}g <span className="text-white/20">Carb</span>
                             </p>
                           </div>
                         </div>
@@ -791,7 +792,7 @@ const EditorV3Page = () => {
 
                       <div className="text-right min-w-[60px]">
                         <p className="font-black text-base text-emerald-500 leading-none">
-                          {Math.round((item.quantity ?? 1) * item.calories)} <span className="text-[10px] text-emerald-500/60 uppercase">kcal</span>
+                          {Math.round((item.quantity ?? 1) * item.calories * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))} <span className="text-[10px] text-emerald-500/60 uppercase">kcal</span>
                         </p>
                         <p className="text-[9px] text-white/30 uppercase font-black tracking-widest mt-1">Total</p>
                       </div>
