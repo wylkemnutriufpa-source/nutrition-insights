@@ -138,6 +138,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
       
+      // Safety watchdog: Force loading state to end if it hangs for more than 8s
+      const authTimeout = setTimeout(() => {
+        if (mounted) {
+          console.warn(`[Auth:${correlationId}] TIMEOUT DE SEGURANÇA: Finalizando estado de loading forçadamente.`);
+          setLoading(false);
+        }
+      }, 8000);
+      
       // Timer de segurança removido para evitar auto-cura. 
       // O sistema deve falhar via ErrorBoundary ou timeout nativo do navegador.
 
@@ -165,12 +173,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           ]);
 
           if (mounted) {
+            clearTimeout(authTimeout);
             setLoading(false);
             checkSubscription();
             console.log(`[Auth:${correlationId}] Inicialização concluída com sucesso.`);
           }
         } else {
           console.log(`[Auth:${correlationId}] Nenhum usuário encontrado.`);
+          clearTimeout(authTimeout);
           if (mounted) {
             setLoading(false);
           }
@@ -180,6 +190,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         console.error(`[Auth:${correlationId}] FALHA NA INICIALIZAÇÃO:`, err);
         // ... keep existing code
         if (mounted) {
+          clearTimeout(authTimeout);
           setError(err instanceof Error ? err : new Error(String(err)));
           setLoading(false);
         }
