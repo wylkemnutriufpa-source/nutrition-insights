@@ -69,7 +69,7 @@ function sumMealMacros(meal: Meal) {
   let kcal = 0, p = 0, c = 0, f = 0;
   for (const i of meal.items) {
     const q = i.quantity ?? 1;
-    kcal += (i.calories ?? 0) * q;
+    kcal += (i.kcal ?? i.calories ?? 0) * q;
     p += (i.protein ?? 0) * q;
     c += (i.carbs ?? 0) * q;
     f += (i.fat ?? 0) * q;
