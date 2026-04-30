@@ -124,8 +124,9 @@ export async function loadOrCreateDraft(
  * Retorna o registro atualizado para controle de updated_at.
  */
 export async function saveDraft(draftId: string, meals: Meal[]): Promise<DraftRecord | null> {
-  const macros = computeMacros(meals);
-  const payload: DraftPayload = { meals, version: DRAFT_PAYLOAD_VERSION };
+  const normalizedMeals = normalizeMeals(meals);
+  const macros = computeMacros(normalizedMeals);
+  const payload: DraftPayload = { meals: normalizedMeals, version: DRAFT_PAYLOAD_VERSION };
 
   const { data, error } = await supabase
     .from('v3_drafts' as any)
