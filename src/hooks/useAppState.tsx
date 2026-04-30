@@ -83,13 +83,6 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (window as any).__FJ_READY__ = isReady;
-    if (isReady) {
-      const loader = document.getElementById("fj-initial-loader");
-      if (loader) {
-        loader.classList.add("fade-out");
-        setTimeout(() => loader.remove(), 500);
-      }
-    }
   }, [isReady]);
 
   return (
