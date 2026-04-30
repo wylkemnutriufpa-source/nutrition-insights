@@ -1371,39 +1371,61 @@ const EditorV3Page = () => {
                         </div>
                       ) : smartSubstitutions.length > 0 ? (
                         <div className="grid grid-cols-1 gap-2">
-                          {smartSubstitutions.map((food) => (
-                            <Button
-                              key={`smart-${food.id}`}
-                              variant="ghost"
-                              onClick={() => {
-                                const currentItem = selectedItem.item;
-                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                                  name: food.name,
-                                  kcal: food.kcal,
-                                  calories: food.kcal,
-                                  protein: food.protein,
-                                  carbs: food.carbs,
-                                  fat: food.fat,
-                                  portionLabel: food.portionLabel,
-                                  imageUrl: food.imageUrl,
-                                  ingredients: food.ingredients,
-                                  isMarmita: food.isMarmita,
-                                  measurementType: food.measurementType
-                                });
-                                setSelectedItem(null);
-                                toast.success(`Trocado inteligentemente para ${food.name}`);
-                              }}
-                              className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
-                            >
-                              <div className="text-left">
-                                <p className="font-bold text-white group-hover:text-emerald-400 text-xs">{food.name}</p>
-                                <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
-                              </div>
-                              <Zap className="w-3.5 h-3.5 text-emerald-500" />
-                            </Button>
-                          ))}
+                          {smartSubstitutions.map((food) => {
+                            const needsConversion = food.measurementType !== selectedItem.item.measurementType;
+                            return (
+                              <Button
+                                key={`smart-${food.id}`}
+                                variant="ghost"
+                                onClick={() => {
+                                  const currentItem = selectedItem.item;
+                                  updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                                    name: food.name,
+                                    kcal: food.kcal,
+                                    calories: food.kcal,
+                                    protein: food.protein,
+                                    carbs: food.carbs,
+                                    fat: food.fat,
+                                    portionLabel: food.portionLabel,
+                                    imageUrl: food.imageUrl,
+                                    ingredients: food.ingredients,
+                                    isMarmita: food.isMarmita,
+                                    measurementType: food.measurementType
+                                  });
+                                  setSelectedItem(null);
+                                  toast.success(`Trocado inteligentemente para ${food.name}`);
+                                }}
+                                className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
+                              >
+                                <div className="text-left">
+                                  <p className="font-bold text-white group-hover:text-emerald-400 text-xs">{food.name}</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                                    {needsConversion && <Badge className="bg-amber-500/10 text-amber-500 text-[7px] border-amber-500/20 h-3">Requer Ajuste de Porção</Badge>}
+                                  </div>
+                                </div>
+                                <Zap className="w-3.5 h-3.5 text-emerald-500" />
+                              </Button>
+                            );
+                          })}
                         </div>
-                      ) : null}
+                      ) : (
+                        <div className="text-center py-6 border-2 border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
+                          <AlertTriangle className="w-6 h-6 text-amber-500/40 mx-auto mb-2" />
+                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest mb-3">Nenhuma sugestão compatível encontrada</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              const input = document.querySelector('input[placeholder="Buscar alimento para trocar..."]') as HTMLInputElement;
+                              if (input) input.focus();
+                            }}
+                            className="h-8 text-[9px] font-black uppercase tracking-widest bg-white/5 border-white/10 hover:bg-white/10"
+                          >
+                            <Search className="w-3 h-3 mr-2" /> Buscar Manualmente
+                          </Button>
+                        </div>
+                      )}
 
                       {swapResults.length > 0 && (
                         <div className="pt-4 border-t border-white/5 mt-4">
