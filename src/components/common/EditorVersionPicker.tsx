@@ -10,6 +10,7 @@ import { ChevronDown, Zap, Sparkles, Pencil } from "lucide-react";
 
 interface EditorVersionPickerProps {
   planId: string;
+  patientId?: string;
   onBeforeNavigate?: () => void;
   label?: string;
   variant?: "default" | "outline" | "ghost" | "secondary";
