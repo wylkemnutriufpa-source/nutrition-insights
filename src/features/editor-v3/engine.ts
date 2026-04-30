@@ -92,7 +92,7 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
 /**
  * Gera um plano completo distribuindo alimentos em todas as refeições vazias
  */
-export const generatePlanWithEngine = (currentMeals: Meal[], goal: string): Meal[] => {
+export const generatePlanWithEngine = (currentMeals: Meal[], goal: string, baseCalories: number = 2000): Meal[] => {
   return currentMeals.map(meal => {
     // Só geramos para refeições vazias para evitar sobrescrever trabalho do usuário
     if (meal.items.length === 0) {
