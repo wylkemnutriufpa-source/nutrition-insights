@@ -347,7 +347,7 @@ export default function MealPlans() {
         else if (newPlan) {
           toast.success("Plano criado! Abrindo Builder...");
           setOpen(false);
-          navigate(`/plan-builder/${newPlan.id}`, { replace: true });
+          navigate(`/v3/${form.patient_id}?planId=${newPlan.id}`, { replace: true });
         }
       }
       setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });
@@ -615,7 +615,7 @@ export default function MealPlans() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="icon" className="h-9 w-9" title="Builder Híbrido"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/plan-builder/${p.id}`); }}>
+                        onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}?planId=${p.id}`); }}>
                         <Zap className="w-4 h-4 text-primary" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor V3 (Premium)"

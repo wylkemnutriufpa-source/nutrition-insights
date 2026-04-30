@@ -792,7 +792,7 @@ export default function PatientDetail() {
             {expUI.showProtocols && (
             <>
             {isAdmin && (
-              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/profissionais")}>
+              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/professionals")}>
                 <UserCog className="w-4 h-4" /> Gerenciar Profissionais
               </Button>
             )}
@@ -1515,7 +1515,7 @@ export default function PatientDetail() {
                           });
                           if (error) throw error;
                           toast.success("Plano criado! Abrindo Builder...");
-                          navigate(`/plan-builder/${newPlan.id}`, { replace: true });
+                          navigate(`/v3/${resolvedPatientId}?planId=${newPlan.id}`, { replace: true });
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao criar plano");
                         }
@@ -1602,7 +1602,7 @@ export default function PatientDetail() {
                             });
                             if (error) throw error;
                             toast.success("Plano criado! Abrindo Builder...");
-                            navigate(`/plan-builder/${newPlan.id}`, { replace: true });
+                            navigate(`/v3/${resolvedPatientId}?planId=${newPlan.id}`, { replace: true });
                           } catch (err: any) {
                             toast.error(err.message || "Erro ao criar plano");
                           }
@@ -1655,6 +1655,7 @@ export default function PatientDetail() {
                                   {isPending && (
                                     <EditorVersionPicker
                                       planId={plan.id}
+                                      patientId={resolvedPatientId}
                                       onBeforeNavigate={() => setOpenSection(null)}
                                       label="Revisar e Aprovar"
                                       variant="default"
@@ -1664,6 +1665,7 @@ export default function PatientDetail() {
                                   )}
                                   <EditorVersionPicker
                                     planId={plan.id}
+                                    patientId={resolvedPatientId}
                                     onBeforeNavigate={() => setOpenSection(null)}
                                     label={isPending ? "Ver" : "Ver Plano"}
                                     variant="outline"

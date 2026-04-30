@@ -10,6 +10,7 @@ import { ChevronDown, Zap, Sparkles, Pencil } from "lucide-react";
 
 interface EditorVersionPickerProps {
   planId: string;
+  patientId?: string;
   onBeforeNavigate?: () => void;
   label?: string;
   variant?: "default" | "outline" | "ghost" | "secondary";
@@ -23,6 +24,7 @@ interface EditorVersionPickerProps {
  */
 export function EditorVersionPicker({
   planId,
+  patientId,
   onBeforeNavigate,
   label = "Editar Plano",
   variant = "outline",
@@ -37,11 +39,12 @@ export function EditorVersionPicker({
     if (version === "v2") {
       navigate(`/meal-plans/${planId}`);
     } else {
-      // For V3, we often need the patientId. We'll try to find it or just navigate to the general route if needed.
-      // But usually, in the contexts where this is used, we have access to the plan.
-      // For now, let's just point to /meal-plan-editor-v3 with a planId query param if possible, 
-      // or assume the V3 page can handle finding the patient from the planId.
-      navigate(`/meal-plan-editor-v3?planId=${planId}`);
+      // Prioritize patientId in path if available, otherwise use general route
+      if (patientId) {
+        navigate(`/v3/${patientId}?planId=${planId}`);
+      } else {
+        navigate(`/meal-plan-editor-v3?planId=${planId}`);
+      }
     }
   };
 

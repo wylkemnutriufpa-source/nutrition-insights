@@ -1022,7 +1022,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/profissionais")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/professionals")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Users className="w-8 h-8 text-primary" />
                     <div>

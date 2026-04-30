@@ -91,7 +91,7 @@ const allRoutes = [
   { to: "/admin/testimonials", icon: Star, label: "Depoimentos", keywords: "depoimentos testimonials avaliacoes clientes cases sucesso", roles: ["admin"], desc: "Gerenciar depoimentos" },
   { to: "/admin/pricing", icon: DollarSign, label: "Planos & Preços", keywords: "planos precos pricing assinatura valor mensal anual cobranca", roles: ["admin"], desc: "Gerenciar planos de preço" },
   { to: "/admin/patient-features", icon: Crown, label: "Features Paciente", keywords: "features paciente funcionalidades plano nivel gamificacao", roles: ["admin"], desc: "Features por nível de paciente" },
-  { to: "/admin/profissionais", icon: Users, label: "Profissionais", keywords: "profissionais nutricionistas personal trainers cadastro equipe team", roles: ["admin"], desc: "Gerenciar profissionais" },
+  { to: "/admin/professionals", icon: Users, label: "Profissionais", keywords: "profissionais nutricionistas personal trainers cadastro equipe team", roles: ["admin"], desc: "Gerenciar profissionais" },
   { to: "/admin/growth", icon: TrendingUp, label: "Growth Dashboard", keywords: "growth crescimento metricas analytics kpi conversao funil", roles: ["admin"], desc: "Dashboard de crescimento" },
   { to: "/admin/prestige", icon: Crown, label: "Prestígio & Ranking", keywords: "prestigio prestige ranking planos prestigio pontos regras zerar reset coroa badge niveis tier medalha gamificacao", roles: ["admin"], desc: "Gerenciar sistema de prestígio" },
   { to: "/admin/landing-pages", icon: Globe, label: "Landing Pages", keywords: "landing pages pagina publica site marketing captura leads", roles: ["admin"], desc: "Páginas de captura" },
