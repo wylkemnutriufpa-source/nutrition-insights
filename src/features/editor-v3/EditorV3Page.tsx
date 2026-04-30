@@ -30,7 +30,7 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -107,6 +107,9 @@ const EditorV3Page = () => {
   const [substitutionSearch, setSubstitutionSearch] = useState('');
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
   const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
+  const [swapSearch, setSwapSearch] = useState('');
+  const [swapResults, setSwapResults] = useState<Food[]>([]);
+  const [isSearchingSwap, setIsSearchingSwap] = useState(false);
 
   // Estados para Modais Premium
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -154,6 +157,20 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [substitutionSearch]);
+  // Busca de Trocas (Swap)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (swapSearch.length >= 2) {
+        setIsSearchingSwap(true);
+        const results = await searchFoods(swapSearch);
+        setSwapResults(results);
+        setIsSearchingSwap(false);
+      } else if (swapSearch.length === 0) {
+        setSwapResults([]);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [swapSearch]);
   // Busca de Marmitas e Templates
   useEffect(() => {
     const loadData = async () => {
@@ -474,7 +491,7 @@ const EditorV3Page = () => {
             ) : (
               <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
             )}
-            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO COM IA'}
+            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO (ENGINE V3)'}
           </Button>
           <Button
             size="sm"
@@ -553,7 +570,7 @@ const EditorV3Page = () => {
                     ) : (
                       <Sparkles className="w-3.5 h-3.5" />
                     )}
-                    Gerar Refeição
+                    Gerar com IA
                   </Button>
 
                   <Button
@@ -1002,7 +1019,7 @@ const EditorV3Page = () => {
               className="h-auto py-4 flex flex-col items-start gap-1 border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-left"
             >
               <span className="font-black text-emerald-400 uppercase tracking-widest text-[10px]">Manter e Complementar</span>
-              <span className="text-xs text-white/40">A IA preencherá apenas as refeições que estão vazias.</span>
+              <span className="text-xs text-white/40">O Motor V3 preencherá apenas as refeições que estão vazias.</span>
             </Button>
             
             <Button 
@@ -1011,7 +1028,7 @@ const EditorV3Page = () => {
               className="h-auto py-4 flex flex-col items-start gap-1 border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-left"
             >
               <span className="font-black text-rose-400 uppercase tracking-widest text-[10px]">Substituir Tudo</span>
-              <span className="text-xs text-white/40 font-bold">Aviso: Isso removerá todos os alimentos atuais e criará um novo plano do zero.</span>
+              <span className="text-xs text-white/40 font-bold">Aviso: O Motor V3 removerá todos os alimentos atuais e criará um novo plano do zero.</span>
             </Button>
           </div>
           <DialogFooter>
@@ -1120,9 +1137,12 @@ const EditorV3Page = () => {
                 </div>
               </DialogHeader>
 
-              <Tabs defaultValue="edit" className="w-full">
+              <Tabs defaultValue="swap" className="w-full">
                 <div className="px-6 border-b border-white/5">
                   <TabsList className="bg-transparent h-auto p-0 gap-6">
+                    <TabsTrigger value="swap" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
+                      <RefreshCcw className="w-3.5 h-3.5 mr-2" /> Trocar
+                    </TabsTrigger>
                     <TabsTrigger value="edit" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
                       <Edit3 className="w-3.5 h-3.5 mr-2" /> Editar
                     </TabsTrigger>
@@ -1141,6 +1161,62 @@ const EditorV3Page = () => {
                 </div>
 
                 <div className="p-6 h-[400px] overflow-y-auto custom-scrollbar">
+                  <TabsContent value="swap" className="mt-0 space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <Input 
+                        placeholder="Buscar alimento para trocar..." 
+                        value={swapSearch}
+                        onChange={(e) => setSwapSearch(e.target.value)}
+                        className="h-12 pl-10 bg-white/5 border-white/10 rounded-xl focus:ring-emerald-500/50"
+                      />
+                      {isSearchingSwap && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 animate-spin" />}
+                    </div>
+
+                    <div className="space-y-2">
+                      {swapResults.map((food) => (
+                        <Button
+                          key={food.id}
+                          variant="ghost"
+                          onClick={() => {
+                            const currentItem = selectedItem.item;
+                            // Troca imediata mantendo a instância e a quantidade base se compatível
+                            updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                              name: food.name,
+                              kcal: food.kcal,
+                              calories: food.kcal,
+                              protein: food.protein,
+                              carbs: food.carbs,
+                              fat: food.fat,
+                              portionLabel: food.portionLabel,
+                              imageUrl: food.imageUrl,
+                              ingredients: food.ingredients,
+                              isMarmita: food.isMarmita
+                            });
+                            setSwapSearch('');
+                            setSwapResults([]);
+                            setSelectedItem(null); // Fecha para aplicar
+                            toast.success(`Alimento trocado para ${food.name}`);
+                          }}
+                          className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group"
+                        >
+                          <div className="text-left">
+                            <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
+                            <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                          </div>
+                          <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
+                        </Button>
+                      ))}
+                      
+                      {swapSearch.length < 2 && (
+                        <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-2xl">
+                          <Search className="w-8 h-8 text-white/5 mx-auto mb-2" />
+                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest">Digite para buscar substitutos</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
                   <TabsContent value="edit" className="mt-0 space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
@@ -1160,9 +1236,10 @@ const EditorV3Page = () => {
                           </Button>
                           <Input 
                             type="number"
-                            value={selectedItem.item.quantity}
+                            value={selectedItem.item.quantity || 0}
                             onChange={(e) => {
                               const val = Number(e.target.value);
+                              if (isNaN(val)) return;
                               updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, val);
                               setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: val } } : null);
                             }}
@@ -1231,22 +1308,30 @@ const EditorV3Page = () => {
                     <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6">
                       <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-4">Resumo Nutricional (Total)</p>
                       <div className="grid grid-cols-4 gap-4">
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-white">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.calories ?? 0))}</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Kcal</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-emerald-400">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.protein ?? 0))}g</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Prot</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-blue-400">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.carbs ?? 0))}g</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Carb</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-amber-400">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.fat ?? 0))}g</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Gord</p>
-                        </div>
+                        {(() => {
+                          const q = selectedItem.item.quantity ?? 1;
+                          const factor = (selectedItem.item.measurementType === 'gram' || selectedItem.item.measurementType === 'ml') ? 0.01 : 1;
+                          return (
+                            <>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-white">{Math.round(q * (selectedItem.item.calories ?? 0) * factor)}</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Kcal</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-emerald-400">{Math.round(q * (selectedItem.item.protein ?? 0) * factor)}g</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Prot</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-blue-400">{Math.round(q * (selectedItem.item.carbs ?? 0) * factor)}g</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Carb</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-amber-400">{Math.round(q * (selectedItem.item.fat ?? 0) * factor)}g</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Gord</p>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </TabsContent>
