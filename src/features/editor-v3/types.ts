@@ -6,14 +6,16 @@ export interface HouseholdMeasure {
 export interface Food {
   id: string;
   name: string;
-  calories: number;
+  kcal: number;
+  calories: number; // Keep for backward compatibility
   protein: number;
   carbs: number;
   fat: number;
   portionValue: number;
-  portionUnit: string;
-  portionLabel: string;
-  measurementType?: 'unit' | 'gram' | 'spoon' | 'ml';
+  portionUnitLabel: string;
+  portionUnit: string; // Keep for backward compatibility
+  portionLabel: string; // Keep for backward compatibility
+  measurementType: 'unit' | 'gram' | 'spoon' | 'ml';
   isMarmita?: boolean;
   locked?: boolean;
   imageUrl?: string;
