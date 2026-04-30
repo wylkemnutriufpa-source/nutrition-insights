@@ -501,8 +501,12 @@ const EditorV3Page = () => {
                           size="icon"
                           disabled={item.locked || (item.quantity ?? 1) <= 0}
                           onClick={() => {
+                            const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
-                            updateFoodQuantity(meal.id, item.instanceId, Math.max(0, (item.quantity ?? 1) - step));
+                            const nextValue = Math.max(0, current - step);
+                            // Garante que o valor seja múltiplo do step para evitar quebra
+                            const roundedValue = Math.floor(nextValue / step) * step;
+                            updateFoodQuantity(meal.id, item.instanceId, roundedValue);
                           }}
                           className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
                         >
@@ -520,8 +524,11 @@ const EditorV3Page = () => {
                           size="icon"
                           disabled={item.locked}
                           onClick={() => {
+                            const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
-                            updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) + step);
+                            const nextValue = current + step;
+                            const roundedValue = Math.ceil(nextValue / step) * step;
+                            updateFoodQuantity(meal.id, item.instanceId, roundedValue);
                           }}
                           className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
                         >
