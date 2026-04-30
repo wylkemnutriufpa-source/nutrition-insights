@@ -78,6 +78,9 @@ const EditorV3Page = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRevertConfirm, setShowRevertConfirm] = useState(false);
   const [showPatientSelector, setShowPatientSelector] = useState(false);
+  const [showAIGenerateConfirm, setShowAIGenerateConfirm] = useState(false);
+  const [generatingMealId, setGeneratingMealId] = useState<string | null>(null);
+  const [isGeneratingGlobal, setIsGeneratingGlobal] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
 
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
