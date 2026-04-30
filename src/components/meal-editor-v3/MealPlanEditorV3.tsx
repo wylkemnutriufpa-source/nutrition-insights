@@ -18,12 +18,13 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/lib/auth';
 import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 import PatientPickerDropdown from '../common/PatientPickerDropdown';
 import { 
   RefreshCw, Save, Zap, Dumbbell, Flame, Apple, Salad, Soup, 
   Package, ShieldCheck, Settings2, Sparkles, CheckCircle2,
   Stethoscope, Baby, HeartPulse, Activity, UserPlus, Search,
-  PlusCircle, Bot, Calendar, Eye, Star, ShoppingCart
+  PlusCircle, Bot, Calendar, Eye, Star, ShoppingCart, ArrowLeft
 } from 'lucide-react';
 import {
   Dialog,
