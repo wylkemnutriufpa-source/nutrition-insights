@@ -1351,7 +1351,7 @@ const EditorV3Page = () => {
             <Button 
               onClick={() => {
                 if (!newMealName) {
-                  toast.error("Dê um nome para a refeição");
+                  toast.error("Dé um nome para a refeição");
                   return;
                 }
                 addMealWithHeader(newMealName, newMealTime);
