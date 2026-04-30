@@ -9,11 +9,10 @@ export function PWAUpdateBanner() {
   const [needRefresh, setNeedRefresh] = useState(false);
 
   useEffect(() => {
-    // In production, we would check for updates here.
-    // In development, we keep it disabled to avoid breaking the build.
-    if (import.meta.env.PROD && "serviceWorker" in navigator) {
-      console.log("[PWA] Update check placeholder");
-    }
+    // Disable auto-refresh entirely to avoid interrupting professional work
+    // We only show the banner if a real version update is detected
+    // and let the user choose when to click "Refresh"
+    console.log("[PWA] Auto-refresh disabled for stability.");
   }, []);
 
   if (!visible || !needRefresh) return null;

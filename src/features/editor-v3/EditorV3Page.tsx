@@ -169,17 +169,20 @@ const EditorV3Page = () => {
     loadData();
   }, [user?.id]);
 
-  // Macros totais memoizados
   // Macros totais memoizados com fallback para kcal/calories
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
         const q = item.quantity ?? 1;
         const cal = item.calories || item.kcal || 0;
-        acc.kcal += cal * q;
-        acc.protein += (item.protein ?? 0) * q;
-        acc.carbs += (item.carbs ?? 0) * q;
-        acc.fat += (item.fat ?? 0) * q;
+        
+        // Se for gramas ou ml, a base é 100
+        const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') ? q / 100 : q;
+        
+        acc.kcal += cal * factor;
+        acc.protein += (item.protein ?? 0) * factor;
+        acc.carbs += (item.carbs ?? 0) * factor;
+        acc.fat += (item.fat ?? 0) * factor;
       });
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
@@ -200,7 +203,9 @@ const EditorV3Page = () => {
       warnings.push(`${emptyMeals.length} refeições estão vazias.`);
     }
 
-    if (totalMacros.kcal === 0) errors.push("Macros totais não podem ser zero.");
+    if (totalMacros.kcal === 0 && meals.some(m => m.items.length > 0)) {
+       errors.push("Macros totais não podem ser zero se houver alimentos.");
+    }
 
     return {
       isValid: errors.length === 0,
@@ -490,10 +495,11 @@ const EditorV3Page = () => {
           const mealMacros = meal.items.reduce((acc, item) => {
             const q = item.quantity ?? 1;
             const calories = item.calories || item.kcal || 0;
-            acc.kcal += calories * q;
-            acc.p += (item.protein ?? 0) * q;
-            acc.c += (item.carbs ?? 0) * q;
-            acc.f += (item.fat ?? 0) * q;
+            const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') ? q / 100 : q;
+            acc.kcal += calories * factor;
+            acc.p += (item.protein ?? 0) * factor;
+            acc.c += (item.carbs ?? 0) * factor;
+            acc.f += (item.fat ?? 0) * factor;
             return acc;
           }, { kcal: 0, p: 0, c: 0, f: 0 });
 
@@ -706,7 +712,7 @@ const EditorV3Page = () => {
                       <div>
                         <div className="flex items-center gap-3 mb-1.5">
                           <p className="font-black text-[15px] tracking-tight text-white group-hover/card:text-emerald-400 transition-colors">
-                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name} — {Math.round((item.quantity ?? 1) * (item.calories ?? 0))} kcal
+                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name} — {Math.round((item.quantity ?? 1) * (item.calories ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))} kcal
                           </p>
                           {item.locked && (
                             <Badge variant="outline" className="h-5 text-[8px] font-black bg-amber-500/10 text-amber-500 border-amber-500/20 gap-1 uppercase tracking-wider px-2">
@@ -719,19 +725,19 @@ const EditorV3Page = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {Math.round((item.quantity ?? 1) * (item.calories ?? 0))} <span className="text-white/20">kcal</span>
+                              {Math.round((item.quantity ?? 1) * (item.calories ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))} <span className="text-white/20">kcal</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {Math.round((item.quantity ?? 1) * (item.protein ?? 0))}g <span className="text-white/20">Prot</span>
+                              {Math.round((item.quantity ?? 1) * (item.protein ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))}g <span className="text-white/20">Prot</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {Math.round((item.quantity ?? 1) * (item.carbs ?? 0))}g <span className="text-white/20">Carb</span>
+                              {Math.round((item.quantity ?? 1) * (item.carbs ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))}g <span className="text-white/20">Carb</span>
                             </p>
                           </div>
                         </div>
@@ -739,7 +745,7 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="flex items-center gap-6 z-20">
-                      <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1">
+                      <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -759,9 +765,12 @@ const EditorV3Page = () => {
                         </Button>
                         
                         <div className="px-3 text-center min-w-[80px]">
-                          <p className="font-black text-sm text-white">
-                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)}
-                          </p>
+                          <Input 
+                            type="number" 
+                            className="h-7 w-16 bg-transparent border-none text-center font-black text-white p-0 focus-visible:ring-0" 
+                            value={item.quantity}
+                            onChange={(e) => updateFoodQuantity(meal.id, item.instanceId, Number(e.target.value))}
+                          />
                         </div>
  
                         <Button
@@ -785,7 +794,7 @@ const EditorV3Page = () => {
 
                       <div className="text-right min-w-[60px]">
                         <p className="font-black text-base text-emerald-500 leading-none">
-                          {Math.round((item.quantity ?? 1) * item.calories)} <span className="text-[10px] text-emerald-500/60 uppercase">kcal</span>
+                          {Math.round((item.quantity ?? 1) * item.calories * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))} <span className="text-[10px] text-emerald-500/60 uppercase">kcal</span>
                         </p>
                         <p className="text-[9px] text-white/30 uppercase font-black tracking-widest mt-1">Total</p>
                       </div>
@@ -1120,14 +1129,14 @@ const EditorV3Page = () => {
                     <TabsTrigger value="substitutions" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
                       <RefreshCw className="w-3.5 h-3.5 mr-2" /> Substituições
                     </TabsTrigger>
+                    <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
+                      <List className="w-3.5 h-3.5 mr-2" /> Descrição
+                    </TabsTrigger>
                     {selectedItem.item.isMarmita && (
                       <TabsTrigger value="recipe" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
                         <BookOpen className="w-3.5 h-3.5 mr-2" /> Receita
                       </TabsTrigger>
                     )}
-                    <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
-                      <List className="w-3.5 h-3.5 mr-2" /> Descrição
-                    </TabsTrigger>
                   </TabsList>
                 </div>
 
@@ -1136,12 +1145,42 @@ const EditorV3Page = () => {
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40">Quantidade</Label>
-                        <Input 
-                          type="number"
-                          value={selectedItem.item.quantity}
-                          onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
-                          className="bg-white/5 border-white/10 text-white font-bold h-12 text-lg"
-                        />
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const step = selectedItem.item.measurementType === 'gram' ? 10 : selectedItem.item.measurementType === 'ml' ? 50 : 1;
+                              updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Math.max(0, selectedItem.item.quantity - step));
+                              setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: Math.max(0, prev.item.quantity - step) } } : null);
+                            }}
+                            className="bg-white/5 border-white/10 text-white h-12 w-12 hover:bg-emerald-500/20"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <Input 
+                            type="number"
+                            value={selectedItem.item.quantity}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, val);
+                              setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: val } } : null);
+                            }}
+                            className="bg-white/5 border-white/10 text-white font-black h-12 text-center text-xl"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const step = selectedItem.item.measurementType === 'gram' ? 10 : selectedItem.item.measurementType === 'ml' ? 50 : 1;
+                              updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, selectedItem.item.quantity + step);
+                              setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: prev.item.quantity + step } } : null);
+                            }}
+                            className="bg-white/5 border-white/10 text-white h-12 w-12 hover:bg-emerald-500/20"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40">Unidade / Medida</Label>
@@ -1171,6 +1210,7 @@ const EditorV3Page = () => {
                                       portionUnit: opt.unit,
                                       portionUnitLabel: opt.label
                                     });
+                                    setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, measurementType: opt.type, portionUnit: opt.unit, portionUnitLabel: opt.label } } : null);
                                   }}
                                   className={cn(
                                     "h-10 justify-start px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
@@ -1215,7 +1255,7 @@ const EditorV3Page = () => {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                       <Input 
-                        placeholder="Adicionar substituição..." 
+                        placeholder="Adicionar substituição compatível..." 
                         value={substitutionSearch}
                         onChange={(e) => setSubstitutionSearch(e.target.value)}
                         className="h-12 pl-10 bg-white/5 border-white/10 rounded-xl focus:ring-emerald-500/50"
@@ -1235,12 +1275,17 @@ const EditorV3Page = () => {
                             });
                             setSubstitutionSearch('');
                             setSubstitutionResults([]);
+                            // Atualiza o estado local para refletir no modal aberto
+                            setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, substitutions: [...currentSubs, food] } } : null);
                           }}
                           className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group"
                         >
                           <div className="text-left">
                             <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
-                            <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel}</p>
+                            <div className="flex items-center gap-3">
+                              <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel}</p>
+                              <Badge className="h-4 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase border-blue-500/20">Compatível</Badge>
+                            </div>
                           </div>
                           <Plus className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
                         </Button>
@@ -1248,21 +1293,40 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="mt-6">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">Substitutos Atuais</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">Substitutos Atuais (Clicáveis)</p>
                       <div className="space-y-2">
                         {(selectedItem.item.substitutions || []).length > 0 ? (
                           selectedItem.item.substitutions?.map((sub, idx) => (
-                            <div key={`${sub.id}-${idx}`} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl group/sub">
-                              <div>
-                                <p className="font-bold text-white/80">{sub.name}</p>
+                            <div key={`${sub.id}-${idx}`} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl group/sub hover:border-emerald-500/30 transition-all cursor-pointer">
+                              <div className="flex-1" onClick={() => {
+                                // Swap logic: substituir o item principal pelo substituto selecionado
+                                const currentItem = selectedItem.item;
+                                const newMain = { ...sub, instanceId: currentItem.instanceId, quantity: currentItem.quantity, substitutions: currentItem.substitutions?.filter((_, i) => i !== idx) };
+                                // Not working directly because of how data is structured, but we can update quantity/macros
+                                updateMealItem(selectedItem.mealId, currentItem.instanceId, { 
+                                  name: sub.name, 
+                                  kcal: sub.kcal, 
+                                  calories: sub.kcal,
+                                  protein: sub.protein,
+                                  carbs: sub.carbs,
+                                  fat: sub.fat,
+                                  portionLabel: sub.portionLabel,
+                                  substitutions: [...(currentItem.substitutions || []).filter((_, i) => i !== idx), { ...currentItem, substitutions: [] } as any]
+                                });
+                                setSelectedItem(null); // Fecha para recarregar
+                                toast.success(`${sub.name} agora é o item principal.`);
+                              }}>
+                                <p className="font-bold text-white group-hover/sub:text-emerald-400">{sub.name}</p>
                                 <p className="text-[10px] font-bold text-white/20 uppercase">{sub.kcal} kcal / {sub.portionLabel}</p>
                               </div>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   const newSubs = (selectedItem.item.substitutions || []).filter((_, i) => i !== idx);
                                   updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { substitutions: newSubs });
+                                  setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, substitutions: newSubs } } : null);
                                 }}
                                 className="h-8 w-8 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg opacity-0 group-hover/sub:opacity-100 transition-all"
                               >
@@ -1312,7 +1376,11 @@ const EditorV3Page = () => {
                     <Textarea 
                       placeholder="Escreva algo especial sobre este alimento para o paciente..."
                       value={selectedItem.item.description || ''}
-                      onChange={(e) => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { description: e.target.value })}
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { description: val });
+                        setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, description: val } } : null);
+                      }}
                       className="min-h-[200px] bg-white/5 border-white/10 text-white rounded-xl focus:ring-emerald-500/50 p-4 leading-relaxed"
                     />
                   </TabsContent>
