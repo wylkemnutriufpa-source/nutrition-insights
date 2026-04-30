@@ -198,6 +198,22 @@ const EditorV3Page = () => {
     setShowRevertConfirm(false);
   };
 
+  const handleGlobalGenerate = async (replace: boolean) => {
+    setIsGeneratingGlobal(true);
+    setShowAIGenerateConfirm(false);
+    // Pequeno delay para efeito visual de "processamento"
+    await new Promise(resolve => setTimeout(resolve, 800));
+    generatePlan('muscle-gain', replace);
+    setIsGeneratingGlobal(false);
+  };
+
+  const handleMealGenerate = async (mealId: string) => {
+    setGeneratingMealId(mealId);
+    await new Promise(resolve => setTimeout(resolve, 600));
+    generateMeal(mealId, 'muscle-gain');
+    setGeneratingMealId(null);
+  };
+
   // Sandbox mode check
 
   return (
