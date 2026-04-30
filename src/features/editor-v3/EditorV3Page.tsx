@@ -232,7 +232,7 @@ const EditorV3Page = () => {
 
                     <div className="flex items-center gap-2">
                       <div className="text-right mr-4">
-                        <p className="font-bold text-sm">{item.quantity} {item.portionUnit}</p>
+                        <p className="font-bold text-sm">{item.quantity * (item.portionValue || 1)} {item.portionUnit}</p>
                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Quantidade</p>
                       </div>
                       <Button 
