@@ -31,18 +31,7 @@ import { Meal, MealItem } from './types';
 const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 'spoon' | 'ml') => {
   if (type === 'gram') return `${quantity}g`;
   if (type === 'ml') return `${quantity}ml`;
-  if (type === 'spoon') {
-    return `${quantity} ${quantity === 1 ? 'colher' : 'colheres'}`;
-  }
-  
-  if (quantity === 1) {
-    if (unit === 'fatia') return '1 fatia';
-    if (unit === 'unidade') return '1 unidade';
-    if (unit === 'pote') return '1 pote';
-    if (unit === 'medida') return '1 medida';
-    if (unit === 'marmita') return '1 marmita';
-    return `1 ${unit}`;
-  }
+  if (type === 'spoon') return `${quantity} ${quantity === 1 ? 'colher' : 'colheres'}`;
   
   const plurals: Record<string, string> = {
     fatia: 'fatias',
@@ -51,6 +40,10 @@ const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 
     medida: 'medidas',
     marmita: 'marmitas'
   };
+  
+  if (quantity === 1) {
+    return `1 ${unit}`;
+  }
   
   return `${quantity} ${plurals[unit] || unit + 's'}`;
 };
