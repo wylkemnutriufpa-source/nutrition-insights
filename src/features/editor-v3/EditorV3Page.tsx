@@ -95,6 +95,12 @@ const EditorV3Page = () => {
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
   const [isSearchingSubstitutions, setIsSearchingSubstitutions] = useState(false);
 
+  // Estados para Modais Premium
+  const [showAddMealModal, setShowAddMealModal] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [newMealName, setNewMealName] = useState('');
+  const [newMealTime, setNewMealTime] = useState('00:00');
+
   // Estados para busca de dados reais
   const [foodSearch, setFoodSearch] = useState('');
   const [foods, setFoods] = useState<Food[]>([]);
