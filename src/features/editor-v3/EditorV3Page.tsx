@@ -1,6 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useEditorState } from './useEditorState';
+import { useDraftSync } from './useDraftSync';
+import { promoteDraftToMealPlan } from './promoteDraft';
+import { loadOrCreateDraft } from './draftService';
 import { mockMarmitas, mockFoods, mockTemplates } from './constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -9,7 +12,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import {
   ArrowLeft, UserX, Plus, Trash2, Lock,
   Sparkles, Save, Package, ChefHat, Clock,
-  Apple, Layers, Utensils
+  Apple, Layers, Utensils, CloudOff, Cloud, Loader2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -19,18 +22,71 @@ const EditorV3Page = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const planId = searchParams.get('planId');
-  
+
   const {
-    meals, setPatientId, addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
+    meals, setPatientId, hydrateMeals,
+    addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, generatePlan, savePlan, planStatus,
     resetEditor
   } = useEditorState();
 
+  const {
+    draftId, syncState, initialMeals, scheduleSave, resetDraft
+  } = useDraftSync(patientId ?? null, meals);
+
+  const hydratedRef = useRef(false);
+  const [promoting, setPromoting] = useState(false);
+
   useEffect(() => {
-    if (patientId) {
-      setPatientId(patientId);
-    }
+    if (patientId) setPatientId(patientId);
   }, [patientId, setPatientId]);
+
+  // Hidrata o store com o conteúdo do draft remoto (uma única vez)
+  useEffect(() => {
+    if (!hydratedRef.current && initialMeals && initialMeals.length > 0) {
+      hydrateMeals(initialMeals);
+      hydratedRef.current = true;
+    }
+  }, [initialMeals, hydrateMeals]);
+
+  // Auto-save: dispara após cada mudança em meals (depois da hidratação)
+  useEffect(() => {
+    if (hydratedRef.current && draftId) {
+      scheduleSave(meals);
+    }
+  }, [meals, draftId, scheduleSave]);
+
+  const handleSavePlan = async () => {
+    if (!draftId) {
+      toast.error('Rascunho não está sincronizado com o servidor.');
+      return;
+    }
+    setPromoting(true);
+    try {
+      const fresh = await loadOrCreateDraft(patientId!, meals);
+      if (!fresh) {
+        toast.error('Não foi possível recuperar o rascunho.');
+        return;
+      }
+      const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1 } });
+      if (result.ok) {
+        toast.success('Plano salvo no sistema clínico (rascunho oficial).');
+        await savePlan();
+      } else {
+        toast.error(`Falha ao salvar plano: ${result.error}`);
+      }
+    } finally {
+      setPromoting(false);
+    }
+  };
+
+  const handleReset = async () => {
+    await resetDraft();
+    resetEditor();
+    hydratedRef.current = false;
+    toast.success('Rascunho resetado.');
+  };
+
 
   if (!patientId && !planId) {
     return (
