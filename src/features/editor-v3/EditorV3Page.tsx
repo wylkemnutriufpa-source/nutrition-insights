@@ -489,11 +489,12 @@ const EditorV3Page = () => {
                       </Button>
                     </div>
                   </Card>
-                ))}
+                ))
               )}
             </div>
           </section>
-        )})}
+        );
+      })}
       </main>
 
       {/* MODALS */}
