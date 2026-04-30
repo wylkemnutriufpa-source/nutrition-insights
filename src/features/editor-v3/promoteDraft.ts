@@ -46,7 +46,7 @@ function buildItemTitle(meal: Meal): string {
 function buildItemDescription(meal: Meal): string {
   return meal.items
     .map((i) => {
-      const unit = i.portionUnit || 'unidade';
+      const unit = i.portionUnitLabel || i.portionUnit || 'unidade';
       const quantity = i.quantity || 1;
       let displayUnit = unit;
       if (quantity > 1) {
