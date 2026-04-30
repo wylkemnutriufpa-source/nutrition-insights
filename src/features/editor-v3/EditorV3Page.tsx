@@ -116,6 +116,8 @@ const EditorV3Page = () => {
   const [swapSearch, setSwapSearch] = useState('');
   const [swapResults, setSwapResults] = useState<Food[]>([]);
   const [isSearchingSwap, setIsSearchingSwap] = useState(false);
+  const [smartSubstitutions, setSmartSubstitutions] = useState<Food[]>([]);
+  const [isLoadingSmartSubs, setIsLoadingSmartSubs] = useState(false);
 
   // Estados para Modais Premium
   const [showAddMealModal, setShowAddMealModal] = useState(false);
