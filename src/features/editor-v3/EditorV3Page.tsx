@@ -1302,7 +1302,7 @@ const EditorV3Page = () => {
                                   carbs: sub.carbs,
                                   fat: sub.fat,
                                   portionLabel: sub.portionLabel,
-                                  substitutions: [...(currentItem.substitutions || []).filter((_, i) => i !== idx), { ...currentItem, substitutions: [] }]
+                                  substitutions: [...(currentItem.substitutions || []).filter((_, i) => i !== idx), { ...currentItem, substitutions: [] } as any]
                                 });
                                 setSelectedItem(null); // Fecha para recarregar
                                 toast.success(`${sub.name} agora é o item principal.`);
