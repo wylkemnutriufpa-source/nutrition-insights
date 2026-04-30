@@ -7,6 +7,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal } from './types';
+import { normalizeMeals } from './utils/normalization';
 
 export interface DraftPayload {
   meals: Meal[];
@@ -44,7 +45,7 @@ function computeMacros(meals: Meal[]) {
   for (const meal of meals) {
     for (const item of meal.items) {
       const q = item.quantity ?? 1;
-      kcal += (item.calories ?? 0) * q;
+      kcal += (item.kcal ?? item.calories ?? 0) * q;
       protein += (item.protein ?? 0) * q;
       carbs += (item.carbs ?? 0) * q;
       fat += (item.fat ?? 0) * q;
@@ -78,7 +79,13 @@ export async function loadOrCreateDraft(
     console.warn('[v3-draft] load failed, will fallback to local');
     return null;
   }
-  if (existing) return existing as unknown as DraftRecord;
+  if (existing) {
+    const record = existing as unknown as DraftRecord;
+    if (record.payload?.meals) {
+      record.payload.meals = normalizeMeals(record.payload.meals);
+    }
+    return record;
+  }
 
   // 2) Cria um novo
   const tenantId = await getActiveTenant();
@@ -117,8 +124,9 @@ export async function loadOrCreateDraft(
  * Retorna o registro atualizado para controle de updated_at.
  */
 export async function saveDraft(draftId: string, meals: Meal[]): Promise<DraftRecord | null> {
-  const macros = computeMacros(meals);
-  const payload: DraftPayload = { meals, version: DRAFT_PAYLOAD_VERSION };
+  const normalizedMeals = normalizeMeals(meals);
+  const macros = computeMacros(normalizedMeals);
+  const payload: DraftPayload = { meals: normalizedMeals, version: DRAFT_PAYLOAD_VERSION };
 
   const { data, error } = await supabase
     .from('v3_drafts' as any)
