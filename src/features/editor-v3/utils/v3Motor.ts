@@ -47,7 +47,7 @@ export const calculateItemMacros = (item: Partial<Food>, quantity: number) => {
  * 2. Se não encontrar, prioriza mesma unidade de medida
  * 3. Ordena por compatibilidade de measurementType
  */
-export const getDeterministicSuggestions = (baseItemName: string, availableFoods: Food[], baseMeasurementType?: string): Food[] => {
+export const getDeterministicSuggestions = (baseItemName: string, availableFoods: Food[], baseMeasurementType?: string, basePortionLabel?: string): Food[] => {
   const name = baseItemName.toLowerCase();
   let suggestions: Food[] = [];
 
@@ -76,9 +76,8 @@ export const getDeterministicSuggestions = (baseItemName: string, availableFoods
     const bTypeMatch = b.measurementType === baseMeasurementType ? 1 : 0;
     
     // Mesmo rótulo de porção (ex: "1 unidade", "100g")
-    // Note: This is an extra layer of compatibility
-    const aLabelMatch = a.portionLabel === suggestions.find(s => s.name.toLowerCase() === baseItemName.toLowerCase())?.portionLabel ? 1 : 0;
-    const bLabelMatch = b.portionLabel === suggestions.find(s => s.name.toLowerCase() === baseItemName.toLowerCase())?.portionLabel ? 1 : 0;
+    const aLabelMatch = basePortionLabel && a.portionLabel === basePortionLabel ? 1 : 0;
+    const bLabelMatch = basePortionLabel && b.portionLabel === basePortionLabel ? 1 : 0;
 
     if (aTypeMatch !== bTypeMatch) return bTypeMatch - aTypeMatch;
     return bLabelMatch - aLabelMatch;
