@@ -174,7 +174,21 @@ export const useEditorState = create<EditorState>()(
         }));
         toast.success(`Template "${template.name}" aplicado!`);
       },
-
+      updateMealItem: (mealId, instanceId, updates) => {
+        set((state) => ({
+          meals: state.meals.map((m) =>
+            m.id === mealId
+              ? {
+                  ...m,
+                  items: m.items.map((i) =>
+                    i.instanceId === instanceId ? { ...i, ...updates } : i
+                  ),
+                }
+              : m
+          ),
+          planStatus: 'draft',
+        }));
+      },
       removeFood: (mealId, instanceId) => {
         const meal = get().meals.find((m) => m.id === mealId);
         const item = meal?.items.find((i) => i.instanceId === instanceId);
