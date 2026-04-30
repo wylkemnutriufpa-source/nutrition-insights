@@ -1363,44 +1363,91 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="space-y-2">
-                      {swapResults.map((food) => (
-                        <Button
-                          key={food.id}
-                          variant="ghost"
-                          onClick={() => {
-                            const currentItem = selectedItem.item;
-                            // Troca imediata mantendo a instância e a quantidade base se compatível
-                            updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                              name: food.name,
-                              kcal: food.kcal,
-                              calories: food.kcal,
-                              protein: food.protein,
-                              carbs: food.carbs,
-                              fat: food.fat,
-                              portionLabel: food.portionLabel,
-                              imageUrl: food.imageUrl,
-                              ingredients: food.ingredients,
-                              isMarmita: food.isMarmita
-                            });
-                            setSwapSearch('');
-                            setSwapResults([]);
-                            setSelectedItem(null); // Fecha para aplicar
-                            toast.success(`Alimento trocado para ${food.name}`);
-                          }}
-                          className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group"
-                        >
-                          <div className="text-left">
-                            <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
-                            <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
-                          </div>
-                          <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
-                        </Button>
-                      ))}
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-2">Sugestões Inteligentes (Motor V3)</p>
                       
-                      {swapSearch.length < 2 && (
+                      {isLoadingSmartSubs ? (
+                        <div className="flex justify-center py-4">
+                          <Loader2 className="w-6 h-6 text-emerald-500 animate-spin" />
+                        </div>
+                      ) : smartSubstitutions.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-2">
+                          {smartSubstitutions.map((food) => (
+                            <Button
+                              key={`smart-${food.id}`}
+                              variant="ghost"
+                              onClick={() => {
+                                const currentItem = selectedItem.item;
+                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                                  name: food.name,
+                                  kcal: food.kcal,
+                                  calories: food.kcal,
+                                  protein: food.protein,
+                                  carbs: food.carbs,
+                                  fat: food.fat,
+                                  portionLabel: food.portionLabel,
+                                  imageUrl: food.imageUrl,
+                                  ingredients: food.ingredients,
+                                  isMarmita: food.isMarmita,
+                                  measurementType: food.measurementType
+                                });
+                                setSelectedItem(null);
+                                toast.success(`Trocado inteligentemente para ${food.name}`);
+                              }}
+                              className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
+                            >
+                              <div className="text-left">
+                                <p className="font-bold text-white group-hover:text-emerald-400 text-xs">{food.name}</p>
+                                <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                              </div>
+                              <Zap className="w-3.5 h-3.5 text-emerald-500" />
+                            </Button>
+                          ))}
+                        </div>
+                      ) : null}
+
+                      {swapResults.length > 0 && (
+                        <div className="pt-4 border-t border-white/5 mt-4">
+                          <p className="text-[10px] font-black uppercase tracking-widest text-white/30 mb-2">Resultados da Busca</p>
+                          {swapResults.map((food) => (
+                            <Button
+                              key={food.id}
+                              variant="ghost"
+                              onClick={() => {
+                                const currentItem = selectedItem.item;
+                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                                  name: food.name,
+                                  kcal: food.kcal,
+                                  calories: food.kcal,
+                                  protein: food.protein,
+                                  carbs: food.carbs,
+                                  fat: food.fat,
+                                  portionLabel: food.portionLabel,
+                                  imageUrl: food.imageUrl,
+                                  ingredients: food.ingredients,
+                                  isMarmita: food.isMarmita,
+                                  measurementType: food.measurementType
+                                });
+                                setSwapSearch('');
+                                setSwapResults([]);
+                                setSelectedItem(null);
+                                toast.success(`Alimento trocado para ${food.name}`);
+                              }}
+                              className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group mb-2"
+                            >
+                              <div className="text-left">
+                                <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
+                                <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                              </div>
+                              <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
+                            </Button>
+                          ))}
+                        </div>
+                      )}
+                      
+                      {swapSearch.length < 2 && smartSubstitutions.length === 0 && (
                         <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-2xl">
                           <Search className="w-8 h-8 text-white/5 mx-auto mb-2" />
-                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest">Digite para buscar substitutos</p>
+                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest">Digite para buscar outros alimentos</p>
                         </div>
                       )}
                     </div>
