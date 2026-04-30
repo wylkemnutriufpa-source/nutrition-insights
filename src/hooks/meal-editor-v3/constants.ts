@@ -1,4 +1,4 @@
-import { Food } from './useMealEditorV3Store';
+import { Food } from './types';
 
 /**
  * FitJourney V3 - Base de Dados Nutricionais
