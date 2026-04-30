@@ -56,6 +56,7 @@ const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 
 };
 
 const EditorV3Page = () => {
+  const { user } = useAuth();
   const { patientId } = useParams();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -85,10 +86,47 @@ const EditorV3Page = () => {
   const [isGeneratingGlobal, setIsGeneratingGlobal] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
 
+  // Estados para busca de dados reais
+  const [foodSearch, setFoodSearch] = useState('');
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [marmitas, setMarmitas] = useState<Food[]>([]);
+  const [templates, setTemplates] = useState<MealTemplate[]>([]);
+  const [isSearchingFoods, setIsSearchingFoods] = useState(false);
+
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
     search: patientSearch,
     pageSize: 10
   });
+
+  // Busca de Alimentos (TACO/USDA/Personalizados)
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      if (foodSearch.length >= 2) {
+        setIsSearchingFoods(true);
+        const results = await searchFoods(foodSearch);
+        setFoods(results);
+        setIsSearchingFoods(false);
+      } else if (foodSearch.length === 0) {
+        setFoods([]);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [foodSearch]);
+
+  // Busca de Marmitas e Templates
+  useEffect(() => {
+    const loadData = async () => {
+      if (user?.id) {
+        const [marmitasData, templatesData] = await Promise.all([
+          searchMarmitas(user.id),
+          searchTemplates()
+        ]);
+        setMarmitas(marmitasData);
+        setTemplates(templatesData);
+      }
+    };
+    loadData();
+  }, [user?.id]);
 
   // Macros totais memoizados
   const totalMacros = useMemo(() => {
