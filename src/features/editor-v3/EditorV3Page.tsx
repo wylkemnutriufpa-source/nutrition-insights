@@ -28,7 +28,10 @@ import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Meal, MealItem } from './types';
 
-const formatPortion = (quantity: number, unit: string) => {
+const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 'spoon' | 'ml') => {
+  if (type === 'gram') return `${quantity}g`;
+  if (type === 'ml') return `${quantity}ml`;
+  
   if (quantity === 1) {
     if (unit === 'fatia') return '1 fatia';
     if (unit === 'unidade') return '1 unidade';
