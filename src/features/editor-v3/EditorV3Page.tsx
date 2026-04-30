@@ -497,6 +497,102 @@ const EditorV3Page = () => {
         ))}
       </main>
 
+      {/* MODALS */}
+      
+      {/* Modal de Validação / Promoção */}
+      <Dialog open={showValidation} onOpenChange={setShowValidation}>
+        <DialogContent className="bg-black/95 border-emerald-500/20 text-white backdrop-blur-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-black italic">
+              <Zap className="w-5 h-5 text-emerald-500" />
+              VALIDAÇÃO CLÍNICA
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest">
+              Verificando integridade do plano antes da promoção
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            {validation.errors.map((error, i) => (
+              <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-rose-500/5 border border-rose-500/20 animate-in slide-in-from-left-2 duration-300">
+                <XCircle className="w-5 h-5 text-rose-500 shrink-0 mt-0.5" />
+                <p className="text-sm font-bold text-rose-200">{error}</p>
+              </div>
+            ))}
+
+            {validation.warnings.map((warning, i) => (
+              <div key={i} className="flex items-start gap-3 p-4 rounded-2xl bg-amber-500/5 border border-amber-500/20 animate-in slide-in-from-left-2 duration-500">
+                <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-sm font-bold text-amber-200">{warning}</p>
+              </div>
+            ))}
+
+            {validation.isValid && validation.errors.length === 0 && validation.warnings.length === 0 && (
+              <div className="flex flex-col items-center justify-center p-8 text-center gap-4">
+                <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center animate-bounce">
+                  <CheckCircle2 className="w-10 h-10 text-emerald-500" />
+                </div>
+                <div>
+                  <p className="font-black text-lg text-white italic">Plano Impecável!</p>
+                  <p className="text-sm text-white/40 font-bold">Tudo pronto para salvar no sistema oficial.</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="gap-2">
+            <Button variant="ghost" onClick={() => setShowValidation(false)} className="font-black uppercase tracking-widest text-[10px]">
+              Corrigir
+            </Button>
+            <Button 
+              onClick={handleConfirmPromotion} 
+              disabled={!validation.isValid || promoting}
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest text-[10px] px-8"
+            >
+              {promoting ? "Promovendo..." : "Prosseguir"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Reversão */}
+      <Dialog open={showRevertConfirm} onOpenChange={setShowRevertConfirm}>
+        <DialogContent className="bg-black/95 border-amber-500/20 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-black">
+              <RotateCcw className="w-5 h-5 text-amber-500" />
+              REVERTER ALTERAÇÕES?
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              Isso voltará o rascunho para o último estado sincronizado com sucesso no servidor.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowRevertConfirm(false)}>Cancelar</Button>
+            <Button onClick={handleRevert} className="bg-amber-500 hover:bg-amber-400 text-black font-black">Reverter Agora</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de Reset */}
+      <Dialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <DialogContent className="bg-black/95 border-rose-500/20 text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 font-black text-rose-500">
+              <Trash2 className="w-5 h-5" />
+              RESET SEGURO DO DRAFT
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              ATENÇÃO: Esta ação é irreversível. O rascunho atual será permanentemente removido do servidor e do armazenamento local.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowResetConfirm(false)}>Manter Plano</Button>
+            <Button onClick={handleReset} className="bg-rose-500 hover:bg-rose-600 text-white font-black">Limpar Tudo</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Footer Info */}
       <footer className="p-8 text-center border-t border-emerald-500/5 bg-black/40 backdrop-blur-md">
         <div className="flex flex-col items-center gap-2">
