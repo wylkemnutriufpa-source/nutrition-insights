@@ -768,6 +768,7 @@ const EditorV3Page = () => {
             </Button>
           </DialogFooter>
         </DialogContent>
+      </Dialog>
 
       {/* Footer Info */}
       <footer className="p-8 text-center border-t border-emerald-500/5 bg-black/40 backdrop-blur-md">
