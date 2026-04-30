@@ -20,10 +20,10 @@ const EditorV3Page = () => {
   const navigate = useNavigate();
   const planId = searchParams.get('planId');
   
-  const { 
-    meals, setPatientId, addMarmitaToMeal, 
+  const {
+    meals, setPatientId, addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, generatePlan, savePlan, planStatus,
-    resetEditor 
+    resetEditor
   } = useEditorState();
 
   useEffect(() => {
