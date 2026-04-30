@@ -699,7 +699,8 @@ const EditorV3Page = () => {
                           variant="ghost"
                           size="icon"
                           disabled={item.locked || (item.quantity ?? 1) <= 0}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
                             const nextValue = Math.max(0, current - step);
@@ -722,7 +723,8 @@ const EditorV3Page = () => {
                           variant="ghost"
                           size="icon"
                           disabled={item.locked}
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
                             const nextValue = current + step;
@@ -745,7 +747,10 @@ const EditorV3Page = () => {
                       <Button 
                         variant="ghost" 
                         size="icon" 
-                        onClick={() => removeFood(meal.id, item.instanceId)}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeFood(meal.id, item.instanceId);
+                        }}
                         disabled={item.locked}
                         className={cn(
                           "h-10 w-10 text-white/20 rounded-xl transition-all",
