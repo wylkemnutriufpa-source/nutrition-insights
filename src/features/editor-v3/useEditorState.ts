@@ -14,7 +14,7 @@ interface EditorState {
   hydrateMeals: (meals: Meal[]) => void;
   addMeal: () => void;
   removeMeal: (mealId: string) => void;
-  updateMealHeader: (mealId: string, name: string, time: string) => void;
+  updateMealHeader: (mealId: string, name: string, time: string, description?: string) => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
@@ -73,10 +73,10 @@ export const useEditorState = create<EditorState>()(
         toast.success('Refeição removida');
       },
 
-      updateMealHeader: (mealId, name, time) => {
+      updateMealHeader: (mealId, name, time, description) => {
         set((state) => ({
           meals: state.meals.map((m) =>
-            m.id === mealId ? { ...m, name, time } : m
+            m.id === mealId ? { ...m, name, time, description: description !== undefined ? description : m.description } : m
           ),
           planStatus: 'draft',
         }));
