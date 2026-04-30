@@ -108,6 +108,6 @@ describe("EditorV3Page module exposes a safe fallback for missing patient contex
   it("uses the new Editor V3 core (useEditorState, mockMarmitas, engine)", () => {
     expect(PAGE_SRC).toMatch(/useEditorState/);
     expect(PAGE_SRC).toMatch(/mockMarmitas/);
-    expect(PAGE_SRC).toMatch(/generatePlanWithEngine/);
+    expect(PAGE_SRC).toMatch(/generatePlan/);
   });
 });
