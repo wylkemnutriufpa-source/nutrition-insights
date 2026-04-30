@@ -77,6 +77,13 @@ const EditorV3Page = () => {
   const [showValidation, setShowValidation] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRevertConfirm, setShowRevertConfirm] = useState(false);
+  const [showPatientSelector, setShowPatientSelector] = useState(false);
+  const [patientSearch, setPatientSearch] = useState('');
+
+  const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
+    search: patientSearch,
+    pageSize: 10
+  });
 
   // Macros totais memoizados
   const totalMacros = useMemo(() => {
