@@ -41,3 +41,42 @@ export const mockMarmitas: Food[] = [
     imageUrl: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?q=80&w=200' 
   }
 ];
+
+export const mockFoods: Food[] = [
+  { id: 'f1', name: 'Ovo cozido', calories: 70, protein: 6, carbs: 0, fat: 5, portionValue: 50, portionUnit: 'g' },
+  { id: 'f2', name: 'Banana', calories: 90, protein: 1, carbs: 23, fat: 0, portionValue: 100, portionUnit: 'g' },
+  { id: 'f3', name: 'Pão integral', calories: 140, protein: 5, carbs: 26, fat: 2, portionValue: 50, portionUnit: 'g' },
+  { id: 'f4', name: 'Iogurte natural', calories: 80, protein: 7, carbs: 9, fat: 2, portionValue: 170, portionUnit: 'g' },
+  { id: 'f5', name: 'Whey protein', calories: 120, protein: 25, carbs: 3, fat: 1, portionValue: 30, portionUnit: 'g' },
+  { id: 'f6', name: 'Aveia em flocos', calories: 150, protein: 5, carbs: 27, fat: 3, portionValue: 40, portionUnit: 'g' },
+];
+
+export interface MealTemplate {
+  id: string;
+  name: string;
+  description: string;
+  items: Food[];
+}
+
+export const mockTemplates: MealTemplate[] = [
+  {
+    id: 't1',
+    name: 'Café Fit Padrão',
+    description: 'Ovos + Pão integral + Banana',
+    items: [
+      { id: 'f1', name: 'Ovo cozido', calories: 70, protein: 6, carbs: 0, fat: 5, portionValue: 100, portionUnit: 'g' },
+      { id: 'f3', name: 'Pão integral', calories: 140, protein: 5, carbs: 26, fat: 2, portionValue: 50, portionUnit: 'g' },
+      { id: 'f2', name: 'Banana', calories: 90, protein: 1, carbs: 23, fat: 0, portionValue: 100, portionUnit: 'g' },
+    ],
+  },
+  {
+    id: 't2',
+    name: 'Lanche Proteico',
+    description: 'Whey + Aveia + Iogurte',
+    items: [
+      { id: 'f5', name: 'Whey protein', calories: 120, protein: 25, carbs: 3, fat: 1, portionValue: 30, portionUnit: 'g' },
+      { id: 'f6', name: 'Aveia em flocos', calories: 150, protein: 5, carbs: 27, fat: 3, portionValue: 40, portionUnit: 'g' },
+      { id: 'f4', name: 'Iogurte natural', calories: 80, protein: 7, carbs: 9, fat: 2, portionValue: 170, portionUnit: 'g' },
+    ],
+  },
+];

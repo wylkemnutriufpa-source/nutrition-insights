@@ -1,13 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useEditorState } from './useEditorState';
-import { mockMarmitas } from './constants';
+import { mockMarmitas, mockFoods, mockTemplates } from './constants';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ArrowLeft, UserX, Plus, Trash2, Lock, 
-  Sparkles, Save, Package, ChefHat, Clock 
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import {
+  ArrowLeft, UserX, Plus, Trash2, Lock,
+  Sparkles, Save, Package, ChefHat, Clock,
+  Apple, Layers, Utensils
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -18,10 +20,10 @@ const EditorV3Page = () => {
   const navigate = useNavigate();
   const planId = searchParams.get('planId');
   
-  const { 
-    meals, setPatientId, addMarmitaToMeal, 
+  const {
+    meals, setPatientId, addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, generatePlan, savePlan, planStatus,
-    resetEditor 
+    resetEditor
   } = useEditorState();
 
   useEffect(() => {
@@ -117,15 +119,76 @@ const EditorV3Page = () => {
                   </div>
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="rounded-full gap-2 text-xs font-bold"
-                onClick={() => addMarmitaToMeal(meal.id, mockMarmitas[0])}
-              >
-                <Plus className="w-3 h-3" />
-                Adicionar marmita
-              </Button>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="rounded-full gap-2 text-xs font-bold"
+                  >
+                    <Plus className="w-3 h-3" />
+                    Adicionar
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent align="end" className="w-72 p-0 overflow-hidden">
+                  {/* Alimentos */}
+                  <div className="p-3 border-b">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1">
+                      <Apple className="w-3 h-3" /> Alimentos avulsos
+                    </p>
+                    <div className="space-y-1 max-h-40 overflow-y-auto">
+                      {mockFoods.map((f) => (
+                        <button
+                          key={f.id}
+                          onClick={() => addFoodToMeal(meal.id, f)}
+                          className="w-full text-left text-xs p-2 rounded-md hover:bg-muted/50 flex justify-between items-center"
+                        >
+                          <span className="font-medium">{f.name}</span>
+                          <span className="text-muted-foreground text-[10px]">{f.calories} kcal</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Marmitas */}
+                  <div className="p-3 border-b">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1">
+                      <Utensils className="w-3 h-3" /> Marmitas
+                    </p>
+                    <div className="space-y-1">
+                      {mockMarmitas.map((m) => (
+                        <button
+                          key={m.id}
+                          onClick={() => addMarmitaToMeal(meal.id, m)}
+                          className="w-full text-left text-xs p-2 rounded-md hover:bg-muted/50 flex justify-between items-center"
+                        >
+                          <span className="font-medium truncate pr-2">{m.name}</span>
+                          <span className="text-muted-foreground text-[10px] shrink-0">{m.calories} kcal</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Templates */}
+                  <div className="p-3">
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2 flex items-center gap-1">
+                      <Layers className="w-3 h-3" /> Templates de refeição
+                    </p>
+                    <div className="space-y-1">
+                      {mockTemplates.map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => applyTemplateToMeal(meal.id, t)}
+                          className="w-full text-left text-xs p-2 rounded-md hover:bg-muted/50"
+                        >
+                          <p className="font-medium">{t.name}</p>
+                          <p className="text-[10px] text-muted-foreground">{t.description}</p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </PopoverContent>
+              </Popover>
             </div>
 
             <div className="grid gap-4">
@@ -169,7 +232,7 @@ const EditorV3Page = () => {
 
                     <div className="flex items-center gap-2">
                       <div className="text-right mr-4">
-                        <p className="font-bold text-sm">{item.quantity} {item.portionUnit}</p>
+                        <p className="font-bold text-sm">{item.quantity * (item.portionValue || 1)} {item.portionUnit}</p>
                         <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Quantidade</p>
                       </div>
                       <Button 
