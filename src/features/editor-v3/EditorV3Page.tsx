@@ -22,7 +22,7 @@ import {
   Sparkles, Save, Package, ChefHat, Clock,
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
-  Zap, Activity, PieChart
+  Zap, Activity, PieChart, Minus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
