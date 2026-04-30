@@ -15,7 +15,7 @@ function getStatus() {
     console.log("-----------------------------------");
     console.log("SCHEMA STATUS: OUTDATED (Missing Snapshot)");
     console.log("-----------------------------------");
-    console.log("Fix:\npnpm schema:update");
+    console.log("Fix:\nnpm run schema:update");
     console.log("-----------------------------------");
     process.exit(1);
   }
@@ -51,7 +51,7 @@ function getStatus() {
   console.log("-----------------------------------");
   if (status === "OUTDATED") {
     console.log("Fix:");
-    console.log("pnpm schema:update");
+    console.log("npm run schema:update");
     console.log("-----------------------------------");
     process.exit(1);
   }

@@ -12,7 +12,7 @@ const migrationsDir = join(projectRoot, "supabase", "migrations");
 
 function listMissing() {
   if (!fs.existsSync(snapshotPath)) {
-    console.log("Status: OUTDATED\n\nMissing: ALL (snapshot missing)\n\nCount: unknown\n\nFix:\npnpm schema:update");
+    console.log("Status: OUTDATED\n\nMissing: ALL (snapshot missing)\n\nCount: unknown\n\nFix:\nnpm run schema:update");
     process.exit(1);
   }
 
@@ -34,7 +34,7 @@ function listMissing() {
   console.log("Missing:");
   missingMigrations.forEach(m => console.log(`- ${m}`));
   console.log(`\nCount: ${missingMigrations.length}`);
-  console.log("\nFix:\npnpm schema:update");
+  console.log("\nFix:\nnpm run schema:update");
   process.exit(1);
 }
 
