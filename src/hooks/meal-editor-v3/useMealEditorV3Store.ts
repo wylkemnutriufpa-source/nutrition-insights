@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { QUICK_FOODS, MARMITAS } from './constants';
 import { getEquivalentFoods, applyClinicalRules } from './clinicalRules';
-import { 
+export type { 
   Food, Meal, MealItem, HistoryState, ClinicalLog, HouseholdMeasure 
 } from './types';
 import { supabase } from '@/integrations/supabase/client';
