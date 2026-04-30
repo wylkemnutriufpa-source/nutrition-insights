@@ -1324,7 +1324,7 @@ export default function MealPlanEditorV2() {
                 nutritionistId={plan.nutritionist_id}
                 tenantId={tenantId}
                 items={store.items}
-                onSimplified={(newId) => navigate(`/plan-builder/${newId}`, { replace: true })}
+                onSimplified={(newId) => navigate(`/meal-plan-editor-v3?planId=${newId}`, { replace: true })}
               />
             )}
 
