@@ -15,11 +15,12 @@ interface EditorState {
   addMeal: () => void;
   removeMeal: (mealId: string) => void;
   updateMealHeader: (mealId: string, name: string, time: string) => void;
-  addMarmitaToMeal: (mealId: string, marmita: Food) => void;
+  addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
   removeFood: (mealId: string, instanceId: string) => void;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
+  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => void;
   generatePlan: (goal: string, replaceExisting?: boolean) => void;
   generateMeal: (mealId: string, goal: string) => void;
   savePlan: () => Promise<void>;
