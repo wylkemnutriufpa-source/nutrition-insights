@@ -57,7 +57,7 @@ export const mockMarmitas: Food[] = [
 export const mockFoods: Food[] = [
   // --- UNIT ---
   { 
-    id: 'f1', name: 'Ovo cozido', 
+    id: 'f1', name: 'Ovo cozido/mexido', 
     kcal: 70, calories: 70, protein: 6, carbs: 0.5, fat: 5, 
     portionValue: 50, portionUnitLabel: 'unidade', portionUnit: 'unidade', portionLabel: '1 unidade', 
     measurementType: 'unit' 

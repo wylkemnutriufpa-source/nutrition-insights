@@ -206,53 +206,42 @@ const EditorV3Page = () => {
       if (selectedItem) {
         setIsLoadingSmartSubs(true);
         const name = selectedItem.item.name.toLowerCase();
+        
+        // Simulação de regras determinísticas do Motor V3 baseadas no banco real
+        // Em um cenário real, isso faria uma chamada ao banco filtrando por categorias nutricionais
+        const allAvailableFoods = mockFoods; 
+        
         let suggestions: Food[] = [];
         
-        // Regras do Motor V3 para compatibilidade inteligente
-        if (name.includes('frango') || name.includes('carne') || name.includes('peixe') || name.includes('ovo')) {
-          // Grupo de Proteínas
-          suggestions = mockFoods.filter(f => 
-            (f.name.toLowerCase().includes('frango') || 
-             f.name.toLowerCase().includes('carne') || 
-             f.name.toLowerCase().includes('peixe') || 
-             f.name.toLowerCase().includes('ovo') || 
-             f.name.toLowerCase().includes('patinho') ||
-             f.name.toLowerCase().includes('whey')) && 
-            f.name.toLowerCase() !== name
-          );
-        } else if (name.includes('arroz') || name.includes('batata') || name.includes('macarrão') || name.includes('feijão') || name.includes('pão') || name.includes('aveia') || name.includes('tapioca')) {
-          // Grupo de Carboidratos
-          suggestions = mockFoods.filter(f => 
-            (f.name.toLowerCase().includes('arroz') || 
-             f.name.toLowerCase().includes('batata') || 
-             f.name.toLowerCase().includes('macarrão') || 
-             f.name.toLowerCase().includes('feijão') || 
-             f.name.toLowerCase().includes('pão') || 
-             f.name.toLowerCase().includes('aveia') || 
-             f.name.toLowerCase().includes('tapioca') ||
-             f.name.toLowerCase().includes('granola')) && 
-            f.name.toLowerCase() !== name
-          );
-        } else if (name.includes('fruta') || name.includes('banana') || name.includes('maçã') || name.includes('morango') || name.includes('suco')) {
-          // Grupo de Frutas/Vitamins
-          suggestions = mockFoods.filter(f => 
-            (f.name.toLowerCase().includes('banana') || 
-             f.name.toLowerCase().includes('maçã') || 
-             f.name.toLowerCase().includes('suco') ||
-             f.name.toLowerCase().includes('iogurte')) && 
-            f.name.toLowerCase() !== name
-          );
+        // Regras determinísticas de compatibilidade nutricional (Categorias)
+        const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('whey') || n.includes('patinho') || n.includes('presunto') || n.includes('queijo');
+        const isCarb = (n: string) => n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || n.includes('feijão') || n.includes('pão') || n.includes('aveia') || n.includes('tapioca') || n.includes('cuscuz') || n.includes('mandioca');
+        const isFruit = (n: string) => n.includes('banana') || n.includes('maçã') || n.includes('uva') || n.includes('fruta') || n.includes('suco');
+
+        if (isProtein(name)) {
+          suggestions = allAvailableFoods.filter(f => isProtein(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+        } else if (isCarb(name)) {
+          suggestions = allAvailableFoods.filter(f => isCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+        } else if (isFruit(name)) {
+          suggestions = allAvailableFoods.filter(f => isFruit(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
         }
 
-        // Se não achou nada específico, pega aleatórios do mesmo tipo de medida
+        // Fallback: mesma unidade de medida
         if (suggestions.length === 0) {
-          suggestions = mockFoods.filter(f => 
+          suggestions = allAvailableFoods.filter(f => 
             f.measurementType === selectedItem.item.measurementType && 
             f.name.toLowerCase() !== name
-          ).slice(0, 5);
+          );
         }
 
-        setSmartSubstitutions(suggestions.slice(0, 6));
+        // Priorização por measurementType e portionLabel compatíveis
+        suggestions.sort((a, b) => {
+          const aMatch = a.measurementType === selectedItem.item.measurementType ? 1 : 0;
+          const bMatch = b.measurementType === selectedItem.item.measurementType ? 1 : 0;
+          return bMatch - aMatch;
+        });
+
+        setSmartSubstitutions(suggestions.slice(0, 12));
         setIsLoadingSmartSubs(false);
       }
     };
@@ -1319,8 +1308,16 @@ const EditorV3Page = () => {
                   </div>
                   <div>
                     <DialogTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                      {selectedItem.item.name}
-                      {selectedItem.item.isMarmita && <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase border-emerald-500/30">Marmita</Badge>}
+                      <Input
+                        value={selectedItem.item.name}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { name: val });
+                          setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, name: val } } : null);
+                        }}
+                        className="bg-transparent border-0 border-b border-emerald-500/20 focus:border-emerald-500 rounded-none h-auto p-0 text-xl font-black tracking-tight text-white placeholder:text-white/20 w-full focus-visible:ring-0"
+                      />
+                      {selectedItem.item.isMarmita && <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase border-emerald-500/30 shrink-0">Marmita</Badge>}
                     </DialogTitle>
                     <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest">
                       {selectedItem.item.portionLabel} • {Math.round(selectedItem.item.kcal)} kcal (base)
@@ -1374,39 +1371,61 @@ const EditorV3Page = () => {
                         </div>
                       ) : smartSubstitutions.length > 0 ? (
                         <div className="grid grid-cols-1 gap-2">
-                          {smartSubstitutions.map((food) => (
-                            <Button
-                              key={`smart-${food.id}`}
-                              variant="ghost"
-                              onClick={() => {
-                                const currentItem = selectedItem.item;
-                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                                  name: food.name,
-                                  kcal: food.kcal,
-                                  calories: food.kcal,
-                                  protein: food.protein,
-                                  carbs: food.carbs,
-                                  fat: food.fat,
-                                  portionLabel: food.portionLabel,
-                                  imageUrl: food.imageUrl,
-                                  ingredients: food.ingredients,
-                                  isMarmita: food.isMarmita,
-                                  measurementType: food.measurementType
-                                });
-                                setSelectedItem(null);
-                                toast.success(`Trocado inteligentemente para ${food.name}`);
-                              }}
-                              className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
-                            >
-                              <div className="text-left">
-                                <p className="font-bold text-white group-hover:text-emerald-400 text-xs">{food.name}</p>
-                                <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
-                              </div>
-                              <Zap className="w-3.5 h-3.5 text-emerald-500" />
-                            </Button>
-                          ))}
+                          {smartSubstitutions.map((food) => {
+                            const needsConversion = food.measurementType !== selectedItem.item.measurementType;
+                            return (
+                              <Button
+                                key={`smart-${food.id}`}
+                                variant="ghost"
+                                onClick={() => {
+                                  const currentItem = selectedItem.item;
+                                  updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                                    name: food.name,
+                                    kcal: food.kcal,
+                                    calories: food.kcal,
+                                    protein: food.protein,
+                                    carbs: food.carbs,
+                                    fat: food.fat,
+                                    portionLabel: food.portionLabel,
+                                    imageUrl: food.imageUrl,
+                                    ingredients: food.ingredients,
+                                    isMarmita: food.isMarmita,
+                                    measurementType: food.measurementType
+                                  });
+                                  setSelectedItem(null);
+                                  toast.success(`Trocado inteligentemente para ${food.name}`);
+                                }}
+                                className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
+                              >
+                                <div className="text-left">
+                                  <p className="font-bold text-white group-hover:text-emerald-400 text-xs">{food.name}</p>
+                                  <div className="flex items-center gap-2">
+                                    <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                                    {needsConversion && <Badge className="bg-amber-500/10 text-amber-500 text-[7px] border-amber-500/20 h-3">Requer Ajuste de Porção</Badge>}
+                                  </div>
+                                </div>
+                                <Zap className="w-3.5 h-3.5 text-emerald-500" />
+                              </Button>
+                            );
+                          })}
                         </div>
-                      ) : null}
+                      ) : (
+                        <div className="text-center py-6 border-2 border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
+                          <AlertTriangle className="w-6 h-6 text-amber-500/40 mx-auto mb-2" />
+                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest mb-3">Nenhuma sugestão compatível encontrada</p>
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            onClick={() => {
+                              const input = document.querySelector('input[placeholder="Buscar alimento para trocar..."]') as HTMLInputElement;
+                              if (input) input.focus();
+                            }}
+                            className="h-8 text-[9px] font-black uppercase tracking-widest bg-white/5 border-white/10 hover:bg-white/10"
+                          >
+                            <Search className="w-3 h-3 mr-2" /> Buscar Manualmente
+                          </Button>
+                        </div>
+                      )}
 
                       {swapResults.length > 0 && (
                         <div className="pt-4 border-t border-white/5 mt-4">
@@ -1617,7 +1636,57 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="mt-6">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">Substitutos Atuais (Clicáveis)</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Substitutos Atuais (Clicáveis)</p>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-7 text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20">
+                              <Zap className="w-2.5 h-2.5 mr-1" /> Inteligentes
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 bg-black/95 border-emerald-500/20 backdrop-blur-2xl p-0 overflow-hidden shadow-2xl z-[160]">
+                            <div className="p-4 border-b border-white/5 bg-emerald-500/5">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Sugestões do Motor V3</p>
+                              <p className="text-[9px] font-bold text-white/40">Itens nutricionalmente compatíveis</p>
+                            </div>
+                            <ScrollArea className="h-72">
+                              <div className="p-2 grid grid-cols-1 gap-1">
+                                {smartSubstitutions.map((food) => {
+                                  const needsConversion = food.measurementType !== selectedItem.item.measurementType;
+                                  return (
+                                    <Button
+                                      key={`smart-pop-${food.id}`}
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const currentSubs = selectedItem.item.substitutions || [];
+                                        if (currentSubs.some(s => s.id === food.id)) {
+                                          toast.error('Este alimento já está na lista.');
+                                          return;
+                                        }
+                                        updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, {
+                                          substitutions: [...currentSubs, food]
+                                        });
+                                        setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, substitutions: [...currentSubs, food] } } : null);
+                                        toast.success(`${food.name} adicionado como substituto.`);
+                                      }}
+                                      className="h-auto p-3 justify-between bg-white/[0.02] hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 rounded-xl transition-all group"
+                                    >
+                                      <div className="text-left">
+                                        <p className="font-bold text-white group-hover:text-emerald-400 text-[11px]">{food.name}</p>
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                                          {needsConversion && <Badge className="bg-amber-500/10 text-amber-500 text-[7px] border-amber-500/20 h-3">Conversão</Badge>}
+                                        </div>
+                                      </div>
+                                      <Plus className="w-3 h-3 text-white/20 group-hover:text-emerald-500" />
+                                    </Button>
+                                  );
+                                })}
+                              </div>
+                            </ScrollArea>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                       <div className="space-y-2">
                         {(selectedItem.item.substitutions || []).length > 0 ? (
                           selectedItem.item.substitutions?.map((sub, idx) => (
