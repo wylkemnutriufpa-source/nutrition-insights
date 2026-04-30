@@ -41,16 +41,7 @@ export const SUBSTITUTION_GROUPS: Record<string, string[]> = {
   'beverages': ['q11', 'q12'],
 };
 
-export interface ClinicalLog {
-  timestamp: string;
-  conditionId: string;
-  appliedRules: string[];
-  changes: {
-    type: 'removal' | 'substitution';
-    foodName: string;
-    reason: string;
-  }[];
-}
+// ClinicalLog moved to types.ts
 
 export function getEquivalentFoods(foodId: string): Food[] {
   const sourceFood = QUICK_FOODS.find(f => f.id === foodId);
