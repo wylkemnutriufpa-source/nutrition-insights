@@ -1,4 +1,4 @@
-import React, { useEffect, useState, createContext, useContext } from "react";
+import React, { useEffect, useState, createContext, useContext, useCallback } from "react";
 import { ShieldAlert, RefreshCcw, WifiOff, Lock, ServerCrash, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -30,17 +30,25 @@ export const SystemShieldProvider = ({ children }: { children: React.ReactNode }
     isHealthy: true,
   });
 
-  const reportBootStatus = (key: keyof SystemBootState, value: boolean) => {
-    setBootState(prev => ({ ...prev, [key]: value }));
-  };
+  const reportBootStatus = useCallback((key: keyof SystemBootState, value: boolean) => {
+    setBootState(prev => {
+      if (prev[key] === value) return prev;
+      return { ...prev, [key]: value };
+    });
+  }, []);
 
   // Mark providers as mounted immediately
   useEffect(() => {
     reportBootStatus("isProvidersMounted", true);
-  }, []);
+  }, [reportBootStatus]);
+
+  const contextValue = React.useMemo(() => ({ 
+    bootState, 
+    reportBootStatus 
+  }), [bootState, reportBootStatus]);
 
   return (
-    <SystemShieldContext.Provider value={{ bootState, reportBootStatus }}>
+    <SystemShieldContext.Provider value={contextValue}>
       {children}
     </SystemShieldContext.Provider>
   );

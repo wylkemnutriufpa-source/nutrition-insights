@@ -55,10 +55,10 @@ function RouterBootTracker() {
   const location = useLocation();
   
   useEffect(() => {
-    if (shield && location.pathname) {
+    if (shield && !shield.bootState.isRouterActive) {
       shield.reportBootStatus("isRouterActive", true);
     }
-  }, [location, shield]);
+  }, [shield]);
   
   return null;
 }

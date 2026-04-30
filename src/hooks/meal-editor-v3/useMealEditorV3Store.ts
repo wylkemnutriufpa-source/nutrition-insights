@@ -1,52 +1,15 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { QUICK_FOODS, MARMITAS } from './constants';
-import { getEquivalentFoods, applyClinicalRules, ClinicalLog } from './clinicalRules';
+import { getEquivalentFoods, applyClinicalRules } from './clinicalRules';
+import { 
+  Food, Meal, MealItem, HistoryState, ClinicalLog, HouseholdMeasure 
+} from './types';
+export type { 
+  Food, Meal, MealItem, HistoryState, ClinicalLog, HouseholdMeasure 
+} from './types';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
-
-export interface HouseholdMeasure {
-  unit: string;
-  factor: number; // multiplier for the base quantity (usually grams)
-}
-
-export interface Food {
-  id: string;
-  name: string;
-  calories: number;
-  protein: number;
-  carbs: number;
-  fat: number;
-  portionValue: number;
-  portionUnit: string;
-  isMarmita?: boolean;
-  locked?: boolean;
-  imageUrl?: string;
-  usageCount?: number;
-  householdMeasures?: HouseholdMeasure[];
-}
-
-export interface MealItem extends Food {
-  instanceId: string;
-  quantity: number; 
-  selectedUnit?: string;
-  substitutions?: Food[];
-}
-
-export interface Meal {
-  id: string;
-  name: string;
-  items: MealItem[];
-  daySubstitutions?: Record<string, string>; // dayId -> instanceId
-  selectionMode?: 'day' | 'week';
-  time?: string; // HH:MM
-  icon?: string; // sun | coffee | utensils | moon | star | apple
-}
-
-interface HistoryState {
-  past: Meal[][];
-  future: Meal[][];
-}
 
 interface MealPlanState {
   patientId: string | null;
