@@ -307,19 +307,34 @@ const EditorV3Page = () => {
     setShowRevertConfirm(false);
   };
 
-  const handleGlobalGenerate = async (replace: boolean) => {
-    setIsGeneratingGlobal(true);
+  const handleGlobalGenerate = (replace: boolean) => {
+    setReplaceExistingFlag(replace);
     setShowAIGenerateConfirm(false);
+    setShowDietTypeModal(true);
+  };
+
+  const handleSelectDietType = (goal: string) => {
+    setSelectedDietType(goal);
+    setShowDietTypeModal(false);
+    setShowCalorieModal(true);
+  };
+
+  const handleExecuteGeneration = async (calories: number) => {
+    setIsGeneratingGlobal(true);
+    setShowCalorieModal(false);
+    
     // Pequeno delay para efeito visual de "processamento"
     await new Promise(resolve => setTimeout(resolve, 800));
-    generatePlan('muscle-gain', replace);
+    
+    generatePlan(selectedDietType || 'muscle-gain', calories, replaceExistingFlag);
     setIsGeneratingGlobal(false);
+    toast.success('Motor V3: Plano gerado com sucesso!');
   };
 
   const handleMealGenerate = async (mealId: string) => {
     setGeneratingMealId(mealId);
     await new Promise(resolve => setTimeout(resolve, 600));
-    generateMeal(mealId, 'muscle-gain');
+    generateMeal(mealId, 'muscle-gain', 2000); // Default for single meal optimization
     setGeneratingMealId(null);
   };
 
