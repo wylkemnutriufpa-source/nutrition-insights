@@ -489,7 +489,8 @@ const EditorV3Page = () => {
           // Macros por refeição
           const mealMacros = meal.items.reduce((acc, item) => {
             const q = item.quantity ?? 1;
-            acc.kcal += (item.calories ?? 0) * q;
+            const calories = item.calories || item.kcal || 0;
+            acc.kcal += calories * q;
             acc.p += (item.protein ?? 0) * q;
             acc.c += (item.carbs ?? 0) * q;
             acc.f += (item.fat ?? 0) * q;
