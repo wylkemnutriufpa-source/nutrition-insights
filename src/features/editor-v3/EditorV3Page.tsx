@@ -1137,9 +1137,12 @@ const EditorV3Page = () => {
                 </div>
               </DialogHeader>
 
-              <Tabs defaultValue="edit" className="w-full">
+              <Tabs defaultValue="swap" className="w-full">
                 <div className="px-6 border-b border-white/5">
                   <TabsList className="bg-transparent h-auto p-0 gap-6">
+                    <TabsTrigger value="swap" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
+                      <RefreshCcw className="w-3.5 h-3.5 mr-2" /> Trocar
+                    </TabsTrigger>
                     <TabsTrigger value="edit" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
                       <Edit3 className="w-3.5 h-3.5 mr-2" /> Editar
                     </TabsTrigger>
@@ -1158,6 +1161,62 @@ const EditorV3Page = () => {
                 </div>
 
                 <div className="p-6 h-[400px] overflow-y-auto custom-scrollbar">
+                  <TabsContent value="swap" className="mt-0 space-y-4">
+                    <div className="relative">
+                      <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+                      <Input 
+                        placeholder="Buscar alimento para trocar..." 
+                        value={swapSearch}
+                        onChange={(e) => setSwapSearch(e.target.value)}
+                        className="h-12 pl-10 bg-white/5 border-white/10 rounded-xl focus:ring-emerald-500/50"
+                      />
+                      {isSearchingSwap && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 animate-spin" />}
+                    </div>
+
+                    <div className="space-y-2">
+                      {swapResults.map((food) => (
+                        <Button
+                          key={food.id}
+                          variant="ghost"
+                          onClick={() => {
+                            const currentItem = selectedItem.item;
+                            // Troca imediata mantendo a instância e a quantidade base se compatível
+                            updateMealItem(selectedItem.mealId, currentItem.instanceId, {
+                              name: food.name,
+                              kcal: food.kcal,
+                              calories: food.kcal,
+                              protein: food.protein,
+                              carbs: food.carbs,
+                              fat: food.fat,
+                              portionLabel: food.portionLabel,
+                              imageUrl: food.imageUrl,
+                              ingredients: food.ingredients,
+                              isMarmita: food.isMarmita
+                            });
+                            setSwapSearch('');
+                            setSwapResults([]);
+                            setSelectedItem(null); // Fecha para aplicar
+                            toast.success(`Alimento trocado para ${food.name}`);
+                          }}
+                          className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group"
+                        >
+                          <div className="text-left">
+                            <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
+                            <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                          </div>
+                          <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
+                        </Button>
+                      ))}
+                      
+                      {swapSearch.length < 2 && (
+                        <div className="text-center py-8 border-2 border-dashed border-white/5 rounded-2xl">
+                          <Search className="w-8 h-8 text-white/5 mx-auto mb-2" />
+                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest">Digite para buscar substitutos</p>
+                        </div>
+                      )}
+                    </div>
+                  </TabsContent>
+
                   <TabsContent value="edit" className="mt-0 space-y-6">
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
