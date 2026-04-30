@@ -57,10 +57,14 @@ export const useEditorState = create<EditorState>()(
       },
 
       addFoodToMeal: (mealId, food) => {
+        let initialQuantity = 1;
+        if (food.measurementType === 'gram') initialQuantity = 100;
+        if (food.measurementType === 'ml') initialQuantity = 200;
+
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
-              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: 1, locked: false }] }
+              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: initialQuantity, locked: false }] }
               : m
           ),
           planStatus: 'draft',
