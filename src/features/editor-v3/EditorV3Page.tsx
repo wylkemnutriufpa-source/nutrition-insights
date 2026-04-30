@@ -1206,7 +1206,7 @@ const EditorV3Page = () => {
           <ScrollArea className="flex-1 px-4">
             <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2 pb-6">
               {foods
-                .filter(f => activeFoodCategory === 'all' || f.category === activeFoodCategory)
+                .filter(f => activeFoodCategory === 'all' || (f as any).category === activeFoodCategory)
                 .map((f) => (
                 <button
                   key={f.id}
