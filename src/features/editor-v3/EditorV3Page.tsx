@@ -1147,11 +1147,18 @@ const EditorV3Page = () => {
             
             {patientId && (
               <Button 
-                onClick={() => handleExecuteGeneration(2200)} // Mocked for now, but visible only for patients
+                onClick={() => handleExecuteGeneration(lastAssessment?.calories_target || lastAssessment?.tdee || 2000)}
                 variant="outline"
                 className="col-span-2 h-auto py-4 flex flex-col items-center gap-1 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-center"
               >
-                <span className="font-black text-emerald-400 uppercase tracking-widest text-[10px]">Cálculo Personalizado (Baseado em Avaliação)</span>
+                <div className="flex items-center gap-2">
+                  <span className="font-black text-emerald-400 uppercase tracking-widest text-[10px]">Cálculo Personalizado</span>
+                  {lastAssessment && (
+                    <Badge className="bg-emerald-500/20 text-emerald-400 text-[8px] border-emerald-500/30">
+                      {Math.round(lastAssessment?.calories_target || lastAssessment?.tdee || 2000)} kcal
+                    </Badge>
+                  )}
+                </div>
                 <span className="text-xs text-white/60">Utilizar dados de anamnese e avaliação física para precisão máxima</span>
               </Button>
             )}
