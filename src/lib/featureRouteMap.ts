@@ -24,7 +24,7 @@ export const PROFESSIONAL_ROUTE_MAP: Record<string, string> = {
   protocols: "/protocols",
   programs: "/programs",
   onboarding_pipeline: "/patients",
-  patient_import: "/admin/import-patients",
+  patient_import: "/import-patients",
   chat: "/chat",
   whatsapp_integration: "/settings/whatsapp",
   notifications: "/notifications",
