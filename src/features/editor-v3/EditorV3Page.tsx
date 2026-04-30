@@ -1392,19 +1392,22 @@ const EditorV3Page = () => {
                           })}
                         </div>
                       ) : (
-                        <div className="text-center py-6 border-2 border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
-                          <AlertTriangle className="w-6 h-6 text-amber-500/40 mx-auto mb-2" />
-                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest mb-3">Nenhuma sugestão compatível encontrada</p>
+                        <div className="flex flex-col items-center justify-center py-10 px-4 text-center border-2 border-dashed border-emerald-500/10 rounded-2xl bg-emerald-500/[0.02]">
+                          <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
+                            <Search className="w-6 h-6 text-emerald-500/40" />
+                          </div>
+                          <h3 className="text-sm font-bold text-white mb-1">Nenhuma sugestão inteligente</h3>
+                          <p className="text-[10px] font-medium text-white/40 max-w-[200px] mb-6">
+                            Não encontramos substitutos automáticos compatíveis para este item no momento.
+                          </p>
                           <Button 
-                            variant="outline" 
-                            size="sm" 
                             onClick={() => {
                               const input = document.querySelector('input[placeholder="Buscar alimento para trocar..."]') as HTMLInputElement;
                               if (input) input.focus();
                             }}
-                            className="h-8 text-[9px] font-black uppercase tracking-widest bg-white/5 border-white/10 hover:bg-white/10"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
                           >
-                            <Search className="w-3 h-3 mr-2" /> Buscar Manualmente
+                            <Plus className="w-3.5 h-3.5 mr-2" /> Buscar Manualmente
                           </Button>
                         </div>
                       )}
