@@ -12,6 +12,7 @@ export interface Food {
   fat: number;
   portionValue: number;
   portionUnit: string;
+  portionLabel: string;
   isMarmita?: boolean;
   locked?: boolean;
   imageUrl?: string;

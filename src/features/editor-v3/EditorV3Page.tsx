@@ -22,11 +22,34 @@ import {
   Sparkles, Save, Package, ChefHat, Clock,
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
-  Zap, Activity, PieChart
+  Zap, Activity, PieChart, Minus
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Meal } from './types';
+import { Meal, MealItem } from './types';
+
+const formatPortion = (quantity: number, unit: string) => {
+  if (quantity === 1) {
+    if (unit === 'fatia') return '1 fatia';
+    if (unit === 'unidade') return '1 unidade';
+    if (unit === 'colher') return '1 colher';
+    if (unit === 'pote') return '1 pote';
+    if (unit === 'medida') return '1 medida';
+    if (unit === 'marmita') return '1 marmita';
+    return `1 ${unit}`;
+  }
+  
+  const plurals: Record<string, string> = {
+    fatia: 'fatias',
+    unidade: 'unidades',
+    colher: 'colheres',
+    pote: 'potes',
+    medida: 'medidas',
+    marmita: 'marmitas'
+  };
+  
+  return `${quantity} ${plurals[unit] || unit + 's'}`;
+};
 
 const EditorV3Page = () => {
   const { patientId } = useParams();
@@ -37,7 +60,7 @@ const EditorV3Page = () => {
   const {
     meals, setPatientId, hydrateMeals,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
-    removeFood, generatePlan, savePlan, planStatus,
+    removeFood, updateFoodQuantity, generatePlan, savePlan, planStatus,
     resetEditor
   } = useEditorState();
 
@@ -349,7 +372,10 @@ const EditorV3Page = () => {
                             onClick={() => addFoodToMeal(meal.id, f)}
                             className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
                           >
-                            <span className="font-bold text-white/80 group-hover/item:text-white">{f.name}</span>
+                            <div className="flex flex-col">
+                              <span className="font-bold text-white/80 group-hover/item:text-white">{f.name}</span>
+                              <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{f.portionLabel}</span>
+                            </div>
                             <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase">
                               {f.calories} kcal
                             </span>
@@ -370,7 +396,10 @@ const EditorV3Page = () => {
                             onClick={() => addMarmitaToMeal(meal.id, m)}
                             className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
                           >
-                            <span className="font-bold text-white/80 group-hover/item:text-white truncate pr-2">{m.name}</span>
+                            <div className="flex flex-col truncate pr-2">
+                              <span className="font-bold text-white/80 group-hover/item:text-white truncate">{m.name}</span>
+                              <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{m.portionLabel}</span>
+                            </div>
                             <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
                               {m.calories} kcal
                             </span>
@@ -449,32 +478,61 @@ const EditorV3Page = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {item.calories} <span className="text-white/20">kcal</span>
+                              {Math.round((item.quantity ?? 1) * (item.calories ?? 0))} <span className="text-white/20">kcal</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {item.protein}g <span className="text-white/20">Prot</span>
+                              {Math.round((item.quantity ?? 1) * (item.protein ?? 0))}g <span className="text-white/20">Prot</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {item.carbs}g <span className="text-white/20">Carb</span>
+                              {Math.round((item.quantity ?? 1) * (item.carbs ?? 0))}g <span className="text-white/20">Carb</span>
                             </p>
                           </div>
                         </div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 z-10">
-                      <div className="text-right">
-                        <p className="font-black text-base text-emerald-500 leading-none">
-                          {item.quantity * (item.portionValue || 1)} <span className="text-[10px] text-emerald-500/60 uppercase">{item.portionUnit}</span>
-                        </p>
-                        <p className="text-[9px] text-white/30 uppercase font-black tracking-widest mt-1">Dose Real</p>
+                    <div className="flex items-center gap-6 z-10">
+                      <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={item.locked || (item.quantity ?? 1) <= 1}
+                          onClick={() => updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) - 1)}
+                          className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </Button>
+                        
+                        <div className="px-3 text-center min-w-[80px]">
+                          <p className="font-black text-sm text-white">
+                            {formatPortion(item.quantity ?? 1, item.portionUnit)}
+                          </p>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={item.locked}
+                          onClick={() => updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) + 1)}
+                          className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
+
+                      <div className="text-right min-w-[60px]">
+                        <p className="font-black text-base text-emerald-500 leading-none">
+                          {Math.round((item.quantity ?? 1) * item.calories)} <span className="text-[10px] text-emerald-500/60 uppercase">kcal</span>
+                        </p>
+                        <p className="text-[9px] text-white/30 uppercase font-black tracking-widest mt-1">Total</p>
+                      </div>
+
                       <Button 
                         variant="ghost" 
                         size="icon" 
