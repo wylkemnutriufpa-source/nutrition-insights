@@ -394,7 +394,10 @@ const EditorV3Page = () => {
                             onClick={() => addMarmitaToMeal(meal.id, m)}
                             className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
                           >
-                            <span className="font-bold text-white/80 group-hover/item:text-white truncate pr-2">{m.name}</span>
+                            <div className="flex flex-col truncate pr-2">
+                              <span className="font-bold text-white/80 group-hover/item:text-white truncate">{m.name}</span>
+                              <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{m.portionLabel}</span>
+                            </div>
                             <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
                               {m.calories} kcal
                             </span>
