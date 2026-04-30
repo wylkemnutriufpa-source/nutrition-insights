@@ -35,7 +35,7 @@ import {
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Meal, MealItem, Food } from './types';
-import { MealTemplate } from './constants';
+import { MealTemplate, mockFoods } from './constants';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
 import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
 import { supabase } from '@/integrations/supabase/client';
