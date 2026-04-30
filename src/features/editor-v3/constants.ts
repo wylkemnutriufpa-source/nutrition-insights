@@ -9,7 +9,7 @@ export const mockMarmitas: Food[] = [
     carbs: 45, 
     fat: 10, 
     portionValue: 350, 
-    portionUnit: 'unidade', 
+    portionUnit: 'marmita', 
     portionLabel: '1 marmita',
     isMarmita: true, 
     locked: true,
