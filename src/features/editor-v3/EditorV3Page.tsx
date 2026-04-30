@@ -201,46 +201,26 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [swapSearch]);
-  // Carregar sugestões inteligentes ao abrir o modal
   useEffect(() => {
     const loadSmartSuggestions = async () => {
       if (selectedItem) {
         setIsLoadingSmartSubs(true);
-        const name = selectedItem.item.name.toLowerCase();
+        const name = selectedItem.item.name;
         
-        // Simulação de regras determinísticas do Motor V3 baseadas no banco real
-        // Em um cenário real, isso faria uma chamada ao banco filtrando por categorias nutricionais
-        const allAvailableFoods = mockFoods; 
+        let category: 'protein' | 'carb' | 'fruit' | 'any' = 'any';
+        if (isProtein(name)) category = 'protein';
+        else if (isCarb(name)) category = 'carb';
+        else if (isFruit(name)) category = 'fruit';
+
+        // Busca real no banco de dados
+        const dbSuggestions = await getCompatibleFoods(category, name);
         
-        let suggestions: Food[] = [];
-        
-        // Regras determinísticas de compatibilidade nutricional (Categorias)
-        const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('whey') || n.includes('patinho') || n.includes('presunto') || n.includes('queijo');
-        const isCarb = (n: string) => n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || n.includes('feijão') || n.includes('pão') || n.includes('aveia') || n.includes('tapioca') || n.includes('cuscuz') || n.includes('mandioca');
-        const isFruit = (n: string) => n.includes('banana') || n.includes('maçã') || n.includes('uva') || n.includes('fruta') || n.includes('suco');
-
-        if (isProtein(name)) {
-          suggestions = allAvailableFoods.filter(f => isProtein(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-        } else if (isCarb(name)) {
-          suggestions = allAvailableFoods.filter(f => isCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-        } else if (isFruit(name)) {
-          suggestions = allAvailableFoods.filter(f => isFruit(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-        }
-
-        // Fallback: mesma unidade de medida
-        if (suggestions.length === 0) {
-          suggestions = allAvailableFoods.filter(f => 
-            f.measurementType === selectedItem.item.measurementType && 
-            f.name.toLowerCase() !== name
-          );
-        }
-
-        // Priorização por measurementType e portionLabel compatíveis
-        suggestions.sort((a, b) => {
-          const aMatch = a.measurementType === selectedItem.item.measurementType ? 1 : 0;
-          const bMatch = b.measurementType === selectedItem.item.measurementType ? 1 : 0;
-          return bMatch - aMatch;
-        });
+        // Aplica regras determinísticas do Motor V3
+        const suggestions = getDeterministicSuggestions(
+          name, 
+          dbSuggestions, 
+          selectedItem.item.measurementType
+        );
 
         setSmartSubstitutions(suggestions.slice(0, 12));
         setIsLoadingSmartSubs(false);
