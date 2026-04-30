@@ -8,8 +8,6 @@ import {
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
-// Keep existing logic but move types to types.ts
-...
 interface MealPlanState {
   patientId: string | null;
   patientTargets: {
