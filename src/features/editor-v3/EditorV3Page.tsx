@@ -1245,7 +1245,121 @@ const EditorV3Page = () => {
           )}
         </DialogContent>
       </Dialog>
-      {/* Footer Info */}
+      {/* Modal Fullscreen: Adicionar Refeição */}
+      <Dialog open={showAddMealModal} onOpenChange={setShowAddMealModal}>
+        <DialogContent className="max-w-none w-full h-screen m-0 rounded-none border-0 bg-black text-white p-0 flex flex-col animate-in slide-in-from-bottom duration-500 z-[100]">
+          <div className="flex items-center justify-between p-6 border-b border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center">
+                <ChefHat className="w-6 h-6 text-emerald-500" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black uppercase tracking-tight">Nova Refeição</h2>
+                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Estruturação de Plano</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setShowAddMealModal(false)} className="rounded-full h-12 w-12 hover:bg-white/5">
+              <X className="w-6 h-6" />
+            </Button>
+          </div>
+
+          <div className="flex-1 flex flex-col items-center justify-center p-6 max-w-xl mx-auto w-full space-y-8">
+            <div className="w-full space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Nome da Refeição</Label>
+              <Input 
+                placeholder="Ex: Almoço de Domingo, Pós-Treino..."
+                value={newMealName}
+                onChange={(e) => setNewMealName(e.target.value)}
+                className="h-16 bg-white/5 border-white/10 text-2xl font-black rounded-2xl px-6 focus:ring-emerald-500/50"
+              />
+            </div>
+            <div className="w-full space-y-3">
+              <Label className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-500">Horário Sugerido</Label>
+              <Input 
+                type="time"
+                value={newMealTime}
+                onChange={(e) => setNewMealTime(e.target.value)}
+                className="h-16 bg-white/5 border-white/10 text-2xl font-black rounded-2xl px-6 focus:ring-emerald-500/50"
+              />
+            </div>
+            <Button 
+              onClick={() => {
+                if (!newMealName) {
+                  toast.error("Dê um nome para a refeição");
+                  return;
+                }
+                addMeal(); // Chama a action existente
+                // Como addMeal não aceita parâmetros, precisamos atualizar o header logo após
+                setTimeout(() => {
+                  const state = useEditorState.getState();
+                  const lastMeal = state.meals[state.meals.length - 1];
+                  if (lastMeal) {
+                    updateMealHeader(lastMeal.id, newMealName, newMealTime);
+                  }
+                }, 50);
+                
+                setShowAddMealModal(false);
+                setNewMealName('');
+              }}
+              className="w-full h-16 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-[0.2em] text-sm rounded-2xl shadow-[0_0_30px_-10px_rgba(16,185,129,0.5)] transition-all active:scale-95"
+            >
+              Confirmar e Criar
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal Fullscreen: Templates de Plano */}
+      <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
+        <DialogContent className="max-w-none w-full h-screen m-0 rounded-none border-0 bg-black text-white p-0 flex flex-col animate-in slide-in-from-bottom duration-500 z-[100]">
+          <div className="flex items-center justify-between p-6 border-b border-white/5">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-2xl bg-blue-500/10 flex items-center justify-center">
+                <Layers className="w-6 h-6 text-blue-500" />
+              </div>
+              <div>
+                <h2 className="text-xl font-black uppercase tracking-tight">Biblioteca de Templates</h2>
+                <p className="text-[10px] font-black text-white/30 uppercase tracking-widest">Base Estrutural Premium</p>
+              </div>
+            </div>
+            <Button variant="ghost" size="icon" onClick={() => setShowTemplatesModal(false)} className="rounded-full h-12 w-12 hover:bg-white/5">
+              <X className="w-6 h-6" />
+            </Button>
+          </div>
+
+          <ScrollArea className="flex-1 p-6">
+            <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 py-8">
+              {[
+                { id: 't1', name: 'Ganho de Massa Limpo', desc: 'Foco em hipertrofia com baixo acúmulo de gordura.', kcal: '2.800' },
+                { id: 't2', name: 'Cutting Agressivo', desc: 'Déficit calórico otimizado para preservação de MM.', kcal: '1.800' },
+                { id: 't3', name: 'Low Carb Funcional', desc: 'Controle glicêmico e alta densidade nutritiva.', kcal: '2.000' },
+                { id: 't4', name: 'Vegano Performance', desc: 'Proteínas vegetais de alto valor biológico.', kcal: '2.400' },
+                { id: 't5', name: 'Manutenção Normocalórica', desc: 'Equilíbrio total para longevidade e saúde.', kcal: '2.200' },
+              ].map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    toast.success(`Template "${t.name}" selecionado!`);
+                    setShowTemplatesModal(false);
+                  }}
+                  className="group text-left p-8 rounded-[2rem] bg-white/[0.03] border border-white/10 hover:border-emerald-500/40 hover:bg-emerald-500/[0.02] transition-all relative overflow-hidden"
+                >
+                  <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-100 group-hover:text-emerald-500 transition-all">
+                    <Sparkles className="w-12 h-12" />
+                  </div>
+                  <h3 className="text-xl font-black text-white group-hover:text-emerald-400 transition-colors mb-2">{t.name}</h3>
+                  <p className="text-xs text-white/40 leading-relaxed mb-6 font-medium">{t.desc}</p>
+                  <div className="flex items-center justify-between">
+                    <Badge className="bg-white/10 text-white/60 border-0 font-black px-4 py-1 rounded-full uppercase text-[10px]">{t.kcal} kcal</Badge>
+                    <span className="text-[10px] font-black uppercase text-emerald-500 opacity-0 group-hover:opacity-100 transition-all">Aplicar Template →</span>
+                  </div>
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       <footer className="p-8 text-center border-t border-emerald-500/5 bg-black/40 backdrop-blur-md">
         <div className="flex flex-col items-center gap-2">
           <div className="flex items-center gap-3 grayscale opacity-30 hover:grayscale-0 hover:opacity-100 transition-all duration-700 cursor-default">
