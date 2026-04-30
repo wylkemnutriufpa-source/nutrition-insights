@@ -91,7 +91,7 @@ const EditorV3Page = () => {
     const errors: string[] = [];
     const warnings: string[] = [];
 
-    if (!patientId) errors.push("Paciente não identificado.");
+    if (!patientId && !isSandbox) errors.push("Paciente não identificado.");
     
     const hasItems = meals.some(m => m.items.length > 0);
     if (!hasItems) errors.push("O plano deve ter pelo menos um item.");
