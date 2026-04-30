@@ -55,8 +55,8 @@
           }
           localStorage.setItem('fj_last_version', BUILD_VERSION);
 
-          // Watchdog disabled temporarily to debug loading issues
-          var watchdog = null;
+          // Watchdog: Se o app não montar em 15s, força limpeza e reload.
+          var watchdog = setTimeout(function() {
 
           window.__FJ_MARK_READY__ = function() {
             window.__FJ_READY__ = true;
