@@ -1505,6 +1505,10 @@ export default function PatientDetail() {
                         <BookOpen className="w-3 h-3" /> A partir de Template
                       </Button>
                       <Button size="sm" className="gap-1 text-xs h-7 gradient-primary" onClick={async () => {
+                        if (!resolvedPatientId) {
+                          toast.error("ID do paciente não resolvido");
+                          return;
+                        }
                         setOpenSection(null);
                         // Create plan directly then open builder
                         try {
@@ -1514,6 +1518,7 @@ export default function PatientDetail() {
                             tenantId,
                           });
                           if (error) throw error;
+                          if (!newPlan?.id) throw new Error("ID do novo plano não retornado");
                           toast.success("Plano criado! Abrindo Builder...");
                           navigate(`/v3/${resolvedPatientId}?planId=${newPlan.id}`, { replace: true });
                         } catch (err: any) {
