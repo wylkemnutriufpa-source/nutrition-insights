@@ -495,13 +495,42 @@ const EditorV3Page = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4 z-10">
-                      <div className="text-right">
-                        <p className="font-black text-base text-emerald-500 leading-none">
-                          {item.quantity * (item.portionValue || 1)} <span className="text-[10px] text-emerald-500/60 uppercase">{item.portionUnit}</span>
-                        </p>
-                        <p className="text-[9px] text-white/30 uppercase font-black tracking-widest mt-1">Dose Real</p>
+                    <div className="flex items-center gap-6 z-10">
+                      <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={item.locked || (item.quantity ?? 1) <= 1}
+                          onClick={() => updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) - 1)}
+                          className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                        >
+                          <Minus className="w-3.5 h-3.5" />
+                        </Button>
+                        
+                        <div className="px-3 text-center min-w-[80px]">
+                          <p className="font-black text-sm text-white">
+                            {formatPortion(item.quantity ?? 1, item.portionUnit)}
+                          </p>
+                        </div>
+
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          disabled={item.locked}
+                          onClick={() => updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) + 1)}
+                          className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </Button>
                       </div>
+
+                      <div className="text-right min-w-[60px]">
+                        <p className="font-black text-base text-emerald-500 leading-none">
+                          {Math.round((item.quantity ?? 1) * item.calories)} <span className="text-[10px] text-emerald-500/60 uppercase">kcal</span>
+                        </p>
+                        <p className="text-[9px] text-white/30 uppercase font-black tracking-widest mt-1">Total</p>
+                      </div>
+
                       <Button 
                         variant="ghost" 
                         size="icon" 
