@@ -123,13 +123,26 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   if (!user) return { type: 'ALLOW', reason: 'Public allowed' };
 
   // 5. Hard Fail Guard: Profile Consistency (Critical)
-  if (isReady && !isInList(safePathname, PUBLIC_ROUTES) && !isInList(safePathname, ONBOARDING_ALLOWED_ROUTES)) {
-    if (!profile?.tenant_id && !ctx.isAdmin && !ctx.isNutritionist) {
-      return { 
-        type: 'BLOCK', 
-        reason: 'Critical: Access blocked due to inconsistent profile (missing tenant)', 
-        target: '/hard-fail-linkage' 
-      };
+  if (isReady && !isInList(safePathname, PUBLIC_ROUTES) && !isInList(safePathname, ONBOARDING_ALLOWED_ROUTES) && safePathname !== '/welcome') {
+    const isPro = ctx.isAdmin || ctx.isNutritionist || ctx.isPersonal;
+    
+    // Se não tem tenant, bloqueia ou redireciona para reconciliação
+    if (!profile?.tenant_id) {
+      if (isPro) {
+        // Profissionais sem tenant vão para o Welcome para auto-reconciliação
+        return { 
+          type: 'REDIRECT', 
+          reason: 'Professional missing tenant, redirecting to reconciliation', 
+          target: '/welcome' 
+        };
+      } else {
+        // Pacientes sem tenant vão para o Hard Fail (não têm como se auto-resolver)
+        return { 
+          type: 'BLOCK', 
+          reason: 'Critical: Patient missing tenant linkage', 
+          target: '/hard-fail-linkage' 
+        };
+      }
     }
   }
 
