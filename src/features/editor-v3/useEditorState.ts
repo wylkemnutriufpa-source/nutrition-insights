@@ -9,7 +9,7 @@ interface EditorState {
   meals: Meal[];
   patientId: string | null;
   planStatus: 'draft' | 'saving' | 'saved';
-  
+
   setPatientId: (id: string) => void;
   hydrateMeals: (meals: Meal[]) => void;
   addMeal: () => void;
@@ -81,6 +81,7 @@ export const useEditorState = create<EditorState>()(
         }));
       },
 
+      addMarmitaToMeal: (mealId, marmita) => {
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
