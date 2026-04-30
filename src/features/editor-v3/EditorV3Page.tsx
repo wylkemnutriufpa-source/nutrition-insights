@@ -324,83 +324,82 @@ const EditorV3Page = () => {
                     </div>
                   </div>
                 </div>
-... keep existing code
-              
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Adicionar
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
-                  {/* Alimentos */}
-                  <div className="p-4 border-b border-emerald-500/10">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                      <Apple className="w-3 h-3" /> Alimentos Avulsos
-                    </p>
-                    <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                      {mockFoods.map((f) => (
-                        <button
-                          key={f.id}
-                          onClick={() => addFoodToMeal(meal.id, f)}
-                          className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                        >
-                          <span className="font-bold text-white/80 group-hover/item:text-white">{f.name}</span>
-                          <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase">
-                            {f.calories} kcal
-                          </span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Marmitas */}
-                  <div className="p-4 border-b border-emerald-500/10">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                      <Utensils className="w-3 h-3" /> Marmitas
-                    </p>
-                    <div className="space-y-1.5">
-                      {mockMarmitas.map((m) => (
-                        <button
-                          key={m.id}
-                          onClick={() => addMarmitaToMeal(meal.id, m)}
-                          className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                        >
-                          <span className="font-bold text-white/80 group-hover/item:text-white truncate pr-2">{m.name}</span>
-                          <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
-                            {m.calories} kcal
-                          </span>
-                        </button>
-                      ))}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      Adicionar
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
+                    {/* Alimentos */}
+                    <div className="p-4 border-b border-emerald-500/10">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
+                        <Apple className="w-3 h-3" /> Alimentos Avulsos
+                      </p>
+                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
+                        {mockFoods.map((f) => (
+                          <button
+                            key={f.id}
+                            onClick={() => addFoodToMeal(meal.id, f)}
+                            className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
+                          >
+                            <span className="font-bold text-white/80 group-hover/item:text-white">{f.name}</span>
+                            <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase">
+                              {f.calories} kcal
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
 
-                  {/* Templates */}
-                  <div className="p-4 bg-emerald-500/[0.02]">
-                    <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                      <Layers className="w-3 h-3" /> Templates Completos
-                    </p>
-                    <div className="space-y-1.5">
-                      {mockTemplates.map((t) => (
-                        <button
-                          key={t.id}
-                          onClick={() => applyTemplateToMeal(meal.id, t)}
-                          className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all group/item"
-                        >
-                          <p className="font-bold text-white/80 group-hover/item:text-white">{t.name}</p>
-                          <p className="text-[10px] text-white/30 group-hover/item:text-white/50 leading-relaxed mt-0.5">{t.description}</p>
-                        </button>
-                      ))}
+                    {/* Marmitas */}
+                    <div className="p-4 border-b border-emerald-500/10">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
+                        <Utensils className="w-3 h-3" /> Marmitas
+                      </p>
+                      <div className="space-y-1.5">
+                        {mockMarmitas.map((m) => (
+                          <button
+                            key={m.id}
+                            onClick={() => addMarmitaToMeal(meal.id, m)}
+                            className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
+                          >
+                            <span className="font-bold text-white/80 group-hover/item:text-white truncate pr-2">{m.name}</span>
+                            <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
+                              {m.calories} kcal
+                            </span>
+                          </button>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                </PopoverContent>
-              </Popover>
-            </div>
+
+                    {/* Templates */}
+                    <div className="p-4 bg-emerald-500/[0.02]">
+                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
+                        <Layers className="w-3 h-3" /> Templates Completos
+                      </p>
+                      <div className="space-y-1.5">
+                        {mockTemplates.map((t) => (
+                          <button
+                            key={t.id}
+                            onClick={() => applyTemplateToMeal(meal.id, t)}
+                            className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all group/item"
+                          >
+                            <p className="font-bold text-white/80 group-hover/item:text-white">{t.name}</p>
+                            <p className="text-[10px] text-white/30 group-hover/item:text-white/50 leading-relaxed mt-0.5">{t.description}</p>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              </div>
 
             <div className="grid gap-5">
               {meal.items.length === 0 ? (
