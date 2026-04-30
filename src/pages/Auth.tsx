@@ -165,13 +165,12 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
       // Salvar intenção de role para o fluxo pós-login (Google/Apple)
       if (selectedRole) {
         localStorage.setItem("fj_selected_role", selectedRole);
-        localStorage.setItem("fj_invited", "true"); // Forçar fluxo de verificação
+        localStorage.setItem("fj_invited", "true");
+        localStorage.setItem("fj_user_type", selectedRole);
       }
 
       const result = await lovable.auth.signInWithOAuth(provider, {
         redirect_uri: window.location.origin,
-        // Algumas configurações de metadados podem ser passadas aqui dependendo da implementação do gateway
-        queryParams: selectedRole ? { role: selectedRole } : undefined
       });
       if (result && 'error' in result && result.error) {
         toast.error(t("auth.socialError"));
