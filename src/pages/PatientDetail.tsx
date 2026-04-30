@@ -792,7 +792,7 @@ export default function PatientDetail() {
             {expUI.showProtocols && (
             <>
             {isAdmin && (
-              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/profissionais")}>
+              <Button variant="outline" className="gap-2 border-primary/30 text-primary hover:bg-primary/10" onClick={() => navigate("/admin/professionals")}>
                 <UserCog className="w-4 h-4" /> Gerenciar Profissionais
               </Button>
             )}
