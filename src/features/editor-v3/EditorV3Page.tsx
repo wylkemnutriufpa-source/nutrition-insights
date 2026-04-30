@@ -1019,7 +1019,7 @@ const EditorV3Page = () => {
               className="h-auto py-4 flex flex-col items-start gap-1 border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-left"
             >
               <span className="font-black text-emerald-400 uppercase tracking-widest text-[10px]">Manter e Complementar</span>
-              <span className="text-xs text-white/40">A IA preencherá apenas as refeições que estão vazias.</span>
+              <span className="text-xs text-white/40">O Motor V3 preencherá apenas as refeições que estão vazias.</span>
             </Button>
             
             <Button 
