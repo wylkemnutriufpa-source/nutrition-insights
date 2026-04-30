@@ -503,6 +503,7 @@ const EditorV3Page = () => {
                   </PopoverContent>
                 </Popover>
               </div>
+            </div>
 
             <div className="grid gap-5">
               {meal.items.length === 0 ? (
