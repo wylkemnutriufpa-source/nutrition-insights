@@ -61,8 +61,10 @@ export const searchMarmitas = async (nutritionistId: string | null): Promise<Foo
     portionLabel: "1 marmita",
     measurementType: "unit",
     isMarmita: true,
-    locked: true,
-    imageUrl: r.image_url || undefined
+    locked: false, // Permite editar marmitas agora
+    imageUrl: r.image_url || undefined,
+    ingredients: r.foods_json || [],
+    instructions: r.instructions || ""
   }));
 };
 
@@ -101,4 +103,28 @@ export const searchTemplates = async (): Promise<MealTemplate[]> => {
       }))
     };
   });
+};
+export const getFoodMacrosByName = async (names: string[]): Promise<Record<string, { kcal: number, protein: number, carbs: number, fat: number }>> => {
+  if (!names.length) return {};
+  
+  const { data, error } = await supabase
+    .from("food_database")
+    .select("name, calories, protein, carbs, fat")
+    .in("name", names);
+
+  if (error) {
+    console.error("Error fetching food macros:", error);
+    return {};
+  }
+
+  const result: Record<string, any> = {};
+  data?.forEach(f => {
+    result[f.name.toLowerCase()] = {
+      kcal: f.calories,
+      protein: f.protein,
+      carbs: f.carbs,
+      fat: f.fat
+    };
+  });
+  return result;
 };

@@ -15,11 +15,12 @@ interface EditorState {
   addMeal: () => void;
   removeMeal: (mealId: string) => void;
   updateMealHeader: (mealId: string, name: string, time: string) => void;
-  addMarmitaToMeal: (mealId: string, marmita: Food) => void;
+  addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
   removeFood: (mealId: string, instanceId: string) => void;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
+  updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => void;
   generatePlan: (goal: string, replaceExisting?: boolean) => void;
   generateMeal: (mealId: string, goal: string) => void;
   savePlan: () => Promise<void>;
@@ -81,11 +82,50 @@ export const useEditorState = create<EditorState>()(
         }));
       },
 
-      addMarmitaToMeal: (mealId, marmita) => {
+      addMarmitaToMeal: async (mealId, marmita) => {
+        let calculatedMacros = { kcal: marmita.kcal, protein: marmita.protein, carbs: marmita.carbs, fat: marmita.fat };
+        
+        // Se os macros estiverem zerados e houver ingredientes, calculamos
+        if (calculatedMacros.kcal === 0 && marmita.ingredients && marmita.ingredients.length > 0) {
+          const { getFoodMacrosByName } = await import('./utils/dataFetcher');
+          const names = marmita.ingredients.map((i: any) => (i.name || i.food).toLowerCase());
+          const macrosMap = await getFoodMacrosByName(names);
+          
+          let totalKcal = 0, totalP = 0, totalC = 0, totalF = 0;
+          
+          marmita.ingredients.forEach((ing: any) => {
+            const name = (ing.name || ing.food).toLowerCase();
+            const grams = ing.grams || ing.base_grams || 100;
+            const factor = grams / 100;
+            const macros = macrosMap[name];
+            
+            if (macros) {
+              totalKcal += macros.kcal * factor;
+              totalP += macros.protein * factor;
+              totalC += macros.carbs * factor;
+              totalF += macros.fat * factor;
+            }
+          });
+          
+          calculatedMacros = { kcal: totalKcal, protein: totalP, carbs: totalC, fat: totalF };
+        }
+
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
-              ? { ...m, items: [...m.items, { ...marmita, instanceId: makeInstanceId(), quantity: 1 }] }
+              ? { 
+                  ...m, 
+                  items: [
+                    ...m.items, 
+                    { 
+                      ...marmita, 
+                      ...calculatedMacros, 
+                      calories: calculatedMacros.kcal,
+                      instanceId: makeInstanceId(), 
+                      quantity: 1 
+                    }
+                  ] 
+                }
               : m
           ),
           planStatus: 'draft',
@@ -134,7 +174,21 @@ export const useEditorState = create<EditorState>()(
         }));
         toast.success(`Template "${template.name}" aplicado!`);
       },
-
+      updateMealItem: (mealId, instanceId, updates) => {
+        set((state) => ({
+          meals: state.meals.map((m) =>
+            m.id === mealId
+              ? {
+                  ...m,
+                  items: m.items.map((i) =>
+                    i.instanceId === instanceId ? { ...i, ...updates } : i
+                  ),
+                }
+              : m
+          ),
+          planStatus: 'draft',
+        }));
+      },
       removeFood: (mealId, instanceId) => {
         const meal = get().meals.find((m) => m.id === mealId);
         const item = meal?.items.find((i) => i.instanceId === instanceId);

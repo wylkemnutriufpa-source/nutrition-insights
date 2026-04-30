@@ -21,6 +21,8 @@ export interface Food {
   imageUrl?: string;
   usageCount?: number;
   householdMeasures?: HouseholdMeasure[];
+  ingredients?: any[];
+  instructions?: string;
 }
 
 export interface MealItem extends Food {
@@ -28,6 +30,9 @@ export interface MealItem extends Food {
   quantity: number; 
   selectedUnit?: string;
   substitutions?: Food[];
+  description?: string;
+  instructions?: string;
+  ingredients?: any[];
 }
 
 export interface Meal {
