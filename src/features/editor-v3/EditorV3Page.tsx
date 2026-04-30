@@ -135,6 +135,27 @@ const EditorV3Page = () => {
     pageSize: 10
   });
 
+  const { data: patientDetail } = usePatientDetail(patientId);
+
+  const [lastAssessment, setLastAssessment] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchAssessment = async () => {
+      if (patientId) {
+        const { data } = await supabase
+          .from('physical_assessments')
+          .select('*')
+          .eq('patient_id', patientId)
+          .order('assessment_date', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        
+        if (data) setLastAssessment(data);
+      }
+    };
+    fetchAssessment();
+  }, [patientId]);
+
   // Busca de Alimentos (TACO/USDA/Personalizados)
   useEffect(() => {
     const timer = setTimeout(async () => {
