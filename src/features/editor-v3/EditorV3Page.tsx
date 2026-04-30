@@ -1329,7 +1329,7 @@ const EditorV3Page = () => {
                 </div>
               </DialogHeader>
 
-              <Tabs defaultValue="swap" className="w-full">
+              <Tabs defaultValue="substitutions" className="w-full">
                 <div className="px-6 border-b border-white/5">
                   <TabsList className="bg-transparent h-auto p-0 gap-6">
                     <TabsTrigger value="swap" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
