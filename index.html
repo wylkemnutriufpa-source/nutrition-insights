@@ -46,17 +46,14 @@
         // --- EMERGENCY PWA RECOVERY SYSTEM ---
         (function() {
           var BUILD_VERSION = "%BUILD_VERSION%";
-          var lastVersion = localStorage.getItem('fj_last_version');
-          
-          // Se a versão mudou, podemos estar em um estado de transição de SW.
-          if (lastVersion && lastVersion !== BUILD_VERSION) {
-            console.warn("[FitJourney:PWA] Versão detectada mudou: " + lastVersion + " -> " + BUILD_VERSION);
-            // Se detectarmos que acabamos de atualizar, damos um tempo para o SW respirar
-          }
           localStorage.setItem('fj_last_version', BUILD_VERSION);
 
-          // Watchdog: Se o app não montar em 15s, força limpeza e reload.
+          // Watchdog: Se o app não montar em 15s, mostra botão de recuperação.
           var watchdog = setTimeout(function() {
+            var btn = document.getElementById('fj-recovery-btn');
+            if (btn) btn.style.display = 'block';
+            console.error("[FitJourney] O sistema demorou demais para iniciar. Possível erro de bundle ou rede.");
+          }, 15000);
 
           window.__FJ_MARK_READY__ = function() {
             window.__FJ_READY__ = true;
@@ -67,9 +64,14 @@
               setTimeout(function() { loader.remove(); }, 500);
             }
           };
+
+          document.getElementById('fj-recovery-btn')?.addEventListener('click', function() {
+            localStorage.clear();
+            sessionStorage.clear();
+            window.location.reload(true);
+          });
         })();
 
-        // Version logger for debugging
         console.log("System Version: %BUILD_VERSION%");
         console.log("Built at: %BUILD_TIMESTAMP%");
       </script>
