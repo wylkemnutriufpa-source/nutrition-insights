@@ -582,7 +582,7 @@ const EditorV3Page = () => {
                     {/* Templates */}
                     <div className="p-4 bg-emerald-500/[0.02]">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Layers className="w-3 h-3" /> Templates (Dietas Prontas)
+                        <Layers className="w-3 h-3" /> Templates de Refeição
                       </p>
                       <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
                         {templates.length > 0 ? (
