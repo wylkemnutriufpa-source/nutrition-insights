@@ -12,18 +12,22 @@ const makeId = () => Math.random().toString(36).substring(2, 10);
 const getFoodByName = (name: string) => mockFoods.find(f => f.name.toLowerCase().includes(name.toLowerCase()));
 const getMarmitaByName = (name: string) => mockMarmitas.find(m => m.name.toLowerCase().includes(name.toLowerCase()));
 
-const createMealItem = (food: Food, quantity: number): MealItem => ({
-  ...food,
-  instanceId: makeId(),
-  quantity,
-  locked: food.isMarmita || false
-});
+const createMealItem = (food: Food | undefined, quantity: number): MealItem | null => {
+  if (!food) return null;
+  return {
+    ...food,
+    instanceId: makeId(),
+    quantity,
+    locked: food.isMarmita || false
+  };
+};
 
 /**
  * Gera uma composição para uma refeição específica baseada no seu contexto (nome/horário)
  */
 export const generateMealWithEngine = (meal: Meal, goal: string): MealItem[] => {
   const mealName = meal.name.toLowerCase();
+  let items: (MealItem | null)[] = [];
   
   // Café da Manhã
   if (mealName.includes('café') || mealName.includes('desjejum')) {
@@ -32,57 +36,63 @@ export const generateMealWithEngine = (meal: Meal, goal: string): MealItem[] => 
     const banana = getFoodByName('Banana');
     
     if (goal === 'muscle-gain') {
-      return [
-        createMealItem(ovo!, 3),
-        createMealItem(pao!, 2),
-        createMealItem(banana!, 1)
+      items = [
+        createMealItem(ovo, 3),
+        createMealItem(pao, 2),
+        createMealItem(banana, 1)
+      ];
+    } else {
+      items = [
+        createMealItem(ovo, 2),
+        createMealItem(pao, 1),
+        createMealItem(banana, 1)
       ];
     }
-    return [
-      createMealItem(ovo!, 2),
-      createMealItem(pao!, 1),
-      createMealItem(banana!, 1)
-    ];
   }
 
   // Almoço / Jantar
-  if (mealName.includes('almoço') || mealName.includes('jantar')) {
+  else if (mealName.includes('almoço') || mealName.includes('jantar')) {
     if (goal === 'muscle-gain') {
       const arroz = getFoodByName('Arroz branco');
       const frango = getFoodByName('Frango grelhado');
       const feijao = getFoodByName('Feijão carioca');
-      return [
-        createMealItem(arroz!, 200),
-        createMealItem(frango!, 150),
-        createMealItem(feijao!, 100)
+      items = [
+        createMealItem(arroz, 200),
+        createMealItem(frango, 150),
+        createMealItem(feijao, 100)
       ];
+    } else {
+      const marmita = getMarmitaByName('Peixe Grelhado') || getMarmitaByName('Frango');
+      items = [createMealItem(marmita, 1)];
     }
-    // Para perda de peso, sugerimos uma marmita de controle ou porções menores
-    const marmita = getMarmitaByName('Peixe Grelhado');
-    return [createMealItem(marmita!, 1)];
   }
 
   // Lanches
-  if (mealName.includes('lanche') || mealName.includes('ceia')) {
+  else if (mealName.includes('lanche') || mealName.includes('ceia')) {
     const whey = getFoodByName('Whey protein');
     const aveia = getFoodByName('Aveia');
     const iogurte = getFoodByName('Iogurte');
     
     if (goal === 'muscle-gain') {
-      return [
-        createMealItem(whey!, 1),
-        createMealItem(aveia!, 2),
-        createMealItem(iogurte!, 1)
+      items = [
+        createMealItem(whey, 1),
+        createMealItem(aveia, 2),
+        createMealItem(iogurte, 1)
+      ];
+    } else {
+      items = [
+        createMealItem(iogurte, 1),
+        createMealItem(aveia, 1)
       ];
     }
-    return [
-      createMealItem(iogurte!, 1),
-      createMealItem(aveia!, 1)
-    ];
   }
 
-  // Fallback
-  return [createMealItem(getFoodByName('Banana')!, 1)];
+  // Fallback se nada foi gerado
+  if (items.length === 0 || items.every(i => i === null)) {
+    items = [createMealItem(getFoodByName('Banana'), 1)];
+  }
+
+  return items.filter((i): i is MealItem => i !== null);
 };
 
 /**
@@ -91,7 +101,6 @@ export const generateMealWithEngine = (meal: Meal, goal: string): MealItem[] => 
 export const generatePlanWithEngine = (currentMeals: Meal[], goal: string): Meal[] => {
   return currentMeals.map(meal => {
     // Só geramos para refeições vazias para evitar sobrescrever trabalho do usuário
-    // A lógica de "substituir tudo" será tratada no useEditorState limpando antes
     if (meal.items.length === 0) {
       return {
         ...meal,
