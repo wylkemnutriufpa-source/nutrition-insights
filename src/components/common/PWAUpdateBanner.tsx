@@ -29,16 +29,10 @@ export function PWAUpdateBanner() {
   useEffect(() => {
     if (needRefresh) {
       setVisible(true);
-      toast.info("Nova versão disponível!", {
-        description: "Uma atualização premium está pronta para ser instalada.",
-        duration: Infinity,
-        action: {
-          label: "Atualizar Agora",
-          onClick: () => updateServiceWorker(true),
-        },
-      });
+      // No longer using toast.info to avoid redundancy with the banner
+      console.log("[PWA] Nova versão detectada, exibindo banner de atualização.");
     }
-  }, [needRefresh, updateServiceWorker]);
+  }, [needRefresh]);
 
   if (!visible || !needRefresh) return null;
 
