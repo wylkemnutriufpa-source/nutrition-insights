@@ -157,11 +157,13 @@ const EditorV3Page = () => {
   }, [user?.id]);
 
   // Macros totais memoizados
+  // Macros totais memoizados com fallback para kcal/calories
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
         const q = item.quantity ?? 1;
-        acc.kcal += (item.calories ?? 0) * q;
+        const cal = item.calories || item.kcal || 0;
+        acc.kcal += cal * q;
         acc.protein += (item.protein ?? 0) * q;
         acc.carbs += (item.carbs ?? 0) * q;
         acc.fat += (item.fat ?? 0) * q;
