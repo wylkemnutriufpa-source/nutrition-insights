@@ -79,7 +79,13 @@ export async function loadOrCreateDraft(
     console.warn('[v3-draft] load failed, will fallback to local');
     return null;
   }
-  if (existing) return existing as unknown as DraftRecord;
+  if (existing) {
+    const record = existing as unknown as DraftRecord;
+    if (record.payload?.meals) {
+      record.payload.meals = normalizeMeals(record.payload.meals);
+    }
+    return record;
+  }
 
   // 2) Cria um novo
   const tenantId = await getActiveTenant();
