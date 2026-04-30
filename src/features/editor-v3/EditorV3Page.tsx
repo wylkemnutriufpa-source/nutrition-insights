@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
 import { useEditorState } from './useEditorState';
 import { useDraftSync } from './useDraftSync';
@@ -10,12 +10,23 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
   ArrowLeft, UserX, Plus, Trash2, Lock,
   Sparkles, Save, Package, ChefHat, Clock,
-  Apple, Layers, Utensils, CloudOff, Cloud, Loader2
+  Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
+  AlertTriangle, CheckCircle2, XCircle, RotateCcw,
+  Zap, Activity, PieChart
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
+import { Meal } from './types';
 
 const EditorV3Page = () => {
   const { patientId } = useParams();
@@ -31,49 +42,101 @@ const EditorV3Page = () => {
   } = useEditorState();
 
   const {
-    draftId, syncState, initialMeals, scheduleSave, resetDraft
-  } = useDraftSync(patientId ?? null, meals);
+    draftId, syncState, initialMeals, lastSavedAt,
+    scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
+  } = useDraftSync(patientId ?? null, meals, meals);
 
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
+  const [showValidation, setShowValidation] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [showRevertConfirm, setShowRevertConfirm] = useState(false);
+
+  // Macros totais memoizados
+  const totalMacros = useMemo(() => {
+    return meals.reduce((acc, meal) => {
+      meal.items.forEach(item => {
+        const q = item.quantity ?? 1;
+        acc.kcal += (item.calories ?? 0) * q;
+        acc.protein += (item.protein ?? 0) * q;
+        acc.carbs += (item.carbs ?? 0) * q;
+        acc.fat += (item.fat ?? 0) * q;
+      });
+      return acc;
+    }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
+  }, [meals]);
+
+  // Validação do plano
+  const validation = useMemo(() => {
+    const errors: string[] = [];
+    const warnings: string[] = [];
+
+    if (!patientId) errors.push("Paciente não identificado.");
+    
+    const hasItems = meals.some(m => m.items.length > 0);
+    if (!hasItems) errors.push("O plano deve ter pelo menos um item.");
+
+    const emptyMeals = meals.filter(m => m.items.length === 0);
+    if (emptyMeals.length > 0) {
+      warnings.push(`${emptyMeals.length} refeições estão vazias.`);
+    }
+
+    if (totalMacros.kcal === 0) errors.push("Macros totais não podem ser zero.");
+
+    return {
+      isValid: errors.length === 0,
+      errors,
+      warnings
+    };
+  }, [meals, patientId, totalMacros.kcal]);
 
   useEffect(() => {
     if (patientId) setPatientId(patientId);
   }, [patientId, setPatientId]);
 
-  // Hidrata o store com o conteúdo do draft remoto (uma única vez)
   useEffect(() => {
-    if (!hydratedRef.current && initialMeals && initialMeals.length > 0) {
+    if (initialMeals && initialMeals.length > 0) {
       hydrateMeals(initialMeals);
       hydratedRef.current = true;
     }
   }, [initialMeals, hydrateMeals]);
 
-  // Auto-save: dispara após cada mudança em meals (depois da hidratação)
   useEffect(() => {
     if (hydratedRef.current && draftId) {
       scheduleSave(meals);
     }
   }, [meals, draftId, scheduleSave]);
 
-  const handleSavePlan = async () => {
-    if (!draftId) {
-      toast.error('Rascunho não está sincronizado com o servidor.');
+  const handlePromotionRequest = () => {
+    setShowValidation(true);
+  };
+
+  const handleConfirmPromotion = async () => {
+    if (!validation.isValid) {
+      toast.error("Corrija os erros antes de salvar.");
       return;
     }
+
+    if (!draftId) {
+      toast.error('Rascunho não está sincronizado.');
+      return;
+    }
+
     setPromoting(true);
+    setShowValidation(false);
+    
     try {
       const fresh = await loadOrCreateDraft(patientId!, meals);
       if (!fresh) {
-        toast.error('Não foi possível recuperar o rascunho.');
+        toast.error('Erro ao recuperar rascunho remoto.');
         return;
       }
       const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1 } });
       if (result.ok) {
-        toast.success('Plano salvo no sistema clínico (rascunho oficial).');
+        toast.success('Plano promovido com sucesso!');
         await savePlan();
       } else {
-        toast.error(`Falha ao salvar plano: ${result.error}`);
+        toast.error(`Erro: ${result.error}`);
       }
     } finally {
       setPromoting(false);
@@ -84,9 +147,14 @@ const EditorV3Page = () => {
     await resetDraft();
     resetEditor();
     hydratedRef.current = false;
+    setShowResetConfirm(false);
     toast.success('Rascunho resetado.');
   };
 
+  const handleRevert = () => {
+    revertToLastSaved();
+    setShowRevertConfirm(false);
+  };
 
   if (!patientId && !planId) {
     return (
@@ -96,7 +164,7 @@ const EditorV3Page = () => {
         </div>
         <h1 className="text-2xl font-bold mb-2">Paciente não selecionado</h1>
         <p className="text-muted-foreground max-w-md mb-8">
-          Para utilizar o Editor V3, você precisa selecionar um paciente ou carregar um plano existente.
+          Para utilizar o Editor V3, você precisa selecionar um paciente.
         </p>
         <Button onClick={() => navigate('/patients')} variant="default" className="gap-2">
           <ArrowLeft className="w-4 h-4" />
@@ -108,7 +176,7 @@ const EditorV3Page = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
-      {/* Header V3 */}
+      {/* Header V3 Elite */}
       <header className="border-b border-emerald-500/10 bg-black/80 backdrop-blur-2xl sticky top-0 z-50 px-6 py-3 flex items-center justify-between shadow-2xl shadow-emerald-500/5">
         <div className="flex items-center gap-5">
           <Button 
@@ -121,7 +189,7 @@ const EditorV3Page = () => {
           </Button>
           <div className="flex flex-col">
             <h1 className="text-lg font-extrabold tracking-tight bg-gradient-to-br from-white to-white/60 bg-clip-text text-transparent">
-              Editor V3
+              Editor V3 Elite
             </h1>
             <div className="flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
@@ -129,7 +197,7 @@ const EditorV3Page = () => {
                 <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
               </span>
               <p className="text-[9px] font-black text-emerald-500/80 uppercase tracking-[0.2em]">
-                Elite Engine Active
+                Control System Active
               </p>
             </div>
           </div>
@@ -139,24 +207,56 @@ const EditorV3Page = () => {
             syncState === 'saving' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
             syncState === 'loading' && "bg-blue-500/10 text-blue-400 border-blue-500/30",
             (syncState === 'offline' || syncState === 'error') && "bg-rose-500/10 text-rose-400 border-rose-500/30",
+            syncState === 'conflict' && "bg-amber-500/10 text-amber-400 border-amber-500/30",
             syncState === 'idle' && "bg-white/5 text-white/40 border-white/10"
           )}>
             {syncState === 'saving' && <Loader2 className="w-2.5 h-2.5 animate-spin" />}
             {syncState === 'saved' && <Cloud className="w-3 h-3" />}
             {(syncState === 'offline' || syncState === 'error') && <CloudOff className="w-3 h-3" />}
+            {syncState === 'conflict' && <AlertTriangle className="w-3 h-3" />}
             {syncState === 'loading' ? 'CARREGANDO' :
              syncState === 'saving' ? 'SALVANDO' :
              syncState === 'saved' ? 'SINCRONIZADO' :
              syncState === 'offline' ? 'OFFLINE' :
+             syncState === 'conflict' ? 'CONFLITO' :
              syncState === 'error' ? 'ERRO' : 'DRAFT'}
           </Badge>
+
+          {/* Resumo de Macros no Header (Sticky) */}
+          <div className="hidden md:flex items-center gap-6 ml-8 px-6 border-l border-white/10">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Total Kcal</span>
+              <span className="text-sm font-black text-white">{Math.round(totalMacros.kcal)}</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Proteína</span>
+              <span className="text-sm font-black text-emerald-400">{Math.round(totalMacros.protein)}g</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Carbo</span>
+              <span className="text-sm font-black text-blue-400">{Math.round(totalMacros.carbs)}g</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Gordura</span>
+              <span className="text-sm font-black text-amber-400">{Math.round(totalMacros.fat)}g</span>
+            </div>
+          </div>
         </div>
 
         <div className="flex items-center gap-3">
           <Button
             variant="ghost"
             size="sm"
-            onClick={handleReset}
+            onClick={() => setShowRevertConfirm(true)}
+            className="text-[11px] font-bold text-white/40 hover:text-amber-400 hover:bg-amber-400/10 transition-colors rounded-lg gap-2"
+          >
+            <RotateCcw className="w-3.5 h-3.5" />
+            Reverter
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowResetConfirm(true)}
             className="text-[11px] font-bold text-white/40 hover:text-rose-400 hover:bg-rose-400/10 transition-colors rounded-lg"
           >
             Resetar
@@ -172,39 +272,59 @@ const EditorV3Page = () => {
           </Button>
           <Button
             size="sm"
-            onClick={handleSavePlan}
+            onClick={handlePromotionRequest}
             disabled={promoting || !draftId}
             className="gap-2 font-black text-[11px] tracking-wide bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] rounded-lg px-5"
           >
             {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {promoting ? 'SINCRONIZANDO...' : 'SALVAR PLANO'}
+            {promoting ? 'SALVANDO...' : 'SALVAR PLANO'}
           </Button>
         </div>
       </header>
 
       {/* Main Content */}
-      <main className="flex-1 p-6 max-w-5xl mx-auto w-full space-y-12">
-        {meals.map((meal, index) => (
-          <section 
-            key={meal.id} 
-            className="group animate-in fade-in slide-in-from-bottom-4 duration-700"
-            style={{ animationDelay: `${index * 100}ms` }}
-          >
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
-                  <ChefHat className="w-6 h-6 text-emerald-500" />
-                </div>
-                <div>
-                  <h2 className="font-black text-xl tracking-tight text-white group-hover:text-emerald-400 transition-colors">
-                    {meal.name}
-                  </h2>
-                  <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider">
-                    <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
-                    {meal.time}
+      <main className="flex-1 p-6 max-w-5xl mx-auto w-full space-y-12 pb-32">
+        {meals.map((meal, index) => {
+          // Macros por refeição
+          const mealMacros = meal.items.reduce((acc, item) => {
+            const q = item.quantity ?? 1;
+            acc.kcal += (item.calories ?? 0) * q;
+            acc.p += (item.protein ?? 0) * q;
+            acc.c += (item.carbs ?? 0) * q;
+            acc.f += (item.fat ?? 0) * q;
+            return acc;
+          }, { kcal: 0, p: 0, c: 0, f: 0 });
+
+          return (
+            <section 
+              key={meal.id} 
+              className="group animate-in fade-in slide-in-from-bottom-4 duration-700"
+              style={{ animationDelay: `${index * 100}ms` }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
+                    <ChefHat className="w-6 h-6 text-emerald-500" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-3">
+                      <h2 className="font-black text-xl tracking-tight text-white group-hover:text-emerald-400 transition-colors">
+                        {meal.name}
+                      </h2>
+                      {mealMacros.kcal > 0 && (
+                        <div className="flex gap-2">
+                           <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black border-0">{Math.round(mealMacros.kcal)} kcal</Badge>
+                           <Badge className="bg-white/5 text-white/40 text-[10px] font-black border-0">{Math.round(mealMacros.p)}g P</Badge>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider">
+                      <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
+                      {meal.time}
+                    </div>
                   </div>
                 </div>
-              </div>
+... keep existing code
               
               <Popover>
                 <PopoverTrigger asChild>
