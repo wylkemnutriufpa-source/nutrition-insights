@@ -738,13 +738,14 @@ const EditorV3Page = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 z-10">
+                    <div className="flex items-center gap-6 z-20">
                       <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1">
                         <Button
                           variant="ghost"
                           size="icon"
                           disabled={item.locked || (item.quantity ?? 1) <= 0}
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
@@ -768,6 +769,7 @@ const EditorV3Page = () => {
                           size="icon"
                           disabled={item.locked}
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
@@ -1162,6 +1164,7 @@ const EditorV3Page = () => {
                                   key={opt.label}
                                   variant="ghost"
                                   onClick={(e) => {
+                                    e.preventDefault();
                                     e.stopPropagation();
                                     updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
                                       measurementType: opt.type, 
