@@ -38,10 +38,4 @@ if (root) {
     </ErrorBoundaryDebug>
   );
 
-  // Sinaliza ao index.html que o app montou com sucesso
-  setTimeout(() => {
-    if (typeof (window as any).__FJ_MARK_READY__ === "function") {
-      (window as any).__FJ_MARK_READY__();
-    }
-  }, 100);
 }
