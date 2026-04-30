@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 type SyncState = 'idle' | 'loading' | 'saving' | 'saved' | 'offline' | 'error' | 'conflict';
 
-const LOCAL_FALLBACK_KEY = (patientId: string) => `fitjourney-v3-fallback-${patientId}`;
+const LOCAL_FALLBACK_KEY = (patientId: string | null) => `fitjourney-v3-fallback-${patientId || 'sandbox'}`;
 
 interface UseDraftSyncReturn {
   draftId: string | null;
