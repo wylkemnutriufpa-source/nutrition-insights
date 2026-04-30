@@ -200,6 +200,65 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [swapSearch]);
+  // Carregar sugestões inteligentes ao abrir o modal
+  useEffect(() => {
+    const loadSmartSuggestions = async () => {
+      if (selectedItem) {
+        setIsLoadingSmartSubs(true);
+        const name = selectedItem.item.name.toLowerCase();
+        let suggestions: Food[] = [];
+        
+        // Regras do Motor V3 para compatibilidade inteligente
+        if (name.includes('frango') || name.includes('carne') || name.includes('peixe') || name.includes('ovo')) {
+          // Grupo de Proteínas
+          suggestions = mockFoods.filter(f => 
+            (f.name.toLowerCase().includes('frango') || 
+             f.name.toLowerCase().includes('carne') || 
+             f.name.toLowerCase().includes('peixe') || 
+             f.name.toLowerCase().includes('ovo') || 
+             f.name.toLowerCase().includes('patinho') ||
+             f.name.toLowerCase().includes('whey')) && 
+            f.name.toLowerCase() !== name
+          );
+        } else if (name.includes('arroz') || name.includes('batata') || name.includes('macarrão') || name.includes('feijão') || name.includes('pão') || name.includes('aveia') || name.includes('tapioca')) {
+          // Grupo de Carboidratos
+          suggestions = mockFoods.filter(f => 
+            (f.name.toLowerCase().includes('arroz') || 
+             f.name.toLowerCase().includes('batata') || 
+             f.name.toLowerCase().includes('macarrão') || 
+             f.name.toLowerCase().includes('feijão') || 
+             f.name.toLowerCase().includes('pão') || 
+             f.name.toLowerCase().includes('aveia') || 
+             f.name.toLowerCase().includes('tapioca') ||
+             f.name.toLowerCase().includes('granola')) && 
+            f.name.toLowerCase() !== name
+          );
+        } else if (name.includes('fruta') || name.includes('banana') || name.includes('maçã') || name.includes('morango') || name.includes('suco')) {
+          // Grupo de Frutas/Vitamins
+          suggestions = mockFoods.filter(f => 
+            (f.name.toLowerCase().includes('banana') || 
+             f.name.toLowerCase().includes('maçã') || 
+             f.name.toLowerCase().includes('suco') ||
+             f.name.toLowerCase().includes('iogurte')) && 
+            f.name.toLowerCase() !== name
+          );
+        }
+
+        // Se não achou nada específico, pega aleatórios do mesmo tipo de medida
+        if (suggestions.length === 0) {
+          suggestions = mockFoods.filter(f => 
+            f.measurementType === selectedItem.item.measurementType && 
+            f.name.toLowerCase() !== name
+          ).slice(0, 5);
+        }
+
+        setSmartSubstitutions(suggestions.slice(0, 6));
+        setIsLoadingSmartSubs(false);
+      }
+    };
+    loadSmartSuggestions();
+  }, [selectedItem]);
+
   // Busca de Marmitas e Templates
   useEffect(() => {
     const loadData = async () => {
