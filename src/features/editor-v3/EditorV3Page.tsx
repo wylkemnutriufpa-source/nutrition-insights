@@ -203,7 +203,9 @@ const EditorV3Page = () => {
       warnings.push(`${emptyMeals.length} refeições estão vazias.`);
     }
 
-    if (totalMacros.kcal === 0) errors.push("Macros totais não podem ser zero.");
+    if (totalMacros.kcal === 0 && meals.some(m => m.items.length > 0)) {
+       errors.push("Macros totais não podem ser zero se houver alimentos.");
+    }
 
     return {
       isValid: errors.length === 0,
