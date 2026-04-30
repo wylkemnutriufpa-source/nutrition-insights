@@ -30,13 +30,26 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Meal, MealItem, Food } from './types';
 import { MealTemplate } from './constants';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
+
+const MEASURE_OPTIONS = [
+  { label: 'Gramas', unit: 'g', type: 'gram' as const },
+  { label: 'Colheres', unit: 'colher(es)', type: 'spoon' as const },
+  { label: 'Porção', unit: 'porção', type: 'unit' as const },
+  { label: 'Copos', unit: 'copo(s)', type: 'unit' as const },
+  { label: 'Prato Raso', unit: 'prato raso', type: 'unit' as const },
+  { label: 'Prato Fundo', unit: 'prato fundo', type: 'unit' as const },
+  { label: 'Prato Médio', unit: 'prato médio', type: 'unit' as const },
+  { label: 'Unid. P', unit: 'unid P', type: 'unit' as const },
+  { label: 'Unid. M', unit: 'unid M', type: 'unit' as const },
+  { label: 'Unid. G', unit: 'unid G', type: 'unit' as const },
+];
 
 const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 'spoon' | 'ml') => {
   if (type === 'gram') return `${quantity}g`;
@@ -157,11 +170,13 @@ const EditorV3Page = () => {
   }, [user?.id]);
 
   // Macros totais memoizados
+  // Macros totais memoizados com fallback para kcal/calories
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
         const q = item.quantity ?? 1;
-        acc.kcal += (item.calories ?? 0) * q;
+        const cal = item.calories || item.kcal || 0;
+        acc.kcal += cal * q;
         acc.protein += (item.protein ?? 0) * q;
         acc.carbs += (item.carbs ?? 0) * q;
         acc.fat += (item.fat ?? 0) * q;
@@ -474,7 +489,8 @@ const EditorV3Page = () => {
           // Macros por refeição
           const mealMacros = meal.items.reduce((acc, item) => {
             const q = item.quantity ?? 1;
-            acc.kcal += (item.calories ?? 0) * q;
+            const calories = item.calories || item.kcal || 0;
+            acc.kcal += calories * q;
             acc.p += (item.protein ?? 0) * q;
             acc.c += (item.carbs ?? 0) * q;
             acc.f += (item.fat ?? 0) * q;
@@ -793,11 +809,25 @@ const EditorV3Page = () => {
                 ))
               )}
             </div>
+            
+            {/* Espaço para descrição da refeição */}
+            <div className="mt-6 animate-in fade-in duration-1000 delay-300">
+              <div className="flex items-center gap-2 mb-2">
+                <Edit3 className="w-3 h-3 text-emerald-500/50" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Instruções / Notas da Refeição</span>
+              </div>
+              <Textarea
+                placeholder="Ex: Beber bastante água, evitar frituras nesta refeição..."
+                value={meal.description || ''}
+                onChange={(e) => updateMealHeader(meal.id, meal.name, meal.time || '00:00', e.target.value)}
+                className="bg-emerald-500/[0.02] border-emerald-500/10 text-white/60 text-xs rounded-2xl focus:ring-emerald-500/50 min-h-[80px] resize-none p-4 placeholder:text-white/10"
+              />
+            </div>
           </section>
         );
       })}
 
-      <div className="flex justify-center pb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div className="flex justify-center pb-24 animate-in fade-in slide-in-from-bottom-4 duration-1000">
         <Button
           onClick={addMeal}
           className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 hover:border-emerald-500/40 text-emerald-500 font-black gap-4 transition-all hover:scale-105 group"
@@ -809,6 +839,43 @@ const EditorV3Page = () => {
         </Button>
       </div>
     </main>
+
+    {/* Sticky Macro Summary Bar */}
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50] w-[90%] max-w-4xl animate-in slide-in-from-bottom-10 duration-1000">
+      <div className="bg-black/80 backdrop-blur-3xl border border-emerald-500/30 rounded-3xl p-4 shadow-[0_0_50px_-10px_rgba(16,185,129,0.3)] flex items-center justify-between px-8">
+        <div className="flex items-center gap-10">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Total Kcal</span>
+            <span className="text-xl font-black text-white italic">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-emerald-500 not-italic">kcal</span></span>
+          </div>
+          <div className="h-8 w-px bg-white/10" />
+          <div className="flex items-center gap-8">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-emerald-500/40 uppercase tracking-[0.2em] mb-1">Proteína</span>
+              <span className="text-sm font-black text-white">{Math.round(totalMacros.protein)}g</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-blue-500/40 uppercase tracking-[0.2em] mb-1">Carbo</span>
+              <span className="text-sm font-black text-white">{Math.round(totalMacros.carbs)}g</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-amber-500/40 uppercase tracking-[0.2em] mb-1">Gordura</span>
+              <span className="text-sm font-black text-white">{Math.round(totalMacros.fat)}g</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className={cn(
+            "h-2 w-2 rounded-full animate-pulse",
+            planStatus === 'saved' ? "bg-emerald-500" : "bg-amber-500"
+          )} />
+          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+            {planStatus === 'saved' ? 'Sincronizado' : 'Alterações Pendentes'}
+          </span>
+        </div>
+      </div>
+    </div>
 
       {/* MODALS */}
       
@@ -1077,28 +1144,42 @@ const EditorV3Page = () => {
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40">Unidade / Medida</Label>
-                        <div className="flex flex-wrap gap-2">
-                          <Button 
-                            variant={selectedItem.item.measurementType === 'gram' ? 'default' : 'outline'}
-                            onClick={() => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { measurementType: 'gram', portionUnit: 'g' })}
-                            className={cn(
-                              "h-12 flex-1 text-[11px] font-black uppercase",
-                              selectedItem.item.measurementType === 'gram' ? "bg-emerald-500 text-black" : "border-white/10 text-white/40"
-                            )}
-                          >
-                            Gramas
-                          </Button>
-                          <Button 
-                            variant={selectedItem.item.measurementType === 'unit' ? 'default' : 'outline'}
-                            onClick={() => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { measurementType: 'unit', portionUnit: selectedItem.item.portionUnitLabel || 'unidade' })}
-                            className={cn(
-                              "h-12 flex-1 text-[11px] font-black uppercase",
-                              selectedItem.item.measurementType === 'unit' ? "bg-emerald-500 text-black" : "border-white/10 text-white/40"
-                            )}
-                          >
-                            Caseira
-                          </Button>
-                        </div>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button 
+                              variant="outline"
+                              className="h-12 w-full justify-between border-white/10 text-white font-bold bg-white/5 hover:bg-white/10 rounded-xl transition-all"
+                            >
+                              <span className="uppercase text-[11px] tracking-widest font-black">
+                                {selectedItem.item.portionUnitLabel || (selectedItem.item.measurementType === 'gram' ? 'Gramas' : 'Selecionar Medida')}
+                              </span>
+                              <ChevronDown className="w-4 h-4 text-emerald-500" />
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent align="end" className="w-72 p-2 bg-black/95 border-emerald-500/20 backdrop-blur-3xl shadow-2xl z-[150]">
+                            <div className="grid grid-cols-1 gap-1">
+                              {MEASURE_OPTIONS.map((opt) => (
+                                <Button
+                                  key={opt.label}
+                                  variant="ghost"
+                                  onClick={() => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
+                                    measurementType: opt.type, 
+                                    portionUnit: opt.unit,
+                                    portionUnitLabel: opt.label
+                                  })}
+                                  className={cn(
+                                    "h-10 justify-start px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
+                                    (selectedItem.item.portionUnitLabel === opt.label) 
+                                      ? "bg-emerald-500 text-black hover:bg-emerald-400" 
+                                      : "text-white/60 hover:text-white hover:bg-emerald-500/10"
+                                  )}
+                                >
+                                  {opt.label}
+                                </Button>
+                              ))}
+                            </div>
+                          </PopoverContent>
+                        </Popover>
                       </div>
                     </div>
 
