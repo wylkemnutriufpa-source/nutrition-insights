@@ -61,8 +61,10 @@ export const searchMarmitas = async (nutritionistId: string | null): Promise<Foo
     portionLabel: "1 marmita",
     measurementType: "unit",
     isMarmita: true,
-    locked: true,
-    imageUrl: r.image_url || undefined
+    locked: false, // Permite editar marmitas agora
+    imageUrl: r.image_url || undefined,
+    ingredients: r.foods_json || [],
+    instructions: r.instructions || ""
   }));
 };
 
