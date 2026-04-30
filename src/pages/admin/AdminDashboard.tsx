@@ -1013,7 +1013,7 @@ export default function AdminDashboard() {
                     </div>
                   </CardContent>
                 </Card>
-                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/admin/import-patients")}>
+                <Card className="glass shadow-card cursor-pointer hover:shadow-glow transition-shadow" onClick={() => navigate("/import-patients")}>
                   <CardContent className="flex items-center gap-4 py-6">
                     <Globe className="w-8 h-8 text-blue-400" />
                     <div>

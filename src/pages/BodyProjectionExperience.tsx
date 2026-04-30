@@ -795,7 +795,7 @@ export default function BodyProjectionExperience() {
               <Button className="flex-1" variant="outline" onClick={() => setShowShareModal(true)}>
                 <Share2 className="w-4 h-4 mr-2" /> Compartilhar
               </Button>
-              <Button variant="outline" onClick={() => navigate("/my-story")}>Minha História</Button>
+              <Button variant="outline" onClick={() => navigate("/journey")}>Minha História</Button>
             </div>
           </div>
 
