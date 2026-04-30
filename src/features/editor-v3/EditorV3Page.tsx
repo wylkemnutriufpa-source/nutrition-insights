@@ -1614,7 +1614,57 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="mt-6">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">Substitutos Atuais (Clicáveis)</p>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-[10px] font-black uppercase tracking-widest text-white/40">Substitutos Atuais (Clicáveis)</p>
+                        <Popover>
+                          <PopoverTrigger asChild>
+                            <Button variant="outline" size="sm" className="h-7 text-[8px] font-black uppercase tracking-widest bg-emerald-500/10 border-emerald-500/20 text-emerald-500 hover:bg-emerald-500/20">
+                              <Zap className="w-2.5 h-2.5 mr-1" /> Inteligentes
+                            </Button>
+                          </PopoverTrigger>
+                          <PopoverContent className="w-80 bg-black/95 border-emerald-500/20 backdrop-blur-2xl p-0 overflow-hidden shadow-2xl z-[160]">
+                            <div className="p-4 border-b border-white/5 bg-emerald-500/5">
+                              <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500">Sugestões do Motor V3</p>
+                              <p className="text-[9px] font-bold text-white/40">Itens nutricionalmente compatíveis</p>
+                            </div>
+                            <ScrollArea className="h-72">
+                              <div className="p-2 grid grid-cols-1 gap-1">
+                                {smartSubstitutions.map((food) => {
+                                  const needsConversion = food.measurementType !== selectedItem.item.measurementType;
+                                  return (
+                                    <Button
+                                      key={`smart-pop-${food.id}`}
+                                      variant="ghost"
+                                      onClick={() => {
+                                        const currentSubs = selectedItem.item.substitutions || [];
+                                        if (currentSubs.some(s => s.id === food.id)) {
+                                          toast.error('Este alimento já está na lista.');
+                                          return;
+                                        }
+                                        updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, {
+                                          substitutions: [...currentSubs, food]
+                                        });
+                                        setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, substitutions: [...currentSubs, food] } } : null);
+                                        toast.success(`${food.name} adicionado como substituto.`);
+                                      }}
+                                      className="h-auto p-3 justify-between bg-white/[0.02] hover:bg-emerald-500/10 border border-transparent hover:border-emerald-500/20 rounded-xl transition-all group"
+                                    >
+                                      <div className="text-left">
+                                        <p className="font-bold text-white group-hover:text-emerald-400 text-[11px]">{food.name}</p>
+                                        <div className="flex items-center gap-2">
+                                          <p className="text-[9px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                                          {needsConversion && <Badge className="bg-amber-500/10 text-amber-500 text-[7px] border-amber-500/20 h-3">Conversão</Badge>}
+                                        </div>
+                                      </div>
+                                      <Plus className="w-3 h-3 text-white/20 group-hover:text-emerald-500" />
+                                    </Button>
+                                  );
+                                })}
+                              </div>
+                            </ScrollArea>
+                          </PopoverContent>
+                        </Popover>
+                      </div>
                       <div className="space-y-2">
                         {(selectedItem.item.substitutions || []).length > 0 ? (
                           selectedItem.item.substitutions?.map((sub, idx) => (
