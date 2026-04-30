@@ -1520,7 +1520,7 @@ export default function PatientDetail() {
                           if (error) throw error;
                           if (!newPlan?.id) throw new Error("ID do novo plano não retornado");
                           toast.success("Plano criado! Abrindo Builder...");
-                          navigate(`/v3/${resolvedPatientId}?planId=${newPlan.id}`, { replace: true });
+                          navigate(`/v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}`, { replace: true });
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao criar plano");
                         }
