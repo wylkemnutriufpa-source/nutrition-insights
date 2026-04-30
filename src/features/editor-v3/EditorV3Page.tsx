@@ -100,6 +100,10 @@ const EditorV3Page = () => {
   const [showAIGenerateConfirm, setShowAIGenerateConfirm] = useState(false);
   const [generatingMealId, setGeneratingMealId] = useState<string | null>(null);
   const [isGeneratingGlobal, setIsGeneratingGlobal] = useState(false);
+  const [showDietTypeModal, setShowDietTypeModal] = useState(false);
+  const [showCalorieModal, setShowCalorieModal] = useState(false);
+  const [selectedDietType, setSelectedDietType] = useState<string | null>(null);
+  const [replaceExistingFlag, setReplaceExistingFlag] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
   
   // Modal de Detalhes do Item
