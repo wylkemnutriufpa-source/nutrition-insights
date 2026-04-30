@@ -738,18 +738,18 @@ const EditorV3Page = () => {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-6 z-10">
+                    <div className="flex items-center gap-6 z-20">
                       <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1">
                         <Button
                           variant="ghost"
                           size="icon"
                           disabled={item.locked || (item.quantity ?? 1) <= 0}
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
                             const nextValue = Math.max(0, current - step);
-                            // Garante que o valor seja múltiplo do step para evitar quebra
                             const roundedValue = Math.floor(nextValue / step) * step;
                             updateFoodQuantity(meal.id, item.instanceId, roundedValue);
                           }}
@@ -769,6 +769,7 @@ const EditorV3Page = () => {
                           size="icon"
                           disabled={item.locked}
                           onClick={(e) => {
+                            e.preventDefault();
                             e.stopPropagation();
                             const current = item.quantity ?? 1;
                             const step = item.measurementType === 'gram' ? 10 : item.measurementType === 'ml' ? 50 : 1;
@@ -1162,11 +1163,15 @@ const EditorV3Page = () => {
                                 <Button
                                   key={opt.label}
                                   variant="ghost"
-                                  onClick={() => updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
-                                    measurementType: opt.type, 
-                                    portionUnit: opt.unit,
-                                    portionUnitLabel: opt.label
-                                  })}
+                                  onClick={(e) => {
+                                    e.preventDefault();
+                                    e.stopPropagation();
+                                    updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { 
+                                      measurementType: opt.type, 
+                                      portionUnit: opt.unit,
+                                      portionUnitLabel: opt.label
+                                    });
+                                  }}
                                   className={cn(
                                     "h-10 justify-start px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
                                     (selectedItem.item.portionUnitLabel === opt.label) 

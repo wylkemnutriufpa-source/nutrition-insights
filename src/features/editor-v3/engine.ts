@@ -1,6 +1,15 @@
 import { Meal, Food, MealItem } from './types';
 import { mockMarmitas, mockFoods } from './constants';
 
+const shuffleArray = <T>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
+
 const makeId = () => Math.random().toString(36).substring(2, 10);
 
 /**
@@ -11,6 +20,9 @@ const makeId = () => Math.random().toString(36).substring(2, 10);
 // Helper para selecionar alimentos por tipo
 const getFoodByName = (name: string) => mockFoods.find(f => f.name.toLowerCase().includes(name.toLowerCase()));
 const getMarmitaByName = (name: string) => mockMarmitas.find(m => m.name.toLowerCase().includes(name.toLowerCase()));
+
+const getRandomFood = (count: number = 1) => shuffleArray(mockFoods).slice(0, count);
+const getRandomMarmita = (count: number = 1) => shuffleArray(mockMarmitas).slice(0, count);
 
 const createMealItem = (food: Food | undefined, quantity: number): MealItem | null => {
   if (!food) return null;
@@ -31,65 +43,47 @@ export const generateMealWithEngine = (meal: Meal, goal: string): MealItem[] => 
   
   // Café da Manhã
   if (mealName.includes('café') || mealName.includes('desjejum')) {
-    const ovo = getFoodByName('Ovo cozido');
-    const pao = getFoodByName('Pão integral');
-    const banana = getFoodByName('Banana');
+    const carbs = shuffleArray(mockFoods.filter(f => ['Pão', 'Aveia', 'Fruta', 'Banana', 'Maçã'].some(word => f.name.includes(word))));
+    const proteins = shuffleArray(mockFoods.filter(f => ['Ovo', 'Whey', 'Iogurte', 'Queijo'].some(word => f.name.includes(word))));
     
-    if (goal === 'muscle-gain') {
-      items = [
-        createMealItem(ovo, 3),
-        createMealItem(pao, 2),
-        createMealItem(banana, 1)
-      ];
-    } else {
-      items = [
-        createMealItem(ovo, 2),
-        createMealItem(pao, 1),
-        createMealItem(banana, 1)
-      ];
-    }
+    items = [
+      createMealItem(proteins[0], goal === 'muscle-gain' ? 3 : 2),
+      createMealItem(carbs[0], goal === 'muscle-gain' ? 2 : 1),
+      createMealItem(carbs[1], 1)
+    ];
   }
 
   // Almoço / Jantar
   else if (mealName.includes('almoço') || mealName.includes('jantar')) {
-    if (goal === 'muscle-gain') {
-      const arroz = getFoodByName('Arroz branco');
-      const frango = getFoodByName('Frango grelhado');
-      const feijao = getFoodByName('Feijão carioca');
+    if (goal === 'muscle-gain' || Math.random() > 0.5) {
+      const carbs = shuffleArray(mockFoods.filter(f => ['Arroz', 'Batata', 'Macarrão', 'Feijão'].some(word => f.name.includes(word))));
+      const proteins = shuffleArray(mockFoods.filter(f => ['Frango', 'Carne', 'Peixe', 'Ovo'].some(word => f.name.includes(word))));
+      
       items = [
-        createMealItem(arroz, 200),
-        createMealItem(frango, 150),
-        createMealItem(feijao, 100)
+        createMealItem(carbs[0], 200),
+        createMealItem(proteins[0], 150),
+        createMealItem(carbs[1] || carbs[0], 100)
       ];
     } else {
-      const marmita = getMarmitaByName('Peixe Grelhado') || getMarmitaByName('Frango');
-      items = [createMealItem(marmita, 1)];
+      const randomMarmitas = getRandomMarmita(2);
+      items = [createMealItem(randomMarmitas[0], 1)];
     }
   }
 
   // Lanches
   else if (mealName.includes('lanche') || mealName.includes('ceia')) {
-    const whey = getFoodByName('Whey protein');
-    const aveia = getFoodByName('Aveia');
-    const iogurte = getFoodByName('Iogurte');
+    const snacks = shuffleArray(mockFoods.filter(f => ['Fruta', 'Iogurte', 'Aveia', 'Whey', 'Castanha'].some(word => f.name.includes(word))));
     
-    if (goal === 'muscle-gain') {
-      items = [
-        createMealItem(whey, 1),
-        createMealItem(aveia, 2),
-        createMealItem(iogurte, 1)
-      ];
-    } else {
-      items = [
-        createMealItem(iogurte, 1),
-        createMealItem(aveia, 1)
-      ];
-    }
+    items = [
+      createMealItem(snacks[0], goal === 'muscle-gain' ? 2 : 1),
+      createMealItem(snacks[1], 1)
+    ];
   }
 
   // Fallback se nada foi gerado
   if (items.length === 0 || items.every(i => i === null)) {
-    items = [createMealItem(getFoodByName('Banana'), 1)];
+    const randoms = getRandomFood(2);
+    items = [createMealItem(randoms[0], 1)];
   }
 
   return items.filter((i): i is MealItem => i !== null);
