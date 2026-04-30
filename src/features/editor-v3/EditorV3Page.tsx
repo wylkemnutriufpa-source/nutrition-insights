@@ -109,7 +109,7 @@ const EditorV3Page = () => {
       errors,
       warnings
     };
-  }, [meals, patientId, totalMacros.kcal]);
+  }, [meals, patientId, totalMacros.kcal, isSandbox]);
 
   useEffect(() => {
     if (patientId) setPatientId(patientId);
