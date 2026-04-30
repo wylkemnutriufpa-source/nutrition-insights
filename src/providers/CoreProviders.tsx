@@ -86,6 +86,7 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                         <CelebrationProvider>
                           <CommandPaletteProvider>
                             <ExperienceThemeSync />
+                            <PWAUpdateBanner />
                             <Toaster />
                             <Sonner />
                             <Helmet>
