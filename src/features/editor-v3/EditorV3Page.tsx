@@ -813,7 +813,10 @@ const EditorV3Page = () => {
                       "p-5 flex items-center justify-between border-0 border-l-[3px] bg-white/[0.03] hover:bg-white/[0.06] transition-all hover:translate-x-1 duration-300 rounded-2xl group/card relative overflow-hidden cursor-pointer",
                       item.locked ? "border-amber-500/50" : "border-emerald-500/50"
                     )}
-                    onClick={() => setSelectedItem({ mealId: meal.id, item })}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSelectedItem({ mealId: meal.id, item });
+                    }}
                   >
                     {/* Glossy overlay */}
                     <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/[0.02] to-transparent pointer-events-none" />
