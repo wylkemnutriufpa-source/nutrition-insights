@@ -62,14 +62,14 @@ describe('Motor V3 Determinístico - Sugestões Inteligentes', () => {
 
 describe('Motor V3 - Recálculo de Macros', () => {
   it('deve calcular macros corretamente para gramas (base 100g)', () => {
-    const item = { kcal: 160, protein: 30, carbs: 0, fat: 4, measurementType: 'gram' };
+    const item = { kcal: 160, protein: 30, carbs: 0, fat: 4, measurementType: 'gram' as const };
     const result = calculateItemMacros(item, 200); // 200g
     expect(result.kcal).toBe(320);
     expect(result.protein).toBe(60);
   });
 
   it('deve calcular macros corretamente para unidades', () => {
-    const item = { kcal: 70, protein: 6, carbs: 0, fat: 5, measurementType: 'unit' };
+    const item = { kcal: 70, protein: 6, carbs: 0, fat: 5, measurementType: 'unit' as const };
     const result = calculateItemMacros(item, 3); // 3 unidades
     expect(result.kcal).toBe(210);
     expect(result.protein).toBe(18);
