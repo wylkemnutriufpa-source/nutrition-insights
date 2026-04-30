@@ -5,7 +5,7 @@ import { toast } from 'sonner';
 
 type SyncState = 'idle' | 'loading' | 'saving' | 'saved' | 'offline' | 'error' | 'conflict';
 
-const LOCAL_FALLBACK_KEY = (patientId: string) => `fitjourney-v3-fallback-${patientId}`;
+const LOCAL_FALLBACK_KEY = (patientId: string | null) => `fitjourney-v3-fallback-${patientId || 'sandbox'}`;
 
 interface UseDraftSyncReturn {
   draftId: string | null;
@@ -34,7 +34,23 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
   const lastUpdateRef = useRef<string | null>(null);
 
   const loadDraft = useCallback(async (isReload = false) => {
-    if (!patientId) return;
+    if (!patientId) {
+      // Sandbox mode: try loading from local storage
+      const local = localStorage.getItem(LOCAL_FALLBACK_KEY(null));
+      if (local) {
+        try {
+          const parsed = JSON.parse(local) as { meals: Meal[] };
+          setInitialMeals(parsed.meals);
+          setSnapshot(parsed.meals);
+        } catch {
+          setInitialMeals(seedMeals);
+        }
+      } else {
+        setInitialMeals(seedMeals);
+      }
+      setSyncState('idle');
+      return;
+    }
     setSyncState('loading');
 
     const draft: DraftRecord | null = await loadOrCreateDraft(patientId, seedMeals);
@@ -68,7 +84,6 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
   }, [loadDraft]);
 
   const scheduleSave = (meals: Meal[]) => {
-    if (!patientId) return;
     pendingMealsRef.current = meals;
 
     try {
@@ -105,7 +120,7 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
 
   const resetDraft = async () => {
     if (draftId) await discardDraft(draftId);
-    if (patientId) localStorage.removeItem(LOCAL_FALLBACK_KEY(patientId));
+    localStorage.removeItem(LOCAL_FALLBACK_KEY(patientId));
     setDraftId(null);
     setInitialMeals(null);
     setLastSavedAt(null);
