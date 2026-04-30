@@ -182,6 +182,14 @@ export const MealPlanEditorV3: React.FC = () => {
 
       <div className="flex items-center justify-between px-6 py-4 border-b bg-background/50 backdrop-blur-xl z-20">
         <div className="flex items-center gap-6">
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={() => window.history.back()} 
+            className="h-8 w-8 rounded-full hover:bg-muted"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </Button>
           <div>
             <h1 className="text-xl font-bold tracking-tight">Editor V3</h1>
             <div className="flex items-center gap-2">
