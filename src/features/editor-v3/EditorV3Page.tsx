@@ -739,7 +739,7 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="flex items-center gap-6 z-20">
-                      <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1">
+                      <div className="flex items-center bg-black/40 rounded-xl border border-white/5 p-1" onClick={(e) => e.stopPropagation()}>
                         <Button
                           variant="ghost"
                           size="icon"
@@ -759,9 +759,12 @@ const EditorV3Page = () => {
                         </Button>
                         
                         <div className="px-3 text-center min-w-[80px]">
-                          <p className="font-black text-sm text-white">
-                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)}
-                          </p>
+                          <Input 
+                            type="number" 
+                            className="h-7 w-16 bg-transparent border-none text-center font-black text-white p-0 focus-visible:ring-0" 
+                            value={item.quantity}
+                            onChange={(e) => updateFoodQuantity(meal.id, item.instanceId, Number(e.target.value))}
+                          />
                         </div>
  
                         <Button
