@@ -491,7 +491,7 @@ const EditorV3Page = () => {
             ) : (
               <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
             )}
-            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO COM IA'}
+            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO (ENGINE V3)'}
           </Button>
           <Button
             size="sm"
