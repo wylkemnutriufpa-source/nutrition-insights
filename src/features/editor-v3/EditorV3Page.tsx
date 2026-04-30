@@ -5,7 +5,7 @@ import { useDraftSync } from './useDraftSync';
 import { promoteDraftToMealPlan } from './promoteDraft';
 import { loadOrCreateDraft } from './draftService';
 import { searchFoods, searchMarmitas, searchTemplates, getCompatibleFoods } from './utils/dataFetcher';
-import { isProtein, isCarb, isFruit, getDeterministicSuggestions } from './utils/v3Motor';
+import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
