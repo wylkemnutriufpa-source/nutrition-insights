@@ -388,33 +388,53 @@ const EditorV3Page = () => {
           </div>
         )}
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2">
+          {/* Ações Premium - Header */}
+          <div className="flex items-center gap-1.5 mr-4 bg-white/5 p-1 rounded-2xl border border-white/10">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowAddMealModal(true)}
+              className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-2"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              Refeição
+            </Button>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => setShowTemplatesModal(true)}
+              className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-blue-400 hover:bg-blue-500/10 rounded-xl transition-all gap-2"
+            >
+              <Layers className="w-3.5 h-3.5" />
+              Templates
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-white/20 hover:text-white/60 rounded-xl"
+            >
+              <History className="w-4 h-4" />
+            </Button>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-9 w-9 text-white/20 hover:text-white/60 rounded-xl"
+            >
+              <Maximize2 className="w-4 h-4" />
+            </Button>
+          </div>
+
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowPatientSelector(true)}
-            className="text-[11px] font-bold text-emerald-500/80 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors rounded-lg gap-2"
+            className="text-[10px] font-black uppercase text-emerald-500/60 hover:text-emerald-400 hover:bg-emerald-500/10 transition-colors rounded-xl gap-2 h-9"
           >
             <Users className="w-3.5 h-3.5" />
-            {patientId ? 'Mudar Paciente' : 'Escolher Paciente'}
+            {patientId ? 'Paciente' : 'Escolher'}
           </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowRevertConfirm(true)}
-            className="text-[11px] font-bold text-white/40 hover:text-amber-400 hover:bg-amber-400/10 transition-colors rounded-lg gap-2"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Reverter
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={() => setShowResetConfirm(true)}
-            className="text-[11px] font-bold text-white/40 hover:text-rose-400 hover:bg-rose-400/10 transition-colors rounded-lg"
-          >
-            Resetar
-          </Button>
+          
           <Button
             variant="outline"
             size="sm"
