@@ -1,4 +1,4 @@
-import { Food, Meal, MealItem } from './useMealEditorV3Store';
+import { Food, Meal, ClinicalLog } from './types';
 import { QUICK_FOODS, MARMITAS } from './constants';
 
 export interface ClinicalCondition {
