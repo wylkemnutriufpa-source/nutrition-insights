@@ -1136,12 +1136,42 @@ const EditorV3Page = () => {
                     <div className="grid grid-cols-2 gap-6">
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40">Quantidade</Label>
-                        <Input 
-                          type="number"
-                          value={selectedItem.item.quantity}
-                          onChange={(e) => updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Number(e.target.value))}
-                          className="bg-white/5 border-white/10 text-white font-bold h-12 text-lg"
-                        />
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const step = selectedItem.item.measurementType === 'gram' ? 10 : selectedItem.item.measurementType === 'ml' ? 50 : 1;
+                              updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, Math.max(0, selectedItem.item.quantity - step));
+                              setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: Math.max(0, prev.item.quantity - step) } } : null);
+                            }}
+                            className="bg-white/5 border-white/10 text-white h-12 w-12 hover:bg-emerald-500/20"
+                          >
+                            <Minus className="w-4 h-4" />
+                          </Button>
+                          <Input 
+                            type="number"
+                            value={selectedItem.item.quantity}
+                            onChange={(e) => {
+                              const val = Number(e.target.value);
+                              updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, val);
+                              setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: val } } : null);
+                            }}
+                            className="bg-white/5 border-white/10 text-white font-black h-12 text-center text-xl"
+                          />
+                          <Button
+                            variant="outline"
+                            size="icon"
+                            onClick={() => {
+                              const step = selectedItem.item.measurementType === 'gram' ? 10 : selectedItem.item.measurementType === 'ml' ? 50 : 1;
+                              updateFoodQuantity(selectedItem.mealId, selectedItem.item.instanceId, selectedItem.item.quantity + step);
+                              setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, quantity: prev.item.quantity + step } } : null);
+                            }}
+                            className="bg-white/5 border-white/10 text-white h-12 w-12 hover:bg-emerald-500/20"
+                          >
+                            <Plus className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label className="text-[10px] font-black uppercase tracking-widest text-white/40">Unidade / Medida</Label>
@@ -1171,6 +1201,7 @@ const EditorV3Page = () => {
                                       portionUnit: opt.unit,
                                       portionUnitLabel: opt.label
                                     });
+                                    setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, measurementType: opt.type, portionUnit: opt.unit, portionUnitLabel: opt.label } } : null);
                                   }}
                                   className={cn(
                                     "h-10 justify-start px-4 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all",
@@ -1215,7 +1246,7 @@ const EditorV3Page = () => {
                     <div className="relative">
                       <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
                       <Input 
-                        placeholder="Adicionar substituição..." 
+                        placeholder="Adicionar substituição compatível..." 
                         value={substitutionSearch}
                         onChange={(e) => setSubstitutionSearch(e.target.value)}
                         className="h-12 pl-10 bg-white/5 border-white/10 rounded-xl focus:ring-emerald-500/50"
@@ -1235,12 +1266,17 @@ const EditorV3Page = () => {
                             });
                             setSubstitutionSearch('');
                             setSubstitutionResults([]);
+                            // Atualiza o estado local para refletir no modal aberto
+                            setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, substitutions: [...currentSubs, food] } } : null);
                           }}
                           className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group"
                         >
                           <div className="text-left">
                             <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
-                            <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel}</p>
+                            <div className="flex items-center gap-3">
+                              <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel}</p>
+                              <Badge className="h-4 bg-blue-500/10 text-blue-400 text-[8px] font-black uppercase border-blue-500/20">Compatível</Badge>
+                            </div>
                           </div>
                           <Plus className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
                         </Button>
@@ -1248,21 +1284,40 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="mt-6">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">Substitutos Atuais</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-white/40 mb-3">Substitutos Atuais (Clicáveis)</p>
                       <div className="space-y-2">
                         {(selectedItem.item.substitutions || []).length > 0 ? (
                           selectedItem.item.substitutions?.map((sub, idx) => (
-                            <div key={`${sub.id}-${idx}`} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl group/sub">
-                              <div>
-                                <p className="font-bold text-white/80">{sub.name}</p>
+                            <div key={`${sub.id}-${idx}`} className="flex items-center justify-between p-4 bg-white/[0.02] border border-white/5 rounded-xl group/sub hover:border-emerald-500/30 transition-all cursor-pointer">
+                              <div className="flex-1" onClick={() => {
+                                // Swap logic: substituir o item principal pelo substituto selecionado
+                                const currentItem = selectedItem.item;
+                                const newMain = { ...sub, instanceId: currentItem.instanceId, quantity: currentItem.quantity, substitutions: currentItem.substitutions?.filter((_, i) => i !== idx) };
+                                // Not working directly because of how data is structured, but we can update quantity/macros
+                                updateMealItem(selectedItem.mealId, currentItem.instanceId, { 
+                                  name: sub.name, 
+                                  kcal: sub.kcal, 
+                                  calories: sub.kcal,
+                                  protein: sub.protein,
+                                  carbs: sub.carbs,
+                                  fat: sub.fat,
+                                  portionLabel: sub.portionLabel,
+                                  substitutions: [...(currentItem.substitutions || []).filter((_, i) => i !== idx), { ...currentItem, substitutions: [] }]
+                                });
+                                setSelectedItem(null); // Fecha para recarregar
+                                toast.success(`${sub.name} agora é o item principal.`);
+                              }}>
+                                <p className="font-bold text-white group-hover/sub:text-emerald-400">{sub.name}</p>
                                 <p className="text-[10px] font-bold text-white/20 uppercase">{sub.kcal} kcal / {sub.portionLabel}</p>
                               </div>
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                onClick={() => {
+                                onClick={(e) => {
+                                  e.stopPropagation();
                                   const newSubs = (selectedItem.item.substitutions || []).filter((_, i) => i !== idx);
                                   updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { substitutions: newSubs });
+                                  setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, substitutions: newSubs } } : null);
                                 }}
                                 className="h-8 w-8 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 rounded-lg opacity-0 group-hover/sub:opacity-100 transition-all"
                               >
