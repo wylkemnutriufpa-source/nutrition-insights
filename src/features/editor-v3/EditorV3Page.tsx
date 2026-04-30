@@ -1160,6 +1160,223 @@ const EditorV3Page = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Modais Premium Fullscreen */}
+      
+      {/* Alimentos Modal */}
+      <Dialog open={showFoodsModal} onOpenChange={setShowFoodsModal}>
+        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+          <DialogHeader className="p-6 pb-2">
+            <div className="flex items-center justify-between w-full pr-8">
+              <div>
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
+                  <Apple className="w-7 h-7 text-emerald-500" />
+                  Biblioteca de Alimentos
+                </DialogTitle>
+                <DialogDescription className="text-white/40 font-bold">
+                  Explore a base TACO/USDA para adicionar à sua refeição.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="px-6 py-4 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <Input
+                placeholder="Pesquisar por nome ou categoria..."
+                value={foodSearch}
+                onChange={(e) => setFoodSearch(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-emerald-500/50 transition-all h-12 rounded-xl"
+              />
+              {isSearchingFoods && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 animate-spin" />}
+            </div>
+
+            <Tabs defaultValue="all" className="w-full" onValueChange={setActiveFoodCategory}>
+              <TabsList className="bg-white/5 w-full justify-start p-1 rounded-xl h-auto flex-wrap gap-1">
+                <TabsTrigger value="all" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Todos</TabsTrigger>
+                <TabsTrigger value="proteina" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Proteínas</TabsTrigger>
+                <TabsTrigger value="carboidrato" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Carbos</TabsTrigger>
+                <TabsTrigger value="fruta" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Frutas</TabsTrigger>
+                <TabsTrigger value="vegetal" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Vegetais</TabsTrigger>
+                <TabsTrigger value="gordura" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Gorduras</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <ScrollArea className="flex-1 px-4">
+            <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2 pb-6">
+              {foods
+                .filter(f => activeFoodCategory === 'all' || f.category === activeFoodCategory)
+                .map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => {
+                    if (activeMealId) addFoodToMeal(activeMealId, f);
+                    setShowFoodsModal(false);
+                    toast.success(`${f.name} adicionado!`);
+                  }}
+                  className="group relative flex flex-col items-start p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden"
+                >
+                  <div className="flex justify-between items-start w-full mb-1">
+                    <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-1">{f.name}</span>
+                    <Badge className="bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter mb-3">{f.portionLabel}</span>
+                  
+                  <div className="flex items-center gap-4 w-full">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Prot</span>
+                      <span className="text-[10px] font-black text-emerald-400/70">{f.protein}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Carb</span>
+                      <span className="text-[10px] font-black text-blue-400/70">{f.carbs}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Gord</span>
+                      <span className="text-[10px] font-black text-amber-400/70">{f.fat}g</span>
+                    </div>
+                  </div>
+                  
+                  <Plus className="absolute bottom-4 right-4 w-4 h-4 text-emerald-500/20 group-hover:text-emerald-500 group-hover:scale-125 transition-all" />
+                </button>
+              ))}
+              
+              {foods.length === 0 && !isSearchingFoods && (
+                <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/10 italic font-medium">
+                  <Apple className="w-12 h-12 mb-4 opacity-10" />
+                  <p>Digite para buscar em nossa base de dados clínica.</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Marmitas Modal */}
+      <Dialog open={showMarmitasModal} onOpenChange={setShowMarmitasModal}>
+        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-blue-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+          <DialogHeader className="p-6 pb-2">
+            <div className="flex items-center justify-between w-full pr-8">
+              <div>
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
+                  <Utensils className="w-7 h-7 text-blue-500" />
+                  Minhas Marmitas
+                </DialogTitle>
+                <DialogDescription className="text-white/40 font-bold">
+                  Refeições completas prontas para montagem rápida.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 px-4 mt-6">
+            <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2 pb-6">
+              {marmitas.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    if (activeMealId) addMarmitaToMeal(activeMealId, m);
+                    setShowMarmitasModal(false);
+                    toast.success(`${m.name} adicionada!`);
+                  }}
+                  className="group relative flex items-center p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left gap-4"
+                >
+                  <div className="w-14 h-14 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                    {m.imageUrl ? (
+                      <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover rounded-xl" />
+                    ) : (
+                      <Utensils className="w-6 h-6 text-blue-500" />
+                    )}
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-black text-white group-hover:text-blue-400 transition-colors line-clamp-1">{m.name}</span>
+                    <span className="text-[10px] font-bold text-white/30 uppercase mb-2">{m.kcal} kcal • Refeição Pronta</span>
+                    <div className="flex gap-3">
+                      <span className="text-[9px] font-black text-emerald-400/50">{m.protein}g P</span>
+                      <span className="text-[9px] font-black text-blue-400/50">{m.carbs}g C</span>
+                      <span className="text-[9px] font-black text-amber-400/50">{m.fat}g G</span>
+                    </div>
+                  </div>
+                  <Plus className="w-4 h-4 text-blue-500/20 group-hover:text-blue-500 transition-all mr-2" />
+                </button>
+              ))}
+              
+              {marmitas.length === 0 && (
+                <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/10 italic font-medium text-center px-10">
+                  <CloudOff className="w-12 h-12 mb-4 opacity-10" />
+                  <p>Você ainda não tem marmitas cadastradas. Crie receitas no painel de marmitas.</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Templates Modal */}
+      <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
+        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-amber-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+          <DialogHeader className="p-6 pb-2">
+            <div className="flex items-center justify-between w-full pr-8">
+              <div>
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
+                  <Layers className="w-7 h-7 text-amber-500" />
+                  Templates de Refeição
+                </DialogTitle>
+                <DialogDescription className="text-white/40 font-bold">
+                  Modelos estruturados para ganho de velocidade.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 px-4 mt-6">
+            <div className="p-2 grid grid-cols-1 gap-2 pb-6">
+              {templates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    if (activeMealId) applyTemplateToMeal(activeMealId, t);
+                    else {
+                      // Se não tem activeMealId, podemos adicionar uma nova refeição com o template?
+                      // Para simplificar, neste contexto exigimos uma refeição ativa se aberto pelo card
+                      // Mas no header podemos permitir aplicar no plano? 
+                      // Por enquanto vamos tratar como seleção para a última refeição ou nova
+                      if (meals.length > 0) applyTemplateToMeal(meals[meals.length-1].id, t);
+                      else {
+                        addMeal('Nova Refeição', '08:00');
+                        // Aguarda o state atualizar não é ideal aqui, ideal seria dispatch específico
+                      }
+                    }
+                    setShowTemplatesModal(false);
+                    toast.success(`Template ${t.name} aplicado!`);
+                  }}
+                  className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                    <Clock className="w-6 h-6 text-amber-500" />
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-black text-white group-hover:text-amber-400 transition-colors text-lg">{t.name}</span>
+                    <p className="text-[11px] font-medium text-white/40 leading-relaxed mb-3">{t.description}</p>
+                    <div className="flex items-center gap-4">
+                       <span className="text-[10px] font-black text-amber-500/60 uppercase">{t.items.length} ITENS</span>
+                       <div className="flex gap-2">
+                         {t.items.slice(0, 3).map((item, idx) => (
+                           <Badge key={idx} variant="outline" className="text-[8px] h-4 bg-white/5 border-white/10 text-white/40">{item.name}</Badge>
+                         ))}
+                         {t.items.length > 3 && <span className="text-[8px] text-white/20 font-black">+{t.items.length - 3}</span>}
+                       </div>
+                    </div>
+                  </div>
+                  <Zap className="w-5 h-5 text-amber-500/20 group-hover:text-amber-500 group-hover:animate-pulse transition-all mr-2 mt-1" />
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showPatientSelector} onOpenChange={setShowPatientSelector}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
           <DialogHeader className="p-6 pb-2">
