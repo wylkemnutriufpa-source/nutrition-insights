@@ -1308,22 +1308,30 @@ const EditorV3Page = () => {
                     <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6">
                       <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-4">Resumo Nutricional (Total)</p>
                       <div className="grid grid-cols-4 gap-4">
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-white">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.calories ?? 0))}</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Kcal</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-emerald-400">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.protein ?? 0))}g</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Prot</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-blue-400">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.carbs ?? 0))}g</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Carb</p>
-                        </div>
-                        <div className="text-center">
-                          <p className="text-2xl font-black text-amber-400">{Math.round((selectedItem.item.quantity ?? 1) * (selectedItem.item.fat ?? 0))}g</p>
-                          <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Gord</p>
-                        </div>
+                        {(() => {
+                          const q = selectedItem.item.quantity ?? 1;
+                          const factor = (selectedItem.item.measurementType === 'gram' || selectedItem.item.measurementType === 'ml') ? 0.01 : 1;
+                          return (
+                            <>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-white">{Math.round(q * (selectedItem.item.calories ?? 0) * factor)}</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Kcal</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-emerald-400">{Math.round(q * (selectedItem.item.protein ?? 0) * factor)}g</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Prot</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-blue-400">{Math.round(q * (selectedItem.item.carbs ?? 0) * factor)}g</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Carb</p>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-2xl font-black text-amber-400">{Math.round(q * (selectedItem.item.fat ?? 0) * factor)}g</p>
+                                <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Gord</p>
+                              </div>
+                            </>
+                          );
+                        })()}
                       </div>
                     </div>
                   </TabsContent>
