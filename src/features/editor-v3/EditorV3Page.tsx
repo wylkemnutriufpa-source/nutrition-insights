@@ -26,7 +26,28 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Meal } from './types';
+import { Meal, MealItem } from './types';
+
+const formatPortion = (quantity: number, unit: string) => {
+  if (quantity === 1) {
+    if (unit === 'fatia') return '1 fatia';
+    if (unit === 'unidade') return '1 unidade';
+    if (unit === 'colher') return '1 colher';
+    if (unit === 'pote') return '1 pote';
+    if (unit === 'medida') return '1 medida';
+    return `1 ${unit}`;
+  }
+  
+  const plurals: Record<string, string> = {
+    fatia: 'fatias',
+    unidade: 'unidades',
+    colher: 'colheres',
+    pote: 'potes',
+    medida: 'medidas'
+  };
+  
+  return `${quantity} ${plurals[unit] || unit + 's'}`;
+};
 
 const EditorV3Page = () => {
   const { patientId } = useParams();
