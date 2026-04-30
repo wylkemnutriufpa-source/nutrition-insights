@@ -321,7 +321,7 @@ export default function MobileSidebar({
         <div className="px-3 space-y-0.5 pb-4">
           {effectiveProRole && (
             <Link
-              to="/workspace-editor"
+              to="/workspace"
               onClick={onLinkClick}
               className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-all"
             >

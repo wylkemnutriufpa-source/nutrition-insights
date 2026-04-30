@@ -111,7 +111,7 @@ function SidebarFooter({
     <div className="flex-shrink-0 p-3 border-t border-border space-y-2">
       {!collapsed && isProRole && (
         <Link
-          to="/workspace-editor"
+          to="/workspace"
           onClick={onLinkClick}
           className="flex items-center gap-3 px-3 py-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted w-full transition-all"
         >
