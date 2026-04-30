@@ -35,6 +35,7 @@ const formatPortion = (quantity: number, unit: string) => {
     if (unit === 'colher') return '1 colher';
     if (unit === 'pote') return '1 pote';
     if (unit === 'medida') return '1 medida';
+    if (unit === 'marmita') return '1 marmita';
     return `1 ${unit}`;
   }
   
@@ -43,7 +44,8 @@ const formatPortion = (quantity: number, unit: string) => {
     unidade: 'unidades',
     colher: 'colheres',
     pote: 'potes',
-    medida: 'medidas'
+    medida: 'medidas',
+    marmita: 'marmitas'
   };
   
   return `${quantity} ${plurals[unit] || unit + 's'}`;
