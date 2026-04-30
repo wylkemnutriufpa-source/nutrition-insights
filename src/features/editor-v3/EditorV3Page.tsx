@@ -514,71 +514,95 @@ const EditorV3Page = () => {
                     {/* Alimentos */}
                     <div className="p-4 border-b border-emerald-500/10">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Apple className="w-3 h-3" /> Alimentos Avulsos
+                        <Apple className="w-3 h-3" /> Alimentos (TACO/USDA)
                       </p>
+                      <div className="relative mb-3">
+                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" />
+                        <Input 
+                          placeholder="Buscar no banco..." 
+                          value={foodSearch}
+                          onChange={(e) => setFoodSearch(e.target.value)}
+                          className="h-8 pl-8 text-[10px] bg-white/5 border-white/10 rounded-lg focus:ring-emerald-500/50"
+                        />
+                        {isSearchingFoods && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-500 animate-spin" />}
+                      </div>
                       <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                        {mockFoods.map((f) => (
-                          <button
-                            key={f.id}
-                            onClick={() => addFoodToMeal(meal.id, f)}
-                            className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                          >
-                            <div className="flex flex-col">
-                              <span className="font-bold text-white/80 group-hover/item:text-white">{f.name}</span>
-                              <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{f.portionLabel}</span>
-                            </div>
-                            <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase">
-                              {f.calories} kcal
-                            </span>
-                          </button>
-                        ))}
+                        {foods.length > 0 ? (
+                          foods.map((f) => (
+                            <button
+                              key={f.id}
+                              onClick={() => addFoodToMeal(meal.id, f)}
+                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
+                            >
+                              <div className="flex flex-col">
+                                <span className="font-bold text-white/80 group-hover/item:text-white line-clamp-1">{f.name}</span>
+                                <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{f.portionLabel}</span>
+                              </div>
+                              <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0 ml-2">
+                                {f.kcal} kcal
+                              </span>
+                            </button>
+                          ))
+                        ) : foodSearch.length >= 2 && !isSearchingFoods ? (
+                          <p className="text-[10px] text-center py-4 text-white/20 font-bold uppercase tracking-widest">Nenhum alimento encontrado</p>
+                        ) : foodSearch.length < 2 && (
+                          <p className="text-[10px] text-center py-4 text-white/20 font-bold uppercase tracking-widest">Digite para buscar</p>
+                        )}
                       </div>
                     </div>
 
                     {/* Marmitas */}
                     <div className="p-4 border-b border-emerald-500/10">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Utensils className="w-3 h-3" /> Marmitas
+                        <Utensils className="w-3 h-3" /> Minhas Marmitas
                       </p>
-                      <div className="space-y-1.5">
-                        {mockMarmitas.map((m) => (
-                          <button
-                            key={m.id}
-                            onClick={() => addMarmitaToMeal(meal.id, m)}
-                            className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                          >
-                            <div className="flex flex-col truncate pr-2">
-                              <span className="font-bold text-white/80 group-hover/item:text-white truncate">{m.name}</span>
-                              <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{m.portionLabel}</span>
-                            </div>
-                            <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
-                              {m.calories} kcal
-                            </span>
-                          </button>
-                        ))}
+                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                        {marmitas.length > 0 ? (
+                          marmitas.map((m) => (
+                            <button
+                              key={m.id}
+                              onClick={() => addMarmitaToMeal(meal.id, m)}
+                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
+                            >
+                              <div className="flex flex-col truncate pr-2">
+                                <span className="font-bold text-white/80 group-hover/item:text-white truncate">{m.name}</span>
+                                <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{m.portionLabel}</span>
+                              </div>
+                              <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
+                                {m.kcal} kcal
+                              </span>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="text-[10px] text-center py-2 text-white/20 font-bold uppercase tracking-widest">Sem marmitas cadastradas</p>
+                        )}
                       </div>
                     </div>
 
                     {/* Templates */}
                     <div className="p-4 bg-emerald-500/[0.02]">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Layers className="w-3 h-3" /> Templates Completos
+                        <Layers className="w-3 h-3" /> Templates (Dietas Prontas)
                       </p>
-                      <div className="space-y-1.5">
-                        {mockTemplates.map((t) => (
-                          <button
-                            key={t.id}
-                            onClick={() => applyTemplateToMeal(meal.id, t)}
-                            className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all group/item"
-                          >
-                            <p className="font-bold text-white/80 group-hover/item:text-white">{t.name}</p>
-                            <p className="text-[10px] text-white/30 group-hover/item:text-white/50 leading-relaxed mt-0.5">{t.description}</p>
-                          </button>
-                        ))}
+                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
+                        {templates.length > 0 ? (
+                          templates.map((t) => (
+                            <button
+                              key={t.id}
+                              onClick={() => applyTemplateToMeal(meal.id, t)}
+                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all group/item"
+                            >
+                              <p className="font-bold text-white/80 group-hover/item:text-white line-clamp-1">{t.name}</p>
+                              <p className="text-[10px] text-white/30 group-hover/item:text-white/50 leading-relaxed mt-0.5 line-clamp-2">{t.description}</p>
+                            </button>
+                          ))
+                        ) : (
+                          <p className="text-[10px] text-center py-2 text-white/20 font-bold uppercase tracking-widest">Carregando templates...</p>
+                        )}
                       </div>
                     </div>
-                  </PopoverContent>
-                </Popover>
+                    </PopoverContent>
+                  </Popover>
               </div>
             </div>
 
