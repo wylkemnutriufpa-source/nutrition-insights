@@ -406,17 +406,33 @@ const EditorV3Page = () => {
                   </div>
                 </div>
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Adicionar
-                    </Button>
-                  </PopoverTrigger>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={generatingMealId === meal.id}
+                    onClick={() => handleMealGenerate(meal.id)}
+                    className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all border border-emerald-500/10"
+                  >
+                    {generatingMealId === meal.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5" />
+                    )}
+                    Gerar Refeição
+                  </Button>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Adicionar
+                      </Button>
+                    </PopoverTrigger>
                   <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
                     {/* Alimentos */}
                     <div className="p-4 border-b border-emerald-500/10">
