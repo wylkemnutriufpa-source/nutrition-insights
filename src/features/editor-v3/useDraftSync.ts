@@ -34,7 +34,23 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
   const lastUpdateRef = useRef<string | null>(null);
 
   const loadDraft = useCallback(async (isReload = false) => {
-    if (!patientId) return;
+    if (!patientId) {
+      // Sandbox mode: try loading from local storage
+      const local = localStorage.getItem(LOCAL_FALLBACK_KEY(null));
+      if (local) {
+        try {
+          const parsed = JSON.parse(local) as { meals: Meal[] };
+          setInitialMeals(parsed.meals);
+          setSnapshot(parsed.meals);
+        } catch {
+          setInitialMeals(seedMeals);
+        }
+      } else {
+        setInitialMeals(seedMeals);
+      }
+      setSyncState('idle');
+      return;
+    }
     setSyncState('loading');
 
     const draft: DraftRecord | null = await loadOrCreateDraft(patientId, seedMeals);
