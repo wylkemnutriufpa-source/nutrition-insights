@@ -176,26 +176,29 @@ const EditorV3Page = () => {
     setShowRevertConfirm(false);
   };
 
-  if (!patientId && !planId) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-background text-center">
-        <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mb-6">
-          <UserX className="w-8 h-8 text-muted-foreground" />
-        </div>
-        <h1 className="text-2xl font-bold mb-2">Paciente não selecionado</h1>
-        <p className="text-muted-foreground max-w-md mb-8">
-          Para utilizar o Editor V3, você precisa selecionar um paciente.
-        </p>
-        <Button onClick={() => navigate('/patients')} variant="default" className="gap-2">
-          <ArrowLeft className="w-4 h-4" />
-          Voltar para Pacientes
-        </Button>
-      </div>
-    );
-  }
+  // Sandbox mode check
+  const isSandbox = !patientId && !planId;
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
+      {isSandbox && (
+        <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 px-6 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top duration-500">
+          <div className="flex h-5 w-5 rounded-full bg-amber-500/20 items-center justify-center">
+            <Zap className="w-3 h-3 text-amber-500" />
+          </div>
+          <p className="text-[10px] font-black text-amber-500 uppercase tracking-widest">
+            Modo Sandbox Ativo — Testando Editor V3 Elite sem paciente vinculado
+          </p>
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={() => navigate('/patients')}
+            className="h-6 text-[9px] font-black text-amber-500/60 hover:text-amber-500 hover:bg-amber-500/10 uppercase tracking-tighter"
+          >
+            Selecionar Paciente para Salvar
+          </Button>
+        </div>
+      )}
       {/* Header V3 Elite */}
       <header className="border-b border-emerald-500/10 bg-black/80 backdrop-blur-2xl sticky top-0 z-50 px-6 py-3 flex items-center justify-between shadow-2xl shadow-emerald-500/5">
         <div className="flex items-center gap-5">
