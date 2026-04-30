@@ -302,6 +302,23 @@ const EditorV3Page = () => {
             </div>
           </div>
         </div>
+        
+        {patientId && patientsData?.patients && (
+          <div className="flex items-center gap-3 px-6 border-l border-white/10">
+            <Avatar className="h-8 w-8 border border-emerald-500/20">
+              <AvatarImage src={patientsData.patients.find(p => p.patient_id === patientId)?.profile?.avatar_url || ''} />
+              <AvatarFallback className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black">
+                {patientsData.patients.find(p => p.patient_id === patientId)?.profile?.full_name?.[0] || <User className="w-4 h-4" />}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest">Paciente</span>
+              <span className="text-xs font-bold text-white truncate max-w-[150px]">
+                {patientsData.patients.find(p => p.patient_id === patientId)?.profile?.full_name || 'Carregando...'}
+              </span>
+            </div>
+          </div>
+        )}
 
         <div className="flex items-center gap-3">
           <Button
