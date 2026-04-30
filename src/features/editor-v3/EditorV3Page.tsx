@@ -219,7 +219,8 @@ const EditorV3Page = () => {
         const suggestions = getDeterministicSuggestions(
           name, 
           dbSuggestions, 
-          selectedItem.item.measurementType
+          selectedItem.item.measurementType,
+          selectedItem.item.portionLabel
         );
 
         setSmartSubstitutions(suggestions.slice(0, 12));
