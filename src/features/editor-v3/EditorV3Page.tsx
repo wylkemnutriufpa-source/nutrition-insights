@@ -795,11 +795,25 @@ const EditorV3Page = () => {
                 ))
               )}
             </div>
+            
+            {/* Espaço para descrição da refeição */}
+            <div className="mt-6 animate-in fade-in duration-1000 delay-300">
+              <div className="flex items-center gap-2 mb-2">
+                <Edit3 className="w-3 h-3 text-emerald-500/50" />
+                <span className="text-[10px] font-black uppercase tracking-widest text-white/30">Instruções / Notas da Refeição</span>
+              </div>
+              <Textarea
+                placeholder="Ex: Beber bastante água, evitar frituras nesta refeição..."
+                value={meal.description || ''}
+                onChange={(e) => updateMealHeader(meal.id, meal.name, meal.time || '00:00', e.target.value)}
+                className="bg-emerald-500/[0.02] border-emerald-500/10 text-white/60 text-xs rounded-2xl focus:ring-emerald-500/50 min-h-[80px] resize-none p-4 placeholder:text-white/10"
+              />
+            </div>
           </section>
         );
       })}
 
-      <div className="flex justify-center pb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+      <div className="flex justify-center pb-24 animate-in fade-in slide-in-from-bottom-4 duration-1000">
         <Button
           onClick={addMeal}
           className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 hover:border-emerald-500/40 text-emerald-500 font-black gap-4 transition-all hover:scale-105 group"
@@ -811,6 +825,43 @@ const EditorV3Page = () => {
         </Button>
       </div>
     </main>
+
+    {/* Sticky Macro Summary Bar */}
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[50] w-[90%] max-w-4xl animate-in slide-in-from-bottom-10 duration-1000">
+      <div className="bg-black/80 backdrop-blur-3xl border border-emerald-500/30 rounded-3xl p-4 shadow-[0_0_50px_-10px_rgba(16,185,129,0.3)] flex items-center justify-between px-8">
+        <div className="flex items-center gap-10">
+          <div className="flex flex-col">
+            <span className="text-[9px] font-black text-white/30 uppercase tracking-[0.2em] mb-1">Total Kcal</span>
+            <span className="text-xl font-black text-white italic">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-emerald-500 not-italic">kcal</span></span>
+          </div>
+          <div className="h-8 w-px bg-white/10" />
+          <div className="flex items-center gap-8">
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-emerald-500/40 uppercase tracking-[0.2em] mb-1">Proteína</span>
+              <span className="text-sm font-black text-white">{Math.round(totalMacros.protein)}g</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-blue-500/40 uppercase tracking-[0.2em] mb-1">Carbo</span>
+              <span className="text-sm font-black text-white">{Math.round(totalMacros.carbs)}g</span>
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[9px] font-black text-amber-500/40 uppercase tracking-[0.2em] mb-1">Gordura</span>
+              <span className="text-sm font-black text-white">{Math.round(totalMacros.fat)}g</span>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex items-center gap-3">
+          <div className={cn(
+            "h-2 w-2 rounded-full animate-pulse",
+            planStatus === 'saved' ? "bg-emerald-500" : "bg-amber-500"
+          )} />
+          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+            {planStatus === 'saved' ? 'Sincronizado' : 'Alterações Pendentes'}
+          </span>
+        </div>
+      </div>
+    </div>
 
       {/* MODALS */}
       
