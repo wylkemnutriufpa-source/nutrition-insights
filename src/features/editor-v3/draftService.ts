@@ -7,6 +7,7 @@
  */
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal } from './types';
+import { normalizeMeals } from './utils/normalization';
 
 export interface DraftPayload {
   meals: Meal[];
