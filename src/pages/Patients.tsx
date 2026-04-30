@@ -317,7 +317,7 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
                 toast.error("ID do paciente não encontrado");
                 return;
               }
-              navigate(`/v3/${p.patient_id}`); 
+              navigate(`/v3/${encodeURIComponent(p.patient_id)}`); 
             }}
             size="sm"
             className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20"
