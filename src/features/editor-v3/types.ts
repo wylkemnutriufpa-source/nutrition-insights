@@ -28,6 +28,9 @@ export interface MealItem extends Food {
   quantity: number; 
   selectedUnit?: string;
   substitutions?: Food[];
+  description?: string;
+  instructions?: string;
+  ingredients?: any[];
 }
 
 export interface Meal {
