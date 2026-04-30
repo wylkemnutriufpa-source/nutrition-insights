@@ -41,6 +41,8 @@ export const useEditorState = create<EditorState>()(
 
       setPatientId: (id) => set({ patientId: id }),
 
+      hydrateMeals: (meals) => set({ meals, planStatus: 'saved' }),
+
       addMarmitaToMeal: (mealId, marmita) => {
         set((state) => ({
           meals: state.meals.map((m) =>
