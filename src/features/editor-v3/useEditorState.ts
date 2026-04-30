@@ -21,8 +21,8 @@ interface EditorState {
   removeFood: (mealId: string, instanceId: string) => void;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
   updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => void;
-  generatePlan: (goal: string, replaceExisting?: boolean) => void;
-  generateMeal: (mealId: string, goal: string) => void;
+  generatePlan: (goal: string, baseCalories: number, replaceExisting?: boolean) => void;
+  generateMeal: (mealId: string, goal: string, baseCalories?: number) => void;
   savePlan: () => Promise<void>;
   resetEditor: () => void;
 }
@@ -225,24 +225,24 @@ export const useEditorState = create<EditorState>()(
         }));
       },
 
-      generatePlan: (goal, replaceExisting = false) => {
+      generatePlan: (goal, baseCalories, replaceExisting = false) => {
         let currentMeals = get().meals;
         
         if (replaceExisting) {
           currentMeals = initialMeals.map(m => ({ ...m, items: [] }));
         }
 
-        const newMeals = generatePlanWithEngine(currentMeals, goal);
+        const newMeals = generatePlanWithEngine(currentMeals, goal, baseCalories);
         set({ meals: newMeals, planStatus: 'draft' });
-        toast.success('Plano alimentar estruturado pela Engine V3');
+        toast.success(`Plano estruturado para ${goal} com ${baseCalories}kcal`);
       },
 
-      generateMeal: (mealId, goal) => {
+      generateMeal: (mealId, goal, baseCalories = 2000) => {
         const meals = get().meals;
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
 
-        const newItems = generateMealWithEngine(meal, goal);
+        const newItems = generateMealWithEngine(meal, goal, baseCalories);
         set((state) => ({
           meals: state.meals.map(m => 
             m.id === mealId ? { ...m, items: newItems } : m
