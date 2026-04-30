@@ -1127,14 +1127,14 @@ const EditorV3Page = () => {
                     <TabsTrigger value="substitutions" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
                       <RefreshCw className="w-3.5 h-3.5 mr-2" /> Substituições
                     </TabsTrigger>
+                    <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
+                      <List className="w-3.5 h-3.5 mr-2" /> Descrição
+                    </TabsTrigger>
                     {selectedItem.item.isMarmita && (
                       <TabsTrigger value="recipe" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
                         <BookOpen className="w-3.5 h-3.5 mr-2" /> Receita
                       </TabsTrigger>
                     )}
-                    <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:text-emerald-500 data-[state=active]:border-b-2 data-[state=active]:border-emerald-500 rounded-none h-12 px-0 text-[10px] font-black uppercase tracking-widest border-b-2 border-transparent">
-                      <List className="w-3.5 h-3.5 mr-2" /> Descrição
-                    </TabsTrigger>
                   </TabsList>
                 </div>
 
