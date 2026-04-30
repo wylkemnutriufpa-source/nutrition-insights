@@ -3,7 +3,7 @@
  * Full-page trust-building experience for clinical consent.
  */
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Lock, Eye, FileText, Brain, CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -179,12 +179,12 @@ export default function ConsentRequired() {
 
         {/* Footer Links */}
         <div className="text-center mt-6 space-x-4">
-          <a href="/privacy-policy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+          <Link to="/privacy" className="text-xs text-muted-foreground hover:text-primary transition-colors">
             Política de Privacidade
-          </a>
-          <a href="/terms-of-use" className="text-xs text-muted-foreground hover:text-primary transition-colors">
+          </Link>
+          <Link to="/terms" className="text-xs text-muted-foreground hover:text-primary transition-colors">
             Termos de Uso
-          </a>
+          </Link>
         </div>
       </motion.div>
     </div>

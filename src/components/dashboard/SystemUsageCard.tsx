@@ -41,7 +41,7 @@ const FEATURE_ROUTES: Record<string, string> = {
   physical_assessment: "/physical-assessment",
   supplements: "/supplements",
   checkin_panel: "/checkin-panel",
-  import_patients: "/admin/import-patients",
+  import_patients: "/import-patients",
   document_upload: "/patients",
   chat: "/chat",
   appointments: "/appointments",

@@ -860,9 +860,9 @@ export default function Landing() {
             <div>
               <h4 className="font-display font-semibold mb-4 text-sm">Legal</h4>
               <ul className="space-y-2.5 text-sm text-muted-foreground">
-                <li><Link to="/termos-de-uso" className="hover:text-primary transition-colors">Termos de Uso</Link></li>
-                <li><Link to="/politica-de-privacidade" className="hover:text-primary transition-colors">Privacidade</Link></li>
-                <li><Link to="/exclusao-de-conta" className="hover:text-primary transition-colors">LGPD</Link></li>
+                <li><Link to="/terms" className="hover:text-primary transition-colors">Termos de Uso</Link></li>
+                <li><Link to="/privacy" className="hover:text-primary transition-colors">Privacidade</Link></li>
+                <li><Link to="/settings/account-deletion" className="hover:text-primary transition-colors">LGPD</Link></li>
               </ul>
             </div>
           </div>

@@ -1,9 +1,9 @@
 import { Link } from "react-router-dom";
 
 const links = [
-  { to: "/politica-de-privacidade", label: "Política de Privacidade" },
-  { to: "/termos-de-uso", label: "Termos de Uso" },
-  { to: "/exclusao-de-conta", label: "Exclusão de Conta" },
+  { to: "/privacy", label: "Política de Privacidade" },
+  { to: "/terms", label: "Termos de Uso" },
+  { to: "/settings/account-deletion", label: "Exclusão de Conta" },
 ];
 
 export default function InstitutionalFooter() {

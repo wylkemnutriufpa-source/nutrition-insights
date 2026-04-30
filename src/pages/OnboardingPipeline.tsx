@@ -607,7 +607,7 @@ export default function OnboardingPipeline() {
           </p>
           <div className="flex flex-col gap-2 pt-4 max-w-xs mx-auto">
             <Button asChild variant="outline">
-              <Link to="/diagnostic-status">Verificar status do meu cadastro</Link>
+              <Link to="/status">Verificar status do meu cadastro</Link>
             </Button>
             <Button onClick={() => window.location.reload()} variant="ghost" size="sm">
               <RefreshCw className="w-3 h-3 mr-2" /> Tentar novamente

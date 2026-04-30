@@ -107,7 +107,7 @@ export default function LandingHero() {
                 Criar conta gratuita
               </Button>
             </Link>
-            <Link to="/demo/profissional">
+            <Link to="/demo">
               <Button
                 size="lg"
                 variant="outline"
