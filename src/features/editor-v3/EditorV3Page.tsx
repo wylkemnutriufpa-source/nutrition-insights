@@ -1308,8 +1308,16 @@ const EditorV3Page = () => {
                   </div>
                   <div>
                     <DialogTitle className="text-xl font-black tracking-tight text-white flex items-center gap-2">
-                      {selectedItem.item.name}
-                      {selectedItem.item.isMarmita && <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase border-emerald-500/30">Marmita</Badge>}
+                      <Input
+                        value={selectedItem.item.name}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          updateMealItem(selectedItem.mealId, selectedItem.item.instanceId, { name: val });
+                          setSelectedItem(prev => prev ? { ...prev, item: { ...prev.item, name: val } } : null);
+                        }}
+                        className="bg-transparent border-0 border-b border-emerald-500/20 focus:border-emerald-500 rounded-none h-auto p-0 text-xl font-black tracking-tight text-white placeholder:text-white/20 w-full focus-visible:ring-0"
+                      />
+                      {selectedItem.item.isMarmita && <Badge className="bg-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase border-emerald-500/30 shrink-0">Marmita</Badge>}
                     </DialogTitle>
                     <DialogDescription className="text-white/40 font-bold uppercase text-[10px] tracking-widest">
                       {selectedItem.item.portionLabel} • {Math.round(selectedItem.item.kcal)} kcal (base)
