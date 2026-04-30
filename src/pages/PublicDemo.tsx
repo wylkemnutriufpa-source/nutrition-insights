@@ -201,7 +201,7 @@ export default function PublicDemo() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" onClick={() => navigate(isPro ? "/demo/paciente" : "/demo/profissional")} className="text-xs h-8 border-white/10 text-white/60 hover:text-white">
+            <Button size="sm" variant="outline" onClick={() => navigate("/demo")} className="text-xs h-8 border-white/10 text-white/60 hover:text-white">
               {isPro ? "Ver visão Paciente" : "Ver visão Profissional"}
             </Button>
             <Button size="sm" onClick={() => navigate("/auth")} className="bg-primary hover:bg-primary/90 text-primary-foreground text-xs h-8">
