@@ -347,7 +347,7 @@ export default function MealPlans() {
         else if (newPlan) {
           toast.success("Plano criado! Abrindo Builder...");
           setOpen(false);
-          navigate(`/plan-builder/${newPlan.id}`, { replace: true });
+          navigate(`/meal-plan-editor-v3?planId=${newPlan.id}`, { replace: true });
         }
       }
       setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });
