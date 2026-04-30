@@ -69,10 +69,18 @@ export const getDeterministicSuggestions = (baseItemName: string, availableFoods
     suggestions = [...suggestions, ...additional];
   }
 
-  // Priorização por measurementType compatível
+  // Priorização por measurementType e portionLabel compatíveis
   return suggestions.sort((a, b) => {
-    const aMatch = a.measurementType === baseMeasurementType ? 1 : 0;
-    const bMatch = b.measurementType === baseMeasurementType ? 1 : 0;
-    return bMatch - aMatch;
+    // Mesma unidade de medida (gram/unit/spoon)
+    const aTypeMatch = a.measurementType === baseMeasurementType ? 1 : 0;
+    const bTypeMatch = b.measurementType === baseMeasurementType ? 1 : 0;
+    
+    // Mesmo rótulo de porção (ex: "1 unidade", "100g")
+    // Note: This is an extra layer of compatibility
+    const aLabelMatch = a.portionLabel === suggestions.find(s => s.name.toLowerCase() === baseItemName.toLowerCase())?.portionLabel ? 1 : 0;
+    const bLabelMatch = b.portionLabel === suggestions.find(s => s.name.toLowerCase() === baseItemName.toLowerCase())?.portionLabel ? 1 : 0;
+
+    if (aTypeMatch !== bTypeMatch) return bTypeMatch - aTypeMatch;
+    return bLabelMatch - aLabelMatch;
   });
 };
