@@ -12,6 +12,9 @@ interface EditorState {
 
   setPatientId: (id: string) => void;
   hydrateMeals: (meals: Meal[]) => void;
+  addMeal: () => void;
+  removeMeal: (mealId: string) => void;
+  updateMealHeader: (mealId: string, name: string, time: string) => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => void;
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
@@ -44,6 +47,39 @@ export const useEditorState = create<EditorState>()(
       setPatientId: (id) => set({ patientId: id }),
 
       hydrateMeals: (meals) => set({ meals, planStatus: 'saved' }),
+
+      addMeal: () => {
+        set((state) => ({
+          meals: [
+            ...state.meals,
+            {
+              id: Math.random().toString(36).substring(2, 9),
+              name: `Nova Refeição ${state.meals.length + 1}`,
+              items: [],
+              time: '00:00',
+            },
+          ],
+          planStatus: 'draft',
+        }));
+        toast.success('Refeição adicionada!');
+      },
+
+      removeMeal: (mealId) => {
+        set((state) => ({
+          meals: state.meals.filter((m) => m.id !== mealId),
+          planStatus: 'draft',
+        }));
+        toast.success('Refeição removida');
+      },
+
+      updateMealHeader: (mealId, name, time) => {
+        set((state) => ({
+          meals: state.meals.map((m) =>
+            m.id === mealId ? { ...m, name, time } : m
+          ),
+          planStatus: 'draft',
+        }));
+      },
 
       addMarmitaToMeal: (mealId, marmita) => {
         set((state) => ({

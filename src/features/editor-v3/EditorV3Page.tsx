@@ -64,7 +64,7 @@ const EditorV3Page = () => {
     meals, setPatientId, hydrateMeals,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, generatePlan, generateMeal, savePlan, planStatus,
-    resetEditor
+    resetEditor, addMeal, removeMeal, updateMealHeader
   } = useEditorState();
 
   const {
@@ -387,21 +387,28 @@ const EditorV3Page = () => {
                   <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
                     <ChefHat className="w-6 h-6 text-emerald-500" />
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <div className="flex items-center gap-3">
-                      <h2 className="font-black text-xl tracking-tight text-white group-hover:text-emerald-400 transition-colors">
-                        {meal.name}
-                      </h2>
+                      <input
+                        className="bg-transparent border-none font-black text-xl tracking-tight text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-full max-w-[300px]"
+                        value={meal.name}
+                        onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')}
+                      />
                       {mealMacros.kcal > 0 && (
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 shrink-0">
                            <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black border-0">{Math.round(mealMacros.kcal)} kcal</Badge>
                            <Badge className="bg-white/5 text-white/40 text-[10px] font-black border-0">{Math.round(mealMacros.p)}g P</Badge>
                         </div>
                       )}
                     </div>
-                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider">
+                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider mt-1">
                       <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
-                      {meal.time}
+                      <input
+                        type="time"
+                        className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-20"
+                        value={meal.time || '00:00'}
+                        onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)}
+                      />
                     </div>
                   </div>
                 </div>
@@ -421,7 +428,20 @@ const EditorV3Page = () => {
                     )}
                     Gerar Refeição
                   </Button>
-                  
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => {
+                      if (confirm(`Remover "${meal.name}"?`)) {
+                        removeMeal(meal.id);
+                      }
+                    }}
+                    className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button
@@ -641,7 +661,19 @@ const EditorV3Page = () => {
           </section>
         );
       })}
-      </main>
+
+      <div className="flex justify-center pb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <Button
+          onClick={addMeal}
+          className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 hover:border-emerald-500/40 text-emerald-500 font-black gap-4 transition-all hover:scale-105 group"
+        >
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:rotate-90 transition-transform duration-500">
+            <Plus className="w-5 h-5" />
+          </div>
+          <span className="uppercase tracking-[0.2em] text-xs">Adicionar Nova Refeição</span>
+        </Button>
+      </div>
+    </main>
 
       {/* MODALS */}
       
