@@ -213,17 +213,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
+          const selectedRole = localStorage.getItem("fj_selected_role");
+          
           logAudit("login", "auth", session.user.id, { 
             email: session.user.email ?? "",
             flow: "login",
             auth_provider: session.user.app_metadata?.provider || "email",
+            selected_role: selectedRole,
             result: "success"
           });
+
+          // Se temos uma intenção de role (ex: via Google Login) e o usuário não tem role ainda
+          if (selectedRole && (selectedRole === "nutritionist" || selectedRole === "personal")) {
+            console.log(`[Auth:${authEventId}] Sincronizando role intencional: ${selectedRole}`);
+            // Chamamos a RPC para garantir que o perfil e tenant sejam criados
+            supabase.rpc("self_register_nutritionist" as any, {
+              _user_id: session.user.id,
+              _full_name: session.user.user_metadata?.full_name || "Profissional"
+            }).then(() => {
+              console.log(`[Auth:${authEventId}] Auto-registro concluído.`);
+              refreshProfile();
+            });
+          }
           
           localStorage.removeItem("fitjourney_ref");
           localStorage.removeItem("fitjourney_ref_at");
           localStorage.removeItem("fitjourney_invite_code");
           localStorage.removeItem("fitjourney_nutri_id");
+          localStorage.removeItem("fj_selected_role");
         }
 
         if (event === "SIGNED_OUT") {
