@@ -120,7 +120,7 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
 
   const resetDraft = async () => {
     if (draftId) await discardDraft(draftId);
-    if (patientId) localStorage.removeItem(LOCAL_FALLBACK_KEY(patientId));
+    localStorage.removeItem(LOCAL_FALLBACK_KEY(patientId));
     setDraftId(null);
     setInitialMeals(null);
     setLastSavedAt(null);
