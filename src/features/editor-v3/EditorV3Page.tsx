@@ -661,7 +661,19 @@ const EditorV3Page = () => {
           </section>
         );
       })}
-      </main>
+
+      <div className="flex justify-center pb-12 animate-in fade-in slide-in-from-bottom-4 duration-1000">
+        <Button
+          onClick={addMeal}
+          className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 hover:border-emerald-500/40 text-emerald-500 font-black gap-4 transition-all hover:scale-105 group"
+        >
+          <div className="w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center group-hover:rotate-90 transition-transform duration-500">
+            <Plus className="w-5 h-5" />
+          </div>
+          <span className="uppercase tracking-[0.2em] text-xs">Adicionar Nova Refeição</span>
+        </Button>
+      </div>
+    </main>
 
       {/* MODALS */}
       
