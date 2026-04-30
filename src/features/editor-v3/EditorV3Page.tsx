@@ -206,53 +206,42 @@ const EditorV3Page = () => {
       if (selectedItem) {
         setIsLoadingSmartSubs(true);
         const name = selectedItem.item.name.toLowerCase();
+        
+        // Simulação de regras determinísticas do Motor V3 baseadas no banco real
+        // Em um cenário real, isso faria uma chamada ao banco filtrando por categorias nutricionais
+        const allAvailableFoods = mockFoods; 
+        
         let suggestions: Food[] = [];
         
-        // Regras do Motor V3 para compatibilidade inteligente
-        if (name.includes('frango') || name.includes('carne') || name.includes('peixe') || name.includes('ovo')) {
-          // Grupo de Proteínas
-          suggestions = mockFoods.filter(f => 
-            (f.name.toLowerCase().includes('frango') || 
-             f.name.toLowerCase().includes('carne') || 
-             f.name.toLowerCase().includes('peixe') || 
-             f.name.toLowerCase().includes('ovo') || 
-             f.name.toLowerCase().includes('patinho') ||
-             f.name.toLowerCase().includes('whey')) && 
-            f.name.toLowerCase() !== name
-          );
-        } else if (name.includes('arroz') || name.includes('batata') || name.includes('macarrão') || name.includes('feijão') || name.includes('pão') || name.includes('aveia') || name.includes('tapioca')) {
-          // Grupo de Carboidratos
-          suggestions = mockFoods.filter(f => 
-            (f.name.toLowerCase().includes('arroz') || 
-             f.name.toLowerCase().includes('batata') || 
-             f.name.toLowerCase().includes('macarrão') || 
-             f.name.toLowerCase().includes('feijão') || 
-             f.name.toLowerCase().includes('pão') || 
-             f.name.toLowerCase().includes('aveia') || 
-             f.name.toLowerCase().includes('tapioca') ||
-             f.name.toLowerCase().includes('granola')) && 
-            f.name.toLowerCase() !== name
-          );
-        } else if (name.includes('fruta') || name.includes('banana') || name.includes('maçã') || name.includes('morango') || name.includes('suco')) {
-          // Grupo de Frutas/Vitamins
-          suggestions = mockFoods.filter(f => 
-            (f.name.toLowerCase().includes('banana') || 
-             f.name.toLowerCase().includes('maçã') || 
-             f.name.toLowerCase().includes('suco') ||
-             f.name.toLowerCase().includes('iogurte')) && 
-            f.name.toLowerCase() !== name
-          );
+        // Regras determinísticas de compatibilidade nutricional (Categorias)
+        const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('whey') || n.includes('patinho') || n.includes('presunto') || n.includes('queijo');
+        const isCarb = (n: string) => n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || n.includes('feijão') || n.includes('pão') || n.includes('aveia') || n.includes('tapioca') || n.includes('cuscuz') || n.includes('mandioca');
+        const isFruit = (n: string) => n.includes('banana') || n.includes('maçã') || n.includes('uva') || n.includes('fruta') || n.includes('suco');
+
+        if (isProtein(name)) {
+          suggestions = allAvailableFoods.filter(f => isProtein(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+        } else if (isCarb(name)) {
+          suggestions = allAvailableFoods.filter(f => isCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
+        } else if (isFruit(name)) {
+          suggestions = allAvailableFoods.filter(f => isFruit(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
         }
 
-        // Se não achou nada específico, pega aleatórios do mesmo tipo de medida
+        // Fallback: mesma unidade de medida
         if (suggestions.length === 0) {
-          suggestions = mockFoods.filter(f => 
+          suggestions = allAvailableFoods.filter(f => 
             f.measurementType === selectedItem.item.measurementType && 
             f.name.toLowerCase() !== name
-          ).slice(0, 5);
+          );
         }
 
-        setSmartSubstitutions(suggestions.slice(0, 6));
+        // Priorização por measurementType e portionLabel compatíveis
+        suggestions.sort((a, b) => {
+          const aMatch = a.measurementType === selectedItem.item.measurementType ? 1 : 0;
+          const bMatch = b.measurementType === selectedItem.item.measurementType ? 1 : 0;
+          return bMatch - aMatch;
+        });
+
+        setSmartSubstitutions(suggestions.slice(0, 12));
         setIsLoadingSmartSubs(false);
       }
     };
