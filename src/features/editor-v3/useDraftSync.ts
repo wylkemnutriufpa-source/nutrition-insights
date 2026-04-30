@@ -85,7 +85,6 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
 
   const scheduleSave = (meals: Meal[]) => {
     pendingMealsRef.current = meals;
-    pendingMealsRef.current = meals;
 
     try {
       localStorage.setItem(LOCAL_FALLBACK_KEY(patientId), JSON.stringify({ meals }));
