@@ -1515,7 +1515,7 @@ export default function PatientDetail() {
                           });
                           if (error) throw error;
                           toast.success("Plano criado! Abrindo Builder...");
-                          navigate(`/plan-builder/${newPlan.id}`, { replace: true });
+                          navigate(`/meal-plan-editor-v3?planId=${newPlan.id}`, { replace: true });
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao criar plano");
                         }
