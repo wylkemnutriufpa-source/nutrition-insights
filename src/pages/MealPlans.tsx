@@ -615,7 +615,7 @@ export default function MealPlans() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="icon" className="h-9 w-9" title="Builder Híbrido"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/plan-builder/${p.id}`); }}>
+                        onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor-v3?planId=${p.id}`); }}>
                         <Zap className="w-4 h-4 text-primary" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor V3 (Premium)"
