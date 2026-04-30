@@ -114,13 +114,13 @@ export async function loadOrCreateDraft(
 
 /**
  * Salva o conteúdo atual do editor no draft.
- * Idempotente — pode ser chamado em debounce.
+ * Retorna o registro atualizado para controle de updated_at.
  */
-export async function saveDraft(draftId: string, meals: Meal[]): Promise<boolean> {
+export async function saveDraft(draftId: string, meals: Meal[]): Promise<DraftRecord | null> {
   const macros = computeMacros(meals);
   const payload: DraftPayload = { meals, version: DRAFT_PAYLOAD_VERSION };
 
-  const { error } = await supabase
+  const { data, error } = await supabase
     .from('v3_drafts' as any)
     .update({
       payload,
@@ -129,13 +129,15 @@ export async function saveDraft(draftId: string, meals: Meal[]): Promise<boolean
       meta_carbs: macros.carbs,
       meta_fat: macros.fat,
     })
-    .eq('id', draftId);
+    .eq('id', draftId)
+    .select('*')
+    .single();
 
   if (error) {
     console.warn('[v3-draft] save failed — keeping local fallback');
-    return false;
+    return null;
   }
-  return true;
+  return data as unknown as DraftRecord;
 }
 
 /**
