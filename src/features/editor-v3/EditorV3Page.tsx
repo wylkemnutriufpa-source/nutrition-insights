@@ -1057,84 +1057,85 @@ const EditorV3Page = () => {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-1041: 
-1042:       {/* Passo 1: Seleção de Tipo de Dieta */}
-1043:       <Dialog open={showDietTypeModal} onOpenChange={setShowDietTypeModal}>
-1044:         <DialogContent className="sm:max-w-[500px] border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
-1045:           <DialogHeader>
-1046:             <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-xl">
-1047:               <Layers className="w-6 h-6 text-emerald-500" />
-1048:               Tipo de Estratégia
-1049:             </DialogTitle>
-1050:             <DialogDescription className="text-white/40 font-bold">
-1051:               Selecione o objetivo principal para o Motor V3 estruturar o plano.
-1052:             </DialogDescription>
-1053:           </DialogHeader>
-1054:           <div className="py-6 grid grid-cols-1 gap-3">
-1055:             {[
-1056:               { id: 'weight-loss', label: 'Emagrecimento', desc: 'Foco em déficit calórico e saciedade', icon: <Zap className="w-4 h-4 text-amber-500" /> },
-1057:               { id: 'muscle-gain', label: 'Hipertrofia', desc: 'Foco em superávit e síntese proteica', icon: <Activity className="w-4 h-4 text-emerald-500" /> },
-1058:               { id: 'maintenance', label: 'Manutenção', desc: 'Equilíbrio calórico e performance', icon: <RefreshCw className="w-4 h-4 text-blue-500" /> },
-1059:               { id: 'ketogenic', label: 'Cetogênica', desc: 'Muito baixo carbo, gorduras como energia', icon: <PieChart className="w-4 h-4 text-purple-500" /> },
-1060:               { id: 'low-carb', label: 'Low Carb', desc: 'Redução moderada de carboidratos', icon: <Utensils className="w-4 h-4 text-rose-500" /> },
-1061:             ].map((type) => (
-1062:               <Button 
-1063:                 key={type.id}
-1064:                 onClick={() => handleSelectDietType(type.id)}
-1065:                 variant="outline"
-1066:                 className="h-auto py-4 flex items-center justify-start gap-4 border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/20 text-left transition-all"
-1067:               >
-1068:                 <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center border border-white/5">
-1069:                   {type.icon}
-1070:                 </div>
-1071:                 <div className="flex flex-col">
-1072:                   <span className="font-black text-white uppercase tracking-widest text-[10px]">{type.label}</span>
-1073:                   <span className="text-xs text-white/40">{type.desc}</span>
-1074:                 </div>
-1075:               </Button>
-1076:             ))}
-1077:           </div>
-1078:         </DialogContent>
-1079:       </Dialog>
-1080: 
-1081:       {/* Passo 2: Seleção de Base Calórica */}
-1082:       <Dialog open={showCalorieModal} onOpenChange={setShowCalorieModal}>
-1083:         <DialogContent className="sm:max-w-[500px] border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
-1084:           <DialogHeader>
-1085:             <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-xl">
-1086:               <Activity className="w-6 h-6 text-emerald-500" />
-1087:               Base Calórica do Plano
-1088:             </DialogTitle>
-1089:             <DialogDescription className="text-white/40 font-bold">
-1090:               Escolha uma das bases calóricas sugeridas pelo Motor V3.
-1091:             </DialogDescription>
-1092:           </DialogHeader>
-1093:           <div className="py-6 grid grid-cols-2 gap-4">
-1094:             {[1600, 2000, 2400, 3000].map((kcal) => (
-1095:               <Button 
-1096:                 key={kcal}
-1097:                 onClick={() => handleExecuteGeneration(kcal)}
-1098:                 variant="outline"
-1099:                 className="h-24 flex flex-col items-center justify-center gap-2 border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/40 group transition-all"
-1100:               >
-1101:                 <span className="text-2xl font-black text-white group-hover:text-emerald-400">{kcal}</span>
-1102:                 <span className="font-black text-white/30 uppercase tracking-widest text-[9px]">Kcal / Dia</span>
-1103:               </Button>
-1104:             ))}
-1105:             
-1106:             {patientId && (
-1107:               <Button 
-1108:                 onClick={() => handleExecuteGeneration(2200)} // Mocked for now, but visible only for patients
-1109:                 variant="outline"
-1110:                 className="col-span-2 h-auto py-4 flex flex-col items-center gap-1 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-center"
-1111:               >
-1112:                 <span className="font-black text-emerald-400 uppercase tracking-widest text-[10px]">Cálculo Personalizado (Baseado em Avaliação)</span>
-1113:                 <span className="text-xs text-white/60">Utilizar dados de anamnese e avaliação física para precisão máxima</span>
-1114:               </Button>
-1115:             )}
-1116:           </div>
-1117:         </DialogContent>
-1118:       </Dialog>
+
+      {/* Passo 1: Seleção de Tipo de Dieta */}
+      <Dialog open={showDietTypeModal} onOpenChange={setShowDietTypeModal}>
+        <DialogContent className="sm:max-w-[500px] border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-xl">
+              <Layers className="w-6 h-6 text-emerald-500" />
+              Tipo de Estratégia
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              Selecione o objetivo principal para o Motor V3 estruturar o plano.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 grid grid-cols-1 gap-3">
+            {[
+              { id: 'weight-loss', label: 'Emagrecimento', desc: 'Foco em déficit calórico e saciedade', icon: <Zap className="w-4 h-4 text-amber-500" /> },
+              { id: 'muscle-gain', label: 'Hipertrofia', desc: 'Foco em superávit e síntese proteica', icon: <Activity className="w-4 h-4 text-emerald-500" /> },
+              { id: 'maintenance', label: 'Manutenção', desc: 'Equilíbrio calórico e performance', icon: <RefreshCw className="w-4 h-4 text-blue-500" /> },
+              { id: 'ketogenic', label: 'Cetogênica', desc: 'Muito baixo carbo, gorduras como energia', icon: <PieChart className="w-4 h-4 text-purple-500" /> },
+              { id: 'low-carb', label: 'Low Carb', desc: 'Redução moderada de carboidratos', icon: <Utensils className="w-4 h-4 text-rose-500" /> },
+            ].map((type) => (
+              <Button 
+                key={type.id}
+                onClick={() => handleSelectDietType(type.id)}
+                variant="outline"
+                className="h-auto py-4 flex items-center justify-start gap-4 border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/20 text-left transition-all"
+              >
+                <div className="w-10 h-10 rounded-xl bg-black/40 flex items-center justify-center border border-white/5">
+                  {type.icon}
+                </div>
+                <div className="flex flex-col">
+                  <span className="font-black text-white uppercase tracking-widest text-[10px]">{type.label}</span>
+                  <span className="text-xs text-white/40">{type.desc}</span>
+                </div>
+              </Button>
+            ))}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Passo 2: Seleção de Base Calórica */}
+      <Dialog open={showCalorieModal} onOpenChange={setShowCalorieModal}>
+        <DialogContent className="sm:max-w-[500px] border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-xl">
+              <Activity className="w-6 h-6 text-emerald-500" />
+              Base Calórica do Plano
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              Escolha uma das bases calóricas sugeridas pelo Motor V3.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 grid grid-cols-2 gap-4">
+            {[1600, 2000, 2400, 3000].map((kcal) => (
+              <Button 
+                key={kcal}
+                onClick={() => handleExecuteGeneration(kcal)}
+                variant="outline"
+                className="h-24 flex flex-col items-center justify-center gap-2 border-white/10 bg-white/5 hover:bg-emerald-500/10 hover:border-emerald-500/40 group transition-all"
+              >
+                <span className="text-2xl font-black text-white group-hover:text-emerald-400">{kcal}</span>
+                <span className="font-black text-white/30 uppercase tracking-widest text-[9px]">Kcal / Dia</span>
+              </Button>
+            ))}
+            
+            {patientId && (
+              <Button 
+                onClick={() => handleExecuteGeneration(2200)} // Mocked for now, but visible only for patients
+                variant="outline"
+                className="col-span-2 h-auto py-4 flex flex-col items-center gap-1 border-emerald-500/30 bg-emerald-500/10 hover:bg-emerald-500/20 text-center"
+              >
+                <span className="font-black text-emerald-400 uppercase tracking-widest text-[10px]">Cálculo Personalizado (Baseado em Avaliação)</span>
+                <span className="text-xs text-white/60">Utilizar dados de anamnese e avaliação física para precisão máxima</span>
+              </Button>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
+
       <Dialog open={showPatientSelector} onOpenChange={setShowPatientSelector}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
           <DialogHeader className="p-6 pb-2">
