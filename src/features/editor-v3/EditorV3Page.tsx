@@ -505,8 +505,11 @@ const EditorV3Page = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          disabled={item.locked || (item.quantity ?? 1) <= 1}
-                          onClick={() => updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) - 1)}
+                          disabled={item.locked || (item.quantity ?? 1) <= 0}
+                          onClick={() => {
+                            const step = item.measurementType === 'gram' ? 25 : item.measurementType === 'ml' ? 50 : 1;
+                            updateFoodQuantity(meal.id, item.instanceId, Math.max(0, (item.quantity ?? 1) - step));
+                          }}
                           className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
                         >
                           <Minus className="w-3.5 h-3.5" />
@@ -514,15 +517,18 @@ const EditorV3Page = () => {
                         
                         <div className="px-3 text-center min-w-[80px]">
                           <p className="font-black text-sm text-white">
-                            {formatPortion(item.quantity ?? 1, item.portionUnit)}
+                            {formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)}
                           </p>
                         </div>
-
+ 
                         <Button
                           variant="ghost"
                           size="icon"
                           disabled={item.locked}
-                          onClick={() => updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) + 1)}
+                          onClick={() => {
+                            const step = item.measurementType === 'gram' ? 25 : item.measurementType === 'ml' ? 50 : 1;
+                            updateFoodQuantity(meal.id, item.instanceId, (item.quantity ?? 1) + step);
+                          }}
                           className="h-8 w-8 text-white/40 hover:text-emerald-500 hover:bg-emerald-500/10 rounded-lg transition-all"
                         >
                           <Plus className="w-3.5 h-3.5" />
