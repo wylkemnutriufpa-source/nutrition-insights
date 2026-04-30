@@ -43,4 +43,5 @@ export interface Meal {
   selectionMode?: 'day' | 'week';
   time?: string;
   icon?: string;
+  description?: string;
 }
