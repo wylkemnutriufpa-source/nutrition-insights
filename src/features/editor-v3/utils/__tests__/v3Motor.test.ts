@@ -5,8 +5,11 @@ import { Food } from '../../types';
 const mockAvailableFoods: Food[] = [
   { id: '1', name: 'Frango Grelhado', kcal: 160, protein: 31, carbs: 0, fat: 3.5, measurementType: 'gram', portionLabel: '100g' } as Food,
   { id: '2', name: 'Carne Vermelha', kcal: 250, protein: 26, carbs: 0, fat: 15, measurementType: 'gram', portionLabel: '100g' } as Food,
+  { id: '2b', name: 'Peixe Tilápia', kcal: 120, protein: 20, carbs: 0, fat: 2, measurementType: 'gram', portionLabel: '100g' } as Food,
+  { id: '2c', name: 'Ovo cozido', kcal: 70, protein: 6, carbs: 0.5, fat: 5, measurementType: 'unit', portionLabel: '1 unidade' } as Food,
   { id: '3', name: 'Arroz Branco', kcal: 130, protein: 2, carbs: 28, fat: 0.3, measurementType: 'gram', portionLabel: '100g' } as Food,
   { id: '4', name: 'Batata Doce', kcal: 86, protein: 1.6, carbs: 20, fat: 0.1, measurementType: 'gram', portionLabel: '100g' } as Food,
+  { id: '4b', name: 'Macarrão Integral', kcal: 150, protein: 5, carbs: 30, fat: 1, measurementType: 'gram', portionLabel: '100g' } as Food,
   { id: '5', name: 'Banana', kcal: 89, protein: 1.1, carbs: 23, fat: 0.3, measurementType: 'unit', portionLabel: '1 unidade' } as Food,
   { id: '6', name: 'Maçã', kcal: 52, protein: 0.3, carbs: 14, fat: 0.2, measurementType: 'unit', portionLabel: '1 unidade' } as Food,
 ];
