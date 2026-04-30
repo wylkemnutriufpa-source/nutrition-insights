@@ -1,0 +1,150 @@
+/**
+ * Editor V3 — Draft Service
+ * ----------------------------------------------------------------
+ * Persistência ISOLADA dos rascunhos do Editor V3 em `v3_drafts`.
+ * NUNCA escreve em `meal_plans` / `meal_plan_items` diretamente.
+ * A promoção (draft -> plano oficial) acontece em `promoteDraft.ts`.
+ */
+import { supabase } from '@/integrations/supabase/client';
+import type { Meal } from './types';
+
+export interface DraftPayload {
+  meals: Meal[];
+  version: number;
+}
+
+export interface DraftRecord {
+  id: string;
+  patient_id: string;
+  nutritionist_id: string;
+  tenant_id: string;
+  payload: DraftPayload;
+  meta_kcal: number | null;
+  meta_protein: number | null;
+  meta_carbs: number | null;
+  meta_fat: number | null;
+  draft_status: 'editing' | 'promoted' | 'discarded';
+  promoted_meal_plan_id: string | null;
+  updated_at: string;
+}
+
+const DRAFT_PAYLOAD_VERSION = 1;
+
+async function getActiveTenant(): Promise<string | null> {
+  const { data, error } = await supabase.rpc('get_user_active_tenant');
+  if (error) {
+    console.error('[v3-draft] get_user_active_tenant error');
+    return null;
+  }
+  return (data as string | null) ?? null;
+}
+
+function computeMacros(meals: Meal[]) {
+  let kcal = 0, protein = 0, carbs = 0, fat = 0;
+  for (const meal of meals) {
+    for (const item of meal.items) {
+      const q = item.quantity ?? 1;
+      kcal += (item.calories ?? 0) * q;
+      protein += (item.protein ?? 0) * q;
+      carbs += (item.carbs ?? 0) * q;
+      fat += (item.fat ?? 0) * q;
+    }
+  }
+  return { kcal, protein, carbs, fat };
+}
+
+/**
+ * Carrega o draft `editing` ativo do par (nutricionista atual, paciente).
+ * Se não existir, cria um novo a partir das `seedMeals`.
+ */
+export async function loadOrCreateDraft(
+  patientId: string,
+  seedMeals: Meal[]
+): Promise<DraftRecord | null> {
+  const { data: userRes } = await supabase.auth.getUser();
+  const nutritionistId = userRes.user?.id;
+  if (!nutritionistId) return null;
+
+  // 1) Tenta achar um draft em edição
+  const { data: existing, error: findErr } = await supabase
+    .from('v3_drafts' as any)
+    .select('*')
+    .eq('nutritionist_id', nutritionistId)
+    .eq('patient_id', patientId)
+    .eq('draft_status', 'editing')
+    .maybeSingle();
+
+  if (findErr) {
+    console.warn('[v3-draft] load failed, will fallback to local');
+    return null;
+  }
+  if (existing) return existing as unknown as DraftRecord;
+
+  // 2) Cria um novo
+  const tenantId = await getActiveTenant();
+  if (!tenantId) {
+    console.warn('[v3-draft] no active tenant — cannot create draft');
+    return null;
+  }
+
+  const payload: DraftPayload = { meals: seedMeals, version: DRAFT_PAYLOAD_VERSION };
+  const macros = computeMacros(seedMeals);
+
+  const { data: created, error: insErr } = await supabase
+    .from('v3_drafts' as any)
+    .insert({
+      patient_id: patientId,
+      nutritionist_id: nutritionistId,
+      tenant_id: tenantId,
+      payload,
+      meta_kcal: macros.kcal,
+      meta_protein: macros.protein,
+      meta_carbs: macros.carbs,
+      meta_fat: macros.fat,
+    })
+    .select('*')
+    .single();
+
+  if (insErr) {
+    console.error('[v3-draft] create failed');
+    return null;
+  }
+  return created as unknown as DraftRecord;
+}
+
+/**
+ * Salva o conteúdo atual do editor no draft.
+ * Idempotente — pode ser chamado em debounce.
+ */
+export async function saveDraft(draftId: string, meals: Meal[]): Promise<boolean> {
+  const macros = computeMacros(meals);
+  const payload: DraftPayload = { meals, version: DRAFT_PAYLOAD_VERSION };
+
+  const { error } = await supabase
+    .from('v3_drafts' as any)
+    .update({
+      payload,
+      meta_kcal: macros.kcal,
+      meta_protein: macros.protein,
+      meta_carbs: macros.carbs,
+      meta_fat: macros.fat,
+    })
+    .eq('id', draftId);
+
+  if (error) {
+    console.warn('[v3-draft] save failed — keeping local fallback');
+    return false;
+  }
+  return true;
+}
+
+/**
+ * Marca um draft como descartado (usado pelo Resetar).
+ * Não apaga histórico — preserva para auditoria.
+ */
+export async function discardDraft(draftId: string): Promise<void> {
+  await supabase
+    .from('v3_drafts' as any)
+    .update({ draft_status: 'discarded' })
+    .eq('id', draftId);
+}
