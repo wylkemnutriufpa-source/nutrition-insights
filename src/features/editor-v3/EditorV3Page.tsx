@@ -4,7 +4,8 @@ import { useEditorState } from './useEditorState';
 import { useDraftSync } from './useDraftSync';
 import { promoteDraftToMealPlan } from './promoteDraft';
 import { loadOrCreateDraft } from './draftService';
-import { searchFoods, searchMarmitas, searchTemplates } from './utils/dataFetcher';
+import { searchFoods, searchMarmitas, searchTemplates, getCompatibleFoods } from './utils/dataFetcher';
+import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -200,46 +201,27 @@ const EditorV3Page = () => {
     }, 400);
     return () => clearTimeout(timer);
   }, [swapSearch]);
-  // Carregar sugestões inteligentes ao abrir o modal
   useEffect(() => {
     const loadSmartSuggestions = async () => {
       if (selectedItem) {
         setIsLoadingSmartSubs(true);
-        const name = selectedItem.item.name.toLowerCase();
+        const name = selectedItem.item.name;
         
-        // Simulação de regras determinísticas do Motor V3 baseadas no banco real
-        // Em um cenário real, isso faria uma chamada ao banco filtrando por categorias nutricionais
-        const allAvailableFoods = mockFoods; 
+        let category: 'protein' | 'carb' | 'fruit' | 'any' = 'any';
+        if (isProtein(name)) category = 'protein';
+        else if (isCarb(name)) category = 'carb';
+        else if (isFruit(name)) category = 'fruit';
+
+        // Busca real no banco de dados
+        const dbSuggestions = await getCompatibleFoods(category, name);
         
-        let suggestions: Food[] = [];
-        
-        // Regras determinísticas de compatibilidade nutricional (Categorias)
-        const isProtein = (n: string) => n.includes('frango') || n.includes('carne') || n.includes('peixe') || n.includes('ovo') || n.includes('whey') || n.includes('patinho') || n.includes('presunto') || n.includes('queijo');
-        const isCarb = (n: string) => n.includes('arroz') || n.includes('batata') || n.includes('macarrão') || n.includes('feijão') || n.includes('pão') || n.includes('aveia') || n.includes('tapioca') || n.includes('cuscuz') || n.includes('mandioca');
-        const isFruit = (n: string) => n.includes('banana') || n.includes('maçã') || n.includes('uva') || n.includes('fruta') || n.includes('suco');
-
-        if (isProtein(name)) {
-          suggestions = allAvailableFoods.filter(f => isProtein(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-        } else if (isCarb(name)) {
-          suggestions = allAvailableFoods.filter(f => isCarb(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-        } else if (isFruit(name)) {
-          suggestions = allAvailableFoods.filter(f => isFruit(f.name.toLowerCase()) && f.name.toLowerCase() !== name);
-        }
-
-        // Fallback: mesma unidade de medida
-        if (suggestions.length === 0) {
-          suggestions = allAvailableFoods.filter(f => 
-            f.measurementType === selectedItem.item.measurementType && 
-            f.name.toLowerCase() !== name
-          );
-        }
-
-        // Priorização por measurementType e portionLabel compatíveis
-        suggestions.sort((a, b) => {
-          const aMatch = a.measurementType === selectedItem.item.measurementType ? 1 : 0;
-          const bMatch = b.measurementType === selectedItem.item.measurementType ? 1 : 0;
-          return bMatch - aMatch;
-        });
+        // Aplica regras determinísticas do Motor V3
+        const suggestions = getDeterministicSuggestions(
+          name, 
+          dbSuggestions, 
+          selectedItem.item.measurementType,
+          selectedItem.item.portionLabel
+        );
 
         setSmartSubstitutions(suggestions.slice(0, 12));
         setIsLoadingSmartSubs(false);
@@ -1410,19 +1392,22 @@ const EditorV3Page = () => {
                           })}
                         </div>
                       ) : (
-                        <div className="text-center py-6 border-2 border-dashed border-white/5 rounded-2xl bg-white/[0.01]">
-                          <AlertTriangle className="w-6 h-6 text-amber-500/40 mx-auto mb-2" />
-                          <p className="text-[10px] font-black uppercase text-white/20 tracking-widest mb-3">Nenhuma sugestão compatível encontrada</p>
+                        <div className="flex flex-col items-center justify-center py-10 px-4 text-center border-2 border-dashed border-emerald-500/10 rounded-2xl bg-emerald-500/[0.02]">
+                          <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
+                            <Search className="w-6 h-6 text-emerald-500/40" />
+                          </div>
+                          <h3 className="text-sm font-bold text-white mb-1">Nenhuma sugestão inteligente</h3>
+                          <p className="text-[10px] font-medium text-white/40 max-w-[200px] mb-6">
+                            Não encontramos substitutos automáticos compatíveis para este item no momento.
+                          </p>
                           <Button 
-                            variant="outline" 
-                            size="sm" 
                             onClick={() => {
                               const input = document.querySelector('input[placeholder="Buscar alimento para trocar..."]') as HTMLInputElement;
                               if (input) input.focus();
                             }}
-                            className="h-8 text-[9px] font-black uppercase tracking-widest bg-white/5 border-white/10 hover:bg-white/10"
+                            className="bg-emerald-500 hover:bg-emerald-600 text-black font-black uppercase tracking-widest text-[10px] h-10 px-6 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95"
                           >
-                            <Search className="w-3 h-3 mr-2" /> Buscar Manualmente
+                            <Plus className="w-3.5 h-3.5 mr-2" /> Buscar Manualmente
                           </Button>
                         </div>
                       )}
@@ -1564,27 +1549,26 @@ const EditorV3Page = () => {
                     </div>
 
                     <div className="bg-emerald-500/5 border border-emerald-500/10 rounded-2xl p-6">
-                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-4">Resumo Nutricional (Total)</p>
+                      <p className="text-[10px] font-black uppercase tracking-widest text-emerald-500/60 mb-4">Resumo Nutricional (Total para {selectedItem.item.quantity}{selectedItem.item.measurementType === 'gram' ? 'g' : selectedItem.item.measurementType === 'ml' ? 'ml' : ' unidades'})</p>
                       <div className="grid grid-cols-4 gap-4">
                         {(() => {
-                          const q = selectedItem.item.quantity ?? 1;
-                          const factor = (selectedItem.item.measurementType === 'gram' || selectedItem.item.measurementType === 'ml') ? 0.01 : 1;
+                          const macros = calculateItemMacros(selectedItem.item, selectedItem.item.quantity);
                           return (
                             <>
                               <div className="text-center">
-                                <p className="text-2xl font-black text-white">{Math.round(q * (selectedItem.item.calories ?? 0) * factor)}</p>
+                                <p className="text-2xl font-black text-white">{Math.round(macros.kcal)}</p>
                                 <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Kcal</p>
                               </div>
                               <div className="text-center">
-                                <p className="text-2xl font-black text-emerald-400">{Math.round(q * (selectedItem.item.protein ?? 0) * factor)}g</p>
+                                <p className="text-2xl font-black text-emerald-400">{Math.round(macros.protein)}g</p>
                                 <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Prot</p>
                               </div>
                               <div className="text-center">
-                                <p className="text-2xl font-black text-blue-400">{Math.round(q * (selectedItem.item.carbs ?? 0) * factor)}g</p>
+                                <p className="text-2xl font-black text-blue-400">{Math.round(macros.carbs)}g</p>
                                 <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Carb</p>
                               </div>
                               <div className="text-center">
-                                <p className="text-2xl font-black text-amber-400">{Math.round(q * (selectedItem.item.fat ?? 0) * factor)}g</p>
+                                <p className="text-2xl font-black text-amber-400">{Math.round(macros.fat)}g</p>
                                 <p className="text-[8px] font-black uppercase text-white/30 tracking-widest">Gord</p>
                               </div>
                             </>

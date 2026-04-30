@@ -128,3 +128,37 @@ export const getFoodMacrosByName = async (names: string[]): Promise<Record<strin
   });
   return result;
 };
+
+export const getCompatibleFoods = async (category: 'protein' | 'carb' | 'fruit' | 'any', currentName: string): Promise<Food[]> => {
+  let query = supabase.from("food_database").select("*");
+  
+  if (category === 'protein') {
+    query = query.or('name.ilike.%frango%,name.ilike.%carne%,name.ilike.%peixe%,name.ilike.%ovo%,name.ilike.%whey%,name.ilike.%patinho%,name.ilike.%queijo%');
+  } else if (category === 'carb') {
+    query = query.or('name.ilike.%arroz%,name.ilike.%batata%,name.ilike.%macarrão%,name.ilike.%feijão%,name.ilike.%pão%,name.ilike.%aveia%,name.ilike.%tapioca%');
+  } else if (category === 'fruit') {
+    query = query.or('name.ilike.%banana%,name.ilike.%maçã%,name.ilike.%uva%,name.ilike.%laranja%,name.ilike.%mamão%,name.ilike.%abacaxi%');
+  }
+
+  const { data, error } = await query.neq('name', currentName).limit(15);
+
+  if (error) {
+    console.error("Error fetching compatible foods:", error);
+    return [];
+  }
+
+  return (data || []).map((f: any) => ({
+    id: f.id,
+    name: f.name,
+    kcal: f.calories,
+    calories: f.calories,
+    protein: f.protein,
+    carbs: f.carbs,
+    fat: f.fat,
+    portionValue: 1,
+    portionUnitLabel: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
+    portionUnit: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
+    portionLabel: f.serving_size || "100g",
+    measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
+  }));
+};
