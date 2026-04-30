@@ -102,6 +102,23 @@ export const useEditorState = create<EditorState>()(
           planStatus: 'draft',
         }));
       },
+      
+      updateFoodQuantity: (mealId, instanceId, quantity) => {
+        if (quantity < 1) return;
+        set((state) => ({
+          meals: state.meals.map((m) =>
+            m.id === mealId
+              ? {
+                  ...m,
+                  items: m.items.map((i) =>
+                    i.instanceId === instanceId ? { ...i, quantity } : i
+                  ),
+                }
+              : m
+          ),
+          planStatus: 'draft',
+        }));
+      },
 
       generatePlan: (goal) => {
         const currentMeals = get().meals;
