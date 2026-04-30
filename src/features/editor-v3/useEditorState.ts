@@ -11,6 +11,7 @@ interface EditorState {
   planStatus: 'draft' | 'saving' | 'saved';
 
   setPatientId: (id: string) => void;
+  addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[]) => void;
   addMeal: () => void;
   removeMeal: (mealId: string) => void;
@@ -46,6 +47,22 @@ export const useEditorState = create<EditorState>()(
       planStatus: 'draft',
 
       setPatientId: (id) => set({ patientId: id }),
+
+      addMealWithHeader: (name, time) => {
+        set((state) => ({
+          meals: [
+            ...state.meals,
+            {
+              id: Math.random().toString(36).substring(2, 9),
+              name,
+              items: [],
+              time,
+            },
+          ],
+          planStatus: 'draft',
+        }));
+        toast.success(`Refeição "${name}" adicionada!`);
+      },
 
       hydrateMeals: (meals) => set({ meals, planStatus: 'saved' }),
 

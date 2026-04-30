@@ -16,6 +16,7 @@ export interface Food {
   portionUnit: string; // Keep for backward compatibility
   portionLabel: string; // Keep for backward compatibility
   measurementType: 'unit' | 'gram' | 'spoon' | 'ml';
+  category?: string;
   isMarmita?: boolean;
   locked?: boolean;
   imageUrl?: string;

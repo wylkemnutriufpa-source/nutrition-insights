@@ -86,7 +86,7 @@ const EditorV3Page = () => {
     meals, setPatientId, hydrateMeals,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
-    resetEditor, addMeal, removeMeal, updateMealHeader
+    resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader
   } = useEditorState();
 
   const {
@@ -123,8 +123,14 @@ const EditorV3Page = () => {
   // Estados para Modais Premium
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
+  const [showFoodsModal, setShowFoodsModal] = useState(false);
+  const [showMarmitasModal, setShowMarmitasModal] = useState(false);
+  const [activeMealId, setActiveMealId] = useState<string | null>(null);
   const [newMealName, setNewMealName] = useState('');
   const [newMealTime, setNewMealTime] = useState('00:00');
+
+  // Categorias de Alimentos para o Modal
+  const [activeFoodCategory, setActiveFoodCategory] = useState<string>('all');
 
   // Estados para busca de dados reais
   const [foodSearch, setFoodSearch] = useState('');
@@ -397,6 +403,73 @@ const EditorV3Page = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
+      {/* Gráfico de Macros Global - Topo */}
+      <div className="bg-black/40 border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
+        <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-4">
+             <div className="flex flex-col">
+               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Status Nutricional</span>
+               <div className="flex items-center gap-6">
+                  <div className="flex flex-col">
+                    <span className="text-xl font-black text-white">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-white/40 font-bold ml-1 uppercase">kcal</span></span>
+                  </div>
+                  <div className="h-8 w-px bg-white/10" />
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-emerald-400">{Math.round(totalMacros.protein)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Prot</span></span>
+                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (totalMacros.protein * 4 / totalMacros.kcal) * 100 || 0)}%` }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-blue-400">{Math.round(totalMacros.carbs)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Carb</span></span>
+                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (totalMacros.carbs * 4 / totalMacros.kcal) * 100 || 0)}%` }} />
+                    </div>
+                  </div>
+                  <div className="flex flex-col">
+                    <span className="text-sm font-black text-amber-400">{Math.round(totalMacros.fat)}g <span className="text-[8px] text-white/30 font-bold ml-0.5 uppercase">Gord</span></span>
+                    <div className="w-16 h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: `${Math.min(100, (totalMacros.fat * 9 / totalMacros.kcal) * 100 || 0)}%` }} />
+                    </div>
+                  </div>
+               </div>
+             </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowResetConfirm(true)}
+              className="h-9 border-white/5 bg-white/5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all"
+            >
+              <RotateCcw className="w-3.5 h-3.5 mr-2" /> Resetar
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              disabled={isGeneratingGlobal}
+              onClick={() => {
+                const hasItems = meals.some(m => m.items.length > 0);
+                if (hasItems) setShowAIGenerateConfirm(true);
+                else handleGlobalGenerate(false);
+              }}
+              className="h-9 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Gerar Plano
+            </Button>
+            <Button
+              size="sm"
+              onClick={handlePromotionRequest}
+              disabled={promoting || !draftId}
+              className="h-9 bg-emerald-500 hover:bg-emerald-400 text-black text-[10px] font-black uppercase tracking-widest rounded-xl transition-all px-6 shadow-lg shadow-emerald-500/20"
+            >
+              <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
+            </Button>
+          </div>
+        </div>
+      </div>
+
       {isSandbox && (
         <div className="bg-amber-500/10 border-b border-amber-500/20 py-2 px-6 flex items-center justify-center gap-3 animate-in fade-in slide-in-from-top duration-500">
           <div className="flex h-5 w-5 rounded-full bg-amber-500/20 items-center justify-center">
@@ -520,20 +593,6 @@ const EditorV3Page = () => {
               <Layers className="w-3.5 h-3.5" />
               Templates
             </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-white/20 hover:text-white/60 rounded-xl"
-            >
-              <History className="w-4 h-4" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-9 w-9 text-white/20 hover:text-white/60 rounded-xl"
-            >
-              <Maximize2 className="w-4 h-4" />
-            </Button>
           </div>
 
           <Button
@@ -544,37 +603,6 @@ const EditorV3Page = () => {
           >
             <Users className="w-3.5 h-3.5" />
             {patientId ? 'Paciente' : 'Escolher'}
-          </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={isGeneratingGlobal}
-            onClick={() => {
-              const hasItems = meals.some(m => m.items.length > 0);
-              if (hasItems) {
-                setShowAIGenerateConfirm(true);
-              } else {
-                handleGlobalGenerate(false);
-              }
-            }}
-            className="gap-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-[11px] font-black tracking-wide transition-all rounded-lg min-w-[140px]"
-          >
-            {isGeneratingGlobal ? (
-              <Loader2 className="w-3.5 h-3.5 animate-spin" />
-            ) : (
-              <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
-            )}
-            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO (ENGINE V3)'}
-          </Button>
-          <Button
-            size="sm"
-            onClick={handlePromotionRequest}
-            disabled={promoting || !draftId}
-            className="gap-2 font-black text-[11px] tracking-wide bg-emerald-500 hover:bg-emerald-400 text-black shadow-lg shadow-emerald-500/20 transition-all active:scale-[0.98] rounded-lg px-5"
-          >
-            {promoting ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
-            {promoting ? 'SALVANDO...' : 'SALVAR PLANO'}
           </Button>
         </div>
       </header>
@@ -644,8 +672,44 @@ const EditorV3Page = () => {
                     ) : (
                       <Sparkles className="w-3.5 h-3.5" />
                     )}
-                    Gerar com IA
+                    Otimizar
                   </Button>
+
+                  <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setActiveMealId(meal.id);
+                        setShowFoodsModal(true);
+                      }}
+                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all gap-1.5"
+                    >
+                      <Apple className="w-3 h-3" /> Alimento
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setActiveMealId(meal.id);
+                        setShowMarmitasModal(true);
+                      }}
+                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all gap-1.5"
+                    >
+                      <Utensils className="w-3 h-3" /> Marmita
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => {
+                        setActiveMealId(meal.id);
+                        setShowTemplatesModal(true);
+                      }}
+                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all gap-1.5"
+                    >
+                      <Layers className="w-3 h-3" /> Template
+                    </Button>
+                  </div>
 
                   <Button
                     variant="ghost"
@@ -659,111 +723,6 @@ const EditorV3Page = () => {
                   >
                     <Trash2 className="w-4 h-4" />
                   </Button>
-
-                  <Popover>
-                    <PopoverTrigger asChild>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                        Adicionar
-                      </Button>
-                    </PopoverTrigger>
-                    <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
-                    {/* Alimentos */}
-                    <div className="p-4 border-b border-emerald-500/10">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Apple className="w-3 h-3" /> Alimentos (TACO/USDA)
-                      </p>
-                      <div className="relative mb-3">
-                        <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/30" />
-                        <Input 
-                          placeholder="Buscar no banco..." 
-                          value={foodSearch}
-                          onChange={(e) => setFoodSearch(e.target.value)}
-                          className="h-8 pl-8 text-[10px] bg-white/5 border-white/10 rounded-lg focus:ring-emerald-500/50"
-                        />
-                        {isSearchingFoods && <Loader2 className="absolute right-2.5 top-1/2 -translate-y-1/2 w-3 h-3 text-emerald-500 animate-spin" />}
-                      </div>
-                      <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1 custom-scrollbar">
-                        {foods.length > 0 ? (
-                          foods.map((f) => (
-                            <button
-                              key={f.id}
-                              onClick={() => addFoodToMeal(meal.id, f)}
-                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                            >
-                              <div className="flex flex-col">
-                                <span className="font-bold text-white/80 group-hover/item:text-white line-clamp-1">{f.name}</span>
-                                <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{f.portionLabel}</span>
-                              </div>
-                              <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0 ml-2">
-                                {f.kcal} kcal
-                              </span>
-                            </button>
-                          ))
-                        ) : foodSearch.length >= 2 && !isSearchingFoods ? (
-                          <p className="text-[10px] text-center py-4 text-white/20 font-bold uppercase tracking-widest">Nenhum alimento encontrado</p>
-                        ) : foodSearch.length < 2 && (
-                          <p className="text-[10px] text-center py-4 text-white/20 font-bold uppercase tracking-widest">Digite para buscar</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Marmitas */}
-                    <div className="p-4 border-b border-emerald-500/10">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Utensils className="w-3 h-3" /> Minhas Marmitas
-                      </p>
-                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                        {marmitas.length > 0 ? (
-                          marmitas.map((m) => (
-                            <button
-                              key={m.id}
-                              onClick={() => addMarmitaToMeal(meal.id, m)}
-                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all flex justify-between items-center group/item"
-                            >
-                              <div className="flex flex-col truncate pr-2">
-                                <span className="font-bold text-white/80 group-hover/item:text-white truncate">{m.name}</span>
-                                <span className="text-[10px] font-bold text-white/30 uppercase mt-0.5">{m.portionLabel}</span>
-                              </div>
-                              <span className="text-[10px] font-black text-white/30 group-hover/item:text-emerald-500 transition-colors uppercase shrink-0">
-                                {m.kcal} kcal
-                              </span>
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-[10px] text-center py-2 text-white/20 font-bold uppercase tracking-widest">Sem marmitas cadastradas</p>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Templates */}
-                    <div className="p-4 bg-emerald-500/[0.02]">
-                      <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
-                        <Layers className="w-3 h-3" /> Templates de Refeição
-                      </p>
-                      <div className="space-y-1.5 max-h-40 overflow-y-auto pr-1 custom-scrollbar">
-                        {templates.length > 0 ? (
-                          templates.map((t) => (
-                            <button
-                              key={t.id}
-                              onClick={() => applyTemplateToMeal(meal.id, t)}
-                              className="w-full text-left text-xs p-3 rounded-xl hover:bg-emerald-500/10 transition-all group/item"
-                            >
-                              <p className="font-bold text-white/80 group-hover/item:text-white line-clamp-1">{t.name}</p>
-                              <p className="text-[10px] text-white/30 group-hover/item:text-white/50 leading-relaxed mt-0.5 line-clamp-2">{t.description}</p>
-                            </button>
-                          ))
-                        ) : (
-                          <p className="text-[10px] text-center py-2 text-white/20 font-bold uppercase tracking-widest">Carregando templates...</p>
-                        )}
-                      </div>
-                    </div>
-                    </PopoverContent>
-                  </Popover>
               </div>
             </div>
 
@@ -1198,6 +1157,277 @@ const EditorV3Page = () => {
               </Button>
             )}
           </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modais Premium Fullscreen */}
+      
+      {/* Alimentos Modal */}
+      <Dialog open={showFoodsModal} onOpenChange={setShowFoodsModal}>
+        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+          <DialogHeader className="p-6 pb-2">
+            <div className="flex items-center justify-between w-full pr-8">
+              <div>
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
+                  <Apple className="w-7 h-7 text-emerald-500" />
+                  Biblioteca de Alimentos
+                </DialogTitle>
+                <DialogDescription className="text-white/40 font-bold">
+                  Explore a base TACO/USDA para adicionar à sua refeição.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <div className="px-6 py-4 space-y-4">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <Input
+                placeholder="Pesquisar por nome ou categoria..."
+                value={foodSearch}
+                onChange={(e) => setFoodSearch(e.target.value)}
+                className="pl-10 bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-emerald-500/50 transition-all h-12 rounded-xl"
+              />
+              {isSearchingFoods && <Loader2 className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-500 animate-spin" />}
+            </div>
+
+            <Tabs defaultValue="all" className="w-full" onValueChange={setActiveFoodCategory}>
+              <TabsList className="bg-white/5 w-full justify-start p-1 rounded-xl h-auto flex-wrap gap-1">
+                <TabsTrigger value="all" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Todos</TabsTrigger>
+                <TabsTrigger value="proteina" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Proteínas</TabsTrigger>
+                <TabsTrigger value="carboidrato" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Carbos</TabsTrigger>
+                <TabsTrigger value="fruta" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Frutas</TabsTrigger>
+                <TabsTrigger value="vegetal" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Vegetais</TabsTrigger>
+                <TabsTrigger value="gordura" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Gorduras</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
+          <ScrollArea className="flex-1 px-4">
+            <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2 pb-6">
+              {foods
+                .filter(f => activeFoodCategory === 'all' || (f as any).category === activeFoodCategory)
+                .map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => {
+                    if (activeMealId) addFoodToMeal(activeMealId, f);
+                    setShowFoodsModal(false);
+                    toast.success(`${f.name} adicionado!`);
+                  }}
+                  className="group relative flex flex-col items-start p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden"
+                >
+                  <div className="flex justify-between items-start w-full mb-1">
+                    <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-1">{f.name}</span>
+                    <Badge className="bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter mb-3">{f.portionLabel}</span>
+                  
+                  <div className="flex items-center gap-4 w-full">
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Prot</span>
+                      <span className="text-[10px] font-black text-emerald-400/70">{f.protein}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Carb</span>
+                      <span className="text-[10px] font-black text-blue-400/70">{f.carbs}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[8px] font-black text-white/20 uppercase">Gord</span>
+                      <span className="text-[10px] font-black text-amber-400/70">{f.fat}g</span>
+                    </div>
+                  </div>
+                  
+                  <Plus className="absolute bottom-4 right-4 w-4 h-4 text-emerald-500/20 group-hover:text-emerald-500 group-hover:scale-125 transition-all" />
+                </button>
+              ))}
+              
+              {foods.length === 0 && !isSearchingFoods && (
+                <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/10 italic font-medium">
+                  <Apple className="w-12 h-12 mb-4 opacity-10" />
+                  <p>Digite para buscar em nossa base de dados clínica.</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Marmitas Modal */}
+      <Dialog open={showMarmitasModal} onOpenChange={setShowMarmitasModal}>
+        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-blue-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+          <DialogHeader className="p-6 pb-2">
+            <div className="flex items-center justify-between w-full pr-8">
+              <div>
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
+                  <Utensils className="w-7 h-7 text-blue-500" />
+                  Minhas Marmitas
+                </DialogTitle>
+                <DialogDescription className="text-white/40 font-bold">
+                  Refeições completas prontas para montagem rápida.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 px-4 mt-6">
+            <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2 pb-6">
+              {marmitas.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    if (activeMealId) addMarmitaToMeal(activeMealId, m);
+                    setShowMarmitasModal(false);
+                    toast.success(`${m.name} adicionada!`);
+                  }}
+                  className="group relative flex items-center p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left gap-4"
+                >
+                  <div className="w-14 h-14 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
+                    {m.imageUrl ? (
+                      <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover rounded-xl" />
+                    ) : (
+                      <Utensils className="w-6 h-6 text-blue-500" />
+                    )}
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-black text-white group-hover:text-blue-400 transition-colors line-clamp-1">{m.name}</span>
+                    <span className="text-[10px] font-bold text-white/30 uppercase mb-2">{m.kcal} kcal • Refeição Pronta</span>
+                    <div className="flex gap-3">
+                      <span className="text-[9px] font-black text-emerald-400/50">{m.protein}g P</span>
+                      <span className="text-[9px] font-black text-blue-400/50">{m.carbs}g C</span>
+                      <span className="text-[9px] font-black text-amber-400/50">{m.fat}g G</span>
+                    </div>
+                  </div>
+                  <Plus className="w-4 h-4 text-blue-500/20 group-hover:text-blue-500 transition-all mr-2" />
+                </button>
+              ))}
+              
+              {marmitas.length === 0 && (
+                <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/10 italic font-medium text-center px-10">
+                  <CloudOff className="w-12 h-12 mb-4 opacity-10" />
+                  <p>Você ainda não tem marmitas cadastradas. Crie receitas no painel de marmitas.</p>
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      {/* Adicionar Refeição Modal */}
+      <Dialog open={showAddMealModal} onOpenChange={setShowAddMealModal}>
+        <DialogContent className="sm:max-w-[425px] border-emerald-500/20 bg-black/95 backdrop-blur-2xl text-white">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-xl font-black uppercase tracking-tight">
+              <Plus className="w-5 h-5 text-emerald-500" />
+              Nova Refeição
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              Defina o nome e horário da nova refeição.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <Label htmlFor="name" className="text-[10px] font-black uppercase tracking-widest text-white/40 px-1">Nome da Refeição</Label>
+              <Input
+                id="name"
+                placeholder="Ex: Almoço de Domingo, Lanche Pré-Treino..."
+                value={newMealName}
+                onChange={(e) => setNewMealName(e.target.value)}
+                className="bg-white/5 border-white/10 text-white placeholder:text-white/20 focus:border-emerald-500/50 h-11 rounded-xl"
+              />
+            </div>
+            <div className="grid gap-2">
+              <Label htmlFor="time" className="text-[10px] font-black uppercase tracking-widest text-white/40 px-1">Horário</Label>
+              <Input
+                id="time"
+                type="time"
+                value={newMealTime}
+                onChange={(e) => setNewMealTime(e.target.value)}
+                className="bg-white/5 border-white/10 text-white focus:border-emerald-500/50 h-11 rounded-xl"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                if (!newMealName) {
+                  toast.error("Dé um nome para a refeição");
+                  return;
+                }
+                addMealWithHeader(newMealName, newMealTime);
+                setShowAddMealModal(false);
+                setNewMealName('');
+              }}
+              className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl w-full h-11"
+            >
+              Criar Refeição
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Templates Modal */}
+      <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
+        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-amber-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+          <DialogHeader className="p-6 pb-2">
+            <div className="flex items-center justify-between w-full pr-8">
+              <div>
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
+                  <Layers className="w-7 h-7 text-amber-500" />
+                  Templates de Refeição
+                </DialogTitle>
+                <DialogDescription className="text-white/40 font-bold">
+                  Modelos estruturados para ganho de velocidade.
+                </DialogDescription>
+              </div>
+            </div>
+          </DialogHeader>
+
+          <ScrollArea className="flex-1 px-4 mt-6">
+            <div className="p-2 grid grid-cols-1 gap-2 pb-6">
+              {templates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    if (activeMealId) {
+                      applyTemplateToMeal(activeMealId, t);
+                    } else {
+                      // Se aberto pelo header, cria uma nova refeição com o nome do template
+                      addMealWithHeader(t.name, "08:00");
+                      // Como o state é async e não temos o ID da nova refeição aqui, 
+                      // o ideal seria uma action atômica no store, mas vamos aplicar na última.
+                      setTimeout(() => {
+                        const state = useEditorState.getState();
+                        const lastMeal = state.meals[state.meals.length - 1];
+                        if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
+                      }, 50);
+                    }
+                    setShowTemplatesModal(false);
+                    toast.success(`Template ${t.name} aplicado!`);
+                  }}
+                  className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                    <Clock className="w-6 h-6 text-amber-500" />
+                  </div>
+                  <div className="flex flex-col flex-1">
+                    <span className="font-black text-white group-hover:text-amber-400 transition-colors text-lg">{t.name}</span>
+                    <p className="text-[11px] font-medium text-white/40 leading-relaxed mb-3">{t.description}</p>
+                    <div className="flex items-center gap-4">
+                       <span className="text-[10px] font-black text-amber-500/60 uppercase">{t.items.length} ITENS</span>
+                       <div className="flex gap-2">
+                         {t.items.slice(0, 3).map((item, idx) => (
+                           <Badge key={idx} variant="outline" className="text-[8px] h-4 bg-white/5 border-white/10 text-white/40">{item.name}</Badge>
+                         ))}
+                         {t.items.length > 3 && <span className="text-[8px] text-white/20 font-black">+{t.items.length - 3}</span>}
+                       </div>
+                    </div>
+                  </div>
+                  <Zap className="w-5 h-5 text-amber-500/20 group-hover:text-amber-500 group-hover:animate-pulse transition-all mr-2 mt-1" />
+                </button>
+              ))}
+            </div>
+          </ScrollArea>
         </DialogContent>
       </Dialog>
 
