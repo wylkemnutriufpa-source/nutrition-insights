@@ -311,7 +311,14 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
         <ScoreRing score={score} />
         <div className="flex items-center gap-1">
           <Button
-            onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}`); }}
+            onClick={(e) => { 
+              e.stopPropagation(); 
+              if (!p.patient_id) {
+                toast.error("ID do paciente não encontrado");
+                return;
+              }
+              navigate(`/v3/${encodeURIComponent(p.patient_id)}`); 
+            }}
             size="sm"
             className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20"
           >
