@@ -58,6 +58,7 @@ export const MealPlanEditorV3: React.FC = () => {
     viewMode, setViewMode, setPatientId, patientId, activeDay, saveAsFavorite
   } = useMealEditorV3Store();
   
+  const navigate = useNavigate();
   const [isGenerateModalOpen, setIsGenerateModalOpen] = useState(false);
   const [isValidationModalOpen, setIsValidationModalOpen] = useState(false);
   const [isPatientSearchOpen, setIsPatientSearchOpen] = useState(false);
