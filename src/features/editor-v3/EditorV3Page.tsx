@@ -63,7 +63,7 @@ const EditorV3Page = () => {
   const {
     meals, setPatientId, hydrateMeals,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
-    removeFood, updateFoodQuantity, generatePlan, savePlan, planStatus,
+    removeFood, updateFoodQuantity, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor
   } = useEditorState();
 
@@ -78,6 +78,9 @@ const EditorV3Page = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRevertConfirm, setShowRevertConfirm] = useState(false);
   const [showPatientSelector, setShowPatientSelector] = useState(false);
+  const [showAIGenerateConfirm, setShowAIGenerateConfirm] = useState(false);
+  const [generatingMealId, setGeneratingMealId] = useState<string | null>(null);
+  const [isGeneratingGlobal, setIsGeneratingGlobal] = useState(false);
   const [patientSearch, setPatientSearch] = useState('');
 
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
@@ -193,6 +196,22 @@ const EditorV3Page = () => {
   const handleRevert = () => {
     revertToLastSaved();
     setShowRevertConfirm(false);
+  };
+
+  const handleGlobalGenerate = async (replace: boolean) => {
+    setIsGeneratingGlobal(true);
+    setShowAIGenerateConfirm(false);
+    // Pequeno delay para efeito visual de "processamento"
+    await new Promise(resolve => setTimeout(resolve, 800));
+    generatePlan('muscle-gain', replace);
+    setIsGeneratingGlobal(false);
+  };
+
+  const handleMealGenerate = async (mealId: string) => {
+    setGeneratingMealId(mealId);
+    await new Promise(resolve => setTimeout(resolve, 600));
+    generateMeal(mealId, 'muscle-gain');
+    setGeneratingMealId(null);
   };
 
   // Sandbox mode check
@@ -314,11 +333,23 @@ const EditorV3Page = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => generatePlan('muscle-gain')}
-            className="gap-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-[11px] font-black tracking-wide transition-all rounded-lg"
+            disabled={isGeneratingGlobal}
+            onClick={() => {
+              const hasItems = meals.some(m => m.items.length > 0);
+              if (hasItems) {
+                setShowAIGenerateConfirm(true);
+              } else {
+                handleGlobalGenerate(false);
+              }
+            }}
+            className="gap-2 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-[11px] font-black tracking-wide transition-all rounded-lg min-w-[140px]"
           >
-            <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
-            GERAR COM IA
+            {isGeneratingGlobal ? (
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+            ) : (
+              <Sparkles className="w-3.5 h-3.5 fill-emerald-500/20" />
+            )}
+            {isGeneratingGlobal ? 'PROCESSANDO...' : 'GERAR PLANO COM IA'}
           </Button>
           <Button
             size="sm"
@@ -375,18 +406,34 @@ const EditorV3Page = () => {
                   </div>
                 </div>
 
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
-                    >
-                      <Plus className="w-3.5 h-3.5" />
-                      Adicionar
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    disabled={generatingMealId === meal.id}
+                    onClick={() => handleMealGenerate(meal.id)}
+                    className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all border border-emerald-500/10"
+                  >
+                    {generatingMealId === meal.id ? (
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <Sparkles className="w-3.5 h-3.5" />
+                    )}
+                    Gerar Refeição
+                  </Button>
+                  
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest border-emerald-500/20 bg-black hover:bg-emerald-500/5 hover:border-emerald-500/40 transition-all"
+                      >
+                        <Plus className="w-3.5 h-3.5" />
+                        Adicionar
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent align="end" className="w-80 p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl shadow-2xl">
                     {/* Alimentos */}
                     <div className="p-4 border-b border-emerald-500/10">
                       <p className="text-[9px] font-black uppercase tracking-[0.2em] text-emerald-500/60 mb-3 flex items-center gap-2">
@@ -456,6 +503,7 @@ const EditorV3Page = () => {
                   </PopoverContent>
                 </Popover>
               </div>
+            </div>
 
             <div className="grid gap-5">
               {meal.items.length === 0 ? (
@@ -691,7 +739,44 @@ const EditorV3Page = () => {
         </DialogContent>
       </Dialog>
       
-      {/* Seletor de Paciente */}
+      {/* Geração com IA - Confirmação */}
+      <Dialog open={showAIGenerateConfirm} onOpenChange={setShowAIGenerateConfirm}>
+        <DialogContent className="sm:max-w-[500px] border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-xl">
+              <Sparkles className="w-6 h-6 text-emerald-500" />
+              Geração Inteligente Engine V3
+            </DialogTitle>
+            <DialogDescription className="text-white/40 font-bold">
+              Já existem itens no seu plano alimentar. Como deseja proceder?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-6 flex flex-col gap-4">
+            <Button 
+              onClick={() => handleGlobalGenerate(false)}
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-start gap-1 border-emerald-500/20 bg-emerald-500/5 hover:bg-emerald-500/10 text-left"
+            >
+              <span className="font-black text-emerald-400 uppercase tracking-widest text-[10px]">Manter e Complementar</span>
+              <span className="text-xs text-white/40">A IA preencherá apenas as refeições que estão vazias.</span>
+            </Button>
+            
+            <Button 
+              onClick={() => handleGlobalGenerate(true)}
+              variant="outline"
+              className="h-auto py-4 flex flex-col items-start gap-1 border-rose-500/20 bg-rose-500/5 hover:bg-rose-500/10 text-left"
+            >
+              <span className="font-black text-rose-400 uppercase tracking-widest text-[10px]">Substituir Tudo</span>
+              <span className="text-xs text-white/40 font-bold">Aviso: Isso removerá todos os alimentos atuais e criará um novo plano do zero.</span>
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowAIGenerateConfirm(false)} className="text-white/40 hover:text-white">
+              Cancelar
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       <Dialog open={showPatientSelector} onOpenChange={setShowPatientSelector}>
         <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl">
           <DialogHeader className="p-6 pb-2">
