@@ -184,7 +184,6 @@ const EditorV3Page = () => {
   };
 
   // Sandbox mode check
-  const isSandbox = !patientId && !planId;
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
