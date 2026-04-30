@@ -82,7 +82,7 @@ export default defineConfig(({ mode }) => ({
     versionJsonPlugin(),
     mode === "development" && componentTagger(),
     mode === "production" && VitePWA({
-      registerType: "autoUpdate",
+      registerType: "prompt",
       injectRegister: "auto",
       includeAssets: ["favicon.png", "pwa-192x192.png", "pwa-512x512.png"],
       workbox: {
