@@ -476,19 +476,19 @@ const EditorV3Page = () => {
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {item.calories} <span className="text-white/20">kcal</span>
+                              {Math.round((item.quantity ?? 1) * (item.calories ?? 0))} <span className="text-white/20">kcal</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-blue-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {item.protein}g <span className="text-white/20">Prot</span>
+                              {Math.round((item.quantity ?? 1) * (item.protein ?? 0))}g <span className="text-white/20">Prot</span>
                             </p>
                           </div>
                           <div className="flex items-center gap-1.5">
                             <span className="w-1.5 h-1.5 rounded-full bg-purple-500/40" />
                             <p className="text-[11px] font-bold text-white/50">
-                              {item.carbs}g <span className="text-white/20">Carb</span>
+                              {Math.round((item.quantity ?? 1) * (item.carbs ?? 0))}g <span className="text-white/20">Carb</span>
                             </p>
                           </div>
                         </div>
