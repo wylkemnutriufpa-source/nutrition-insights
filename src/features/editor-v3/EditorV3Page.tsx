@@ -35,7 +35,7 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
@@ -90,7 +90,7 @@ const EditorV3Page = () => {
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
-    duplicateMeal, reorderMeal
+    duplicateMeal, reorderMeal, updateMealImage
   } = useEditorState();
 
   const {
@@ -152,6 +152,25 @@ const EditorV3Page = () => {
   const showFoodsModal = showMainAddModal && activeTab === 'food';
   const showTemplatesModal = showMainAddModal && activeTab === 'template';
   const showMarmitasModal = showMainAddModal && activeTab === 'marmita';
+  const showVisualLibraryModal = showMainAddModal && activeTab === 'visual';
+
+  const [visualLibrarySearch, setVisualLibrarySearch] = useState('');
+  const [visualLibraryCategories] = useState([
+    { id: 'all', label: 'Todos' },
+    { id: 'cafe_da_manha', label: 'Café da Manhã' },
+    { id: 'lanches', label: 'Lanches' },
+    { id: 'almoco', label: 'Almoço' },
+    { id: 'jantar', label: 'Jantar' },
+    { id: 'ceia', label: 'Ceia' },
+    { id: 'outros', label: 'Outros' }
+  ]);
+  const [selectedVisualCategory, setSelectedVisualCategory] = useState('all');
+
+  const openVisualLibraryForMeal = (mealId: string) => {
+    setActiveMealId(mealId);
+    setActiveTab('visual');
+    setShowMainAddModal(true);
+  };
 
   const [activeFoodCategory, setActiveFoodCategory] = useState<string>('all');
 
@@ -198,13 +217,13 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (foodSearch.length >= 2) {
+      if (foodSearch.length >= 2 || (activeTab === 'visual' && foodSearch.length === 0)) {
         setIsSearchingFoods(true);
         setIsSearchingVisualLibrary(true);
         
         const [foodResults, visualResults] = await Promise.all([
           searchFoods(foodSearch),
-          searchVisualLibrary(foodSearch)
+          searchVisualLibrary(foodSearch, activeTab === 'visual' ? selectedVisualCategory : undefined)
         ]);
         
         setFoods(foodResults);
@@ -218,7 +237,7 @@ const EditorV3Page = () => {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [foodSearch]);
+  }, [foodSearch, selectedVisualCategory, activeTab]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -635,26 +654,57 @@ const EditorV3Page = () => {
       <main className="flex-1 p-6 max-w-5xl mx-auto w-full space-y-12 pb-32">
         {meals.map((meal, index) => (
           <section key={meal.id} className="group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
-            <div className="flex items-center justify-between mb-6">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500">
-                  <ChefHat className="w-6 h-6 text-emerald-500" />
+            <div className="flex flex-col mb-6">
+              {meal.imageUrl && (
+                <div className="relative w-full h-48 mb-6 rounded-3xl overflow-hidden group/img">
+                  <img src={meal.imageUrl} alt={meal.name} className="w-full h-full object-cover" />
+                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover/img:opacity-100 transition-opacity flex items-center justify-center backdrop-blur-[2px]">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => openVisualLibraryForMeal(meal.id)}
+                      className="bg-white text-black font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 hover:text-black border-0 gap-2"
+                    >
+                      <ImageIcon className="w-4 h-4" /> Alterar Imagem
+                    </Button>
+                  </div>
+                  {meal.imageSource === 'manual' && (
+                    <Badge className="absolute top-4 left-4 bg-emerald-500 text-black font-black uppercase tracking-tighter text-[9px] border-0">
+                      Imagem Personalizada
+                    </Badge>
+                  )}
                 </div>
-                <div className="flex-1">
-                  <input className="bg-transparent border-none font-black text-xl tracking-tight text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-full max-w-[300px]" value={meal.name} onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')} />
-                  <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider mt-1">
-                    <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
-                    <input type="time" className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-20" value={meal.time || '00:00'} onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)} />
+              )}
+              
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shadow-inner group-hover:scale-110 transition-transform duration-500 relative">
+                    <ChefHat className="w-6 h-6 text-emerald-500" />
+                    {!meal.imageUrl && (
+                      <button 
+                        onClick={() => openVisualLibraryForMeal(meal.id)}
+                        className="absolute -top-1 -right-1 w-6 h-6 rounded-full bg-black border border-white/10 flex items-center justify-center text-white/40 hover:text-emerald-500 hover:border-emerald-500/50 transition-all shadow-xl"
+                        title="Adicionar imagem à refeição"
+                      >
+                        <ImageIcon className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <input className="bg-transparent border-none font-black text-xl tracking-tight text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-full max-w-[300px]" value={meal.name} onChange={(e) => updateMealHeader(meal.id, e.target.value, meal.time || '00:00')} />
+                    <div className="flex items-center gap-2 text-white/40 text-xs font-bold uppercase tracking-wider mt-1">
+                      <Clock className="w-3.5 h-3.5 text-emerald-500/50" />
+                      <input type="time" className="bg-transparent border-none text-white/40 focus:text-white focus:outline-none focus:ring-1 focus:ring-emerald-500/50 rounded px-1 -ml-1 w-20" value={meal.time || '00:00'} onChange={(e) => updateMealHeader(meal.id, meal.name, e.target.value)} />
+                    </div>
                   </div>
                 </div>
-              </div>
-              <div className="flex items-center gap-2">
-                <Button variant="ghost" size="sm" disabled={generatingMealId === meal.id} onClick={() => handleMealGenerate(meal.id)} className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all border border-emerald-500/10">
-                  {generatingMealId === meal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar Refeição
-                </Button>
-                <Button variant="ghost" size="icon" onClick={() => duplicateMeal(meal.id)} className="rounded-xl h-9 w-9 text-blue-500/40 hover:text-blue-500 hover:bg-blue-500/10 transition-all border border-blue-500/10"><Layers className="w-4 h-4" /></Button>
-                <Button variant="ghost" size="sm" onClick={() => { setActiveMealId(meal.id); setShowFoodsModal(true); }} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-1.5"><Plus className="w-3 h-3" /> Adicionar</Button>
-                <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
+                <div className="flex items-center gap-2">
+                  <Button variant="ghost" size="sm" disabled={generatingMealId === meal.id} onClick={() => handleMealGenerate(meal.id)} className="rounded-xl gap-2 text-[10px] font-black uppercase tracking-widest text-emerald-500/60 hover:text-emerald-500 hover:bg-emerald-500/10 transition-all border border-emerald-500/10">
+                    {generatingMealId === meal.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />} Gerar Refeição
+                  </Button>
+                  <Button variant="ghost" size="icon" onClick={() => duplicateMeal(meal.id)} className="rounded-xl h-9 w-9 text-blue-500/40 hover:text-blue-500 hover:bg-blue-500/10 transition-all border border-blue-500/10"><Layers className="w-4 h-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => { setActiveMealId(meal.id); setShowFoodsModal(true); }} className="h-9 px-4 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-xl transition-all gap-1.5"><Plus className="w-3 h-3" /> Adicionar</Button>
+                  <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
+                </div>
               </div>
             </div>
             <div className="grid gap-5">
@@ -712,15 +762,38 @@ const EditorV3Page = () => {
             </Tabs>
 
             {(activeTab === 'food' || activeTab === 'visual') && (
-              <div className="relative mb-6">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
-                <Input 
-                  placeholder={activeTab === 'food' ? "Pesquisar alimentos..." : "Pesquisar banco de imagens..."}
-                  value={foodSearch} 
-                  onChange={(e) => setFoodSearch(e.target.value)} 
-                  className="pl-12 h-14 bg-white/5 border-white/10 text-white rounded-2xl text-lg placeholder:text-white/10 focus:border-emerald-500/50 transition-all shadow-2xl" 
-                />
-                {(isSearchingFoods || isSearchingVisualLibrary) && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 animate-spin" />}
+              <div className="flex flex-col gap-4 mb-6">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                  <Input 
+                    placeholder={activeTab === 'food' ? "Pesquisar alimentos..." : "Pesquisar banco de imagens..."}
+                    value={foodSearch} 
+                    onChange={(e) => setFoodSearch(e.target.value)} 
+                    className="pl-12 h-14 bg-white/5 border-white/10 text-white rounded-2xl text-lg placeholder:text-white/10 focus:border-emerald-500/50 transition-all shadow-2xl" 
+                  />
+                  {(isSearchingFoods || isSearchingVisualLibrary) && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 animate-spin" />}
+                </div>
+                
+                {activeTab === 'visual' && (
+                  <ScrollArea className="w-full pb-2">
+                    <div className="flex gap-2">
+                      {visualLibraryCategories.map((cat) => (
+                        <button
+                          key={cat.id}
+                          onClick={() => setSelectedVisualCategory(cat.id)}
+                          className={cn(
+                            "px-4 h-9 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all whitespace-nowrap border",
+                            selectedVisualCategory === cat.id 
+                              ? "bg-rose-500 text-black border-rose-500" 
+                              : "bg-white/5 text-white/40 border-white/5 hover:border-white/20 hover:text-white/60"
+                          )}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </ScrollArea>
+                )}
               </div>
             )}
           </div>
@@ -782,13 +855,15 @@ const EditorV3Page = () => {
                 <button
                   key={v.id}
                   onClick={() => {
-                    if (activeMealId) addFoodToMeal(activeMealId, v);
-                    setShowMainAddModal(false);
-                    toast.success(`${v.name} adicionado!`);
+                    if (activeMealId) {
+                      updateMealImage(activeMealId, v.imageUrl!, 'manual');
+                      setShowMainAddModal(false);
+                      toast.success(`Imagem da refeição atualizada!`);
+                    }
                   }}
-                  className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                  className="group relative flex flex-col items-start p-4 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
                 >
-                  <div className="w-full h-32 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all">
+                  <div className="w-full h-40 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all">
                     {v.imageUrl ? (
                       <img src={v.imageUrl} alt={v.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
                     ) : (
@@ -797,22 +872,14 @@ const EditorV3Page = () => {
                       </div>
                     )}
                   </div>
-                  <div className="flex justify-between items-start w-full mb-2">
-                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{v.name}</span>
+                  <div className="flex justify-between items-start w-full px-2">
+                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-sm uppercase tracking-tight">{(v as any).display_name || v.name}</span>
                   </div>
-                  <Badge className="bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase border-0 mb-4">{v.kcal} kcal</Badge>
-                  
-                  <div className="flex items-center gap-6 w-full mt-auto">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-rose-400/80">{v.protein}g</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-blue-400/80">{v.carbs}g</span>
-                    </div>
-                    <div className="flex flex-col">
-                      <span className="text-xs font-black text-amber-400/80">{v.fat}g</span>
-                    </div>
-                  </div>
+                  {v.category && (
+                    <Badge className="mt-2 ml-2 bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
+                      {visualLibraryCategories.find(c => c.id === v.category)?.label || v.category}
+                    </Badge>
+                  )}
                 </button>
               ))}
 

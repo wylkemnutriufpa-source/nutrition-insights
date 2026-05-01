@@ -106,13 +106,21 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
   return foods as Food[];
 };
 
-export const searchVisualLibrary = async (query: string): Promise<Food[]> => {
-  const { data, error } = await supabase
+export const searchVisualLibrary = async (query: string, category?: string): Promise<Food[]> => {
+  let queryBuilder = supabase
     .from("meal_visual_library")
     .select("*")
-    .or(`name.ilike.%${query}%,display_name.ilike.%${query}%`)
-    .eq("is_active", true)
-    .limit(20);
+    .eq("is_active", true);
+
+  if (query && query.length >= 2) {
+    queryBuilder = queryBuilder.or(`name.ilike.%${query}%,display_name.ilike.%${query}%`);
+  }
+
+  if (category && category !== 'all') {
+    queryBuilder = queryBuilder.eq("category", category);
+  }
+
+  const { data, error } = await queryBuilder.limit(40);
 
   if (error) {
     console.error("Error searching visual library:", error);
