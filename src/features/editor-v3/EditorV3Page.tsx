@@ -957,7 +957,7 @@ const EditorV3Page = () => {
                     <div className="flex-1">
                       <div className="flex justify-between items-start w-full">
                         <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-2">{f.name}</span>
-                        <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                        {f.kcal > 0 && <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>}
                       </div>
                       <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1 block">{f.portionLabel}</span>
                     </div>
