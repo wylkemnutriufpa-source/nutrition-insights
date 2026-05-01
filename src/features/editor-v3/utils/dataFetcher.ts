@@ -1,6 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Food } from "../types";
-import { MealTemplate } from "../constants";
+import { Food, MealTemplate } from "../types";
 
 export const searchFoods = async (query: string): Promise<Food[]> => {
   if (!query || query.length < 2) return [];
