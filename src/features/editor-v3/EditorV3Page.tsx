@@ -708,7 +708,7 @@ const EditorV3Page = () => {
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
-                 {nutritionalScore && (
+                {nutritionalScore && (
                    <Badge className={cn(
                      "px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter",
                      nutritionalScore.total >= 90 ? "bg-emerald-500 text-black" : 
@@ -717,6 +717,55 @@ const EditorV3Page = () => {
                    )}>
                      {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
                    </Badge>
+                 )}
+                 {patientContext && (
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Badge variant="outline" className="px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter border-emerald-500/50 text-emerald-500 cursor-help">
+                         Plano baseado no paciente
+                       </Badge>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-64 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl z-[100]">
+                       <div className="space-y-3">
+                         <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Resumo Clínico</p>
+                            {confidence && (
+                              <Badge className={cn(
+                                "text-[8px] font-black uppercase",
+                                confidence.level === 'high' ? "bg-emerald-500 text-black" :
+                                confidence.level === 'medium' ? "bg-amber-500 text-black" : "bg-rose-500 text-white"
+                              )}>
+                                Confiança {confidence.level}
+                              </Badge>
+                            )}
+                         </div>
+                         <div className="space-y-1">
+                           <p className="text-xs text-white/80 font-bold">{patientContext.name}</p>
+                           <p className="text-[10px] text-white/40 font-bold uppercase tracking-tight">Objetivo: {patientContext.goal}</p>
+                         </div>
+                         <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
+                            <div>
+                               <p className="text-[8px] text-white/30 uppercase font-black">Meta Kcal</p>
+                               <p className="text-xs text-white font-black">{Math.round(patientContext.calories_target)}</p>
+                            </div>
+                            <div>
+                               <p className="text-[8px] text-white/30 uppercase font-black">Meta Prot</p>
+                               <p className="text-xs text-white font-black">{Math.round(patientContext.protein_target)}g</p>
+                            </div>
+                         </div>
+                         {patientContext.restrictions.length > 0 && (
+                           <div className="border-t border-white/5 pt-2">
+                             <p className="text-[8px] text-white/30 uppercase font-black mb-1">Restrições</p>
+                             <div className="flex flex-wrap gap-1">
+                               {patientContext.restrictions.map(r => (
+                                 <Badge key={r} variant="ghost" className="bg-rose-500/10 text-rose-500 text-[8px] border-rose-500/20">{r}</Badge>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     </PopoverContent>
+                   </Popover>
                  )}
                </div>
                <div className="flex items-center gap-6">
@@ -739,23 +788,29 @@ const EditorV3Page = () => {
              {nutritionalScore && (
                <div className="hidden lg:flex flex-col">
                  <div className="flex items-center gap-1 mb-1">
-                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Score V3</span>
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Score Nutricional</span>
                     <span className={cn(
                       "text-lg font-black",
                       nutritionalScore.total >= 90 ? "text-emerald-500" : 
                       nutritionalScore.total >= 70 ? "text-amber-500" : 
                       "text-rose-500"
                     )}>{nutritionalScore.total}</span>
+                    <span className="text-[8px] text-white/20 font-black uppercase ml-1">
+                      {patientContext ? `p/ ${patientContext.goal}` : 'Geral'}
+                    </span>
                  </div>
                  <div className="flex gap-2">
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Calorias">
                       <div className="h-full bg-emerald-500" style={{ width: `${nutritionalScore.breakdown.calories}%` }} />
                     </div>
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Macros">
                       <div className="h-full bg-blue-500" style={{ width: `${nutritionalScore.breakdown.macros}%` }} />
                     </div>
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500" style={{ width: `${nutritionalScore.breakdown.quality}%` }} />
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Equilíbrio">
+                      <div className="h-full bg-amber-500" style={{ width: `${nutritionalScore.breakdown.distribution}%` }} />
+                    </div>
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Qualidade/Restrições">
+                      <div className="h-full bg-rose-500" style={{ width: `${nutritionalScore.breakdown.quality}%` }} />
                     </div>
                  </div>
                </div>
