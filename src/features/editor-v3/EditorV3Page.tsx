@@ -92,7 +92,8 @@ const EditorV3Page = () => {
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
     duplicateMeal, reorderMeal, updateMealImage,
-    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata
+    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
+    patientContext, setPatientContext, confidence
   } = useEditorState();
 
   const {
@@ -103,6 +104,7 @@ const EditorV3Page = () => {
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const [showClinicalDecision, setShowClinicalDecision] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRevertConfirm, setShowRevertConfirm] = useState(false);
   const [showPatientSelector, setShowPatientSelector] = useState(false);
@@ -219,9 +221,17 @@ const EditorV3Page = () => {
   const [lastAssessment, setLastAssessment] = useState<any>(null);
 
   useEffect(() => {
-    const fetchAssessment = async () => {
+    const fetchClinicalData = async () => {
       if (patientId) {
-        const { data } = await supabase
+        // Carregar Perfil do Paciente (Contexto Central)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', patientId)
+          .maybeSingle();
+
+        // Carregar Avaliação Física para Metas
+        const { data: assessment } = await supabase
           .from('physical_assessments')
           .select('*')
           .eq('patient_id', patientId)
@@ -229,11 +239,27 @@ const EditorV3Page = () => {
           .limit(1)
           .maybeSingle();
         
-        if (data) setLastAssessment(data);
+        if (profile) {
+          const profileAny = profile as any;
+          const context = {
+            id: profile.id,
+            name: profile.full_name || 'Paciente',
+            goal: profileAny.goal || 'Manutenção',
+            restrictions: profileAny.food_restrictions || [],
+            preferences: profileAny.food_preferences || [],
+            calories_target: assessment?.calories_target || 2000,
+            protein_target: assessment?.protein_target || 150,
+            carbs_target: assessment?.carbs_target || 200,
+            fat_target: assessment?.fat_target || 60,
+          };
+          setPatientContext(context);
+        }
+
+        if (assessment) setLastAssessment(assessment);
       }
     };
-    fetchAssessment();
-  }, [patientId]);
+    fetchClinicalData();
+  }, [patientId, setPatientContext]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -305,7 +331,12 @@ const EditorV3Page = () => {
         else if (isCarb(name)) category = 'carb';
         else if (isFruit(name)) category = 'fruit';
 
-        const dbSuggestions = await getCompatibleFoods(category, name);
+        // Adaptative Engine: Pass restrictions to filtering
+        const dbSuggestions = await getCompatibleFoods(
+          category, 
+          name, 
+          patientContext?.restrictions || []
+        );
         const suggestions = getDeterministicSuggestions(
           name, 
           dbSuggestions, 
@@ -432,7 +463,16 @@ const EditorV3Page = () => {
   }, [meals, auditLog, draftId, scheduleSave]);
 
   const handlePromotionRequest = () => {
-    setShowValidation(true);
+    // Sistema de Decisão Clínica (Pré-Salvamento)
+    const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
+    const hasViolations = criticalIssues.length > 0;
+    const isLowConfidence = confidence && confidence.value < 70;
+
+    if (hasViolations || isLowConfidence) {
+      setShowClinicalDecision(true);
+    } else {
+      handleConfirmPromotion();
+    }
   };
 
   const handleConfirmPromotion = async () => {
@@ -461,7 +501,7 @@ const EditorV3Page = () => {
         toast.error('Erro ao recuperar rascunho remoto.');
         return;
       }
-      const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1 } });
+      const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1, patient_context: patientContext, nutritional_score: nutritionalScore, confidence: confidence } });
       if (result.ok) {
         toast.success('Plano promovido com sucesso!');
         await savePlan();
@@ -669,7 +709,7 @@ const EditorV3Page = () => {
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
-                 {nutritionalScore && (
+                {nutritionalScore && (
                    <Badge className={cn(
                      "px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter",
                      nutritionalScore.total >= 90 ? "bg-emerald-500 text-black" : 
@@ -678,6 +718,55 @@ const EditorV3Page = () => {
                    )}>
                      {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
                    </Badge>
+                 )}
+                 {patientContext && (
+                   <Popover>
+                     <PopoverTrigger asChild>
+                       <Badge variant="outline" className="px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter border-emerald-500/50 text-emerald-500 cursor-help">
+                         Plano baseado no paciente
+                       </Badge>
+                     </PopoverTrigger>
+                     <PopoverContent className="w-64 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl z-[100]">
+                       <div className="space-y-3">
+                         <div className="flex items-center justify-between">
+                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Resumo Clínico</p>
+                            {confidence && (
+                              <Badge className={cn(
+                                "text-[8px] font-black uppercase",
+                                confidence.level === 'high' ? "bg-emerald-500 text-black" :
+                                confidence.level === 'medium' ? "bg-amber-500 text-black" : "bg-rose-500 text-white"
+                              )}>
+                                Confiança {confidence.level}
+                              </Badge>
+                            )}
+                         </div>
+                         <div className="space-y-1">
+                           <p className="text-xs text-white/80 font-bold">{patientContext.name}</p>
+                           <p className="text-[10px] text-white/40 font-bold uppercase tracking-tight">Objetivo: {patientContext.goal}</p>
+                         </div>
+                         <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
+                            <div>
+                               <p className="text-[8px] text-white/30 uppercase font-black">Meta Kcal</p>
+                               <p className="text-xs text-white font-black">{Math.round(patientContext.calories_target)}</p>
+                            </div>
+                            <div>
+                               <p className="text-[8px] text-white/30 uppercase font-black">Meta Prot</p>
+                               <p className="text-xs text-white font-black">{Math.round(patientContext.protein_target)}g</p>
+                            </div>
+                         </div>
+                         {patientContext.restrictions.length > 0 && (
+                           <div className="border-t border-white/5 pt-2">
+                             <p className="text-[8px] text-white/30 uppercase font-black mb-1">Restrições</p>
+                             <div className="flex flex-wrap gap-1">
+                               {patientContext.restrictions.map(r => (
+                                 <Badge key={r} variant="secondary" className="bg-rose-500/10 text-rose-500 text-[8px] border-rose-500/20">{r}</Badge>
+                               ))}
+                             </div>
+                           </div>
+                         )}
+                       </div>
+                     </PopoverContent>
+                   </Popover>
                  )}
                </div>
                <div className="flex items-center gap-6">
@@ -700,23 +789,29 @@ const EditorV3Page = () => {
              {nutritionalScore && (
                <div className="hidden lg:flex flex-col">
                  <div className="flex items-center gap-1 mb-1">
-                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Score V3</span>
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Score Nutricional</span>
                     <span className={cn(
                       "text-lg font-black",
                       nutritionalScore.total >= 90 ? "text-emerald-500" : 
                       nutritionalScore.total >= 70 ? "text-amber-500" : 
                       "text-rose-500"
                     )}>{nutritionalScore.total}</span>
+                    <span className="text-[8px] text-white/20 font-black uppercase ml-1">
+                      {patientContext ? `p/ ${patientContext.goal}` : 'Geral'}
+                    </span>
                  </div>
                  <div className="flex gap-2">
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Calorias">
                       <div className="h-full bg-emerald-500" style={{ width: `${nutritionalScore.breakdown.calories}%` }} />
                     </div>
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Macros">
                       <div className="h-full bg-blue-500" style={{ width: `${nutritionalScore.breakdown.macros}%` }} />
                     </div>
-                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
-                      <div className="h-full bg-amber-500" style={{ width: `${nutritionalScore.breakdown.quality}%` }} />
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Equilíbrio">
+                      <div className="h-full bg-amber-500" style={{ width: `${nutritionalScore.breakdown.distribution}%` }} />
+                    </div>
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden" title="Qualidade/Restrições">
+                      <div className="h-full bg-rose-500" style={{ width: `${nutritionalScore.breakdown.quality}%` }} />
                     </div>
                  </div>
                </div>
@@ -1264,6 +1359,89 @@ const EditorV3Page = () => {
               )}
             </div>
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showClinicalDecision} onOpenChange={setShowClinicalDecision}>
+        <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
+          <div className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+                  <AlertTriangle className="w-8 h-8 text-rose-500" />
+               </div>
+               <div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Decisão Clínica Necessária</h2>
+                  <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">O plano atual possui inconsistências críticas para este paciente.</p>
+               </div>
+            </div>
+
+            <div className="space-y-6">
+               <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Diagnóstico V3</p>
+                    {confidence && (
+                       <Badge className={cn(
+                        "font-black uppercase text-[10px]",
+                        confidence.level === 'high' ? "bg-emerald-500 text-black" :
+                        confidence.level === 'medium' ? "bg-amber-500 text-black" : "bg-rose-500 text-white"
+                      )}>
+                        Confiança: {confidence.value}%
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {validationIssues.filter(i => i.severity === 'critical').map((issue, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-rose-500/5 p-3 rounded-xl border border-rose-500/10">
+                        <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-white/80 font-bold">{issue.message}</p>
+                      </div>
+                    ))}
+                    {validationIssues.filter(i => i.severity === 'attention').map((issue, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-amber-500/5 p-3 rounded-xl border border-amber-500/10">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-white/80 font-bold">{issue.message}</p>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowClinicalDecision(false);
+                      refinePlan(baseFoods);
+                    }}
+                    className="h-14 border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/10 font-black uppercase tracking-widest text-xs rounded-2xl gap-3"
+                  >
+                    <Sparkles className="w-5 h-5" /> Corrigir Automaticamente
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowClinicalDecision(false)}
+                    className="h-14 border-white/5 bg-white/5 text-white/60 hover:bg-white/10 font-black uppercase tracking-widest text-xs rounded-2xl gap-3"
+                  >
+                    <Edit3 className="w-5 h-5" /> Revisar Manualmente
+                  </Button>
+               </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/5 p-6 flex items-center justify-between border-t border-white/10">
+             <p className="text-[10px] text-white/20 font-black uppercase tracking-tighter max-w-[200px]">
+               Forçar o salvamento pode comprometer a estratégia nutricional do paciente.
+             </p>
+             <Button 
+               variant="ghost" 
+               onClick={() => {
+                 setShowClinicalDecision(false);
+                 handleConfirmPromotion();
+               }}
+               className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
+             >
+               Forçar Salvamento (Com Confirmação)
+             </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>

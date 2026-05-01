@@ -315,7 +315,11 @@ export const getFoodMacrosByName = async (names: string[]): Promise<Record<strin
   return result;
 };
 
-export const getCompatibleFoods = async (category: 'protein' | 'carb' | 'fruit' | 'any', currentName: string): Promise<Food[]> => {
+export const getCompatibleFoods = async (
+  category: 'protein' | 'carb' | 'fruit' | 'any', 
+  currentName: string,
+  restrictions: string[] = []
+): Promise<Food[]> => {
   let query = supabase.from("food_database").select("*");
   
   if (category === 'protein') {
@@ -326,14 +330,19 @@ export const getCompatibleFoods = async (category: 'protein' | 'carb' | 'fruit' 
     query = query.or('name.ilike.%banana%,name.ilike.%maçã%,name.ilike.%uva%,name.ilike.%laranja%,name.ilike.%mamão%,name.ilike.%abacaxi%');
   }
 
-  const { data, error } = await query.neq('name', currentName).limit(15);
+  const { data, error } = await query.neq('name', currentName).limit(30);
 
   if (error) {
     console.error("Error fetching compatible foods:", error);
     return [];
   }
 
-  return (data || []).map((f: any) => ({
+  // Engine Adaptativa: Filtrar restrições
+  const filteredData = (data || []).filter(f => 
+    !restrictions.some(r => f.name.toLowerCase().includes(r.toLowerCase()))
+  );
+
+  return filteredData.map((f: any) => ({
     id: f.id,
     name: f.name,
     kcal: f.calories,

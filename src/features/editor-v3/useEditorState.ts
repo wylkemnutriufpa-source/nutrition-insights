@@ -1,8 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Meal, Food, MealItem, MealTemplate, AuditLogEntry } from './types';
+import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from './types';
 import { generatePlanWithEngine, generateMealWithEngine, refinePlanWithScore } from './engine';
 import { calculateNutritionalScore, validatePlanClinically, type PlanMetadata } from './utils/nutritionalEvaluator';
+import { calculatePersonalizedScore, validateClinicalContext, calculatePlanConfidence } from './utils/clinicalIntelligence';
 import { NutritionalScore, ValidationIssue } from './nutritionalScoreTypes';
 import { toast } from 'sonner';
 
@@ -14,8 +15,11 @@ interface EditorState {
   nutritionalScore: NutritionalScore | null;
   validationIssues: ValidationIssue[];
   goalMetadata: PlanMetadata;
+  patientContext: PatientContext | null;
+  confidence: PlanConfidence | null;
 
   setPatientId: (id: string) => void;
+  setPatientContext: (context: PatientContext) => void;
   setGoalMetadata: (metadata: any) => void;
   recalculateScore: () => void;
   refinePlan: (availableFoods: Food[]) => void;
@@ -60,8 +64,23 @@ export const useEditorState = create<EditorState>()(
       nutritionalScore: null,
       validationIssues: [],
       goalMetadata: {},
+      patientContext: null,
+      confidence: null,
 
       setPatientId: (id) => set({ patientId: id }),
+      
+      setPatientContext: (context) => {
+        set({ patientContext: context, goalMetadata: {
+          goalCalories: context.calories_target,
+          goalProtein: context.protein_target,
+          goalCarbs: context.carbs_target,
+          goalFat: context.fat_target,
+          goal: context.goal,
+          restrictions: context.restrictions,
+          preferences: context.preferences
+        }});
+        get().recalculateScore();
+      },
       
       setGoalMetadata: (metadata) => {
         set({ goalMetadata: metadata });
@@ -70,9 +89,19 @@ export const useEditorState = create<EditorState>()(
 
       recalculateScore: () => {
         const { meals, goalMetadata } = get();
-        const nutritionalScore = calculateNutritionalScore(meals, goalMetadata);
-        const validationIssues = validatePlanClinically(meals, goalMetadata);
-        set({ nutritionalScore, validationIssues });
+        // Fallback para o sistema anterior se não houver contexto clínico
+        const nutritionalScore = calculatePersonalizedScore(meals, goalMetadata);
+        const clinicalIssues = validateClinicalContext(meals, goalMetadata);
+        const baseIssues = validatePlanClinically(meals, goalMetadata);
+        
+        const allIssues = [...baseIssues, ...clinicalIssues];
+        const confidence = calculatePlanConfidence(nutritionalScore, allIssues, goalMetadata);
+        
+        set({ 
+          nutritionalScore, 
+          validationIssues: allIssues,
+          confidence 
+        });
       },
 
       refinePlan: (availableFoods) => {
