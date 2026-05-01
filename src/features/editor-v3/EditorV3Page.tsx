@@ -118,6 +118,11 @@ const EditorV3Page = () => {
   const [isSearchingSwap, setIsSearchingSwap] = useState(false);
   const [smartSubstitutions, setSmartSubstitutions] = useState<Food[]>([]);
   const [isLoadingSmartSubs, setIsLoadingSmartSubs] = useState(false);
+  const [replacementPending, setReplacementPending] = useState<{
+    current: MealItem,
+    target: Food,
+    mealId: string
+  } | null>(null);
 
   // Estados para Modais Premium
   const [showAddMealModal, setShowAddMealModal] = useState(false);
