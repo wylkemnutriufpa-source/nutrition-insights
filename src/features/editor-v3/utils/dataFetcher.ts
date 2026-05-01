@@ -227,9 +227,27 @@ export const seedBaseData = async (nutritionistId: string): Promise<boolean> => 
 
     // Verifica se já existem alimentos
     const { count: foodCount } = await supabase.from('food_database').select('*', { count: 'exact', head: true });
-    if (foodCount === 0) {
+    if (foodCount < 40) {
       console.log('[Seed] Inserindo alimentos essenciais...');
-      await supabase.from('food_database').insert(essentialFoods);
+      const extendedFoods = [
+        ...essentialFoods,
+        { name: 'Aveia em Flocos', calories: 389, protein: 17, carbs: 66, fat: 7, serving_size: '100g' },
+        { name: 'Pasta de Amendoim', calories: 588, protein: 25, carbs: 20, fat: 50, serving_size: '100g' },
+        { name: 'Iogurte Grego', calories: 133, protein: 10, carbs: 4, fat: 9, serving_size: '100g' },
+        { name: 'Pão Francês', calories: 300, protein: 9, carbs: 58, fat: 3, serving_size: '100g' },
+        { name: 'Mamão Papaia', calories: 43, protein: 0.5, carbs: 11, fat: 0.3, serving_size: '100g' },
+        { name: 'Abacaxi Pérola', calories: 50, protein: 0.5, carbs: 13, fat: 0.1, serving_size: '100g' },
+        { name: 'Uva Niágara', calories: 67, protein: 0.6, carbs: 17, fat: 0.4, serving_size: '100g' },
+        { name: 'Melancia', calories: 30, protein: 0.6, carbs: 7.5, fat: 0.2, serving_size: '100g' },
+        { name: 'Quinoa Cozida', calories: 120, protein: 4.4, carbs: 21, fat: 1.9, serving_size: '100g' },
+        { name: 'Laranja Pêra', calories: 47, protein: 0.9, carbs: 12, fat: 0.1, serving_size: '100g' },
+        { name: 'Cenoura Cozida', calories: 41, protein: 0.9, carbs: 10, fat: 0.2, serving_size: '100g' },
+        { name: 'Castanha do Pará', calories: 656, protein: 14, carbs: 12, fat: 66, serving_size: '100g' },
+        { name: 'Filé de Salmão Grelhado', calories: 208, protein: 20, carbs: 0, fat: 13, serving_size: '100g' },
+        { name: 'Macarrão Integral Cozido', calories: 124, protein: 5.3, carbs: 26, fat: 0.5, serving_size: '100g' },
+        { name: 'Feijão Preto Cozido', calories: 132, protein: 8.9, carbs: 24, fat: 0.5, serving_size: '100g' }
+      ];
+      await supabase.from('food_database').insert(extendedFoods);
     }
 
     // 2. Marmitas Base
@@ -238,11 +256,21 @@ export const seedBaseData = async (nutritionistId: string): Promise<boolean> => 
       { nutritionist_id: nutritionistId, name: 'Marmita Low Carb Patinho & Brócolis', fixed_calories: 280, fixed_protein: 40, fixed_carbs: 10, fixed_fat: 8, is_active: true },
       { nutritionist_id: nutritionistId, name: 'Marmita Veggie Grão de Bico & Arroz Integral', fixed_calories: 420, fixed_protein: 15, fixed_carbs: 65, fixed_fat: 10, is_active: true },
       { nutritionist_id: nutritionistId, name: 'Marmita Peixe & Vegetais Assados', fixed_calories: 310, fixed_protein: 30, fixed_carbs: 25, fixed_fat: 12, is_active: true },
-      { nutritionist_id: nutritionistId, name: 'Marmita Hipertrofia Macarrão & Carne Moída', fixed_calories: 550, fixed_protein: 45, fixed_carbs: 70, fixed_fat: 10, is_active: true }
+      { nutritionist_id: nutritionistId, name: 'Marmita Hipertrofia Macarrão & Carne Moída', fixed_calories: 550, fixed_protein: 45, fixed_carbs: 70, fixed_fat: 10, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Salmão & Quinoa', fixed_calories: 450, fixed_protein: 35, fixed_carbs: 35, fixed_fat: 18, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Frango Curry & Arroz Basmati', fixed_calories: 380, fixed_protein: 32, fixed_carbs: 45, fixed_fat: 7, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Omelete de Forno & Salada', fixed_calories: 250, fixed_protein: 20, fixed_carbs: 8, fixed_fat: 15, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Escondidinho de Mandioca & Carne', fixed_calories: 480, fixed_protein: 30, fixed_carbs: 55, fixed_fat: 14, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Bowl de Atum & Grãos', fixed_calories: 320, fixed_protein: 28, fixed_carbs: 30, fixed_fat: 9, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Panqueca Integral de Frango', fixed_calories: 400, fixed_protein: 35, fixed_carbs: 40, fixed_fat: 10, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Lasanha de Berinjela', fixed_calories: 290, fixed_protein: 22, carbs: 15, fat: 12, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Frango desfiado com Milho', fixed_calories: 340, fixed_protein: 38, carbs: 25, fat: 8, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Risoto de Alho Poró & Tilápia', fixed_calories: 370, fixed_protein: 28, carbs: 45, fat: 6, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Almôndegas de Frango & Purê de Abóbora', fixed_calories: 310, fixed_protein: 30, carbs: 20, fat: 10, is_active: true }
     ];
 
     const { count: marmitaCount } = await supabase.from('meal_recipes').select('*', { count: 'exact', head: true }).eq('nutritionist_id', nutritionistId);
-    if (marmitaCount === 0) {
+    if (marmitaCount < 10) {
       console.log('[Seed] Inserindo marmitas base...');
       await supabase.from('meal_recipes').insert(baseMarmitas);
     }
