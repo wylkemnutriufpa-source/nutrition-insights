@@ -46,6 +46,8 @@ export interface Meal {
   time?: string;
   icon?: string;
   description?: string;
+  imageUrl?: string;
+  imageSource?: 'auto' | 'manual';
 }
 
 export interface MealTemplate {

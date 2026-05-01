@@ -16,7 +16,8 @@ interface EditorState {
   duplicateMeal: (mealId: string) => void;
   reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
   removeMeal: (mealId: string) => void;
-  updateMealHeader: (mealId: string, name: string, time: string, description?: string) => void;
+  updateMealHeader: (mealId: string, name: string, time: string, description?: string, imageUrl?: string, imageSource?: 'auto' | 'manual') => void;
+  updateMealImage: (mealId: string, imageUrl: string, imageSource: 'auto' | 'manual') => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
@@ -134,10 +135,25 @@ export const useEditorState = create<EditorState>()(
         toast.success('Refeição removida');
       },
 
-      updateMealHeader: (mealId, name, time, description) => {
+      updateMealHeader: (mealId, name, time, description, imageUrl, imageSource) => {
         set((state) => ({
           meals: state.meals.map((m) =>
-            m.id === mealId ? { ...m, name, time, description: description !== undefined ? description : m.description } : m
+            m.id === mealId ? { 
+              ...m, 
+              name, 
+              time, 
+              description: description !== undefined ? description : m.description,
+              imageUrl: imageUrl !== undefined ? imageUrl : m.imageUrl,
+              imageSource: imageSource !== undefined ? imageSource : m.imageSource
+            } : m
+          ),
+          planStatus: 'draft',
+        }));
+      },
+      updateMealImage: (mealId, imageUrl, imageSource) => {
+        set((state) => ({
+          meals: state.meals.map((m) =>
+            m.id === mealId ? { ...m, imageUrl, imageSource } : m
           ),
           planStatus: 'draft',
         }));
