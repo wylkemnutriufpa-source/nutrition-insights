@@ -13,6 +13,8 @@ interface EditorState {
   addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[]) => void;
   addMeal: () => void;
+  duplicateMeal: (mealId: string) => void;
+  reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
   removeMeal: (mealId: string) => void;
   updateMealHeader: (mealId: string, name: string, time: string, description?: string) => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
@@ -81,7 +83,50 @@ export const useEditorState = create<EditorState>()(
         toast.success('Refeição adicionada!');
       },
 
+      duplicateMeal: (mealId) => {
+        const state = get();
+        const mealToDuplicate = state.meals.find(m => m.id === mealId);
+        if (!mealToDuplicate) return;
+
+        const newMeal: Meal = {
+          ...mealToDuplicate,
+          id: Math.random().toString(36).substring(2, 9),
+          items: mealToDuplicate.items.map(item => ({
+            ...item,
+            instanceId: makeInstanceId()
+          }))
+        };
+
+        const mealIndex = state.meals.findIndex(m => m.id === mealId);
+        const newMeals = [...state.meals];
+        newMeals.splice(mealIndex + 1, 0, newMeal);
+
+        set({ meals: newMeals, planStatus: 'draft' });
+        toast.success(`Refeição "${mealToDuplicate.name}" duplicada!`);
+      },
+
+      reorderMeal: (mealId, direction) => {
+        const state = get();
+        const mealIndex = state.meals.findIndex(m => m.id === mealId);
+        if (mealIndex === -1) return;
+
+        const newIndex = direction === 'up' ? mealIndex - 1 : mealIndex + 1;
+        if (newIndex < 0 || newIndex >= state.meals.length) return;
+
+        const newMeals = [...state.meals];
+        const [removed] = newMeals.splice(mealIndex, 1);
+        newMeals.splice(newIndex, 0, removed);
+
+        set({ meals: newMeals, planStatus: 'draft' });
+      },
+
       removeMeal: (mealId) => {
+        const meal = get().meals.find(m => m.id === mealId);
+        if (meal && meal.items.some(item => item.locked)) {
+          toast.error('Não é possível remover refeição com itens bloqueados.');
+          return;
+        }
+
         set((state) => ({
           meals: state.meals.filter((m) => m.id !== mealId),
           planStatus: 'draft',
