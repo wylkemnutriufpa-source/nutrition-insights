@@ -40,12 +40,13 @@ const findBestVisual = async (foodName: string): Promise<string | undefined> => 
     .from("meal_visual_library")
     .select("image_url")
     .ilike("name", foodName)
+    .is("nutritionist_id", null) // Prioritize system images for auto-match to avoid randomness
+    .limit(1)
     .maybeSingle();
 
   if (libraryData?.image_url) return libraryData.image_url;
 
   // 3. Try keywords with whole-word matching (Priority 3)
-  // This avoids "Frango" matching "Frango à parmegiana" if we want just frango
   const keywords = norm.split(' ');
   const importantKeywords = keywords.filter(k => k.length > 3 && !['com', 'para', 'sem'].includes(k));
   
@@ -55,10 +56,10 @@ const findBestVisual = async (foodName: string): Promise<string | undefined> => 
         .from("meal_visual_library")
         .select("image_url, name")
         .ilike("name", `%${kw}%`)
+        .is("nutritionist_id", null)
         .limit(5);
       
       if (kwMatches && kwMatches.length > 0) {
-        // Find the one that best matches as a whole word
         const bestKwMatch = kwMatches.find(m => isWholeWordMatch(m.name, kw));
         if (bestKwMatch?.image_url) return bestKwMatch.image_url;
       }

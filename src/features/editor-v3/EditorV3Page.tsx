@@ -960,13 +960,23 @@ const EditorV3Page = () => {
                   }}
                   className="group relative flex flex-col items-start p-4 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
                 >
-                  <div className="w-full h-40 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all">
+                  <div className="w-full h-40 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all relative">
                     {v.imageUrl ? (
-                      <img src={v.imageUrl} alt={v.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                      <img 
+                        src={v.imageUrl} 
+                        alt={v.name} 
+                        loading="lazy"
+                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                      />
                     ) : (
-                      <div className="w-full h-full flex items-center justify-center">
-                         <Apple className="w-10 h-10 text-white/5" />
+                      <div className="w-full h-full flex items-center justify-center bg-white/5 animate-pulse">
+                         <ImageIcon className="w-10 h-10 text-white/5" />
                       </div>
+                    )}
+                    {v.nutritionistId === user?.id && (
+                      <Badge className="absolute top-3 right-3 bg-emerald-500 text-black text-[7px] font-black uppercase border-0 shadow-xl">
+                        Minha Imagem
+                      </Badge>
                     )}
                   </div>
                   <div className="flex justify-between items-start w-full px-2">
@@ -975,11 +985,6 @@ const EditorV3Page = () => {
                   {v.category && (
                     <Badge className="mt-2 ml-2 bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
                       {visualLibraryCategories.find(c => c.id === v.category)?.label || v.category}
-                    </Badge>
-                  )}
-                  {v.nutritionistId === user?.id && (
-                    <Badge className="absolute top-6 right-6 bg-emerald-500 text-black text-[7px] font-black uppercase border-0">
-                      Minha Imagem
                     </Badge>
                   )}
                 </button>
