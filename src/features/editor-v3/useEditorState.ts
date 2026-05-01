@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, Food, MealItem, MealTemplate, AuditLogEntry } from './types';
-import { generatePlanWithEngine, generateMealWithEngine } from './engine';
+import { generatePlanWithEngine, generateMealWithEngine, refinePlanWithScore } from './engine';
+import { calculateNutritionalScore, validatePlanClinically } from './utils/nutritionalEvaluator';
+import { NutritionalScore, ValidationIssue } from './nutritionalScoreTypes';
 import { toast } from 'sonner';
 
 interface EditorState {
@@ -9,8 +11,21 @@ interface EditorState {
   auditLog: AuditLogEntry[];
   patientId: string | null;
   planStatus: 'draft' | 'saving' | 'saved';
+  nutritionalScore: NutritionalScore | null;
+  validationIssues: ValidationIssue[];
+  goalMetadata: {
+    calories?: number;
+    protein?: number;
+    carbs?: number;
+    fat?: number;
+  };
 
   setPatientId: (id: string) => void;
+  setGoalMetadata: (metadata: any) => void;
+  recalculateScore: () => void;
+  refinePlan: () => void;
+  // ... rest of state
+}
   addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[]) => void;
   addMeal: () => void;
