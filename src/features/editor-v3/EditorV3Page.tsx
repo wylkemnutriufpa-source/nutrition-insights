@@ -1672,21 +1672,7 @@ const EditorV3Page = () => {
                                 variant="ghost"
                                 onClick={() => {
                                   const currentItem = selectedItem.item;
-                                  updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                                    name: food.name,
-                                    kcal: food.kcal,
-                                    calories: food.kcal,
-                                    protein: food.protein,
-                                    carbs: food.carbs,
-                                    fat: food.fat,
-                                    portionLabel: food.portionLabel,
-                                    imageUrl: food.imageUrl,
-                                    ingredients: food.ingredients,
-                                    isMarmita: food.isMarmita,
-                                    measurementType: food.measurementType
-                                  });
-                                  setSelectedItem(null);
-                                  toast.success(`Trocado inteligentemente para ${food.name}`);
+                                  handleRequestSwap(selectedItem.mealId, currentItem, food);
                                 }}
                                 className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
                               >
