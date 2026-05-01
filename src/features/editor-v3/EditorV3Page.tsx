@@ -490,7 +490,18 @@ const EditorV3Page = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
              <div className="flex flex-col">
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Status Nutricional</span>
+               <div className="flex items-center gap-2 mb-1">
+                 <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
+                 <button 
+                   onClick={() => setDebugMode(!debugMode)}
+                   className={cn(
+                     "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
+                     debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
+                   )}
+                 >
+                   MODO TRANSPARÊNCIA
+                 </button>
+               </div>
                <div className="flex items-center gap-6">
                   <div className="flex flex-col">
                     <span className="text-xl font-black text-white">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-white/40 font-bold ml-1 uppercase">kcal</span></span>
