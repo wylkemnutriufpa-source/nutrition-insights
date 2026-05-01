@@ -46,6 +46,7 @@ export const useEditorState = create<EditorState>()(
   persist(
     (set, get) => ({
       meals: initialMeals,
+      auditLog: [],
       patientId: null,
       planStatus: 'draft',
 
@@ -67,7 +68,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Refeição "${name}" adicionada!`);
       },
 
-      hydrateMeals: (meals) => set({ meals, planStatus: 'saved' }),
+      hydrateMeals: (meals, auditLog = []) => set({ meals, auditLog, planStatus: 'saved' }),
 
       addMeal: () => {
         set((state) => ({
@@ -152,12 +153,27 @@ export const useEditorState = create<EditorState>()(
         }));
       },
       updateMealImage: (mealId, imageUrl, imageSource) => {
-        set((state) => ({
-          meals: state.meals.map((m) =>
-            m.id === mealId ? { ...m, imageUrl, imageSource } : m
-          ),
-          planStatus: 'draft',
-        }));
+        set((state) => {
+          const meal = state.meals.find(m => m.id === mealId);
+          if (!meal) return state;
+
+          const newAuditEntry: AuditLogEntry = {
+            type: "image_change",
+            mealId,
+            from: meal.imageUrl || 'none',
+            to: imageUrl,
+            source: imageSource,
+            created_at: new Date().toISOString()
+          };
+
+          return {
+            meals: state.meals.map((m) =>
+              m.id === mealId ? { ...m, imageUrl, imageSource } : m
+            ),
+            auditLog: [...state.auditLog, newAuditEntry],
+            planStatus: 'draft',
+          };
+        });
       },
 
       addMarmitaToMeal: async (mealId, marmita) => {
