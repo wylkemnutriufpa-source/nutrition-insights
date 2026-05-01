@@ -144,6 +144,13 @@ const EditorV3Page = () => {
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
   const [baseFoods, setBaseFoods] = useState<Food[]>([]);
+  const [dataReady, setDataReady] = useState(false);
+  const [dbStatus, setDbStatus] = useState<{
+    foods: number;
+    marmitas: number;
+    templates: number;
+    error: string | null;
+  }>({ foods: 0, marmitas: 0, templates: 0, error: null });
 
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
     search: patientSearch,
