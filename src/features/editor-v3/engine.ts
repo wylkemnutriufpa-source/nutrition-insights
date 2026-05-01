@@ -31,6 +31,12 @@ const createMealItem = (food: Food | undefined, quantity: number): MealItem | nu
  * Gera uma composição para uma refeição específica baseada no seu contexto (nome/horário)
  */
 export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: number = 2000, availableFoods: Food[] = []): MealItem[] => {
+  if (!availableFoods || availableFoods.length < 10) {
+    console.error('[Engine V3] Bloqueio de execução: Base de alimentos insuficiente.', { count: availableFoods?.length });
+    toast.error('Base de dados insuficiente para gerar sugestões. Tente recarregar a página.');
+    return [];
+  }
+
   const mealName = meal.name.toLowerCase();
   let items: (MealItem | null)[] = [];
   
