@@ -1,4 +1,4 @@
-import { Meal } from '../types';
+import { Meal, PlanConfidence } from '../types';
 import { calculateItemMacros } from './v3Motor';
 import { PlanMetadata } from './nutritionalEvaluator';
 import { NutritionalScore, ValidationIssue } from '../nutritionalScoreTypes';
