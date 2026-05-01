@@ -144,6 +144,13 @@ const EditorV3Page = () => {
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
   const [baseFoods, setBaseFoods] = useState<Food[]>([]);
+  const [dataReady, setDataReady] = useState(false);
+  const [dbStatus, setDbStatus] = useState<{
+    foods: number;
+    marmitas: number;
+    templates: number;
+    error: string | null;
+  }>({ foods: 0, marmitas: 0, templates: 0, error: null });
 
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
     search: patientSearch,
@@ -244,26 +251,45 @@ const EditorV3Page = () => {
 
   // Busca de Marmitas e Templates
   useEffect(() => {
-    const loadData = async () => {
-      if (user?.id) {
-        const [marmitasData, templatesData] = await Promise.all([
+    const loadAllData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        console.log('[EditorV3] Iniciando carregamento de base crítica...');
+        
+        const [marmitasData, templatesData, baseData] = await Promise.all([
           searchMarmitas(user.id),
-          searchTemplates()
+          searchTemplates(),
+          getBaseFoods()
         ]);
+
+        console.log(`[EditorV3] food_database: ${baseData.length} itens`);
+        console.log(`[EditorV3] meal_recipes: ${marmitasData.length} itens`);
+        console.log(`[EditorV3] nutritionist_meal_templates: ${templatesData.length} itens`);
+
         setMarmitas(marmitasData);
         setTemplates(templatesData);
+        setBaseFoods(baseData);
+        
+        setDbStatus({
+          foods: baseData.length,
+          marmitas: marmitasData.length,
+          templates: templatesData.length,
+          error: null
+        });
+
+        if (baseData.length > 0 && templatesData.length > 0) {
+          setDataReady(true);
+        } else {
+          setDbStatus(prev => ({ ...prev, error: 'Base de dados incompleta ou vazia.' }));
+        }
+      } catch (err: any) {
+        console.error('[EditorV3] Erro crítico no fail-safe:', err);
+        setDbStatus(prev => ({ ...prev, error: err.message || 'Falha ao conectar com o banco de dados.' }));
       }
     };
-    loadData();
+    loadAllData();
   }, [user?.id]);
-
-  useEffect(() => {
-    const fetchBase = async () => {
-      const data = await getBaseFoods();
-      setBaseFoods(data);
-    };
-    fetchBase();
-  }, []);
 
   // Macros totais memoizados com fallback para kcal/calories
   const totalMacros = useMemo(() => {
@@ -468,6 +494,47 @@ const EditorV3Page = () => {
     }
   };
 
+  // Fail-safe: Bloqueio de renderização sem dados válidos
+  if (!dataReady && !isSandbox) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div className={cn(
+          "w-20 h-20 rounded-full flex items-center justify-center mb-6 animate-pulse",
+          dbStatus.error ? "bg-rose-500/10" : "bg-emerald-500/10"
+        )}>
+          {dbStatus.error ? <CloudOff className="w-10 h-10 text-rose-500" /> : <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />}
+        </div>
+        <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
+          {dbStatus.error ? "Base de dados não encontrada" : "Carregando Base Clínica"}
+        </h1>
+        <p className="text-white/40 max-w-sm mb-8">
+          {dbStatus.error || "Sincronizando tabelas essenciais (food_database, meal_recipes, templates) para garantir precisão clínica."}
+        </p>
+        
+        {dbStatus.error && (
+          <Button onClick={() => window.location.reload()} className="bg-white text-black font-black uppercase tracking-widest px-8 h-12 rounded-xl">
+            Tentar Novamente
+          </Button>
+        )}
+
+        <div className="mt-12 grid grid-cols-3 gap-8 opacity-20">
+          <div className="flex flex-col items-center">
+             <span className="text-[10px] font-black text-white uppercase">{dbStatus.foods}</span>
+             <span className="text-[8px] font-bold text-white/40 uppercase">Alimentos</span>
+          </div>
+          <div className="flex flex-col items-center">
+             <span className="text-[10px] font-black text-white uppercase">{dbStatus.templates}</span>
+             <span className="text-[8px] font-bold text-white/40 uppercase">Templates</span>
+          </div>
+          <div className="flex flex-col items-center">
+             <span className="text-[10px] font-black text-white uppercase">{dbStatus.marmitas}</span>
+             <span className="text-[8px] font-bold text-white/40 uppercase">Marmitas</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   // Sandbox mode check
   if (!patientId && !planId && !isSandbox) {
     return (
@@ -483,6 +550,7 @@ const EditorV3Page = () => {
       </div>
     );
   }
+
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
       {/* Gráfico de Macros Global - Topo */}
@@ -1508,14 +1576,14 @@ const EditorV3Page = () => {
                     setShowTemplatesModal(false);
                     toast.success(`Template ${t.name} aplicado!`);
                   }}
-                   className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
-                 >
-                   {debugMode && (
-                     <div className="absolute top-2 right-2 z-10">
-                       <Badge className="bg-amber-500/20 text-amber-500 text-[6px] font-black uppercase border-amber-500/30">nutritionist_meal_templates</Badge>
-                     </div>
-                   )}
-                   <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
+                >
+                  {debugMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-amber-500/20 text-amber-500 text-[6px] font-black uppercase border-amber-500/30">nutritionist_meal_templates</Badge>
+                    </div>
+                  )}
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
                     <Clock className="w-6 h-6 text-amber-500" />
                   </div>
                   <div className="flex flex-col flex-1">
