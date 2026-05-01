@@ -3012,7 +3012,9 @@ function buildGenerationMetadata(
 // ═══════════════════════════════════════════════════════════════
 
 export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?: any) {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const origin = req.headers.get("origin");
+  const dynamicCorsHeaders = getCorsHeaders(origin);
+  if (req.method === "OPTIONS") return new Response(null, { headers: dynamicCorsHeaders });
 
   try {
     // CRITICAL: Deno.serve passes (req, info) to handlers, where `info` is a non-null object.
