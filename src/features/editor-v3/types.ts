@@ -38,6 +38,15 @@ export interface MealItem extends Food {
   ingredients?: any[];
 }
 
+export interface AuditLogEntry {
+  type: "image_change";
+  mealId: string;
+  from: string;
+  to: string;
+  source: "manual" | "auto" | "fallback";
+  created_at: string;
+}
+
 export interface Meal {
   id: string;
   name: string;
@@ -48,7 +57,13 @@ export interface Meal {
   icon?: string;
   description?: string;
   imageUrl?: string;
-  imageSource?: 'auto' | 'manual';
+  imageSource?: 'auto' | 'manual' | 'fallback';
+}
+
+export interface DraftPayload {
+  meals: Meal[];
+  version: number;
+  audit_log?: AuditLogEntry[];
 }
 
 export interface MealTemplate {
