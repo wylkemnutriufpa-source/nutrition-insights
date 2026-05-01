@@ -294,6 +294,7 @@ const EditorV3Page = () => {
           foods: baseData.length,
           marmitas: marmitasData.length,
           templates: templatesData.length,
+          visualLibrary: 0, // Will be updated as needed
           error: null
         });
 
@@ -307,7 +308,7 @@ const EditorV3Page = () => {
           setMarmitas(m2);
           setTemplates(t2);
           setBaseFoods(b2);
-          setDbStatus({ foods: b2.length, marmitas: m2.length, templates: t2.length, error: null });
+          setDbStatus({ foods: b2.length, marmitas: m2.length, templates: t2.length, visualLibrary: 0, error: null });
           if (b2.length > 0 && t2.length > 0) setDataReady(true);
           return;
         }
