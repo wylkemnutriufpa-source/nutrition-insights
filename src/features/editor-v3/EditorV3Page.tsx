@@ -747,6 +747,7 @@ const EditorV3Page = () => {
 
       <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
         <div className="lg:col-span-8 space-y-12">
+          {meals.map((meal, index) => (
 
           <section key={meal.id} className="group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex flex-col mb-6">
