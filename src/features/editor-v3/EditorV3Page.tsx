@@ -1365,17 +1365,20 @@ const EditorV3Page = () => {
       {/* Alimentos Modal */}
       <Dialog open={showFoodsModal} onOpenChange={setShowFoodsModal}>
         <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black backdrop-blur-2xl flex flex-col rounded-none">
-          <DialogHeader className="p-6 pb-2">
-            <div className="flex items-center justify-between w-full pr-8">
+          <DialogHeader className="p-8 pb-4">
+            <div className="flex items-center justify-between w-full">
               <div>
-                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
-                  <Apple className="w-7 h-7 text-emerald-500" />
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-3xl">
+                  <Apple className="w-8 h-8 text-emerald-500" />
                   Biblioteca de Alimentos
                 </DialogTitle>
-                <DialogDescription className="text-white/40 font-bold">
+                <DialogDescription className="text-white/40 font-bold text-sm mt-1">
                   Explore a base TACO/USDA para adicionar à sua refeição.
                 </DialogDescription>
               </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowFoodsModal(false)} className="text-white/40 hover:text-white rounded-full h-12 w-12 hover:bg-white/5">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
           </DialogHeader>
 
@@ -1461,17 +1464,20 @@ const EditorV3Page = () => {
       {/* Marmitas Modal */}
       <Dialog open={showMarmitasModal} onOpenChange={setShowMarmitasModal}>
         <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black backdrop-blur-2xl flex flex-col rounded-none">
-          <DialogHeader className="p-6 pb-2">
-            <div className="flex items-center justify-between w-full pr-8">
+          <DialogHeader className="p-8 pb-4">
+            <div className="flex items-center justify-between w-full">
               <div>
-                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
-                  <Utensils className="w-7 h-7 text-blue-500" />
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-3xl">
+                  <Utensils className="w-8 h-8 text-blue-500" />
                   Minhas Marmitas
                 </DialogTitle>
-                <DialogDescription className="text-white/40 font-bold">
+                <DialogDescription className="text-white/40 font-bold text-sm mt-1">
                   Refeições completas prontas para montagem rápida.
                 </DialogDescription>
               </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowMarmitasModal(false)} className="text-white/40 hover:text-white rounded-full h-12 w-12 hover:bg-white/5">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
           </DialogHeader>
 
@@ -1579,17 +1585,20 @@ const EditorV3Page = () => {
       {/* Templates Modal */}
       <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
         <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black backdrop-blur-2xl flex flex-col rounded-none">
-          <DialogHeader className="p-6 pb-2">
-            <div className="flex items-center justify-between w-full pr-8">
+          <DialogHeader className="p-8 pb-4">
+            <div className="flex items-center justify-between w-full">
               <div>
-                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-2xl">
-                  <Layers className="w-7 h-7 text-amber-500" />
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-3xl">
+                  <Layers className="w-8 h-8 text-amber-500" />
                   Templates de Refeição
                 </DialogTitle>
-                <DialogDescription className="text-white/40 font-bold">
-                  Modelos estruturados para ganho de velocidade.
+                <DialogDescription className="text-white/40 font-bold text-sm mt-1">
+                  Modelos estruturados para ganho de velocidade. Selecione um template para aplicar à refeição.
                 </DialogDescription>
               </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowTemplatesModal(false)} className="text-white/40 hover:text-white rounded-full h-12 w-12 hover:bg-white/5">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
           </DialogHeader>
 
