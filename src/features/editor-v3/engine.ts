@@ -29,7 +29,7 @@ const createMealItem = (food: Food | undefined, quantity: number): MealItem | nu
 /**
  * Gera uma composição para uma refeição específica baseada no seu contexto (nome/horário)
  */
-export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: number = 2000): MealItem[] => {
+export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: number = 2000, availableFoods: Food[] = []): MealItem[] => {
   const mealName = meal.name.toLowerCase();
   let items: (MealItem | null)[] = [];
   
@@ -38,8 +38,8 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
   
   // Café da Manhã
   if (mealName.includes('café') || mealName.includes('desjejum')) {
-    const carbs = shuffleArray(mockFoods.filter(f => ['Pão', 'Aveia', 'Fruta', 'Banana', 'Maçã', 'Tapioca'].some(word => f.name.includes(word))));
-    const proteins = shuffleArray(mockFoods.filter(f => ['Ovo', 'Whey', 'Iogurte', 'Queijo', 'Frango'].some(word => f.name.includes(word))));
+    const carbs = shuffleArray(availableFoods.filter(f => ['Pão', 'Aveia', 'Fruta', 'Banana', 'Maçã', 'Tapioca'].some(word => f.name.includes(word))));
+    const proteins = shuffleArray(availableFoods.filter(f => ['Ovo', 'Whey', 'Iogurte', 'Queijo', 'Frango'].some(word => f.name.includes(word))));
     
     if (goal === 'ketogenic') {
       items = [
@@ -57,15 +57,15 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
 
   // Almoço / Jantar
   else if (mealName.includes('almoço') || mealName.includes('jantar')) {
-    const carbs = shuffleArray(mockFoods.filter(f => ['Arroz', 'Batata', 'Macarrão', 'Feijão', 'Quinoa'].some(word => f.name.includes(word))));
-    const proteins = shuffleArray(mockFoods.filter(f => ['Frango', 'Carne', 'Peixe', 'Ovo', 'Patinho'].some(word => f.name.includes(word))));
-    const veggies = shuffleArray(mockFoods.filter(f => ['Alface', 'Tomate', 'Brócolis', 'Cenoura'].some(word => f.name.includes(word))));
+    const carbs = shuffleArray(availableFoods.filter(f => ['Arroz', 'Batata', 'Macarrão', 'Feijão', 'Quinoa'].some(word => f.name.includes(word))));
+    const proteins = shuffleArray(availableFoods.filter(f => ['Frango', 'Carne', 'Peixe', 'Ovo', 'Patinho'].some(word => f.name.includes(word))));
+    const veggies = shuffleArray(availableFoods.filter(f => ['Alface', 'Tomate', 'Brócolis', 'Cenoura'].some(word => f.name.includes(word))));
 
     if (goal === 'ketogenic') {
       items = [
         createMealItem(proteins[0], 200 * scale),
         createMealItem(veggies[0], 100),
-        createMealItem(mockFoods.find(f => f.name.includes('Azeite')), 10 * scale)
+        createMealItem(availableFoods.find(f => f.name.includes('Azeite')), 10 * scale)
       ];
     } else if (goal === 'low-carb') {
       items = [
@@ -84,7 +84,7 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
 
   // Lanches
   else if (mealName.includes('lanche') || mealName.includes('ceia')) {
-    const snacks = shuffleArray(mockFoods.filter(f => ['Fruta', 'Iogurte', 'Aveia', 'Whey', 'Castanha', 'Pasta de Amendoim'].some(word => f.name.includes(word))));
+    const snacks = shuffleArray(availableFoods.filter(f => ['Fruta', 'Iogurte', 'Aveia', 'Whey', 'Castanha', 'Pasta de Amendoim'].some(word => f.name.includes(word))));
     
     if (goal === 'ketogenic') {
       items = [
@@ -101,7 +101,7 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
 
   // Fallback se nada foi gerado
   if (items.length === 0 || items.every(i => i === null)) {
-    const randoms = shuffleArray(mockFoods).slice(0, 2);
+    const randoms = shuffleArray(availableFoods).slice(0, 2);
     items = [createMealItem(randoms[0], 100 * scale)];
   }
 
@@ -111,13 +111,13 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
 /**
  * Gera um plano completo distribuindo alimentos em todas as refeições vazias
  */
-export const generatePlanWithEngine = (currentMeals: Meal[], goal: string, baseCalories: number = 2000): Meal[] => {
+export const generatePlanWithEngine = (currentMeals: Meal[], goal: string, baseCalories: number = 2000, availableFoods: Food[] = []): Meal[] => {
   return currentMeals.map(meal => {
     // Só geramos para refeições vazias para evitar sobrescrever trabalho do usuário
     if (meal.items.length === 0) {
       return {
         ...meal,
-        items: generateMealWithEngine(meal, goal, baseCalories)
+        items: generateMealWithEngine(meal, goal, baseCalories, availableFoods)
       };
     }
     return meal;
