@@ -104,6 +104,7 @@ const EditorV3Page = () => {
   const hydratedRef = useRef(false);
   const [promoting, setPromoting] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
+  const [showClinicalDecision, setShowClinicalDecision] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRevertConfirm, setShowRevertConfirm] = useState(false);
   const [showPatientSelector, setShowPatientSelector] = useState(false);
@@ -468,7 +469,7 @@ const EditorV3Page = () => {
     const isLowConfidence = confidence && confidence.value < 70;
 
     if (hasViolations || isLowConfidence) {
-      setShowValidation(true);
+      setShowClinicalDecision(true);
     } else {
       handleConfirmPromotion();
     }
@@ -500,7 +501,7 @@ const EditorV3Page = () => {
         toast.error('Erro ao recuperar rascunho remoto.');
         return;
       }
-      const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1 } });
+      const result = await promoteDraftToMealPlan({ ...fresh, payload: { meals, version: 1, patient_context: patientContext, nutritional_score: nutritionalScore, confidence: confidence } });
       if (result.ok) {
         toast.success('Plano promovido com sucesso!');
         await savePlan();
@@ -758,7 +759,7 @@ const EditorV3Page = () => {
                              <p className="text-[8px] text-white/30 uppercase font-black mb-1">Restrições</p>
                              <div className="flex flex-wrap gap-1">
                                {patientContext.restrictions.map(r => (
-                                 <Badge key={r} variant="ghost" className="bg-rose-500/10 text-rose-500 text-[8px] border-rose-500/20">{r}</Badge>
+                                 <Badge key={r} variant="secondary" className="bg-rose-500/10 text-rose-500 text-[8px] border-rose-500/20">{r}</Badge>
                                ))}
                              </div>
                            </div>
@@ -1358,6 +1359,89 @@ const EditorV3Page = () => {
               )}
             </div>
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showClinicalDecision} onOpenChange={setShowClinicalDecision}>
+        <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
+          <div className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+               <div className="w-14 h-14 rounded-2xl bg-rose-500/10 flex items-center justify-center border border-rose-500/20">
+                  <AlertTriangle className="w-8 h-8 text-rose-500" />
+               </div>
+               <div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Decisão Clínica Necessária</h2>
+                  <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">O plano atual possui inconsistências críticas para este paciente.</p>
+               </div>
+            </div>
+
+            <div className="space-y-6">
+               <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                  <div className="flex items-center justify-between mb-4">
+                    <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Diagnóstico V3</p>
+                    {confidence && (
+                       <Badge className={cn(
+                        "font-black uppercase text-[10px]",
+                        confidence.level === 'high' ? "bg-emerald-500 text-black" :
+                        confidence.level === 'medium' ? "bg-amber-500 text-black" : "bg-rose-500 text-white"
+                      )}>
+                        Confiança: {confidence.value}%
+                      </Badge>
+                    )}
+                  </div>
+                  
+                  <div className="space-y-3">
+                    {validationIssues.filter(i => i.severity === 'critical').map((issue, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-rose-500/5 p-3 rounded-xl border border-rose-500/10">
+                        <XCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-white/80 font-bold">{issue.message}</p>
+                      </div>
+                    ))}
+                    {validationIssues.filter(i => i.severity === 'attention').map((issue, idx) => (
+                      <div key={idx} className="flex items-start gap-3 bg-amber-500/5 p-3 rounded-xl border border-amber-500/10">
+                        <AlertTriangle className="w-4 h-4 text-amber-500 shrink-0 mt-0.5" />
+                        <p className="text-xs text-white/80 font-bold">{issue.message}</p>
+                      </div>
+                    ))}
+                  </div>
+               </div>
+
+               <div className="grid grid-cols-2 gap-4">
+                  <Button 
+                    variant="outline" 
+                    onClick={() => {
+                      setShowClinicalDecision(false);
+                      refinePlan(baseFoods);
+                    }}
+                    className="h-14 border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/10 font-black uppercase tracking-widest text-xs rounded-2xl gap-3"
+                  >
+                    <Sparkles className="w-5 h-5" /> Corrigir Automaticamente
+                  </Button>
+                  <Button 
+                    variant="outline"
+                    onClick={() => setShowClinicalDecision(false)}
+                    className="h-14 border-white/5 bg-white/5 text-white/60 hover:bg-white/10 font-black uppercase tracking-widest text-xs rounded-2xl gap-3"
+                  >
+                    <Edit3 className="w-5 h-5" /> Revisar Manualmente
+                  </Button>
+               </div>
+            </div>
+          </div>
+          
+          <div className="bg-white/5 p-6 flex items-center justify-between border-t border-white/10">
+             <p className="text-[10px] text-white/20 font-black uppercase tracking-tighter max-w-[200px]">
+               Forçar o salvamento pode comprometer a estratégia nutricional do paciente.
+             </p>
+             <Button 
+               variant="ghost" 
+               onClick={() => {
+                 setShowClinicalDecision(false);
+                 handleConfirmPromotion();
+               }}
+               className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
+             >
+               Forçar Salvamento (Com Confirmação)
+             </Button>
+          </div>
         </DialogContent>
       </Dialog>
     </div>
