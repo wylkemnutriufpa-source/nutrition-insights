@@ -408,16 +408,16 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     if (initialMeals && initialMeals.length > 0) {
-      hydrateMeals(initialMeals);
+      hydrateMeals(initialMeals, initialAuditLog);
       hydratedRef.current = true;
     }
-  }, [initialMeals, hydrateMeals]);
+  }, [initialMeals, initialAuditLog, hydrateMeals]);
 
   useEffect(() => {
     if (hydratedRef.current && draftId) {
-      scheduleSave(meals);
+      scheduleSave(meals, auditLog);
     }
-  }, [meals, draftId, scheduleSave]);
+  }, [meals, auditLog, draftId, scheduleSave]);
 
   const handlePromotionRequest = () => {
     setShowValidation(true);
