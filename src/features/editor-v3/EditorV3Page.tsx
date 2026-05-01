@@ -1395,67 +1395,122 @@ const EditorV3Page = () => {
             </div>
 
             <Tabs defaultValue="all" className="w-full" onValueChange={setActiveFoodCategory}>
-              <TabsList className="bg-white/5 w-full justify-start p-1 rounded-xl h-auto flex-wrap gap-1">
-                <TabsTrigger value="all" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Todos</TabsTrigger>
-                <TabsTrigger value="proteina" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Proteínas</TabsTrigger>
-                <TabsTrigger value="carboidrato" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Carbos</TabsTrigger>
-                <TabsTrigger value="fruta" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Frutas</TabsTrigger>
-                <TabsTrigger value="vegetal" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Vegetais</TabsTrigger>
-                <TabsTrigger value="gordura" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[10px] font-black uppercase rounded-lg h-8">Gorduras</TabsTrigger>
+              <TabsList className="bg-white/5 w-full justify-start p-1.5 rounded-2xl h-auto flex-wrap gap-2 mb-4 border border-white/5">
+                <TabsTrigger value="all" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Geral</TabsTrigger>
+                <TabsTrigger value="food" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Alimentos</TabsTrigger>
+                <TabsTrigger value="marmita" className="data-[state=active]:bg-blue-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Marmitas</TabsTrigger>
+                <TabsTrigger value="template" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Templates</TabsTrigger>
               </TabsList>
             </Tabs>
           </div>
 
-          <ScrollArea className="flex-1 px-4">
-            <div className="p-2 grid grid-cols-1 md:grid-cols-2 gap-2 pb-6">
-              {foods
-                .filter(f => activeFoodCategory === 'all' || (f as any).category === activeFoodCategory)
-                .map((f) => (
+          <ScrollArea className="flex-1 px-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
+              {/* Seção de Alimentos */}
+              {(activeFoodCategory === 'all' || activeFoodCategory === 'food') && foods.map((f) => (
                 <button
                   key={f.id}
                   onClick={() => {
                     if (activeMealId) addFoodToMeal(activeMealId, f);
                     setShowFoodsModal(false);
-                    toast.success(`${f.name} adicionado!`);
                   }}
-                  className="group relative flex flex-col items-start p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden"
+                  className="group relative flex flex-col items-start p-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
                 >
-                  {debugMode && (
-                    <div className="absolute top-2 right-2 z-10">
-                      <Badge className="bg-emerald-500/20 text-emerald-500 text-[6px] font-black uppercase border-emerald-500/30">food_database</Badge>
-                    </div>
-                  )}
-                  <div className="flex justify-between items-start w-full mb-1">
-                    <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-1">{f.name}</span>
-                    <Badge className="bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                  <div className="flex justify-between items-start w-full mb-2">
+                    <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-sm leading-tight pr-8">{f.name}</span>
+                    <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
                   </div>
-                  <span className="text-[10px] font-bold text-white/30 uppercase tracking-tighter mb-3">{f.portionLabel}</span>
+                  <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-4">{f.portionLabel}</span>
                   
-                  <div className="flex items-center gap-4 w-full">
+                  <div className="flex items-center gap-6 w-full mt-auto">
                     <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-white/20 uppercase">Prot</span>
-                      <span className="text-[10px] font-black text-emerald-400/70">{f.protein}g</span>
+                      <span className="text-[9px] font-black text-white/10 uppercase">Prot</span>
+                      <span className="text-xs font-black text-emerald-400/80">{f.protein}g</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-white/20 uppercase">Carb</span>
-                      <span className="text-[10px] font-black text-blue-400/70">{f.carbs}g</span>
+                      <span className="text-[9px] font-black text-white/10 uppercase">Carb</span>
+                      <span className="text-xs font-black text-blue-400/80">{f.carbs}g</span>
                     </div>
                     <div className="flex flex-col">
-                      <span className="text-[8px] font-black text-white/20 uppercase">Gord</span>
-                      <span className="text-[10px] font-black text-amber-400/70">{f.fat}g</span>
+                      <span className="text-[9px] font-black text-white/10 uppercase">Gord</span>
+                      <span className="text-xs font-black text-amber-400/80">{f.fat}g</span>
                     </div>
                   </div>
-                  
-                  <Plus className="absolute bottom-4 right-4 w-4 h-4 text-emerald-500/20 group-hover:text-emerald-500 group-hover:scale-125 transition-all" />
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black">
+                      <Plus className="w-4 h-4" />
+                    </div>
+                  </div>
                 </button>
               ))}
-              
-              {foods.length === 0 && !isSearchingFoods && (
-                <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/10 italic font-medium">
-                  <Apple className="w-12 h-12 mb-4 opacity-10" />
-                  <p>Digite para buscar em nossa base de dados clínica.</p>
-                </div>
-              )}
+
+              {/* Seção de Marmitas */}
+              {(activeFoodCategory === 'all' || activeFoodCategory === 'marmita') && marmitas.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    if (activeMealId) addMarmitaToMeal(activeMealId, m);
+                    setShowFoodsModal(false);
+                  }}
+                  className="group relative flex flex-col items-start p-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                >
+                  <div className="flex justify-between items-start w-full mb-2">
+                    <span className="font-black text-white group-hover:text-blue-400 transition-colors line-clamp-2 text-sm leading-tight pr-8">{m.name}</span>
+                    <Badge className="bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase border-0">{m.kcal} kcal</Badge>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-4">Marmita Pronta</span>
+                  
+                  <div className="flex items-center gap-6 w-full mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase">Prot</span>
+                      <span className="text-xs font-black text-emerald-400/80">{m.protein}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase">Carb</span>
+                      <span className="text-xs font-black text-blue-400/80">{m.carbs}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase">Gord</span>
+                      <span className="text-xs font-black text-amber-400/80">{m.fat}g</span>
+                    </div>
+                  </div>
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-8 h-8 rounded-full bg-blue-500 flex items-center justify-center text-black">
+                      <Plus className="w-4 h-4" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+
+              {/* Seção de Templates */}
+              {(activeFoodCategory === 'all' || activeFoodCategory === 'template') && templates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    if (activeMealId) applyTemplateToMeal(activeMealId, t);
+                    setShowFoodsModal(false);
+                  }}
+                  className="group relative flex flex-col items-start p-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                >
+                  <div className="flex justify-between items-start w-full mb-2">
+                    <span className="font-black text-white group-hover:text-amber-400 transition-colors line-clamp-2 text-sm leading-tight pr-8">{t.name}</span>
+                    <Badge className="bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase border-0">{t.items.length} Itens</Badge>
+                  </div>
+                  <p className="text-[10px] font-medium text-white/40 line-clamp-2 mb-4 h-8">{t.description}</p>
+                  
+                  <div className="flex gap-2 mt-auto">
+                    {t.items.slice(0, 2).map((item, idx) => (
+                      <Badge key={idx} variant="outline" className="text-[8px] h-4 bg-white/5 border-white/10 text-white/30">{item.name}</Badge>
+                    ))}
+                    {t.items.length > 2 && <span className="text-[8px] text-white/20 font-black">+{t.items.length - 2}</span>}
+                  </div>
+                  <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="w-8 h-8 rounded-full bg-amber-500 flex items-center justify-center text-black">
+                      <Plus className="w-4 h-4" />
+                    </div>
+                  </div>
+                </button>
+              ))}
             </div>
           </ScrollArea>
         </DialogContent>
