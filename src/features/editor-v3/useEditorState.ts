@@ -13,12 +13,7 @@ interface EditorState {
   planStatus: 'draft' | 'saving' | 'saved';
   nutritionalScore: NutritionalScore | null;
   validationIssues: ValidationIssue[];
-  goalMetadata: {
-    calories?: number;
-    protein?: number;
-    carbs?: number;
-    fat?: number;
-  };
+  goalMetadata: PlanMetadata;
 
   setPatientId: (id: string) => void;
   setGoalMetadata: (metadata: any) => void;
