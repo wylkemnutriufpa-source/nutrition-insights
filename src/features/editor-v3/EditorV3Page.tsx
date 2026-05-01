@@ -132,6 +132,23 @@ const EditorV3Page = () => {
   const [newMealName, setNewMealName] = useState('');
   const [newMealTime, setNewMealTime] = useState('00:00');
 
+  // Helper functions for modal management
+  const setShowFoodsModal = (val: boolean) => {
+    setActiveTab('food');
+    setShowMainAddModal(val);
+  };
+  const setShowTemplatesModal = (val: boolean) => {
+    setActiveTab('template');
+    setShowMainAddModal(val);
+  };
+  const setShowMarmitasModal = (val: boolean) => {
+    setActiveTab('marmita');
+    setShowMainAddModal(val);
+  };
+  const showFoodsModal = showMainAddModal && activeTab === 'food';
+  const showTemplatesModal = showMainAddModal && activeTab === 'template';
+  const showMarmitasModal = showMainAddModal && activeTab === 'marmita';
+
   const [activeFoodCategory, setActiveFoodCategory] = useState<string>('all');
 
   const [foodSearch, setFoodSearch] = useState('');
