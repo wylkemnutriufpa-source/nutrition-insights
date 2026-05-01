@@ -239,23 +239,30 @@ const EditorV3Page = () => {
         setIsSearchingFoods(true);
         setIsSearchingVisualLibrary(true);
         
-        const [foodResults, visualResults] = await Promise.all([
+        const [foodResults, visualData] = await Promise.all([
           searchFoods(foodSearch),
           searchVisualLibrary(foodSearch, activeTab === 'visual' ? selectedVisualCategory : undefined, user?.id)
         ]);
         
         setFoods(foodResults);
-        setVisualLibraryResults(visualResults);
+        if (visualData) {
+          setVisualLibraryResults(visualData.items);
+          setVisualLibraryInfo({ 
+            count: visualData.categoryCount || 0, 
+            incomplete: visualData.incomplete || false 
+          });
+        }
         
         setIsSearchingFoods(false);
         setIsSearchingVisualLibrary(false);
       } else if (foodSearch.length === 0 && activeTab !== 'visual') {
         setFoods([]);
         setVisualLibraryResults([]);
+        setVisualLibraryInfo({ count: 0, incomplete: false });
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [foodSearch, selectedVisualCategory, activeTab]);
+  }, [foodSearch, selectedVisualCategory, activeTab, user?.id]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
