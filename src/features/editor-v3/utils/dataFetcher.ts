@@ -249,24 +249,24 @@ export const seedBaseData = async (nutritionistId: string): Promise<boolean> => 
 
     // 3. Templates Base
     const baseTemplates = [
-      { name: 'Café da Manhã Clássico', goal_tags: ['Manutenção', 'Equilíbrio'], foods_structure: [
-        { name: 'Pão de Forma Integral', kcal: 120, protein: 5, carbs: 22, fat: 2, portion: '2 fatias' },
+      { nutritionist_id: nutritionistId, name: 'Café da Manhã Clássico', goal_tags: ['Manutenção', 'Equilíbrio'], foods_structure: [
+        { name: 'Pão de Forma Integral', kcal: 120, protein: 9, carbs: 22, fat: 3, portion: '2 fatias' },
         { name: 'Ovo de Galinha Cozido', kcal: 150, protein: 12, carbs: 1, fat: 10, portion: '2 unidades' }
       ]},
-      { name: 'Almoço Performance', goal_tags: ['Hipertrofia', 'Energia'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Almoço Performance', goal_tags: ['Hipertrofia', 'Energia'], foods_structure: [
         { name: 'Arroz Branco Cozido', kcal: 195, protein: 4, carbs: 42, fat: 0, portion: '150g' },
         { name: 'Feijão Carioca Cozido', kcal: 76, protein: 5, carbs: 14, fat: 0, portion: '100g' },
         { name: 'Peito de Frango Grelhado', kcal: 247, protein: 46, carbs: 0, fat: 5, portion: '150g' }
       ]},
-      { name: 'Lanche Prático', goal_tags: ['Praticidade', 'Saciedade'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Lanche Prático', goal_tags: ['Praticidade', 'Saciedade'], foods_structure: [
         { name: 'Iogurte Natural Integral', kcal: 100, protein: 6, carbs: 8, fat: 5, portion: '170g' },
         { name: 'Aveia em Flocos', kcal: 115, protein: 5, carbs: 20, fat: 2, portion: '30g' }
       ]},
-      { name: 'Jantar Leve', goal_tags: ['Cutting', 'Sono'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Jantar Leve', goal_tags: ['Cutting', 'Sono'], foods_structure: [
         { name: 'Filé de Tilápia Grelhado', kcal: 130, protein: 26, carbs: 0, fat: 3, portion: '100g' },
         { name: 'Brócolis Cozido', kcal: 35, protein: 3, carbs: 7, fat: 0, portion: '100g' }
       ]},
-      { name: 'Pré-Treino Explosivo', goal_tags: ['Performance', 'Foco'], foods_structure: [
+      { nutritionist_id: nutritionistId, name: 'Pré-Treino Explosivo', goal_tags: ['Performance', 'Foco'], foods_structure: [
         { name: 'Banana Nanica', kcal: 90, protein: 1, carbs: 23, fat: 0, portion: '1 unidade' },
         { name: 'Aveia em Flocos', kcal: 115, protein: 5, carbs: 20, fat: 2, portion: '30g' }
       ]}
