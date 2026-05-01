@@ -1,13 +1,9 @@
-import { Meal } from '../types';
+import { Meal, PlanConfidence } from '../types';
 import { calculateItemMacros } from './v3Motor';
 import { PlanMetadata } from './nutritionalEvaluator';
 import { NutritionalScore, ValidationIssue } from '../nutritionalScoreTypes';
 
-export interface PlanConfidence {
-  value: number;
-  level: 'low' | 'medium' | 'high';
-  reasons: string[];
-}
+// ... keep existing code
 
 /**
  * Calcula o Score Nutricional adaptado ao contexto do paciente
@@ -183,10 +179,21 @@ export const calculatePlanConfidence = (
   let value = score.total;
   const reasons: string[] = [];
 
+  const breakdown = {
+    objectiveAdherence: score.breakdown.calories * 0.5 + score.breakdown.macros * 0.5,
+    quality: score.breakdown.quality,
+    consistency: score.breakdown.distribution,
+    restrictions: 100
+  };
+
   const criticalIssues = issues.filter(i => i.severity === 'critical');
   if (criticalIssues.length > 0) {
     value -= criticalIssues.length * 15;
     reasons.push(`${criticalIssues.length} erro(s) crítico(s) detectado(s)`);
+    
+    if (issues.some(i => i.type === 'restriction')) {
+      breakdown.restrictions = Math.max(0, 100 - criticalIssues.filter(i => i.type === 'restriction').length * 40);
+    }
   }
 
   if (score.breakdown.quality < 70) {
@@ -197,6 +204,7 @@ export const calculatePlanConfidence = (
   if (!metadata.goal) {
     value -= 20;
     reasons.push('Plano sem contexto de objetivo definido');
+    breakdown.objectiveAdherence = 0;
   }
 
   value = Math.max(0, Math.min(100, value));
@@ -205,5 +213,5 @@ export const calculatePlanConfidence = (
   if (value < 50) level = 'low';
   else if (value < 80) level = 'medium';
 
-  return { value, level, reasons };
+  return { value, level, reasons, breakdown };
 };

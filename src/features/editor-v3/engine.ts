@@ -150,11 +150,34 @@ export const refinePlanWithScore = (
   meals: Meal[], 
   metadata: PlanMetadata, 
   issues: ValidationIssue[], 
-  availableFoods: Food[]
+  availableFoods: Food[],
+  level: 'light' | 'moderate' | 'aggressive' = 'moderate'
 ): Meal[] => {
   let newMeals = [...meals];
   
+  // 1. Nível LIGHT: Apenas ajusta quantidades de itens existentes para bater macros
+  if (level === 'light') {
+    return newMeals.map(meal => ({
+      ...meal,
+      items: meal.items.map(item => {
+        if (item.locked) return item;
+        
+        // Ajuste simples de +10% ou -10% se houver erro de calorias
+        const calIssue = issues.find(i => i.type === 'calories');
+        if (calIssue) {
+          const factor = calIssue.message.includes('acima') ? 0.9 : 1.1;
+          return { ...item, quantity: Math.round(item.quantity * factor) };
+        }
+        return item;
+      })
+    }));
+  }
+
+  // 2. Nível MODERATE e AGGRESSIVE
   issues.forEach(issue => {
+    // Se moderado, focamos em substituições e adições pontuais
+    // Se agressivo, podemos adicionar mais itens ou trocar mais radicalmente
+
     // 1. Se proteína baixa -> adicionar fonte proteica
     if (issue.type === 'protein' && issue.severity === 'critical') {
       const proteins = availableFoods.filter(f => isProtein(f.name));

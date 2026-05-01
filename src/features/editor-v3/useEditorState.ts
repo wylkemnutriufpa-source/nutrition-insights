@@ -4,6 +4,7 @@ import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, Plan
 import { generatePlanWithEngine, generateMealWithEngine, refinePlanWithScore } from './engine';
 import { calculateNutritionalScore, validatePlanClinically, type PlanMetadata } from './utils/nutritionalEvaluator';
 import { calculatePersonalizedScore, validateClinicalContext, calculatePlanConfidence } from './utils/clinicalIntelligence';
+import { runClinicalRegressions } from './utils/clinicalRegression';
 import { NutritionalScore, ValidationIssue } from './nutritionalScoreTypes';
 import { toast } from 'sonner';
 
@@ -15,6 +16,8 @@ interface EditorState {
   nutritionalScore: NutritionalScore | null;
   validationIssues: ValidationIssue[];
   goalMetadata: PlanMetadata;
+  clinicalMode: boolean;
+  lastBlockedReason: string | null;
   patientContext: PatientContext | null;
   confidence: PlanConfidence | null;
 
@@ -22,7 +25,8 @@ interface EditorState {
   setPatientContext: (context: PatientContext) => void;
   setGoalMetadata: (metadata: any) => void;
   recalculateScore: () => void;
-  refinePlan: (availableFoods: Food[]) => void;
+  addAuditEntry: (entry: Omit<AuditLogEntry, 'created_at'>) => void;
+  refinePlan: (availableFoods: Food[], level?: 'light' | 'moderate' | 'aggressive') => void;
   addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[]) => void;
   addMeal: () => void;
@@ -66,8 +70,32 @@ export const useEditorState = create<EditorState>()(
       goalMetadata: {},
       patientContext: null,
       confidence: null,
+      clinicalMode: true, // editor_v3_clinical_mode = true
+      lastBlockedReason: null,
 
-      setPatientId: (id) => set({ patientId: id }),
+      setPatientId: (id) => {
+        set({ patientId: id });
+        get().addAuditEntry({
+          type: 'system_action',
+          description: `Paciente ${id} selecionado`,
+          source: 'system'
+        });
+      },
+
+      addAuditEntry: (entry) => {
+        const newEntry: AuditLogEntry = {
+          ...entry,
+          created_at: new Date().toISOString()
+        };
+        
+        if (process.env.NODE_ENV === 'development') {
+          console.log(`[Clinical Audit] ${newEntry.type}: ${newEntry.description}`, newEntry);
+        }
+        
+        set((state) => ({
+          auditLog: [...state.auditLog, newEntry]
+        }));
+      },
       
       setPatientContext: (context) => {
         set({ patientContext: context, goalMetadata: {
@@ -89,6 +117,12 @@ export const useEditorState = create<EditorState>()(
 
       recalculateScore: () => {
         const { meals, goalMetadata } = get();
+        
+        // Rodar regressões internas para garantir integridade
+        if (process.env.NODE_ENV === 'development') {
+          runClinicalRegressions();
+        }
+        
         // Fallback para o sistema anterior se não houver contexto clínico
         const nutritionalScore = calculatePersonalizedScore(meals, goalMetadata);
         const clinicalIssues = validateClinicalContext(meals, goalMetadata);
@@ -104,17 +138,24 @@ export const useEditorState = create<EditorState>()(
         });
       },
 
-      refinePlan: (availableFoods) => {
+      refinePlan: (availableFoods, level = 'moderate') => {
         const { meals, goalMetadata, validationIssues } = get();
         if (validationIssues.length === 0) {
           toast.info("O plano já parece estar bem balanceado.");
           return;
         }
         
-        const refinedMeals = refinePlanWithScore(meals, goalMetadata, validationIssues, availableFoods);
+        const refinedMeals = refinePlanWithScore(meals, goalMetadata, validationIssues, availableFoods, level);
+        
+        get().addAuditEntry({
+          type: 'engine_action',
+          description: `Refinamento clínico aplicado (Nível: ${level})`,
+          source: 'engine'
+        });
+
         set({ meals: refinedMeals, planStatus: 'draft' });
         get().recalculateScore();
-        toast.success("Plano refinado com base no diagnóstico clínico!");
+        toast.success(`Plano refinado com sucesso (${level})!`);
       },
 
       addMealWithHeader: (name, time) => {
@@ -130,6 +171,13 @@ export const useEditorState = create<EditorState>()(
           ],
           planStatus: 'draft',
         }));
+        
+        get().addAuditEntry({
+          type: 'system_action',
+          description: `Refeição "${name}" adicionada`,
+          source: 'manual'
+        });
+
         get().recalculateScore();
         toast.success(`Refeição "${name}" adicionada!`);
       },
@@ -234,10 +282,10 @@ export const useEditorState = create<EditorState>()(
 
           const newAuditEntry: AuditLogEntry = {
             type: "image_change",
+            description: `Imagem alterada para ${imageUrl}`,
             mealId,
-            from: meal.imageUrl || 'none',
-            to: imageUrl,
-            source: imageSource,
+            source: imageSource === 'manual' ? 'manual' : 'engine',
+            metadata: { from: meal.imageUrl || 'none', to: imageUrl },
             created_at: new Date().toISOString()
           };
 
@@ -432,6 +480,29 @@ export const useEditorState = create<EditorState>()(
       },
 
       savePlan: async () => {
+        const { validationIssues, confidence, patientId, addAuditEntry } = get();
+        
+        // Registrar tentativa de salvar
+        addAuditEntry({
+          type: 'save_attempt',
+          description: 'Nutricionista tentou promover o plano',
+          source: 'manual'
+        });
+
+        const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
+        if (criticalIssues.length > 0 || (confidence && confidence.value < 70)) {
+          const reason = criticalIssues.length > 0 ? criticalIssues[0].message : 'Baixa confiança clínica';
+          
+          set({ lastBlockedReason: reason });
+          
+          addAuditEntry({
+            type: 'save_blocked',
+            description: `Salvamento bloqueado: ${reason}`,
+            source: 'system',
+            metadata: { issues: criticalIssues.map(i => i.message) }
+          });
+        }
+
         set({ planStatus: 'saving' });
         await new Promise((resolve) => setTimeout(resolve, 1000));
         set({ planStatus: 'saved' });
