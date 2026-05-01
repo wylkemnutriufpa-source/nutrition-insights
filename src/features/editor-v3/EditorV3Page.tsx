@@ -131,7 +131,7 @@ const EditorV3Page = () => {
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [showMainAddModal, setShowMainAddModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'food' | 'marmita' | 'template'>('food');
+  const [activeTab, setActiveTab] = useState<'food' | 'marmita' | 'template' | 'visual'>('food');
   const [activeMealId, setActiveMealId] = useState<string | null>(null);
   const [newMealName, setNewMealName] = useState('');
   const [newMealTime, setNewMealTime] = useState('00:00');
