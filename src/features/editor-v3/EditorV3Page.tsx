@@ -907,7 +907,7 @@ const EditorV3Page = () => {
                     <span className="text-xs font-black text-blue-400">{Math.round(totalMacros.carbs)}g</span>
                  </div>
                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (totalMacros.carbs / (goalMetadata.carbs || 300)) * 100)}%` }} />
+                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (totalMacros.carbs / (goalMetadata.goalCarbs || 300)) * 100)}%` }} />
                  </div>
               </div>
             </div>
