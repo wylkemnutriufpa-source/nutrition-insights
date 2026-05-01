@@ -537,6 +537,20 @@ const EditorV3Page = () => {
 
   // Sandbox mode check
   if (!patientId && !planId && !isSandbox) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-6">
+          <UserX className="w-10 h-10 text-rose-500" />
+        </div>
+        <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Paciente não selecionado</h1>
+        <p className="text-white/40 max-w-sm mb-8">Você precisa selecionar um paciente para criar ou editar um plano real.</p>
+        <Button onClick={() => navigate('/patients')} className="bg-white text-black font-black uppercase tracking-widest px-8 h-12 rounded-xl">
+          Voltar para Pacientes
+        </Button>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
       {/* Gráfico de Macros Global - Topo */}
