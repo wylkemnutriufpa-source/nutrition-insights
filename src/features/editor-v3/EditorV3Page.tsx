@@ -962,47 +962,82 @@ const EditorV3Page = () => {
                 </button>
               ))}
 
-              {activeTab === 'visual' && visualLibraryResults.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => {
-                    if (activeMealId) {
-                      updateMealImage(activeMealId, v.imageUrl!, 'manual');
-                      setShowMainAddModal(false);
-                      toast.success(`Imagem da refeição atualizada!`);
-                    }
-                  }}
-                  className="group relative flex flex-col items-start p-4 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
-                >
-                  <div className="w-full h-40 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all relative">
-                    {v.imageUrl ? (
-                      <img 
-                        src={v.imageUrl} 
-                        alt={v.name} 
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-white/5 animate-pulse">
-                         <ImageIcon className="w-10 h-10 text-white/5" />
+              {activeTab === 'visual' && (
+                <>
+                  {visualLibraryInfo.incomplete && (
+                    <div className="col-span-full mb-4">
+                      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-xs font-black text-amber-500 uppercase tracking-wider">Catálogo Incompleto</p>
+                          <p className="text-[10px] text-amber-500/70 font-bold uppercase tracking-tight">Esta categoria possui poucas imagens. Recomendamos o upload de novas fotos para esta categoria.</p>
+                        </div>
+                        <Badge className="bg-amber-500 text-black text-[9px] font-black uppercase">Mínimo não atingido</Badge>
                       </div>
-                    )}
-                    {v.nutritionistId === user?.id && (
-                      <Badge className="absolute top-3 right-3 bg-emerald-500 text-black text-[7px] font-black uppercase border-0 shadow-xl">
-                        Minha Imagem
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-start w-full px-2">
-                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-sm uppercase tracking-tight">{(v as any).display_name || v.name}</span>
-                  </div>
-                  {v.category && (
-                    <Badge className="mt-2 ml-2 bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
-                      {visualLibraryCategories.find(c => c.id === v.category)?.label || v.category}
-                    </Badge>
+                    </div>
                   )}
-                </button>
-              ))}
+
+                  {visualLibraryResults.length === 0 && !isSearchingVisualLibrary ? (
+                    <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/10">
+                      <ImageIcon className="w-16 h-16 mb-4 opacity-10" />
+                      <p className="uppercase tracking-[0.2em] font-black text-xs">Nenhuma imagem disponível para esta categoria</p>
+                    </div>
+                  ) : (
+                    visualLibraryResults.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            updateMealImage(activeMealId, v.imageUrl!, 'manual');
+                            setShowMainAddModal(false);
+                            toast.success(`Imagem da refeição atualizada!`);
+                          }
+                        }}
+                        className="group relative flex flex-col items-start p-4 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                      >
+                        <div className="w-full h-40 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-emerald-500/20 transition-all relative">
+                          {v.imageUrl ? (
+                            <img 
+                              src={v.imageUrl} 
+                              alt={v.name} 
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-white/5 animate-pulse">
+                               <ImageIcon className="w-10 h-10 text-white/5" />
+                            </div>
+                          )}
+                          {v.nutritionistId === user?.id && (
+                            <Badge className="absolute top-3 right-3 bg-emerald-500 text-black text-[7px] font-black uppercase border-0 shadow-xl">
+                              Minha Imagem
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex justify-between items-start w-full px-2">
+                          <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-sm uppercase tracking-tight">{(v as any).display_name || v.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 ml-2">
+                          {v.category && (
+                            <Badge className="bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
+                              {visualLibraryCategories.find(c => c.id === v.category)?.label || v.category}
+                            </Badge>
+                          )}
+                          {v.nutritionistId ? (
+                             <Badge className="bg-emerald-500/10 text-emerald-500/50 text-[8px] font-black uppercase border-0">
+                               Personalizada
+                             </Badge>
+                          ) : (
+                             <Badge className="bg-white/5 text-white/20 text-[8px] font-black uppercase border-0">
+                               Sistema
+                             </Badge>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </>
+              )}
 
               {activeTab === 'marmita' && marmitas.map((m) => (
                 <button
