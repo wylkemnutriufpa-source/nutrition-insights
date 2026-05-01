@@ -173,5 +173,14 @@ export async function promoteDraftToMealPlan(
     })
     .eq('id', draft.id);
 
+  // Log de acesso: Exportação/Promoção de draft para plano oficial
+  await supabase.from('access_logs').insert({
+    user_id: draft.nutritionist_id,
+    patient_id: draft.patient_id,
+    action: 'export',
+    resource: 'meal_plan',
+    user_agent: navigator.userAgent
+  });
+
   return { ok: true, mealPlanId: plan.id };
 }
