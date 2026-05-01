@@ -173,9 +173,10 @@ export async function saveDraft(
   // Log de acesso: Edição de draft
   const { data: userRes } = await supabase.auth.getUser();
   if (userRes.user) {
+    const record = data as unknown as DraftRecord;
     await supabase.from('access_logs').insert({
       user_id: userRes.user.id,
-      patient_id: data.patient_id,
+      patient_id: record.patient_id,
       action: 'edit',
       resource: 'draft',
       user_agent: navigator.userAgent
