@@ -3,17 +3,7 @@ import { calculateItemMacros } from './v3Motor';
 import { PlanMetadata } from './nutritionalEvaluator';
 import { NutritionalScore, ValidationIssue } from '../nutritionalScoreTypes';
 
-export interface PlanConfidence {
-  value: number;
-  level: 'low' | 'medium' | 'high';
-  reasons: string[];
-  breakdown: {
-    objectiveAdherence: number;
-    quality: number;
-    consistency: number;
-    restrictions: number;
-  };
-}
+// ... keep existing code
 
 /**
  * Calcula o Score Nutricional adaptado ao contexto do paciente

@@ -82,6 +82,12 @@ export interface PlanConfidence {
   value: number;
   level: 'low' | 'medium' | 'high';
   reasons: string[];
+  breakdown: {
+    objectiveAdherence: number;
+    quality: number;
+    consistency: number;
+    restrictions: number;
+  };
 }
 
 export interface DraftPayload {
