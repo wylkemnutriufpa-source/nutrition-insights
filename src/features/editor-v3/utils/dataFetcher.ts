@@ -1,6 +1,73 @@
 import { supabase } from "@/integrations/supabase/client";
 import { Food, MealTemplate } from "../types";
 
+const normalize = (text: string): string => {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9\s]/g, "")
+    .trim()
+    .replace(/\s+/g, " ");
+};
+
+const isWholeWordMatch = (text: string, keyword: string): boolean => {
+  const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+  return regex.test(text);
+};
+
+const findBestVisual = async (foodName: string): Promise<string | undefined> => {
+  const norm = normalize(foodName);
+  
+  // 1. Try exact alias match (Priority 1)
+  const { data: aliasData } = await supabase
+    .from("meal_visual_aliases" as any)
+    .select("library_item_id")
+    .eq("normalized_alias", norm)
+    .maybeSingle();
+
+  if (aliasData) {
+    const { data: item } = await supabase
+      .from("meal_visual_library")
+      .select("image_url")
+      .eq("id", (aliasData as any).library_item_id)
+      .maybeSingle();
+    if (item?.image_url) return item.image_url;
+  }
+
+  // 2. Try exact name match in library (Priority 2)
+  const { data: libraryData } = await supabase
+    .from("meal_visual_library")
+    .select("image_url")
+    .ilike("name", foodName)
+    .maybeSingle();
+
+  if (libraryData?.image_url) return libraryData.image_url;
+
+  // 3. Try keywords with whole-word matching (Priority 3)
+  // This avoids "Frango" matching "Frango à parmegiana" if we want just frango
+  const keywords = norm.split(' ');
+  const importantKeywords = keywords.filter(k => k.length > 3 && !['com', 'para', 'sem'].includes(k));
+  
+  if (importantKeywords.length > 0) {
+    for (const kw of importantKeywords) {
+      const { data: kwMatches } = await supabase
+        .from("meal_visual_library")
+        .select("image_url, name")
+        .ilike("name", `%${kw}%`)
+        .limit(5);
+      
+      if (kwMatches && kwMatches.length > 0) {
+        // Find the one that best matches as a whole word
+        const bestKwMatch = kwMatches.find(m => isWholeWordMatch(m.name, kw));
+        if (bestKwMatch?.image_url) return bestKwMatch.image_url;
+      }
+    }
+  }
+
+  return undefined;
+};
+
 export const searchFoods = async (query: string): Promise<Food[]> => {
   if (!query || query.length < 2) return [];
 
@@ -15,20 +82,58 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
     return [];
   }
 
-  return (data || []).map((f: any) => ({
-    id: f.id,
-    name: f.name,
-    kcal: f.calories,
-    calories: f.calories,
-    protein: f.protein,
-    carbs: f.carbs,
-    fat: f.fat,
-    portionValue: 1, // Base value for gram/ml
-    portionUnitLabel: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
-    portionUnit: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
-    portionLabel: f.serving_size || "100g",
-    measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
-    imageUrl: undefined
+  // Fetch visuals in parallel for better performance
+  const foods = await Promise.all((data || []).map(async (f: any) => {
+    const imageUrl = await findBestVisual(f.name);
+    
+    return {
+      id: f.id,
+      name: f.name,
+      kcal: f.calories,
+      calories: f.calories,
+      protein: f.protein,
+      carbs: f.carbs,
+      fat: f.fat,
+      portionValue: 1,
+      portionUnitLabel: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
+      portionUnit: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
+      portionLabel: f.serving_size || "100g",
+      measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
+      imageUrl: imageUrl || undefined
+    };
+  }));
+
+  return foods as Food[];
+};
+
+export const searchVisualLibrary = async (query: string): Promise<Food[]> => {
+  const { data, error } = await supabase
+    .from("meal_visual_library")
+    .select("*")
+    .or(`name.ilike.%${query}%,display_name.ilike.%${query}%`)
+    .eq("is_active", true)
+    .limit(20);
+
+  if (error) {
+    console.error("Error searching visual library:", error);
+    return [];
+  }
+
+  return (data || []).map((v: any) => ({
+    id: v.id,
+    name: v.display_name || v.name,
+    kcal: v.default_calories || 0,
+    calories: v.default_calories || 0,
+    protein: v.default_protein || 0,
+    carbs: v.default_carbs || 0,
+    fat: v.default_fat || 0,
+    portionValue: 1,
+    portionUnitLabel: v.default_portion?.includes("g") ? "g" : (v.default_portion?.includes("ml") ? "ml" : "unidade"),
+    portionUnit: v.default_portion?.includes("g") ? "g" : (v.default_portion?.includes("ml") ? "ml" : "unidade"),
+    portionLabel: v.default_portion || "1 porção",
+    measurementType: v.default_portion?.includes("g") ? "gram" : (v.default_portion?.includes("ml") ? "ml" : "unit") as any,
+    imageUrl: v.image_url || undefined,
+    isVisualLibraryItem: true
   }));
 };
 

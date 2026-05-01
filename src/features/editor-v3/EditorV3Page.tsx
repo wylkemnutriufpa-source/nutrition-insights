@@ -4,7 +4,11 @@ import { useEditorState } from './useEditorState';
 import { useDraftSync } from './useDraftSync';
 import { promoteDraftToMealPlan } from './promoteDraft';
 import { loadOrCreateDraft } from './draftService';
-import { searchFoods, searchMarmitas, searchTemplates, getCompatibleFoods, getBaseFoods, seedBaseData } from './utils/dataFetcher';
+import { 
+  searchFoods, searchMarmitas, searchTemplates, 
+  getCompatibleFoods, getBaseFoods, seedBaseData,
+  searchVisualLibrary 
+} from './utils/dataFetcher';
 import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -127,7 +131,7 @@ const EditorV3Page = () => {
 
   const [showAddMealModal, setShowAddMealModal] = useState(false);
   const [showMainAddModal, setShowMainAddModal] = useState(false);
-  const [activeTab, setActiveTab] = useState<'food' | 'marmita' | 'template'>('food');
+  const [activeTab, setActiveTab] = useState<'food' | 'marmita' | 'template' | 'visual'>('food');
   const [activeMealId, setActiveMealId] = useState<string | null>(null);
   const [newMealName, setNewMealName] = useState('');
   const [newMealTime, setNewMealTime] = useState('00:00');
@@ -155,15 +159,18 @@ const EditorV3Page = () => {
   const [foods, setFoods] = useState<Food[]>([]);
   const [marmitas, setMarmitas] = useState<Food[]>([]);
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
+  const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
+  const [isSearchingVisualLibrary, setIsSearchingVisualLibrary] = useState(false);
   const [baseFoods, setBaseFoods] = useState<Food[]>([]);
   const [dataReady, setDataReady] = useState(false);
   const [dbStatus, setDbStatus] = useState<{
     foods: number;
     marmitas: number;
     templates: number;
+    visualLibrary: number;
     error: string | null;
-  }>({ foods: 0, marmitas: 0, templates: 0, error: null });
+  }>({ foods: 0, marmitas: 0, templates: 0, visualLibrary: 0, error: null });
 
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
     search: patientSearch,
@@ -193,11 +200,21 @@ const EditorV3Page = () => {
     const timer = setTimeout(async () => {
       if (foodSearch.length >= 2) {
         setIsSearchingFoods(true);
-        const results = await searchFoods(foodSearch);
-        setFoods(results);
+        setIsSearchingVisualLibrary(true);
+        
+        const [foodResults, visualResults] = await Promise.all([
+          searchFoods(foodSearch),
+          searchVisualLibrary(foodSearch)
+        ]);
+        
+        setFoods(foodResults);
+        setVisualLibraryResults(visualResults);
+        
         setIsSearchingFoods(false);
+        setIsSearchingVisualLibrary(false);
       } else if (foodSearch.length === 0) {
         setFoods([]);
+        setVisualLibraryResults([]);
       }
     }, 400);
     return () => clearTimeout(timer);
@@ -277,6 +294,7 @@ const EditorV3Page = () => {
           foods: baseData.length,
           marmitas: marmitasData.length,
           templates: templatesData.length,
+          visualLibrary: 0, // Will be updated as needed
           error: null
         });
 
@@ -290,7 +308,7 @@ const EditorV3Page = () => {
           setMarmitas(m2);
           setTemplates(t2);
           setBaseFoods(b2);
-          setDbStatus({ foods: b2.length, marmitas: m2.length, templates: t2.length, error: null });
+          setDbStatus({ foods: b2.length, marmitas: m2.length, templates: t2.length, visualLibrary: 0, error: null });
           if (b2.length > 0 && t2.length > 0) setDataReady(true);
           return;
         }
@@ -689,19 +707,20 @@ const EditorV3Page = () => {
                 <TabsTrigger value="food" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Alimentos</TabsTrigger>
                 <TabsTrigger value="marmita" className="data-[state=active]:bg-blue-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Marmitas</TabsTrigger>
                 <TabsTrigger value="template" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Templates</TabsTrigger>
+                <TabsTrigger value="visual" className="data-[state=active]:bg-rose-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Banco de Imagens</TabsTrigger>
               </TabsList>
             </Tabs>
 
-            {activeTab === 'food' && (
+            {(activeTab === 'food' || activeTab === 'visual') && (
               <div className="relative mb-6">
                 <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
                 <Input 
-                  placeholder="Pesquisar por nome ou categoria..." 
+                  placeholder={activeTab === 'food' ? "Pesquisar alimentos..." : "Pesquisar banco de imagens..."}
                   value={foodSearch} 
                   onChange={(e) => setFoodSearch(e.target.value)} 
                   className="pl-12 h-14 bg-white/5 border-white/10 text-white rounded-2xl text-lg placeholder:text-white/10 focus:border-emerald-500/50 transition-all shadow-2xl" 
                 />
-                {isSearchingFoods && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 animate-spin" />}
+                {(isSearchingFoods || isSearchingVisualLibrary) && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 animate-spin" />}
               </div>
             )}
           </div>
@@ -718,11 +737,24 @@ const EditorV3Page = () => {
                   }}
                   className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
                 >
-                  <div className="flex justify-between items-start w-full mb-3">
-                    <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{f.name}</span>
-                    <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                  <div className="flex items-center gap-4 w-full mb-4">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                      {f.imageUrl ? (
+                        <img src={f.imageUrl} alt={f.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Apple className="w-6 h-6 text-white/10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start w-full">
+                        <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-2">{f.name}</span>
+                        <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                      </div>
+                      <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1 block">{f.portionLabel}</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-6">{f.portionLabel}</span>
                   
                   <div className="flex items-center gap-6 w-full mt-auto">
                     <div className="flex flex-col">
@@ -741,6 +773,44 @@ const EditorV3Page = () => {
                   <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
                     <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-black shadow-lg shadow-emerald-500/20">
                       <Plus className="w-5 h-5" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+
+              {activeTab === 'visual' && visualLibraryResults.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => {
+                    if (activeMealId) addFoodToMeal(activeMealId, v);
+                    setShowMainAddModal(false);
+                    toast.success(`${v.name} adicionado!`);
+                  }}
+                  className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                >
+                  <div className="w-full h-32 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all">
+                    {v.imageUrl ? (
+                      <img src={v.imageUrl} alt={v.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                         <Apple className="w-10 h-10 text-white/5" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-start w-full mb-2">
+                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{v.name}</span>
+                  </div>
+                  <Badge className="bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase border-0 mb-4">{v.kcal} kcal</Badge>
+                  
+                  <div className="flex items-center gap-6 w-full mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-rose-400/80">{v.protein}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-blue-400/80">{v.carbs}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-amber-400/80">{v.fat}g</span>
                     </div>
                   </div>
                 </button>

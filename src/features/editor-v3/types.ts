@@ -24,6 +24,7 @@ export interface Food {
   householdMeasures?: HouseholdMeasure[];
   ingredients?: any[];
   instructions?: string;
+  isVisualLibraryItem?: boolean;
 }
 
 export interface MealItem extends Food {
