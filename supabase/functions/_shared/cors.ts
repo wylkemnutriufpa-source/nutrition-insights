@@ -5,15 +5,15 @@ const ALLOWED_ORIGINS = [
 ];
 
 export const getCorsHeaders = (origin: string | null) => {
-  let allowedOrigin = "*"; // Default to * but we will try to be more specific
+  let allowedOrigin = "https://fitjourney.com.br"; // Safe default
   
   if (origin) {
-    if (ALLOWED_ORIGINS.includes(origin) || origin.endsWith(".lovableproject.com")) {
+    const isLovablePreview = origin.endsWith(".lovableproject.com");
+    const isProduction = origin === "https://fitjourney.com.br";
+    const isLocal = origin.startsWith("http://localhost");
+
+    if (isProduction || isLovablePreview || isLocal) {
       allowedOrigin = origin;
-    } else {
-      // In production, we might want to be even stricter
-      // For now, let's allow it but return the specific origin if it matches our pattern
-      allowedOrigin = "https://fitjourney.com.br"; 
     }
   }
 
@@ -21,11 +21,12 @@ export const getCorsHeaders = (origin: string | null) => {
     "Access-Control-Allow-Origin": allowedOrigin,
     "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
     "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS, DELETE",
+    "Vary": "Origin", // Important when using dynamic Access-Control-Allow-Origin
   };
 };
 
 export const corsHeaders = {
-  "Access-Control-Allow-Origin": "*", // Legacy fallback, prefer getCorsHeaders(req.headers.get("origin"))
+  "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
-  "Access-Control-Allow-Methods": "GET, POST, PATCH, OPTIONS, DELETE",
 };
+
