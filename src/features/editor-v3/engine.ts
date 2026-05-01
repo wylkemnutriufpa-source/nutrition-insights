@@ -34,11 +34,12 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
   if (!availableFoods || availableFoods.length < 10) {
     console.error('[Engine V3] Bloqueio de execução: Base de alimentos insuficiente.', { count: availableFoods?.length });
     toast.error('Base de dados insuficiente para gerar sugestões. Tente recarregar a página.');
-    return [];
+    return meal.items;
   }
 
   const mealName = meal.name.toLowerCase();
-  let items: (MealItem | null)[] = [];
+  const existingNames = meal.items.map(i => i.name.toLowerCase());
+  let newItems: (MealItem | null)[] = [];
   
   // Fator de escala calórica baseado na base de 2000kcal
   const scale = baseCalories / 2000;
@@ -49,12 +50,12 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
     const proteins = shuffleArray(availableFoods.filter(f => ['Ovo', 'Whey', 'Iogurte', 'Queijo', 'Frango'].some(word => f.name.includes(word))));
     
     if (goal === 'ketogenic') {
-      items = [
+      newItems = [
         createMealItem(proteins.find(p => p.name.includes('Ovo')), 3 * scale),
         createMealItem(proteins.find(p => p.name.includes('Queijo')), 30 * scale)
       ];
     } else {
-      items = [
+      newItems = [
         createMealItem(proteins[0], (goal === 'muscle-gain' ? 3 : 2) * scale),
         createMealItem(carbs[0], (goal === 'muscle-gain' ? 80 : 50) * scale),
         createMealItem(carbs[1] || carbs[0], 1)
@@ -69,19 +70,19 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
     const veggies = shuffleArray(availableFoods.filter(f => ['Alface', 'Tomate', 'Brócolis', 'Cenoura'].some(word => f.name.includes(word))));
 
     if (goal === 'ketogenic') {
-      items = [
+      newItems = [
         createMealItem(proteins[0], 200 * scale),
         createMealItem(veggies[0], 100),
         createMealItem(availableFoods.find(f => f.name.includes('Azeite')), 10 * scale)
       ];
     } else if (goal === 'low-carb') {
-      items = [
+      newItems = [
         createMealItem(proteins[0], 180 * scale),
         createMealItem(carbs[0], 80 * scale),
         createMealItem(veggies[0], 100)
       ];
     } else {
-      items = [
+      newItems = [
         createMealItem(carbs[0], (goal === 'muscle-gain' ? 250 : 150) * scale),
         createMealItem(proteins[0], (goal === 'muscle-gain' ? 180 : 120) * scale),
         createMealItem(carbs[1] || carbs[0], 100 * scale)
@@ -94,12 +95,12 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
     const snacks = shuffleArray(availableFoods.filter(f => ['Fruta', 'Iogurte', 'Aveia', 'Whey', 'Castanha', 'Pasta de Amendoim'].some(word => f.name.includes(word))));
     
     if (goal === 'ketogenic') {
-      items = [
+      newItems = [
         createMealItem(snacks.find(s => s.name.includes('Castanha')), 30 * scale),
         createMealItem(snacks.find(s => s.name.includes('Amendoim')), 20 * scale)
       ];
     } else {
-      items = [
+      newItems = [
         createMealItem(snacks[0], (goal === 'muscle-gain' ? 2 : 1) * scale),
         createMealItem(snacks[1], 1)
       ];
@@ -107,12 +108,13 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
   }
 
   // Fallback se nada foi gerado
-  if (items.length === 0 || items.every(i => i === null)) {
+  if (newItems.length === 0 || newItems.every(i => i === null)) {
     const randoms = shuffleArray(availableFoods).slice(0, 2);
-    items = [createMealItem(randoms[0], 100 * scale)];
+    newItems = [createMealItem(randoms[0], 100 * scale)];
   }
 
-  return items.filter((i): i is MealItem => i !== null);
+  const filteredItems = newItems.filter((i): i is MealItem => i !== null && !existingNames.includes(i.name.toLowerCase()));
+  return [...meal.items, ...filteredItems];
 };
 
 /**
@@ -126,7 +128,8 @@ export const generatePlanWithEngine = (currentMeals: Meal[], goal: string, baseC
   }
 
   return currentMeals.map(meal => {
-    // Só geramos para refeições vazias para evitar sobrescrever trabalho do usuário
+    // Para plano global, ainda usamos lógica de preencher apenas vazias ou complementar se solicitado
+    // mas a engine agora nativamente complementa
     if (meal.items.length === 0) {
       return {
         ...meal,
