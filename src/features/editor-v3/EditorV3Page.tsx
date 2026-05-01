@@ -203,6 +203,11 @@ const EditorV3Page = () => {
     error: string | null;
   }>({ foods: 0, marmitas: 0, templates: 0, visualLibrary: 0, error: null });
 
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadName, setUploadName] = useState('');
+  const [uploadCategory, setUploadCategory] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
     search: patientSearch,
     pageSize: 10
@@ -479,6 +484,44 @@ const EditorV3Page = () => {
     setSelectedDietType(goal);
     setShowDietTypeModal(false);
     setShowCalorieModal(true);
+  };
+  const handleUploadImage = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user?.id) return;
+
+    if (!uploadName || !uploadCategory) {
+      toast.error('Nome e categoria são obrigatórios para o upload.');
+      return;
+    }
+
+    // Validation
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+      toast.error('Formato inválido. Use JPG, PNG ou WebP.');
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) { // 2MB limit
+      toast.error('Arquivo muito grande. Limite de 2MB.');
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const result = await uploadVisualLibraryImage(file, uploadName, uploadCategory, user.id);
+      if (result.success) {
+        toast.success('Imagem enviada com sucesso!');
+        setUploadName('');
+        setUploadCategory('');
+        // Refresh library
+        const visualResults = await searchVisualLibrary(foodSearch, selectedVisualCategory, user.id);
+        setVisualLibraryResults(visualResults);
+      } else {
+        toast.error(`Erro no upload: ${result.error}`);
+      }
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleExecuteGeneration = async (calories: number) => {
@@ -806,6 +849,48 @@ const EditorV3Page = () => {
                     </div>
                   </ScrollArea>
                 )}
+
+                {activeTab === 'visual' && (
+                  <div className="bg-white/5 border border-white/10 rounded-2xl p-6 mb-4 flex flex-col md:flex-row gap-4 items-end animate-in fade-in slide-in-from-top-2 duration-500">
+                    <div className="flex-1 space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-white/40 ml-1 tracking-widest">Nome da Imagem</Label>
+                      <Input 
+                        placeholder="Ex: Tapioca com Ovos..." 
+                        value={uploadName}
+                        onChange={(e) => setUploadName(e.target.value)}
+                        className="bg-white/5 border-white/10 h-11 rounded-xl focus:border-emerald-500/50"
+                      />
+                    </div>
+                    <div className="w-full md:w-48 space-y-2">
+                      <Label className="text-[10px] font-black uppercase text-white/40 ml-1 tracking-widest">Categoria</Label>
+                      <select 
+                        value={uploadCategory}
+                        onChange={(e) => setUploadCategory(e.target.value)}
+                        className="w-full bg-white/5 border border-white/10 h-11 rounded-xl px-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 appearance-none"
+                      >
+                        <option value="" disabled>Selecionar...</option>
+                        {visualLibraryCategories.filter(c => c.id !== 'all').map(c => (
+                          <option key={c.id} value={c.id} className="bg-black text-white">{c.label}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <input 
+                      type="file" 
+                      ref={fileInputRef} 
+                      className="hidden" 
+                      accept="image/*" 
+                      onChange={handleUploadImage}
+                    />
+                    <Button 
+                      onClick={() => fileInputRef.current?.click()}
+                      disabled={isUploading || !uploadName || !uploadCategory}
+                      className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-11 rounded-xl px-6 transition-all shrink-0 gap-2 shadow-lg shadow-emerald-500/20"
+                    >
+                      {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+                      Upload de Imagem
+                    </Button>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -890,6 +975,11 @@ const EditorV3Page = () => {
                   {v.category && (
                     <Badge className="mt-2 ml-2 bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
                       {visualLibraryCategories.find(c => c.id === v.category)?.label || v.category}
+                    </Badge>
+                  )}
+                  {v.nutritionistId === user?.id && (
+                    <Badge className="absolute top-6 right-6 bg-emerald-500 text-black text-[7px] font-black uppercase border-0">
+                      Minha Imagem
                     </Badge>
                   )}
                 </button>

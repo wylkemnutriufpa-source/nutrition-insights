@@ -177,14 +177,14 @@ export const uploadVisualLibraryImage = async (
 
     const { error: insertError } = await supabase
       .from('meal_visual_library')
-      .insert({
+      .insert(({
         name,
         display_name: name,
         category,
         image_url: publicUrl,
         nutritionist_id: nutritionistId,
         is_active: true
-      });
+      } as any));
 
     if (insertError) throw insertError;
 
