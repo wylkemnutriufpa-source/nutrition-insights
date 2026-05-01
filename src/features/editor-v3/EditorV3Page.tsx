@@ -1364,7 +1364,7 @@ const EditorV3Page = () => {
       
       {/* Alimentos Modal */}
       <Dialog open={showFoodsModal} onOpenChange={setShowFoodsModal}>
-        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-emerald-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+        <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black backdrop-blur-2xl flex flex-col rounded-none">
           <DialogHeader className="p-6 pb-2">
             <div className="flex items-center justify-between w-full pr-8">
               <div>
@@ -1460,7 +1460,7 @@ const EditorV3Page = () => {
 
       {/* Marmitas Modal */}
       <Dialog open={showMarmitasModal} onOpenChange={setShowMarmitasModal}>
-        <DialogContent className="sm:max-w-[700px] h-[90vh] p-0 overflow-hidden border-blue-500/20 bg-black/95 backdrop-blur-2xl flex flex-col">
+        <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black backdrop-blur-2xl flex flex-col rounded-none">
           <DialogHeader className="p-6 pb-2">
             <div className="flex items-center justify-between w-full pr-8">
               <div>
