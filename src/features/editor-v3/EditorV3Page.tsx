@@ -118,6 +118,11 @@ const EditorV3Page = () => {
   const [isSearchingSwap, setIsSearchingSwap] = useState(false);
   const [smartSubstitutions, setSmartSubstitutions] = useState<Food[]>([]);
   const [isLoadingSmartSubs, setIsLoadingSmartSubs] = useState(false);
+  const [replacementPending, setReplacementPending] = useState<{
+    current: MealItem,
+    target: Food,
+    mealId: string
+  } | null>(null);
 
   // Estados para Modais Premium
   const [showAddMealModal, setShowAddMealModal] = useState(false);
@@ -405,6 +410,61 @@ const EditorV3Page = () => {
     await new Promise(resolve => setTimeout(resolve, 600));
     generateMeal(mealId, 'muscle-gain', baseFoods, 2000); // Default for single meal optimization
     setGeneratingMealId(null);
+  };
+
+  const executeSwap = (mealId: string, instanceId: string, target: Food, autoAdjust = false) => {
+    const meal = meals.find(m => m.id === mealId);
+    const currentItem = meal?.items.find(i => i.instanceId === instanceId);
+    
+    if (!currentItem) return;
+
+    let newQuantity = 1;
+
+    if (autoAdjust) {
+      const currentMacros = calculateItemMacros(currentItem, currentItem.quantity);
+      const targetKcalPerUnit = target.kcal; 
+      
+      if (targetKcalPerUnit > 0) {
+        if (target.measurementType === 'gram' || target.measurementType === 'ml') {
+          newQuantity = Math.round((currentMacros.kcal / targetKcalPerUnit) * 100);
+        } else {
+          newQuantity = Math.round(currentMacros.kcal / targetKcalPerUnit);
+        }
+      } else {
+        newQuantity = currentItem.quantity;
+      }
+    } else {
+      if (target.measurementType === 'gram') newQuantity = 100;
+      else if (target.measurementType === 'ml') newQuantity = 200;
+      else newQuantity = 1;
+    }
+
+    updateMealItem(mealId, instanceId, {
+      name: target.name,
+      kcal: target.kcal,
+      calories: target.kcal,
+      protein: target.protein,
+      carbs: target.carbs,
+      fat: target.fat,
+      portionLabel: target.portionLabel,
+      imageUrl: target.imageUrl,
+      ingredients: target.ingredients,
+      isMarmita: target.isMarmita,
+      measurementType: target.measurementType,
+      quantity: newQuantity
+    });
+    
+    setReplacementPending(null);
+    setSelectedItem(null);
+    toast.success(`Alimento trocado para ${target.name}`);
+  };
+
+  const handleRequestSwap = (mealId: string, current: MealItem, target: Food) => {
+    if (current.measurementType !== target.measurementType) {
+      setReplacementPending({ current, target, mealId });
+    } else {
+      executeSwap(mealId, current.instanceId, target);
+    }
   };
 
   // Sandbox mode check
@@ -1612,21 +1672,7 @@ const EditorV3Page = () => {
                                 variant="ghost"
                                 onClick={() => {
                                   const currentItem = selectedItem.item;
-                                  updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                                    name: food.name,
-                                    kcal: food.kcal,
-                                    calories: food.kcal,
-                                    protein: food.protein,
-                                    carbs: food.carbs,
-                                    fat: food.fat,
-                                    portionLabel: food.portionLabel,
-                                    imageUrl: food.imageUrl,
-                                    ingredients: food.ingredients,
-                                    isMarmita: food.isMarmita,
-                                    measurementType: food.measurementType
-                                  });
-                                  setSelectedItem(null);
-                                  toast.success(`Trocado inteligentemente para ${food.name}`);
+                                  handleRequestSwap(selectedItem.mealId, currentItem, food);
                                 }}
                                 className="w-full justify-between h-auto p-3 bg-emerald-500/5 hover:bg-emerald-500/10 border border-emerald-500/10 rounded-xl transition-all group"
                               >
@@ -1670,32 +1716,18 @@ const EditorV3Page = () => {
                             <Button
                               key={food.id}
                               variant="ghost"
-                              onClick={() => {
-                                const currentItem = selectedItem.item;
-                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                                  name: food.name,
-                                  kcal: food.kcal,
-                                  calories: food.kcal,
-                                  protein: food.protein,
-                                  carbs: food.carbs,
-                                  fat: food.fat,
-                                  portionLabel: food.portionLabel,
-                                  imageUrl: food.imageUrl,
-                                  ingredients: food.ingredients,
-                                  isMarmita: food.isMarmita,
-                                  measurementType: food.measurementType
-                                });
-                                setSwapSearch('');
-                                setSwapResults([]);
-                                setSelectedItem(null);
-                                toast.success(`Alimento trocado para ${food.name}`);
-                              }}
-                              className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group mb-2"
-                            >
-                              <div className="text-left">
-                                <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
-                                <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
-                              </div>
+                                onClick={() => {
+                                  const currentItem = selectedItem.item;
+                                  handleRequestSwap(selectedItem.mealId, currentItem, food);
+                                  setSwapSearch('');
+                                  setSwapResults([]);
+                                }}
+                                className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group mb-2"
+                              >
+                                <div className="text-left">
+                                  <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
+                                  <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                                </div>
                               <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
                             </Button>
                           ))}
@@ -2139,6 +2171,100 @@ const EditorV3Page = () => {
               ))}
             </div>
           </ScrollArea>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={!!replacementPending} onOpenChange={() => setReplacementPending(null)}>
+        <DialogContent className="bg-black/95 border-amber-500/20 backdrop-blur-3xl shadow-2xl p-0 overflow-hidden max-w-md">
+          <div className="bg-amber-500/10 p-6 flex items-center gap-4 border-b border-amber-500/20">
+            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
+              <AlertTriangle className="w-6 h-6 text-amber-500" />
+            </div>
+            <div>
+              <h3 className="text-xl font-black text-white uppercase tracking-tight">Divergência de Medida</h3>
+              <p className="text-[10px] font-black text-amber-500/60 uppercase tracking-widest">Validação Clínica Obrigatória</p>
+            </div>
+          </div>
+
+          <div className="p-8 space-y-6">
+            <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5">
+              <div className="flex-1 text-center">
+                <p className="text-[9px] font-black text-white/20 uppercase mb-1">Atual</p>
+                <Badge variant="outline" className="bg-white/5 border-white/10 text-white/60 font-black uppercase text-[10px]">
+                  {replacementPending?.current.measurementType === 'gram' ? 'Gramas' : 
+                   replacementPending?.current.measurementType === 'ml' ? 'Mililitros' : 'Unidades'}
+                </Badge>
+              </div>
+              <div className="h-8 w-px bg-white/5" />
+              <div className="flex-1 text-center">
+                <p className="text-[9px] font-black text-amber-500/40 uppercase mb-1">Novo</p>
+                <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 font-black uppercase text-[10px]">
+                  {replacementPending?.target.measurementType === 'gram' ? 'Gramas' : 
+                   replacementPending?.target.measurementType === 'ml' ? 'Mililitros' : 'Unidades'}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="space-y-4">
+              <p className="text-xs text-white/60 font-medium leading-relaxed">
+                Você está trocando um item medido em <span className="text-white font-bold">{replacementPending?.current.measurementType}</span> por um em <span className="text-white font-bold">{replacementPending?.target.measurementType}</span>. Isso impacta o cálculo nutricional.
+              </p>
+
+              <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 space-y-3">
+                <div className="flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-emerald-500" />
+                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Ajuste Sugerido</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-white/40">Estimativa para manter macros:</span>
+                  <span className="text-lg font-black text-emerald-400">
+                    {replacementPending && (() => {
+                      const curMacros = calculateItemMacros(replacementPending.current, replacementPending.current.quantity);
+                      const targetKcal = replacementPending.target.kcal;
+                      if (targetKcal <= 0) return '---';
+                      
+                      const val = (replacementPending.target.measurementType === 'gram' || replacementPending.target.measurementType === 'ml')
+                        ? Math.round((curMacros.kcal / targetKcal) * 100)
+                        : Math.round(curMacros.kcal / targetKcal);
+                      
+                      return `${val}${replacementPending.target.measurementType === 'gram' ? 'g' : replacementPending.target.measurementType === 'ml' ? 'ml' : ' un'}`;
+                    })()}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2 pt-4">
+              <Button 
+                onClick={() => {
+                  if (replacementPending) {
+                    executeSwap(replacementPending.mealId, replacementPending.current.instanceId, replacementPending.target, true);
+                  }
+                }}
+                className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-12 rounded-xl"
+              >
+                Ajustar Automaticamente
+              </Button>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  if (replacementPending) {
+                    executeSwap(replacementPending.mealId, replacementPending.current.instanceId, replacementPending.target, false);
+                  }
+                }}
+                className="bg-white/5 border-white/10 text-white font-black uppercase tracking-widest h-12 rounded-xl"
+              >
+                Confirmar Manualmente
+              </Button>
+              <Button 
+                variant="ghost"
+                onClick={() => setReplacementPending(null)}
+                className="text-white/40 hover:text-white font-black uppercase tracking-widest h-12 rounded-xl"
+              >
+                Cancelar Troca
+              </Button>
+            </div>
+          </div>
         </DialogContent>
       </Dialog>
 
