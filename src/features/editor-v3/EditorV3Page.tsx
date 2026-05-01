@@ -731,8 +731,14 @@ const EditorV3Page = () => {
               <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
             </Button>
           </div>
-        </div>
-      </div>
+              </div>
+              {validationIssues.some(issue => issue.mealId === meal.id) && (
+                <div className="flex items-center gap-1.5 mt-2 bg-amber-500/10 w-fit px-2 py-0.5 rounded-lg border border-amber-500/20">
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  <span className="text-[9px] font-black text-amber-500 uppercase">Ajuste Necessário</span>
+                </div>
+              )}
+            </div>
 
       <header className="border-b border-emerald-500/10 bg-black/80 backdrop-blur-2xl sticky top-0 z-50 px-6 py-3 flex items-center justify-between shadow-2xl shadow-emerald-500/5">
         <div className="flex items-center gap-5">
