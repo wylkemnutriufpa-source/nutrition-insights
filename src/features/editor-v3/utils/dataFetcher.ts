@@ -107,35 +107,38 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
   return foods as Food[];
 };
 
-export const searchVisualLibrary = async (query: string, category?: string, nutritionistId?: string | null): Promise<Food[]> => {
+export const searchVisualLibrary = async (
+  query: string, 
+  category?: string, 
+  nutritionistId?: string | null
+): Promise<{ items: Food[], categoryCount?: number, incomplete?: boolean }> => {
   let queryBuilder = supabase
     .from("meal_visual_library")
-    .select("*")
+    .select("*", { count: 'exact' })
     .eq("is_active", true);
 
   if (nutritionistId) {
-    // Show system items OR nutritionist's items
     queryBuilder = queryBuilder.or(`nutritionist_id.is.null,nutritionist_id.eq.${nutritionistId}`);
   } else {
     queryBuilder = queryBuilder.is("nutritionist_id", null);
-  }
-
-  if (query && query.length >= 2) {
-    queryBuilder = queryBuilder.or(`name.ilike.%${query}%,display_name.ilike.%${query}%`);
   }
 
   if (category && category !== 'all') {
     queryBuilder = queryBuilder.eq("category", category);
   }
 
-  const { data, error } = await queryBuilder.limit(40);
+  if (query && query.length >= 2) {
+    queryBuilder = queryBuilder.or(`name.ilike.%${query}%,display_name.ilike.%${query}%`);
+  }
+
+  const { data, error, count } = await queryBuilder.limit(40);
 
   if (error) {
     console.error("Error searching visual library:", error);
-    return [];
+    return { items: [] };
   }
 
-  return (data || []).map((v: any) => ({
+  const items = (data || []).map((v: any) => ({
     id: v.id,
     name: v.display_name || v.name,
     kcal: v.default_calories || 0,
@@ -153,6 +156,26 @@ export const searchVisualLibrary = async (query: string, category?: string, nutr
     isVisualLibraryItem: true,
     nutritionistId: v.nutritionist_id
   }));
+
+  // Fail-Safe Validation
+  let incomplete = false;
+  if (category && category !== 'all') {
+    const minNeeded: Record<string, number> = {
+      'cafe_da_manha': 5,
+      'almoco': 5,
+      'jantar': 5,
+      'lanches': 3
+    };
+    if (count !== null && count < (minNeeded[category] || 0)) {
+      incomplete = true;
+    }
+  }
+
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`[VisualLibrary] ${items.length} imagens carregadas para categoria: ${category || 'all'}`);
+  }
+
+  return { items, categoryCount: count || 0, incomplete };
 };
 
 export const uploadVisualLibraryImage = async (
