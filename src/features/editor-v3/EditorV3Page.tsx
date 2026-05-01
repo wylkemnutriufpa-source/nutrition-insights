@@ -109,6 +109,7 @@ const EditorV3Page = () => {
   const [patientSearch, setPatientSearch] = useState('');
   
   // Modal de Detalhes do Item
+  const [debugMode, setDebugMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ mealId: string, item: MealItem } | null>(null);
   const [substitutionSearch, setSubstitutionSearch] = useState('');
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
@@ -489,7 +490,18 @@ const EditorV3Page = () => {
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-4">
              <div className="flex flex-col">
-               <span className="text-[10px] font-black text-white/40 uppercase tracking-widest mb-1">Status Nutricional</span>
+               <div className="flex items-center gap-2 mb-1">
+                 <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
+                 <button 
+                   onClick={() => setDebugMode(!debugMode)}
+                   className={cn(
+                     "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
+                     debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
+                   )}
+                 >
+                   MODO TRANSPARÊNCIA
+                 </button>
+               </div>
                <div className="flex items-center gap-6">
                   <div className="flex flex-col">
                     <span className="text-xl font-black text-white">{Math.round(totalMacros.kcal)} <span className="text-[10px] text-white/40 font-bold ml-1 uppercase">kcal</span></span>
@@ -1298,6 +1310,11 @@ const EditorV3Page = () => {
                   }}
                   className="group relative flex flex-col items-start p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden"
                 >
+                  {debugMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-emerald-500/20 text-emerald-500 text-[6px] font-black uppercase border-emerald-500/30">food_database</Badge>
+                    </div>
+                  )}
                   <div className="flex justify-between items-start w-full mb-1">
                     <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-1">{f.name}</span>
                     <Badge className="bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase border-0">{f.kcal} kcal</Badge>
@@ -1363,6 +1380,11 @@ const EditorV3Page = () => {
                   }}
                   className="group relative flex items-center p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left gap-4"
                 >
+                  {debugMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-blue-500/20 text-blue-500 text-[6px] font-black uppercase border-blue-500/30">meal_recipes</Badge>
+                    </div>
+                  )}
                   <div className="w-14 h-14 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                     {m.imageUrl ? (
                       <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover rounded-xl" />
@@ -1486,9 +1508,14 @@ const EditorV3Page = () => {
                     setShowTemplatesModal(false);
                     toast.success(`Template ${t.name} aplicado!`);
                   }}
-                  className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
-                >
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                   className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
+                 >
+                   {debugMode && (
+                     <div className="absolute top-2 right-2 z-10">
+                       <Badge className="bg-amber-500/20 text-amber-500 text-[6px] font-black uppercase border-amber-500/30">nutritionist_meal_templates</Badge>
+                     </div>
+                   )}
+                   <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
                     <Clock className="w-6 h-6 text-amber-500" />
                   </div>
                   <div className="flex flex-col flex-1">
