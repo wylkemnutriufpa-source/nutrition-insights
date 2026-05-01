@@ -841,6 +841,7 @@ const EditorV3Page = () => {
               ))}
             </div>
           </section>
+          ))}
         </div>
 
         <aside className="lg:col-span-4 space-y-6">
