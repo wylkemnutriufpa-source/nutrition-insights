@@ -2202,96 +2202,147 @@ const EditorV3Page = () => {
       </Dialog>
 
       <Dialog open={!!replacementPending} onOpenChange={() => setReplacementPending(null)}>
-        <DialogContent className="bg-black/95 border-amber-500/20 backdrop-blur-3xl shadow-2xl p-0 overflow-hidden max-w-md">
-          <div className="bg-amber-500/10 p-6 flex items-center gap-4 border-b border-amber-500/20">
-            <div className="w-12 h-12 rounded-2xl bg-amber-500/20 flex items-center justify-center shrink-0">
-              <AlertTriangle className="w-6 h-6 text-amber-500" />
-            </div>
-            <div>
-              <h3 className="text-xl font-black text-white uppercase tracking-tight">Divergência de Medida</h3>
-              <p className="text-[10px] font-black text-amber-500/60 uppercase tracking-widest">Validação Clínica Obrigatória</p>
-            </div>
-          </div>
+        <DialogContent className="bg-black/95 border-emerald-500/20 backdrop-blur-3xl shadow-2xl p-0 overflow-hidden max-w-lg">
+          {replacementPending && (() => {
+            const curMacros = calculateItemMacros(replacementPending.current, replacementPending.current.quantity);
+            const targetKcal = replacementPending.target.kcal;
+            
+            const autoQty = (replacementPending.target.measurementType === 'gram' || replacementPending.target.measurementType === 'ml')
+              ? Math.round((curMacros.kcal / targetKcal) * 100)
+              : Math.round(curMacros.kcal / targetKcal);
+            
+            const estMacros = calculateItemMacros(replacementPending.target, autoQty);
+            
+            const diffs = {
+              kcal: estMacros.kcal - curMacros.kcal,
+              protein: estMacros.protein - curMacros.protein,
+              carbs: estMacros.carbs - curMacros.carbs,
+              fat: estMacros.fat - curMacros.fat
+            };
 
-          <div className="p-8 space-y-6">
-            <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5">
-              <div className="flex-1 text-center">
-                <p className="text-[9px] font-black text-white/20 uppercase mb-1">Atual</p>
-                <Badge variant="outline" className="bg-white/5 border-white/10 text-white/60 font-black uppercase text-[10px]">
-                  {replacementPending?.current.measurementType === 'gram' ? 'Gramas' : 
-                   replacementPending?.current.measurementType === 'ml' ? 'Mililitros' : 'Unidades'}
-                </Badge>
-              </div>
-              <div className="h-8 w-px bg-white/5" />
-              <div className="flex-1 text-center">
-                <p className="text-[9px] font-black text-amber-500/40 uppercase mb-1">Novo</p>
-                <Badge className="bg-amber-500/20 text-amber-500 border-amber-500/30 font-black uppercase text-[10px]">
-                  {replacementPending?.target.measurementType === 'gram' ? 'Gramas' : 
-                   replacementPending?.target.measurementType === 'ml' ? 'Mililitros' : 'Unidades'}
-                </Badge>
-              </div>
-            </div>
+            const isBigDiff = Math.abs(diffs.kcal) > 50 || Math.abs(diffs.protein) > 5;
 
-            <div className="space-y-4">
-              <p className="text-xs text-white/60 font-medium leading-relaxed">
-                Você está trocando um item medido em <span className="text-white font-bold">{replacementPending?.current.measurementType}</span> por um em <span className="text-white font-bold">{replacementPending?.target.measurementType}</span>. Isso impacta o cálculo nutricional.
-              </p>
-
-              <div className="p-4 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 space-y-3">
-                <div className="flex items-center gap-2">
-                  <Zap className="w-4 h-4 text-emerald-500" />
-                  <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Ajuste Sugerido</span>
+            return (
+              <>
+                <div className="bg-emerald-500/10 p-6 flex items-center gap-4 border-b border-emerald-500/20">
+                  <div className="w-12 h-12 rounded-2xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <RefreshCcw className="w-6 h-6 text-emerald-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-xl font-black text-white uppercase tracking-tight">Validação de Macros</h3>
+                    <p className="text-[10px] font-black text-emerald-500/60 uppercase tracking-widest">Ajuste de Precisão Clínica</p>
+                  </div>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-white/40">Estimativa para manter macros:</span>
-                  <span className="text-lg font-black text-emerald-400">
-                    {replacementPending && (() => {
-                      const curMacros = calculateItemMacros(replacementPending.current, replacementPending.current.quantity);
-                      const targetKcal = replacementPending.target.kcal;
-                      if (targetKcal <= 0) return '---';
-                      
-                      const val = (replacementPending.target.measurementType === 'gram' || replacementPending.target.measurementType === 'ml')
-                        ? Math.round((curMacros.kcal / targetKcal) * 100)
-                        : Math.round(curMacros.kcal / targetKcal);
-                      
-                      return `${val}${replacementPending.target.measurementType === 'gram' ? 'g' : replacementPending.target.measurementType === 'ml' ? 'ml' : ' un'}`;
-                    })()}
-                  </span>
-                </div>
-              </div>
-            </div>
 
-            <div className="grid grid-cols-1 gap-2 pt-4">
-              <Button 
-                onClick={() => {
-                  if (replacementPending) {
-                    executeSwap(replacementPending.mealId, replacementPending.current.instanceId, replacementPending.target, true);
-                  }
-                }}
-                className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-12 rounded-xl"
-              >
-                Ajustar Automaticamente
-              </Button>
-              <Button 
-                variant="outline"
-                onClick={() => {
-                  if (replacementPending) {
-                    executeSwap(replacementPending.mealId, replacementPending.current.instanceId, replacementPending.target, false);
-                  }
-                }}
-                className="bg-white/5 border-white/10 text-white font-black uppercase tracking-widest h-12 rounded-xl"
-              >
-                Confirmar Manualmente
-              </Button>
-              <Button 
-                variant="ghost"
-                onClick={() => setReplacementPending(null)}
-                className="text-white/40 hover:text-white font-black uppercase tracking-widest h-12 rounded-xl"
-              >
-                Cancelar Troca
-              </Button>
-            </div>
-          </div>
+                <div className="p-8 space-y-6">
+                  {isBigDiff && (
+                    <div className="p-4 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-start gap-3">
+                      <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                      <p className="text-[10px] font-bold text-amber-200/80 uppercase leading-relaxed">
+                        Aviso: Esta substituição pode alterar significativamente o perfil do plano.
+                      </p>
+                    </div>
+                  )}
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="space-y-3">
+                      <p className="text-[9px] font-black text-white/20 uppercase tracking-widest text-center">Antes ({replacementPending.current.name})</p>
+                      <div className="bg-white/[0.02] border border-white/5 rounded-2xl p-4 space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold"><span className="text-white/40 uppercase">Kcal</span> <span className="text-white">{Math.round(curMacros.kcal)}</span></div>
+                        <div className="flex justify-between text-[10px] font-bold"><span className="text-emerald-500/40 uppercase">Prot</span> <span className="text-emerald-400">{Math.round(curMacros.protein)}g</span></div>
+                        <div className="flex justify-between text-[10px] font-bold"><span className="text-blue-500/40 uppercase">Carb</span> <span className="text-blue-400">{Math.round(curMacros.carbs)}g</span></div>
+                        <div className="flex justify-between text-[10px] font-bold"><span className="text-amber-500/40 uppercase">Gord</span> <span className="text-amber-400">{Math.round(curMacros.fat)}g</span></div>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <p className="text-[9px] font-black text-emerald-500/40 uppercase tracking-widest text-center">Depois ({replacementPending.target.name})</p>
+                      <div className="bg-emerald-500/[0.02] border border-emerald-500/10 rounded-2xl p-4 space-y-2">
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-white/40 uppercase">Kcal</span> 
+                          <span className="text-white flex items-center gap-1">
+                            {Math.round(estMacros.kcal)} 
+                            {diffs.kcal !== 0 && (
+                              <span className={cn("text-[8px]", diffs.kcal > 0 ? "text-rose-400" : "text-emerald-400")}>
+                                {diffs.kcal > 0 ? `↑` : `↓`}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-emerald-500/40 uppercase">Prot</span> 
+                          <span className="text-emerald-400 flex items-center gap-1">
+                            {Math.round(estMacros.protein)}g
+                            {Math.round(diffs.protein) !== 0 && (
+                              <span className={cn("text-[8px]", diffs.protein > 0 ? "text-emerald-400" : "text-rose-400")}>
+                                {diffs.protein > 0 ? `↑` : `↓`}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-blue-500/40 uppercase">Carb</span> 
+                          <span className="text-blue-400 flex items-center gap-1">
+                            {Math.round(estMacros.carbs)}g
+                            {Math.round(diffs.carbs) !== 0 && (
+                              <span className={cn("text-[8px]", diffs.carbs > 0 ? "text-blue-400" : "text-amber-400")}>
+                                {diffs.carbs > 0 ? `↑` : `↓`}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                        <div className="flex justify-between text-[10px] font-bold">
+                          <span className="text-amber-500/40 uppercase">Gord</span> 
+                          <span className="text-amber-400 flex items-center gap-1">
+                            {Math.round(estMacros.fat)}g
+                            {Math.round(diffs.fat) !== 0 && (
+                              <span className={cn("text-[8px]", diffs.fat > 0 ? "text-amber-400" : "text-rose-400")}>
+                                {diffs.fat > 0 ? `↑` : `↓`}
+                              </span>
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-white/[0.03] border border-white/5">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Zap className="w-3.5 h-3.5 text-emerald-500" />
+                      <span className="text-[10px] font-black text-white/60 uppercase tracking-widest">Ajuste Inteligente</span>
+                    </div>
+                    <p className="text-[10px] text-white/30 font-medium leading-relaxed">
+                      Porção calculada para manter <span className="text-white font-bold">{Math.round(curMacros.kcal)} kcal</span>. O ajuste é baseado em densidade calórica e proporção nutricional.
+                    </p>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-2 pt-2">
+                    <Button 
+                      onClick={() => executeSwap(replacementPending.mealId, replacementPending.current.instanceId, replacementPending.target, true)}
+                      className="bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest h-12 rounded-xl group"
+                    >
+                      Manter Macros Principais <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                    <div className="grid grid-cols-2 gap-2">
+                      <Button 
+                        variant="outline"
+                        onClick={() => executeSwap(replacementPending.mealId, replacementPending.current.instanceId, replacementPending.target, false)}
+                        className="bg-white/5 border-white/10 text-white font-black uppercase tracking-widest h-12 rounded-xl text-[10px]"
+                      >
+                        Trocar Sem Ajuste
+                      </Button>
+                      <Button 
+                        variant="ghost"
+                        onClick={() => setReplacementPending(null)}
+                        className="text-white/40 hover:text-white font-black uppercase tracking-widest h-12 rounded-xl text-[10px]"
+                      >
+                        Cancelar
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            );
+          })()}
         </DialogContent>
       </Dialog>
 
