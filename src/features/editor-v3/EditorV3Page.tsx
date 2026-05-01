@@ -395,7 +395,7 @@ const EditorV3Page = () => {
     // Pequeno delay para efeito visual de "processamento"
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    generatePlan(selectedDietType || 'muscle-gain', calories, replaceExistingFlag);
+    generatePlan(selectedDietType || 'muscle-gain', calories, baseFoods, replaceExistingFlag);
     setIsGeneratingGlobal(false);
     toast.success('Motor V3: Plano gerado com sucesso!');
   };
