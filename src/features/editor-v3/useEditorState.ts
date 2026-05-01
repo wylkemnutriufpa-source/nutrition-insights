@@ -242,24 +242,24 @@ export const useEditorState = create<EditorState>()(
         }));
       },
 
-      generatePlan: (goal, baseCalories, replaceExisting = false) => {
+      generatePlan: (goal, baseCalories, availableFoods, replaceExisting = false) => {
         let currentMeals = get().meals;
         
         if (replaceExisting) {
           currentMeals = initialMeals.map(m => ({ ...m, items: [] }));
         }
 
-        const newMeals = generatePlanWithEngine(currentMeals, goal, baseCalories);
+        const newMeals = generatePlanWithEngine(currentMeals, goal, baseCalories, availableFoods);
         set({ meals: newMeals, planStatus: 'draft' });
         toast.success(`Plano estruturado para ${goal} com ${baseCalories}kcal`);
       },
 
-      generateMeal: (mealId, goal, baseCalories = 2000) => {
+      generateMeal: (mealId, goal, availableFoods, baseCalories = 2000) => {
         const meals = get().meals;
         const meal = meals.find(m => m.id === mealId);
         if (!meal) return;
 
-        const newItems = generateMealWithEngine(meal, goal, baseCalories);
+        const newItems = generateMealWithEngine(meal, goal, baseCalories, availableFoods);
         set((state) => ({
           meals: state.meals.map(m => 
             m.id === mealId ? { ...m, items: newItems } : m
