@@ -898,7 +898,7 @@ const EditorV3Page = () => {
                     <span className="text-xs font-black text-emerald-400">{Math.round(totalMacros.protein)}g</span>
                  </div>
                  <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                    <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (totalMacros.protein / (goalMetadata.protein || 150)) * 100)}%` }} />
+                    <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (totalMacros.protein / (goalMetadata.goalProtein || 150)) * 100)}%` }} />
                  </div>
               </div>
               <div className="flex flex-col gap-1.5">
