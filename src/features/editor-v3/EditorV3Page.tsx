@@ -253,6 +253,8 @@ const EditorV3Page = () => {
             protein_target: assessment?.protein_target || 150,
             carbs_target: assessment?.carbs_target || 200,
             fat_target: assessment?.fat_target || 60,
+            consent_given: profileAny.consent_given,
+            consent_date: profileAny.consent_date,
           };
           setPatientContext(context);
         }
@@ -486,6 +488,12 @@ const EditorV3Page = () => {
 
     if (!validation.isValid) {
       toast.error("Corrija os erros antes de salvar.");
+      return;
+    }
+
+    if (patientContext && !patientContext.consent_given) {
+      toast.error('BLOQUEIO LGPD: É necessário consentimento do paciente para salvar e promover este plano.');
+      setShowValidation(true);
       return;
     }
 
@@ -726,12 +734,22 @@ const EditorV3Page = () => {
                      <PopoverTrigger asChild>
                        <Badge variant="outline" className="px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter border-emerald-500/50 text-emerald-500 cursor-help">
                          Plano baseado no paciente
-                       </Badge>
-                     </PopoverTrigger>
-                     <PopoverContent className="w-72 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl z-[100] shadow-2xl">
-                       <div className="space-y-4">
-                         <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Confiança Clínica</p>
+                        </Badge>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-72 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl z-[100] shadow-2xl">
+                        <div className="space-y-4">
+                          <div className="flex items-center justify-between">
+                             <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Compliance LGPD</p>
+                             <Badge className={cn(
+                               "text-[9px] font-black uppercase",
+                               patientContext.consent_given ? "bg-emerald-500 text-black" : "bg-amber-500 text-black"
+                             )}>
+                               {patientContext.consent_given ? "Consentimento Ativo" : "Consentimento Pendente"}
+                             </Badge>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                             <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Confiança Clínica</p>
                             {confidence && (
                               <Badge className={cn(
                                 "text-[9px] font-black uppercase",
@@ -1465,16 +1483,20 @@ const EditorV3Page = () => {
                <p className="text-[10px] text-white/20 font-black uppercase tracking-tighter max-w-[200px]">
                  Forçar o salvamento pode comprometer a estratégia nutricional do paciente.
                </p>
-               <Button 
-                 variant="ghost" 
-                 onClick={() => {
-                   setShowClinicalDecision(false);
-                   handleConfirmPromotion();
-                 }}
-                 className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
-               >
-                 Forçar Salvamento (Com Confirmação)
-               </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => {
+                    if (patientContext && !patientContext.consent_given) {
+                      toast.error('BLOQUEIO LGPD: Sem consentimento, o salvamento não pode ser forçado.');
+                      return;
+                    }
+                    setShowClinicalDecision(false);
+                    handleConfirmPromotion();
+                  }}
+                  className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
+                >
+                  Forçar Salvamento (Com Confirmação)
+                </Button>
              </div>
           </div>
         </DialogContent>

@@ -59,6 +59,7 @@ function computeMacros(meals: Meal[]) {
 /**
  * Carrega o draft `editing` ativo do par (nutricionista atual, paciente).
  * Se não existir, cria um novo a partir das `seedMeals`.
+ * Também registra o log de acesso.
  */
 export async function loadOrCreateDraft(
   patientId: string,
@@ -67,6 +68,15 @@ export async function loadOrCreateDraft(
   const { data: userRes } = await supabase.auth.getUser();
   const nutritionistId = userRes.user?.id;
   if (!nutritionistId) return null;
+
+  // Registrar log de acesso: Visualização de plano/draft
+  await supabase.from('access_logs').insert({
+    user_id: nutritionistId,
+    patient_id: patientId,
+    action: 'view',
+    resource: 'draft',
+    user_agent: navigator.userAgent
+  });
 
   // 1) Tenta achar um draft em edição
   const { data: existing, error: findErr } = await supabase
@@ -159,6 +169,20 @@ export async function saveDraft(
     console.warn('[v3-draft] save failed — keeping local fallback');
     return null;
   }
+
+  // Log de acesso: Edição de draft
+  const { data: userRes } = await supabase.auth.getUser();
+  if (userRes.user) {
+    const record = data as unknown as DraftRecord;
+    await supabase.from('access_logs').insert({
+      user_id: userRes.user.id,
+      patient_id: record.patient_id,
+      action: 'edit',
+      resource: 'draft',
+      user_agent: navigator.userAgent
+    });
+  }
+
   return data as unknown as DraftRecord;
 }
 
@@ -167,8 +191,28 @@ export async function saveDraft(
  * Não apaga histórico — preserva para auditoria.
  */
 export async function discardDraft(draftId: string): Promise<void> {
+  const { data: draftData } = await supabase
+    .from('v3_drafts' as any)
+    .select('patient_id')
+    .eq('id', draftId)
+    .single();
+
+  const draft = draftData as any;
+
   await supabase
     .from('v3_drafts' as any)
     .update({ draft_status: 'discarded' })
     .eq('id', draftId);
+
+  // Log de exclusão (soft-delete)
+  const { data: userRes } = await supabase.auth.getUser();
+  if (userRes.user && draft?.patient_id) {
+    await supabase.from('access_logs').insert({
+      user_id: userRes.user.id,
+      patient_id: draft.patient_id,
+      action: 'delete',
+      resource: 'draft',
+      user_agent: navigator.userAgent
+    });
+  }
 }

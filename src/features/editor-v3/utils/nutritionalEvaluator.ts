@@ -10,6 +10,8 @@ export interface PlanMetadata {
   goal?: string;
   restrictions?: string[];
   preferences?: string[];
+  consent_given?: boolean;
+  consent_date?: string;
 }
 
 export const calculateNutritionalScore = (

@@ -35,11 +35,19 @@ export const runClinicalRegressions = () => {
   
   const metadataWithLactose: any = {
     restrictions: ['Leite', 'Lactose'],
-    goal: 'Emagrecimento'
+    goal: 'Emagrecimento',
+    consent_given: true
   };
 
   const issues = validateClinicalContext([mealWithRestriction], metadataWithLactose);
   assert(issues.some(i => i.type === 'restriction'), 'Deveria detectar violação de restrição de Lactose');
+
+  // 1.1 Teste de Consentimento LGPD
+  const metadataNoConsent: any = {
+    consent_given: false
+  };
+  const complianceIssues = validateClinicalContext([mealWithRestriction], metadataNoConsent);
+  assert(complianceIssues.some(i => i.type === 'compliance'), 'Deveria detectar violação de compliance LGPD');
 
   // 2. Teste de Score para Hipertrofia
   const highProteinMeal: Meal = {

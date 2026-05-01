@@ -9,7 +9,7 @@ export interface NutritionalScore {
 }
 
 export interface ValidationIssue {
-  type: 'calories' | 'protein' | 'carbs' | 'fat' | 'meal_empty' | 'restriction' | 'preference' | 'distribution';
+  type: 'calories' | 'protein' | 'carbs' | 'fat' | 'meal_empty' | 'restriction' | 'preference' | 'distribution' | 'compliance';
   severity: 'ok' | 'attention' | 'critical';
   message: string;
   mealId?: string;
