@@ -25,6 +25,7 @@ export interface Food {
   ingredients?: any[];
   instructions?: string;
   isVisualLibraryItem?: boolean;
+  nutritionistId?: string;
 }
 
 export interface MealItem extends Food {
