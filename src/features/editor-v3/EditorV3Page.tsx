@@ -251,6 +251,14 @@ const EditorV3Page = () => {
     loadData();
   }, [user?.id]);
 
+  useEffect(() => {
+    const fetchBase = async () => {
+      const data = await getBaseFoods();
+      setBaseFoods(data);
+    };
+    fetchBase();
+  }, []);
+
   // Macros totais memoizados com fallback para kcal/calories
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
