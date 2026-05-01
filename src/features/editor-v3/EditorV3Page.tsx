@@ -251,26 +251,45 @@ const EditorV3Page = () => {
 
   // Busca de Marmitas e Templates
   useEffect(() => {
-    const loadData = async () => {
-      if (user?.id) {
-        const [marmitasData, templatesData] = await Promise.all([
+    const loadAllData = async () => {
+      if (!user?.id) return;
+      
+      try {
+        console.log('[EditorV3] Iniciando carregamento de base crítica...');
+        
+        const [marmitasData, templatesData, baseData] = await Promise.all([
           searchMarmitas(user.id),
-          searchTemplates()
+          searchTemplates(),
+          getBaseFoods()
         ]);
+
+        console.log(`[EditorV3] food_database: ${baseData.length} itens`);
+        console.log(`[EditorV3] meal_recipes: ${marmitasData.length} itens`);
+        console.log(`[EditorV3] nutritionist_meal_templates: ${templatesData.length} itens`);
+
         setMarmitas(marmitasData);
         setTemplates(templatesData);
+        setBaseFoods(baseData);
+        
+        setDbStatus({
+          foods: baseData.length,
+          marmitas: marmitasData.length,
+          templates: templatesData.length,
+          error: null
+        });
+
+        if (baseData.length > 0 && templatesData.length > 0) {
+          setDataReady(true);
+        } else {
+          setDbStatus(prev => ({ ...prev, error: 'Base de dados incompleta ou vazia.' }));
+        }
+      } catch (err: any) {
+        console.error('[EditorV3] Erro crítico no fail-safe:', err);
+        setDbStatus(prev => ({ ...prev, error: err.message || 'Falha ao conectar com o banco de dados.' }));
       }
     };
-    loadData();
+    loadAllData();
   }, [user?.id]);
-
-  useEffect(() => {
-    const fetchBase = async () => {
-      const data = await getBaseFoods();
-      setBaseFoods(data);
-    };
-    fetchBase();
-  }, []);
 
   // Macros totais memoizados com fallback para kcal/calories
   const totalMacros = useMemo(() => {
