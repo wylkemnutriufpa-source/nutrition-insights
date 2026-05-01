@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, Food, MealItem, MealTemplate, AuditLogEntry } from './types';
 import { generatePlanWithEngine, generateMealWithEngine, refinePlanWithScore } from './engine';
-import { calculateNutritionalScore, validatePlanClinically } from './utils/nutritionalEvaluator';
+import { calculateNutritionalScore, validatePlanClinically, type PlanMetadata } from './utils/nutritionalEvaluator';
 import { NutritionalScore, ValidationIssue } from './nutritionalScoreTypes';
 import { toast } from 'sonner';
 
