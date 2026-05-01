@@ -64,6 +64,7 @@ export interface DraftPayload {
   meals: Meal[];
   version: number;
   audit_log?: AuditLogEntry[];
+  nutritional_score?: any;
 }
 
 export interface MealTemplate {
