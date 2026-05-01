@@ -92,7 +92,8 @@ const EditorV3Page = () => {
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
     duplicateMeal, reorderMeal, updateMealImage,
-    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata
+    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
+    patientContext, setPatientContext, confidence
   } = useEditorState();
 
   const {
@@ -219,9 +220,17 @@ const EditorV3Page = () => {
   const [lastAssessment, setLastAssessment] = useState<any>(null);
 
   useEffect(() => {
-    const fetchAssessment = async () => {
+    const fetchClinicalData = async () => {
       if (patientId) {
-        const { data } = await supabase
+        // Carregar Perfil do Paciente (Contexto Central)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', patientId)
+          .maybeSingle();
+
+        // Carregar Avaliação Física para Metas
+        const { data: assessment } = await supabase
           .from('physical_assessments')
           .select('*')
           .eq('patient_id', patientId)
@@ -229,11 +238,26 @@ const EditorV3Page = () => {
           .limit(1)
           .maybeSingle();
         
-        if (data) setLastAssessment(data);
+        if (profile) {
+          const context = {
+            id: profile.id,
+            name: profile.full_name || 'Paciente',
+            goal: profile.goal || 'Manutenção',
+            restrictions: profile.food_restrictions || [],
+            preferences: profile.food_preferences || [],
+            calories_target: assessment?.calories_target || 2000,
+            protein_target: assessment?.protein_target || 150,
+            carbs_target: assessment?.carbs_target || 200,
+            fat_target: assessment?.fat_target || 60,
+          };
+          setPatientContext(context);
+        }
+
+        if (assessment) setLastAssessment(assessment);
       }
     };
-    fetchAssessment();
-  }, [patientId]);
+    fetchClinicalData();
+  }, [patientId, setPatientContext]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -305,7 +329,12 @@ const EditorV3Page = () => {
         else if (isCarb(name)) category = 'carb';
         else if (isFruit(name)) category = 'fruit';
 
-        const dbSuggestions = await getCompatibleFoods(category, name);
+        // Adaptative Engine: Pass restrictions to filtering
+        const dbSuggestions = await getCompatibleFoods(
+          category, 
+          name, 
+          patientContext?.restrictions || []
+        );
         const suggestions = getDeterministicSuggestions(
           name, 
           dbSuggestions, 
@@ -432,7 +461,16 @@ const EditorV3Page = () => {
   }, [meals, auditLog, draftId, scheduleSave]);
 
   const handlePromotionRequest = () => {
-    setShowValidation(true);
+    // Sistema de Decisão Clínica (Pré-Salvamento)
+    const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
+    const hasViolations = criticalIssues.length > 0;
+    const isLowConfidence = confidence && confidence.value < 70;
+
+    if (hasViolations || isLowConfidence) {
+      setShowValidation(true);
+    } else {
+      handleConfirmPromotion();
+    }
   };
 
   const handleConfirmPromotion = async () => {
