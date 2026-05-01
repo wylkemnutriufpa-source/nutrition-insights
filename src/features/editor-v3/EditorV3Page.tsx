@@ -1454,20 +1454,28 @@ const EditorV3Page = () => {
             </div>
           </div>
           
-          <div className="bg-white/5 p-6 flex items-center justify-between border-t border-white/10">
-             <p className="text-[10px] text-white/20 font-black uppercase tracking-tighter max-w-[200px]">
-               Forçar o salvamento pode comprometer a estratégia nutricional do paciente.
-             </p>
-             <Button 
-               variant="ghost" 
-               onClick={() => {
-                 setShowClinicalDecision(false);
-                 handleConfirmPromotion();
-               }}
-               className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
-             >
-               Forçar Salvamento (Com Confirmação)
-             </Button>
+          <div className="bg-white/5 p-6 flex flex-col gap-4 border-t border-white/10">
+             {lastBlockedReason && (
+               <div className="flex items-center gap-2 text-[10px] font-black text-rose-500 uppercase">
+                  <XCircle className="w-3 h-3" />
+                  Última tentativa bloqueada: {lastBlockedReason}
+               </div>
+             )}
+             <div className="flex items-center justify-between">
+               <p className="text-[10px] text-white/20 font-black uppercase tracking-tighter max-w-[200px]">
+                 Forçar o salvamento pode comprometer a estratégia nutricional do paciente.
+               </p>
+               <Button 
+                 variant="ghost" 
+                 onClick={() => {
+                   setShowClinicalDecision(false);
+                   handleConfirmPromotion();
+                 }}
+                 className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
+               >
+                 Forçar Salvamento (Com Confirmação)
+               </Button>
+             </div>
           </div>
         </DialogContent>
       </Dialog>
