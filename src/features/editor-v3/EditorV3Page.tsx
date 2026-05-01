@@ -10,6 +10,7 @@ import {
   searchVisualLibrary, uploadVisualLibraryImage 
 } from './utils/dataFetcher';
 import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
+import { calculateNutritionalScore, validatePlanClinically } from './utils/nutritionalEvaluator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
