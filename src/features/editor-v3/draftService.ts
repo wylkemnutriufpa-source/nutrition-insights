@@ -191,11 +191,13 @@ export async function saveDraft(
  * Não apaga histórico — preserva para auditoria.
  */
 export async function discardDraft(draftId: string): Promise<void> {
-  const { data: draft } = await supabase
+  const { data: draftData } = await supabase
     .from('v3_drafts' as any)
     .select('patient_id')
     .eq('id', draftId)
     .single();
+
+  const draft = draftData as any;
 
   await supabase
     .from('v3_drafts' as any)
@@ -204,7 +206,7 @@ export async function discardDraft(draftId: string): Promise<void> {
 
   // Log de exclusão (soft-delete)
   const { data: userRes } = await supabase.auth.getUser();
-  if (userRes.user && draft) {
+  if (userRes.user && draft?.patient_id) {
     await supabase.from('access_logs').insert({
       user_id: userRes.user.id,
       patient_id: draft.patient_id,
