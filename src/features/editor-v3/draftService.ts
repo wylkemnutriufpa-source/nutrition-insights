@@ -169,6 +169,19 @@ export async function saveDraft(
     console.warn('[v3-draft] save failed — keeping local fallback');
     return null;
   }
+
+  // Log de acesso: Edição de draft
+  const { data: userRes } = await supabase.auth.getUser();
+  if (userRes.user) {
+    await supabase.from('access_logs').insert({
+      user_id: userRes.user.id,
+      patient_id: data.patient_id,
+      action: 'edit',
+      resource: 'draft',
+      user_agent: navigator.userAgent
+    });
+  }
+
   return data as unknown as DraftRecord;
 }
 
@@ -177,8 +190,26 @@ export async function saveDraft(
  * Não apaga histórico — preserva para auditoria.
  */
 export async function discardDraft(draftId: string): Promise<void> {
+  const { data: draft } = await supabase
+    .from('v3_drafts' as any)
+    .select('patient_id')
+    .eq('id', draftId)
+    .single();
+
   await supabase
     .from('v3_drafts' as any)
     .update({ draft_status: 'discarded' })
     .eq('id', draftId);
+
+  // Log de exclusão (soft-delete)
+  const { data: userRes } = await supabase.auth.getUser();
+  if (userRes.user && draft) {
+    await supabase.from('access_logs').insert({
+      user_id: userRes.user.id,
+      patient_id: draft.patient_id,
+      action: 'delete',
+      resource: 'draft',
+      user_agent: navigator.userAgent
+    });
+  }
 }
