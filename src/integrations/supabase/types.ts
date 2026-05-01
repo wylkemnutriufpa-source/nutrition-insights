@@ -14,6 +14,50 @@ export type Database = {
   }
   public: {
     Tables: {
+      access_logs: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          ip_address: string | null
+          patient_id: string | null
+          resource: string
+          tenant_id: string | null
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          patient_id?: string | null
+          resource: string
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          ip_address?: string | null
+          patient_id?: string | null
+          resource?: string
+          tenant_id?: string | null
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "access_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       achievements: {
         Row: {
           created_at: string
@@ -14374,6 +14418,9 @@ export type Database = {
           behavioral_consistency_score: number | null
           clinical_risk_level: string | null
           clinical_risk_score: number | null
+          compliance_mode: boolean | null
+          consent_date: string | null
+          consent_given: boolean | null
           created_at: string
           current_editor_mode: string | null
           current_weight: number | null
@@ -14429,6 +14476,9 @@ export type Database = {
           behavioral_consistency_score?: number | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
+          compliance_mode?: boolean | null
+          consent_date?: string | null
+          consent_given?: boolean | null
           created_at?: string
           current_editor_mode?: string | null
           current_weight?: number | null
@@ -14484,6 +14534,9 @@ export type Database = {
           behavioral_consistency_score?: number | null
           clinical_risk_level?: string | null
           clinical_risk_score?: number | null
+          compliance_mode?: boolean | null
+          consent_date?: string | null
+          consent_given?: boolean | null
           created_at?: string
           current_editor_mode?: string | null
           current_weight?: number | null
@@ -20441,6 +20494,10 @@ export type Database = {
           p_status?: string
         }
         Returns: string
+      }
+      anonymize_profile_data: {
+        Args: { target_profile_id: string }
+        Returns: undefined
       }
       approve_and_publish_plan: {
         Args: {
