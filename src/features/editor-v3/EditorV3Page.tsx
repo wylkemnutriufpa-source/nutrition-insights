@@ -93,7 +93,7 @@ const EditorV3Page = () => {
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
     duplicateMeal, reorderMeal, updateMealImage,
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
-    patientContext, setPatientContext, confidence
+    patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry
   } = useEditorState();
 
   const {
@@ -105,6 +105,8 @@ const EditorV3Page = () => {
   const [promoting, setPromoting] = useState(false);
   const [showValidation, setShowValidation] = useState(false);
   const [showClinicalDecision, setShowClinicalDecision] = useState(false);
+  const [showClinicalHistory, setShowClinicalHistory] = useState(false);
+  const [showRefineOptions, setShowRefineOptions] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [showRevertConfirm, setShowRevertConfirm] = useState(false);
   const [showPatientSelector, setShowPatientSelector] = useState(false);
@@ -726,44 +728,66 @@ const EditorV3Page = () => {
                          Plano baseado no paciente
                        </Badge>
                      </PopoverTrigger>
-                     <PopoverContent className="w-64 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl z-[100]">
-                       <div className="space-y-3">
+                     <PopoverContent className="w-72 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl z-[100] shadow-2xl">
+                       <div className="space-y-4">
                          <div className="flex items-center justify-between">
-                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Resumo Clínico</p>
+                            <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Confiança Clínica</p>
                             {confidence && (
                               <Badge className={cn(
-                                "text-[8px] font-black uppercase",
+                                "text-[9px] font-black uppercase",
                                 confidence.level === 'high' ? "bg-emerald-500 text-black" :
                                 confidence.level === 'medium' ? "bg-amber-500 text-black" : "bg-rose-500 text-white"
                               )}>
-                                Confiança {confidence.level}
+                                {confidence.value}% {confidence.level}
                               </Badge>
                             )}
                          </div>
-                         <div className="space-y-1">
-                           <p className="text-xs text-white/80 font-bold">{patientContext.name}</p>
-                           <p className="text-[10px] text-white/40 font-bold uppercase tracking-tight">Objetivo: {patientContext.goal}</p>
-                         </div>
-                         <div className="grid grid-cols-2 gap-2 border-t border-white/5 pt-2">
-                            <div>
-                               <p className="text-[8px] text-white/30 uppercase font-black">Meta Kcal</p>
-                               <p className="text-xs text-white font-black">{Math.round(patientContext.calories_target)}</p>
-                            </div>
-                            <div>
-                               <p className="text-[8px] text-white/30 uppercase font-black">Meta Prot</p>
-                               <p className="text-xs text-white font-black">{Math.round(patientContext.protein_target)}g</p>
-                            </div>
-                         </div>
-                         {patientContext.restrictions.length > 0 && (
-                           <div className="border-t border-white/5 pt-2">
-                             <p className="text-[8px] text-white/30 uppercase font-black mb-1">Restrições</p>
-                             <div className="flex flex-wrap gap-1">
-                               {patientContext.restrictions.map(r => (
-                                 <Badge key={r} variant="secondary" className="bg-rose-500/10 text-rose-500 text-[8px] border-rose-500/20">{r}</Badge>
-                               ))}
-                             </div>
+
+                         {confidence?.breakdown && (
+                           <div className="grid grid-cols-2 gap-3">
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[8px] text-white/40 uppercase font-black">Metas</span>
+                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.objectiveAdherence)}%</span>
+                                </div>
+                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div className="h-full bg-emerald-500 transition-all" style={{ width: `${confidence.breakdown.objectiveAdherence}%` }} />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[8px] text-white/40 uppercase font-black">Qualidade</span>
+                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.quality)}%</span>
+                                </div>
+                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div className="h-full bg-blue-500 transition-all" style={{ width: `${confidence.breakdown.quality}%` }} />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[8px] text-white/40 uppercase font-black">Equilíbrio</span>
+                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.consistency)}%</span>
+                                </div>
+                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div className="h-full bg-amber-500 transition-all" style={{ width: `${confidence.breakdown.consistency}%` }} />
+                                </div>
+                              </div>
+                              <div className="space-y-1">
+                                <div className="flex justify-between items-center">
+                                  <span className="text-[8px] text-white/40 uppercase font-black">Restrições</span>
+                                  <span className="text-[9px] text-white font-black">{Math.round(confidence.breakdown.restrictions)}%</span>
+                                </div>
+                                <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                                  <div className="h-full bg-rose-500 transition-all" style={{ width: `${confidence.breakdown.restrictions}%` }} />
+                                </div>
+                              </div>
                            </div>
                          )}
+
+                         <div className="space-y-1 pt-2 border-t border-white/5">
+                           <p className="text-xs text-white/80 font-bold">{patientContext.name}</p>
+                           <p className="text-[9px] text-white/40 font-bold uppercase tracking-tight">Objetivo: {patientContext.goal}</p>
+                         </div>
                        </div>
                      </PopoverContent>
                    </Popover>
@@ -822,8 +846,11 @@ const EditorV3Page = () => {
             <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="h-9 border-white/5 bg-white/5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               <RotateCcw className="w-3.5 h-3.5 mr-2" /> Resetar
             </Button>
-            <Button variant="outline" size="sm" onClick={() => refinePlan(baseFoods)} className="h-9 border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
+          <Button variant="outline" size="sm" onClick={() => setShowRefineOptions(true)} className="h-9 border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
               <Sparkles className="w-3.5 h-3.5" /> Corrigir Plano
+            </Button>
+            <Button variant="outline" size="sm" onClick={() => setShowClinicalHistory(true)} className="h-9 border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
+              <History className="w-3.5 h-3.5" /> Histórico Clínico
             </Button>
             <Button size="sm" onClick={handlePromotionRequest} disabled={promoting || !draftId} className="h-9 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl transition-all px-6 shadow-lg shadow-emerald-500/20">
               <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
@@ -1410,7 +1437,7 @@ const EditorV3Page = () => {
                     variant="outline" 
                     onClick={() => {
                       setShowClinicalDecision(false);
-                      refinePlan(baseFoods);
+                      setShowRefineOptions(true);
                     }}
                     className="h-14 border-emerald-500/20 bg-emerald-500/5 text-emerald-500 hover:bg-emerald-500/10 font-black uppercase tracking-widest text-xs rounded-2xl gap-3"
                   >
@@ -1441,6 +1468,107 @@ const EditorV3Page = () => {
              >
                Forçar Salvamento (Com Confirmação)
              </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={showClinicalHistory} onOpenChange={setShowClinicalHistory}>
+        <DialogContent className="max-w-2xl bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
+          <div className="p-8">
+            <div className="flex items-center gap-4 mb-8">
+               <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20">
+                  <History className="w-8 h-8 text-emerald-500" />
+               </div>
+               <div>
+                  <h2 className="text-2xl font-black text-white uppercase tracking-tight">Histórico Clínico</h2>
+                  <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest">Audit Trail das decisões tomadas para este rascunho.</p>
+               </div>
+            </div>
+
+            <ScrollArea className="h-[400px] pr-4">
+              <div className="space-y-4">
+                {auditLog.length === 0 ? (
+                  <div className="py-20 flex flex-col items-center justify-center text-white/10">
+                    <History className="w-12 h-12 mb-4 opacity-10" />
+                    <p className="uppercase tracking-widest font-black text-[10px]">Nenhum registro encontrado</p>
+                  </div>
+                ) : (
+                  auditLog.slice().reverse().map((log, idx) => (
+                    <div key={idx} className="flex gap-4 p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/20 transition-all">
+                       <div className="pt-1">
+                          {log.source === 'engine' ? <Sparkles className="w-4 h-4 text-blue-400" /> : 
+                           log.source === 'system' ? <Lock className="w-4 h-4 text-rose-500" /> : 
+                           <User className="w-4 h-4 text-emerald-500" />}
+                       </div>
+                       <div className="flex-1">
+                          <div className="flex justify-between items-start mb-1">
+                             <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">
+                                {log.type === 'save_blocked' ? 'Bloqueio de Salvamento' : 
+                                 log.type === 'engine_action' ? 'Ação da Engine' : 
+                                 log.type === 'image_change' ? 'Visual Update' : 'Interação Manual'}
+                             </p>
+                             <span className="text-[9px] text-white/20 font-bold">{new Date(log.created_at).toLocaleTimeString()}</span>
+                          </div>
+                          <p className="text-xs text-white/80 font-bold">{log.description}</p>
+                          {log.metadata?.issues && (
+                            <div className="mt-2 flex flex-wrap gap-2">
+                               {log.metadata.issues.map((issue: string, i: number) => (
+                                 <Badge key={i} variant="outline" className="text-[8px] border-rose-500/20 bg-rose-500/5 text-rose-400">{issue}</Badge>
+                               ))}
+                            </div>
+                          )}
+                       </div>
+                    </div>
+                  ))
+                )}
+              </div>
+            </ScrollArea>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showRefineOptions} onOpenChange={setShowRefineOptions}>
+        <DialogContent className="max-w-md bg-[#000000] border-white/10 p-0 overflow-hidden rounded-3xl">
+          <div className="p-8 text-center">
+            <div className="w-20 h-20 rounded-3xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 mx-auto mb-6">
+               <Sparkles className="w-10 h-10 text-blue-500" />
+            </div>
+            <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Refinar Estratégia</h2>
+            <p className="text-white/40 text-[11px] font-bold uppercase tracking-widest mb-8">Como você deseja que a engine corrija o plano?</p>
+
+            <div className="grid gap-4">
+              <button 
+                onClick={() => {
+                  refinePlan(baseFoods, 'light');
+                  setShowRefineOptions(false);
+                }}
+                className="group flex flex-col items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left"
+              >
+                 <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mb-1">Correção Leve</span>
+                 <p className="text-xs text-white font-black group-hover:text-emerald-400">Apenas ajusta quantidades dos itens existentes.</p>
+              </button>
+
+              <button 
+                onClick={() => {
+                  refinePlan(baseFoods, 'moderate');
+                  setShowRefineOptions(false);
+                }}
+                className="group flex flex-col items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left"
+              >
+                 <span className="text-[10px] font-black text-blue-500 uppercase tracking-widest mb-1">Correção Moderada (Recomendada)</span>
+                 <p className="text-xs text-white font-black group-hover:text-blue-400">Substitui alimentos e adiciona itens similares.</p>
+              </button>
+
+              <button 
+                onClick={() => {
+                  refinePlan(baseFoods, 'aggressive');
+                  setShowRefineOptions(false);
+                }}
+                className="group flex flex-col items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left"
+              >
+                 <span className="text-[10px] font-black text-rose-500 uppercase tracking-widest mb-1">Correção Completa</span>
+                 <p className="text-xs text-white font-black group-hover:text-rose-400">Reestrutura refeições críticas do zero.</p>
+              </button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
