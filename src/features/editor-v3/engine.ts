@@ -1,4 +1,7 @@
 import { Meal, Food, MealItem } from './types';
+import { PlanMetadata, validatePlanClinically } from './utils/nutritionalEvaluator';
+import { ValidationIssue } from './nutritionalScoreTypes';
+import { isProtein, isCarb, isFruit, calculateItemMacros } from './utils/v3Motor';
 import { toast } from 'sonner';
 
 const shuffleArray = <T>(array: T[]): T[] => {
@@ -138,4 +141,57 @@ export const generatePlanWithEngine = (currentMeals: Meal[], goal: string, baseC
     }
     return meal;
   });
+};
+
+/**
+ * Refina o plano com base no diagnóstico clínico (Etapa 3)
+ */
+export const refinePlanWithScore = (
+  meals: Meal[], 
+  metadata: PlanMetadata, 
+  issues: ValidationIssue[], 
+  availableFoods: Food[]
+): Meal[] => {
+  let newMeals = [...meals];
+  
+  issues.forEach(issue => {
+    // 1. Se proteína baixa -> adicionar fonte proteica
+    if (issue.type === 'protein' && issue.severity === 'critical') {
+      const proteins = availableFoods.filter(f => isProtein(f.name));
+      if (proteins.length > 0) {
+        // Encontra uma refeição principal para adicionar proteína (almoço/jantar)
+        const targetMealIndex = newMeals.findIndex(m => 
+          m.name.toLowerCase().includes('almoço') || m.name.toLowerCase().includes('jantar')
+        );
+        
+        if (targetMealIndex !== -1) {
+          const protein = proteins[Math.floor(Math.random() * proteins.length)];
+          const newItem: MealItem = {
+            ...protein,
+            instanceId: Math.random().toString(36).substring(2, 10),
+            quantity: 100,
+            locked: false
+          };
+          newMeals[targetMealIndex] = {
+            ...newMeals[targetMealIndex],
+            items: [...newMeals[targetMealIndex].items, newItem]
+          };
+        }
+      }
+    }
+    
+    // 2. Se refeição vazia -> gerar conteúdo básico
+    if (issue.type === 'meal_empty' && issue.mealId) {
+      const mealIndex = newMeals.findIndex(m => m.id === issue.mealId);
+      if (mealIndex !== -1) {
+        const goal = metadata.goalCalories && metadata.goalCalories > 2500 ? 'muscle-gain' : 'maintenance';
+        newMeals[mealIndex] = {
+          ...newMeals[mealIndex],
+          items: generateMealWithEngine(newMeals[mealIndex], goal, metadata.goalCalories || 2000, availableFoods)
+        };
+      }
+    }
+  });
+
+  return newMeals;
 };

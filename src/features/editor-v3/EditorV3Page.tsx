@@ -10,6 +10,7 @@ import {
   searchVisualLibrary, uploadVisualLibraryImage 
 } from './utils/dataFetcher';
 import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
+import { calculateNutritionalScore, validatePlanClinically } from './utils/nutritionalEvaluator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -90,7 +91,8 @@ const EditorV3Page = () => {
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
-    duplicateMeal, reorderMeal, updateMealImage
+    duplicateMeal, reorderMeal, updateMealImage,
+    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata
   } = useEditorState();
 
   const {
@@ -372,14 +374,11 @@ const EditorV3Page = () => {
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        const q = item.quantity ?? 1;
-        const cal = item.calories || item.kcal || 0;
-        const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') ? q / 100 : q;
-        
-        acc.kcal += cal * factor;
-        acc.protein += (item.protein ?? 0) * factor;
-        acc.carbs += (item.carbs ?? 0) * factor;
-        acc.fat += (item.fat ?? 0) * factor;
+        const macros = calculateItemMacros(item, item.quantity);
+        acc.kcal += macros.kcal;
+        acc.protein += macros.protein;
+        acc.carbs += macros.carbs;
+        acc.fat += macros.fat;
       });
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
@@ -403,12 +402,17 @@ const EditorV3Page = () => {
        errors.push("Macros totais não podem ser zero se houver alimentos.");
     }
 
+    // Integrar com o novo sistema de score
+    const score = calculateNutritionalScore(meals, goalMetadata);
+    const clinicalIssues = validatePlanClinically(meals, goalMetadata);
+
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings: [...warnings, ...clinicalIssues.map(i => i.message)],
+      score
     };
-  }, [meals, patientId, totalMacros.kcal, isSandbox]);
+  }, [meals, patientId, totalMacros.kcal, isSandbox, goalMetadata]);
 
   useEffect(() => {
     if (patientId) setPatientId(patientId);
@@ -543,6 +547,15 @@ const EditorV3Page = () => {
     setShowCalorieModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
     generatePlan(selectedDietType || 'muscle-gain', calories, baseFoods, replaceExistingFlag);
+    
+    // Atualiza metas no estado para o Score
+    setGoalMetadata({
+      goalCalories: calories,
+      goalProtein: selectedDietType === 'muscle-gain' ? (calories * 0.3) / 4 : (calories * 0.25) / 4,
+      goalCarbs: selectedDietType === 'low-carb' ? (calories * 0.2) / 4 : (calories * 0.5) / 4,
+      goalFat: (calories * 0.25) / 9
+    });
+
     setIsGeneratingGlobal(false);
     toast.success('Motor V3: Plano gerado com sucesso!');
   };
@@ -650,23 +663,22 @@ const EditorV3Page = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
-      <div className="bg-black/40 border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
+      <div className="bg-black border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-8">
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
-                 <div className="flex items-center gap-1">
-                   <button 
-                     onClick={() => setDebugMode(!debugMode)}
-                     className={cn(
-                       "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
-                       debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
-                     )}
-                   >
-                     MODO TRANSPARÊNCIA
-                   </button>
-                 </div>
+                 {nutritionalScore && (
+                   <Badge className={cn(
+                     "px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter",
+                     nutritionalScore.total >= 90 ? "bg-emerald-500 text-black" : 
+                     nutritionalScore.total >= 70 ? "bg-amber-500 text-black" : 
+                     "bg-rose-500 text-white"
+                   )}>
+                     {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
+                   </Badge>
+                 )}
                </div>
                <div className="flex items-center gap-6">
                   <div className="flex flex-col">
@@ -684,14 +696,39 @@ const EditorV3Page = () => {
                   </div>
                </div>
              </div>
+
+             {nutritionalScore && (
+               <div className="hidden lg:flex flex-col">
+                 <div className="flex items-center gap-1 mb-1">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Score V3</span>
+                    <span className={cn(
+                      "text-lg font-black",
+                      nutritionalScore.total >= 90 ? "text-emerald-500" : 
+                      nutritionalScore.total >= 70 ? "text-amber-500" : 
+                      "text-rose-500"
+                    )}>{nutritionalScore.total}</span>
+                 </div>
+                 <div className="flex gap-2">
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${nutritionalScore.breakdown.calories}%` }} />
+                    </div>
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: `${nutritionalScore.breakdown.macros}%` }} />
+                    </div>
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: `${nutritionalScore.breakdown.quality}%` }} />
+                    </div>
+                 </div>
+               </div>
+             )}
           </div>
 
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="h-9 border-white/5 bg-white/5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               <RotateCcw className="w-3.5 h-3.5 mr-2" /> Resetar
             </Button>
-            <Button variant="outline" size="sm" onClick={() => { const hasItems = meals.some(m => m.items.length > 0); if (hasItems) setShowAIGenerateConfirm(true); else handleGlobalGenerate(false); }} className="h-9 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
-              <Sparkles className="w-3.5 h-3.5" /> Gerar Plano
+            <Button variant="outline" size="sm" onClick={() => refinePlan(baseFoods)} className="h-9 border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
+              <Sparkles className="w-3.5 h-3.5" /> Corrigir Plano
             </Button>
             <Button size="sm" onClick={handlePromotionRequest} disabled={promoting || !draftId} className="h-9 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl transition-all px-6 shadow-lg shadow-emerald-500/20">
               <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
@@ -720,8 +757,10 @@ const EditorV3Page = () => {
         </div>
       </header>
 
-      <main className="flex-1 p-6 max-w-5xl mx-auto w-full space-y-12 pb-32">
-        {meals.map((meal, index) => (
+      <main className="flex-1 p-6 max-w-7xl mx-auto w-full grid grid-cols-1 lg:grid-cols-12 gap-12 pb-32">
+        <div className="lg:col-span-8 space-y-12">
+          {meals.map((meal, index) => (
+
           <section key={meal.id} className="group animate-in fade-in slide-in-from-bottom-4 duration-700" style={{ animationDelay: `${index * 100}ms` }}>
             <div className="flex flex-col mb-6">
               {meal.imageUrl && (
@@ -798,6 +837,12 @@ const EditorV3Page = () => {
                   <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
+              {validationIssues.some(issue => issue.mealId === meal.id) && (
+                <div className="flex items-center gap-1.5 mt-2 bg-amber-500/10 w-fit px-2 py-0.5 rounded-lg border border-amber-500/20 animate-in fade-in zoom-in duration-300">
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  <span className="text-[9px] font-black text-amber-500 uppercase">Ajuste Clínico Necessário</span>
+                </div>
+              )}
             </div>
             <div className="grid gap-5">
               {meal.items.map((item) => (
@@ -814,7 +859,79 @@ const EditorV3Page = () => {
               ))}
             </div>
           </section>
-        ))}
+          ))}
+        </div>
+
+        <aside className="lg:col-span-4 space-y-6">
+          <Card className="p-6 bg-black border-white/5 rounded-3xl overflow-hidden relative group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -mr-10 -mt-10" />
+            <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-500" /> Diagnóstico do Plano
+            </h3>
+
+            {validationIssues.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                </div>
+                <p className="text-xs font-bold text-white/60">Nenhum problema detectado.</p>
+                <p className="text-[10px] text-white/30 uppercase mt-1">Plano nutricionalmente equilibrado</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {validationIssues.map((issue, i) => (
+                  <div key={i} className={cn(
+                    "p-4 rounded-2xl border flex gap-3 transition-all hover:translate-x-1",
+                    issue.severity === 'critical' ? "bg-rose-500/5 border-rose-500/20" : "bg-amber-500/5 border-amber-500/20"
+                  )}>
+                    <div className="mt-0.5">
+                      {issue.severity === 'critical' ? <XCircle className="w-4 h-4 text-rose-500" /> : <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className={cn(
+                        "text-[11px] font-black leading-tight",
+                        issue.severity === 'critical' ? "text-rose-400" : "text-amber-400"
+                      )}>{issue.message}</p>
+                      <button 
+                        onClick={() => refinePlan(baseFoods)}
+                        className="text-[9px] font-bold text-white/40 hover:text-white mt-2 flex items-center gap-1 uppercase tracking-tighter"
+                      >
+                        Corrigir com V3 <ArrowRight className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card className="p-6 bg-black border-white/5 rounded-3xl">
+             <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-blue-500" /> Insights Clínicos
+            </h3>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                 <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Proteína Diária</span>
+                    <span className="text-xs font-black text-emerald-400">{Math.round(totalMacros.protein)}g</span>
+                 </div>
+                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (totalMacros.protein / (goalMetadata.goalProtein || 150)) * 100)}%` }} />
+                 </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                 <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Carboidratos</span>
+                    <span className="text-xs font-black text-blue-400">{Math.round(totalMacros.carbs)}g</span>
+                 </div>
+                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (totalMacros.carbs / (goalMetadata.goalCarbs || 300)) * 100)}%` }} />
+                 </div>
+              </div>
+            </div>
+          </Card>
+        </aside>
+
         <div className="flex justify-center pb-24">
           <Button onClick={addMeal} className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 text-emerald-500 font-black gap-4 transition-all hover:scale-105">
             <Plus className="w-5 h-5" /> Adicionar Nova Refeição
