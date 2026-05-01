@@ -1,4 +1,7 @@
 import { Meal, Food, MealItem } from './types';
+import { PlanMetadata, validatePlanClinically } from './utils/nutritionalEvaluator';
+import { ValidationIssue } from './nutritionalScoreTypes';
+import { isProtein, isCarb, isFruit, calculateItemMacros } from './utils/v3Motor';
 import { toast } from 'sonner';
 
 const shuffleArray = <T>(array: T[]): T[] => {
