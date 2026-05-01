@@ -15941,6 +15941,30 @@ export type Database = {
         }
         Relationships: []
       }
+      rate_limits: {
+        Row: {
+          endpoint: string
+          id: string
+          key: string
+          request_count: number | null
+          window_start: string | null
+        }
+        Insert: {
+          endpoint: string
+          id?: string
+          key: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Update: {
+          endpoint?: string
+          id?: string
+          key?: string
+          request_count?: number | null
+          window_start?: string | null
+        }
+        Relationships: []
+      }
       recalibration_audit_log: {
         Row: {
           adjustment_percent: number
@@ -16666,6 +16690,39 @@ export type Database = {
           id?: string
           ip_address?: string | null
           metadata?: Json | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      security_logs: {
+        Row: {
+          created_at: string | null
+          event_type: string
+          id: string
+          message: string
+          metadata: Json | null
+          severity: string
+          source_ip: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          event_type: string
+          id?: string
+          message: string
+          metadata?: Json | null
+          severity: string
+          source_ip?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          event_type?: string
+          id?: string
+          message?: string
+          metadata?: Json | null
+          severity?: string
+          source_ip?: string | null
           user_id?: string | null
         }
         Relationships: []
@@ -20424,10 +20481,10 @@ export type Database = {
       check_and_update_session: { Args: never; Returns: Json }
       check_rate_limit: {
         Args: {
-          _client_key: string
-          _function_name: string
-          _max_requests: number
-          _window_seconds: number
+          p_endpoint: string
+          p_key: string
+          p_max_requests: number
+          p_window_seconds: number
         }
         Returns: boolean
       }
@@ -20931,6 +20988,15 @@ export type Database = {
           _status?: string
         }
         Returns: string
+      }
+      log_security_event: {
+        Args: {
+          p_event_type: string
+          p_message: string
+          p_metadata?: Json
+          p_severity: string
+        }
+        Returns: undefined
       }
       log_team_activity: {
         Args: {
