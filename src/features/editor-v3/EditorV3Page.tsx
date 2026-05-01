@@ -403,7 +403,7 @@ const EditorV3Page = () => {
   const handleMealGenerate = async (mealId: string) => {
     setGeneratingMealId(mealId);
     await new Promise(resolve => setTimeout(resolve, 600));
-    generateMeal(mealId, 'muscle-gain', 2000); // Default for single meal optimization
+    generateMeal(mealId, 'muscle-gain', baseFoods, 2000); // Default for single meal optimization
     setGeneratingMealId(null);
   };
 
