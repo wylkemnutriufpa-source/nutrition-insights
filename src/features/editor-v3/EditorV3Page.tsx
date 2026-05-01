@@ -581,15 +581,23 @@ const EditorV3Page = () => {
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
-                 <button 
-                   onClick={() => setDebugMode(!debugMode)}
-                   className={cn(
-                     "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
-                     debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
-                   )}
-                 >
-                   MODO TRANSPARÊNCIA
-                 </button>
+                 <div className="flex items-center gap-1">
+                   <button 
+                     onClick={() => setDebugMode(!debugMode)}
+                     className={cn(
+                       "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
+                       debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
+                     )}
+                   >
+                     MODO TRANSPARÊNCIA
+                   </button>
+                   <div className={cn(
+                     "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter",
+                     dbStatus.error ? "bg-rose-500/20 text-rose-500" : "bg-emerald-500/20 text-emerald-500"
+                   )}>
+                     {dbStatus.error ? 'DATA ERROR' : 'DATA SOURCE OK'}
+                   </div>
+                 </div>
                </div>
                <div className="flex items-center gap-6">
                   <div className="flex flex-col">
