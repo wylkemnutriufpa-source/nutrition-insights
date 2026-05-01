@@ -39,11 +39,12 @@ export interface MealItem extends Food {
 }
 
 export interface AuditLogEntry {
-  type: "image_change";
-  mealId: string;
-  from: string;
-  to: string;
-  source: "manual" | "auto" | "fallback";
+  type: "image_change" | "plan_created" | "food_added" | "food_removed" | "quantity_updated" | "engine_action" | "save_attempt" | "save_blocked" | "system_action";
+  description: string;
+  source: "manual" | "engine" | "system";
+  mealId?: string;
+  itemId?: string;
+  metadata?: any;
   created_at: string;
 }
 
