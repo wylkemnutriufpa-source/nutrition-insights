@@ -522,8 +522,14 @@ const EditorV3Page = () => {
         setUploadName('');
         setUploadCategory('');
         // Refresh library
-        const visualResults = await searchVisualLibrary(foodSearch, selectedVisualCategory, user.id);
-        setVisualLibraryResults(visualResults);
+        const visualData = await searchVisualLibrary(foodSearch, selectedVisualCategory, user.id);
+        if (visualData) {
+          setVisualLibraryResults(visualData.items);
+          setVisualLibraryInfo({ 
+            count: visualData.categoryCount || 0, 
+            incomplete: visualData.incomplete || false 
+          });
+        }
       } else {
         toast.error(`Erro no upload: ${result.error}`);
       }
