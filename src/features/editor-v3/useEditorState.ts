@@ -23,9 +23,7 @@ interface EditorState {
   setPatientId: (id: string) => void;
   setGoalMetadata: (metadata: any) => void;
   recalculateScore: () => void;
-  refinePlan: () => void;
-  // ... rest of state
-}
+  refinePlan: (availableFoods: Food[]) => void;
   addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[]) => void;
   addMeal: () => void;
@@ -64,8 +62,36 @@ export const useEditorState = create<EditorState>()(
       auditLog: [],
       patientId: null,
       planStatus: 'draft',
+      nutritionalScore: null,
+      validationIssues: [],
+      goalMetadata: {},
 
       setPatientId: (id) => set({ patientId: id }),
+      
+      setGoalMetadata: (metadata) => {
+        set({ goalMetadata: metadata });
+        get().recalculateScore();
+      },
+
+      recalculateScore: () => {
+        const { meals, goalMetadata } = get();
+        const nutritionalScore = calculateNutritionalScore(meals, goalMetadata);
+        const validationIssues = validatePlanClinically(meals, goalMetadata);
+        set({ nutritionalScore, validationIssues });
+      },
+
+      refinePlan: (availableFoods) => {
+        const { meals, goalMetadata, validationIssues } = get();
+        if (validationIssues.length === 0) {
+          toast.info("O plano já parece estar bem balanceado.");
+          return;
+        }
+        
+        const refinedMeals = refinePlanWithScore(meals, goalMetadata, validationIssues, availableFoods);
+        set({ meals: refinedMeals, planStatus: 'draft' });
+        get().recalculateScore();
+        toast.success("Plano refinado com base no diagnóstico clínico!");
+      },
 
       addMealWithHeader: (name, time) => {
         set((state) => ({
@@ -80,10 +106,14 @@ export const useEditorState = create<EditorState>()(
           ],
           planStatus: 'draft',
         }));
+        get().recalculateScore();
         toast.success(`Refeição "${name}" adicionada!`);
       },
 
-      hydrateMeals: (meals, auditLog = []) => set({ meals, auditLog, planStatus: 'saved' }),
+      hydrateMeals: (meals, auditLog = []) => {
+        set({ meals, auditLog, planStatus: 'saved' });
+        get().recalculateScore();
+      },
 
       addMeal: () => {
         set((state) => ({
@@ -98,6 +128,7 @@ export const useEditorState = create<EditorState>()(
           ],
           planStatus: 'draft',
         }));
+        get().recalculateScore();
         toast.success('Refeição adicionada!');
       },
 
@@ -120,6 +151,7 @@ export const useEditorState = create<EditorState>()(
         newMeals.splice(mealIndex + 1, 0, newMeal);
 
         set({ meals: newMeals, planStatus: 'draft' });
+        get().recalculateScore();
         toast.success(`Refeição "${mealToDuplicate.name}" duplicada!`);
       },
 
@@ -136,6 +168,7 @@ export const useEditorState = create<EditorState>()(
         newMeals.splice(newIndex, 0, removed);
 
         set({ meals: newMeals, planStatus: 'draft' });
+        get().recalculateScore();
       },
 
       removeMeal: (mealId) => {
@@ -149,6 +182,7 @@ export const useEditorState = create<EditorState>()(
           meals: state.meals.filter((m) => m.id !== mealId),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
         toast.success('Refeição removida');
       },
 
@@ -166,7 +200,9 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
       },
+
       updateMealImage: (mealId, imageUrl, imageSource) => {
         set((state) => {
           const meal = state.meals.find(m => m.id === mealId);
@@ -189,12 +225,12 @@ export const useEditorState = create<EditorState>()(
             planStatus: 'draft',
           };
         });
+        get().recalculateScore();
       },
 
       addMarmitaToMeal: async (mealId, marmita) => {
         let calculatedMacros = { kcal: marmita.kcal, protein: marmita.protein, carbs: marmita.carbs, fat: marmita.fat };
         
-        // Se os macros estiverem zerados e houver ingredientes, calculamos
         if (calculatedMacros.kcal === 0 && marmita.ingredients && marmita.ingredients.length > 0) {
           const { getFoodMacrosByName } = await import('./utils/dataFetcher');
           const names = marmita.ingredients.map((i: any) => (i.name || i.food).toLowerCase());
@@ -239,6 +275,7 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
         toast.success(`${marmita.name} adicionada!`);
       },
 
@@ -257,6 +294,7 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
         toast.success(`${food.name} adicionado!`);
       },
 
@@ -281,8 +319,10 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
         toast.success(`Template "${template.name}" aplicado!`);
       },
+
       updateMealItem: (mealId, instanceId, updates) => {
         set((state) => ({
           meals: state.meals.map((m) =>
@@ -297,7 +337,9 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
       },
+
       removeFood: (mealId, instanceId) => {
         const meal = get().meals.find((m) => m.id === mealId);
         const item = meal?.items.find((i) => i.instanceId === instanceId);
@@ -315,6 +357,7 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
       },
       
       updateFoodQuantity: (mealId, instanceId, quantity) => {
@@ -332,6 +375,7 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft',
         }));
+        get().recalculateScore();
       },
 
       generatePlan: (goal, baseCalories, availableFoods, replaceExisting = false) => {
@@ -343,6 +387,7 @@ export const useEditorState = create<EditorState>()(
 
         const newMeals = generatePlanWithEngine(currentMeals, goal, baseCalories, availableFoods);
         set({ meals: newMeals, planStatus: 'draft' });
+        get().recalculateScore();
         toast.success(`Plano estruturado para ${goal} com ${baseCalories}kcal`);
       },
 
@@ -358,6 +403,7 @@ export const useEditorState = create<EditorState>()(
           ),
           planStatus: 'draft'
         }));
+        get().recalculateScore();
         toast.success(`Refeição "${meal.name}" otimizada!`);
       },
 
@@ -368,7 +414,9 @@ export const useEditorState = create<EditorState>()(
         toast.success('Plano salvo com sucesso!');
       },
 
-      resetEditor: () => set({ meals: initialMeals, planStatus: 'draft' }),
+      resetEditor: () => {
+        set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [] });
+      },
     }),
     {
       name: 'fitjourney-editor-v3-storage',
