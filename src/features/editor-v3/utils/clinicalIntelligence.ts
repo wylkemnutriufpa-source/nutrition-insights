@@ -128,6 +128,15 @@ export const validateClinicalContext = (
     return acc;
   }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
 
+  // 0. Bloqueio LGPD: Consentimento
+  if (metadata.consent_given === false) {
+    issues.push({
+      type: 'compliance',
+      severity: 'critical',
+      message: 'BLOQUEIO LGPD: O paciente ainda não forneceu consentimento para o tratamento de dados sensíveis.'
+    });
+  }
+
   // 1. Restrições
   const restrictions = metadata.restrictions || [];
   meals.forEach(meal => {
