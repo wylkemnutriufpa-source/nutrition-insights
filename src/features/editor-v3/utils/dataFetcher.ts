@@ -92,7 +92,38 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
     };
   }));
 
-  return foods;
+  return foods as Food[];
+};
+
+export const searchVisualLibrary = async (query: string): Promise<Food[]> => {
+  const { data, error } = await supabase
+    .from("meal_visual_library")
+    .select("*")
+    .or(`name.ilike.%${query}%,display_name.ilike.%${query}%`)
+    .eq("is_active", true)
+    .limit(20);
+
+  if (error) {
+    console.error("Error searching visual library:", error);
+    return [];
+  }
+
+  return (data || []).map((v: any) => ({
+    id: v.id,
+    name: v.display_name || v.name,
+    kcal: v.default_calories || 0,
+    calories: v.default_calories || 0,
+    protein: v.default_protein || 0,
+    carbs: v.default_carbs || 0,
+    fat: v.default_fat || 0,
+    portionValue: 1,
+    portionUnitLabel: v.default_portion?.includes("g") ? "g" : (v.default_portion?.includes("ml") ? "ml" : "unidade"),
+    portionUnit: v.default_portion?.includes("g") ? "g" : (v.default_portion?.includes("ml") ? "ml" : "unidade"),
+    portionLabel: v.default_portion || "1 porção",
+    measurementType: v.default_portion?.includes("g") ? "gram" : (v.default_portion?.includes("ml") ? "ml" : "unit") as any,
+    imageUrl: v.image_url || undefined,
+    isVisualLibraryItem: true
+  }));
 };
 
 export const searchMarmitas = async (nutritionistId: string | null): Promise<Food[]> => {
