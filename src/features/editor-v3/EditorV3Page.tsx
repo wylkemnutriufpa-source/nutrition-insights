@@ -239,12 +239,13 @@ const EditorV3Page = () => {
           .maybeSingle();
         
         if (profile) {
+          const profileAny = profile as any;
           const context = {
             id: profile.id,
             name: profile.full_name || 'Paciente',
-            goal: profile.goal || 'Manutenção',
-            restrictions: profile.food_restrictions || [],
-            preferences: profile.food_preferences || [],
+            goal: profileAny.goal || 'Manutenção',
+            restrictions: profileAny.food_restrictions || [],
+            preferences: profileAny.food_preferences || [],
             calories_target: assessment?.calories_target || 2000,
             protein_target: assessment?.protein_target || 150,
             carbs_target: assessment?.carbs_target || 200,
