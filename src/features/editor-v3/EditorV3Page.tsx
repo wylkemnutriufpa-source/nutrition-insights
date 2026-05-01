@@ -1716,32 +1716,18 @@ const EditorV3Page = () => {
                             <Button
                               key={food.id}
                               variant="ghost"
-                              onClick={() => {
-                                const currentItem = selectedItem.item;
-                                updateMealItem(selectedItem.mealId, currentItem.instanceId, {
-                                  name: food.name,
-                                  kcal: food.kcal,
-                                  calories: food.kcal,
-                                  protein: food.protein,
-                                  carbs: food.carbs,
-                                  fat: food.fat,
-                                  portionLabel: food.portionLabel,
-                                  imageUrl: food.imageUrl,
-                                  ingredients: food.ingredients,
-                                  isMarmita: food.isMarmita,
-                                  measurementType: food.measurementType
-                                });
-                                setSwapSearch('');
-                                setSwapResults([]);
-                                setSelectedItem(null);
-                                toast.success(`Alimento trocado para ${food.name}`);
-                              }}
-                              className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group mb-2"
-                            >
-                              <div className="text-left">
-                                <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
-                                <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
-                              </div>
+                                onClick={() => {
+                                  const currentItem = selectedItem.item;
+                                  handleRequestSwap(selectedItem.mealId, currentItem, food);
+                                  setSwapSearch('');
+                                  setSwapResults([]);
+                                }}
+                                className="w-full justify-between h-auto p-4 bg-white/5 hover:bg-emerald-500/10 border border-white/5 rounded-xl transition-all group mb-2"
+                              >
+                                <div className="text-left">
+                                  <p className="font-bold text-white group-hover:text-emerald-400">{food.name}</p>
+                                  <p className="text-[10px] font-bold text-white/30 uppercase">{food.portionLabel} • {food.kcal} kcal</p>
+                                </div>
                               <RefreshCcw className="w-4 h-4 text-white/20 group-hover:text-emerald-500" />
                             </Button>
                           ))}
