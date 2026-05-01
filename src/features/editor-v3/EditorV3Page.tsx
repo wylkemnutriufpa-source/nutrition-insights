@@ -651,23 +651,22 @@ const EditorV3Page = () => {
 
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
-      <div className="bg-black/40 border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
+      <div className="bg-black border-b border-white/5 py-4 px-6 backdrop-blur-md sticky top-0 z-[60]">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-8">
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
-                 <div className="flex items-center gap-1">
-                   <button 
-                     onClick={() => setDebugMode(!debugMode)}
-                     className={cn(
-                       "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
-                       debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
-                     )}
-                   >
-                     MODO TRANSPARÊNCIA
-                   </button>
-                 </div>
+                 {nutritionalScore && (
+                   <Badge className={cn(
+                     "px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter",
+                     nutritionalScore.total >= 90 ? "bg-emerald-500 text-black" : 
+                     nutritionalScore.total >= 70 ? "bg-amber-500 text-black" : 
+                     "bg-rose-500 text-white"
+                   )}>
+                     {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
+                   </Badge>
+                 )}
                </div>
                <div className="flex items-center gap-6">
                   <div className="flex flex-col">
@@ -685,14 +684,39 @@ const EditorV3Page = () => {
                   </div>
                </div>
              </div>
+
+             {nutritionalScore && (
+               <div className="hidden lg:flex flex-col">
+                 <div className="flex items-center gap-1 mb-1">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Score V3</span>
+                    <span className={cn(
+                      "text-lg font-black",
+                      nutritionalScore.total >= 90 ? "text-emerald-500" : 
+                      nutritionalScore.total >= 70 ? "text-amber-500" : 
+                      "text-rose-500"
+                    )}>{nutritionalScore.total}</span>
+                 </div>
+                 <div className="flex gap-2">
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-emerald-500" style={{ width: `${nutritionalScore.breakdown.calories}%` }} />
+                    </div>
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: `${nutritionalScore.breakdown.macros}%` }} />
+                    </div>
+                    <div className="w-10 h-1 bg-white/10 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: `${nutritionalScore.breakdown.quality}%` }} />
+                    </div>
+                 </div>
+               </div>
+             )}
           </div>
 
           <div className="flex items-center gap-2">
             <Button variant="outline" size="sm" onClick={() => setShowResetConfirm(true)} className="h-9 border-white/5 bg-white/5 text-white/40 hover:text-rose-400 hover:bg-rose-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all">
               <RotateCcw className="w-3.5 h-3.5 mr-2" /> Resetar
             </Button>
-            <Button variant="outline" size="sm" onClick={() => { const hasItems = meals.some(m => m.items.length > 0); if (hasItems) setShowAIGenerateConfirm(true); else handleGlobalGenerate(false); }} className="h-9 border-emerald-500/20 bg-emerald-500/5 text-emerald-400 hover:bg-emerald-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
-              <Sparkles className="w-3.5 h-3.5" /> Gerar Plano
+            <Button variant="outline" size="sm" onClick={() => refinePlan(baseFoods)} className="h-9 border-blue-500/20 bg-blue-500/5 text-blue-400 hover:bg-blue-500/10 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all gap-2">
+              <Sparkles className="w-3.5 h-3.5" /> Corrigir Plano
             </Button>
             <Button size="sm" onClick={handlePromotionRequest} disabled={promoting || !draftId} className="h-9 bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest rounded-xl transition-all px-6 shadow-lg shadow-emerald-500/20">
               <Save className="w-3.5 h-3.5 mr-2" /> Salvar Plano
