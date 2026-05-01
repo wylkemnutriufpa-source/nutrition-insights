@@ -544,6 +544,15 @@ const EditorV3Page = () => {
     setShowCalorieModal(false);
     await new Promise(resolve => setTimeout(resolve, 800));
     generatePlan(selectedDietType || 'muscle-gain', calories, baseFoods, replaceExistingFlag);
+    
+    // Atualiza metas no estado para o Score
+    setGoalMetadata({
+      goalCalories: calories,
+      goalProtein: selectedDietType === 'muscle-gain' ? (calories * 0.3) / 4 : (calories * 0.25) / 4,
+      goalCarbs: selectedDietType === 'low-carb' ? (calories * 0.2) / 4 : (calories * 0.5) / 4,
+      goalFat: (calories * 0.25) / 9
+    });
+
     setIsGeneratingGlobal(false);
     toast.success('Motor V3: Plano gerado com sucesso!');
   };
