@@ -1310,6 +1310,11 @@ const EditorV3Page = () => {
                   }}
                   className="group relative flex flex-col items-start p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden"
                 >
+                  {debugMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-emerald-500/20 text-emerald-500 text-[6px] font-black uppercase border-emerald-500/30">food_database</Badge>
+                    </div>
+                  )}
                   <div className="flex justify-between items-start w-full mb-1">
                     <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-1">{f.name}</span>
                     <Badge className="bg-emerald-500/10 text-emerald-500 text-[8px] font-black uppercase border-0">{f.kcal} kcal</Badge>
