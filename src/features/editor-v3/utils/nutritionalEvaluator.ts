@@ -7,12 +7,18 @@ export interface PlanMetadata {
   goalProtein?: number;
   goalCarbs?: number;
   goalFat?: number;
+  goal?: string;
+  restrictions?: string[];
+  preferences?: string[];
 }
 
 export const calculateNutritionalScore = (
   meals: Meal[],
   metadata: PlanMetadata = {}
 ): NutritionalScore => {
+  const isPersonalized = !!metadata.goal;
+  // ... rest of logic uses metadata to adjust weights
+
   const totals = meals.reduce((acc, meal) => {
     meal.items.forEach(item => {
       const macros = calculateItemMacros(item, item.quantity);

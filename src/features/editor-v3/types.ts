@@ -60,11 +60,36 @@ export interface Meal {
   imageSource?: 'auto' | 'manual' | 'fallback';
 }
 
+export interface PatientContext {
+  id: string;
+  name: string;
+  age?: number;
+  gender?: string;
+  weight?: number;
+  height?: number;
+  goal?: string;
+  activityLevel?: string;
+  restrictions: string[];
+  preferences: string[];
+  calories_target: number;
+  protein_target: number;
+  carbs_target: number;
+  fat_target: number;
+}
+
+export interface PlanConfidence {
+  value: number;
+  level: 'low' | 'medium' | 'high';
+  reasons: string[];
+}
+
 export interface DraftPayload {
   meals: Meal[];
   version: number;
   audit_log?: AuditLogEntry[];
   nutritional_score?: any;
+  patient_context?: PatientContext;
+  confidence?: PlanConfidence;
 }
 
 export interface MealTemplate {
