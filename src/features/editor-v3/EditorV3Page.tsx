@@ -1562,14 +1562,14 @@ const EditorV3Page = () => {
                     setShowTemplatesModal(false);
                     toast.success(`Template ${t.name} aplicado!`);
                   }}
-                   className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
-                 >
-                   {debugMode && (
-                     <div className="absolute top-2 right-2 z-10">
-                       <Badge className="bg-amber-500/20 text-amber-500 text-[6px] font-black uppercase border-amber-500/30">nutritionist_meal_templates</Badge>
-                     </div>
-                   )}
-                   <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  className="group relative flex items-start p-5 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left gap-4"
+                >
+                  {debugMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-amber-500/20 text-amber-500 text-[6px] font-black uppercase border-amber-500/30">nutritionist_meal_templates</Badge>
+                    </div>
+                  )}
+                  <div className="w-12 h-12 rounded-xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center shrink-0">
                     <Clock className="w-6 h-6 text-amber-500" />
                   </div>
                   <div className="flex flex-col flex-1">
