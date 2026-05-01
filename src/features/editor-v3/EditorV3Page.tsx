@@ -737,11 +737,24 @@ const EditorV3Page = () => {
                   }}
                   className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
                 >
-                  <div className="flex justify-between items-start w-full mb-3">
-                    <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{f.name}</span>
-                    <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                  <div className="flex items-center gap-4 w-full mb-4">
+                    <div className="w-16 h-16 rounded-2xl bg-white/5 overflow-hidden flex-shrink-0 border border-white/5 group-hover:border-emerald-500/20 transition-all">
+                      {f.imageUrl ? (
+                        <img src={f.imageUrl} alt={f.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Apple className="w-6 h-6 text-white/10" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <div className="flex justify-between items-start w-full">
+                        <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-2">{f.name}</span>
+                        <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                      </div>
+                      <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1 block">{f.portionLabel}</span>
+                    </div>
                   </div>
-                  <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-6">{f.portionLabel}</span>
                   
                   <div className="flex items-center gap-6 w-full mt-auto">
                     <div className="flex flex-col">
