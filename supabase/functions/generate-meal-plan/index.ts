@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { validateBody } from "../_shared/validator.ts";
 import { GenerateMealPlanSchema } from "../_shared/schemas.ts";
 import { requireUser } from "../_shared/auth-guard.ts";
