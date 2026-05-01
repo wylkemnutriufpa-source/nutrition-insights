@@ -86,7 +86,7 @@ const EditorV3Page = () => {
   const isSandbox = !patientId && !planId;
 
   const {
-    meals, setPatientId, hydrateMeals,
+    meals, auditLog, setPatientId, hydrateMeals,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
@@ -94,7 +94,7 @@ const EditorV3Page = () => {
   } = useEditorState();
 
   const {
-    draftId, syncState, initialMeals, lastSavedAt,
+    draftId, syncState, initialMeals, initialAuditLog, lastSavedAt,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
   } = useDraftSync(patientId ?? null, meals, meals);
 
@@ -191,6 +191,7 @@ const EditorV3Page = () => {
   const [marmitas, setMarmitas] = useState<Food[]>([]);
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
+  const [visualLibraryInfo, setVisualLibraryInfo] = useState<{ count: number, incomplete: boolean }>({ count: 0, incomplete: false });
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
   const [isSearchingVisualLibrary, setIsSearchingVisualLibrary] = useState(false);
   const [baseFoods, setBaseFoods] = useState<Food[]>([]);
@@ -238,23 +239,30 @@ const EditorV3Page = () => {
         setIsSearchingFoods(true);
         setIsSearchingVisualLibrary(true);
         
-        const [foodResults, visualResults] = await Promise.all([
+        const [foodResults, visualData] = await Promise.all([
           searchFoods(foodSearch),
           searchVisualLibrary(foodSearch, activeTab === 'visual' ? selectedVisualCategory : undefined, user?.id)
         ]);
         
         setFoods(foodResults);
-        setVisualLibraryResults(visualResults);
+        if (visualData) {
+          setVisualLibraryResults(visualData.items);
+          setVisualLibraryInfo({ 
+            count: visualData.categoryCount || 0, 
+            incomplete: visualData.incomplete || false 
+          });
+        }
         
         setIsSearchingFoods(false);
         setIsSearchingVisualLibrary(false);
       } else if (foodSearch.length === 0 && activeTab !== 'visual') {
         setFoods([]);
         setVisualLibraryResults([]);
+        setVisualLibraryInfo({ count: 0, incomplete: false });
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [foodSearch, selectedVisualCategory, activeTab]);
+  }, [foodSearch, selectedVisualCategory, activeTab, user?.id]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -408,16 +416,16 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     if (initialMeals && initialMeals.length > 0) {
-      hydrateMeals(initialMeals);
+      hydrateMeals(initialMeals, initialAuditLog);
       hydratedRef.current = true;
     }
-  }, [initialMeals, hydrateMeals]);
+  }, [initialMeals, initialAuditLog, hydrateMeals]);
 
   useEffect(() => {
     if (hydratedRef.current && draftId) {
-      scheduleSave(meals);
+      scheduleSave(meals, auditLog);
     }
-  }, [meals, draftId, scheduleSave]);
+  }, [meals, auditLog, draftId, scheduleSave]);
 
   const handlePromotionRequest = () => {
     setShowValidation(true);
@@ -514,8 +522,14 @@ const EditorV3Page = () => {
         setUploadName('');
         setUploadCategory('');
         // Refresh library
-        const visualResults = await searchVisualLibrary(foodSearch, selectedVisualCategory, user.id);
-        setVisualLibraryResults(visualResults);
+        const visualData = await searchVisualLibrary(foodSearch, selectedVisualCategory, user.id);
+        if (visualData) {
+          setVisualLibraryResults(visualData.items);
+          setVisualLibraryInfo({ 
+            count: visualData.categoryCount || 0, 
+            incomplete: visualData.incomplete || false 
+          });
+        }
       } else {
         toast.error(`Erro no upload: ${result.error}`);
       }
@@ -723,9 +737,32 @@ const EditorV3Page = () => {
                     </Button>
                   </div>
                   {meal.imageSource === 'manual' && (
-                    <Badge className="absolute top-4 left-4 bg-emerald-500 text-black font-black uppercase tracking-tighter text-[9px] border-0">
-                      Imagem Personalizada
-                    </Badge>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Badge className="absolute top-4 left-4 bg-emerald-500 text-black font-black uppercase tracking-tighter text-[9px] border-0 cursor-help shadow-lg">
+                          Imagem Personalizada
+                        </Badge>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl">
+                        <div className="space-y-3">
+                          <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Histórico de Alterações</p>
+                          <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                            {auditLog
+                              .filter(log => log.mealId === meal.id)
+                              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                              .map((log, i) => (
+                                <div key={i} className="flex flex-col gap-1 border-l border-emerald-500/30 pl-3 py-1">
+                                  <p className="text-[10px] text-white font-bold leading-tight">Imagem alterada manualmente</p>
+                                  <p className="text-[8px] text-white/40 uppercase font-black">{new Date(log.created_at).toLocaleString()}</p>
+                                </div>
+                              ))}
+                            {auditLog.filter(log => log.mealId === meal.id).length === 0 && (
+                              <p className="text-[9px] text-white/20 italic">Nenhum registro encontrado</p>
+                            )}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </div>
               )}
@@ -920,7 +957,7 @@ const EditorV3Page = () => {
                     <div className="flex-1">
                       <div className="flex justify-between items-start w-full">
                         <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-2">{f.name}</span>
-                        <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                        {f.kcal > 0 && <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>}
                       </div>
                       <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mt-1 block">{f.portionLabel}</span>
                     </div>
@@ -948,47 +985,82 @@ const EditorV3Page = () => {
                 </button>
               ))}
 
-              {activeTab === 'visual' && visualLibraryResults.map((v) => (
-                <button
-                  key={v.id}
-                  onClick={() => {
-                    if (activeMealId) {
-                      updateMealImage(activeMealId, v.imageUrl!, 'manual');
-                      setShowMainAddModal(false);
-                      toast.success(`Imagem da refeição atualizada!`);
-                    }
-                  }}
-                  className="group relative flex flex-col items-start p-4 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
-                >
-                  <div className="w-full h-40 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all relative">
-                    {v.imageUrl ? (
-                      <img 
-                        src={v.imageUrl} 
-                        alt={v.name} 
-                        loading="lazy"
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
-                      />
-                    ) : (
-                      <div className="w-full h-full flex items-center justify-center bg-white/5 animate-pulse">
-                         <ImageIcon className="w-10 h-10 text-white/5" />
+              {activeTab === 'visual' && (
+                <>
+                  {visualLibraryInfo.incomplete && (
+                    <div className="col-span-full mb-4">
+                      <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center gap-3">
+                        <AlertTriangle className="w-5 h-5 text-amber-500 shrink-0" />
+                        <div className="flex-1">
+                          <p className="text-xs font-black text-amber-500 uppercase tracking-wider">Catálogo Incompleto</p>
+                          <p className="text-[10px] text-amber-500/70 font-bold uppercase tracking-tight">Esta categoria possui poucas imagens. Recomendamos o upload de novas fotos para esta categoria.</p>
+                        </div>
+                        <Badge className="bg-amber-500 text-black text-[9px] font-black uppercase">Mínimo não atingido</Badge>
                       </div>
-                    )}
-                    {v.nutritionistId === user?.id && (
-                      <Badge className="absolute top-3 right-3 bg-emerald-500 text-black text-[7px] font-black uppercase border-0 shadow-xl">
-                        Minha Imagem
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex justify-between items-start w-full px-2">
-                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-sm uppercase tracking-tight">{(v as any).display_name || v.name}</span>
-                  </div>
-                  {v.category && (
-                    <Badge className="mt-2 ml-2 bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
-                      {visualLibraryCategories.find(c => c.id === v.category)?.label || v.category}
-                    </Badge>
+                    </div>
                   )}
-                </button>
-              ))}
+
+                  {visualLibraryResults.length === 0 && !isSearchingVisualLibrary ? (
+                    <div className="col-span-full py-20 flex flex-col items-center justify-center text-white/10">
+                      <ImageIcon className="w-16 h-16 mb-4 opacity-10" />
+                      <p className="uppercase tracking-[0.2em] font-black text-xs">Nenhuma imagem disponível para esta categoria</p>
+                    </div>
+                  ) : (
+                    visualLibraryResults.map((v) => (
+                      <button
+                        key={v.id}
+                        onClick={() => {
+                          if (activeMealId) {
+                            updateMealImage(activeMealId, v.imageUrl!, 'manual');
+                            setShowMainAddModal(false);
+                            toast.success(`Imagem da refeição atualizada!`);
+                          }
+                        }}
+                        className="group relative flex flex-col items-start p-4 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                      >
+                        <div className="w-full h-40 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-emerald-500/20 transition-all relative">
+                          {v.imageUrl ? (
+                            <img 
+                              src={v.imageUrl} 
+                              alt={v.name} 
+                              loading="lazy"
+                              className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" 
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-white/5 animate-pulse">
+                               <ImageIcon className="w-10 h-10 text-white/5" />
+                            </div>
+                          )}
+                          {v.nutritionistId === user?.id && (
+                            <Badge className="absolute top-3 right-3 bg-emerald-500 text-black text-[7px] font-black uppercase border-0 shadow-xl">
+                              Minha Imagem
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="flex justify-between items-start w-full px-2">
+                          <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-sm uppercase tracking-tight">{(v as any).display_name || v.name}</span>
+                        </div>
+                        <div className="flex items-center gap-2 mt-2 ml-2">
+                          {v.category && (
+                            <Badge className="bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
+                              {visualLibraryCategories.find(c => c.id === v.category)?.label || v.category}
+                            </Badge>
+                          )}
+                          {v.nutritionistId ? (
+                             <Badge className="bg-emerald-500/10 text-emerald-500/50 text-[8px] font-black uppercase border-0">
+                               Personalizada
+                             </Badge>
+                          ) : (
+                             <Badge className="bg-white/5 text-white/20 text-[8px] font-black uppercase border-0">
+                               Sistema
+                             </Badge>
+                          )}
+                        </div>
+                      </button>
+                    ))
+                  )}
+                </>
+              )}
 
               {activeTab === 'marmita' && marmitas.map((m) => (
                 <button

@@ -6,13 +6,8 @@
  * A promoção (draft -> plano oficial) acontece em `promoteDraft.ts`.
  */
 import { supabase } from '@/integrations/supabase/client';
-import type { Meal } from './types';
+import type { Meal, DraftPayload, AuditLogEntry } from './types';
 import { normalizeMeals } from './utils/normalization';
-
-export interface DraftPayload {
-  meals: Meal[];
-  version: number;
-}
 
 export interface DraftRecord {
   id: string;
@@ -45,10 +40,17 @@ function computeMacros(meals: Meal[]) {
   for (const meal of meals) {
     for (const item of meal.items) {
       const q = item.quantity ?? 1;
-      kcal += (item.kcal ?? item.calories ?? 0) * q;
-      protein += (item.protein ?? 0) * q;
-      carbs += (item.carbs ?? 0) * q;
-      fat += (item.fat ?? 0) * q;
+      // Normalizing macro calculation to avoid silent failures
+      const baseKcal = Number(item.kcal || item.calories || 0);
+      const baseProtein = Number(item.protein || 0);
+      const baseCarbs = Number(item.carbs || 0);
+      const baseFat = Number(item.fat || 0);
+      const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') ? q / 100 : q;
+
+      kcal += baseKcal * factor;
+      protein += baseProtein * factor;
+      carbs += baseCarbs * factor;
+      fat += baseFat * factor;
     }
   }
   return { kcal, protein, carbs, fat };
@@ -94,7 +96,11 @@ export async function loadOrCreateDraft(
     return null;
   }
 
-  const payload: DraftPayload = { meals: seedMeals, version: DRAFT_PAYLOAD_VERSION };
+  const payload: DraftPayload = { 
+    meals: seedMeals, 
+    version: DRAFT_PAYLOAD_VERSION,
+    audit_log: [] 
+  };
   const macros = computeMacros(seedMeals);
 
   const { data: created, error: insErr } = await supabase
@@ -123,10 +129,18 @@ export async function loadOrCreateDraft(
  * Salva o conteúdo atual do editor no draft.
  * Retorna o registro atualizado para controle de updated_at.
  */
-export async function saveDraft(draftId: string, meals: Meal[]): Promise<DraftRecord | null> {
+export async function saveDraft(
+  draftId: string, 
+  meals: Meal[], 
+  auditLog: AuditLogEntry[] = []
+): Promise<DraftRecord | null> {
   const normalizedMeals = normalizeMeals(meals);
   const macros = computeMacros(normalizedMeals);
-  const payload: DraftPayload = { meals: normalizedMeals, version: DRAFT_PAYLOAD_VERSION };
+  const payload: DraftPayload = { 
+    meals: normalizedMeals, 
+    version: DRAFT_PAYLOAD_VERSION,
+    audit_log: auditLog
+  };
 
   const { data, error } = await supabase
     .from('v3_drafts' as any)

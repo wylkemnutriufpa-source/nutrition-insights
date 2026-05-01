@@ -1,23 +1,24 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Meal, Food, MealItem, MealTemplate } from './types';
+import { Meal, Food, MealItem, MealTemplate, AuditLogEntry } from './types';
 import { generatePlanWithEngine, generateMealWithEngine } from './engine';
 import { toast } from 'sonner';
 
 interface EditorState {
   meals: Meal[];
+  auditLog: AuditLogEntry[];
   patientId: string | null;
   planStatus: 'draft' | 'saving' | 'saved';
 
   setPatientId: (id: string) => void;
   addMealWithHeader: (name: string, time: string) => void;
-  hydrateMeals: (meals: Meal[]) => void;
+  hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[]) => void;
   addMeal: () => void;
   duplicateMeal: (mealId: string) => void;
   reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
   removeMeal: (mealId: string) => void;
-  updateMealHeader: (mealId: string, name: string, time: string, description?: string, imageUrl?: string, imageSource?: 'auto' | 'manual') => void;
-  updateMealImage: (mealId: string, imageUrl: string, imageSource: 'auto' | 'manual') => void;
+  updateMealHeader: (mealId: string, name: string, time: string, description?: string, imageUrl?: string, imageSource?: 'auto' | 'manual' | 'fallback') => void;
+  updateMealImage: (mealId: string, imageUrl: string, imageSource: 'auto' | 'manual' | 'fallback') => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
   addFoodToMeal: (mealId: string, food: Food) => void;
   applyTemplateToMeal: (mealId: string, template: MealTemplate) => void;
@@ -45,6 +46,7 @@ export const useEditorState = create<EditorState>()(
   persist(
     (set, get) => ({
       meals: initialMeals,
+      auditLog: [],
       patientId: null,
       planStatus: 'draft',
 
@@ -66,7 +68,7 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Refeição "${name}" adicionada!`);
       },
 
-      hydrateMeals: (meals) => set({ meals, planStatus: 'saved' }),
+      hydrateMeals: (meals, auditLog = []) => set({ meals, auditLog, planStatus: 'saved' }),
 
       addMeal: () => {
         set((state) => ({
@@ -151,12 +153,27 @@ export const useEditorState = create<EditorState>()(
         }));
       },
       updateMealImage: (mealId, imageUrl, imageSource) => {
-        set((state) => ({
-          meals: state.meals.map((m) =>
-            m.id === mealId ? { ...m, imageUrl, imageSource } : m
-          ),
-          planStatus: 'draft',
-        }));
+        set((state) => {
+          const meal = state.meals.find(m => m.id === mealId);
+          if (!meal) return state;
+
+          const newAuditEntry: AuditLogEntry = {
+            type: "image_change",
+            mealId,
+            from: meal.imageUrl || 'none',
+            to: imageUrl,
+            source: imageSource,
+            created_at: new Date().toISOString()
+          };
+
+          return {
+            meals: state.meals.map((m) =>
+              m.id === mealId ? { ...m, imageUrl, imageSource } : m
+            ),
+            auditLog: [...state.auditLog, newAuditEntry],
+            planStatus: 'draft',
+          };
+        });
       },
 
       addMarmitaToMeal: async (mealId, marmita) => {
