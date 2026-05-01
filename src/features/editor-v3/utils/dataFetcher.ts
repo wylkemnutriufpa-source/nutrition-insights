@@ -11,10 +11,15 @@ const normalize = (text: string): string => {
     .replace(/\s+/g, " ");
 };
 
+const isWholeWordMatch = (text: string, keyword: string): boolean => {
+  const regex = new RegExp(`\\b${keyword}\\b`, 'i');
+  return regex.test(text);
+};
+
 const findBestVisual = async (foodName: string): Promise<string | undefined> => {
   const norm = normalize(foodName);
   
-  // 1. Try exact alias match
+  // 1. Try exact alias match (Priority 1)
   const { data: aliasData } = await supabase
     .from("meal_visual_aliases" as any)
     .select("library_item_id")
@@ -27,30 +32,36 @@ const findBestVisual = async (foodName: string): Promise<string | undefined> => 
       .select("image_url")
       .eq("id", (aliasData as any).library_item_id)
       .maybeSingle();
-    return item?.image_url;
+    if (item?.image_url) return item.image_url;
   }
 
-  // 2. Try exact name match in library
+  // 2. Try exact name match in library (Priority 2)
   const { data: libraryData } = await supabase
     .from("meal_visual_library")
     .select("image_url")
     .ilike("name", foodName)
     .maybeSingle();
 
-  if (libraryData) return libraryData.image_url;
+  if (libraryData?.image_url) return libraryData.image_url;
 
-  // 3. Try keywords if name is composite
+  // 3. Try keywords with whole-word matching (Priority 3)
+  // This avoids "Frango" matching "Frango à parmegiana" if we want just frango
   const keywords = norm.split(' ');
-  if (keywords.length > 1) {
-    const mainKeywords = keywords.filter(k => k.length > 3);
-    for (const kw of mainKeywords) {
-      const { data: kwMatch } = await supabase
+  const importantKeywords = keywords.filter(k => k.length > 3 && !['com', 'para', 'sem'].includes(k));
+  
+  if (importantKeywords.length > 0) {
+    for (const kw of importantKeywords) {
+      const { data: kwMatches } = await supabase
         .from("meal_visual_library")
-        .select("image_url")
+        .select("image_url, name")
         .ilike("name", `%${kw}%`)
-        .limit(1)
-        .maybeSingle();
-      if (kwMatch) return kwMatch.image_url;
+        .limit(5);
+      
+      if (kwMatches && kwMatches.length > 0) {
+        // Find the one that best matches as a whole word
+        const bestKwMatch = kwMatches.find(m => isWholeWordMatch(m.name, kw));
+        if (bestKwMatch?.image_url) return bestKwMatch.image_url;
+      }
     }
   }
 
