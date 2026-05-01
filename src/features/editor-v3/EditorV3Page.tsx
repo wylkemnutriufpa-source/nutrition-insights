@@ -86,7 +86,7 @@ const EditorV3Page = () => {
   const isSandbox = !patientId && !planId;
 
   const {
-    meals, setPatientId, hydrateMeals,
+    meals, auditLog, setPatientId, hydrateMeals,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
@@ -94,7 +94,7 @@ const EditorV3Page = () => {
   } = useEditorState();
 
   const {
-    draftId, syncState, initialMeals, lastSavedAt,
+    draftId, syncState, initialMeals, initialAuditLog, lastSavedAt,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
   } = useDraftSync(patientId ?? null, meals, meals);
 
