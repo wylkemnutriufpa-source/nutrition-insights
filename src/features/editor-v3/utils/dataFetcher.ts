@@ -40,12 +40,13 @@ const findBestVisual = async (foodName: string): Promise<string | undefined> => 
     .from("meal_visual_library")
     .select("image_url")
     .ilike("name", foodName)
+    .is("nutritionist_id", null) // Prioritize system images for auto-match to avoid randomness
+    .limit(1)
     .maybeSingle();
 
   if (libraryData?.image_url) return libraryData.image_url;
 
   // 3. Try keywords with whole-word matching (Priority 3)
-  // This avoids "Frango" matching "Frango à parmegiana" if we want just frango
   const keywords = norm.split(' ');
   const importantKeywords = keywords.filter(k => k.length > 3 && !['com', 'para', 'sem'].includes(k));
   
@@ -55,10 +56,10 @@ const findBestVisual = async (foodName: string): Promise<string | undefined> => 
         .from("meal_visual_library")
         .select("image_url, name")
         .ilike("name", `%${kw}%`)
+        .is("nutritionist_id", null)
         .limit(5);
       
       if (kwMatches && kwMatches.length > 0) {
-        // Find the one that best matches as a whole word
         const bestKwMatch = kwMatches.find(m => isWholeWordMatch(m.name, kw));
         if (bestKwMatch?.image_url) return bestKwMatch.image_url;
       }
@@ -106,11 +107,18 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
   return foods as Food[];
 };
 
-export const searchVisualLibrary = async (query: string, category?: string): Promise<Food[]> => {
+export const searchVisualLibrary = async (query: string, category?: string, nutritionistId?: string | null): Promise<Food[]> => {
   let queryBuilder = supabase
     .from("meal_visual_library")
     .select("*")
     .eq("is_active", true);
+
+  if (nutritionistId) {
+    // Show system items OR nutritionist's items
+    queryBuilder = queryBuilder.or(`nutritionist_id.is.null,nutritionist_id.eq.${nutritionistId}`);
+  } else {
+    queryBuilder = queryBuilder.is("nutritionist_id", null);
+  }
 
   if (query && query.length >= 2) {
     queryBuilder = queryBuilder.or(`name.ilike.%${query}%,display_name.ilike.%${query}%`);
@@ -141,8 +149,51 @@ export const searchVisualLibrary = async (query: string, category?: string): Pro
     portionLabel: v.default_portion || "1 porção",
     measurementType: v.default_portion?.includes("g") ? "gram" : (v.default_portion?.includes("ml") ? "ml" : "unit") as any,
     imageUrl: v.image_url || undefined,
-    isVisualLibraryItem: true
+    category: v.category,
+    isVisualLibraryItem: true,
+    nutritionistId: v.nutritionist_id
   }));
+};
+
+export const uploadVisualLibraryImage = async (
+  file: File, 
+  name: string, 
+  category: string, 
+  nutritionistId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `visual-library/${nutritionistId}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('meal-images')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('meal-images')
+      .getPublicUrl(filePath);
+
+    const { error: insertError } = await supabase
+      .from('meal_visual_library')
+      .insert(({
+        name,
+        display_name: name,
+        category,
+        image_url: publicUrl,
+        nutritionist_id: nutritionistId,
+        is_active: true
+      } as any));
+
+    if (insertError) throw insertError;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error uploading image:', err);
+    return { success: false, error: err.message };
+  }
 };
 
 export const searchMarmitas = async (nutritionistId: string | null): Promise<Food[]> => {
