@@ -737,9 +737,32 @@ const EditorV3Page = () => {
                     </Button>
                   </div>
                   {meal.imageSource === 'manual' && (
-                    <Badge className="absolute top-4 left-4 bg-emerald-500 text-black font-black uppercase tracking-tighter text-[9px] border-0">
-                      Imagem Personalizada
-                    </Badge>
+                    <Popover>
+                      <PopoverTrigger asChild>
+                        <Badge className="absolute top-4 left-4 bg-emerald-500 text-black font-black uppercase tracking-tighter text-[9px] border-0 cursor-help shadow-lg">
+                          Imagem Personalizada
+                        </Badge>
+                      </PopoverTrigger>
+                      <PopoverContent className="w-64 bg-black/90 border-white/10 backdrop-blur-xl p-4 rounded-2xl">
+                        <div className="space-y-3">
+                          <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">Histórico de Alterações</p>
+                          <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
+                            {auditLog
+                              .filter(log => log.mealId === meal.id)
+                              .sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
+                              .map((log, i) => (
+                                <div key={i} className="flex flex-col gap-1 border-l border-emerald-500/30 pl-3 py-1">
+                                  <p className="text-[10px] text-white font-bold leading-tight">Imagem alterada manualmente</p>
+                                  <p className="text-[8px] text-white/40 uppercase font-black">{new Date(log.created_at).toLocaleString()}</p>
+                                </div>
+                              ))}
+                            {auditLog.filter(log => log.mealId === meal.id).length === 0 && (
+                              <p className="text-[9px] text-white/20 italic">Nenhum registro encontrado</p>
+                            )}
+                          </div>
+                        </div>
+                      </PopoverContent>
+                    </Popover>
                   )}
                 </div>
               )}
