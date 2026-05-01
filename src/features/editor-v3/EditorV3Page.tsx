@@ -412,6 +412,61 @@ const EditorV3Page = () => {
     setGeneratingMealId(null);
   };
 
+  const executeSwap = (mealId: string, instanceId: string, target: Food, autoAdjust = false) => {
+    const meal = meals.find(m => m.id === mealId);
+    const currentItem = meal?.items.find(i => i.instanceId === instanceId);
+    
+    if (!currentItem) return;
+
+    let newQuantity = 1;
+
+    if (autoAdjust) {
+      const currentMacros = calculateItemMacros(currentItem, currentItem.quantity);
+      const targetKcalPerUnit = target.kcal; 
+      
+      if (targetKcalPerUnit > 0) {
+        if (target.measurementType === 'gram' || target.measurementType === 'ml') {
+          newQuantity = Math.round((currentMacros.kcal / targetKcalPerUnit) * 100);
+        } else {
+          newQuantity = Math.round(currentMacros.kcal / targetKcalPerUnit);
+        }
+      } else {
+        newQuantity = currentItem.quantity;
+      }
+    } else {
+      if (target.measurementType === 'gram') newQuantity = 100;
+      else if (target.measurementType === 'ml') newQuantity = 200;
+      else newQuantity = 1;
+    }
+
+    updateMealItem(mealId, instanceId, {
+      name: target.name,
+      kcal: target.kcal,
+      calories: target.kcal,
+      protein: target.protein,
+      carbs: target.carbs,
+      fat: target.fat,
+      portionLabel: target.portionLabel,
+      imageUrl: target.imageUrl,
+      ingredients: target.ingredients,
+      isMarmita: target.isMarmita,
+      measurementType: target.measurementType,
+      quantity: newQuantity
+    });
+    
+    setReplacementPending(null);
+    setSelectedItem(null);
+    toast.success(`Alimento trocado para ${target.name}`);
+  };
+
+  const handleRequestSwap = (mealId: string, current: MealItem, target: Food) => {
+    if (current.measurementType !== target.measurementType) {
+      setReplacementPending({ current, target, mealId });
+    } else {
+      executeSwap(mealId, current.instanceId, target);
+    }
+  };
+
   // Sandbox mode check
   if (!patientId && !planId && !isSandbox) {
     return (
