@@ -1483,16 +1483,20 @@ const EditorV3Page = () => {
                <p className="text-[10px] text-white/20 font-black uppercase tracking-tighter max-w-[200px]">
                  Forçar o salvamento pode comprometer a estratégia nutricional do paciente.
                </p>
-               <Button 
-                 variant="ghost" 
-                 onClick={() => {
-                   setShowClinicalDecision(false);
-                   handleConfirmPromotion();
-                 }}
-                 className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
-               >
-                 Forçar Salvamento (Com Confirmação)
-               </Button>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => {
+                    if (patientContext && !patientContext.consent_given) {
+                      toast.error('BLOQUEIO LGPD: Sem consentimento, o salvamento não pode ser forçado.');
+                      return;
+                    }
+                    setShowClinicalDecision(false);
+                    handleConfirmPromotion();
+                  }}
+                  className="text-[10px] font-black uppercase tracking-widest text-white/40 hover:text-rose-500 transition-colors"
+                >
+                  Forçar Salvamento (Com Confirmação)
+                </Button>
              </div>
           </div>
         </DialogContent>
