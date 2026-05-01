@@ -119,6 +119,12 @@ export const generateMealWithEngine = (meal: Meal, goal: string, baseCalories: n
  * Gera um plano completo distribuindo alimentos em todas as refeições vazias
  */
 export const generatePlanWithEngine = (currentMeals: Meal[], goal: string, baseCalories: number = 2000, availableFoods: Food[] = []): Meal[] => {
+  if (!availableFoods || availableFoods.length < 10) {
+    console.error('[Engine V3] Bloqueio de Plano: Base insuficiente.');
+    toast.error('Erro: Motor desativado por falta de dados clínicos.');
+    return currentMeals;
+  }
+
   return currentMeals.map(meal => {
     // Só geramos para refeições vazias para evitar sobrescrever trabalho do usuário
     if (meal.items.length === 0) {
