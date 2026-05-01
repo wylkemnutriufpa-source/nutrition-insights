@@ -253,6 +253,8 @@ const EditorV3Page = () => {
             protein_target: assessment?.protein_target || 150,
             carbs_target: assessment?.carbs_target || 200,
             fat_target: assessment?.fat_target || 60,
+            consent_given: profileAny.consent_given,
+            consent_date: profileAny.consent_date,
           };
           setPatientContext(context);
         }
