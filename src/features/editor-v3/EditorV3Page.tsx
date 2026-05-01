@@ -109,6 +109,7 @@ const EditorV3Page = () => {
   const [patientSearch, setPatientSearch] = useState('');
   
   // Modal de Detalhes do Item
+  const [debugMode, setDebugMode] = useState(false);
   const [selectedItem, setSelectedItem] = useState<{ mealId: string, item: MealItem } | null>(null);
   const [substitutionSearch, setSubstitutionSearch] = useState('');
   const [substitutionResults, setSubstitutionResults] = useState<Food[]>([]);
