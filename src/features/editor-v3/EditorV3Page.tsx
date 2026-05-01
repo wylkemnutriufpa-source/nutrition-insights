@@ -765,6 +765,44 @@ const EditorV3Page = () => {
                 </button>
               ))}
 
+              {activeTab === 'visual' && visualLibraryResults.map((v) => (
+                <button
+                  key={v.id}
+                  onClick={() => {
+                    if (activeMealId) addFoodToMeal(activeMealId, v);
+                    setShowMainAddModal(false);
+                    toast.success(`${v.name} adicionado!`);
+                  }}
+                  className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-rose-500/30 hover:bg-rose-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                >
+                  <div className="w-full h-32 mb-4 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-rose-500/20 transition-all">
+                    {v.imageUrl ? (
+                      <img src={v.imageUrl} alt={v.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center">
+                         <Apple className="w-10 h-10 text-white/5" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-between items-start w-full mb-2">
+                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{v.name}</span>
+                  </div>
+                  <Badge className="bg-rose-500/10 text-rose-500 text-[10px] font-black uppercase border-0 mb-4">{v.kcal} kcal</Badge>
+                  
+                  <div className="flex items-center gap-6 w-full mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-rose-400/80">{v.protein}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-blue-400/80">{v.carbs}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-xs font-black text-amber-400/80">{v.fat}g</span>
+                    </div>
+                  </div>
+                </button>
+              ))}
+
               {activeTab === 'marmita' && marmitas.map((m) => (
                 <button
                   key={m.id}
