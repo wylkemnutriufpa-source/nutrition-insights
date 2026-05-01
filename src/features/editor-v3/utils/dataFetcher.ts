@@ -8,7 +8,7 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
     .from("food_database")
     .select("*")
     .ilike("name", `%${query}%`)
-    .limit(20);
+    .limit(50);
 
   if (error) {
     console.error("Error searching foods:", error);
