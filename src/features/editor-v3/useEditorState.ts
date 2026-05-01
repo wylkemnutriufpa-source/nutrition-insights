@@ -13,6 +13,8 @@ interface EditorState {
   addMealWithHeader: (name: string, time: string) => void;
   hydrateMeals: (meals: Meal[]) => void;
   addMeal: () => void;
+  duplicateMeal: (mealId: string) => void;
+  reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
   removeMeal: (mealId: string) => void;
   updateMealHeader: (mealId: string, name: string, time: string, description?: string) => void;
   addMarmitaToMeal: (mealId: string, marmita: Food) => Promise<void>;
