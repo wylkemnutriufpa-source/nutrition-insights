@@ -162,3 +162,38 @@ export const getCompatibleFoods = async (category: 'protein' | 'carb' | 'fruit' 
     measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
   }));
 };
+
+export const getBaseFoods = async (): Promise<Food[]> => {
+  const commonKeywords = [
+    'Arroz', 'Feijão', 'Frango', 'Ovo', 'Pão', 'Banana', 'Maçã', 
+    'Batata', 'Macarrão', 'Carne', 'Peixe', 'Patinho', 'Whey', 
+    'Iogurte', 'Queijo', 'Aveia', 'Tapioca', 'Alface', 'Tomate', 
+    'Brócolis', 'Cenoura', 'Azeite', 'Castanha', 'Amendoim'
+  ];
+  
+  const { data, error } = await supabase
+    .from("food_database")
+    .select("*")
+    .or(commonKeywords.map(k => `name.ilike.%${k}%`).join(','))
+    .limit(100);
+
+  if (error) {
+    console.error("Error fetching base foods:", error);
+    return [];
+  }
+
+  return (data || []).map((f: any) => ({
+    id: f.id,
+    name: f.name,
+    kcal: f.calories,
+    calories: f.calories,
+    protein: f.protein,
+    carbs: f.carbs,
+    fat: f.fat,
+    portionValue: 1,
+    portionUnitLabel: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
+    portionUnit: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
+    portionLabel: f.serving_size || "100g",
+    measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
+  }));
+};
