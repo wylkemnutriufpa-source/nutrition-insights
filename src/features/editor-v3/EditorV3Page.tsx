@@ -494,21 +494,49 @@ const EditorV3Page = () => {
     }
   };
 
-  // Sandbox mode check
-  if (!patientId && !planId && !isSandbox) {
+  // Fail-safe: Bloqueio de renderização sem dados válidos
+  if (!dataReady && !isSandbox) {
     return (
       <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
-        <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-6">
-          <UserX className="w-10 h-10 text-rose-500" />
+        <div className={cn(
+          "w-20 h-20 rounded-full flex items-center justify-center mb-6 animate-pulse",
+          dbStatus.error ? "bg-rose-500/10" : "bg-emerald-500/10"
+        )}>
+          {dbStatus.error ? <CloudOff className="w-10 h-10 text-rose-500" /> : <Loader2 className="w-10 h-10 text-emerald-500 animate-spin" />}
         </div>
-        <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Paciente não selecionado</h1>
-        <p className="text-white/40 max-w-sm mb-8">Você precisa selecionar um paciente para criar ou editar um plano real.</p>
-        <Button onClick={() => navigate('/patients')} className="bg-white text-black font-black uppercase tracking-widest px-8 h-12 rounded-xl">
-          Voltar para Pacientes
-        </Button>
+        <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">
+          {dbStatus.error ? "Base de dados não encontrada" : "Carregando Base Clínica"}
+        </h1>
+        <p className="text-white/40 max-w-sm mb-8">
+          {dbStatus.error || "Sincronizando tabelas essenciais (food_database, meal_recipes, templates) para garantir precisão clínica."}
+        </p>
+        
+        {dbStatus.error && (
+          <Button onClick={() => window.location.reload()} className="bg-white text-black font-black uppercase tracking-widest px-8 h-12 rounded-xl">
+            Tentar Novamente
+          </Button>
+        )}
+
+        <div className="mt-12 grid grid-cols-3 gap-8 opacity-20">
+          <div className="flex flex-col items-center">
+             <span className="text-[10px] font-black text-white uppercase">{dbStatus.foods}</span>
+             <span className="text-[8px] font-bold text-white/40 uppercase">Alimentos</span>
+          </div>
+          <div className="flex flex-col items-center">
+             <span className="text-[10px] font-black text-white uppercase">{dbStatus.templates}</span>
+             <span className="text-[8px] font-bold text-white/40 uppercase">Templates</span>
+          </div>
+          <div className="flex flex-col items-center">
+             <span className="text-[10px] font-black text-white uppercase">{dbStatus.marmitas}</span>
+             <span className="text-[8px] font-bold text-white/40 uppercase">Marmitas</span>
+          </div>
+        </div>
       </div>
     );
   }
+
+  // Sandbox mode check
+  if (!patientId && !planId && !isSandbox) {
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
       {/* Gráfico de Macros Global - Topo */}
