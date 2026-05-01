@@ -834,6 +834,12 @@ const EditorV3Page = () => {
                   <Button variant="ghost" size="icon" onClick={() => { if (confirm(`Remover "${meal.name}"?`)) removeMeal(meal.id); }} className="rounded-xl h-9 w-9 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 transition-all border border-rose-500/10"><Trash2 className="w-4 h-4" /></Button>
                 </div>
               </div>
+              {validationIssues.some(issue => issue.mealId === meal.id) && (
+                <div className="flex items-center gap-1.5 mt-2 bg-amber-500/10 w-fit px-2 py-0.5 rounded-lg border border-amber-500/20 animate-in fade-in zoom-in duration-300">
+                  <AlertTriangle className="w-3 h-3 text-amber-500" />
+                  <span className="text-[9px] font-black text-amber-500 uppercase">Ajuste Clínico Necessário</span>
+                </div>
+              )}
             </div>
             <div className="grid gap-5">
               {meal.items.map((item) => (
