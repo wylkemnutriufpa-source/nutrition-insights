@@ -662,40 +662,173 @@ const EditorV3Page = () => {
         </div>
       </main>
 
-      <Dialog open={showFoodsModal} onOpenChange={setShowFoodsModal}>
-        <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black flex flex-col rounded-none">
+      <Dialog open={showMainAddModal} onOpenChange={setShowMainAddModal}>
+        <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black flex flex-col rounded-none backdrop-blur-2xl">
           <DialogHeader className="p-8 pb-4">
-            <DialogTitle className="text-white font-black uppercase tracking-tighter text-3xl">Biblioteca de Alimentos</DialogTitle>
-          </DialogHeader>
-          <div className="px-6 py-4">
-            <Input placeholder="Pesquisar..." value={foodSearch} onChange={(e) => setFoodSearch(e.target.value)} className="h-12 bg-white/5 border-white/10 text-white rounded-xl" />
-          </div>
-          <ScrollArea className="flex-1 px-8">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pb-20">
-              {foods.map((f) => (
-                <button key={f.id} onClick={() => { if (activeMealId) addFoodToMeal(activeMealId, f); setShowFoodsModal(false); }} className="p-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 text-left">
-                  <span className="font-black text-white text-sm">{f.name}</span>
-                  <p className="text-[10px] text-white/40">{f.kcal} kcal</p>
-                </button>
-              ))}
+            <div className="flex items-center justify-between w-full">
+              <div>
+                <DialogTitle className="flex items-center gap-3 text-white font-black uppercase tracking-tighter text-3xl italic">
+                  {activeTab === 'food' && <Apple className="w-8 h-8 text-emerald-500" />}
+                  {activeTab === 'marmita' && <Utensils className="w-8 h-8 text-blue-500" />}
+                  {activeTab === 'template' && <Layers className="w-8 h-8 text-amber-500" />}
+                  {activeTab === 'food' ? 'Biblioteca de Alimentos' : activeTab === 'marmita' ? 'Minhas Marmitas' : 'Templates de Refeição'}
+                </DialogTitle>
+                <DialogDescription className="text-white/40 font-bold text-sm mt-1 uppercase tracking-widest">
+                  {activeTab === 'food' ? 'Explore a base TACO/USDA para adicionar à sua refeição.' : activeTab === 'marmita' ? 'Refeições completas prontas para montagem rápida.' : 'Modelos estruturados para ganho de velocidade clínica.'}
+                </DialogDescription>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => setShowMainAddModal(false)} className="text-white/40 hover:text-white rounded-full h-12 w-12 hover:bg-white/5 transition-all">
+                <X className="w-6 h-6" />
+              </Button>
             </div>
-          </ScrollArea>
-        </DialogContent>
-      </Dialog>
-
-      <Dialog open={showTemplatesModal} onOpenChange={setShowTemplatesModal}>
-        <DialogContent className="sm:max-w-none w-full h-full p-0 overflow-hidden border-0 bg-black flex flex-col rounded-none">
-          <DialogHeader className="p-8 pb-4">
-            <DialogTitle className="text-white font-black uppercase tracking-tighter text-3xl">Templates</DialogTitle>
           </DialogHeader>
+
+          <div className="px-8 py-2">
+            <Tabs value={activeTab} onValueChange={(v: any) => setActiveTab(v)} className="w-full">
+              <TabsList className="bg-white/5 w-full justify-start p-1.5 rounded-2xl h-auto flex-wrap gap-2 mb-6 border border-white/5">
+                <TabsTrigger value="food" className="data-[state=active]:bg-emerald-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Alimentos</TabsTrigger>
+                <TabsTrigger value="marmita" className="data-[state=active]:bg-blue-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Marmitas</TabsTrigger>
+                <TabsTrigger value="template" className="data-[state=active]:bg-amber-500 data-[state=active]:text-black text-[11px] font-black uppercase rounded-xl h-10 px-6 transition-all">Templates</TabsTrigger>
+              </TabsList>
+            </Tabs>
+
+            {activeTab === 'food' && (
+              <div className="relative mb-6">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/20" />
+                <Input 
+                  placeholder="Pesquisar por nome ou categoria..." 
+                  value={foodSearch} 
+                  onChange={(e) => setFoodSearch(e.target.value)} 
+                  className="pl-12 h-14 bg-white/5 border-white/10 text-white rounded-2xl text-lg placeholder:text-white/10 focus:border-emerald-500/50 transition-all shadow-2xl" 
+                />
+                {isSearchingFoods && <Loader2 className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-emerald-500 animate-spin" />}
+              </div>
+            )}
+          </div>
+
           <ScrollArea className="flex-1 px-8">
-            <div className="grid grid-cols-1 gap-4 pb-20">
-              {templates.map((t) => (
-                <button key={t.id} onClick={() => { if (activeMealId) applyTemplateToMeal(activeMealId, t); setShowTemplatesModal(false); }} className="p-5 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 text-left">
-                  <span className="font-black text-white text-lg">{t.name}</span>
-                  <p className="text-xs text-white/40">{t.description}</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pb-20">
+              {activeTab === 'food' && foods.map((f) => (
+                <button
+                  key={f.id}
+                  onClick={() => {
+                    if (activeMealId) addFoodToMeal(activeMealId, f);
+                    setShowMainAddModal(false);
+                    toast.success(`${f.name} adicionado!`);
+                  }}
+                  className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-emerald-500/30 hover:bg-emerald-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                >
+                  <div className="flex justify-between items-start w-full mb-3">
+                    <span className="font-black text-white group-hover:text-emerald-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{f.name}</span>
+                    <Badge className="bg-emerald-500/10 text-emerald-500 text-[10px] font-black uppercase border-0">{f.kcal} kcal</Badge>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-6">{f.portionLabel}</span>
+                  
+                  <div className="flex items-center gap-6 w-full mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase mb-1">Prot</span>
+                      <span className="text-xs font-black text-emerald-400/80">{f.protein}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase mb-1">Carb</span>
+                      <span className="text-xs font-black text-blue-400/80">{f.carbs}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase mb-1">Gord</span>
+                      <span className="text-xs font-black text-amber-400/80">{f.fat}g</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                    <div className="w-10 h-10 rounded-full bg-emerald-500 flex items-center justify-center text-black shadow-lg shadow-emerald-500/20">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                  </div>
                 </button>
               ))}
+
+              {activeTab === 'marmita' && marmitas.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => {
+                    if (activeMealId) addMarmitaToMeal(activeMealId, m);
+                    setShowMainAddModal(false);
+                    toast.success(`${m.name} adicionada!`);
+                  }}
+                  className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                >
+                  <div className="flex justify-between items-start w-full mb-3">
+                    <span className="font-black text-white group-hover:text-blue-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{m.name}</span>
+                    <Badge className="bg-blue-500/10 text-blue-500 text-[10px] font-black uppercase border-0">{m.kcal} kcal</Badge>
+                  </div>
+                  <span className="text-[10px] font-bold text-white/20 uppercase tracking-widest mb-6">Marmita Pronta</span>
+                  
+                  <div className="flex items-center gap-6 w-full mt-auto">
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase mb-1">Prot</span>
+                      <span className="text-xs font-black text-emerald-400/80">{m.protein}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase mb-1">Carb</span>
+                      <span className="text-xs font-black text-blue-400/80">{m.carbs}g</span>
+                    </div>
+                    <div className="flex flex-col">
+                      <span className="text-[9px] font-black text-white/10 uppercase mb-1">Gord</span>
+                      <span className="text-xs font-black text-amber-400/80">{m.fat}g</span>
+                    </div>
+                  </div>
+                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                    <div className="w-10 h-10 rounded-full bg-blue-500 flex items-center justify-center text-black shadow-lg shadow-blue-500/20">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+
+              {activeTab === 'template' && templates.map((t) => (
+                <button
+                  key={t.id}
+                  onClick={() => {
+                    if (activeMealId) {
+                      applyTemplateToMeal(activeMealId, t);
+                    } else {
+                      addMealWithHeader(t.name, "08:00");
+                      setTimeout(() => {
+                        const state = useEditorState.getState();
+                        const lastMeal = state.meals[state.meals.length - 1];
+                        if (lastMeal) applyTemplateToMeal(lastMeal.id, t);
+                      }, 50);
+                    }
+                    setShowMainAddModal(false);
+                    toast.success(`Template ${t.name} aplicado!`);
+                  }}
+                  className="group relative flex flex-col items-start p-6 rounded-3xl bg-white/[0.03] border border-white/5 hover:border-amber-500/30 hover:bg-amber-500/5 transition-all text-left overflow-hidden h-full shadow-2xl"
+                >
+                  <div className="flex justify-between items-start w-full mb-3">
+                    <span className="font-black text-white group-hover:text-amber-400 transition-colors line-clamp-2 text-[15px] leading-tight pr-8">{t.name}</span>
+                    <Badge className="bg-amber-500/10 text-amber-500 text-[10px] font-black uppercase border-0">{t.items.length} Itens</Badge>
+                  </div>
+                  <p className="text-[11px] font-medium text-white/40 line-clamp-2 mb-6 h-8 leading-relaxed uppercase tracking-tighter">{t.description}</p>
+                  
+                  <div className="flex gap-2 mt-auto">
+                    {t.items.slice(0, 2).map((item, idx) => (
+                      <Badge key={idx} variant="outline" className="text-[9px] h-5 bg-white/5 border-white/10 text-white/30 font-bold">{item.name}</Badge>
+                    ))}
+                    {t.items.length > 2 && <span className="text-[9px] text-white/20 font-black">+{t.items.length - 2}</span>}
+                  </div>
+                  <div className="absolute bottom-6 right-6 opacity-0 group-hover:opacity-100 transition-all translate-y-2 group-hover:translate-y-0">
+                    <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center text-black shadow-lg shadow-amber-500/20">
+                      <Plus className="w-5 h-5" />
+                    </div>
+                  </div>
+                </button>
+              ))}
+
+              {activeTab === 'food' && foods.length === 0 && !isSearchingFoods && (
+                <div className="col-span-full py-40 flex flex-col items-center justify-center text-white/10 italic font-medium">
+                  <Apple className="w-16 h-16 mb-6 opacity-10 animate-pulse" />
+                  <p className="uppercase tracking-[0.3em] font-black text-xs">Digite para buscar na base clínica</p>
+                </div>
+              )}
             </div>
           </ScrollArea>
         </DialogContent>
