@@ -90,7 +90,8 @@ const EditorV3Page = () => {
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
-    duplicateMeal, reorderMeal, updateMealImage
+    duplicateMeal, reorderMeal, updateMealImage,
+    nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata
   } = useEditorState();
 
   const {
