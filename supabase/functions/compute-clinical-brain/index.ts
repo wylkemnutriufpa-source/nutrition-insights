@@ -1,6 +1,7 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { corsHeaders } from "https://esm.sh/@supabase/supabase-js@2/cors";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { validateBody } from "../_shared/validator.ts";
+import { checkRateLimit, rateLimitResponse } from "../_shared/rate-limit.ts";
 import { ClinicalBrainSchema } from "../_shared/schemas.ts";
 
 /** Resolve tenant_id for a given user */
@@ -10,7 +11,16 @@ async function resolveTenant(supabase: any, userId: string): Promise<string | nu
 }
 
 export async function handler(req: Request, maybeSupabaseClient?: any) {
+  const origin = req.headers.get("Origin");
+  const corsHeaders = getCorsHeaders(origin);
+
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+
+  const authHeader = req.headers.get("Authorization");
+  const clientKey = authHeader ? "user" : (req.headers.get("x-real-ip") || "anon");
+
+  const { allowed } = await checkRateLimit("compute-clinical-brain", clientKey, 50, 600);
+  if (!allowed) return rateLimitResponse();
 
   // Correctly handle supabase client injection for tests vs runtime
   const supabase = (maybeSupabaseClient && typeof maybeSupabaseClient.from === "function")
