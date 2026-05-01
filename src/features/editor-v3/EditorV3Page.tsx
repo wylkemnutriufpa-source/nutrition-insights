@@ -217,7 +217,7 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (foodSearch.length >= 2) {
+      if (foodSearch.length >= 2 || (activeTab === 'visual' && foodSearch.length === 0)) {
         setIsSearchingFoods(true);
         setIsSearchingVisualLibrary(true);
         
@@ -237,7 +237,7 @@ const EditorV3Page = () => {
       }
     }, 400);
     return () => clearTimeout(timer);
-  }, [foodSearch]);
+  }, [foodSearch, selectedVisualCategory, activeTab]);
 
   useEffect(() => {
     const timer = setTimeout(async () => {
@@ -873,7 +873,7 @@ const EditorV3Page = () => {
                     )}
                   </div>
                   <div className="flex justify-between items-start w-full px-2">
-                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-sm uppercase tracking-tight">{v.display_name || v.name}</span>
+                    <span className="font-black text-white group-hover:text-rose-400 transition-colors line-clamp-2 text-sm uppercase tracking-tight">{(v as any).display_name || v.name}</span>
                   </div>
                   {v.category && (
                     <Badge className="mt-2 ml-2 bg-white/5 text-white/30 text-[8px] font-black uppercase border-0">
