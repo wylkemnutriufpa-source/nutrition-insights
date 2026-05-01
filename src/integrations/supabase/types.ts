@@ -7570,6 +7570,7 @@ export type Database = {
           image_url: string | null
           is_active: boolean | null
           name: string
+          nutritionist_id: string | null
           search_terms: string[] | null
           short_description: string | null
           slug: string
@@ -7597,6 +7598,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name: string
+          nutritionist_id?: string | null
           search_terms?: string[] | null
           short_description?: string | null
           slug: string
@@ -7624,6 +7626,7 @@ export type Database = {
           image_url?: string | null
           is_active?: boolean | null
           name?: string
+          nutritionist_id?: string | null
           search_terms?: string[] | null
           short_description?: string | null
           slug?: string

@@ -7,7 +7,7 @@ import { loadOrCreateDraft } from './draftService';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
-  searchVisualLibrary 
+  searchVisualLibrary, uploadVisualLibraryImage 
 } from './utils/dataFetcher';
 import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
 import { Button } from '@/components/ui/button';
@@ -170,6 +170,18 @@ const EditorV3Page = () => {
     setActiveMealId(mealId);
     setActiveTab('visual');
     setShowMainAddModal(true);
+    
+    // Auto-select category based on meal type
+    const meal = meals.find(m => m.id === mealId);
+    if (meal) {
+      const name = meal.name.toLowerCase();
+      if (name.includes('café') || name.includes('desjejum')) setSelectedVisualCategory('cafe_da_manha');
+      else if (name.includes('lanche')) setSelectedVisualCategory('lanches');
+      else if (name.includes('almoço')) setSelectedVisualCategory('almoco');
+      else if (name.includes('jantar')) setSelectedVisualCategory('jantar');
+      else if (name.includes('ceia')) setSelectedVisualCategory('ceia');
+      else setSelectedVisualCategory('all');
+    }
   };
 
   const [activeFoodCategory, setActiveFoodCategory] = useState<string>('all');
@@ -217,13 +229,13 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (foodSearch.length >= 2 || (activeTab === 'visual' && foodSearch.length === 0)) {
+      if (foodSearch.length >= 2 || (activeTab === 'visual' && foodSearch.length === 0) || (activeTab === 'visual' && selectedVisualCategory !== 'all')) {
         setIsSearchingFoods(true);
         setIsSearchingVisualLibrary(true);
         
         const [foodResults, visualResults] = await Promise.all([
           searchFoods(foodSearch),
-          searchVisualLibrary(foodSearch, activeTab === 'visual' ? selectedVisualCategory : undefined)
+          searchVisualLibrary(foodSearch, activeTab === 'visual' ? selectedVisualCategory : undefined, user?.id)
         ]);
         
         setFoods(foodResults);
@@ -231,7 +243,7 @@ const EditorV3Page = () => {
         
         setIsSearchingFoods(false);
         setIsSearchingVisualLibrary(false);
-      } else if (foodSearch.length === 0) {
+      } else if (foodSearch.length === 0 && activeTab !== 'visual') {
         setFoods([]);
         setVisualLibraryResults([]);
       }

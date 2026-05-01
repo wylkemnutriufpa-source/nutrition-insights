@@ -106,11 +106,18 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
   return foods as Food[];
 };
 
-export const searchVisualLibrary = async (query: string, category?: string): Promise<Food[]> => {
+export const searchVisualLibrary = async (query: string, category?: string, nutritionistId?: string | null): Promise<Food[]> => {
   let queryBuilder = supabase
     .from("meal_visual_library")
     .select("*")
     .eq("is_active", true);
+
+  if (nutritionistId) {
+    // Show system items OR nutritionist's items
+    queryBuilder = queryBuilder.or(`nutritionist_id.is.null,nutritionist_id.eq.${nutritionistId}`);
+  } else {
+    queryBuilder = queryBuilder.is("nutritionist_id", null);
+  }
 
   if (query && query.length >= 2) {
     queryBuilder = queryBuilder.or(`name.ilike.%${query}%,display_name.ilike.%${query}%`);
@@ -141,8 +148,51 @@ export const searchVisualLibrary = async (query: string, category?: string): Pro
     portionLabel: v.default_portion || "1 porção",
     measurementType: v.default_portion?.includes("g") ? "gram" : (v.default_portion?.includes("ml") ? "ml" : "unit") as any,
     imageUrl: v.image_url || undefined,
-    isVisualLibraryItem: true
+    category: v.category,
+    isVisualLibraryItem: true,
+    nutritionistId: v.nutritionist_id
   }));
+};
+
+export const uploadVisualLibraryImage = async (
+  file: File, 
+  name: string, 
+  category: string, 
+  nutritionistId: string
+): Promise<{ success: boolean; error?: string }> => {
+  try {
+    const fileExt = file.name.split('.').pop();
+    const fileName = `${Math.random()}.${fileExt}`;
+    const filePath = `visual-library/${nutritionistId}/${fileName}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('meal-images')
+      .upload(filePath, file);
+
+    if (uploadError) throw uploadError;
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('meal-images')
+      .getPublicUrl(filePath);
+
+    const { error: insertError } = await supabase
+      .from('meal_visual_library')
+      .insert({
+        name,
+        display_name: name,
+        category,
+        image_url: publicUrl,
+        nutritionist_id: nutritionistId,
+        is_active: true
+      });
+
+    if (insertError) throw insertError;
+
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error uploading image:', err);
+    return { success: false, error: err.message };
+  }
 };
 
 export const searchMarmitas = async (nutritionistId: string | null): Promise<Food[]> => {
