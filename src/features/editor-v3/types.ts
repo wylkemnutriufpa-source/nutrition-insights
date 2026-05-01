@@ -46,3 +46,10 @@ export interface Meal {
   icon?: string;
   description?: string;
 }
+
+export interface MealTemplate {
+  id: string;
+  name: string;
+  description: string;
+  items: Food[];
+}
