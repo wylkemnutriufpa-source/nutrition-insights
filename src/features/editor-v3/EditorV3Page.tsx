@@ -491,6 +491,12 @@ const EditorV3Page = () => {
       return;
     }
 
+    if (patientContext && !patientContext.consent_given) {
+      toast.error('BLOQUEIO LGPD: É necessário consentimento do paciente para salvar e promover este plano.');
+      setShowValidation(true);
+      return;
+    }
+
     if (!draftId) {
       toast.error('Rascunho não está sincronizado.');
       return;
