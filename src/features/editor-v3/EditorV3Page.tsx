@@ -254,8 +254,9 @@ const EditorV3Page = () => {
     const loadAllData = async () => {
       if (!user?.id) return;
       
+      const startTime = performance.now();
       try {
-        console.log('[EditorV3] Iniciando carregamento de base crítica...');
+        console.log('[EditorV3] 📡 Iniciando telemetria de carga...');
         
         const [marmitasData, templatesData, baseData] = await Promise.all([
           searchMarmitas(user.id),
@@ -263,9 +264,26 @@ const EditorV3Page = () => {
           getBaseFoods()
         ]);
 
+        const endTime = performance.now();
+        console.log(`[EditorV3] ✅ Carga finalizada em ${(endTime - startTime).toFixed(2)}ms:
+          - food_database: ${baseData.length} itens ${baseData.length === 0 ? '❌ ERROR' : 'OK'}
+          - meal_recipes: ${marmitasData.length} itens ${marmitasData.length === 0 ? '⚠️ EMPTY' : 'OK'}
+          - nutritionist_meal_templates: ${templatesData.length} itens ${templatesData.length === 0 ? '❌ ERROR' : 'OK'}`);
+
+        setMarmitas(marmitasData);
+        setTemplates(templatesData);
+        setBaseFoods(baseData);
+        
+        setDbStatus({
+          foods: baseData.length,
+          marmitas: marmitasData.length,
+          templates: templatesData.length,
+          error: null
+        });
+
         // Auto-seed se a base estiver vazia
         if (baseData.length === 0 || templatesData.length === 0) {
-          console.log('[EditorV3] Base incompleta detectada. Executando seed...');
+          console.warn('[EditorV3] ⚠️ Base incompleta detectada. Acionando Auto-Seed de Segurança...');
           await seedBaseData(user.id);
           // Recarrega após seed
           const [m2, t2, b2] = await Promise.all([
@@ -281,28 +299,13 @@ const EditorV3Page = () => {
           return;
         }
 
-        console.log(`[EditorV3] food_database: ${baseData.length} itens`);
-        console.log(`[EditorV3] meal_recipes: ${marmitasData.length} itens`);
-        console.log(`[EditorV3] nutritionist_meal_templates: ${templatesData.length} itens`);
-
-        setMarmitas(marmitasData);
-        setTemplates(templatesData);
-        setBaseFoods(baseData);
-        
-        setDbStatus({
-          foods: baseData.length,
-          marmitas: marmitasData.length,
-          templates: templatesData.length,
-          error: null
-        });
-
         if (baseData.length > 0 && templatesData.length > 0) {
           setDataReady(true);
         } else {
           setDbStatus(prev => ({ ...prev, error: 'Base de dados incompleta ou vazia.' }));
         }
       } catch (err: any) {
-        console.error('[EditorV3] Erro crítico no fail-safe:', err);
+        console.error('[EditorV3] ❌ Erro crítico de telemetria:', err);
         setDbStatus(prev => ({ ...prev, error: err.message || 'Falha ao conectar com o banco de dados.' }));
       }
     };
@@ -578,15 +581,23 @@ const EditorV3Page = () => {
              <div className="flex flex-col">
                <div className="flex items-center gap-2 mb-1">
                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Status Nutricional</span>
-                 <button 
-                   onClick={() => setDebugMode(!debugMode)}
-                   className={cn(
-                     "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
-                     debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
-                   )}
-                 >
-                   MODO TRANSPARÊNCIA
-                 </button>
+                 <div className="flex items-center gap-1">
+                   <button 
+                     onClick={() => setDebugMode(!debugMode)}
+                     className={cn(
+                       "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter transition-all",
+                       debugMode ? "bg-blue-500/20 text-blue-400" : "bg-white/5 text-white/20 hover:text-white/40"
+                     )}
+                   >
+                     MODO TRANSPARÊNCIA
+                   </button>
+                   <div className={cn(
+                     "px-1.5 py-0.5 rounded text-[8px] font-black uppercase tracking-tighter",
+                     dbStatus.error ? "bg-rose-500/20 text-rose-500" : "bg-emerald-500/20 text-emerald-500"
+                   )}>
+                     {dbStatus.error ? 'DATA ERROR' : 'DATA SOURCE OK'}
+                   </div>
+                 </div>
                </div>
                <div className="flex items-center gap-6">
                   <div className="flex flex-col">

@@ -48,6 +48,7 @@ export const calculateItemMacros = (item: Partial<Food>, quantity: number) => {
  * 3. Ordena por compatibilidade de measurementType
  */
 export const getDeterministicSuggestions = (baseItemName: string, availableFoods: Food[], baseMeasurementType?: string, basePortionLabel?: string): Food[] => {
+  const startTime = performance.now();
   const name = baseItemName.toLowerCase();
   let suggestions: Food[] = [];
 
@@ -70,7 +71,7 @@ export const getDeterministicSuggestions = (baseItemName: string, availableFoods
   }
 
   // Priorização por measurementType e portionLabel compatíveis
-  return suggestions.sort((a, b) => {
+  const result = suggestions.sort((a, b) => {
     // Mesma unidade de medida (gram/unit/spoon)
     const aTypeMatch = a.measurementType === baseMeasurementType ? 1 : 0;
     const bTypeMatch = b.measurementType === baseMeasurementType ? 1 : 0;
@@ -82,4 +83,12 @@ export const getDeterministicSuggestions = (baseItemName: string, availableFoods
     if (aTypeMatch !== bTypeMatch) return bTypeMatch - aTypeMatch;
     return bLabelMatch - aLabelMatch;
   });
+
+  const endTime = performance.now();
+  console.log(`[EditorV3 Engine] Geração inteligente finalizada:
+    - Item base: ${baseItemName}
+    - Sugestões geradas: ${result.length}
+    - Tempo de execução: ${(endTime - startTime).toFixed(2)}ms`);
+
+  return result;
 };
