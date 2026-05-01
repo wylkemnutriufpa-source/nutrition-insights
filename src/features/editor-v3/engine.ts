@@ -1,5 +1,4 @@
 import { Meal, Food, MealItem } from './types';
-import { mockMarmitas, mockFoods } from './constants';
 
 const shuffleArray = <T>(array: T[]): T[] => {
   const newArray = [...array];
