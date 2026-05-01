@@ -200,11 +200,21 @@ const EditorV3Page = () => {
     const timer = setTimeout(async () => {
       if (foodSearch.length >= 2) {
         setIsSearchingFoods(true);
-        const results = await searchFoods(foodSearch);
-        setFoods(results);
+        setIsSearchingVisualLibrary(true);
+        
+        const [foodResults, visualResults] = await Promise.all([
+          searchFoods(foodSearch),
+          searchVisualLibrary(foodSearch)
+        ]);
+        
+        setFoods(foodResults);
+        setVisualLibraryResults(visualResults);
+        
         setIsSearchingFoods(false);
+        setIsSearchingVisualLibrary(false);
       } else if (foodSearch.length === 0) {
         setFoods([]);
+        setVisualLibraryResults([]);
       }
     }, 400);
     return () => clearTimeout(timer);
