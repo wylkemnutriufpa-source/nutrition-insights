@@ -263,6 +263,24 @@ const EditorV3Page = () => {
           getBaseFoods()
         ]);
 
+        // Auto-seed se a base estiver vazia
+        if (baseData.length === 0 || templatesData.length === 0) {
+          console.log('[EditorV3] Base incompleta detectada. Executando seed...');
+          await seedBaseData(user.id);
+          // Recarrega após seed
+          const [m2, t2, b2] = await Promise.all([
+            searchMarmitas(user.id),
+            searchTemplates(),
+            getBaseFoods()
+          ]);
+          setMarmitas(m2);
+          setTemplates(t2);
+          setBaseFoods(b2);
+          setDbStatus({ foods: b2.length, marmitas: m2.length, templates: t2.length, error: null });
+          if (b2.length > 0 && t2.length > 0) setDataReady(true);
+          return;
+        }
+
         console.log(`[EditorV3] food_database: ${baseData.length} itens`);
         console.log(`[EditorV3] meal_recipes: ${marmitasData.length} itens`);
         console.log(`[EditorV3] nutritionist_meal_templates: ${templatesData.length} itens`);
