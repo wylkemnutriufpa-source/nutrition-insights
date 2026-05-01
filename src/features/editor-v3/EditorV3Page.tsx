@@ -840,7 +840,78 @@ const EditorV3Page = () => {
               ))}
             </div>
           </section>
-        ))}
+        </div>
+
+        <aside className="lg:col-span-4 space-y-6">
+          <Card className="p-6 bg-black border-white/5 rounded-3xl overflow-hidden relative group">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 blur-3xl -mr-10 -mt-10" />
+            <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+              <Activity className="w-4 h-4 text-emerald-500" /> Diagnóstico do Plano
+            </h3>
+
+            {validationIssues.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center mb-4">
+                  <CheckCircle2 className="w-6 h-6 text-emerald-500" />
+                </div>
+                <p className="text-xs font-bold text-white/60">Nenhum problema detectado.</p>
+                <p className="text-[10px] text-white/30 uppercase mt-1">Plano nutricionalmente equilibrado</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {validationIssues.map((issue, i) => (
+                  <div key={i} className={cn(
+                    "p-4 rounded-2xl border flex gap-3 transition-all hover:translate-x-1",
+                    issue.severity === 'critical' ? "bg-rose-500/5 border-rose-500/20" : "bg-amber-500/5 border-amber-500/20"
+                  )}>
+                    <div className="mt-0.5">
+                      {issue.severity === 'critical' ? <XCircle className="w-4 h-4 text-rose-500" /> : <AlertTriangle className="w-4 h-4 text-amber-500" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className={cn(
+                        "text-[11px] font-black leading-tight",
+                        issue.severity === 'critical' ? "text-rose-400" : "text-amber-400"
+                      )}>{issue.message}</p>
+                      <button 
+                        onClick={() => refinePlan(baseFoods)}
+                        className="text-[9px] font-bold text-white/40 hover:text-white mt-2 flex items-center gap-1 uppercase tracking-tighter"
+                      >
+                        Corrigir com V3 <ArrowRight className="w-2.5 h-2.5" />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </Card>
+
+          <Card className="p-6 bg-black border-white/5 rounded-3xl">
+             <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">
+              <PieChart className="w-4 h-4 text-blue-500" /> Insights Clínicos
+            </h3>
+            <div className="space-y-4">
+              <div className="flex flex-col gap-1.5">
+                 <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Proteína Diária</span>
+                    <span className="text-xs font-black text-emerald-400">{Math.round(totalMacros.protein)}g</span>
+                 </div>
+                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-emerald-500" style={{ width: `${Math.min(100, (totalMacros.protein / (goalMetadata.protein || 150)) * 100)}%` }} />
+                 </div>
+              </div>
+              <div className="flex flex-col gap-1.5">
+                 <div className="flex justify-between items-end">
+                    <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Carboidratos</span>
+                    <span className="text-xs font-black text-blue-400">{Math.round(totalMacros.carbs)}g</span>
+                 </div>
+                 <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (totalMacros.carbs / (goalMetadata.carbs || 300)) * 100)}%` }} />
+                 </div>
+              </div>
+            </div>
+          </Card>
+        </aside>
+
         <div className="flex justify-center pb-24">
           <Button onClick={addMeal} className="h-16 px-10 rounded-3xl bg-emerald-500/5 hover:bg-emerald-500/10 border-2 border-dashed border-emerald-500/20 text-emerald-500 font-black gap-4 transition-all hover:scale-105">
             <Plus className="w-5 h-5" /> Adicionar Nova Refeição
