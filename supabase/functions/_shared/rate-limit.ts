@@ -1,81 +1,54 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 /**
- * Shared rate-limiting utility for Edge Functions.
- * Uses the edge_function_rate_limits table.
- *
- * @param functionName - Name of the edge function
- * @param clientKey - Unique key for the client (user_id, IP, etc.)
- * @param maxRequests - Max requests allowed in the window
- * @param windowMinutes - Time window in minutes (default 15)
- * @returns { allowed: boolean, remaining: number }
+ * Enhanced rate-limiting for Edge Functions using the new rate_limits table.
  */
 export async function checkRateLimit(
-  functionName: string,
+  endpoint: string,
   clientKey: string,
   maxRequests: number = 30,
-  windowMinutes: number = 15
-): Promise<{ allowed: boolean; remaining: number }> {
-  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "https://vkrcobprntictsxqmjjl.supabase.co";
-  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? Deno.env.get("SUPABASE_ANON_KEY") ?? "";
-  const client = createClient(supabaseUrl, supabaseKey);
+  windowSeconds: number = 600
+): Promise<{ allowed: boolean; remaining?: number }> {
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  const supabase = createClient(supabaseUrl, supabaseKey);
 
-  const windowStart = new Date(Date.now() - windowMinutes * 60 * 1000).toISOString();
+  try {
+    const { data: allowed, error } = await supabase.rpc("check_rate_limit", {
+      p_key: clientKey,
+      p_endpoint: endpoint,
+      p_max_requests: maxRequests,
+      p_window_seconds: windowSeconds
+    });
 
-  // Clean old entries
-  await client
-    .from("edge_function_rate_limits")
-    .delete()
-    .eq("function_name", functionName)
-    .eq("client_key", clientKey)
-    .lt("window_start", windowStart);
-
-  // Get current count
-  const { data: existing } = await client
-    .from("edge_function_rate_limits")
-    .select("id, request_count")
-    .eq("function_name", functionName)
-    .eq("client_key", clientKey)
-    .gte("window_start", windowStart)
-    .limit(1)
-    .maybeSingle();
-
-  if (existing) {
-    const newCount = existing.request_count + 1;
-    if (newCount > maxRequests) {
-      // Log abuse event
-      await client.from("security_events").insert({
-        event_type: "rate_limit_exceeded",
-        user_id: clientKey.length === 36 ? clientKey : null,
-        function_name: functionName,
-        metadata: { request_count: newCount, window_minutes: windowMinutes },
-      }).then(() => {});
-      return { allowed: false, remaining: 0 };
+    if (error) {
+      console.error("[RateLimit] Error checking limit:", error);
+      return { allowed: true }; // Fail open if infrastructure fails
     }
-    await client
-      .from("edge_function_rate_limits")
-      .update({ request_count: newCount })
-      .eq("id", existing.id);
-    return { allowed: true, remaining: maxRequests - newCount };
+
+    if (!allowed) {
+      // Log security event for blocking
+      await supabase.rpc("log_security_event", {
+        p_event_type: "rate_limit_blocked",
+        p_severity: "warning",
+        p_message: `Rate limit exceeded for endpoint ${endpoint}`,
+        p_metadata: { clientKey, endpoint, maxRequests }
+      });
+    }
+
+    return { allowed: !!allowed };
+  } catch (err) {
+    console.error("[RateLimit] Catch error:", err);
+    return { allowed: true };
   }
-
-  // Create new window
-  await client.from("edge_function_rate_limits").insert({
-    function_name: functionName,
-    client_key: clientKey,
-    request_count: 1,
-    window_start: new Date().toISOString(),
-  });
-
-  return { allowed: true, remaining: maxRequests - 1 };
 }
 
-/**
- * Returns a 429 response if rate limit is exceeded.
- */
 export function rateLimitResponse(): Response {
   return new Response(
-    JSON.stringify({ error: "Too many requests. Please try again later." }),
+    JSON.stringify({ 
+      error: "Muitas requisições. Por favor, tente novamente mais tarde.",
+      code: "TOO_MANY_REQUESTS"
+    }),
     {
       status: 429,
       headers: {
