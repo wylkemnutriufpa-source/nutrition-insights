@@ -1380,6 +1380,11 @@ const EditorV3Page = () => {
                   }}
                   className="group relative flex items-center p-4 rounded-2xl bg-white/[0.03] border border-white/5 hover:border-blue-500/30 hover:bg-blue-500/5 transition-all text-left gap-4"
                 >
+                  {debugMode && (
+                    <div className="absolute top-2 right-2 z-10">
+                      <Badge className="bg-blue-500/20 text-blue-500 text-[6px] font-black uppercase border-blue-500/30">meal_recipes</Badge>
+                    </div>
+                  )}
                   <div className="w-14 h-14 rounded-xl bg-blue-500/10 border border-blue-500/20 flex items-center justify-center shrink-0">
                     {m.imageUrl ? (
                       <img src={m.imageUrl} alt={m.name} className="w-full h-full object-cover rounded-xl" />
