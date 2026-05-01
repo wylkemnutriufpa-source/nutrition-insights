@@ -191,6 +191,7 @@ const EditorV3Page = () => {
   const [marmitas, setMarmitas] = useState<Food[]>([]);
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [visualLibraryResults, setVisualLibraryResults] = useState<Food[]>([]);
+  const [visualLibraryInfo, setVisualLibraryInfo] = useState<{ count: number, incomplete: boolean }>({ count: 0, incomplete: false });
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
   const [isSearchingVisualLibrary, setIsSearchingVisualLibrary] = useState(false);
   const [baseFoods, setBaseFoods] = useState<Food[]>([]);
