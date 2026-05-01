@@ -473,6 +473,29 @@ export const useEditorState = create<EditorState>()(
       },
 
       savePlan: async () => {
+        const { validationIssues, confidence, patientId, addAuditEntry } = get();
+        
+        // Registrar tentativa de salvar
+        addAuditEntry({
+          type: 'save_attempt',
+          description: 'Nutricionista tentou promover o plano',
+          source: 'manual'
+        });
+
+        const criticalIssues = validationIssues.filter(i => i.severity === 'critical');
+        if (criticalIssues.length > 0 || (confidence && confidence.value < 70)) {
+          const reason = criticalIssues.length > 0 ? criticalIssues[0].message : 'Baixa confiança clínica';
+          
+          set({ lastBlockedReason: reason });
+          
+          addAuditEntry({
+            type: 'save_blocked',
+            description: `Salvamento bloqueado: ${reason}`,
+            source: 'system',
+            metadata: { issues: criticalIssues.map(i => i.message) }
+          });
+        }
+
         set({ planStatus: 'saving' });
         await new Promise((resolve) => setTimeout(resolve, 1000));
         set({ planStatus: 'saved' });
