@@ -105,9 +105,9 @@ describe("EditorV3Page module exposes a safe fallback for missing patient contex
     expect(PAGE_SRC).toMatch(/Voltar para Pacientes/);
   });
 
-  it("uses the new Editor V3 core (useEditorState, mockMarmitas, engine)", () => {
+  it("uses the new Editor V3 core (useEditorState, getBaseFoods, engine)", () => {
     expect(PAGE_SRC).toMatch(/useEditorState/);
-    expect(PAGE_SRC).toMatch(/mockMarmitas/);
+    expect(PAGE_SRC).toMatch(/getBaseFoods/);
     expect(PAGE_SRC).toMatch(/generatePlan/);
   });
 });

@@ -4,7 +4,7 @@ import { useEditorState } from './useEditorState';
 import { useDraftSync } from './useDraftSync';
 import { promoteDraftToMealPlan } from './promoteDraft';
 import { loadOrCreateDraft } from './draftService';
-import { searchFoods, searchMarmitas, searchTemplates, getCompatibleFoods } from './utils/dataFetcher';
+import { searchFoods, searchMarmitas, searchTemplates, getCompatibleFoods, getBaseFoods } from './utils/dataFetcher';
 import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -35,8 +35,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Meal, MealItem, Food } from './types';
-import { MealTemplate, mockFoods } from './constants';
+import { Meal, MealItem, Food, MealTemplate } from './types';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
 import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
 import { supabase } from '@/integrations/supabase/client';
@@ -138,6 +137,7 @@ const EditorV3Page = () => {
   const [marmitas, setMarmitas] = useState<Food[]>([]);
   const [templates, setTemplates] = useState<MealTemplate[]>([]);
   const [isSearchingFoods, setIsSearchingFoods] = useState(false);
+  const [baseFoods, setBaseFoods] = useState<Food[]>([]);
 
   const { data: patientsData, isLoading: isLoadingPatients } = usePatientsList({ 
     search: patientSearch,
@@ -250,6 +250,14 @@ const EditorV3Page = () => {
     };
     loadData();
   }, [user?.id]);
+
+  useEffect(() => {
+    const fetchBase = async () => {
+      const data = await getBaseFoods();
+      setBaseFoods(data);
+    };
+    fetchBase();
+  }, []);
 
   // Macros totais memoizados com fallback para kcal/calories
   const totalMacros = useMemo(() => {
@@ -387,7 +395,7 @@ const EditorV3Page = () => {
     // Pequeno delay para efeito visual de "processamento"
     await new Promise(resolve => setTimeout(resolve, 800));
     
-    generatePlan(selectedDietType || 'muscle-gain', calories, replaceExistingFlag);
+    generatePlan(selectedDietType || 'muscle-gain', calories, baseFoods, replaceExistingFlag);
     setIsGeneratingGlobal(false);
     toast.success('Motor V3: Plano gerado com sucesso!');
   };
@@ -395,12 +403,25 @@ const EditorV3Page = () => {
   const handleMealGenerate = async (mealId: string) => {
     setGeneratingMealId(mealId);
     await new Promise(resolve => setTimeout(resolve, 600));
-    generateMeal(mealId, 'muscle-gain', 2000); // Default for single meal optimization
+    generateMeal(mealId, 'muscle-gain', baseFoods, 2000); // Default for single meal optimization
     setGeneratingMealId(null);
   };
 
   // Sandbox mode check
-
+  if (!patientId && !planId && !isSandbox) {
+    return (
+      <div className="min-h-screen bg-black flex flex-col items-center justify-center p-6 text-center">
+        <div className="w-20 h-20 rounded-full bg-rose-500/10 flex items-center justify-center mb-6">
+          <UserX className="w-10 h-10 text-rose-500" />
+        </div>
+        <h1 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Paciente não selecionado</h1>
+        <p className="text-white/40 max-w-sm mb-8">Você precisa selecionar um paciente para criar ou editar um plano real.</p>
+        <Button onClick={() => navigate('/patients')} className="bg-white text-black font-black uppercase tracking-widest px-8 h-12 rounded-xl">
+          Voltar para Pacientes
+        </Button>
+      </div>
+    );
+  }
   return (
     <div className="min-h-screen bg-[#fafafa] dark:bg-[#000000] flex flex-col font-sans selection:bg-emerald-500/30">
       {/* Gráfico de Macros Global - Topo */}
