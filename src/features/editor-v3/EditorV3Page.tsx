@@ -374,14 +374,11 @@ const EditorV3Page = () => {
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        const q = item.quantity ?? 1;
-        const cal = item.calories || item.kcal || 0;
-        const factor = (item.measurementType === 'gram' || item.measurementType === 'ml') ? q / 100 : q;
-        
-        acc.kcal += cal * factor;
-        acc.protein += (item.protein ?? 0) * factor;
-        acc.carbs += (item.carbs ?? 0) * factor;
-        acc.fat += (item.fat ?? 0) * factor;
+        const macros = calculateItemMacros(item, item.quantity);
+        acc.kcal += macros.kcal;
+        acc.protein += macros.protein;
+        acc.carbs += macros.carbs;
+        acc.fat += macros.fat;
       });
       return acc;
     }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
@@ -405,12 +402,17 @@ const EditorV3Page = () => {
        errors.push("Macros totais não podem ser zero se houver alimentos.");
     }
 
+    // Integrar com o novo sistema de score
+    const score = calculateNutritionalScore(meals, goalMetadata);
+    const clinicalIssues = validatePlanClinically(meals, goalMetadata);
+
     return {
       isValid: errors.length === 0,
       errors,
-      warnings
+      warnings: [...warnings, ...clinicalIssues.map(i => i.message)],
+      score
     };
-  }, [meals, patientId, totalMacros.kcal, isSandbox]);
+  }, [meals, patientId, totalMacros.kcal, isSandbox, goalMetadata]);
 
   useEffect(() => {
     if (patientId) setPatientId(patientId);
