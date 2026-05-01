@@ -850,6 +850,27 @@ const EditorV3Page = () => {
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-1 mr-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => reorderMeal(meal.id, 'up')}
+                      disabled={index === 0}
+                      className="h-6 w-6 text-white/20 hover:text-white hover:bg-white/10 rounded-md"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5 rotate-180" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => reorderMeal(meal.id, 'down')}
+                      disabled={index === meals.length - 1}
+                      className="h-6 w-6 text-white/20 hover:text-white hover:bg-white/10 rounded-md"
+                    >
+                      <ChevronDown className="w-3.5 h-3.5" />
+                    </Button>
+                  </div>
+
                   <Button
                     variant="ghost"
                     size="sm"
@@ -862,7 +883,17 @@ const EditorV3Page = () => {
                     ) : (
                       <Sparkles className="w-3.5 h-3.5" />
                     )}
-                    Otimizar
+                    Gerar Refeição
+                  </Button>
+
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => duplicateMeal(meal.id)}
+                    className="rounded-xl h-9 w-9 text-blue-500/40 hover:text-blue-500 hover:bg-blue-500/10 transition-all border border-blue-500/10"
+                    title="Duplicar Refeição"
+                  >
+                    <Layers className="w-4 h-4" />
                   </Button>
 
                   <div className="flex items-center gap-1 bg-white/5 p-1 rounded-xl border border-white/10">
@@ -875,29 +906,7 @@ const EditorV3Page = () => {
                       }}
                       className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-emerald-400 hover:bg-emerald-500/10 rounded-lg transition-all gap-1.5"
                     >
-                      <Apple className="w-3 h-3" /> Alimento
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setActiveMealId(meal.id);
-                        setShowMarmitasModal(true);
-                      }}
-                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition-all gap-1.5"
-                    >
-                      <Utensils className="w-3 h-3" /> Marmita
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => {
-                        setActiveMealId(meal.id);
-                        setShowTemplatesModal(true);
-                      }}
-                      className="h-8 px-3 text-[10px] font-black uppercase tracking-wider text-white/60 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all gap-1.5"
-                    >
-                      <Layers className="w-3 h-3" /> Template
+                      <Plus className="w-3 h-3" /> Alimento
                     </Button>
                   </div>
 
