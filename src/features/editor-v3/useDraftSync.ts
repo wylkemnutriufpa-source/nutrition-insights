@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Meal } from './types';
+import { Meal, AuditLogEntry } from './types';
 import { loadOrCreateDraft, saveDraft, discardDraft, type DraftRecord } from './draftService';
 import { toast } from 'sonner';
 
@@ -11,9 +11,10 @@ interface UseDraftSyncReturn {
   draftId: string | null;
   syncState: SyncState;
   initialMeals: Meal[] | null;
+  initialAuditLog: AuditLogEntry[];
   lastSavedAt: string | null;
   /** Chama após cada mutação local — debouncado internamente */
-  scheduleSave: (meals: Meal[]) => void;
+  scheduleSave: (meals: Meal[], auditLog: AuditLogEntry[]) => void;
   /** Marca o draft atual como descartado e limpa fallback local */
   resetDraft: () => Promise<void>;
   /** Recarrega do servidor forçadamente (resolve conflito) */
@@ -22,15 +23,22 @@ interface UseDraftSyncReturn {
   revertToLastSaved: () => void;
 }
 
-export function useDraftSync(patientId: string | null, seedMeals: Meal[], currentMeals: Meal[]): UseDraftSyncReturn {
+export function useDraftSync(
+  patientId: string | null, 
+  seedMeals: Meal[], 
+  currentMeals: Meal[]
+): UseDraftSyncReturn {
   const [draftId, setDraftId] = useState<string | null>(null);
   const [syncState, setSyncState] = useState<SyncState>('idle');
   const [initialMeals, setInitialMeals] = useState<Meal[] | null>(null);
+  const [initialAuditLog, setInitialAuditLog] = useState<AuditLogEntry[]>([]);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [snapshot, setSnapshot] = useState<Meal[] | null>(null);
+  const [snapshotAuditLog, setSnapshotAuditLog] = useState<AuditLogEntry[]>([]);
   
   const debounceRef = useRef<number | null>(null);
   const pendingMealsRef = useRef<Meal[] | null>(null);
+  const pendingAuditLogRef = useRef<AuditLogEntry[] | null>(null);
   const lastUpdateRef = useRef<string | null>(null);
 
   const loadDraft = useCallback(async (isReload = false) => {
@@ -39,14 +47,18 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
       const local = localStorage.getItem(LOCAL_FALLBACK_KEY(null));
       if (local) {
         try {
-          const parsed = JSON.parse(local) as { meals: Meal[] };
+          const parsed = JSON.parse(local) as { meals: Meal[], audit_log?: AuditLogEntry[] };
           setInitialMeals(parsed.meals);
+          setInitialAuditLog(parsed.audit_log || []);
           setSnapshot(parsed.meals);
+          setSnapshotAuditLog(parsed.audit_log || []);
         } catch {
           setInitialMeals(seedMeals);
+          setInitialAuditLog([]);
         }
       } else {
         setInitialMeals(seedMeals);
+        setInitialAuditLog([]);
       }
       setSyncState('idle');
       return;
@@ -57,8 +69,12 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
 
     if (draft) {
       setDraftId(draft.id);
-      setInitialMeals(draft.payload?.meals ?? seedMeals);
-      setSnapshot(draft.payload?.meals ?? seedMeals);
+      const remoteMeals = draft.payload?.meals ?? seedMeals;
+      const remoteAuditLog = draft.payload?.audit_log ?? [];
+      setInitialMeals(remoteMeals);
+      setInitialAuditLog(remoteAuditLog);
+      setSnapshot(remoteMeals);
+      setSnapshotAuditLog(remoteAuditLog);
       setLastSavedAt(draft.updated_at);
       lastUpdateRef.current = draft.updated_at;
       setSyncState('saved');
@@ -67,13 +83,16 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
       const local = localStorage.getItem(LOCAL_FALLBACK_KEY(patientId));
       if (local) {
         try {
-          const parsed = JSON.parse(local) as { meals: Meal[] };
+          const parsed = JSON.parse(local) as { meals: Meal[], audit_log?: AuditLogEntry[] };
           setInitialMeals(parsed.meals);
+          setInitialAuditLog(parsed.audit_log || []);
         } catch {
           setInitialMeals(seedMeals);
+          setInitialAuditLog([]);
         }
       } else {
         setInitialMeals(seedMeals);
+        setInitialAuditLog([]);
       }
       setSyncState('offline');
     }
@@ -83,34 +102,29 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
     loadDraft();
   }, [loadDraft]);
 
-  const scheduleSave = (meals: Meal[]) => {
+  const scheduleSave = (meals: Meal[], auditLog: AuditLogEntry[]) => {
     pendingMealsRef.current = meals;
+    pendingAuditLogRef.current = auditLog;
 
     try {
-      localStorage.setItem(LOCAL_FALLBACK_KEY(patientId), JSON.stringify({ meals }));
+      localStorage.setItem(LOCAL_FALLBACK_KEY(patientId), JSON.stringify({ meals, audit_log: auditLog }));
     } catch {}
 
     if (debounceRef.current) window.clearTimeout(debounceRef.current);
     debounceRef.current = window.setTimeout(async () => {
       if (!draftId) return;
       const mealsToSave = pendingMealsRef.current;
+      const auditLogToSave = pendingAuditLogRef.current;
       if (!mealsToSave) return;
 
-      // Antes de salvar, verifica se houve mudança remota (multi-aba)
-      // Fazemos isso via loadOrCreateDraft rápido ou apenas confiamos no update que retornará o novo estado
       setSyncState('saving');
-      const updatedRecord = await saveDraft(draftId, mealsToSave);
+      const updatedRecord = await saveDraft(draftId, mealsToSave, auditLogToSave || []);
       
       if (updatedRecord) {
-        // Se o updated_at que o banco gerou é muito diferente do que esperávamos (concorrência)
-        // O Supabase trigger handle_updated_at sempre atualiza.
-        // Como o update é cego, em um sistema real faríamos um check de version/updated_at no WHERE.
-        // Para o MVP: se o record retornado tem updated_at > nosso lastSavedAt + delta, houve conflito detectado pós-save?
-        // Na verdade, o ideal é detectar ANTES ou usar o retorno.
-        
         setLastSavedAt(updatedRecord.updated_at);
         lastUpdateRef.current = updatedRecord.updated_at;
         setSnapshot(mealsToSave);
+        setSnapshotAuditLog(auditLogToSave || []);
         setSyncState('saved');
       } else {
         setSyncState('offline');
@@ -123,14 +137,17 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
     localStorage.removeItem(LOCAL_FALLBACK_KEY(patientId));
     setDraftId(null);
     setInitialMeals(null);
+    setInitialAuditLog([]);
     setLastSavedAt(null);
     setSnapshot(null);
+    setSnapshotAuditLog([]);
     setSyncState('idle');
   };
 
   const revertToLastSaved = () => {
     if (snapshot) {
       setInitialMeals([...snapshot]);
+      setInitialAuditLog([...snapshotAuditLog]);
       toast.success('Alterações revertidas para o último save.');
     }
   };
@@ -139,6 +156,7 @@ export function useDraftSync(patientId: string | null, seedMeals: Meal[], curren
     draftId, 
     syncState, 
     initialMeals, 
+    initialAuditLog,
     lastSavedAt,
     scheduleSave, 
     resetDraft,
