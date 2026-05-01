@@ -4,6 +4,7 @@ import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, Plan
 import { generatePlanWithEngine, generateMealWithEngine, refinePlanWithScore } from './engine';
 import { calculateNutritionalScore, validatePlanClinically, type PlanMetadata } from './utils/nutritionalEvaluator';
 import { calculatePersonalizedScore, validateClinicalContext, calculatePlanConfidence } from './utils/clinicalIntelligence';
+import { runClinicalRegressions } from './utils/clinicalRegression';
 import { NutritionalScore, ValidationIssue } from './nutritionalScoreTypes';
 import { toast } from 'sonner';
 
@@ -116,6 +117,12 @@ export const useEditorState = create<EditorState>()(
 
       recalculateScore: () => {
         const { meals, goalMetadata } = get();
+        
+        // Rodar regressões internas para garantir integridade
+        if (process.env.NODE_ENV === 'development') {
+          runClinicalRegressions();
+        }
+        
         // Fallback para o sistema anterior se não houver contexto clínico
         const nutritionalScore = calculatePersonalizedScore(meals, goalMetadata);
         const clinicalIssues = validateClinicalContext(meals, goalMetadata);
