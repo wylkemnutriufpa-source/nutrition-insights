@@ -196,3 +196,91 @@ export const getBaseFoods = async (): Promise<Food[]> => {
     measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
   }));
 };
+
+export const seedBaseData = async (nutritionistId: string): Promise<boolean> => {
+  try {
+    console.log('[Seed] Iniciando Auto-Seed de Segurança...');
+
+    // 1. Alimentos Essenciais
+    const essentialFoods = [
+      { name: 'Arroz Branco Cozido', calories: 130, protein: 2.5, carbs: 28, fat: 0.2, serving_size: '100g' },
+      { name: 'Feijão Carioca Cozido', calories: 76, protein: 4.8, carbs: 14, fat: 0.5, serving_size: '100g' },
+      { name: 'Peito de Frango Grelhado', calories: 165, protein: 31, carbs: 0, fat: 3.6, serving_size: '100g' },
+      { name: 'Ovo de Galinha Cozido', calories: 155, protein: 13, carbs: 1.1, fat: 11, serving_size: '100g' },
+      { name: 'Banana Nanica', calories: 92, protein: 1.1, carbs: 24, fat: 0.3, serving_size: '100g' },
+      { name: 'Maçã Fuji', calories: 52, protein: 0.3, carbs: 14, fat: 0.2, serving_size: '100g' },
+      { name: 'Batata Doce Cozida', calories: 86, protein: 1.6, carbs: 20, fat: 0.1, serving_size: '100g' },
+      { name: 'Patinho Moído Grelhado', calories: 219, protein: 35.9, carbs: 0, fat: 7.3, serving_size: '100g' },
+      { name: 'Pão de Forma Integral', calories: 247, protein: 9.4, carbs: 43, fat: 3.7, serving_size: '100g' },
+      { name: 'Aveia em Flocos', calories: 389, protein: 16.9, carbs: 66, fat: 6.9, serving_size: '100g' },
+      { name: 'Whey Protein Isolar', calories: 370, protein: 80, carbs: 5, fat: 3, serving_size: '100g' },
+      { name: 'Iogurte Natural Integral', calories: 61, protein: 3.5, carbs: 4.7, fat: 3.3, serving_size: '100g' },
+      { name: 'Queijo Cottage', calories: 98, protein: 11, carbs: 3.4, fat: 4.3, serving_size: '100g' },
+      { name: 'Tapioca (Goma)', calories: 240, protein: 0, carbs: 60, fat: 0, serving_size: '100g' },
+      { name: 'Alface Crespa', calories: 15, protein: 1.3, carbs: 2.9, fat: 0.2, serving_size: '100g' },
+      { name: 'Tomate Italiano', calories: 18, protein: 0.9, carbs: 3.9, fat: 0.2, serving_size: '100g' },
+      { name: 'Brócolis Cozido', calories: 34, protein: 2.8, carbs: 7, fat: 0.4, serving_size: '100g' },
+      { name: 'Azeite de Oliva Extra Virgem', calories: 884, protein: 0, carbs: 0, fat: 100, serving_size: '100g' },
+      { name: 'Amendoim Torrado', calories: 567, protein: 25.8, carbs: 16.1, fat: 49.2, serving_size: '100g' },
+      { name: 'Filé de Tilápia Grelhado', calories: 128, protein: 26, carbs: 0, fat: 2.7, serving_size: '100g' }
+    ];
+
+    // Verifica se já existem alimentos
+    const { count: foodCount } = await supabase.from('food_database').select('*', { count: 'exact', head: true });
+    if (foodCount === 0) {
+      console.log('[Seed] Inserindo alimentos essenciais...');
+      await supabase.from('food_database').insert(essentialFoods);
+    }
+
+    // 2. Marmitas Base
+    const baseMarmitas = [
+      { nutritionist_id: nutritionistId, name: 'Marmita Fit Frango & Batata Doce', fixed_calories: 350, fixed_protein: 35, fixed_carbs: 40, fixed_fat: 5, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Low Carb Patinho & Brócolis', fixed_calories: 280, fixed_protein: 40, fixed_carbs: 10, fixed_fat: 8, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Veggie Grão de Bico & Arroz Integral', fixed_calories: 420, fixed_protein: 15, fixed_carbs: 65, fixed_fat: 10, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Peixe & Vegetais Assados', fixed_calories: 310, fixed_protein: 30, fixed_carbs: 25, fixed_fat: 12, is_active: true },
+      { nutritionist_id: nutritionistId, name: 'Marmita Hipertrofia Macarrão & Carne Moída', fixed_calories: 550, fixed_protein: 45, fixed_carbs: 70, fixed_fat: 10, is_active: true }
+    ];
+
+    const { count: marmitaCount } = await supabase.from('meal_recipes').select('*', { count: 'exact', head: true }).eq('nutritionist_id', nutritionistId);
+    if (marmitaCount === 0) {
+      console.log('[Seed] Inserindo marmitas base...');
+      await supabase.from('meal_recipes').insert(baseMarmitas);
+    }
+
+    // 3. Templates Base
+    const baseTemplates = [
+      { name: 'Café da Manhã Clássico', goal_tags: ['Manutenção', 'Equilíbrio'], foods_structure: [
+        { name: 'Pão de Forma Integral', kcal: 120, protein: 5, carbs: 22, fat: 2, portion: '2 fatias' },
+        { name: 'Ovo de Galinha Cozido', kcal: 150, protein: 12, carbs: 1, fat: 10, portion: '2 unidades' }
+      ]},
+      { name: 'Almoço Performance', goal_tags: ['Hipertrofia', 'Energia'], foods_structure: [
+        { name: 'Arroz Branco Cozido', kcal: 195, protein: 4, carbs: 42, fat: 0, portion: '150g' },
+        { name: 'Feijão Carioca Cozido', kcal: 76, protein: 5, carbs: 14, fat: 0, portion: '100g' },
+        { name: 'Peito de Frango Grelhado', kcal: 247, protein: 46, carbs: 0, fat: 5, portion: '150g' }
+      ]},
+      { name: 'Lanche Prático', goal_tags: ['Praticidade', 'Saciedade'], foods_structure: [
+        { name: 'Iogurte Natural Integral', kcal: 100, protein: 6, carbs: 8, fat: 5, portion: '170g' },
+        { name: 'Aveia em Flocos', kcal: 115, protein: 5, carbs: 20, fat: 2, portion: '30g' }
+      ]},
+      { name: 'Jantar Leve', goal_tags: ['Cutting', 'Sono'], foods_structure: [
+        { name: 'Filé de Tilápia Grelhado', kcal: 130, protein: 26, carbs: 0, fat: 3, portion: '100g' },
+        { name: 'Brócolis Cozido', kcal: 35, protein: 3, carbs: 7, fat: 0, portion: '100g' }
+      ]},
+      { name: 'Pré-Treino Explosivo', goal_tags: ['Performance', 'Foco'], foods_structure: [
+        { name: 'Banana Nanica', kcal: 90, protein: 1, carbs: 23, fat: 0, portion: '1 unidade' },
+        { name: 'Aveia em Flocos', kcal: 115, protein: 5, carbs: 20, fat: 2, portion: '30g' }
+      ]}
+    ];
+
+    const { count: templateCount } = await supabase.from('nutritionist_meal_templates').select('*', { count: 'exact', head: true });
+    if (templateCount === 0) {
+      console.log('[Seed] Inserindo templates base...');
+      await supabase.from('nutritionist_meal_templates').insert(baseTemplates);
+    }
+
+    return true;
+  } catch (err) {
+    console.error('[Seed] Erro crítico no Auto-Seed:', err);
+    return false;
+  }
+};
