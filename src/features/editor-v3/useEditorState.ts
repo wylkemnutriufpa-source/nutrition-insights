@@ -22,8 +22,8 @@ interface EditorState {
   removeFood: (mealId: string, instanceId: string) => void;
   updateFoodQuantity: (mealId: string, instanceId: string, quantity: number) => void;
   updateMealItem: (mealId: string, instanceId: string, updates: Partial<MealItem>) => void;
-  generatePlan: (goal: string, baseCalories: number, replaceExisting?: boolean) => void;
-  generateMeal: (mealId: string, goal: string, baseCalories?: number) => void;
+  generatePlan: (goal: string, baseCalories: number, availableFoods: Food[], replaceExisting?: boolean) => void;
+  generateMeal: (mealId: string, goal: string, availableFoods: Food[], baseCalories?: number) => void;
   savePlan: () => Promise<void>;
   resetEditor: () => void;
 }
