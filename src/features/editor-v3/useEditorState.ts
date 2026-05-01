@@ -1,8 +1,7 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Meal, Food, MealItem } from './types';
+import { Meal, Food, MealItem, MealTemplate } from './types';
 import { generatePlanWithEngine, generateMealWithEngine } from './engine';
-import { MealTemplate } from './constants';
 import { toast } from 'sonner';
 
 interface EditorState {
