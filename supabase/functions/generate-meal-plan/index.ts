@@ -1,4 +1,5 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { getCorsHeaders } from "../_shared/cors.ts";
 import { validateBody } from "../_shared/validator.ts";
 import { GenerateMealPlanSchema } from "../_shared/schemas.ts";
 import { requireUser } from "../_shared/auth-guard.ts";
@@ -65,9 +66,9 @@ import {
 import { scaleRecipeByMacros, type RecipeIngredient } from "../_shared/recipe-scaling-engine.ts";
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Access-Control-Allow-Origin": "https://fitjourney.com.br", // Reforçado para produção
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+  "Vary": "Origin"
 };
 
 // ──── Constants ────
@@ -3012,7 +3013,9 @@ function buildGenerationMetadata(
 // ═══════════════════════════════════════════════════════════════
 
 export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?: any) {
-  if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
+  const origin = req.headers.get("origin");
+  const dynamicCorsHeaders = getCorsHeaders(origin);
+  if (req.method === "OPTIONS") return new Response(null, { headers: dynamicCorsHeaders });
 
   try {
     // CRITICAL: Deno.serve passes (req, info) to handlers, where `info` is a non-null object.

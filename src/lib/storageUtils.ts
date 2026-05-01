@@ -5,6 +5,22 @@ import { supabase } from "@/integrations/supabase/client";
  */
 const PRIVATE_BUCKETS = ["body-images", "checkin-photos", "enrollment-photos", "meal-images", "patient-documents"];
 
+const ALLOWED_MIME_TYPES = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
+function validateFile(file: File) {
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    throw new Error(`Segurança: Tipo de arquivo '${file.type}' não permitido.`);
+  }
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`Segurança: Arquivo excede o limite de 10MB.`);
+  }
+}
+
+function sanitizePath(path: string): string {
+  return path.replace(/[<>:"|?*]/g, "_"); // Basic sanitization for path segments
+}
+
 /**
  * Upload a file to a storage bucket and return its path (NOT a public URL).
  * For private buckets, store the path and use getSignedUrl() to access.
@@ -15,12 +31,19 @@ export async function uploadToStorage(
   file: File,
   options?: { upsert?: boolean }
 ): Promise<{ path: string; error: Error | null }> {
-  const { error } = await supabase.storage.from(bucket).upload(path, file, {
-    upsert: options?.upsert ?? false,
-  });
+  try {
+    validateFile(file);
+    const safePath = sanitizePath(path);
 
-  if (error) return { path: "", error };
-  return { path, error: null };
+    const { error } = await supabase.storage.from(bucket).upload(safePath, file, {
+      upsert: options?.upsert ?? false,
+    });
+
+    if (error) return { path: "", error };
+    return { path: safePath, error: null };
+  } catch (err) {
+    return { path: "", error: err as Error };
+  }
 }
 
 /**
