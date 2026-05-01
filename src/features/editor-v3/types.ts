@@ -76,6 +76,8 @@ export interface PatientContext {
   protein_target: number;
   carbs_target: number;
   fat_target: number;
+  consent_given?: boolean;
+  consent_date?: string;
 }
 
 export interface PlanConfidence {
