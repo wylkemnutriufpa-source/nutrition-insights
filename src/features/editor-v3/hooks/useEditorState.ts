@@ -77,6 +77,43 @@ export const useEditorState = create<EditorState>()(
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
 
+      dispatch: (action, updateFn) => {
+        const state = get();
+        const previousMeals = JSON.parse(JSON.stringify(state.meals));
+        const previousAuditLog = JSON.parse(JSON.stringify(state.auditLog));
+
+        try {
+          const updates = updateFn(state);
+          const newState = { ...state, ...updates };
+
+          // Validar Contratos (Etapa 2)
+          validateDraftIntegrity({ meals: newState.meals, version: 1 });
+          validateClinicalValidity({ meals: newState.meals });
+
+          set(updates);
+          
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[Dispatch Success] ${action}`);
+          }
+        } catch (error: any) {
+          console.error(`[Dispatch Failure] ${action}:`, error.message);
+          
+          // Rollback
+          set({ 
+            meals: previousMeals, 
+            auditLog: [...previousAuditLog, {
+              type: 'system_action',
+              description: `Rollback em ${action}: ${error.message}`,
+              source: 'system',
+              created_at: new Date().toISOString()
+            }],
+            lastBlockedReason: error.message
+          });
+
+          toast.error(`Ação bloqueada: ${error.message}`);
+        }
+      },
+
       setPatientId: (id) => {
         set({ patientId: id });
         get().addAuditEntry({
