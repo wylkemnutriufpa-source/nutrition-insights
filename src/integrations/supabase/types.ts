@@ -14501,13 +14501,11 @@ export type Database = {
           fit_intelligence_first_experience_seen: boolean | null
           fit_intelligence_last_seen_at: string | null
           fit_intelligence_mode: string | null
-          fit_intelligence_onboarded: boolean
           fit_intelligence_snoozed_until: string | null
           full_name: string
           goal: string | null
           historical_loss_rate: number | null
           id: string
-          is_anamnesis_completed: boolean | null
           is_orphan: boolean | null
           last_editor_step: number | null
           last_editor_version_used: string | null
@@ -14518,9 +14516,7 @@ export type Database = {
           metabolic_phase_last_updated_at: string | null
           metabolic_response_type: string | null
           notes: string | null
-          patient_state:
-            | Database["public"]["Enums"]["patient_state_type"]
-            | null
+          patient_state: Database["public"]["Enums"]["patient_state_type"]
           phone: string | null
           plateau_probability: number | null
           preferred_editor_version: string | null
@@ -14563,13 +14559,11 @@ export type Database = {
           fit_intelligence_first_experience_seen?: boolean | null
           fit_intelligence_last_seen_at?: string | null
           fit_intelligence_mode?: string | null
-          fit_intelligence_onboarded?: boolean
           fit_intelligence_snoozed_until?: string | null
           full_name?: string
           goal?: string | null
           historical_loss_rate?: number | null
           id?: string
-          is_anamnesis_completed?: boolean | null
           is_orphan?: boolean | null
           last_editor_step?: number | null
           last_editor_version_used?: string | null
@@ -14580,9 +14574,7 @@ export type Database = {
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           notes?: string | null
-          patient_state?:
-            | Database["public"]["Enums"]["patient_state_type"]
-            | null
+          patient_state?: Database["public"]["Enums"]["patient_state_type"]
           phone?: string | null
           plateau_probability?: number | null
           preferred_editor_version?: string | null
@@ -14625,13 +14617,11 @@ export type Database = {
           fit_intelligence_first_experience_seen?: boolean | null
           fit_intelligence_last_seen_at?: string | null
           fit_intelligence_mode?: string | null
-          fit_intelligence_onboarded?: boolean
           fit_intelligence_snoozed_until?: string | null
           full_name?: string
           goal?: string | null
           historical_loss_rate?: number | null
           id?: string
-          is_anamnesis_completed?: boolean | null
           is_orphan?: boolean | null
           last_editor_step?: number | null
           last_editor_version_used?: string | null
@@ -14642,9 +14632,7 @@ export type Database = {
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           notes?: string | null
-          patient_state?:
-            | Database["public"]["Enums"]["patient_state_type"]
-            | null
+          patient_state?: Database["public"]["Enums"]["patient_state_type"]
           phone?: string | null
           plateau_probability?: number | null
           preferred_editor_version?: string | null
