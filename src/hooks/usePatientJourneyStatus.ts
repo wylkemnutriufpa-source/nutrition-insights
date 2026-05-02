@@ -136,27 +136,34 @@ export function usePatientJourneyStatus() {
 
     fetchStatus();
 
-    // Listen for insert/update events
-    const channel = supabase
-      .channel(`journey-${user.id}`)
-      .on(
-        "postgres_changes",
-        {
-          event: "*",
-          schema: "public",
-          table: "nutritionist_patients",
-          filter: `patient_id=eq.${user.id}`,
-        },
-        (payload) => {
-          const newStatus = (payload.new as any)?.journey_status;
-          if (newStatus) setStatus(newStatus);
-        }
-      )
-      .subscribe();
+    // Listen for insert/update events — blindado contra falhas de WebSocket
+    let channel: any = null;
+    try {
+      channel = supabase
+        .channel(`journey-${user.id}`)
+        .on(
+          "postgres_changes",
+          {
+            event: "*",
+            schema: "public",
+            table: "nutritionist_patients",
+            filter: `patient_id=eq.${user.id}`,
+          },
+          (payload) => {
+            const newStatus = (payload.new as any)?.journey_status;
+            if (newStatus) setStatus(newStatus);
+          }
+        )
+        .subscribe();
+    } catch (err: any) {
+      console.warn("[usePatientJourneyStatus] Realtime indisponível (continuando sem realtime):", err?.message);
+    }
 
     return () => {
       cancelled = true;
-      supabase.removeChannel(channel);
+      try {
+        if (channel) supabase.removeChannel(channel);
+      } catch { /* noop */ }
     };
   }, [user, isPatient]);
 
