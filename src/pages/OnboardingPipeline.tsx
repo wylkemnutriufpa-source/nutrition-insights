@@ -185,12 +185,8 @@ export default function OnboardingPipeline() {
     if (pipelineRes.data) {
       const d = pipelineRes.data as any;
 
-      // Auto-sync only when the completed anamnesis is newer than the latest pipeline reset.
-      const pipelineTouchedAt = new Date(d.updated_at || d.created_at || 0).getTime();
-      const anamnesisTouchedAt = anamnesisRes.data
-        ? new Date((anamnesisRes.data as any).updated_at || (anamnesisRes.data as any).created_at || 0).getTime()
-        : 0;
-      const hasFreshCompletedAnamnesis = !!anamnesisRes.data && anamnesisTouchedAt >= pipelineTouchedAt;
+      // Auto-sync only when there is a completed anamnesis record.
+      const hasFreshCompletedAnamnesis = !!anamnesisRes.data && (anamnesisRes.data as any).status === "completed";
 
       if (hasFreshCompletedAnamnesis && !d.anamnesis_completed) {
         await supabase

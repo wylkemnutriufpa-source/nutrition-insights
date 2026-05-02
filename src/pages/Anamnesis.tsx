@@ -638,10 +638,16 @@ export default function Anamnesis() {
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) {
-          console.error("[FJ:Anamnesis] failed to resolve profile tenant:", error);
+          console.error("[FJ:Anamnesis] critical: failed to resolve profile tenant:", error);
+          toast.error("Erro ao carregar perfil clínico. Verifique sua conexão.");
           return;
         }
-        if (data?.tenant_id) setResolvedTenantId(data.tenant_id);
+        if (data?.tenant_id) {
+          console.log("[FJ:Anamnesis] Tenant resolved successfully:", data.tenant_id);
+          setResolvedTenantId(data.tenant_id);
+        } else {
+          console.error("[FJ:Anamnesis] critical: profile exists but has NO tenant_id", { targetUserId });
+        }
         if (data?.full_name) setPatientName(data.full_name);
       });
   }, [tenantId, targetUserId, isNutritionistMode]);
@@ -1112,26 +1118,36 @@ export default function Anamnesis() {
     }
 
 
-    // Sync onboarding pipeline FIRST so the patient leaves step 1 immediately,
+    // Sync onboarding pipeline and journey status FIRST so the patient leaves step 1 immediately,
     // even if AI/secondary automations are slow or temporarily failing.
-    const { data: syncedPipeline, error: pipelineSyncError } = await supabase
-      .from("onboarding_pipelines" as any)
-      .update({
-        anamnesis_completed: true,
-        status: "pending_body_data",
-        weight: weight,
-        height: height,
-      } as any)
-      .eq("patient_id", targetUserId)
-      .in("status", ["pending_anamnesis", "in_progress"])
-      .select("id")
-      .maybeSingle();
+    const [pipelineRes, journeyRes] = await Promise.all([
+      supabase
+        .from("onboarding_pipelines" as any)
+        .update({
+          anamnesis_completed: true,
+          status: "pending_body_data",
+          weight: weight,
+          height: height,
+        } as any)
+        .eq("patient_id", targetUserId)
+        .in("status", ["pending_anamnesis", "in_progress"])
+        .select("id")
+        .maybeSingle(),
+      supabase
+        .from("nutritionist_patients")
+        .update({ journey_status: "onboarding_completed" })
+        .eq("patient_id", targetUserId)
+        .eq("status", "active")
+    ]);
 
-    if (pipelineSyncError) {
-      console.error("[FJ:Anamnesis] pipeline sync failed:", pipelineSyncError);
+    if (pipelineRes.error) {
+      console.error("[FJ:Anamnesis] pipeline sync failed:", pipelineRes.error);
+    }
+    if (journeyRes.error) {
+      console.error("[FJ:Anamnesis] journey status sync failed:", journeyRes.error);
     }
 
-    if (syncedPipeline && !isPipelineMode) {
+    if (pipelineRes.data && !isPipelineMode) {
       setHasActivePipeline(true);
     }
 
