@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, Heart, Sparkles, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 import slide1 from "@/assets/onboarding-paciente/slide-1.png";
 import slide2 from "@/assets/onboarding-paciente/slide-2.png";
