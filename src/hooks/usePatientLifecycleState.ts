@@ -82,6 +82,8 @@ const PLAN_STATES: LifecycleState[] = [
 const ONBOARDING_STATES: LifecycleState[] = [
   "onboarding_started",
   "onboarding_ready_for_plan",
+  "onboarding_active",
+  "onboarding",
 ];
 
 /** Parse RPC result into PatientLifecycle */
