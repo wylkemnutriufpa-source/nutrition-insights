@@ -21,10 +21,23 @@ if (import.meta.env.DEV) {
  * O sistema deve falhar rápido e de forma visível.
  */
 window.addEventListener("error", (e) => {
+  const msg = (e?.error?.message || e?.message || "").toLowerCase();
+  // 🛡️ Erros de WebSocket/Realtime são não-fatais: degradação graciosa.
+  if (msg.includes("websocket") || msg.includes("operation is insecure")) {
+    console.warn("[FitJourney:FailFast] WebSocket indisponível (ignorado, app continua):", e?.error?.message || e?.message);
+    e.preventDefault?.();
+    return;
+  }
   console.error("[FitJourney:FailFast] Erro Crítico não tratado:", e.error);
 });
 
 window.addEventListener("unhandledrejection", (e) => {
+  const msg = (e?.reason?.message || String(e?.reason) || "").toLowerCase();
+  if (msg.includes("websocket") || msg.includes("operation is insecure")) {
+    console.warn("[FitJourney:FailFast] Promise rejeitada por WebSocket (ignorado):", e?.reason?.message);
+    e.preventDefault?.();
+    return;
+  }
   console.error("[FitJourney:FailFast] Promise Rejection não tratada:", e.reason);
 });
 
