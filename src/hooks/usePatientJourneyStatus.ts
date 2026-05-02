@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { assertContract } from "@/lib/contractGuards";
-import { isRealtimeAvailable } from "@/lib/safeRealtime";
+import { isRealtimeAvailable } from "@/lib/security-layer/safeRealtime";
 import { useLocation } from "react-router-dom";
 
 export type JourneyStatus =

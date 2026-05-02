@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { invalidateNutritionistQueries } from "@/lib/queryInvalidation";
 import { useTelemetryStore } from "@/lib/telemetryStore";
-import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/safeRealtime";
+import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/security-layer/safeRealtime";
 
 export function useNutritionistRealtime() {
   const { user, isNutritionist, isAdmin } = useAuth();

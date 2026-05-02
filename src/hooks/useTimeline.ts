@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useCallback, useRef } from "react";
-import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/safeRealtime";
+import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/security-layer/safeRealtime";
 
 const PAGE_SIZE = 20;
 
