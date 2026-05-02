@@ -2,12 +2,45 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { toast } from "sonner";
-import { format } from "date-fns";
+import { format, isAfter, setHours, setMinutes } from "date-fns";
+
+const SUCCESS_MESSAGES = [
+  "Incrível! Mais um passo rumo ao seu objetivo. 🚀",
+  "Mandou bem! A consistência é o segredo. ✨",
+  "Sensacional! Continue assim. 💪",
+  "Feito! Você está no caminho certo. 🔥",
+];
+
+const RISK_MESSAGES = [
+  "Não pare agora! Sua evolução depende da sua constância. ⚠️",
+  "Sua meta está logo ali. Vamos retomar o foco? 🎯",
+  "Um dia de cada vez, mas não deixe passar. ⏳",
+  "Sua saúde é sua prioridade. Vamos nessa? 🍎",
+];
+
+const NIGHT_MESSAGES = [
+  "O dia ainda não acabou! Ainda dá tempo de fechar sua meta. 🌙",
+  "Que tal fechar o dia com chave de ouro? Só falta um pouco. ✨",
+  "Não deixe para amanhã o que você pode concluir hoje. 🚀",
+];
 
 export function useEngagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
   const today = format(new Date(), "yyyy-MM-dd");
+
+  const { data: profile } = useQuery({
+    queryKey: ["profile", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("goal, full_name")
+        .eq("user_id", user?.id)
+        .maybeSingle();
+      return data;
+    },
+  });
 
   const { data: stats, isLoading: loadingStats } = useQuery({
     queryKey: ["engagement-stats", user?.id],
@@ -24,7 +57,6 @@ export function useEngagement() {
     },
   });
 
-  // Fetch today's plan items to calculate progress %
   const { data: planItems } = useQuery({
     queryKey: ["today-plan-items", user?.id],
     enabled: !!user?.id,
@@ -77,7 +109,6 @@ export function useEngagement() {
 
       if (error) throw error;
 
-      // Log usage
       await supabase.from("usage_logs").insert({
         user_id: user!.id,
         event_type: "meal_checkin",
@@ -87,7 +118,9 @@ export function useEngagement() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["meal-checkins", user?.id] });
       queryClient.invalidateQueries({ queryKey: ["engagement-stats", user?.id] });
-      toast.success("Check-in realizado com sucesso! ✨");
+      
+      const randomSuccess = SUCCESS_MESSAGES[Math.floor(Math.random() * SUCCESS_MESSAGES.length)];
+      toast.success(randomSuccess);
     },
     onError: (error) => {
       console.error("Checkin error:", error);
@@ -115,6 +148,24 @@ export function useEngagement() {
   const isStreakAtRisk = stats?.current_streak > 0 && progressPct < 100 && riskLevel === "on_track";
   const isNearCompletion = progressPct >= 70 && progressPct < 100;
   
+  // Future Expectation Logic
+  const isNearRecord = stats?.current_streak > 0 && stats?.current_streak >= (stats?.longest_streak - 1);
+  const expectationMessage = isNearRecord 
+    ? `Você está a apenas 1 dia de bater seu recorde de ${stats?.longest_streak} dias!`
+    : progressPct > 0 ? "Você está chegando perto do seu melhor resultado do dia!" : null;
+
+  // Personal Connection Logic
+  const personalMessage = profile?.goal 
+    ? `Lembre-se do seu objetivo: ${profile.goal}. Cada refeição conta!`
+    : "Você está cada vez mais próximo da sua melhor versão!";
+
+  // Critical Moment (Night) Logic
+  const isNightTime = isAfter(new Date(), setMinutes(setHours(new Date(), 20), 0));
+  const isDayIncomplete = progressPct < 100 && totalMeals > 0;
+  const criticalNightMessage = (isNightTime && isDayIncomplete) 
+    ? NIGHT_MESSAGES[Math.floor(Math.random() * NIGHT_MESSAGES.length)]
+    : null;
+
   const identityStatus = (() => {
     if (stats?.current_streak >= 10) return "Insuperável";
     if (stats?.current_streak >= 5) return "Consistente";
@@ -146,6 +197,13 @@ export function useEngagement() {
 
   const isBetterThanLastWeek = stats?.weekly_adherence_pct > (prevWeekStats || 0);
 
+  // Progressive Reward Impact
+  const rewardImpact = (() => {
+    if (stats?.current_streak >= 30) return "strong";
+    if (stats?.current_streak >= 7) return "medium";
+    return "light";
+  })();
+
   const achievements = {
     oneDay: stats?.total_checkins >= 1,
     threeDays: stats?.longest_streak >= 3,
@@ -160,6 +218,10 @@ export function useEngagement() {
     progressPct,
     isStreakAtRisk,
     isNearCompletion,
+    expectationMessage,
+    personalMessage,
+    criticalNightMessage,
+    rewardImpact,
     identityStatus,
     isBetterThanLastWeek,
     remainingMeals: totalMeals - completedMeals,
