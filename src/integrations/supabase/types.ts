@@ -14518,6 +14518,9 @@ export type Database = {
           metabolic_phase_last_updated_at: string | null
           metabolic_response_type: string | null
           notes: string | null
+          patient_state:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
           phone: string | null
           plateau_probability: number | null
           preferred_editor_version: string | null
@@ -14577,6 +14580,9 @@ export type Database = {
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           notes?: string | null
+          patient_state?:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
           phone?: string | null
           plateau_probability?: number | null
           preferred_editor_version?: string | null
@@ -14636,6 +14642,9 @@ export type Database = {
           metabolic_phase_last_updated_at?: string | null
           metabolic_response_type?: string | null
           notes?: string | null
+          patient_state?:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
           phone?: string | null
           plateau_probability?: number | null
           preferred_editor_version?: string | null
@@ -20887,6 +20896,10 @@ export type Database = {
           view_name: string
         }[]
       }
+      get_calculated_patient_state: {
+        Args: { p_user_id: string }
+        Returns: Database["public"]["Enums"]["patient_state_type"]
+      }
       get_detailed_plan_diagnostics: {
         Args: { p_patient_id: string }
         Returns: {
@@ -21175,6 +21188,7 @@ export type Database = {
           count_plans: number
         }[]
       }
+      migrate_to_single_source_of_truth: { Args: never; Returns: undefined }
       normalize_patient_data: { Args: { _patient_id: string }; Returns: Json }
       preview_orphan_onboarding_pipelines: {
         Args: never
@@ -21433,6 +21447,13 @@ export type Database = {
         | "maintenance_mode"
         | "paused"
         | "closed"
+      patient_state_type:
+        | "onboarding_slides"
+        | "anamnesis"
+        | "collecting_profile"
+        | "ready_for_plan"
+        | "plan_generated"
+        | "active_plan"
       payment_gateway:
         | "stripe"
         | "mercado_pago"
@@ -21674,6 +21695,14 @@ export const Constants = {
         "maintenance_mode",
         "paused",
         "closed",
+      ],
+      patient_state_type: [
+        "onboarding_slides",
+        "anamnesis",
+        "collecting_profile",
+        "ready_for_plan",
+        "plan_generated",
+        "active_plan",
       ],
       payment_gateway: ["stripe", "mercado_pago", "pagseguro", "pix", "manual"],
       payout_status: ["pending", "processing", "paid", "failed"],
