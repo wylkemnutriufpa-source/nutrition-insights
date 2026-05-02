@@ -25,7 +25,7 @@ export const logClinicalEvent = async (params: LogParams) => {
   // Como as tabelas podem não existir ainda, vamos tentar inserir e falhar silenciosamente no console mas logar no sistema.
   
   try {
-    const table = params.type; // Assumindo que as tabelas seguem o nome do tipo
+    const table = params.type as any; // Bypass TS check for dynamically added tables
     const { error } = await supabase.from(table).insert({
       user_id: userId,
       patient_id: params.patient_id,
