@@ -57,14 +57,14 @@ export default function OnboardingPaciente() {
     localStorage.setItem(ONBOARDING_KEY, "true");
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
-    navigate("/anamnesis");
+    navigate("/anamnesis?pipeline=true");
   }, [navigate]);
 
   const skip = useCallback(() => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
-    navigate("/anamnesis");
+    navigate("/anamnesis?pipeline=true");
   }, [navigate]);
 
   useEffect(() => {
