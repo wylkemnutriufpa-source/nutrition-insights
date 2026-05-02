@@ -1,5 +1,5 @@
 import { calculatePersonalizedScore, validateClinicalContext } from './clinicalIntelligence';
-import { Meal, Food } from '../types';
+import { Meal, Food } from '../types/clinical-types';
 
 /**
  * Suite de Testes de Regressão Clínica
