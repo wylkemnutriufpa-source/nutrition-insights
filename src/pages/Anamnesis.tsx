@@ -1187,6 +1187,13 @@ export default function Anamnesis() {
     if (isPipelineMode && !isNutritionistMode) {
       setAnalyzing(false);
       toast.success("Anamnese salva! Indo para a próxima etapa do onboarding. ✅");
+      
+      // Navigate immediately while still transitioning
+      navigate("/body-analysis", { replace: true });
+      
+      setTimeout(() => {
+        if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
+      }, 1500);
 
       void (async () => {
         try {
