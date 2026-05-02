@@ -2,7 +2,7 @@ import { useAuth } from "@/lib/auth";
 import { Navigate } from "react-router-dom";
 import OnboardingPaciente from "@/pages/OnboardingPaciente";
 import OnboardingProfissional from "@/pages/OnboardingProfissional";
-import PageLoader from "./common/PageLoader";
+import PageLoader from "@/components/common/PageLoader";
 
 export default function OnboardingEntry() {
   const { isNutritionist, isPersonal, isAdmin, isPatient, authStatus } = useAuth();
