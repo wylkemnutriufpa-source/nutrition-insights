@@ -1,0 +1,1 @@
+ALTER FUNCTION public.sync_profile_consent() SET search_path TO 'public';
