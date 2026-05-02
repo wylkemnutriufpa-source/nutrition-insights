@@ -92,11 +92,11 @@ const EditorV3Page = () => {
   const isSandbox = !patientId && !planId;
 
   const {
-    meals, auditLog, setPatientId, hydrateMeals, sharingToken,
+    meals, auditLog, setPatientId, hydrateMeals, sharingToken: storeSharingToken,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
-    duplicateMeal, reorderMeal, updateMealHeader as updateMealWithImage, updateMealImage,
+    duplicateMeal, reorderMeal, updateMealImage,
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry
   } = useEditorState();
@@ -115,7 +115,7 @@ const EditorV3Page = () => {
   }
 
   const {
-    draftId, syncState, initialMeals, initialAuditLog, lastSavedAt,
+    draftId, syncState, initialMeals, initialAuditLog, lastSavedAt, sharingToken: draftSharingToken,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
   } = useDraftSync(patientId ?? null, meals, meals);
 
