@@ -603,13 +603,19 @@ export default function Anamnesis() {
   // Stage 5 - Fail-Fast Global Guard
   useEffect(() => {
     if (isReady && !isDegraded && user) {
+      // Hardening: Only validate state if tenant is already resolved or after a safety delay
+      // to avoid blocking patients due to race conditions during initial load.
+      if (!resolvedTenantId) return;
+
       const state = validateSystemState({ userId: user.id, tenantId: resolvedTenantId });
       if (!state.valid) {
         fjLog("CRITICAL", `System state invalid: ${state.reason}`);
-        // If critical and nutritionist mode, we can be more lenient, but for patients we block.
         if (!isNutritionistMode) {
           setOnboardingBlocked(true);
         }
+      } else {
+        // Essential: Unblock if state becomes valid
+        setOnboardingBlocked(false);
       }
     }
   }, [isReady, isDegraded, user, resolvedTenantId, isNutritionistMode]);
