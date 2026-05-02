@@ -836,7 +836,7 @@ export default function Anamnesis() {
   const saveLocalBackup = useCallback((currentAnswers: Record<string, any>) => {
     if (!targetUserId) return;
     try {
-      localStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
+      safeLocalStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
         answers: currentAnswers,
         updated_at: new Date().toISOString()
       }));
