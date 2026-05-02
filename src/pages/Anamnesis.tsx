@@ -1128,6 +1128,9 @@ export default function Anamnesis() {
       setSubmitSyncStatus("success", "anamnesis_submit");
     }
 
+    setSubmitting(true);
+    if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(true);
+    console.log("[FJ:Anamnesis] Starting transition to collecting_profile...");
 
     // Sync onboarding pipeline and journey status FIRST so the patient leaves step 1 immediately,
     // even if AI/secondary automations are slow or temporarily failing.
