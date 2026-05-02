@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer, RefreshCw,
-  CalendarDays, Star, ChevronDown, ChevronUp,
+  CalendarDays, Star, ChevronDown, ChevronUp, Trophy,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown, Calendar
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
