@@ -70,7 +70,7 @@ export function useEngagement() {
     }
   });
 
-  const riskLevel = (() => {
+  const riskLevel: "on_track" | "risco_leve" | "risco_alto" = (() => {
     if (!stats?.last_checkin_date) return "risco_alto";
     
     const lastDate = new Date(stats.last_checkin_date + "T12:00:00");
@@ -78,7 +78,7 @@ export function useEngagement() {
     const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
     
     if (diffDays === 0) return "on_track";
-    if (diffDays === 1) return "on_track"; // Warning if no checkins today? Let's say light risk if 2 days gap
+    if (diffDays === 1) return "on_track";
     if (diffDays === 2) return "risco_leve";
     return "risco_alto";
   })();
