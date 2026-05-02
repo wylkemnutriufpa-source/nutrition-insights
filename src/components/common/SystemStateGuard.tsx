@@ -17,7 +17,7 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading: authLoading, isPatient, isAdmin, isNutritionist, isPersonal } = useAuth();
   const { tenantId, isLoading: tenantLoading } = useTenant();
   const { mode, role } = useExperienceMode();
-  const { status: journeyStatus, anamnesisStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const location = useLocation();
 
   const isReady = !authLoading && !tenantLoading && !journeyLoading;
@@ -30,7 +30,7 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
       user,
       profile,
       journeyStatus: journeyStatus as any,
-      anamnesisStatus,
+      anamnesisStatus: journeyStatus === 'ready_for_plan' || journeyStatus === 'active_plan' ? 'completed' : 'pending',
       mode,
       role,
       isReady,

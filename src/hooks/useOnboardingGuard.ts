@@ -28,7 +28,7 @@ export function useOnboardingGuard() {
       user,
       profile,
       journeyStatus: journeyStatus as any,
-      anamnesisStatus,
+      anamnesisStatus: journeyStatus === 'ready_for_plan' || journeyStatus === 'active_plan' ? 'completed' : 'pending',
       mode,
       role,
       isReady,

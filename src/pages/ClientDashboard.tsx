@@ -360,7 +360,7 @@ export default function ClientDashboard() {
     return (
     <DashboardLayout>
       <SafeRender name="Conteúdo do Dashboard" data={[user, profile, dashData]}>
-      {shouldBlock && journeyStatus !== "awaiting_onboarding_release" ? (
+      {shouldBlock ? (
         <div className="max-w-7xl mx-auto px-4 py-12">
           <OnboardingGateScreen status={journeyStatus!} />
         </div>
