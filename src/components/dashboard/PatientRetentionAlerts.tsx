@@ -117,7 +117,12 @@ export function PatientRetentionAlerts() {
           </p>
           {stats.weekly_adherence_pct > 70 && (
             <p className="text-[10px] text-emerald-600 font-bold">
-              Você está acima da média! 🚀
+              {stats.weekly_adherence_pct > 90 ? "Consistência perfeita! 🔥" : "Você está acima da média! 🚀"}
+            </p>
+          )}
+          {useEngagement().isBetterThanLastWeek && (
+            <p className="text-[10px] text-primary font-bold">
+              Melhor que semana passada! 📈
             </p>
           )}
         </div>
