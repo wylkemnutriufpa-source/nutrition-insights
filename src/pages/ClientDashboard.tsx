@@ -59,6 +59,8 @@ import { useEngagement } from "@/hooks/useEngagement";
 import DailyEngagementProgress from "@/components/patient/engagement/DailyEngagementProgress";
 import AdherenceStats from "@/components/patient/engagement/AdherenceStats";
 import MealCheckinCard from "@/components/patient/engagement/MealCheckinCard";
+import RetentionAlert from "@/components/patient/engagement/RetentionAlert";
+import AchievementBadges from "@/components/patient/engagement/AchievementBadges";
 
 interface WorkoutInfo {
   planTitle: string;
