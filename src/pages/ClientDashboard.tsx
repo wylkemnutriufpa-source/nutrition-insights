@@ -56,6 +56,7 @@ import { usePageState } from "@/hooks/usePageState";
 import { SafeRender } from "@/components/common/SafeRender";
 import { StabilityZone } from "@/components/common/StabilityZone";
 import { useEngagement } from "@/hooks/useEngagement";
+import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
 import DailyEngagementProgress from "@/components/patient/engagement/DailyEngagementProgress";
 import AdherenceStats from "@/components/patient/engagement/AdherenceStats";
 import MealCheckinCard from "@/components/patient/engagement/MealCheckinCard";
