@@ -6501,6 +6501,33 @@ export type Database = {
         }
         Relationships: []
       }
+      meal_checkins: {
+        Row: {
+          checkin_date: string
+          completed: boolean | null
+          created_at: string
+          id: string
+          meal_id: string
+          patient_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          meal_id: string
+          patient_id: string
+        }
+        Update: {
+          checkin_date?: string
+          completed?: boolean | null
+          created_at?: string
+          id?: string
+          meal_id?: string
+          patient_id?: string
+        }
+        Relationships: []
+      }
       meal_clinical_decision_log: {
         Row: {
           condition_applied: string | null
@@ -10674,6 +10701,36 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      patient_engagement_stats: {
+        Row: {
+          current_streak: number | null
+          last_checkin_date: string | null
+          longest_streak: number | null
+          patient_id: string
+          total_checkins: number | null
+          updated_at: string
+          weekly_adherence_pct: number | null
+        }
+        Insert: {
+          current_streak?: number | null
+          last_checkin_date?: string | null
+          longest_streak?: number | null
+          patient_id: string
+          total_checkins?: number | null
+          updated_at?: string
+          weekly_adherence_pct?: number | null
+        }
+        Update: {
+          current_streak?: number | null
+          last_checkin_date?: string | null
+          longest_streak?: number | null
+          patient_id?: string
+          total_checkins?: number | null
+          updated_at?: string
+          weekly_adherence_pct?: number | null
+        }
+        Relationships: []
       }
       patient_favorite_recipes: {
         Row: {
@@ -18714,6 +18771,30 @@ export type Database = {
           table_name?: string
           trigger_depth?: number | null
           trigger_name?: string
+        }
+        Relationships: []
+      }
+      usage_logs: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          metadata: Json | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          metadata?: Json | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          metadata?: Json | null
+          user_id?: string
         }
         Relationships: []
       }
