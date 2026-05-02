@@ -99,8 +99,13 @@ export function logDecision(decision: SystemDecision) {
 export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   if (!ctx) return { type: 'ALLOW', reason: 'Empty context' };
   
-  const { pathname = '/', user, profile, isReady, isDegraded, versionMismatch } = ctx;
+  const { pathname = '/', user, profile, isReady, isDegraded, versionMismatch, isTransitioning } = ctx;
   const safePathname = typeof pathname === 'string' ? pathname : '/';
+
+  // 1. Transition Guard (Critical SSOT)
+  if (isTransitioning) {
+    return { type: 'ALLOW', reason: 'System is transitioning state' };
+  }
 
   // Regra de Versioning removida para garantir estabilidade por previsibilidade.
 
