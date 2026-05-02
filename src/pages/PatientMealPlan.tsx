@@ -32,6 +32,8 @@ import {
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion, type AdherenceStatus, type MealDetailData,
 } from "@/components/patient/MealPlanDailyView";
+import { useEngagement } from "@/hooks/useEngagement";
+import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
