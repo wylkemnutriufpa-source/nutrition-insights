@@ -252,8 +252,8 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Refeição "${name}" adicionada!`);
       },
 
-      hydrateMeals: (meals, auditLog = []) => {
-        set({ meals, auditLog, planStatus: 'saved' });
+      hydrateMeals: (meals, auditLog = [], token = null) => {
+        set({ meals, auditLog, sharingToken: token, planStatus: 'saved' });
         get().recalculateScore();
       },
 
