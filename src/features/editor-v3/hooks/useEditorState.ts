@@ -304,7 +304,7 @@ export const useEditorState = create<EditorState>()(
         let calculatedMacros = { kcal: marmita.kcal, protein: marmita.protein, carbs: marmita.carbs, fat: marmita.fat };
         
         if (calculatedMacros.kcal === 0 && marmita.ingredients && marmita.ingredients.length > 0) {
-          const { getFoodMacrosByName } = await import('./utils/dataFetcher');
+          const { getFoodMacrosByName } = await import('../utils/dataFetcher');
           const names = marmita.ingredients.map((i: any) => (i.name || i.food).toLowerCase());
           const macrosMap = await getFoodMacrosByName(names);
           
