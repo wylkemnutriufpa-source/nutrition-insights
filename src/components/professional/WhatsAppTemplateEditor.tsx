@@ -23,7 +23,7 @@ export default function WhatsAppTemplateEditor() {
     if (!user?.id) return;
     const fetchProfData = async () => {
       const { data: profProfile } = await supabase.from("professional_profiles").select("clinic_name").eq("user_id", user.id).maybeSingle();
-      const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
+      const { data: profile } = await supabase.from("profiles").select("full_name").eq("user_id", user.id).single();
       
       setProfData({
         name: profile?.full_name || "",

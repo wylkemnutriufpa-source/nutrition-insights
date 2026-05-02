@@ -92,7 +92,7 @@ export default function InvitePatient() {
       const { data: profileData } = await supabase
         .from("profiles")
         .select("full_name, tenant_id")
-        .eq("id", user.id)
+        .eq("user_id", user.id)
         .single();
       
       // Use full_name for individual identification, but let user message imply they might use clinic_name for branding

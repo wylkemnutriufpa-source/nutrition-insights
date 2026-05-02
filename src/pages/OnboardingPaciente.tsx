@@ -3,6 +3,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, X, Heart, Sparkles, Rocket } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/lib/auth";
+import { supabase } from "@/integrations/supabase/client";
 
 import slide1 from "@/assets/onboarding-paciente/slide-1.png";
 import slide2 from "@/assets/onboarding-paciente/slide-2.png";
@@ -66,19 +68,37 @@ export default function OnboardingPaciente() {
     setIdx(next);
   }, [idx, total]);
 
-  const complete = useCallback(() => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
-    localStorage.removeItem("fj_invited");
-    localStorage.removeItem("fj_user_type");
-    navigate("/anamnesis?pipeline=true");
-  }, [navigate]);
+  const { user } = useAuth();
 
-  const skip = useCallback(() => {
+  const complete = useCallback(async () => {
     localStorage.setItem(ONBOARDING_KEY, "true");
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
+    
+    if (user?.id) {
+      await supabase
+        .from("profiles")
+        .update({ fit_intelligence_onboarded: true })
+        .eq("user_id", user.id);
+    }
+    
     navigate("/anamnesis?pipeline=true");
-  }, [navigate]);
+  }, [navigate, user?.id]);
+
+  const skip = useCallback(async () => {
+    localStorage.setItem(ONBOARDING_KEY, "true");
+    localStorage.removeItem("fj_invited");
+    localStorage.removeItem("fj_user_type");
+    
+    if (user?.id) {
+      await supabase
+        .from("profiles")
+        .update({ fit_intelligence_onboarded: true })
+        .eq("user_id", user.id);
+    }
+    
+    navigate("/anamnesis?pipeline=true");
+  }, [navigate, user?.id]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {

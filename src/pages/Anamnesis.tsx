@@ -1126,7 +1126,7 @@ export default function Anamnesis() {
 
     // Sync onboarding pipeline and journey status FIRST so the patient leaves step 1 immediately,
     // even if AI/secondary automations are slow or temporarily failing.
-    const [pipelineRes, journeyRes] = await Promise.all([
+    const [pipelineRes, journeyRes, profileRes] = await Promise.all([
       supabase
         .from("onboarding_pipelines" as any)
         .update({
@@ -1143,7 +1143,14 @@ export default function Anamnesis() {
         .from("nutritionist_patients")
         .update({ journey_status: isPipelineMode ? "onboarding_active" : "onboarding_completed" })
         .eq("patient_id", targetUserId)
-        .eq("status", "active")
+        .eq("status", "active"),
+      supabase
+        .from("profiles")
+        .update({ 
+          is_anamnesis_completed: true,
+          fit_intelligence_onboarded: true 
+        })
+        .eq("user_id", targetUserId)
     ]);
 
     if (pipelineRes.error) {
@@ -1151,6 +1158,9 @@ export default function Anamnesis() {
     }
     if (journeyRes.error) {
       console.error("[FJ:Anamnesis] journey status sync failed:", journeyRes.error);
+    }
+    if (profileRes.error) {
+      console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
     }
 
     if (pipelineRes.data && !isPipelineMode) {
