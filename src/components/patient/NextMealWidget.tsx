@@ -97,7 +97,6 @@ export default function NextMealWidget() {
           break;
         }
       }
-      }
       if (!selectedMeal) selectedMeal = MEAL_ORDER.find((mt) => grouped[mt]) || null;
       if (!selectedMeal || !grouped[selectedMeal]) { setLoading(false); return; }
 
