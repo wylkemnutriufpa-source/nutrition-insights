@@ -7264,6 +7264,8 @@ export type Database = {
           previous_plan_id: string | null
           quality_alerts: Json | null
           requires_regeneration: boolean | null
+          sharing_expires_at: string | null
+          sharing_token: string | null
           simplicity_score: number | null
           start_date: string
           template_id: string | null
@@ -7319,6 +7321,8 @@ export type Database = {
           previous_plan_id?: string | null
           quality_alerts?: Json | null
           requires_regeneration?: boolean | null
+          sharing_expires_at?: string | null
+          sharing_token?: string | null
           simplicity_score?: number | null
           start_date: string
           template_id?: string | null
@@ -7374,6 +7378,8 @@ export type Database = {
           previous_plan_id?: string | null
           quality_alerts?: Json | null
           requires_regeneration?: boolean | null
+          sharing_expires_at?: string | null
+          sharing_token?: string | null
           simplicity_score?: number | null
           start_date?: string
           template_id?: string | null
@@ -11004,6 +11010,62 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      patient_meal_completions: {
+        Row: {
+          completed_at: string
+          created_at: string
+          id: string
+          meal_id: string
+          meal_plan_id: string
+          nutritionist_patient_id: string | null
+        }
+        Insert: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          meal_id: string
+          meal_plan_id: string
+          nutritionist_patient_id?: string | null
+        }
+        Update: {
+          completed_at?: string
+          created_at?: string
+          id?: string
+          meal_id?: string
+          meal_plan_id?: string
+          nutritionist_patient_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patient_meal_completions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_resolved_state"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_completions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plans"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patient_meal_completions_meal_plan_id_fkey"
+            columns: ["meal_plan_id"]
+            isOneToOne: false
+            referencedRelation: "v_plan_visibility_diagnostics"
+            referencedColumns: ["plan_id"]
+          },
+          {
+            foreignKeyName: "patient_meal_completions_nutritionist_patient_id_fkey"
+            columns: ["nutritionist_patient_id"]
+            isOneToOne: false
+            referencedRelation: "nutritionist_patients"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       patient_meal_feedback: {
         Row: {
