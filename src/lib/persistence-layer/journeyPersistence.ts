@@ -20,7 +20,8 @@ export async function updatePatientJourneyStatus(
   assertContract("ui_consistency", {
     dbStatus: newStatus,
     uiStatus: null, // Novo status ainda não está na UI
-    anamnesisCompleted: context.anamnesisCompleted
+    errorVisible: false,
+    hasInvisibleState: false
   });
 
   // 2. Execução Determinística

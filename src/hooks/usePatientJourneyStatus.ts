@@ -92,7 +92,8 @@ export function usePatientJourneyStatus() {
               assertContract("ui_consistency", {
                 dbStatus: finalStatus,
                 uiStatus: status === "no_link" ? null : status,
-                anamnesisCompleted: anamRes.data?.status === 'completed'
+                errorVisible: false,
+                hasInvisibleState: false
               });
             } catch (contractErr: any) {
               // Em vez de auto-curar, registramos a falha de integridade para investigação profunda.

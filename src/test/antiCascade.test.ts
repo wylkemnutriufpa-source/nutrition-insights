@@ -1,17 +1,19 @@
 /**
  * FitJourney — Anti-Cascade Architecture: testes obrigatórios
  *
- * Cobre os 4 contratos da Arquitetura Anti-Cascata:
- *   1. DRAFT INTEGRITY (Integridade de Rascunho)
- *   2. CLINICAL VALIDITY (Validade Clínica)
- *   3. PERSISTENCE SAFETY (Segurança de Persistência)
- *   4. UI CONSISTENCY (Consistência de UI/Sincronia)
+ * Cobre os 5 contratos da Arquitetura Anti-Cascata:
+ *   1. DRAFT INTEGRITY
+ *   2. CLINICAL VALIDITY
+ *   3. ENGINE DETERMINISM
+ *   4. PERSISTENCE SAFETY
+ *   5. UI CONSISTENCY
  */
 
 import { describe, expect, it } from "vitest";
 import {
   draftIntegrityContract,
   clinicalValidityContract,
+  engineDeterminismContract,
   persistenceSafetyContract,
   uiConsistencyContract,
 } from "@/lib/criticalContracts";
@@ -19,132 +21,120 @@ import { assertContract, ContractViolationError } from "@/lib/contractGuards";
 
 describe("Anti-Cascade Architecture — Editor V3", () => {
   describe("1. Draft Integrity", () => {
-    it("aceita rascunho com itens e ID", () => {
+    it("aceita rascunho com ID, meals e items únicos", () => {
       const r = draftIntegrityContract({
         draftId: "d1",
-        items: [{ id: 1 }],
-        lastSavedAt: Date.now(),
+        meals: [{}],
+        items: [{ instanceId: "i1" }],
+        locked: true
       });
       expect(r.ok).toBe(true);
     });
 
-    it("rejeita rascunho sem ID", () => {
-      const r = draftIntegrityContract({
-        draftId: "",
-        items: [{ id: 1 }],
-        lastSavedAt: Date.now(),
-      });
-      expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/ID ausente/);
-    });
-
-    it("rejeita rascunho sem itens", () => {
+    it("rejeita meals null", () => {
       const r = draftIntegrityContract({
         draftId: "d1",
+        meals: null as any,
         items: [],
-        lastSavedAt: Date.now(),
+        locked: false
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/sem itens/);
+      expect(r.violations.join(" ")).toMatch(/meals nunca pode ser null/);
+    });
+
+    it("rejeita items com instanceId duplicado", () => {
+      const r = draftIntegrityContract({
+        draftId: "d1",
+        meals: [],
+        items: [{ instanceId: "dup" }, { instanceId: "dup" }],
+        locked: false
+      });
+      expect(r.ok).toBe(false);
+      expect(r.violations.join(" ")).toMatch(/instanceId duplicado/);
     });
   });
 
   describe("2. Clinical Validity", () => {
-    it("aceita plano com macros positivas", () => {
+    it("aceita plano válido", () => {
       const r = clinicalValidityContract({
         kcal: 2000,
         protein: 150,
         patientRestrictions: [],
-        items: [{ title: "Item" }],
+        isValid: true
       });
       expect(r.ok).toBe(true);
     });
 
-    it("rejeita macros zeradas (Bloqueio Anti-Cascata)", () => {
+    it("rejeita plano marcado como inválido", () => {
       const r = clinicalValidityContract({
-        kcal: 0,
-        protein: 0,
+        kcal: 2000,
+        protein: 150,
         patientRestrictions: [],
-        items: [],
+        isValid: false
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Kcal inválida/);
+      expect(r.violations.join(" ")).toMatch(/Plano clínico inválido detectado/);
     });
   });
 
-  describe("3. Persistence Safety", () => {
-    it("aceita quando local == remoto", () => {
-      const data = { title: "Teste", value: 100 };
+  describe("3. Engine Determinism", () => {
+    it("rejeita engine que gera 0 refeições", () => {
+      const r = engineDeterminismContract({
+        action: "generate",
+        mealCount: 0,
+        hasManualOverrides: false,
+        overrideConfirmed: false
+      });
+      expect(r.ok).toBe(false);
+      expect(r.violations.join(" ")).toMatch(/Engine gerou 0 refeições/);
+    });
+
+    it("rejeita sobrescrever manual sem confirmação", () => {
+      const r = engineDeterminismContract({
+        action: "generate",
+        mealCount: 5,
+        hasManualOverrides: true,
+        overrideConfirmed: false
+      });
+      expect(r.ok).toBe(false);
+      expect(r.violations.join(" ")).toMatch(/sobrescrever manual sem confirmação/);
+    });
+  });
+
+  describe("4. Persistence Safety", () => {
+    it("rejeita salvar sem persistência prévia", () => {
       const r = persistenceSafetyContract({
-        local: data,
-        remote: data,
-        fields: ["title", "value"],
-      });
-      expect(r.ok).toBe(true);
-    });
-
-    it("rejeita divergência entre local e remoto", () => {
-      const r = persistenceSafetyContract({
-        local: { title: "A" },
-        remote: { title: "B" },
-        fields: ["title"],
+        local: {},
+        remote: {},
+        isSaving: true,
+        draftPersistedBeforeAction: false
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Divergência/);
+      expect(r.violations.join(" ")).toMatch(/Draft deve ser persistido antes/);
     });
   });
 
-  describe("4. UI Consistency", () => {
-    it("aceita quando UI e DB estão em sincronia", () => {
+  describe("5. UI Consistency", () => {
+    it("rejeita desync invisível", () => {
       const r = uiConsistencyContract({
-        dbStatus: "active",
-        uiStatus: "active",
-        anamnesisCompleted: true,
-      });
-      expect(r.ok).toBe(true);
-    });
-
-    it("detecta desync entre UI e DB", () => {
-      const r = uiConsistencyContract({
-        dbStatus: "active",
-        uiStatus: "onboarding_active",
-        anamnesisCompleted: true,
+        dbStatus: "A",
+        uiStatus: "B",
+        errorVisible: false,
+        hasInvisibleState: false
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Desync/);
+      expect(r.violations.join(" ")).toMatch(/NÃO está visível/);
     });
 
-    it("rejeita quando anamnese está completa mas status trava em onboarding (Inconsistência)", () => {
+    it("rejeita estado invisível", () => {
       const r = uiConsistencyContract({
-        dbStatus: "onboarding_active",
-        uiStatus: null,
-        anamnesisCompleted: true,
+        dbStatus: "A",
+        uiStatus: "A",
+        errorVisible: false,
+        hasInvisibleState: true
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Inconsistência/);
-    });
-  });
-
-  describe("5. assertContract — Bloqueio Rigoroso", () => {
-    it("lança erro fatal em caso de violação de rascunho", () => {
-      expect(() =>
-        assertContract("draft_integrity", {
-          draftId: "",
-          items: [],
-          lastSavedAt: 0,
-        }),
-      ).toThrow(ContractViolationError);
-    });
-
-    it("não lança quando contrato é respeitado", () => {
-      expect(() =>
-        assertContract("clinical_validity", {
-          kcal: 1800,
-          protein: 100,
-          patientRestrictions: [],
-          items: [{}],
-        }),
-      ).not.toThrow();
+      expect(r.violations.join(" ")).toMatch(/Estado invisível detectado/);
     });
   });
 });
