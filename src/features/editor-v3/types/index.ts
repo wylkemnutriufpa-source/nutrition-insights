@@ -1,3 +1,3 @@
 
 export * from "./types";
-export * from "./nutritionalScoreTypes";
+export * from "../../clinical-engine/types/nutritionalScoreTypes";
