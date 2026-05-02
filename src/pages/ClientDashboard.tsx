@@ -99,7 +99,6 @@ export default function ClientDashboard() {
     stats, 
     checkins, 
     riskLevel, 
-    achievements, 
     expectationMessage, 
     personalMessage, 
     criticalNightMessage, 
