@@ -255,7 +255,12 @@ export default function ClientDashboard() {
               </motion.div>
 
               {/* Retention Recovery Alert */}
-              <RetentionAlert riskLevel={riskLevel} />
+              <RetentionAlert 
+                riskLevel={riskLevel} 
+                isStreakAtRisk={isStreakAtRisk}
+                criticalNightMessage={criticalNightMessage}
+                currentStreak={stats?.current_streak}
+              />
 
               {/* Patient Engagement Central (Check-ins + Progress) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -275,6 +280,9 @@ export default function ClientDashboard() {
                         <DailyEngagementProgress 
                           completed={checkins?.length || 0} 
                           total={lifecycle.plan?.meals?.length || 0} 
+                          expectationMessage={expectationMessage}
+                          personalMessage={personalMessage}
+                          rewardImpact={rewardImpact}
                         />
                       </CardHeader>
                       <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
