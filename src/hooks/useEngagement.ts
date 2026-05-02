@@ -70,9 +70,30 @@ export function useEngagement() {
     }
   });
 
+  const riskLevel = (() => {
+    if (!stats?.last_checkin_date) return "risco_alto";
+    
+    const lastDate = new Date(stats.last_checkin_date + "T12:00:00");
+    const todayDate = new Date(today + "T12:00:00");
+    const diffDays = Math.floor((todayDate.getTime() - lastDate.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (diffDays === 0) return "on_track";
+    if (diffDays === 1) return "on_track"; // Warning if no checkins today? Let's say light risk if 2 days gap
+    if (diffDays === 2) return "risco_leve";
+    return "risco_alto";
+  })();
+
+  const achievements = {
+    oneDay: stats?.total_checkins >= 1,
+    threeDays: stats?.longest_streak >= 3,
+    sevenDays: stats?.longest_streak >= 7,
+  };
+
   return {
     stats,
     checkins,
+    riskLevel,
+    achievements,
     isLoading: loadingStats || loadingCheckins,
     toggleCheckin: (mealId: string, completed: boolean = true) => 
       checkinMutation.mutate({ mealId, completed }),
