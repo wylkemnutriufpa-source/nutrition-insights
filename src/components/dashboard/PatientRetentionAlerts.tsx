@@ -1,8 +1,7 @@
 import { motion } from "framer-motion";
 import { AlertCircle, Flame, CheckCircle2, TrendingUp, Zap } from "lucide-react";
 import { useEngagement } from "@/hooks/useEngagement";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
 export function PatientRetentionAlerts() {
@@ -77,14 +76,19 @@ export function PatientRetentionAlerts() {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-3"
+            className="p-5 rounded-xl bg-rose-500 border-2 border-rose-600 shadow-lg shadow-rose-500/20 flex items-start gap-4 text-white"
           >
-            <AlertCircle className="w-5 h-5 text-rose-500 mt-0.5" />
+            <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+              <AlertCircle className="w-6 h-6 text-white animate-bounce" />
+            </div>
             <div>
-              <p className="text-sm font-bold text-rose-600">Sentimos sua falta!</p>
-              <p className="text-xs text-rose-600/80">
-                Faz tempo que você não registra suas refeições. Que tal voltar hoje e retomar o foco?
+              <p className="text-base font-bold">Retome o controle agora!</p>
+              <p className="text-sm text-white/90 mb-3">
+                Você está perdendo o ritmo da sua evolução. Voltar hoje é 2x mais fácil que voltar amanhã.
               </p>
+              <Button size="sm" variant="secondary" className="font-bold text-rose-600 bg-white hover:bg-white/90" asChild>
+                <a href="/my-diet">Fazer check-in agora</a>
+              </Button>
             </div>
           </motion.div>
         )}
@@ -103,13 +107,20 @@ export function PatientRetentionAlerts() {
            {[...Array(7)].map((_, i) => (
              <div 
                key={i} 
-               className={`h-1.5 flex-1 rounded-full ${i < (stats.weekly_adherence_pct / 14) ? 'bg-primary' : 'bg-muted'}`} 
+               className={`h-2 flex-1 rounded-full ${i < (stats.weekly_adherence_pct / 14.28) ? 'bg-primary' : 'bg-muted'} ${i === 6 ? 'animate-pulse' : ''}`} 
              />
            ))}
         </div>
-        <p className="text-[10px] text-muted-foreground mt-2 text-center">
-          Você está com {stats.weekly_adherence_pct}% de adesão nesta semana.
-        </p>
+        <div className="flex justify-between mt-2">
+          <p className="text-[10px] text-muted-foreground">
+            {stats.weekly_adherence_pct}% de adesão semanal
+          </p>
+          {stats.weekly_adherence_pct > 70 && (
+            <p className="text-[10px] text-emerald-600 font-bold">
+              Você está acima da média! 🚀
+            </p>
+          )}
+        </div>
       </div>
     </div>
   );
