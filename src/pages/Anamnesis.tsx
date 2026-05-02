@@ -1112,26 +1112,36 @@ export default function Anamnesis() {
     }
 
 
-    // Sync onboarding pipeline FIRST so the patient leaves step 1 immediately,
+    // Sync onboarding pipeline and journey status FIRST so the patient leaves step 1 immediately,
     // even if AI/secondary automations are slow or temporarily failing.
-    const { data: syncedPipeline, error: pipelineSyncError } = await supabase
-      .from("onboarding_pipelines" as any)
-      .update({
-        anamnesis_completed: true,
-        status: "pending_body_data",
-        weight: weight,
-        height: height,
-      } as any)
-      .eq("patient_id", targetUserId)
-      .in("status", ["pending_anamnesis", "in_progress"])
-      .select("id")
-      .maybeSingle();
+    const [pipelineRes, journeyRes] = await Promise.all([
+      supabase
+        .from("onboarding_pipelines" as any)
+        .update({
+          anamnesis_completed: true,
+          status: "pending_body_data",
+          weight: weight,
+          height: height,
+        } as any)
+        .eq("patient_id", targetUserId)
+        .in("status", ["pending_anamnesis", "in_progress"])
+        .select("id")
+        .maybeSingle(),
+      supabase
+        .from("nutritionist_patients")
+        .update({ journey_status: "onboarding_completed" })
+        .eq("patient_id", targetUserId)
+        .eq("status", "active")
+    ]);
 
-    if (pipelineSyncError) {
-      console.error("[FJ:Anamnesis] pipeline sync failed:", pipelineSyncError);
+    if (pipelineRes.error) {
+      console.error("[FJ:Anamnesis] pipeline sync failed:", pipelineRes.error);
+    }
+    if (journeyRes.error) {
+      console.error("[FJ:Anamnesis] journey status sync failed:", journeyRes.error);
     }
 
-    if (syncedPipeline && !isPipelineMode) {
+    if (pipelineRes.data && !isPipelineMode) {
       setHasActivePipeline(true);
     }
 

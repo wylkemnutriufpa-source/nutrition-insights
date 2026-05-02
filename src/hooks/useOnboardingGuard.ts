@@ -13,7 +13,7 @@ import { getSystemDecision, type GovernanceContext } from "@/lib/governance";
 export type OnboardingRequirement = "none" | "must_complete" | "loading" | "error_no_link";
 
 export function useOnboardingGuard() {
-  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const { status: journeyStatus, anamnesisStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const { loading: authLoading, user, profile, isNutritionist, isPersonal, isAdmin } = useAuth();
   const { mode, role } = useExperienceMode();
   const { isReady, isDegraded } = useAppState();
@@ -28,6 +28,7 @@ export function useOnboardingGuard() {
       user,
       profile,
       journeyStatus: journeyStatus as any,
+      anamnesisStatus,
       mode,
       role,
       isReady,
@@ -52,6 +53,7 @@ export function useOnboardingGuard() {
       user,
       profile,
       journeyStatus: journeyStatus as any,
+      anamnesisStatus,
       mode,
       role,
       isReady,
