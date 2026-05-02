@@ -19,15 +19,14 @@ import ClinicalMessagesWidget from "@/components/patient/ClinicalMessagesWidget"
 import {
   Rocket, CalendarDays, Bell, TrendingUp, CheckCircle2,
   UtensilsCrossed, Trophy, Target, Dumbbell, Flame, ArrowRight, Clock, Users,
-  AlertTriangle, RefreshCw, Zap, AlertCircle, MessageSquare
+  AlertTriangle, RefreshCw, Zap, AlertCircle, MessageSquare, ChevronRight,
+  Target as TargetIcon
 } from "lucide-react";
-import RankingWidget from "@/components/prestige/RankingWidget";
-import ExplorerProgressWidget from "@/components/dashboard/ExplorerProgressWidget";
 
 import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import PlanRequestButton from "@/components/patient/PlanRequestButton";
-import { safeNum } from "@/lib/formatMacros";
+import { safeNum, fmtMacro } from "@/lib/formatMacros";
 import WorkoutRequestButton from "@/components/patient/WorkoutRequestButton";
 import NutritionistStatusBanner from "@/components/chat/NutritionistStatusBanner";
 import ProgramJoinRequest from "@/components/patient/ProgramJoinRequest";
@@ -39,17 +38,12 @@ import OnboardingProgressModal from "@/components/patient/OnboardingProgressModa
 import BiquiniEnrollmentStatus from "@/components/biquini/BiquiniEnrollmentStatus";
 import BiquiniOnboardingWizard from "@/components/biquini/BiquiniOnboardingWizard";
 import OnboardingExitGuard from "@/components/onboarding/OnboardingExitGuard";
-import { DailyMissionsWidget } from "@/components/gamification/DailyMissionsWidget";
-import { AdherenceEvolutionChart } from "@/components/gamification/AdherenceEvolutionChart";
-import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
 import ExperienceModeSwitcher from "@/components/settings/ExperienceModeSwitcher";
-import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { usePatientLifecycleState } from "@/hooks/usePatientLifecycleState";
 import { usePatientJourneyStatus, IS_FLUID_STATE } from "@/hooks/usePatientJourneyStatus";
 import { useOnboardingGuard } from "@/hooks/useOnboardingGuard";
 import OnboardingGateScreen from "@/components/patient/OnboardingGateScreen";
 import PatientDailyFocusHero from "@/components/patient/PatientDailyFocusHero";
-import SmartChecklistWidget from "@/components/patient/SmartChecklistWidget";
 import TherapeuticMomentumBar from "@/components/patient/TherapeuticMomentumBar";
 import ClinicalInsightsCard from "@/components/patient/ClinicalInsightsCard";
 import PatientMetabolicInsightPanel from "@/components/patient/PatientMetabolicInsightPanel";
@@ -62,6 +56,11 @@ import { ErrorBoundary } from "@/components/common/ErrorBoundary";
 import { usePageState } from "@/hooks/usePageState";
 import { SafeRender } from "@/components/common/SafeRender";
 import { StabilityZone } from "@/components/common/StabilityZone";
+import { useEngagement } from "@/hooks/useEngagement";
+import DailyEngagementProgress from "@/components/patient/engagement/DailyEngagementProgress";
+import AdherenceStats from "@/components/patient/engagement/AdherenceStats";
+import MealCheckinCard from "@/components/patient/engagement/MealCheckinCard";
+
 interface ProgramInfo {
   id: string;
   title: string;
@@ -141,6 +140,7 @@ export default function ClientDashboard() {
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const premium = usePremiumPresence();
   const lifecycle = usePatientLifecycleState();
+  const { stats, checkins } = useEngagement();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
   const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
@@ -149,6 +149,7 @@ export default function ClientDashboard() {
   // Schema consistency check: detect plans with missing/zero macros
   const hasInconsistentPlan = lifecycle.showPlan && 
     (safeNum(lifecycle.plan?.total_calories) === 0 && (lifecycle.planId));
+
 
   // Single React Query for all dashboard data — cached, deduped, auto-refreshed
   const { data: dashData, isLoading: queryLoading, isError: queryError, error: queryErrorObj } = useQuery({
