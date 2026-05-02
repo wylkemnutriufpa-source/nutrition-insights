@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { isFeatureEnabled } from '../../security/services/featureFlags';
 import { useEditorState } from '../hooks/useEditorState';
 import { useDraftSync } from '../hooks/useDraftSync';
 import { promoteDraftToMealPlan } from '../services/promoteDraft';
