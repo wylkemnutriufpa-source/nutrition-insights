@@ -45,7 +45,7 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
     const d = getSystemDecision(ctx);
     if (d.type !== 'ALLOW') logDecision(d);
     return d;
-  }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isNutritionist, isPersonal, isAdmin]);
+  }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isNutritionist, isPersonal, isAdmin, isTransitioning]);
 
   // Track blocked renders for audit
   useEffect(() => {
