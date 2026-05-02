@@ -1264,6 +1264,10 @@ export default function Anamnesis() {
       }
     } catch (err) {
       console.error("Error sending final anamnesis notification:", err);
+    } finally {
+      if ((window as any).__FJ_SET_TRANSITIONING__) {
+        (window as any).__FJ_SET_TRANSITIONING__(false);
+      }
     }
   };
 
