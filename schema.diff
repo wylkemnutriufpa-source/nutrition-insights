@@ -1,0 +1,26 @@
+{
+  "summary": "Summary:\nColumns:\n+ profiles.compliance_mode\n+ profiles.consent_date\n+ profiles.consent_given",
+  "details": {
+    "timestamp": "2026-05-02T14:53:53.147Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260430184036_be5cd1eb-1c4a-4d79-b628-e0da71a5e509.sql",
+    "lastActualMigration": "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql",
+    "missingMigrations": [
+      "20260430233637_08a4e31c-d4fa-489d-ae2f-42cf7bae60e9.sql",
+      "20260430234515_e5ffc529-c647-48f4-a5f8-170ebd48dd59.sql",
+      "20260501161526_700869e2-9128-483d-bc7a-f0759305f667.sql",
+      "20260501233957_b1de6423-71ce-49d9-8b14-d88b64073740.sql",
+      "20260501235713_ce4a44d9-e34c-46ac-a1ad-7c1036aa5082.sql",
+      "20260502114806_59a61a2f-4eea-4461-b331-756868f85ae0.sql",
+      "20260502114845_66a57b3d-88b3-46eb-8f3e-abce98467952.sql",
+      "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql"
+    ],
+    "diffResults": [
+      {
+        "table": "profiles",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "compliance_mode, consent_date, consent_given"
+      }
+    ]
+  }
+}

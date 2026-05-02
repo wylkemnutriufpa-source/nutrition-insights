@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260430184036_be5cd1eb-1c4a-4d79-b628-e0da71a5e509.sql",
-  "migrationsCount": 632,
+  "lastMigration": "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql",
+  "migrationsCount": 640,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -176,6 +176,9 @@
       "behavioral_consistency_score",
       "clinical_risk_level",
       "clinical_risk_score",
+      "compliance_mode",
+      "consent_date",
+      "consent_given",
       "created_at",
       "current_editor_mode",
       "current_weight",
