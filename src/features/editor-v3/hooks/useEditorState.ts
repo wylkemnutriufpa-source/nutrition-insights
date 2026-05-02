@@ -30,6 +30,7 @@ interface EditorState {
   clinicalMode: boolean;
   lastBlockedReason: string | null;
   patientContext: PatientContext | null;
+  sharingToken: string | null;
   confidence: PlanConfidence | null;
 
   // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
@@ -42,7 +43,7 @@ interface EditorState {
   addAuditEntry: (entry: Omit<AuditLogEntry, 'created_at'>) => void;
   refinePlan: (availableFoods: Food[], level?: 'light' | 'moderate' | 'aggressive') => void;
   addMealWithHeader: (name: string, time: string) => void;
-  hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[]) => void;
+  hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[], sharingToken?: string) => void;
   addMeal: () => void;
   duplicateMeal: (mealId: string) => void;
   reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
@@ -83,7 +84,7 @@ export const useEditorState = create<EditorState>()(
       validationIssues: [],
       goalMetadata: {},
       patientContext: null,
-      confidence: null,
+      confidence: null, sharingToken: null,
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
 
@@ -252,8 +253,8 @@ export const useEditorState = create<EditorState>()(
         toast.success(`Refeição "${name}" adicionada!`);
       },
 
-      hydrateMeals: (meals, auditLog = []) => {
-        set({ meals, auditLog, planStatus: 'saved' });
+      hydrateMeals: (meals, auditLog = [], token = null) => {
+        set({ meals, auditLog, sharingToken: token, planStatus: 'saved' });
         get().recalculateScore();
       },
 
@@ -580,7 +581,7 @@ export const useEditorState = create<EditorState>()(
       },
 
       resetEditor: () => {
-        set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [] });
+        set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [], sharingToken: null });
       },
     }),
     {

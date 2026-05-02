@@ -39,8 +39,10 @@ import {
   Apple, Layers, Utensils, CloudOff, Cloud, Loader2,
   AlertTriangle, CheckCircle2, XCircle, RotateCcw,
   Zap, Activity, PieChart, Minus, Users, Search,
-  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon
+  User, Edit3, List, BookOpen, RefreshCw, X, History, Maximize2, ChevronDown, RefreshCcw, ArrowRight, Image as ImageIcon, Eye, Share2
 } from 'lucide-react';
+
+
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
 import { Meal, MealItem, Food, MealTemplate } from '../types';
@@ -90,7 +92,7 @@ const EditorV3Page = () => {
   const isSandbox = !patientId && !planId;
 
   const {
-    meals, auditLog, setPatientId, hydrateMeals,
+    meals, auditLog, setPatientId, hydrateMeals, sharingToken: storeSharingToken,
     addMarmitaToMeal, addFoodToMeal, applyTemplateToMeal,
     removeFood, updateFoodQuantity, updateMealItem, generatePlan, generateMeal, savePlan, planStatus,
     resetEditor, addMeal, removeMeal, updateMealHeader, addMealWithHeader,
@@ -113,7 +115,7 @@ const EditorV3Page = () => {
   }
 
   const {
-    draftId, syncState, initialMeals, initialAuditLog, lastSavedAt,
+    draftId, syncState, initialMeals, initialAuditLog, lastSavedAt, sharingToken: draftSharingToken,
     scheduleSave, resetDraft, reloadFromServer, revertToLastSaved
   } = useDraftSync(patientId ?? null, meals, meals);
 
@@ -471,7 +473,7 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     if (initialMeals && initialMeals.length > 0) {
-      hydrateMeals(initialMeals, initialAuditLog);
+      hydrateMeals(initialMeals, initialAuditLog, draftSharingToken || undefined);
       hydratedRef.current = true;
     }
   }, [initialMeals, initialAuditLog, hydrateMeals]);
@@ -1060,6 +1062,41 @@ const EditorV3Page = () => {
               </div>
             )}
           </Card>
+
+          {planId && (
+            <Card className="p-6 bg-emerald-500/5 border-emerald-500/20 rounded-3xl">
+              <h3 className="text-sm font-black text-emerald-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                <Users className="w-4 h-4" /> Modo Paciente
+              </h3>
+              <p className="text-[10px] text-white/50 mb-4 uppercase leading-relaxed">
+                Visualize como o paciente verá o plano ou compartilhe o link seguro.
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                <Button 
+                  onClick={() => navigate(`/patient/plan/${planId}`)}
+                  className="bg-emerald-500 hover:bg-emerald-600 text-black font-black text-[10px] uppercase rounded-xl h-10"
+                >
+                  <Eye className="w-3.5 h-3.5 mr-2" /> Visualizar
+                </Button>
+                <Button 
+                  onClick={() => {
+                    const token = storeSharingToken || draftSharingToken || (meals.length > 0 ? meals[0].id : null);
+                    if (!token) {
+                      toast.error("Salve o rascunho ou promova o plano para compartilhar.");
+                      return;
+                    }
+                    navigator.clipboard.writeText(`${window.location.origin}/patient/view/${token}`);
+                    toast.success("Link de compartilhamento copiado!");
+                  }}
+                  variant="outline"
+                  className="border-emerald-500/20 hover:bg-emerald-500/10 text-emerald-400 font-black text-[10px] uppercase rounded-xl h-10"
+                >
+                  <Share2 className="w-3.5 h-3.5 mr-2" /> Link
+                </Button>
+              </div>
+            </Card>
+          )}
+
 
           <Card className="p-6 bg-black border-white/5 rounded-3xl">
              <h3 className="text-sm font-black text-white uppercase tracking-widest mb-6 flex items-center gap-2">

@@ -13,6 +13,8 @@ interface UseDraftSyncReturn {
   initialMeals: Meal[] | null;
   initialAuditLog: AuditLogEntry[];
   lastSavedAt: string | null;
+  sharingToken: string | null;
+
   /** Chama após cada mutação local — debouncado internamente */
   scheduleSave: (meals: Meal[], auditLog: AuditLogEntry[]) => void;
   /** Marca o draft atual como descartado e limpa fallback local */
@@ -33,6 +35,8 @@ export function useDraftSync(
   const [initialMeals, setInitialMeals] = useState<Meal[] | null>(null);
   const [initialAuditLog, setInitialAuditLog] = useState<AuditLogEntry[]>([]);
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
+  const [sharingToken, setSharingToken] = useState<string | null>(null);
+
   const [snapshot, setSnapshot] = useState<Meal[] | null>(null);
   const [snapshotAuditLog, setSnapshotAuditLog] = useState<AuditLogEntry[]>([]);
   
@@ -76,6 +80,8 @@ export function useDraftSync(
       setSnapshot(remoteMeals);
       setSnapshotAuditLog(remoteAuditLog);
       setLastSavedAt(draft.updated_at);
+      setSharingToken(draft.sharing_token || null);
+
       lastUpdateRef.current = draft.updated_at;
       setSyncState('saved');
       if (isReload) toast.success('Rascunho atualizado do servidor.');
@@ -158,6 +164,8 @@ export function useDraftSync(
     initialMeals, 
     initialAuditLog,
     lastSavedAt,
+    sharingToken,
+
     scheduleSave, 
     resetDraft,
     reloadFromServer: () => loadDraft(true),

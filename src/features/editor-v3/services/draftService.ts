@@ -22,6 +22,8 @@ export interface DraftRecord {
   meta_fat: number | null;
   draft_status: 'editing' | 'promoted' | 'discarded';
   promoted_meal_plan_id: string | null;
+  sharing_token: string | null;
+
   updated_at: string;
 }
 
