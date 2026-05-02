@@ -87,17 +87,18 @@ export function usePatientJourneyStatus() {
             console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
             
             // Validação de Contrato (Anti-Cascade Architecture)
-            // Não usamos auto-cura. Se houver erro, logamos e bloqueamos.
+            // Não usamos auto-cura silenciosa. Se houver desvio lógico, logamos o erro fatal.
             try {
               assertContract("ui_consistency", {
                 dbStatus: finalStatus,
-                uiStatus: status, // Compara com o estado anterior da UI
+                uiStatus: status === "no_link" ? null : status,
                 anamnesisCompleted: anamRes.data?.status === 'completed'
               });
             } catch (contractErr: any) {
-              console.error("[usePatientJourneyStatus] Violação Crítica de Contrato:", contractErr.message);
-              // Reportamos ao sistema de monitoramento sem mascarar a falha
-              // Em uma arquitetura anti-cascata, erros críticos devem ser visíveis.
+              // Em vez de auto-curar, registramos a falha de integridade para investigação profunda.
+              console.error("[Anti-Cascade] Violação de Integridade detectada:", contractErr.message);
+              // O sistema mantém o status original do banco (finalStatus), 
+              // mas sem mascarar o erro nos logs.
             }
 
             setStatus(finalStatus);
