@@ -80,8 +80,10 @@ function sumMealMacros(meal: Meal) {
 export interface PromoteResult {
   ok: boolean;
   mealPlanId?: string;
+  sharingToken?: string;
   error?: string;
 }
+
 
 /**
  * Promove um draft para um plano clínico oficial.
