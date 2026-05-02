@@ -86,7 +86,7 @@ describe("Anti-Cascade Architecture — Editor V3", () => {
         overrideConfirmed: false
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Engine gerou 0 refeições/);
+      expect(r.violations.join(" ")).toMatch(/0 refeições geradas/);
     });
 
     it("rejeita sobrescrever manual sem confirmação", () => {
@@ -110,7 +110,7 @@ describe("Anti-Cascade Architecture — Editor V3", () => {
         draftPersistedBeforeAction: false
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Draft deve ser persistido antes/);
+      expect(r.violations.join(" ")).toMatch(/draft deve ser persistido antes/);
     });
   });
 
@@ -134,7 +134,7 @@ describe("Anti-Cascade Architecture — Editor V3", () => {
         hasInvisibleState: true
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Estado invisível detectado/);
+      expect(r.violations.join(" ")).toMatch(/Nenhum estado invisível permitido/);
     });
   });
 });
