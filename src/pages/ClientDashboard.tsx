@@ -95,7 +95,17 @@ export default function ClientDashboard() {
   };
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const lifecycle = usePatientLifecycleState();
-  const { stats, checkins, riskLevel, achievements } = useEngagement();
+  const { 
+    stats, 
+    checkins, 
+    riskLevel, 
+    achievements, 
+    expectationMessage, 
+    personalMessage, 
+    criticalNightMessage, 
+    rewardImpact,
+    isStreakAtRisk
+  } = useEngagement();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
   const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
