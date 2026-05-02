@@ -325,17 +325,9 @@ export default function ClientDashboard() {
                     />
                   </motion.div>
 
-                  {/* Micro-Achievements */}
+                  {/* Engagement Alerts & Loops */}
                   <motion.div variants={item}>
-                    <Card className="glass-premium overflow-hidden border-border/50">
-                      <CardContent className="p-4 flex items-center justify-between">
-                        <div>
-                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">🏅 Suas Conquistas</p>
-                          <h4 className="text-sm font-bold">Progresso de Hábito</h4>
-                        </div>
-                        <AchievementBadges achievements={achievements} />
-                      </CardContent>
-                    </Card>
+                    <PatientRetentionAlerts />
                   </motion.div>
 
                   {/* Next Meal Shortcut */}
