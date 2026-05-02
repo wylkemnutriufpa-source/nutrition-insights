@@ -37,6 +37,7 @@ const SLIDES: SlideData[] = [
 ];
 
 const ONBOARDING_KEY = "patient_onboarding_completed";
+const FORCE_RESET_KEY = "fitjourney_force_reset_v1";
 const SWIPE_THRESHOLD = 50;
 
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
@@ -48,6 +49,15 @@ export default function OnboardingPaciente() {
 
   // Hardening: Se o paciente já completou a anamnese ou já passou dessa fase, pula os slides
   useEffect(() => {
+    // Cenário de teste: Força reset se uma flag específica estiver no localStorage
+    if (localStorage.getItem(FORCE_RESET_KEY)) {
+      console.log("[FJ:Test] Reset forçado detectado via localStorage flag");
+      // Não redirecionamos, permitimos que o usuário veja os slides
+      // mas removemos a flag para não entrar em loop de reset
+      localStorage.removeItem(FORCE_RESET_KEY);
+      return;
+    }
+
     if (!journeyLoading && journeyStatus && journeyStatus !== "onboarding_slides") {
       console.log("[FJ:Onboarding] Status não exige slides, redirecionando para dashboard...");
       navigate("/", { replace: true });
