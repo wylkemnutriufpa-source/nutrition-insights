@@ -608,7 +608,7 @@ export default function ClientDashboard() {
         </motion.div>
 
         {/* Action Buttons — Hidden during early onboarding for fluid flow */}
-        {journeyStatus !== "lead_created" && journeyStatus !== "awaiting_consent" && journeyStatus !== "onboarding_active" && (
+        {journeyStatus !== "onboarding_slides" && journeyStatus !== "anamnesis" && journeyStatus !== "collecting_profile" && (
           <motion.div variants={item} className="flex flex-wrap gap-2">
             <PlanRequestButton />
             <WorkoutRequestButton />

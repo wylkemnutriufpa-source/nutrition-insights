@@ -19,7 +19,7 @@ export default function OnboardingExitGuard({ enabled }: OnboardingExitGuardProp
 
   // We only guard if the state is "fluid" (early onboarding), but not yet "active" (finished).
   // Once active, the user is free to move around.
-  const isEarlyOnboarding = journeyStatus !== null && IS_FLUID_STATE(journeyStatus) && journeyStatus !== "active";
+  const isEarlyOnboarding = journeyStatus !== null && (journeyStatus === "onboarding_slides" || journeyStatus === "anamnesis" || journeyStatus === "collecting_profile");
     
   const isActiveGuard = enabled ?? (isEarlyOnboarding && !loading);
 
