@@ -38,7 +38,8 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
       isNutritionist,
       isPersonal,
       isAdmin,
-      versionMismatch: (window as any).__FJ_VERSION_MISMATCH__
+      versionMismatch: (window as any).__FJ_VERSION_MISMATCH__,
+      isTransitioning
     };
 
     const d = getSystemDecision(ctx);
