@@ -96,19 +96,29 @@ export const useEditorState = create<EditorState>()(
           const updates = updateFn(state);
           const newState = { ...state, ...updates };
 
-          // Validar Contratos (Etapa 2)
+          // 1. Validar Contratos (Etapa 2 - Gatekeepers)
           validateDraftIntegrity({ meals: newState.meals, version: 1 });
           validateClinicalValidity({ meals: newState.meals });
 
+          // 2. Executar State Update (Etapa 3 - Anti-Cascata)
           set(updates);
           
+          // 3. Registrar Log de Auditoria (Etapa 8)
+          logClinicalEvent({
+            type: "audit_log",
+            action,
+            resource: "editor-v3",
+            patient_id: state.patientId || undefined,
+            details: { action, timestamp: new Date().toISOString() }
+          });
+
           if (process.env.NODE_ENV === 'development') {
-            console.log(`[Dispatch Success] ${action}`);
+            console.log(`[Blindagem:Sucesso] ${action}`);
           }
         } catch (error: any) {
-          console.error(`[Dispatch Failure] ${action}:`, error.message);
+          console.error(`[Blindagem:VIOLAÇÃO] ${action}:`, error.message);
           
-          // Rollback
+          // 4. Rollback (Etapa 3 - Garantia de Estado)
           set({ 
             meals: previousMeals, 
             auditLog: [...previousAuditLog, {
@@ -120,7 +130,16 @@ export const useEditorState = create<EditorState>()(
             lastBlockedReason: error.message
           });
 
-          toast.error(`Ação bloqueada: ${error.message}`);
+          // 5. Log de Segurança (Etapa 8)
+          logClinicalEvent({
+            type: "security_logs",
+            action: `CONTRACT_VIOLATION_${action.toUpperCase().replace(/\s/g, '_')}`,
+            resource: "editor-v3",
+            severity: "critical",
+            details: { error: error.message, action }
+          });
+
+          toast.error(`Ação bloqueada por contrato: ${error.message}`);
         }
       },
 
