@@ -204,7 +204,8 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
     }
 
     if (isOnboarding && !safePathname.startsWith('/onboarding') && !safePathname.startsWith('/consent') && !safePathname.startsWith('/anamnesis')) {
-      const target = ctx.journeyStatus === 'onboarding_active' ? '/onboarding' : '/consent';
+      // Direct to specific patient onboarding slides if active
+      const target = ctx.journeyStatus === 'onboarding_active' ? '/onboarding/paciente' : '/consent';
       return { type: 'REDIRECT', target, reason: 'Enforcing patient onboarding' };
     }
   }
