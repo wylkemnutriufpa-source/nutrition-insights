@@ -1,283 +1,150 @@
 /**
- * FitJourney — Critical Contracts: testes obrigatórios
+ * FitJourney — Anti-Cascade Architecture: testes obrigatórios
  *
- * Cobre os 5 testes do Freeze Inteligente:
- *   1. Paciente vê plano publicado seu
- *   2. Paciente NÃO vê plano de outro paciente
- *   3. Plano publicado continua visível após update
- *   4. Geração retorna mínimo válido
- *   5. Persistência: salvo no front == salvo no banco
+ * Cobre os 4 contratos da Arquitetura Anti-Cascata:
+ *   1. DRAFT INTEGRITY (Integridade de Rascunho)
+ *   2. CLINICAL VALIDITY (Validade Clínica)
+ *   3. PERSISTENCE SAFETY (Segurança de Persistência)
+ *   4. UI CONSISTENCY (Consistência de UI/Sincronia)
  */
 
 import { describe, expect, it } from "vitest";
 import {
-  patientAccessContract,
-  planGenerationContract,
-  publicationContract,
-  persistenceContract,
-  journeyContinuityContract,
+  draftIntegrityContract,
+  clinicalValidityContract,
+  persistenceSafetyContract,
+  uiConsistencyContract,
 } from "@/lib/criticalContracts";
-import { detectRegression } from "@/lib/regressionGuardRuntime";
 import { assertContract, ContractViolationError } from "@/lib/contractGuards";
 
-describe("Critical Contracts — Freeze Inteligente", () => {
-  describe("1. Acesso do Paciente", () => {
-    it("paciente vê seu próprio plano publicado no seu tenant", () => {
-      const r = patientAccessContract({
-        requestingPatientId: "p1",
-        requestingTenantId: "t1",
-        returnedPlans: [{ id: "plan1", patient_id: "p1", tenant_id: "t1", plan_status: "published_to_patient" }],
-        route: "/my-diet",
+describe("Anti-Cascade Architecture — Editor V3", () => {
+  describe("1. Draft Integrity", () => {
+    it("aceita rascunho com itens e ID", () => {
+      const r = draftIntegrityContract({
+        draftId: "d1",
+        items: [{ id: 1 }],
+        lastSavedAt: Date.now(),
       });
       expect(r.ok).toBe(true);
     });
 
-    it("rejeita plano de outro paciente (vazamento user_id)", () => {
-      const r = patientAccessContract({
-        requestingPatientId: "p1",
-        requestingTenantId: "t1",
-        returnedPlans: [{ id: "planX", patient_id: "p2", tenant_id: "t1", plan_status: "published" }],
-        route: "/my-diet",
+    it("rejeita rascunho sem ID", () => {
+      const r = draftIntegrityContract({
+        draftId: "",
+        items: [{ id: 1 }],
+        lastSavedAt: Date.now(),
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/pertence a outro paciente/);
+      expect(r.violations.join(" ")).toMatch(/ID ausente/);
     });
 
-    it("rejeita plano de outro tenant (vazamento tenant_id)", () => {
-      const r = patientAccessContract({
-        requestingPatientId: "p1",
-        requestingTenantId: "t1",
-        returnedPlans: [{ id: "planX", patient_id: "p1", tenant_id: "t2", plan_status: "published" }],
-        route: "/my-diet",
+    it("rejeita rascunho sem itens", () => {
+      const r = draftIntegrityContract({
+        draftId: "d1",
+        items: [],
+        lastSavedAt: Date.now(),
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/Vazamento de Tenant/);
-    });
-
-    it("rejeita plano não publicado retornado para paciente", () => {
-      const r = patientAccessContract({
-        requestingPatientId: "p1",
-        requestingTenantId: "t1",
-        returnedPlans: [{ id: "draft1", patient_id: "p1", tenant_id: "t1", plan_status: "draft" }],
-        route: "/my-diet",
-      });
-      expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/não está publicado/);
+      expect(r.violations.join(" ")).toMatch(/sem itens/);
     });
   });
 
-  describe("2. Geração de Planos", () => {
-    it("aceita geração válida", () => {
-      const r = planGenerationContract({
-        planType: "normal",
-        generatedItems: [
-          { title: "Café", meal_type: "breakfast", plan_type: "normal", calories_target: 400, protein_target: 25 },
-        ],
-        totalKcal: 1800,
-        totalProtein: 130,
+  describe("2. Clinical Validity", () => {
+    it("aceita plano com macros positivas", () => {
+      const r = clinicalValidityContract({
+        kcal: 2000,
+        protein: 150,
+        patientRestrictions: [],
+        items: [{ title: "Item" }],
       });
       expect(r.ok).toBe(true);
     });
 
-    it("rejeita geração vazia", () => {
-      const r = planGenerationContract({ planType: "normal", generatedItems: [] });
-      expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/vazio/);
-    });
-
-    it("rejeita mistura de plan_type", () => {
-      const r = planGenerationContract({
-        planType: "normal",
-        generatedItems: [{ title: "Marmita", plan_type: "marmita" }],
+    it("rejeita macros zeradas (Bloqueio Anti-Cascata)", () => {
+      const r = clinicalValidityContract({
+        kcal: 0,
+        protein: 0,
+        patientRestrictions: [],
+        items: [],
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/plan_type/);
-    });
-
-    it("rejeita item sem título", () => {
-      const r = planGenerationContract({
-        planType: "normal",
-        generatedItems: [{ title: "", meal_type: "lunch" }],
-      });
-      expect(r.ok).toBe(false);
-    });
-
-    it("rejeita macros zeradas em totais", () => {
-      const r = planGenerationContract({
-        planType: "normal",
-        generatedItems: [{ title: "X" }],
-        totalKcal: 0,
-        totalProtein: 0,
-      });
-      expect(r.ok).toBe(false);
+      expect(r.violations.join(" ")).toMatch(/Kcal inválida/);
     });
   });
 
-  describe("3. Publicação", () => {
-    it("aceita publicação saudável", () => {
-      const r = publicationContract({
-        planId: "p",
-        beforeStatus: "approved",
-        afterStatus: "published_to_patient",
-        beforeItemCount: 21,
-        afterItemCount: 21,
-        isVisibleToPatient: true,
+  describe("3. Persistence Safety", () => {
+    it("aceita quando local == remoto", () => {
+      const data = { title: "Teste", value: 100 };
+      const r = persistenceSafetyContract({
+        local: data,
+        remote: data,
+        fields: ["title", "value"],
       });
       expect(r.ok).toBe(true);
     });
 
-    it("rejeita perda de itens em plano publicado", () => {
-      const r = publicationContract({
-        planId: "p",
-        beforeStatus: "published",
-        afterStatus: "published",
-        beforeItemCount: 21,
-        afterItemCount: 14,
-        isVisibleToPatient: true,
+    it("rejeita divergência entre local e remoto", () => {
+      const r = persistenceSafetyContract({
+        local: { title: "A" },
+        remote: { title: "B" },
+        fields: ["title"],
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/perdeu/);
-    });
-
-    it("rejeita plano publicado invisível ao paciente", () => {
-      const r = publicationContract({
-        planId: "p",
-        beforeStatus: "approved",
-        afterStatus: "published_to_patient",
-        beforeItemCount: 21,
-        afterItemCount: 21,
-        isVisibleToPatient: false,
-      });
-      expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/invisível/);
+      expect(r.violations.join(" ")).toMatch(/Divergência/);
     });
   });
 
-  describe("4. Persistência", () => {
-    it("aceita quando frontend == banco", () => {
-      const r = persistenceContract({
-        expected: [{ title: "Frango", grams: 100 }],
-        persisted: [{ title: "Frango", grams: 100 }],
-        keysToCompare: ["title", "grams"],
+  describe("4. UI Consistency", () => {
+    it("aceita quando UI e DB estão em sincronia", () => {
+      const r = uiConsistencyContract({
+        dbStatus: "active",
+        uiStatus: "active",
+        anamnesisCompleted: true,
       });
       expect(r.ok).toBe(true);
     });
 
-    it("rejeita mutação silenciosa", () => {
-      const r = persistenceContract({
-        expected: [{ title: "Frango", grams: 100 }],
-        persisted: [{ title: "Frango", grams: 80 }],
-        keysToCompare: ["title", "grams"],
+    it("detecta desync entre UI e DB", () => {
+      const r = uiConsistencyContract({
+        dbStatus: "active",
+        uiStatus: "onboarding_active",
+        anamnesisCompleted: true,
       });
       expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/grams/);
+      expect(r.violations.join(" ")).toMatch(/Desync/);
     });
 
-    it("rejeita contagem divergente", () => {
-      const r = persistenceContract({
-        expected: [{ title: "A" }, { title: "B" }],
-        persisted: [{ title: "A" }],
-        keysToCompare: ["title"],
+    it("rejeita quando anamnese está completa mas status trava em onboarding (Inconsistência)", () => {
+      const r = uiConsistencyContract({
+        dbStatus: "onboarding_active",
+        uiStatus: null,
+        anamnesisCompleted: true,
       });
       expect(r.ok).toBe(false);
+      expect(r.violations.join(" ")).toMatch(/Inconsistência/);
     });
   });
 
-  describe("5. Regression Guard Runtime", () => {
-    const base = {
-      planId: "p1",
-      status: "published_to_patient",
-      itemCount: 21,
-      totalKcal: 1800,
-      totalProtein: 130,
-      visibleToPatient: true,
-    };
-
-    it("não detecta regressão quando nada muda", () => {
-      expect(detectRegression(base, base).detected).toBe(false);
-    });
-
-    it("detecta perda total de itens", () => {
-      const d = detectRegression(base, { ...base, itemCount: 0 });
-      expect(d.detected).toBe(true);
-      expect(d.reasons.join(" ")).toMatch(/perdeu/);
-    });
-
-    it("detecta plano que ficou invisível", () => {
-      const d = detectRegression(base, { ...base, visibleToPatient: false });
-      expect(d.detected).toBe(true);
-      expect(d.reasons.join(" ")).toMatch(/invisível/);
-    });
-
-    it("detecta macros zeradas", () => {
-      const d = detectRegression(base, { ...base, totalKcal: 0 });
-      expect(d.detected).toBe(true);
-      expect(d.reasons.join(" ")).toMatch(/Calorias/);
-    });
-
-    it("permite arquivamento explícito", () => {
-      const d = detectRegression(base, { ...base, status: "archived" });
-      expect(d.detected).toBe(false);
-    });
-  });
-
-  describe("6. assertContract — bloqueio efetivo", () => {
-    it("lança ContractViolationError quando contrato é violado (Vazamento de ID)", () => {
+  describe("5. assertContract — Bloqueio Rigoroso", () => {
+    it("lança erro fatal em caso de violação de rascunho", () => {
       expect(() =>
-        assertContract("patient_access", {
-          requestingPatientId: "p1",
-          requestingTenantId: "t1",
-          returnedPlans: [{ id: "x", patient_id: "p2", tenant_id: "t1", plan_status: "published" }],
-          route: "/my-diet",
-        }),
-      ).toThrow(ContractViolationError);
-    });
-
-    it("lança ContractViolationError quando contrato é violado (Vazamento de Tenant)", () => {
-      expect(() =>
-        assertContract("patient_access", {
-          requestingPatientId: "p1",
-          requestingTenantId: "t1",
-          returnedPlans: [{ id: "x", patient_id: "p1", tenant_id: "t2", plan_status: "published" }],
-          route: "/my-diet",
+        assertContract("draft_integrity", {
+          draftId: "",
+          items: [],
+          lastSavedAt: 0,
         }),
       ).toThrow(ContractViolationError);
     });
 
     it("não lança quando contrato é respeitado", () => {
       expect(() =>
-        assertContract("patient_access", {
-          requestingPatientId: "p1",
-          requestingTenantId: "t1",
-          returnedPlans: [{ id: "x", patient_id: "p1", tenant_id: "t1", plan_status: "published_to_patient" }],
-          route: "/my-diet",
+        assertContract("clinical_validity", {
+          kcal: 1800,
+          protein: 100,
+          patientRestrictions: [],
+          items: [{}],
         }),
       ).not.toThrow();
-    });
-  });
-
-  describe("7. Continuidade da Jornada (Journey Continuity)", () => {
-    it("aceita quando jornada está fluindo", () => {
-      const r = journeyContinuityContract({
-        patientId: "p1",
-        journeyStatus: "active",
-        anamnesisStatus: "completed",
-        isRealtimeAvailable: true,
-        pathname: "/client/dashboard",
-      });
-      expect(r.ok).toBe(true);
-    });
-
-    it("rejeita dead-end de paciente sem vínculo", () => {
-      const r = journeyContinuityContract({
-        patientId: "p1",
-        journeyStatus: "no_link",
-        anamnesisStatus: null,
-        isRealtimeAvailable: true,
-        pathname: "/",
-      });
-      expect(r.ok).toBe(false);
-      expect(r.violations.join(" ")).toMatch(/sem vínculo/);
     });
   });
 });
