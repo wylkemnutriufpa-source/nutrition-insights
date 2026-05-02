@@ -1,12 +1,23 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from './types';
-import { generatePlanWithEngine, generateMealWithEngine, refinePlanWithScore } from './engine';
-import { calculateNutritionalScore, validatePlanClinically, type PlanMetadata } from './utils/nutritionalEvaluator';
-import { calculatePersonalizedScore, validateClinicalContext, calculatePlanConfidence } from './utils/clinicalIntelligence';
-import { runClinicalRegressions } from './utils/clinicalRegression';
-import { NutritionalScore, ValidationIssue } from './nutritionalScoreTypes';
+import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from '../types';
+import { 
+  generatePlanWithEngine, 
+  generateMealWithEngine, 
+  refinePlanWithScore, 
+  calculateNutritionalScore, 
+  validatePlanClinically, 
+  type PlanMetadata,
+  calculatePersonalizedScore, 
+  validateClinicalContext, 
+  calculatePlanConfidence,
+  runClinicalRegressions,
+  NutritionalScore, 
+  ValidationIssue 
+} from '../../clinical-engine';
 import { toast } from 'sonner';
+import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
+import { logClinicalEvent } from '../../audit/services/auditLogger';
 
 interface EditorState {
   meals: Meal[];
@@ -20,6 +31,9 @@ interface EditorState {
   lastBlockedReason: string | null;
   patientContext: PatientContext | null;
   confidence: PlanConfidence | null;
+
+  // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
+  dispatch: (action: string, updateFn: (state: EditorState) => Partial<EditorState>) => void;
 
   setPatientId: (id: string) => void;
   setPatientContext: (context: PatientContext) => void;
@@ -72,6 +86,62 @@ export const useEditorState = create<EditorState>()(
       confidence: null,
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
+
+      dispatch: (action, updateFn) => {
+        const state = get();
+        const previousMeals = JSON.parse(JSON.stringify(state.meals));
+        const previousAuditLog = JSON.parse(JSON.stringify(state.auditLog));
+
+        try {
+          const updates = updateFn(state);
+          const newState = { ...state, ...updates };
+
+          // 1. Validar Contratos (Etapa 2 - Gatekeepers)
+          validateDraftIntegrity({ meals: newState.meals, version: 1 });
+          validateClinicalValidity({ meals: newState.meals });
+
+          // 2. Executar State Update (Etapa 3 - Anti-Cascata)
+          set(updates);
+          
+          // 3. Registrar Log de Auditoria (Etapa 8)
+          logClinicalEvent({
+            type: "audit_log",
+            action,
+            resource: "editor-v3",
+            patient_id: state.patientId || undefined,
+            details: { action, timestamp: new Date().toISOString() }
+          });
+
+          if (process.env.NODE_ENV === 'development') {
+            console.log(`[Blindagem:Sucesso] ${action}`);
+          }
+        } catch (error: any) {
+          console.error(`[Blindagem:VIOLAÇÃO] ${action}:`, error.message);
+          
+          // 4. Rollback (Etapa 3 - Garantia de Estado)
+          set({ 
+            meals: previousMeals, 
+            auditLog: [...previousAuditLog, {
+              type: 'system_action',
+              description: `Rollback em ${action}: ${error.message}`,
+              source: 'system',
+              created_at: new Date().toISOString()
+            }],
+            lastBlockedReason: error.message
+          });
+
+          // 5. Log de Segurança (Etapa 8)
+          logClinicalEvent({
+            type: "security_logs",
+            action: `CONTRACT_VIOLATION_${action.toUpperCase().replace(/\s/g, '_')}`,
+            resource: "editor-v3",
+            severity: "critical",
+            details: { error: error.message, action }
+          });
+
+          toast.error(`Ação bloqueada por contrato: ${error.message}`);
+        }
+      },
 
       setPatientId: (id) => {
         set({ patientId: id });
@@ -304,7 +374,7 @@ export const useEditorState = create<EditorState>()(
         let calculatedMacros = { kcal: marmita.kcal, protein: marmita.protein, carbs: marmita.carbs, fat: marmita.fat };
         
         if (calculatedMacros.kcal === 0 && marmita.ingredients && marmita.ingredients.length > 0) {
-          const { getFoodMacrosByName } = await import('./utils/dataFetcher');
+          const { getFoodMacrosByName } = await import('../utils/dataFetcher');
           const names = marmita.ingredients.map((i: any) => (i.name || i.food).toLowerCase());
           const macrosMap = await getFoodMacrosByName(names);
           

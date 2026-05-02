@@ -10,7 +10,7 @@
  *   - Marmitas mantêm `is_locked = true` no item oficial
  */
 import { supabase } from '@/integrations/supabase/client';
-import type { Meal, MealItem } from './types';
+import type { Meal, MealItem } from '../types';
 import type { DraftRecord } from './draftService';
 
 type ClinicalMealType =

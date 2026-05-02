@@ -6,8 +6,9 @@
  * A promoção (draft -> plano oficial) acontece em `promoteDraft.ts`.
  */
 import { supabase } from '@/integrations/supabase/client';
-import type { Meal, DraftPayload, AuditLogEntry } from './types';
-import { normalizeMeals } from './utils/normalization';
+import type { Meal, DraftPayload, AuditLogEntry } from '../types';
+import { normalizeMeals } from '../utils/normalization';
+import { validateDraftIntegrity } from '../../security/services/criticalContracts';
 
 export interface DraftRecord {
   id: string;
@@ -144,6 +145,9 @@ export async function saveDraft(
   meals: Meal[], 
   auditLog: AuditLogEntry[] = []
 ): Promise<DraftRecord | null> {
+  // Contract Validation (ETAPA 2)
+  validateDraftIntegrity({ meals, version: 1 });
+
   const normalizedMeals = normalizeMeals(meals);
   const macros = computeMacros(normalizedMeals);
   const payload: DraftPayload = { 

@@ -1,16 +1,19 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { useEditorState } from './useEditorState';
-import { useDraftSync } from './useDraftSync';
-import { promoteDraftToMealPlan } from './promoteDraft';
-import { loadOrCreateDraft } from './draftService';
+import { isFeatureEnabled } from '../../security/services/featureFlags';
+import { useEditorState } from '../hooks/useEditorState';
+import { useDraftSync } from '../hooks/useDraftSync';
+import { promoteDraftToMealPlan } from '../services/promoteDraft';
+import { loadOrCreateDraft } from '../services/draftService';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
   searchVisualLibrary, uploadVisualLibraryImage 
-} from './utils/dataFetcher';
-import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
-import { calculateNutritionalScore, validatePlanClinically } from './utils/nutritionalEvaluator';
+} from '../utils/dataFetcher';
+import { 
+  isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros,
+  calculateNutritionalScore, validatePlanClinically 
+} from '../../clinical-engine';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -40,7 +43,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Meal, MealItem, Food, MealTemplate } from './types';
+import { Meal, MealItem, Food, MealTemplate } from '../types';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
 import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
 import { supabase } from '@/integrations/supabase/client';
@@ -95,6 +98,19 @@ const EditorV3Page = () => {
     nutritionalScore, validationIssues, refinePlan, goalMetadata, setGoalMetadata,
     patientContext, setPatientContext, confidence, lastBlockedReason, addAuditEntry
   } = useEditorState();
+
+  if (!isFeatureEnabled('editorV3')) {
+    return (
+      <div className="flex flex-col items-center justify-center h-[80vh] space-y-4 p-8 text-center">
+        <div className="p-4 bg-yellow-50 rounded-full">
+          <svg className="w-12 h-12 text-yellow-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" /></svg>
+        </div>
+        <h2 className="text-2xl font-bold">Módulo em Blindagem</h2>
+        <p className="text-muted-foreground max-w-md">O Editor V3 está temporariamente desativado para garantir a estabilidade do sistema principal. Por favor, utilize a versão estável.</p>
+        <Button onClick={() => navigate('/dashboard')} variant="outline">Voltar ao Dashboard</Button>
+      </div>
+    );
+  }
 
   const {
     draftId, syncState, initialMeals, initialAuditLog, lastSavedAt,

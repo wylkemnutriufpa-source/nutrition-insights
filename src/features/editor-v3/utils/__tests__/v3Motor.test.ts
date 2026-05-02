@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
-import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from '../v3Motor';
-import { Food } from '../../types';
+import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from '../../../clinical-engine';
+import { Food } from '../../../clinical-engine/types/clinical-types';
 
 const mockAvailableFoods: Food[] = [
   { id: '1', name: 'Frango Grelhado', kcal: 160, protein: 31, carbs: 0, fat: 3.5, measurementType: 'gram', portionLabel: '100g' } as Food,
