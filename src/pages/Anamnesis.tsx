@@ -1004,6 +1004,11 @@ export default function Anamnesis() {
 
     setSubmitSyncStatus("syncing", "anamnesis_submit");
     setSubmitting(true);
+    
+    // Bloquear Governance SSOT durante a transição
+    if ((window as any).__FJ_SET_TRANSITIONING__) {
+      (window as any).__FJ_SET_TRANSITIONING__(true);
+    }
 
 
     // ── Robust input parsing with unit normalization ──
