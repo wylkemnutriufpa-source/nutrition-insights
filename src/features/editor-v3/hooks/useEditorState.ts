@@ -1,11 +1,20 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
 import { Meal, Food, MealItem, MealTemplate, AuditLogEntry, PatientContext, PlanConfidence } from '../types';
-import { generatePlanWithEngine, generateMealWithEngine, refinePlanWithScore } from '../services/engine';
-import { calculateNutritionalScore, validatePlanClinically, type PlanMetadata } from '../utils/nutritionalEvaluator';
-import { calculatePersonalizedScore, validateClinicalContext, calculatePlanConfidence } from '../utils/clinicalIntelligence';
-import { runClinicalRegressions } from '../utils/clinicalRegression';
-import { NutritionalScore, ValidationIssue } from '../types/nutritionalScoreTypes';
+import { 
+  generatePlanWithEngine, 
+  generateMealWithEngine, 
+  refinePlanWithScore, 
+  calculateNutritionalScore, 
+  validatePlanClinically, 
+  type PlanMetadata,
+  calculatePersonalizedScore, 
+  validateClinicalContext, 
+  calculatePlanConfidence,
+  runClinicalRegressions,
+  NutritionalScore, 
+  ValidationIssue 
+} from '../../clinical-engine';
 import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 
