@@ -27,6 +27,8 @@ import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/security-la
 export type LifecycleState =
   | "onboarding_started"
   | "onboarding_ready_for_plan"
+  | "onboarding_active"
+  | "onboarding"
   | "plan_pending_production"
   | "plan_delivered"
   | "active_followup"
