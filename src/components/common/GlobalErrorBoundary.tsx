@@ -113,12 +113,38 @@ export class CriticalErrorBoundary extends Component<Props, State> {
   };
 
   public static getDerivedStateFromError(error: Error): State {
+    // 🛡️ Hardening: Erros de WebSocket / Realtime NUNCA devem derrubar a UI.
+    // Ocorre tipicamente em Safari iOS modo privado, navegadores bloqueando
+    // cookies de terceiros, ou redes corporativas com WS bloqueado.
+    const msg = (error?.message || "").toLowerCase();
+    const isNonFatal =
+      msg.includes("websocket") ||
+      msg.includes("operation is insecure") ||
+      msg.includes("realtime") ||
+      msg.includes("network request failed") ||
+      msg.includes("failed to fetch");
+
+    if (isNonFatal) {
+      console.warn("[FitJourney:Crash] Erro não-fatal interceptado (sem crash):", error.message);
+      return { hasError: false, error: null };
+    }
     return { hasError: true, error };
   }
 
   public componentDidCatch(error: Error, errorInfo: ErrorInfo) {
+    const msg = (error?.message || "").toLowerCase();
+    const isNonFatal =
+      msg.includes("websocket") ||
+      msg.includes("operation is insecure") ||
+      msg.includes("realtime");
+
+    if (isNonFatal) {
+      console.warn("[FitJourney:Crash] Erro de Realtime/WebSocket ignorado:", error.message);
+      return;
+    }
+
     console.error("[FitJourney:Crash] Erro Crítico de Renderização:", error, errorInfo);
-    
+
     // Auto-reload on ChunkLoadError
     if (/loading.*chunk/i.test(error.message)) {
       console.warn("[FitJourney:Crash] Falha de Chunk detectada, recarregando...");
