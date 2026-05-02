@@ -59,6 +59,8 @@ import { useEngagement } from "@/hooks/useEngagement";
 import DailyEngagementProgress from "@/components/patient/engagement/DailyEngagementProgress";
 import AdherenceStats from "@/components/patient/engagement/AdherenceStats";
 import MealCheckinCard from "@/components/patient/engagement/MealCheckinCard";
+import RetentionAlert from "@/components/patient/engagement/RetentionAlert";
+import AchievementBadges from "@/components/patient/engagement/AchievementBadges";
 
 interface WorkoutInfo {
   planTitle: string;
@@ -93,7 +95,7 @@ export default function ClientDashboard() {
   };
   const { mode, isLoading, failedMode, retryLastMode } = useExperienceMode();
   const lifecycle = usePatientLifecycleState();
-  const { stats, checkins } = useEngagement();
+  const { stats, checkins, riskLevel, achievements } = useEngagement();
   const { status: journeyStatus, loading: journeyLoading, canAccessOnboarding } = usePatientJourneyStatus();
   const navigate = useNavigate();
   const [programJoinOpen, setProgramJoinOpen] = useState(false);
@@ -242,6 +244,9 @@ export default function ClientDashboard() {
                 </PremiumCardWrapper>
               </motion.div>
 
+              {/* Retention Recovery Alert */}
+              <RetentionAlert riskLevel={riskLevel} />
+
               {/* Patient Engagement Central (Check-ins + Progress) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
                 <div className="lg:col-span-8 space-y-6">
@@ -299,7 +304,21 @@ export default function ClientDashboard() {
                     <AdherenceStats 
                       streak={stats?.current_streak || 0} 
                       adherence={stats?.weekly_adherence_pct || 0} 
+                      longestStreak={stats?.longest_streak}
                     />
+                  </motion.div>
+
+                  {/* Micro-Achievements */}
+                  <motion.div variants={item}>
+                    <Card className="glass-premium overflow-hidden border-border/50">
+                      <CardContent className="p-4 flex items-center justify-between">
+                        <div>
+                          <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold mb-1">🏅 Suas Conquistas</p>
+                          <h4 className="text-sm font-bold">Progresso de Hábito</h4>
+                        </div>
+                        <AchievementBadges achievements={achievements} />
+                      </CardContent>
+                    </Card>
                   </motion.div>
 
                   {/* Next Meal Shortcut */}

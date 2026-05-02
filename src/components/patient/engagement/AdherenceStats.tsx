@@ -5,9 +5,10 @@ import { Card, CardContent } from "@/components/ui/card";
 interface AdherenceStatsProps {
   streak: number;
   adherence: number;
+  longestStreak?: number;
 }
 
-export default function AdherenceStats({ streak, adherence }: AdherenceStatsProps) {
+export default function AdherenceStats({ streak, adherence, longestStreak }: AdherenceStatsProps) {
   return (
     <div className="grid grid-cols-2 gap-3">
       <motion.div whileHover={{ y: -2 }}>
@@ -24,6 +25,9 @@ export default function AdherenceStats({ streak, adherence }: AdherenceStatsProp
               <span className="text-2xl font-black">{streak}</span>
               <span className="text-xs text-muted-foreground font-medium">dias</span>
             </div>
+            {longestStreak && longestStreak > streak && (
+              <p className="text-[10px] text-muted-foreground mt-1">Recorde: {longestStreak} dias</p>
+            )}
           </CardContent>
         </Card>
       </motion.div>

@@ -39,7 +39,7 @@ const MEAL_TIMES: Record<string, string> = {
 export default function NextMealWidget() {
   const { user } = useAuth();
   const { tenantId } = useTenant();
-  const [nextMeal, setNextMeal] = useState<MealSlot | null>(null);
+  const [nextMeal, setNextMeal] = useState<(MealSlot & { isNow?: boolean }) | null>(null);
   const [totalsStatus, setTotalsStatus] = useState<string>("ok");
   const [loading, setLoading] = useState(true);
 
@@ -91,7 +91,8 @@ export default function NextMealWidget() {
         if (!grouped[mealType]) continue;
         const timeStr = MEAL_TIMES[mealType] || "12:00";
         const [h, m] = timeStr.split(":").map(Number);
-        if (h * 60 + m >= currentMinutes - 30) {
+        const mealMinutes = h * 60 + m;
+        if (mealMinutes >= currentMinutes - 30 && mealMinutes <= currentMinutes + 60) {
           selectedMeal = mealType;
           break;
         }
@@ -106,14 +107,20 @@ export default function NextMealWidget() {
       const totalFat = mealItems.reduce((s, i) => s + safeNum(i?.fat_target), 0);
       const summary = mealItems.slice(0, 3).map((i) => i?.title || "Alimento").join(", ");
 
+      const nowMinutes = new Date().getHours() * 60 + new Date().getMinutes();
+      const mealHTime = MEAL_TIMES[selectedMeal] || "12:00";
+      const [mh, mm] = mealHTime.split(":").map(Number);
+      const isNow = Math.abs((mh * 60 + mm) - nowMinutes) <= 30;
+
       setNextMeal({
         meal_type: selectedMeal,
-        time_label: MEAL_TIMES[selectedMeal] || "",
+        time_label: mealHTime,
         items_summary: summary + (mealItems.length > 3 ? ` +${mealItems.length - 3}` : ""),
         total_kcal: Math.round(totalKcal),
         protein_g: Math.round(totalProtein),
         carbs_g: Math.round(totalCarbs),
         fat_g: Math.round(totalFat),
+        isNow
       });
     } catch {
       // silent
@@ -131,7 +138,7 @@ export default function NextMealWidget() {
         animate={{ opacity: 1, y: 0 }}
         whileHover={{ scale: 1.01 }}
         whileTap={{ scale: 0.99 }}
-        className="rounded-2xl border border-border/50 bg-card p-4 cursor-pointer hover:border-primary/20 transition-all group"
+        className={`rounded-2xl border ${nextMeal.isNow ? "border-primary bg-primary/5 shadow-md shadow-primary/5" : "border-border/50 bg-card"} p-4 cursor-pointer hover:border-primary/20 transition-all group`}
       >
         <div className="flex items-center gap-3">
           <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-accent/15 to-accent/5 flex items-center justify-center shrink-0">
@@ -140,7 +147,7 @@ export default function NextMealWidget() {
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-0.5">
               <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
-                Próxima refeição
+                {nextMeal.isNow ? "É hora de..." : "Próxima refeição"}
               </p>
               {nextMeal?.time_label && (
                 <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
