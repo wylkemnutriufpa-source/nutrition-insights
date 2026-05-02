@@ -1,4 +1,4 @@
-import { Food } from "../types";
+import { Food } from '../types/clinical-types';
 
 export const isProtein = (name: string): boolean => {
   const n = name.toLowerCase();
