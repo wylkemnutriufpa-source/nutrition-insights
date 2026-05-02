@@ -14507,6 +14507,7 @@ export type Database = {
           goal: string | null
           historical_loss_rate: number | null
           id: string
+          is_anamnesis_completed: boolean | null
           is_orphan: boolean | null
           last_editor_step: number | null
           last_editor_version_used: string | null
@@ -14565,6 +14566,7 @@ export type Database = {
           goal?: string | null
           historical_loss_rate?: number | null
           id?: string
+          is_anamnesis_completed?: boolean | null
           is_orphan?: boolean | null
           last_editor_step?: number | null
           last_editor_version_used?: string | null
@@ -14623,6 +14625,7 @@ export type Database = {
           goal?: string | null
           historical_loss_rate?: number | null
           id?: string
+          is_anamnesis_completed?: boolean | null
           is_orphan?: boolean | null
           last_editor_step?: number | null
           last_editor_version_used?: string | null

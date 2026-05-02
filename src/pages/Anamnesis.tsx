@@ -814,6 +814,11 @@ export default function Anamnesis() {
 
       if (latestAnamnesis.status === "completed") {
         setCompleted(true);
+        // Anti-Loop: if already completed and NOT in nutritionist mode, go to dashboard
+        if (!isNutritionistMode) {
+          console.log("[FJ:Anamnesis] Já concluída, redirecionando...");
+          navigate("/", { replace: true });
+        }
       } else if (latestAnamnesis.status === "draft") {
         if (savedAnswers && Object.keys(savedAnswers).length > 0) {
           const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
@@ -1256,7 +1261,7 @@ export default function Anamnesis() {
       setPipelineCountdown(prev => {
         if (prev <= 1) {
           clearInterval(timer);
-          navigate("/onboarding-pipeline", { replace: true });
+          navigate("/", { replace: true });
           return 0;
         }
         return prev - 1;
@@ -1382,8 +1387,8 @@ export default function Anamnesis() {
               <div className="flex flex-col gap-3">
                 {isPipelineMode && !isNutritionistMode ? (
                   <>
-                    <Button onClick={() => navigate("/onboarding-pipeline", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
-                      <ArrowRight className="w-4 h-4" /> Continuar Onboarding — Próxima Etapa
+                    <Button onClick={() => navigate("/", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
+                      <ArrowRight className="w-4 h-4" /> Ir para meu Dashboard 🚀
                     </Button>
                     <Button onClick={handleEditAnamnesis} variant="outline" className="w-full gap-2">
                       ✏️ Revisar / Editar Respostas
@@ -1395,8 +1400,8 @@ export default function Anamnesis() {
                       ✏️ Revisar / Editar Respostas
                     </Button>
                     {!isNutritionistMode && hasActivePipeline ? (
-                      <Button onClick={() => navigate("/onboarding-pipeline", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
-                        <ArrowRight className="w-4 h-4" /> Continuar Onboarding — Próxima Etapa
+                      <Button onClick={() => navigate("/", { replace: true })} className="w-full gradient-primary shadow-glow gap-2">
+                        <ArrowRight className="w-4 h-4" /> Ir para meu Dashboard 🚀
                       </Button>
                     ) : (
                       <Button onClick={() => navigate(isNutritionistMode ? `/patients/${forPatientId}` : "/")} className="w-full gradient-primary shadow-glow">
