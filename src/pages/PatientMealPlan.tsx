@@ -107,6 +107,8 @@ export default function PatientMealPlan() {
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const xpTimerRef = useRef<number | null>(null);
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const { isStreakAtRisk, isNearCompletion, identityStatus } = useEngagement();
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
