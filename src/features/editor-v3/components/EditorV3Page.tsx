@@ -1,16 +1,16 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import { useParams, useSearchParams, useNavigate } from 'react-router-dom';
-import { useEditorState } from './useEditorState';
-import { useDraftSync } from './useDraftSync';
-import { promoteDraftToMealPlan } from './promoteDraft';
-import { loadOrCreateDraft } from './draftService';
+import { useEditorState } from '../hooks/useEditorState';
+import { useDraftSync } from '../hooks/useDraftSync';
+import { promoteDraftToMealPlan } from '../services/promoteDraft';
+import { loadOrCreateDraft } from '../services/draftService';
 import { 
   searchFoods, searchMarmitas, searchTemplates, 
   getCompatibleFoods, getBaseFoods, seedBaseData,
   searchVisualLibrary, uploadVisualLibraryImage 
-} from './utils/dataFetcher';
-import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from './utils/v3Motor';
-import { calculateNutritionalScore, validatePlanClinically } from './utils/nutritionalEvaluator';
+} from '../utils/dataFetcher';
+import { isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros } from '../utils/v3Motor';
+import { calculateNutritionalScore, validatePlanClinically } from '../utils/nutritionalEvaluator';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
