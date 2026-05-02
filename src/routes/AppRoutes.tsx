@@ -493,7 +493,8 @@ export const AppRoutes = () => {
                 <Route path="/protocol-transitions" element={<NutritionistRoute><LP section="Transições de Protocolo"><ProtocolTransitions /></LP></NutritionistRoute>} />
                 <Route path="/security-dashboard" element={<NutritionistRoute><LP section="Segurança"><SecurityDashboard /></LP></NutritionistRoute>} />
                 <Route path="/team" element={<NutritionistRoute><LP section="Gestão de Equipe"><TeamManagement /></LP></NutritionistRoute>} />
-                <Route path="/onboarding" element={<NutritionistRoute><LP section="Onboarding Profissional"><OnboardingProfissional /></LP></NutritionistRoute>} />
+                <Route path="/onboarding" element={<OnboardingEntry />} />
+                <Route path="/onboarding/profissional" element={<NutritionistRoute><LP section="Onboarding Profissional"><OnboardingProfissional /></LP></NutritionistRoute>} />
                 <Route path="/fitness-anamnesis" element={<NutritionistRoute><LP section="Anamnese Fitness"><FitnessAnamnesis /></LP></NutritionistRoute>} />
                 <Route path="/cockpit" element={<NutritionistRoute><LP section="Cockpit Premium"><CockpitPremium /></LP></NutritionistRoute>} />
                 <Route path="/store" element={<NutritionistRoute><LP section="Loja"><StoreDashboard /></LP></NutritionistRoute>} />
