@@ -1080,9 +1080,13 @@ const EditorV3Page = () => {
                 </Button>
                 <Button 
                   onClick={() => {
-                    const token = meals[0]?.id; // Mock token for now if real one isn't in state
+                    const token = storeSharingToken || draftSharingToken || (meals.length > 0 ? meals[0].id : null);
+                    if (!token) {
+                      toast.error("Salve o rascunho ou promova o plano para compartilhar.");
+                      return;
+                    }
                     navigator.clipboard.writeText(`${window.location.origin}/patient/view/${token}`);
-                    toast.success('Link de compartilhamento copiado!');
+                    toast.success("Link de compartilhamento copiado!");
                   }}
                   variant="outline"
                   className="border-emerald-500/20 hover:bg-emerald-500/10 text-emerald-400 font-black text-[10px] uppercase rounded-xl h-10"
