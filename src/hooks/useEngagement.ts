@@ -122,6 +122,30 @@ export function useEngagement() {
     return "Iniciando jornada";
   })();
 
+  const { data: prevWeekStats } = useQuery({
+    queryKey: ["prev-week-engagement", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      const startOfPrevWeek = new Date(weekAgo);
+      startOfPrevWeek.setDate(startOfPrevWeek.getDate() - 7);
+      
+      const { data } = await supabase
+        .from("meal_item_completions")
+        .select("adherence_status")
+        .eq("patient_id", user!.id)
+        .gte("date", startOfPrevWeek.toISOString().split('T')[0])
+        .lt("date", weekAgo.toISOString().split('T')[0]);
+      
+      if (!data?.length) return 0;
+      const followed = data.filter(c => c.adherence_status === "followed").length;
+      return (followed / data.length) * 100;
+    }
+  });
+
+  const isBetterThanLastWeek = stats?.weekly_adherence_pct > (prevWeekStats || 0);
+
   const achievements = {
     oneDay: stats?.total_checkins >= 1,
     threeDays: stats?.longest_streak >= 3,
