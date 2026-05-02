@@ -1,6 +1,9 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { assertContract } from "@/lib/contractGuards";
+import { isRealtimeAvailable } from "@/lib/safeRealtime";
+import { useLocation } from "react-router-dom";
 
 export type JourneyStatus =
   | "lead_created"
@@ -24,15 +27,11 @@ export const IS_FLUID_STATE = (status: JourneyStatus) =>
   status === "active" || status === "onboarding_active" || status === "lead_created" || status === "awaiting_consent" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "clinical_followup_active";
 
 /**
- * Single Source of Truth for Navigation Decision.
- * MOVED TO GOVERNANCE.TS
- */
-
-/**
  * Returns the patient's journey_status from nutritionist_patients.
  */
 export function usePatientJourneyStatus() {
   const { user, isPatient } = useAuth();
+  const location = useLocation();
   const [status, setStatus] = useState<JourneyStatus | "no_link">(null);
   const [anamnesisStatus, setAnamnesisStatus] = useState<'pending' | 'completed' | null>(null);
   const [loading, setLoading] = useState(true);
@@ -121,6 +120,26 @@ export function usePatientJourneyStatus() {
           } else {
             const finalStatus = (data as any).journey_status || "active";
             console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
+            
+            // Validação de Contrato (Blindagem contra efeito cascata)
+            try {
+              assertContract("journey_continuity", {
+                patientId: user.id,
+                journeyStatus: finalStatus,
+                anamnesisStatus: anamRes.data?.status as any,
+                isRealtimeAvailable: isRealtimeAvailable(),
+                pathname: location.pathname
+              });
+            } catch (contractErr) {
+              console.warn("[usePatientJourneyStatus] Contrato de continuidade violado, tentando auto-heal:", contractErr);
+              // Se anamnese está pronta mas status trava, força active para não parar o paciente
+              if (anamRes.data?.status === 'completed' && ['onboarding_active', 'awaiting_consent', 'lead_created'].includes(finalStatus)) {
+                setStatus("active");
+                setLoading(false);
+                return;
+              }
+            }
+
             setStatus(finalStatus);
             setLoading(false);
           }
@@ -165,7 +184,7 @@ export function usePatientJourneyStatus() {
         if (channel) supabase.removeChannel(channel);
       } catch { /* noop */ }
     };
-  }, [user, isPatient]);
+  }, [user, isPatient, location.pathname]);
 
   const canAccessOnboarding = status !== "no_link" && status !== null;
 

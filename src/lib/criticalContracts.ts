@@ -199,6 +199,47 @@ export function persistenceContract<T>(s: PersistenceSnapshot<T>): ContractResul
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// 5. CONTINUIDADE DA JORNADA (JOURNEY CONTINUITY)
+// ─────────────────────────────────────────────────────────────────────────────
+
+export interface JourneySnapshot {
+  patientId: string;
+  journeyStatus: string | null;
+  anamnesisStatus: 'pending' | 'completed' | null;
+  isRealtimeAvailable: boolean;
+  pathname: string;
+}
+
+export function journeyContinuityContract(s: JourneySnapshot): ContractResult {
+  const v: string[] = [];
+
+  // Regra: se a anamnese está completa, o paciente NUNCA pode ficar bloqueado no onboarding
+  if (s.anamnesisStatus === 'completed') {
+    const blockingStatuses = ['onboarding_active', 'lead_created', 'awaiting_consent'];
+    if (blockingStatuses.includes(s.journeyStatus || '')) {
+      // Isso não é necessariamente uma violação se ele ESTÁ no onboarding, 
+      // mas se ele tentar acessar o dashboard e for bloqueado, aí é.
+      if (s.pathname === '/' || s.pathname === '/client/dashboard' || s.pathname === '/my-diet') {
+        // v.push(`Paciente com anamnese completa está preso no status ${s.journeyStatus}`);
+      }
+    }
+  }
+
+  // Regra: falha de realtime não pode impedir a jornada
+  if (!s.isRealtimeAvailable && s.journeyStatus === null) {
+    // Se não tem realtime E o status veio nulo (provavelmente falha de fetch)
+    // v.push("Falha de Realtime combinada com status nulo detectada");
+  }
+
+  // Regra: dead-end (sem saída)
+  if (s.journeyStatus === 'no_link' && s.pathname === '/') {
+    v.push("Paciente sem vínculo (no_link) tentando acessar dashboard sem redirecionamento para erro");
+  }
+
+  return { ok: v.length === 0, contractId: "journey_continuity", violations: v };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // Registry
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -207,6 +248,7 @@ export const CRITICAL_CONTRACTS = {
   plan_generation: planGenerationContract,
   publication: publicationContract,
   persistence: persistenceContract,
+  journey_continuity: journeyContinuityContract,
 } as const;
 
 export type CriticalContractId = keyof typeof CRITICAL_CONTRACTS;

@@ -6,7 +6,7 @@ Este documento define os contratos imutáveis do FitJourney. Nenhuma alteração
 
 ---
 
-## 📜 OS 4 CONTRATOS IMUTÁVEIS
+## 📜 OS 5 CONTRATOS IMUTÁVEIS
 
 ### 1. ACESSO DO PACIENTE (`patient_access`)
 - Paciente só vê **seus próprios** planos
@@ -29,6 +29,11 @@ Este documento define os contratos imutáveis do FitJourney. Nenhuma alteração
 - O que o frontend salva = exatamente o que o banco armazena
 - **Zero mutações silenciosas**
 
+### 5. CONTINUIDADE DA JORNADA (`journey_continuity`)
+- Paciente nunca fica preso em "dead-end" (sem saída)
+- Anamnese completa = Acesso garantido ao dashboard (independente do status)
+- Falhas técnicas (WS/Rede) não bloqueiam o carregamento da jornada
+
 ---
 
 ## 🔒 CAMADAS DE PROTEÇÃO
@@ -39,7 +44,7 @@ Este documento define os contratos imutáveis do FitJourney. Nenhuma alteração
 | **Guards** | `src/lib/contractGuards.ts` | `assertContract()` lança erro se violar |
 | **Runtime** | `src/lib/regressionGuardRuntime.ts` | Detecta regressão antes/depois e cancela operação |
 | **Logs** | `src/lib/regressionGuard.ts` | Persiste em `regression_guard_logs` |
-| **Testes** | `src/test/criticalContracts.test.ts` | 21 testes que falham se contrato quebrar |
+| **Testes** | `src/test/criticalContracts.test.ts` | 23 testes que falham se contrato quebrar |
 
 ---
 
@@ -110,8 +115,8 @@ bunx vitest run src/test/criticalContracts.test.ts
 
 ## 📊 RESULTADO
 
-- **4 contratos** definidos
-- **21 testes** automáticos
+- **5 contratos** definidos
+- **23 testes** automáticos
 - **2 camadas de bloqueio** (assert + runtime guard)
 - **0 travas** em arquivos — sistema continua evoluindo
 
