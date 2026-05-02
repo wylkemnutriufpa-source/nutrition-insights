@@ -8,6 +8,7 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
 import { normalizeMeals } from '../utils/normalization';
+import { validateDraftIntegrity } from '../../security/services/criticalContracts';
 
 export interface DraftRecord {
   id: string;
