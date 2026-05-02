@@ -19,7 +19,7 @@ export type JourneyStatus =
  * Centralized rule for allowed (non-blocking) states.
  */
 export const IS_FLUID_STATE = (status: JourneyStatus) => 
-  status === "active" || status === "onboarding_active" || status === "lead_created" || status === "awaiting_consent" || status === "onboarding_completed" || status === "draft_ready_for_review" || status === "plan_published" || status === "active_followup" || status === "clinical_followup_active";
+  status === "ready_for_plan" || status === "plan_generated" || status === "active_plan";
 
 /**
  * Returns the patient's unified state from profiles.
