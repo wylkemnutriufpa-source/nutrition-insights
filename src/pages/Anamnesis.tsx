@@ -1147,8 +1147,7 @@ export default function Anamnesis() {
       supabase
         .from("profiles")
         .update({ 
-          is_anamnesis_completed: true,
-          fit_intelligence_onboarded: true 
+          patient_state: 'ready_for_plan'
         })
         .eq("user_id", targetUserId)
     ]);
