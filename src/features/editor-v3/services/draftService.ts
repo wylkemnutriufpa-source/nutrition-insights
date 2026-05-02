@@ -145,6 +145,9 @@ export async function saveDraft(
   meals: Meal[], 
   auditLog: AuditLogEntry[] = []
 ): Promise<DraftRecord | null> {
+  // Contract Validation (ETAPA 2)
+  validateDraftIntegrity({ meals, version: 1 });
+
   const normalizedMeals = normalizeMeals(meals);
   const macros = computeMacros(normalizedMeals);
   const payload: DraftPayload = { 
