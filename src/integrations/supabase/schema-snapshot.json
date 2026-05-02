@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql",
-  "migrationsCount": 640,
+  "lastMigration": "20260502182603_5a9ee865-c633-4d28-a0d4-d584a4c834c3.sql",
+  "migrationsCount": 648,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -60,6 +60,8 @@
       "previous_plan_id",
       "quality_alerts",
       "requires_regeneration",
+      "sharing_expires_at",
+      "sharing_token",
       "simplicity_score",
       "start_date",
       "template_id",
@@ -95,7 +97,8 @@
       "nutritionist_id",
       "patient_id",
       "status",
-      "tenant_id"
+      "tenant_id",
+      "updated_at"
     ],
     "onboarding_pipelines": [
       "anamnesis_completed",
@@ -194,7 +197,6 @@
       "fit_intelligence_first_experience_seen",
       "fit_intelligence_last_seen_at",
       "fit_intelligence_mode",
-      "fit_intelligence_onboarded",
       "fit_intelligence_snoozed_until",
       "full_name",
       "goal",
@@ -210,6 +212,7 @@
       "metabolic_phase_last_updated_at",
       "metabolic_response_type",
       "notes",
+      "patient_state",
       "phone",
       "plateau_probability",
       "preferred_editor_version",

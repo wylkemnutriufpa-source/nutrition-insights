@@ -88,7 +88,7 @@ export default function OnboardingPaciente() {
     if (user?.id) {
       await supabase
         .from("profiles")
-        .update({ fit_intelligence_onboarded: true })
+        .update({ patient_state: 'anamnesis' })
         .eq("user_id", user.id);
     }
     
@@ -103,7 +103,7 @@ export default function OnboardingPaciente() {
     if (user?.id) {
       await supabase
         .from("profiles")
-        .update({ fit_intelligence_onboarded: true })
+        .update({ patient_state: 'anamnesis' })
         .eq("user_id", user.id);
     }
     

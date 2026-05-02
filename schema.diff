@@ -1,25 +1,40 @@
 {
-  "summary": "Summary:\nColumns:\n+ profiles.compliance_mode\n+ profiles.consent_date\n+ profiles.consent_given",
+  "summary": "Summary:\nColumns:\n+ meal_plans.sharing_expires_at\n+ meal_plans.sharing_token\n+ nutritionist_patients.updated_at\n+ profiles.patient_state\n- profiles.fit_intelligence_onboarded",
   "details": {
-    "timestamp": "2026-05-02T14:53:53.147Z",
+    "timestamp": "2026-05-02T18:26:54.143Z",
     "duration": "0.0s",
-    "lastSnapshotMigration": "20260430184036_be5cd1eb-1c4a-4d79-b628-e0da71a5e509.sql",
-    "lastActualMigration": "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql",
+    "lastSnapshotMigration": "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql",
+    "lastActualMigration": "20260502182603_5a9ee865-c633-4d28-a0d4-d584a4c834c3.sql",
     "missingMigrations": [
-      "20260430233637_08a4e31c-d4fa-489d-ae2f-42cf7bae60e9.sql",
-      "20260430234515_e5ffc529-c647-48f4-a5f8-170ebd48dd59.sql",
-      "20260501161526_700869e2-9128-483d-bc7a-f0759305f667.sql",
-      "20260501233957_b1de6423-71ce-49d9-8b14-d88b64073740.sql",
-      "20260501235713_ce4a44d9-e34c-46ac-a1ad-7c1036aa5082.sql",
-      "20260502114806_59a61a2f-4eea-4461-b331-756868f85ae0.sql",
-      "20260502114845_66a57b3d-88b3-46eb-8f3e-abce98467952.sql",
-      "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql"
+      "20260502152006_848b4e44-9e4c-4706-a69a-65aaac60ef22.sql",
+      "20260502154742_a814a20e-5448-417c-8773-8aa130b90d69.sql",
+      "20260502161454_18cabd4c-df6e-49e3-abb0-69cbba22f92d.sql",
+      "20260502162228_4f8970f7-d725-4c68-8dfd-fb8bb819aabd.sql",
+      "20260502163150_f3b9f1f7-06fc-4684-bbeb-5e25f6597d00.sql",
+      "20260502163633_38cc776e-9111-4b4b-8c5a-de151dd3a5a7.sql",
+      "20260502172409_dc7e8600-cae0-45fb-bd30-e585d704484c.sql",
+      "20260502182603_5a9ee865-c633-4d28-a0d4-d584a4c834c3.sql"
     ],
     "diffResults": [
       {
+        "table": "meal_plans",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "sharing_expires_at, sharing_token"
+      },
+      {
+        "table": "nutritionist_patients",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "updated_at"
+      },
+      {
         "table": "profiles",
         "type": "MISSING_IN_SNAPSHOT",
-        "columns": "compliance_mode, consent_date, consent_given"
+        "columns": "patient_state"
+      },
+      {
+        "table": "profiles",
+        "type": "EXTRA_IN_SNAPSHOT",
+        "columns": "fit_intelligence_onboarded"
       }
     ]
   }

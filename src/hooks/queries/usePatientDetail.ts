@@ -100,7 +100,7 @@ export function usePatientDetail(patientId: string | undefined) {
       const { data: resolvedProfile, error: resolvedProfileError } = await withTenantFilter(
         supabase
           .from("profiles")
-          .select("id, user_id, full_name, avatar_url, phone, fit_intelligence_enabled, fit_intelligence_onboarded, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_first_experience_seen, marmita_mode")
+          .select("id, user_id, full_name, avatar_url, phone, fit_intelligence_enabled, patient_state, fit_intelligence_access_mode, fit_intelligence_expires_at, fit_intelligence_first_experience_seen, marmita_mode")
           .or(`id.eq.${patientId},user_id.eq.${patientId}`),
         tenantId
       ).maybeSingle();

@@ -1004,6 +1004,11 @@ export default function Anamnesis() {
 
     setSubmitSyncStatus("syncing", "anamnesis_submit");
     setSubmitting(true);
+    
+    // Bloquear Governance SSOT durante a transição
+    if ((window as any).__FJ_SET_TRANSITIONING__) {
+      (window as any).__FJ_SET_TRANSITIONING__(true);
+    }
 
 
     // ── Robust input parsing with unit normalization ──
@@ -1147,20 +1152,25 @@ export default function Anamnesis() {
       supabase
         .from("profiles")
         .update({ 
-          is_anamnesis_completed: true,
-          fit_intelligence_onboarded: true 
+          patient_state: 'collecting_profile'
         })
         .eq("user_id", targetUserId)
     ]);
 
-    if (pipelineRes.error) {
-      console.error("[FJ:Anamnesis] pipeline sync failed:", pipelineRes.error);
-    }
-    if (journeyRes.error) {
-      console.error("[FJ:Anamnesis] journey status sync failed:", journeyRes.error);
-    }
     if (profileRes.error) {
       console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
+    } else {
+      console.log("[FJ:Anamnesis] patient_state updated to collecting_profile");
+      // Double check state from server
+      const { data: checkData } = await supabase
+        .from("profiles")
+        .select("patient_state")
+        .eq("user_id", targetUserId)
+        .single();
+      
+      if (checkData?.patient_state !== 'collecting_profile') {
+        await supabase.from("profiles").update({ patient_state: 'collecting_profile' }).eq("user_id", targetUserId);
+      }
     }
 
     if (pipelineRes.data && !isPipelineMode) {
@@ -1260,6 +1270,10 @@ export default function Anamnesis() {
       }
     } catch (err) {
       console.error("Error sending final anamnesis notification:", err);
+    } finally {
+      if ((window as any).__FJ_SET_TRANSITIONING__) {
+        (window as any).__FJ_SET_TRANSITIONING__(false);
+      }
     }
   };
 

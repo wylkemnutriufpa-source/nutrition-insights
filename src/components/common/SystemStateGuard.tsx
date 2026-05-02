@@ -17,7 +17,7 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
   const { user, profile, loading: authLoading, isPatient, isAdmin, isNutritionist, isPersonal } = useAuth();
   const { tenantId, isLoading: tenantLoading } = useTenant();
   const { mode, role } = useExperienceMode();
-  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
+  const { status: journeyStatus, loading: journeyLoading, isTransitioning } = usePatientJourneyStatus();
   const location = useLocation();
 
   const isReady = !authLoading && !tenantLoading && !journeyLoading;
@@ -38,13 +38,14 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
       isNutritionist,
       isPersonal,
       isAdmin,
-      versionMismatch: (window as any).__FJ_VERSION_MISMATCH__
+      versionMismatch: (window as any).__FJ_VERSION_MISMATCH__,
+      isTransitioning
     };
 
     const d = getSystemDecision(ctx);
     if (d.type !== 'ALLOW') logDecision(d);
     return d;
-  }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isNutritionist, isPersonal, isAdmin]);
+  }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isNutritionist, isPersonal, isAdmin, isTransitioning]);
 
   // Track blocked renders for audit
   useEffect(() => {
