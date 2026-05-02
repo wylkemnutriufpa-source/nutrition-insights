@@ -1157,14 +1157,21 @@ export default function Anamnesis() {
         .eq("user_id", targetUserId)
     ]);
 
-    if (pipelineRes.error) {
-      console.error("[FJ:Anamnesis] pipeline sync failed:", pipelineRes.error);
-    }
-    if (journeyRes.error) {
-      console.error("[FJ:Anamnesis] journey status sync failed:", journeyRes.error);
-    }
     if (profileRes.error) {
       console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
+    } else {
+      console.log("[FJ:Anamnesis] patient_state updated to ready_for_plan");
+      // Double check state from server before releasing lock
+      const { data: checkData } = await supabase
+        .from("profiles")
+        .select("patient_state")
+        .eq("user_id", targetUserId)
+        .single();
+      
+      if (checkData?.patient_state !== 'ready_for_plan') {
+        console.warn("[FJ:Anamnesis] State mismatch after update, retrying update...");
+        await supabase.from("profiles").update({ patient_state: 'ready_for_plan' }).eq("user_id", targetUserId);
+      }
     }
 
     if (pipelineRes.data && !isPipelineMode) {
