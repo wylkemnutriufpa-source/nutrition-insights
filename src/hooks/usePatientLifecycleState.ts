@@ -22,7 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { validateLifecycleEnvelope } from "@/lib/lifecycleStateValidator";
-import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/safeRealtime";
+import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/security-layer/safeRealtime";
 
 export type LifecycleState =
   | "onboarding_started"

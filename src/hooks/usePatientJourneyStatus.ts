@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { assertContract } from "@/lib/contractGuards";
-import { isRealtimeAvailable } from "@/lib/safeRealtime";
+import { isRealtimeAvailable } from "@/lib/security-layer/safeRealtime";
 import { useLocation } from "react-router-dom";
 
 export type JourneyStatus =
@@ -79,65 +79,26 @@ export function usePatientJourneyStatus() {
 
         if (!cancelled) {
           if (!data) {
-            console.warn(`[usePatientJourneyStatus] NO LINK FOUND for ${user.id}`);
-            // Check if user has NO link at all
-            setStatus(null);
-            
-            // Fresh signup processing fallback: try again after a delay
-            setTimeout(async () => {
-              if (cancelled) return;
-              const { data: retryData } = await supabase
-                .from("nutritionist_patients")
-                .select("journey_status")
-                .eq("patient_id", user.id)
-                .maybeSingle();
-              
-              if (!retryData) {
-                // If still no link, check if it's an orphan patient and try to auto-heal
-                console.log("[usePatientJourneyStatus] Trying auto-heal for orphan patient...");
-                const { data: healData } = await supabase.rpc("run_patient_realtime_fix" as any, { _patient_id: user.id });
-                
-                if (healData?.success) {
-                    const { data: finalData } = await supabase
-                        .from("nutritionist_patients")
-                        .select("journey_status")
-                        .eq("patient_id", user.id)
-                        .maybeSingle();
-                    
-                    if (finalData) {
-                        setStatus((finalData as any).journey_status || "awaiting_consent");
-                        setLoading(false);
-                        return;
-                    }
-                }
-                
-                setStatus("no_link");
-              } else {
-                setStatus((retryData as any).journey_status || "active");
-              }
-              setLoading(false);
-            }, 1500);
+            console.error(`[usePatientJourneyStatus] NO LINK FOUND for ${user.id}`);
+            setStatus("no_link");
+            setLoading(false);
           } else {
             const finalStatus = (data as any).journey_status || "active";
             console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
             
-            // Validação de Contrato (Blindagem contra efeito cascata)
+            // Validação de Contrato (Anti-Cascade Architecture)
+            // Não usamos auto-cura silenciosa. Se houver desvio lógico, logamos o erro fatal.
             try {
-              assertContract("journey_continuity", {
-                patientId: user.id,
-                journeyStatus: finalStatus,
-                anamnesisStatus: anamRes.data?.status as any,
-                isRealtimeAvailable: isRealtimeAvailable(),
-                pathname: location.pathname
+              assertContract("ui_consistency", {
+                dbStatus: finalStatus,
+                uiStatus: status === "no_link" ? null : status,
+                anamnesisCompleted: anamRes.data?.status === 'completed'
               });
-            } catch (contractErr) {
-              console.warn("[usePatientJourneyStatus] Contrato de continuidade violado, tentando auto-heal:", contractErr);
-              // Se anamnese está pronta mas status trava, força active para não parar o paciente
-              if (anamRes.data?.status === 'completed' && ['onboarding_active', 'awaiting_consent', 'lead_created'].includes(finalStatus)) {
-                setStatus("active");
-                setLoading(false);
-                return;
-              }
+            } catch (contractErr: any) {
+              // Em vez de auto-curar, registramos a falha de integridade para investigação profunda.
+              console.error("[Anti-Cascade] Violação de Integridade detectada:", contractErr.message);
+              // O sistema mantém o status original do banco (finalStatus), 
+              // mas sem mascarar o erro nos logs.
             }
 
             setStatus(finalStatus);
@@ -147,7 +108,7 @@ export function usePatientJourneyStatus() {
       } catch (err) {
         console.error("[usePatientJourneyStatus] Unexpected error:", err);
         if (!cancelled) {
-          setStatus("active");
+          // Em caso de erro real de infra, não assumimos "active" falsamente
           setLoading(false);
         }
       }
