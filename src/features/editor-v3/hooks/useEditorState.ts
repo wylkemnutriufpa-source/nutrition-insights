@@ -83,7 +83,7 @@ export const useEditorState = create<EditorState>()(
       validationIssues: [],
       goalMetadata: {},
       patientContext: null,
-      confidence: null,
+      confidence: null, sharingToken: null,
       clinicalMode: true, // editor_v3_clinical_mode = true
       lastBlockedReason: null,
 
