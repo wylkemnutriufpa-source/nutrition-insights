@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState, useCallback } from 'react';
-import { Meal, AuditLogEntry } from './types';
-import { loadOrCreateDraft, saveDraft, discardDraft, type DraftRecord } from './draftService';
+import { Meal, AuditLogEntry } from '../types';
+import { loadOrCreateDraft, saveDraft, discardDraft, type DraftRecord } from '../services/draftService';
 import { toast } from 'sonner';
 
 type SyncState = 'idle' | 'loading' | 'saving' | 'saved' | 'offline' | 'error' | 'conflict';
