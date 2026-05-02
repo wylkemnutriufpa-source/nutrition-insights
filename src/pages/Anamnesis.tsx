@@ -814,6 +814,11 @@ export default function Anamnesis() {
 
       if (latestAnamnesis.status === "completed") {
         setCompleted(true);
+        // Anti-Loop: if already completed and NOT in nutritionist mode, go to dashboard
+        if (!isNutritionistMode) {
+          console.log("[FJ:Anamnesis] Já concluída, redirecionando...");
+          navigate("/", { replace: true });
+        }
       } else if (latestAnamnesis.status === "draft") {
         if (savedAnswers && Object.keys(savedAnswers).length > 0) {
           const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
