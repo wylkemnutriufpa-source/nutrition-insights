@@ -30,7 +30,7 @@ interface EditorState {
   clinicalMode: boolean;
   lastBlockedReason: string | null;
   patientContext: PatientContext | null;
-  confidence: PlanConfidence | null;
+  sharingToken: string | null;
 
   // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
   dispatch: (action: string, updateFn: (state: EditorState) => Partial<EditorState>) => void;
@@ -42,7 +42,7 @@ interface EditorState {
   addAuditEntry: (entry: Omit<AuditLogEntry, 'created_at'>) => void;
   refinePlan: (availableFoods: Food[], level?: 'light' | 'moderate' | 'aggressive') => void;
   addMealWithHeader: (name: string, time: string) => void;
-  hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[]) => void;
+  hydrateMeals: (meals: Meal[], auditLog?: AuditLogEntry[], sharingToken?: string) => void;
   addMeal: () => void;
   duplicateMeal: (mealId: string) => void;
   reorderMeal: (mealId: string, direction: 'up' | 'down') => void;
@@ -580,7 +580,7 @@ export const useEditorState = create<EditorState>()(
       },
 
       resetEditor: () => {
-        set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [] });
+        set({ meals: initialMeals, planStatus: 'draft', nutritionalScore: null, validationIssues: [], sharingToken: null });
       },
     }),
     {
