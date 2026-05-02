@@ -40,7 +40,7 @@ export function usePatientJourneyStatus() {
         const { data, error } = await supabase
           .from("profiles")
           .select("patient_state")
-          .eq("id", user.id)
+          .eq("user_id", user.id)
           .single();
 
         if (error) {
@@ -73,7 +73,7 @@ export function usePatientJourneyStatus() {
           event: "UPDATE",
           schema: "public",
           table: "profiles",
-          filter: `id=eq.${user.id}`,
+          filter: `user_id=eq.${user.id}`,
         },
         (payload) => {
           const newStatus = (payload.new as any)?.patient_state;
