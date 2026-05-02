@@ -469,7 +469,34 @@ export default function PatientMealPlan() {
   return (
     <DashboardLayout>
       <div className={`max-w-2xl mx-auto space-y-5 transition-all duration-500 overflow-x-hidden pb-10 ${focusMode ? "pt-2" : ""}`}>
+        {isToday && <PatientRetentionAlerts />}
+        
         <AnimatePresence>
+          {showCelebration && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCelebration(false)}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-md cursor-pointer"
+            >
+              <motion.div
+                initial={{ scale: 0.8, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="text-center p-8"
+              >
+                <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Trophy className="w-12 h-12 text-primary" />
+                </div>
+                <h2 className="text-3xl font-display font-bold mb-2">Dia Completo! ✔️</h2>
+                <p className="text-muted-foreground mb-8">Você manteve a consistência e venceu mais um dia.</p>
+                <Button onClick={() => setShowCelebration(false)} className="rounded-full px-8">
+                  Continuar evoluindo
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+
           {xpPopup.show && <XPPopup show={xpPopup.show} points={xpPopup.points} />}
         </AnimatePresence>
 
