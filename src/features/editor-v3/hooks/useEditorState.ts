@@ -17,6 +17,7 @@ import {
 } from '../../clinical-engine';
 import { toast } from 'sonner';
 import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
+import { logClinicalEvent } from '../../audit/services/auditLogger';
 
 interface EditorState {
   meals: Meal[];
