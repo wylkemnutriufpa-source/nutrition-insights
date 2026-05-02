@@ -40,7 +40,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from '@/lib/utils';
-import { Meal, MealItem, Food, MealTemplate } from './types';
+import { Meal, MealItem, Food, MealTemplate } from '../types';
 import { usePatientsList } from '@/hooks/queries/usePatientsList';
 import { usePatientDetail } from '@/hooks/queries/usePatientDetail';
 import { supabase } from '@/integrations/supabase/client';
