@@ -202,6 +202,12 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
   if (ctx.role === 'patient') {
     const state = ctx.journeyStatus;
     
+    // Safety Bypass: Always allow onboarding-specific and universal utility routes
+    // This prevents loops where Anamnesis redirects to Consent but Governance redirects back to Anamnesis.
+    if (isInList(safePathname, ONBOARDING_ALLOWED_ROUTES) || isInList(safePathname, UNIVERSAL_ROUTES)) {
+      return { type: 'ALLOW', reason: 'Bypassing state enforcement for allowed route' };
+    }
+
     // Redirect chain based on Single Source of Truth
     switch (state) {
       case 'onboarding_slides':
