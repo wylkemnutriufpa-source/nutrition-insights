@@ -15,6 +15,7 @@ import {
   planGenerationContract,
   publicationContract,
   persistenceContract,
+  journeyContinuityContract,
 } from "@/lib/criticalContracts";
 import { detectRegression } from "@/lib/regressionGuardRuntime";
 import { assertContract, ContractViolationError } from "@/lib/contractGuards";
@@ -252,6 +253,31 @@ describe("Critical Contracts — Freeze Inteligente", () => {
           route: "/my-diet",
         }),
       ).not.toThrow();
+    });
+  });
+
+  describe("7. Continuidade da Jornada (Journey Continuity)", () => {
+    it("aceita quando jornada está fluindo", () => {
+      const r = journeyContinuityContract({
+        patientId: "p1",
+        journeyStatus: "active",
+        anamnesisStatus: "completed",
+        isRealtimeAvailable: true,
+        pathname: "/client/dashboard",
+      });
+      expect(r.ok).toBe(true);
+    });
+
+    it("rejeita dead-end de paciente sem vínculo", () => {
+      const r = journeyContinuityContract({
+        patientId: "p1",
+        journeyStatus: "no_link",
+        anamnesisStatus: null,
+        isRealtimeAvailable: true,
+        pathname: "/",
+      });
+      expect(r.ok).toBe(false);
+      expect(r.violations.join(" ")).toMatch(/sem vínculo/);
     });
   });
 });
