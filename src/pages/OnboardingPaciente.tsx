@@ -37,8 +37,24 @@ const SLIDES: SlideData[] = [
 const ONBOARDING_KEY = "patient_onboarding_completed";
 const SWIPE_THRESHOLD = 50;
 
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { BrainLoaderCard } from "@/components/common/BrainLoader";
+
 export default function OnboardingPaciente() {
+  const { status: journeyStatus, loading: journeyLoading, anamnesisStatus } = usePatientJourneyStatus();
   const navigate = useNavigate();
+
+  // Hardening: Se o paciente já completou a anamnese ou já passou dessa fase, pula os slides
+  useEffect(() => {
+    if (!journeyLoading && journeyStatus && journeyStatus !== "onboarding_active" && journeyStatus !== "awaiting_consent") {
+      console.log("[FJ:Onboarding] Status não exige slides, redirecionando para dashboard...");
+      navigate("/", { replace: true });
+    } else if (!journeyLoading && anamnesisStatus === "completed") {
+       console.log("[FJ:Onboarding] Anamnese já concluída, pulando slides...");
+       navigate("/anamnesis?pipeline=true", { replace: true });
+    }
+  }, [journeyStatus, journeyLoading, anamnesisStatus, navigate]);
+
   const [idx, setIdx] = useState(0);
   const [dir, setDir] = useState(1);
   const total = SLIDES.length + 1;
@@ -86,6 +102,8 @@ export default function OnboardingPaciente() {
   };
 
   const slide = SLIDES[idx];
+
+  if (journeyLoading) return <div className="min-h-screen bg-black flex items-center justify-center"><BrainLoaderCard text="Preparando sua jornada..." /></div>;
 
   return (
     <div className="fixed inset-0 z-[100] bg-black overflow-hidden select-none" onTouchStart={onTouchStart} onTouchEnd={onTouchEnd}>
