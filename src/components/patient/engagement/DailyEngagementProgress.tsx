@@ -1,13 +1,22 @@
 import { motion } from "framer-motion";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Sparkles } from "lucide-react";
+import { Trophy, Sparkles, Target, Star } from "lucide-react";
 
 interface DailyEngagementProgressProps {
   completed: number;
   total: number;
+  expectationMessage?: string | null;
+  personalMessage?: string | null;
+  rewardImpact?: "light" | "medium" | "strong";
 }
 
-export default function DailyEngagementProgress({ completed, total }: DailyEngagementProgressProps) {
+export default function DailyEngagementProgress({ 
+  completed, 
+  total, 
+  expectationMessage,
+  personalMessage,
+  rewardImpact = "light"
+}: DailyEngagementProgressProps) {
   const progress = total > 0 ? Math.round((completed / total) * 100) : 0;
   
   const getMotivationalMessage = (p: number) => {
@@ -18,19 +27,25 @@ export default function DailyEngagementProgress({ completed, total }: DailyEngag
     return "Que tal começar marcando sua primeira refeição? 👋";
   };
 
+  const impactStyles = {
+    light: "text-primary",
+    medium: "text-amber-500",
+    strong: "text-purple-600 animate-pulse font-black"
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       <div className="flex items-center justify-between px-1">
         <div>
           <h3 className="font-display font-bold text-lg flex items-center gap-2">
-            Progresso do Dia {progress === 100 && <Trophy className="w-5 h-5 text-amber-500" />}
+            Meta Diária {progress === 100 && <Trophy className="w-5 h-5 text-amber-500" />}
           </h3>
           <p className="text-xs text-muted-foreground font-medium">
             {getMotivationalMessage(progress)}
           </p>
         </div>
         <div className="text-right">
-          <span className="text-2xl font-black text-primary">{progress}%</span>
+          <span className={`text-2xl font-black ${impactStyles[rewardImpact]}`}>{progress}%</span>
           <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-bold">
             {completed}/{total} refeições
           </p>
@@ -49,6 +64,31 @@ export default function DailyEngagementProgress({ completed, total }: DailyEngag
           </motion.div>
         )}
       </div>
+
+      {(expectationMessage || personalMessage) && (
+        <motion.div 
+          initial={{ opacity: 0, x: -10 }}
+          animate={{ opacity: 1, x: 0 }}
+          className="bg-primary/5 rounded-lg p-3 space-y-2 border border-primary/10"
+        >
+          {expectationMessage && (
+            <div className="flex items-start gap-2">
+              <Star className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />
+              <p className="text-xs font-bold text-primary-foreground/80 dark:text-primary/90">
+                {expectationMessage}
+              </p>
+            </div>
+          )}
+          {personalMessage && (
+            <div className="flex items-start gap-2">
+              <Target className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+              <p className="text-xs text-muted-foreground font-medium italic">
+                "{personalMessage}"
+              </p>
+            </div>
+          )}
+        </motion.div>
+      )}
     </div>
   );
 }
