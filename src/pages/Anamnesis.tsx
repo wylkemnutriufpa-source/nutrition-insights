@@ -1152,7 +1152,7 @@ export default function Anamnesis() {
       supabase
         .from("profiles")
         .update({ 
-          patient_state: 'ready_for_plan'
+          patient_state: 'collecting_profile'
         })
         .eq("user_id", targetUserId)
     ]);
@@ -1160,17 +1160,16 @@ export default function Anamnesis() {
     if (profileRes.error) {
       console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
     } else {
-      console.log("[FJ:Anamnesis] patient_state updated to ready_for_plan");
-      // Double check state from server before releasing lock
+      console.log("[FJ:Anamnesis] patient_state updated to collecting_profile");
+      // Double check state from server
       const { data: checkData } = await supabase
         .from("profiles")
         .select("patient_state")
         .eq("user_id", targetUserId)
         .single();
       
-      if (checkData?.patient_state !== 'ready_for_plan') {
-        console.warn("[FJ:Anamnesis] State mismatch after update, retrying update...");
-        await supabase.from("profiles").update({ patient_state: 'ready_for_plan' }).eq("user_id", targetUserId);
+      if (checkData?.patient_state !== 'collecting_profile') {
+        await supabase.from("profiles").update({ patient_state: 'collecting_profile' }).eq("user_id", targetUserId);
       }
     }
 
