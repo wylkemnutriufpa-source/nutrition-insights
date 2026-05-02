@@ -95,6 +95,8 @@ const MealPlans = lazy(() => import("../pages/MealPlans"));
 const Supplements = lazy(() => import("../pages/Supplements"));
 const Reports = lazy(() => import("../pages/Reports"));
 const Library = lazyDebug(() => import("../pages/Library"), "Biblioteca");
+const PatientPlanPage = lazy(() => import("../features/patient/pages/PatientPlanPage").then(m => ({ default: m.PatientPlanPage })));
+
 
 const AccountDeletion = lazy(() => import("../pages/AccountDeletion"));
 const DietTemplates = lazy(() => import("../pages/DietTemplates"));
@@ -380,7 +382,12 @@ export const AppRoutes = () => {
                 <Route path="/welcome" element={<Welcome />} />
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/auth/confirm" element={<AuthConfirm />} />
-                <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          
+          {/* Patient Plan Sharing - Public Routes */}
+          <Route path="/patient/view/:token" element={<PatientPlanPage />} />
+          <Route path="/patient/plan/:id" element={<ProtectedRoute><PatientPlanPage /></ProtectedRoute>} />
+
                 <Route path="/cadastro" element={<LP section="Cadastro"><PatientRegister /></LP>} />
                 
                 {/* Core Shared */}
