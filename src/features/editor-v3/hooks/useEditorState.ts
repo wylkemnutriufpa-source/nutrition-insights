@@ -7,6 +7,7 @@ import { calculatePersonalizedScore, validateClinicalContext, calculatePlanConfi
 import { runClinicalRegressions } from '../utils/clinicalRegression';
 import { NutritionalScore, ValidationIssue } from '../types/nutritionalScoreTypes';
 import { toast } from 'sonner';
+import { validateDraftIntegrity, validateClinicalValidity } from '../../security/services/criticalContracts';
 
 interface EditorState {
   meals: Meal[];
