@@ -22,6 +22,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { validateLifecycleEnvelope } from "@/lib/lifecycleStateValidator";
+import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/safeRealtime";
 
 export type LifecycleState =
   | "onboarding_started"
@@ -204,9 +205,10 @@ export function usePatientLifecycleState(): PatientLifecycle {
   // re-evaluated when the patient brings the tab back into focus.
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel(`lifecycle-${user.id}`)
-      .on(
+    const channel = safeChannel(`lifecycle-${user.id}`);
+    
+    if (channel) {
+      channel.on(
         "postgres_changes",
         {
           event: "*",
@@ -215,8 +217,7 @@ export function usePatientLifecycleState(): PatientLifecycle {
           filter: `patient_id=eq.${user.id}`,
         },
         () => queryClient.invalidateQueries({ queryKey: ["lifecycle", user.id] })
-      )
-      .on(
+      ).on(
         "postgres_changes",
         {
           event: "*",
@@ -225,8 +226,9 @@ export function usePatientLifecycleState(): PatientLifecycle {
           filter: `patient_id=eq.${user.id}`,
         },
         () => queryClient.invalidateQueries({ queryKey: ["lifecycle", user.id] })
-      )
-      .subscribe();
+      );
+      safeSubscribe(channel);
+    }
 
     const onVisible = () => {
       if (document.visibilityState === "visible") {
@@ -236,7 +238,7 @@ export function usePatientLifecycleState(): PatientLifecycle {
     document.addEventListener("visibilitychange", onVisible);
 
     return () => {
-      supabase.removeChannel(channel);
+      if (channel) safeRemoveChannel(channel);
       document.removeEventListener("visibilitychange", onVisible);
     };
   }, [user, queryClient]);
