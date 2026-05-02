@@ -1,4 +1,4 @@
-import { Meal, Food, MealItem } from '../types';
+import { Meal, Food, MealItem } from '../types/clinical-types';
 import { NutritionalScore, ValidationIssue } from '../types/nutritionalScoreTypes';
 import { isProtein, isCarb, isFruit, calculateItemMacros } from './v3Motor';
 
