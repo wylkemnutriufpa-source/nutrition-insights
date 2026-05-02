@@ -24,6 +24,31 @@ export function useEngagement() {
     },
   });
 
+  // Fetch today's plan items to calculate progress %
+  const { data: planItems } = useQuery({
+    queryKey: ["today-plan-items", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const dow = new Date().getDay();
+      const { data: activePlan } = await supabase
+        .from("meal_plans")
+        .select("id")
+        .eq("patient_id", user!.id)
+        .eq("is_active", true)
+        .maybeSingle();
+
+      if (!activePlan) return [];
+
+      const { data: items } = await supabase
+        .from("meal_plan_items")
+        .select("id")
+        .eq("meal_plan_id", activePlan.id)
+        .eq("day_of_week", dow);
+      
+      return items || [];
+    }
+  });
+
   const { data: checkins, isLoading: loadingCheckins } = useQuery({
     queryKey: ["meal-checkins", user?.id, today],
     enabled: !!user?.id,
@@ -70,6 +95,10 @@ export function useEngagement() {
     }
   });
 
+  const totalMeals = planItems?.length || 0;
+  const completedMeals = checkins?.filter(c => c.completed).length || 0;
+  const progressPct = totalMeals > 0 ? (completedMeals / totalMeals) * 100 : 0;
+
   const riskLevel: "on_track" | "risco_leve" | "risco_alto" = (() => {
     if (!stats?.last_checkin_date) return "risco_alto";
     
@@ -83,6 +112,16 @@ export function useEngagement() {
     return "risco_alto";
   })();
 
+  const isStreakAtRisk = stats?.current_streak > 0 && progressPct < 100 && riskLevel === "on_track";
+  const isNearCompletion = progressPct >= 70 && progressPct < 100;
+  
+  const identityStatus = (() => {
+    if (stats?.current_streak >= 10) return "Insuperável";
+    if (stats?.current_streak >= 5) return "Consistente";
+    if (stats?.weekly_adherence_pct > 80) return "Evoluindo";
+    return "Iniciando jornada";
+  })();
+
   const achievements = {
     oneDay: stats?.total_checkins >= 1,
     threeDays: stats?.longest_streak >= 3,
@@ -94,6 +133,11 @@ export function useEngagement() {
     checkins,
     riskLevel,
     achievements,
+    progressPct,
+    isStreakAtRisk,
+    isNearCompletion,
+    identityStatus,
+    remainingMeals: totalMeals - completedMeals,
     isLoading: loadingStats || loadingCheckins,
     toggleCheckin: (mealId: string, completed: boolean = true) => 
       checkinMutation.mutate({ mealId, completed }),
