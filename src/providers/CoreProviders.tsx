@@ -15,6 +15,7 @@ import { BrowserRouter, useLocation } from "react-router-dom";
 import { SystemShieldProvider, useSystemShield } from "@/components/common/SystemShield";
 import { SectionalErrorBoundary } from "@/components/common/SectionalErrorBoundary";
 import { PWAUpdateBanner } from "@/components/common/PWAUpdateBanner";
+import { OnboardingStabilityMonitor } from "@/components/debug/OnboardingStabilityMonitor";
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -89,6 +90,7 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
                             <PWAUpdateBanner />
                             <Toaster />
                             <Sonner />
+                            <OnboardingStabilityMonitor />
                             <Helmet>
                               <title>FitJourney</title>
                             </Helmet>

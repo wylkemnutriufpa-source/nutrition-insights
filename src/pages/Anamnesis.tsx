@@ -1128,6 +1128,9 @@ export default function Anamnesis() {
       setSubmitSyncStatus("success", "anamnesis_submit");
     }
 
+    setSubmitting(true);
+    if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(true);
+    console.log("[FJ:Anamnesis] Starting transition to collecting_profile...");
 
     // Sync onboarding pipeline and journey status FIRST so the patient leaves step 1 immediately,
     // even if AI/secondary automations are slow or temporarily failing.
@@ -1184,6 +1187,13 @@ export default function Anamnesis() {
     if (isPipelineMode && !isNutritionistMode) {
       setAnalyzing(false);
       toast.success("Anamnese salva! Indo para a próxima etapa do onboarding. ✅");
+      
+      // Navigate immediately while still transitioning
+      navigate("/body-analysis", { replace: true });
+      
+      setTimeout(() => {
+        if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
+      }, 1500);
 
       void (async () => {
         try {

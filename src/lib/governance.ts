@@ -89,8 +89,13 @@ function isInList(pathname: string, routes: string[]): boolean {
   return routes.some(r => matchRoute(pathname, r));
 }
 
-export function logDecision(decision: SystemDecision) {
-  console.info(`[FJ:SystemDecision] [${decision.type}] ${decision.reason}`, decision.metadata || '');
+export function logDecision(decision: SystemDecision, context?: GovernanceContext) {
+  const color = decision.type === 'ALLOW' ? 'color: #10b981' : decision.type === 'REDIRECT' ? 'color: #f59e0b' : 'color: #ef4444';
+  console.groupCollapsed(`%c[FJ:Governance] [${decision.type}] ${decision.reason}`, color);
+  if (context) console.log("Context:", context);
+  if (decision.target) console.log("Target:", decision.target);
+  if (decision.metadata) console.log("Metadata:", decision.metadata);
+  console.groupEnd();
 }
 
 /**

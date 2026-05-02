@@ -88,8 +88,14 @@ export function usePatientJourneyStatus() {
         },
         (payload) => {
           const newStatus = (payload.new as any)?.patient_state;
-          if (newStatus && !isTransitioning) {
-            console.log(`[usePatientJourneyStatus] Realtime update: ${newStatus}`);
+          const oldStatus = (payload.old as any)?.patient_state;
+          
+          if (newStatus && newStatus !== status) {
+            console.log(`[FJ:Audit] State change detected: ${status} -> ${newStatus} (Realtime)`);
+            if (isTransitioning) {
+              console.warn(`[FJ:Audit] Realtime update suppressed because isTransitioning=true`);
+              return;
+            }
             setStatus(newStatus as JourneyStatus);
           }
         }
