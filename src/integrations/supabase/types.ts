@@ -8324,6 +8324,7 @@ export type Database = {
           patient_id: string
           status: string
           tenant_id: string
+          updated_at: string | null
         }
         Insert: {
           attendance_mode?: string
@@ -8339,6 +8340,7 @@ export type Database = {
           patient_id: string
           status?: string
           tenant_id: string
+          updated_at?: string | null
         }
         Update: {
           attendance_mode?: string
@@ -8354,6 +8356,7 @@ export type Database = {
           patient_id?: string
           status?: string
           tenant_id?: string
+          updated_at?: string | null
         }
         Relationships: [
           {
