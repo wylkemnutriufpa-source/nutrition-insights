@@ -161,6 +161,7 @@ export function useEngagement() {
     isStreakAtRisk,
     isNearCompletion,
     identityStatus,
+    isBetterThanLastWeek,
     remainingMeals: totalMeals - completedMeals,
     isLoading: loadingStats || loadingCheckins,
     toggleCheckin: (mealId: string, completed: boolean = true) => 
