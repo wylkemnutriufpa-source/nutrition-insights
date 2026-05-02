@@ -29,6 +29,7 @@ export function usePatientJourneyStatus() {
   const location = useLocation();
   const [status, setStatus] = useState<JourneyStatus>(null);
   const [loading, setLoading] = useState(true);
+  const [lastValidated, setLastValidated] = useState<number>(0);
 
   useEffect(() => {
     if (!user || !isPatient) { setLoading(false); return; }
@@ -53,9 +54,18 @@ export function usePatientJourneyStatus() {
 
         if (!cancelled && data) {
           const finalStatus = data.patient_state as JourneyStatus;
-          console.log(`[usePatientJourneyStatus] Unified state: ${finalStatus}`);
-          setStatus(finalStatus);
+          
+          // Fallback guard: Se o estado vier nulo (improvável devido ao trigger, mas segurança extra)
+          if (!finalStatus) {
+            console.warn("[FJ:Guard] patient_state nulo detectado, forçando fallback para slides");
+            setStatus("onboarding_slides");
+          } else {
+            console.log(`[usePatientJourneyStatus] Unified state: ${finalStatus}`);
+            setStatus(finalStatus);
+          }
+          
           setLoading(false);
+          setLastValidated(Date.now());
         }
       } catch (err) {
         console.error("[usePatientJourneyStatus] Unexpected error:", err);

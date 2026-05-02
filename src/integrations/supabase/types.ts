@@ -17292,6 +17292,45 @@ export type Database = {
         }
         Relationships: []
       }
+      state_consistency_logs: {
+        Row: {
+          calculated_state:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
+          created_at: string | null
+          discrepancy_details: Json | null
+          id: string
+          persisted_state:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
+          user_id: string | null
+        }
+        Insert: {
+          calculated_state?:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
+          created_at?: string | null
+          discrepancy_details?: Json | null
+          id?: string
+          persisted_state?:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
+          user_id?: string | null
+        }
+        Update: {
+          calculated_state?:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
+          created_at?: string | null
+          discrepancy_details?: Json | null
+          id?: string
+          persisted_state?:
+            | Database["public"]["Enums"]["patient_state_type"]
+            | null
+          user_id?: string | null
+        }
+        Relationships: []
+      }
       store_products: {
         Row: {
           calories_per_100g: number | null
@@ -20607,6 +20646,10 @@ export type Database = {
             }
             Returns: Json
           }
+      calculate_actual_patient_state: {
+        Args: { p_user_id: string }
+        Returns: Database["public"]["Enums"]["patient_state_type"]
+      }
       calculate_plan_totals: { Args: { p_plan_id: string }; Returns: Json }
       check_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
