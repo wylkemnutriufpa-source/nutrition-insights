@@ -16,6 +16,7 @@ import { SystemStateGuard } from "@/components/common/SystemStateGuard";
 import ExperienceRouteGuard from "@/components/common/ExperienceRouteGuard";
 import WorkspaceRouteGuard from "@/components/common/WorkspaceRouteGuard";
 import { logError } from "@/lib/monitoring";
+import OnboardingEntry from "@/components/onboarding/OnboardingEntry";
 
 // Eager
 import Auth from "../pages/Auth";
