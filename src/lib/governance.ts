@@ -37,6 +37,7 @@ export interface GovernanceContext {
   isPersonal?: boolean;
   isAdmin?: boolean;
   versionMismatch?: boolean;
+  isTransitioning?: boolean;
 }
 
 // ── Route Classification ──────────────────────────────────────
