@@ -7,6 +7,7 @@ import { logAudit } from "@/lib/auditLog";
 import { ensureContext } from "@/components/common/SystemShield";
 import { useSystemShield } from "@/components/common/SystemShield";
 import { logError } from "@/lib/monitoring";
+import { safeLocalStorage } from "@/lib/safeStorage";
 
 type AppRole = Database["public"]["Enums"]["app_role"];
 
@@ -213,7 +214,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         if (event === "SIGNED_IN" && session?.user) {
-          const selectedRole = localStorage.getItem("fj_selected_role");
+          const selectedRole = safeLocalStorage.getItem("fj_selected_role");
           
           logAudit("login", "auth", session.user.id, { 
             email: session.user.email ?? "",
@@ -236,11 +237,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             });
           }
           
-          localStorage.removeItem("fitjourney_ref");
-          localStorage.removeItem("fitjourney_ref_at");
-          localStorage.removeItem("fitjourney_invite_code");
-          localStorage.removeItem("fitjourney_nutri_id");
-          localStorage.removeItem("fj_selected_role");
+          safeLocalStorage.removeItem("fitjourney_ref");
+          safeLocalStorage.removeItem("fitjourney_ref_at");
+          safeLocalStorage.removeItem("fitjourney_invite_code");
+          safeLocalStorage.removeItem("fitjourney_nutri_id");
+          safeLocalStorage.removeItem("fj_selected_role");
         }
 
         if (event === "SIGNED_OUT") {
