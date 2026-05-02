@@ -50,8 +50,8 @@ export default function OnboardingPaciente() {
       console.log("[FJ:Onboarding] Status não exige slides, redirecionando para dashboard...");
       navigate("/", { replace: true });
     } else if (!journeyLoading && anamnesisStatus === "completed") {
-       console.log("[FJ:Onboarding] Anamnese já concluída, pulando slides...");
-       navigate("/anamnesis?pipeline=true", { replace: true });
+       console.log("[FJ:Onboarding] Anamnese já concluída, redirecionando para dashboard para próximas etapas...");
+       navigate("/", { replace: true });
     }
   }, [journeyStatus, journeyLoading, anamnesisStatus, navigate]);
 
