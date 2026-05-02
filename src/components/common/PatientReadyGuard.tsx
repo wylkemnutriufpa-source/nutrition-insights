@@ -57,7 +57,7 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     !journeyLoading && 
     !isAllowedPath && 
     journeyStatus && 
-    (journeyStatus === "awaiting_payment" || journeyStatus === "awaiting_onboarding_release");
+    (journeyStatus === "onboarding_slides" || journeyStatus === "anamnesis");
 
   if (shouldBlockJourney) {
     console.log(`[PatientReadyGuard] Blocking access to ${location.pathname} for status ${journeyStatus}`);

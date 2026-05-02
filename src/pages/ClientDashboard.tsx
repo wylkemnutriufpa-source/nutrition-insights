@@ -360,7 +360,7 @@ export default function ClientDashboard() {
     return (
     <DashboardLayout>
       <SafeRender name="Conteúdo do Dashboard" data={[user, profile, dashData]}>
-      {shouldBlock && journeyStatus !== "awaiting_onboarding_release" ? (
+      {shouldBlock ? (
         <div className="max-w-7xl mx-auto px-4 py-12">
           <OnboardingGateScreen status={journeyStatus!} />
         </div>
@@ -608,7 +608,7 @@ export default function ClientDashboard() {
         </motion.div>
 
         {/* Action Buttons — Hidden during early onboarding for fluid flow */}
-        {journeyStatus !== "lead_created" && journeyStatus !== "awaiting_consent" && journeyStatus !== "onboarding_active" && (
+        {journeyStatus !== "onboarding_slides" && journeyStatus !== "anamnesis" && journeyStatus !== "collecting_profile" && (
           <motion.div variants={item} className="flex flex-wrap gap-2">
             <PlanRequestButton />
             <WorkoutRequestButton />

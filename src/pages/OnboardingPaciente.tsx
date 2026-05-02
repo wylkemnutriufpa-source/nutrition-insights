@@ -41,19 +41,16 @@ import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import { BrainLoaderCard } from "@/components/common/BrainLoader";
 
 export default function OnboardingPaciente() {
-  const { status: journeyStatus, loading: journeyLoading, anamnesisStatus } = usePatientJourneyStatus();
+  const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const navigate = useNavigate();
 
   // Hardening: Se o paciente já completou a anamnese ou já passou dessa fase, pula os slides
   useEffect(() => {
-    if (!journeyLoading && journeyStatus && journeyStatus !== "onboarding_active" && journeyStatus !== "awaiting_consent") {
+    if (!journeyLoading && journeyStatus && journeyStatus !== "onboarding_slides") {
       console.log("[FJ:Onboarding] Status não exige slides, redirecionando para dashboard...");
       navigate("/", { replace: true });
-    } else if (!journeyLoading && anamnesisStatus === "completed") {
-       console.log("[FJ:Onboarding] Anamnese já concluída, redirecionando para dashboard para próximas etapas...");
-       navigate("/", { replace: true });
     }
-  }, [journeyStatus, journeyLoading, anamnesisStatus, navigate]);
+  }, [journeyStatus, journeyLoading, navigate]);
 
   const [idx, setIdx] = useState(0);
   const [dir, setDir] = useState(1);

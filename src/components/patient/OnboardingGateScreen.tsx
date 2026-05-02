@@ -14,28 +14,29 @@ interface Props {
 export { IS_FLUID_STATE };
 
 const STATUS_CONFIG: Record<string, { icon: React.ElementType; title: string; description: string; action?: { label: string; route: string } }> = {
-  lead_created: {
+  onboarding_slides: {
     icon: Clock,
     title: "Iniciando sua jornada",
     description: "Prepare-se para transformar sua saúde. Você será redirecionado para o onboarding em instantes.",
   },
-  awaiting_payment: {
-    icon: CreditCard,
-    title: "Aguardando pagamento",
-    description: "Seu acesso completo será liberado assim que o pagamento for confirmado pelo seu profissional.",
-    action: { label: "Aguardando confirmação", route: "/payment-required" },
-  },
-  awaiting_onboarding_release: {
+  anamnesis: {
     icon: Stethoscope,
-    title: "Preparando seu acesso",
-    description: "Seu profissional está configurando os detalhes finais do seu perfil clínico. Em breve você poderá começar.",
+    title: "Anamnese Pendente",
+    description: "Precisamos conhecer seu perfil clínico para gerar seu plano ideal.",
+    action: { label: "Preencher Anamnese", route: "/anamnesis" },
+  },
+  collecting_profile: {
+    icon: Stethoscope,
+    title: "Coletando Dados",
+    description: "Quase lá! Agora precisamos das suas medidas corporais.",
+    action: { label: "Medidas Corporais", route: "/body-analysis" },
   },
 };
 
 export default function OnboardingGateScreen({ status }: Props) {
   const navigate = useNavigate();
   const [showRetry, setShowRetry] = useState(false);
-  const config = STATUS_CONFIG[status || "lead_created"] || STATUS_CONFIG.lead_created;
+  const config = STATUS_CONFIG[status || "onboarding_slides"] || STATUS_CONFIG.onboarding_slides;
   const Icon = config.icon;
 
   // Auto-redirect lead_created to onboarding
@@ -45,7 +46,7 @@ export default function OnboardingGateScreen({ status }: Props) {
     // Mostre o botão de tentar novamente após 8 segundos se não houver redirecionamento
     const retryTimer = setTimeout(() => setShowRetry(true), 8000);
 
-    if (status === "lead_created" || status === "awaiting_consent") {
+    if (status === "onboarding_slides") {
       const timer = setTimeout(() => {
         console.log(`[OnboardingGate:Redirect] Directing ${status} to /onboarding`);
         navigate("/onboarding", { replace: true });

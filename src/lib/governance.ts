@@ -187,26 +187,40 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
     }
   }
 
-  // 7. Patient Journey Specifics
+  // 7. Deterministic Patient State Governance (V5)
   if (ctx.role === 'patient') {
-    const isOnboarding = ['onboarding_active', 'lead_created', 'awaiting_consent'].includes(ctx.journeyStatus || '');
+    const state = ctx.journeyStatus;
     
-    // HARDENING: If user has completed anamnesis and is trapped in onboarding_active, allow access if they try to go to dashboard
-    const isAnamnesisComplete = ctx.anamnesisStatus === 'completed';
-    const isDashboardPath = safePathname === '/' || safePathname === '/client/dashboard' || safePathname === '/my-diet';
-
-    if (isOnboarding && safePathname.startsWith('/anamnesis')) {
-      return { type: 'ALLOW', reason: 'Onboarding anamnesis override' };
-    }
-
-    if (isOnboarding && isAnamnesisComplete && isDashboardPath) {
-      return { type: 'ALLOW', reason: 'Bypassing onboarding: Anamnesis complete' };
-    }
-
-    if (isOnboarding && !safePathname.startsWith('/onboarding') && !safePathname.startsWith('/consent') && !safePathname.startsWith('/anamnesis')) {
-      // Direct to specific patient onboarding slides if active
-      const target = ctx.journeyStatus === 'onboarding_active' ? '/onboarding/paciente' : '/consent';
-      return { type: 'REDIRECT', target, reason: 'Enforcing patient onboarding' };
+    // Redirect chain based on Single Source of Truth
+    switch (state) {
+      case 'onboarding_slides':
+        if (!matchRoute(safePathname, '/onboarding/paciente')) {
+          return { type: 'REDIRECT', target: '/onboarding/paciente', reason: 'Enforcing slides step' };
+        }
+        break;
+      case 'anamnesis':
+        if (!matchRoute(safePathname, '/anamnesis')) {
+          return { type: 'REDIRECT', target: '/anamnesis', reason: 'Enforcing anamnesis step' };
+        }
+        break;
+      case 'collecting_profile':
+        if (!matchRoute(safePathname, '/body-analysis')) {
+          return { type: 'REDIRECT', target: '/body-analysis', reason: 'Enforcing profile step' };
+        }
+        break;
+      case 'ready_for_plan':
+      case 'plan_generated':
+      case 'active_plan':
+        const isDashboardPath = safePathname === '/' || safePathname === '/client/dashboard' || safePathname === '/my-diet' || safePathname.startsWith('/patient/plan');
+        if (!isDashboardPath) {
+          return { type: 'REDIRECT', target: '/client/dashboard', reason: 'Accessing dashboard context' };
+        }
+        break;
+      default:
+        // No valid state, but role is patient - likely new user
+        if (!matchRoute(safePathname, '/onboarding/paciente')) {
+          return { type: 'REDIRECT', target: '/onboarding/paciente', reason: 'Missing patient state' };
+        }
     }
   }
 
