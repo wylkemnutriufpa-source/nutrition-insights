@@ -81,6 +81,9 @@ export default function OnboardingPaciente() {
   const { user } = useAuth();
 
   const complete = useCallback(async () => {
+    if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(true);
+    
+    console.log("[FJ:Onboarding] Finalizing slides, transitioning to anamnesis...");
     localStorage.setItem(ONBOARDING_KEY, "true");
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
@@ -92,23 +95,15 @@ export default function OnboardingPaciente() {
         .eq("user_id", user.id);
     }
     
-    navigate("/anamnesis?pipeline=true");
+    navigate("/anamnesis?pipeline=true", { replace: true });
+    
+    // Safety timeout to release transition if redirect fails
+    setTimeout(() => {
+      if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
+    }, 1000);
   }, [navigate, user?.id]);
 
-  const skip = useCallback(async () => {
-    localStorage.setItem(ONBOARDING_KEY, "true");
-    localStorage.removeItem("fj_invited");
-    localStorage.removeItem("fj_user_type");
-    
-    if (user?.id) {
-      await supabase
-        .from("profiles")
-        .update({ patient_state: 'anamnesis' })
-        .eq("user_id", user.id);
-    }
-    
-    navigate("/anamnesis?pipeline=true");
-  }, [navigate, user?.id]);
+  const skip = complete;
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
