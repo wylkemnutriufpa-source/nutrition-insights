@@ -638,10 +638,16 @@ export default function Anamnesis() {
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) {
-          console.error("[FJ:Anamnesis] failed to resolve profile tenant:", error);
+          console.error("[FJ:Anamnesis] critical: failed to resolve profile tenant:", error);
+          toast.error("Erro ao carregar perfil clínico. Verifique sua conexão.");
           return;
         }
-        if (data?.tenant_id) setResolvedTenantId(data.tenant_id);
+        if (data?.tenant_id) {
+          console.log("[FJ:Anamnesis] Tenant resolved successfully:", data.tenant_id);
+          setResolvedTenantId(data.tenant_id);
+        } else {
+          console.error("[FJ:Anamnesis] critical: profile exists but has NO tenant_id", { targetUserId });
+        }
         if (data?.full_name) setPatientName(data.full_name);
       });
   }, [tenantId, targetUserId, isNutritionistMode]);
