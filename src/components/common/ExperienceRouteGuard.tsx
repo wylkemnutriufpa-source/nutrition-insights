@@ -12,7 +12,7 @@ import { getSystemDecision, logDecision, type GovernanceContext } from "@/lib/go
  */
 export default function ExperienceRouteGuard() {
   const { mode, role } = useExperienceMode();
-  const { status: journeyStatus } = usePatientJourneyStatus();
+  const { status: journeyStatus, anamnesisStatus } = usePatientJourneyStatus();
   const { user, profile, isNutritionist, isAdmin, isPersonal } = useAuth();
   const { isReady, isDegraded } = useAppState();
   const location = useLocation();
@@ -26,6 +26,7 @@ export default function ExperienceRouteGuard() {
       user,
       profile,
       journeyStatus: journeyStatus as any,
+      anamnesisStatus,
       mode,
       role,
       isReady,
