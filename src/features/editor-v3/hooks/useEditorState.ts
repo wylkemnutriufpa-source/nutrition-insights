@@ -31,6 +31,7 @@ interface EditorState {
   lastBlockedReason: string | null;
   patientContext: PatientContext | null;
   sharingToken: string | null;
+  confidence: PlanConfidence | null;
 
   // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
   dispatch: (action: string, updateFn: (state: EditorState) => Partial<EditorState>) => void;
