@@ -1141,7 +1141,7 @@ export default function Anamnesis() {
         .maybeSingle(),
       supabase
         .from("nutritionist_patients")
-        .update({ journey_status: "onboarding_completed" })
+        .update({ journey_status: isPipelineMode ? "onboarding_active" : "onboarding_completed" })
         .eq("patient_id", targetUserId)
         .eq("status", "active")
     ]);
