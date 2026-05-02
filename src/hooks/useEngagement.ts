@@ -198,7 +198,7 @@ export function useEngagement() {
   const isBetterThanLastWeek = stats?.weekly_adherence_pct > (prevWeekStats || 0);
 
   // Progressive Reward Impact
-  const rewardImpact = (() => {
+  const rewardImpact: "light" | "medium" | "strong" = (() => {
     if (stats?.current_streak >= 30) return "strong";
     if (stats?.current_streak >= 7) return "medium";
     return "light";
