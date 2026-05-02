@@ -1,5 +1,5 @@
 import { Meal, Food, MealItem } from '../types';
-import { NutritionalScore, ValidationIssue } from '../nutritionalScoreTypes';
+import { NutritionalScore, ValidationIssue } from '../types/nutritionalScoreTypes';
 import { isProtein, isCarb, isFruit, calculateItemMacros } from './v3Motor';
 
 export interface PlanMetadata {
