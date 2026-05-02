@@ -40,11 +40,9 @@ export async function updatePatientJourneyStatus(
   }
 
   // 3. Validação Pós-Persistência (Garantia de que o que foi salvo é o esperado)
-  assertContract("persistence_safety", {
-    local: { status: newStatus },
-    remote: { status: data.journey_status as JourneyStatus },
-    fields: ["status"]
-  });
+  if (data.journey_status !== newStatus) {
+    throw new Error(`[PersistenceLayer] Divergência crítica: Esperado ${newStatus}, Salvo ${data.journey_status}`);
+  }
 
   return data;
 }
