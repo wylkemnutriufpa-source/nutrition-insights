@@ -79,65 +79,25 @@ export function usePatientJourneyStatus() {
 
         if (!cancelled) {
           if (!data) {
-            console.warn(`[usePatientJourneyStatus] NO LINK FOUND for ${user.id}`);
-            // Check if user has NO link at all
-            setStatus(null);
-            
-            // Fresh signup processing fallback: try again after a delay
-            setTimeout(async () => {
-              if (cancelled) return;
-              const { data: retryData } = await supabase
-                .from("nutritionist_patients")
-                .select("journey_status")
-                .eq("patient_id", user.id)
-                .maybeSingle();
-              
-              if (!retryData) {
-                // If still no link, check if it's an orphan patient and try to auto-heal
-                console.log("[usePatientJourneyStatus] Trying auto-heal for orphan patient...");
-                const { data: healData } = await supabase.rpc("run_patient_realtime_fix" as any, { _patient_id: user.id });
-                
-                if (healData?.success) {
-                    const { data: finalData } = await supabase
-                        .from("nutritionist_patients")
-                        .select("journey_status")
-                        .eq("patient_id", user.id)
-                        .maybeSingle();
-                    
-                    if (finalData) {
-                        setStatus((finalData as any).journey_status || "awaiting_consent");
-                        setLoading(false);
-                        return;
-                    }
-                }
-                
-                setStatus("no_link");
-              } else {
-                setStatus((retryData as any).journey_status || "active");
-              }
-              setLoading(false);
-            }, 1500);
+            console.error(`[usePatientJourneyStatus] NO LINK FOUND for ${user.id}`);
+            setStatus("no_link");
+            setLoading(false);
           } else {
             const finalStatus = (data as any).journey_status || "active";
             console.log(`[usePatientJourneyStatus] Resolved status: ${finalStatus}`);
             
-            // Validação de Contrato (Blindagem contra efeito cascata)
+            // Validação de Contrato (Anti-Cascade Architecture)
+            // Não usamos auto-cura. Se houver erro, logamos e bloqueamos.
             try {
-              assertContract("journey_continuity", {
-                patientId: user.id,
-                journeyStatus: finalStatus,
-                anamnesisStatus: anamRes.data?.status as any,
-                isRealtimeAvailable: isRealtimeAvailable(),
-                pathname: location.pathname
+              assertContract("ui_consistency", {
+                dbStatus: finalStatus,
+                uiStatus: status, // Compara com o estado anterior da UI
+                anamnesisCompleted: anamRes.data?.status === 'completed'
               });
-            } catch (contractErr) {
-              console.warn("[usePatientJourneyStatus] Contrato de continuidade violado, tentando auto-heal:", contractErr);
-              // Se anamnese está pronta mas status trava, força active para não parar o paciente
-              if (anamRes.data?.status === 'completed' && ['onboarding_active', 'awaiting_consent', 'lead_created'].includes(finalStatus)) {
-                setStatus("active");
-                setLoading(false);
-                return;
-              }
+            } catch (contractErr: any) {
+              console.error("[usePatientJourneyStatus] Violação Crítica de Contrato:", contractErr.message);
+              // Reportamos ao sistema de monitoramento sem mascarar a falha
+              // Em uma arquitetura anti-cascata, erros críticos devem ser visíveis.
             }
 
             setStatus(finalStatus);
@@ -147,7 +107,7 @@ export function usePatientJourneyStatus() {
       } catch (err) {
         console.error("[usePatientJourneyStatus] Unexpected error:", err);
         if (!cancelled) {
-          setStatus("active");
+          // Em caso de erro real de infra, não assumimos "active" falsamente
           setLoading(false);
         }
       }

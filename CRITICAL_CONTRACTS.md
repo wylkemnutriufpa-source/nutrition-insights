@@ -1,123 +1,65 @@
-# 🛡️ CRITICAL CONTRACTS — Freeze Inteligente
+# 🛡️ EDITOR V3 — Anti-Cascade Architecture
 
-> **Princípio:** Não protegemos código. Protegemos a EXPERIÊNCIA do usuário.
+> **Objetivo:** Evitar que alterações em uma parte do sistema quebrem outras (efeito cascata).
 
-Este documento define os contratos imutáveis do FitJourney. Nenhuma alteração — por mais simples que pareça — pode quebrar estes comportamentos.
-
----
-
-## 📜 OS 5 CONTRATOS IMUTÁVEIS
-
-### 1. ACESSO DO PACIENTE (`patient_access`)
-- Paciente só vê **seus próprios** planos
-- Paciente só vê planos com status `published` ou `published_to_patient`
-- Rota `/my-diet` nunca pode ser quebrada
-
-### 2. GERAÇÃO DE PLANOS (`plan_generation`)
-- Sempre retorna plano **válido**
-- Nunca retorna **vazio**
-- Nunca **mistura** `marmita` com `normal`
-- Respeita `plan_type` em todos os itens
-- Macros totais > 0
-
-### 3. PUBLICAÇÃO (`publication`)
-- Plano publicado nunca pode **desaparecer** (exceto via `archived` explícito)
-- Plano publicado nunca pode **perder itens**
-- Plano publicado nunca pode ficar **invisível** ao paciente
-
-### 4. PERSISTÊNCIA (`persistence`)
-- O que o frontend salva = exatamente o que o banco armazena
-- **Zero mutações silenciosas**
-
-### 5. CONTINUIDADE DA JORNADA (`journey_continuity`)
-- Paciente nunca fica preso em "dead-end" (sem saída)
-- Anamnese completa = Acesso garantido ao dashboard (independente do status)
-- Falhas técnicas (WS/Rede) não bloqueiam o carregamento da jornada
+## 💎 PRINCÍPIOS FUNDAMENTAIS
+- **Determinismo:** O sistema deve se comportar de forma previsível e repetível.
+- **Isolamento:** Mudanças em um módulo não devem vazar para outros.
+- **Validação Obrigatória:** Toda transição de estado deve ser validada antes e depois.
+- **Sem Auto-Cura:** Não mascaramos erros. Falhas devem ser visíveis e tratadas na raiz.
 
 ---
 
-## 🔒 CAMADAS DE PROTEÇÃO
-
-| Camada | Arquivo | Função |
-|---|---|---|
-| **Contratos** | `src/lib/criticalContracts.ts` | Define as regras puras (snapshot → ok/violations) |
-| **Guards** | `src/lib/contractGuards.ts` | `assertContract()` lança erro se violar |
-| **Runtime** | `src/lib/regressionGuardRuntime.ts` | Detecta regressão antes/depois e cancela operação |
-| **Logs** | `src/lib/regressionGuard.ts` | Persiste em `regression_guard_logs` |
-| **Testes** | `src/test/criticalContracts.test.ts` | 23 testes que falham se contrato quebrar |
+## 🏛️ ARQUITETURA DE CAMADAS
+1. **Editor V3 (`src/lib/editor-v3`):** Interface e orquestração do editor.
+2. **Clinical Engine (`src/lib/clinical-engine`):** Regras de negócio puras e algoritmos clínicos.
+3. **Persistence Layer (`src/lib/persistence-layer`):** Comunicação com o banco e integridade de dados.
+4. **Visual Library (`src/lib/visual-library`):** Componentes visuais desacoplados de lógica.
+5. **Security Layer (`src/lib/security-layer`):** RLS, autenticação e contratos críticos.
 
 ---
 
-## ✅ COMO USAR
+## 📜 OS 5 CONTRATOS CRÍTICOS
+### 1. DRAFT INTEGRITY (`draft_integrity`)
+- Um rascunho em edição nunca pode ser corrompido ou perder dados.
+- Mutações parciais são proibidas sem validação de esquema.
 
-### Validar antes de retornar dados ao paciente
-```ts
-import { assertContract } from "@/lib/contractGuards";
+### 2. CLINICAL VALIDITY (`clinical_validity`)
+- Planos gerados devem sempre respeitar as restrições clínicas do paciente.
+- Proibido gerar planos com macros incoerentes (ex: 0 kcal).
 
-const plans = await fetchPatientPlans(patientId);
-assertContract("patient_access", {
-  requestingPatientId: patientId,
-  returnedPlans: plans,
-  route: "/my-diet",
-});
-return plans;
-```
+### 3. ENGINE DETERMINISM (`engine_determinism`)
+- Dada a mesma entrada, o Clinical Engine deve produzir a mesma saída.
+- Proibido efeitos colaterais dentro do Engine.
 
-### Proteger uma operação de publicação
-```ts
-import { withRegressionGuard } from "@/lib/regressionGuardRuntime";
+### 4. PERSISTENCE SAFETY (`persistence_safety`)
+- O que o frontend envia deve bater 100% com o que o banco confirma.
+- Bloqueio imediato se houver divergência entre cache local e DB.
 
-await withRegressionGuard(
-  "meal_plan_publish",
-  () => snapshotPlan(planId),
-  () => publishPlan(planId),
-);
-```
-
-### Validar persistência
-```ts
-import { assertContract } from "@/lib/contractGuards";
-
-assertContract("persistence", {
-  expected: localItems,
-  persisted: dbItems,
-  keysToCompare: ["title", "calories_target", "protein_target"],
-});
-```
+### 5. UI CONSISTENCY (`ui_consistency`)
+- A interface não pode mostrar estados contraditórios.
+- Se o status no DB mudou, a UI deve refletir ou bloquear até a sincronia.
 
 ---
 
-## 🟢 PERMITIDO (evolução livre)
-- Melhorar UI / UX
-- Adicionar features
-- Refatorar código interno
-- Trocar visualizações
-- Adicionar componentes
-- Otimizar queries
-
-## 🔴 PROIBIDO (sem teste novo de contrato)
-- Alterar comportamento final de acesso/geração/publicação/persistência
-- Mudar regra de negócio sem validar contratos
-- Alterar RLS de `meal_plans` sem rodar `criticalContracts.test.ts`
-- Remover/alterar `assertContract` em pontos críticos
+## 🔒 REGRAS CRÍTICAS DE EXECUÇÃO
+- ✅ **Sempre** validar antes de executar.
+- ✅ **Sempre** validar depois de executar.
+- ❌ **Nunca** alterar estado diretamente (usar dispatchers/reducers validados).
+- ❌ **Nunca** ignorar erro ou falha silenciosa.
+- 🛑 **Bloquear** em caso de violação de contrato.
 
 ---
 
-## 🧪 RODANDO OS TESTES
+## 📊 GESTÃO DE FALHAS
+- **Logar Tudo:** Toda falha técnica ou de contrato deve ser reportada.
+- **Transparência:** O usuário deve ser informado se o sistema não puder garantir a integridade.
+- **Anti-Mascaramento:** Não usamos "fallbacks" que escondam inconsistências de dados.
 
+---
+
+## 🧪 VALIDAÇÃO TÉCNICA
 ```bash
-bunx vitest run src/test/criticalContracts.test.ts
+bunx vitest run src/test/antiCascade.test.ts
 ```
-
-**Política:** se qualquer teste de contrato falhar, a alteração **deve ser rejeitada** ou acompanhada de revisão explícita do contrato.
-
----
-
-## 📊 RESULTADO
-
-- **5 contratos** definidos
-- **23 testes** automáticos
-- **2 camadas de bloqueio** (assert + runtime guard)
-- **0 travas** em arquivos — sistema continua evoluindo
-
-> Quando algo "simples" quebrar algo "invisível", o teste de contrato vai pegar antes de chegar em produção.
+**Status:** Todas as alterações devem passar na suíte de regressão crítica.
