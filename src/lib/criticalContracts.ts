@@ -1,9 +1,17 @@
 /**
- * FitJourney — EDITOR V3 Anti-Cascade Contracts
+ * FitJourney — EDITOR V3 Anti-Cascade Contracts (ARQUITETURA DETERMINÍSTICA)
  * 
- * Define regras de integridade determinísticas que bloqueiam o sistema em caso de inconsistência.
- * Seguindo os princípios de Determinismo, Isolamento e Sem Auto-Cura.
+ * Este arquivo define a "Constituição" técnica do sistema, proibindo qualquer alteração 
+ * que viole a continuidade da jornada do paciente ou a integridade dos dados clínicos.
+ * 
+ * Regras Globais:
+ * 1. Nenhuma ação sem validação.
+ * 2. Nenhuma decisão sem log.
+ * 3. Nenhuma alteração automática crítica (Sem Auto-Cura).
+ * 4. Nenhuma quebra silenciosa (Erro sempre visível).
  */
+
+export const system_anti_cascade_mode = true;
 
 export type ContractResult = {
   ok: boolean;
@@ -24,13 +32,13 @@ export interface DraftSnapshot {
 
 export function draftIntegrityContract(s: DraftSnapshot): ContractResult {
   const v: string[] = [];
-  if (!s.draftId) v.push("Draft ID ausente");
-  if (!s.meals) v.push("Contract Violation: meals nunca pode ser null");
+  if (!s.draftId) v.push("Contract Violation: Draft ID ausente");
+  if (!s.meals || s.meals === null) v.push("Contract Violation: meals nunca pode ser null");
   
   const ids = s.items.map(i => i.instanceId);
   const uniqueIds = new Set(ids);
   if (ids.length !== uniqueIds.size) {
-    v.push("Contract Violation: items com instanceId duplicado detectado");
+    v.push("Contract Violation: items com instanceId duplicado detectado (Violação de Isolamento)");
   }
 
   return { ok: v.length === 0, contractId: "draft_integrity", violations: v };
@@ -49,9 +57,9 @@ export interface ClinicalSnapshot {
 
 export function clinicalValidityContract(s: ClinicalSnapshot): ContractResult {
   const v: string[] = [];
-  if (s.kcal <= 0) v.push(`Kcal inválida: ${s.kcal}`);
-  if (s.protein <= 0) v.push(`Proteína inválida: ${s.protein}`);
-  if (!s.isValid) v.push("Contract Violation: Plano clínico inválido detectado. Ação bloqueada.");
+  if (s.kcal <= 0) v.push(`Contract Violation: Kcal inválida (${s.kcal}) detectada pelo Clinical Engine`);
+  if (s.protein <= 0) v.push(`Contract Violation: Proteína inválida (${s.protein}) detectada pelo Clinical Engine`);
+  if (!s.isValid) v.push("Contract Violation: Plano clínico inválido detectado. Ação bloqueada pela Security Layer.");
   
   return { ok: v.length === 0, contractId: "clinical_validity", violations: v };
 }
@@ -71,10 +79,10 @@ export interface EngineSnapshot {
 
 export function engineDeterminismContract(s: EngineSnapshot): ContractResult {
   const v: string[] = [];
-  // Mesma ação -> mesmo resultado (implícito via hash se necessário no futuro)
-  if (s.mealCount === 0) v.push("Contract Violation: Engine gerou 0 refeições (Não duplicar/Não apagar)");
+  // Mesma ação -> mesmo resultado
+  if (s.mealCount === 0) v.push("Contract Violation: Engine determinismo falhou — 0 refeições geradas (NÃO duplicar/NÃO apagar)");
   if (s.hasManualOverrides && !s.overrideConfirmed) {
-    v.push("Contract Violation: Tentativa de sobrescrever manual sem confirmação");
+    v.push("Contract Violation: Tentativa de sobrescrever manual sem confirmação (NÃO sobrescrever manual)");
   }
   return { ok: v.length === 0, contractId: "engine_determinism", violations: v };
 }
@@ -93,7 +101,7 @@ export interface PersistenceSnapshot<T> {
 export function persistenceSafetyContract<T>(s: PersistenceSnapshot<T>): ContractResult {
   const v: string[] = [];
   if (!s.draftPersistedBeforeAction && s.isSaving) {
-    v.push("Contract Violation: Draft deve ser persistido antes de ações críticas");
+    v.push("Contract Violation: Nenhum dado pode ser perdido — draft deve ser persistido antes de ações críticas");
   }
   return { ok: v.length === 0, contractId: "persistence_safety", violations: v };
 }
@@ -111,9 +119,9 @@ export interface UIStatusSnapshot {
 
 export function uiConsistencyContract(s: UIStatusSnapshot): ContractResult {
   const v: string[] = [];
-  if (s.hasInvisibleState) v.push("Contract Violation: Estado invisível detectado");
+  if (s.hasInvisibleState) v.push("Contract Violation: Nenhum estado invisível permitido");
   if (s.dbStatus !== s.uiStatus && !s.errorVisible) {
-    v.push("Contract Violation: Erro de sincronia detectado e NÃO está visível para o usuário");
+    v.push("Contract Violation: Erro de sincronia detectado e NÃO está visível para o usuário (Erro sempre visível)");
   }
   return { ok: v.length === 0, contractId: "ui_consistency", violations: v };
 }
