@@ -123,10 +123,12 @@ export default function PatientGridDashboard() {
 
   useEffect(() => {
     if (!user?.id || lifecycle.isLoading) return;
-    if (lifecycle.showOnboarding) {
+    // Anti-Loop: Only redirect to onboarding slides if it's really necessary
+    // If anamnesis is already done, we stay here and let OnboardingProgressModal handle it.
+    if (lifecycle.showOnboarding && !lifecycle.hasPendingOnboarding) {
       navigate("/onboarding", { replace: true });
     }
-  }, [user?.id, lifecycle.isLoading, lifecycle.showOnboarding, navigate]);
+  }, [user?.id, lifecycle.isLoading, lifecycle.showOnboarding, lifecycle.hasPendingOnboarding, navigate]);
 
   // Filter cards by experience mode
   const visibleCards = PATIENT_CARDS.filter((c) => expUI.minMode(c.minMode ?? "basic"));
