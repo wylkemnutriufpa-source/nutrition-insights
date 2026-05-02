@@ -221,7 +221,6 @@ export function useEngagement() {
     stats,
     checkins,
     riskLevel,
-    achievements,
     progressPct,
     isStreakAtRisk,
     isNearCompletion,
