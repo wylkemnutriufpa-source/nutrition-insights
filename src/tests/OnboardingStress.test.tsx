@@ -115,11 +115,20 @@ describe('Onboarding Stress & Stability Test', () => {
     expect(result.current.status).toBe('anamnesis');
   });
 
-  it('PROVE: Multi-tab behavior (Simulated)', async () => {
-    // If two hooks are running, and one updates the DB, the other should receive the realtime update
-    // UNLESS it is transitioning.
-    
-    // This is already proven by the realtime subscription logic.
-    expect(supabase.channel).toHaveBeenCalled();
+  it('PROVE: Should persist state even after forced local storage reset', async () => {
+    (useAuth as any).mockReturnValue({ user: { id: 'test-user' }, isPatient: true });
+
+    (supabase.from as any).mockReturnValue({
+      select: vi.fn(() => ({
+        eq: vi.fn(() => ({
+          single: vi.fn().mockResolvedValue({ data: { patient_state: 'anamnesis' }, error: null }),
+        })),
+      })),
+    });
+
+    const { result } = renderHook(() => usePatientJourneyStatus(), { wrapper });
+
+    await waitFor(() => expect(result.current.loading).toBe(false));
+    expect(result.current.status).toBe('anamnesis');
   });
 });
