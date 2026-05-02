@@ -119,7 +119,7 @@ export async function promoteDraftToMealPlan(
         promoted_at: new Date().toISOString(),
       },
     } as any)
-    .select('id')
+    .select('id, sharing_token')
     .single();
 
   if (planErr || !plan) {
@@ -182,5 +182,5 @@ export async function promoteDraftToMealPlan(
     user_agent: navigator.userAgent
   });
 
-  return { ok: true, mealPlanId: plan.id };
+  return { ok: true, mealPlanId: plan.id, sharingToken: (plan as any).sharing_token };
 }
