@@ -245,7 +245,7 @@ export default function ClientDashboard() {
               </motion.div>
 
               {/* Retention Recovery Alert */}
-              <RetentionAlert riskLevel={stats?.riskLevel || (useEngagement().riskLevel as any)} />
+              <RetentionAlert riskLevel={riskLevel} />
 
               {/* Patient Engagement Central (Check-ins + Progress) */}
               <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
