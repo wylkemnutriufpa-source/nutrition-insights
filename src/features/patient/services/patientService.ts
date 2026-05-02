@@ -1,43 +1,47 @@
 import { supabase } from "@/integrations/supabase/client";
-import { PatientPlan, MealCompletion } from "../types";
+import { PatientPlan } from "../types";
 
 export const patientService = {
   async getPlanById(planId: string): Promise<PatientPlan | null> {
-    const { data, error } = await supabase
+    const { data: rawData, error } = await supabase
       .from('meal_plans' as any)
       .select(`
         id,
         patient_id,
         created_at,
         sharing_token,
+        total_target_calories,
+        total_target_protein,
+        total_target_carbs,
+        total_target_fat,
         nutritionist_patients (
           id,
-          name:notes,
-          goal:status
+          notes,
+          status
         )
       `)
       .eq('id', planId)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error || !rawData) return null;
+    const data = rawData as any;
 
-    // Fetch items separately since they are in a different table
     const { data: items } = await supabase
       .from('meal_plan_items' as any)
       .select('*')
       .eq('meal_plan_id', planId);
 
-    const patientData = (data as any).nutritionist_patients;
+    const patientData = data.nutritionist_patients;
 
     return {
       id: data.id,
       patient_id: data.patient_id,
-      patient_name: patientData?.name || 'Paciente',
-      goal: patientData?.goal || '',
-      calories_target: (data as any).total_target_calories || 0,
-      protein_target: (data as any).total_target_protein || 0,
-      carbs_target: (data as any).total_target_carbs || 0,
-      fat_target: (data as any).total_target_fat || 0,
+      patient_name: patientData?.notes || 'Paciente',
+      goal: patientData?.status || '',
+      calories_target: data.total_target_calories || 0,
+      protein_target: data.total_target_protein || 0,
+      carbs_target: data.total_target_carbs || 0,
+      fat_target: data.total_target_fat || 0,
       meals: this.groupItemsIntoMeals(items || []),
       created_at: data.created_at,
       sharing_token: data.sharing_token
@@ -45,40 +49,45 @@ export const patientService = {
   },
 
   async getPlanByToken(token: string): Promise<PatientPlan | null> {
-    const { data, error } = await supabase
+    const { data: rawData, error } = await supabase
       .from('meal_plans' as any)
       .select(`
         id,
         patient_id,
         created_at,
         sharing_token,
+        total_target_calories,
+        total_target_protein,
+        total_target_carbs,
+        total_target_fat,
         nutritionist_patients (
           id,
-          name:notes,
-          goal:status
+          notes,
+          status
         )
       `)
       .eq('sharing_token', token)
       .maybeSingle();
 
-    if (error || !data) return null;
+    if (error || !rawData) return null;
+    const data = rawData as any;
 
     const { data: items } = await supabase
       .from('meal_plan_items' as any)
       .select('*')
       .eq('meal_plan_id', data.id);
 
-    const patientData = (data as any).nutritionist_patients;
+    const patientData = data.nutritionist_patients;
 
     return {
       id: data.id,
       patient_id: data.patient_id,
-      patient_name: patientData?.name || 'Paciente',
-      goal: patientData?.goal || '',
-      calories_target: (data as any).total_target_calories || 0,
-      protein_target: (data as any).total_target_protein || 0,
-      carbs_target: (data as any).total_target_carbs || 0,
-      fat_target: (data as any).total_target_fat || 0,
+      patient_name: patientData?.notes || 'Paciente',
+      goal: patientData?.status || '',
+      calories_target: data.total_target_calories || 0,
+      protein_target: data.total_target_protein || 0,
+      carbs_target: data.total_target_carbs || 0,
+      fat_target: data.total_target_fat || 0,
       meals: this.groupItemsIntoMeals(items || []),
       created_at: data.created_at,
       sharing_token: data.sharing_token
@@ -102,10 +111,10 @@ export const patientService = {
       mealsMap[mealName].items.push({
         id: item.id,
         name: item.description || 'Alimento',
-        kcal: item.calories_target || 0,
-        protein: item.protein_target || 0,
-        carbs: item.carbs_target || 0,
-        fat: item.fat_target || 0,
+        kcal: Number(item.calories_target) || 0,
+        protein: Number(item.protein_target) || 0,
+        carbs: Number(item.carbs_target) || 0,
+        fat: Number(item.fat_target) || 0,
         portionValue: 1,
         portionUnitLabel: 'unidade',
         imageUrl: item.image_url
@@ -118,7 +127,7 @@ export const patientService = {
   async toggleMealCompletion(planId: string, mealId: string, patientId: string): Promise<boolean> {
     const today = new Date().toISOString().split('T')[0];
     
-    const { data: existing } = await supabase
+    const { data: existing, error: selectError } = await supabase
       .from('patient_meal_completions' as any)
       .select('id')
       .eq('meal_plan_id', planId)
