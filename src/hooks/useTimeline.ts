@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useEffect, useCallback, useRef } from "react";
+import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/safeRealtime";
 
 const PAGE_SIZE = 20;
 
@@ -25,16 +26,21 @@ export function useTimeline(page = 0) {
     },
   });
 
-  // Realtime subscription
+  // Realtime subscription — protegido contra falhas de WebSocket
   useEffect(() => {
     if (!user) return;
-    const channel = supabase
-      .channel("timeline-realtime")
-      .on("postgres_changes", { event: "INSERT", schema: "public", table: "timeline_events" }, () => {
+    const channel = safeChannel("timeline-realtime");
+    
+    if (channel) {
+      channel.on("postgres_changes", { event: "INSERT", schema: "public", table: "timeline_events" }, () => {
         queryClient.invalidateQueries({ queryKey: ["timeline-events"] });
-      })
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
+      });
+      safeSubscribe(channel);
+    }
+
+    return () => { 
+      if (channel) safeRemoveChannel(channel); 
+    };
   }, [user, queryClient]);
 
   return { events: data || [], isLoading, isFetching };

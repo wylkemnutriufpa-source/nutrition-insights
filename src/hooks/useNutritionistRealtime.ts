@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { invalidateNutritionistQueries } from "@/lib/queryInvalidation";
 import { useTelemetryStore } from "@/lib/telemetryStore";
+import { safeChannel, safeSubscribe, safeRemoveChannel } from "@/lib/safeRealtime";
 
 export function useNutritionistRealtime() {
   const { user, isNutritionist, isAdmin } = useAuth();
@@ -20,7 +21,8 @@ export function useNutritionistRealtime() {
     if (!user || (!isNutritionist && !isAdmin)) return;
 
     const channelName = `nutri-rt-${user.id}-${Date.now()}`;
-    const channel = supabase.channel(channelName);
+    const channel = safeChannel(channelName);
+    if (!channel) return;
 
     const trackAndInvalidate = (table: string) => (payload: any) => {
       const now = Date.now();
@@ -104,15 +106,20 @@ export function useNutritionistRealtime() {
       trackAndInvalidateKey("chat_messages", "chat")
     );
 
-    channel.subscribe((status) => {
-      setConnection({
-        connected: status === "SUBSCRIBED",
-        activeChannels: supabase.getChannels().length,
+    safeSubscribe(channel);
+    
+    // Track status if supported
+    try {
+      (channel as any).subscribe((status: string) => {
+        setConnection({
+          connected: status === "SUBSCRIBED",
+          activeChannels: supabase.getChannels().length,
+        });
       });
-    });
+    } catch {}
 
     return () => {
-      supabase.removeChannel(channel);
+      safeRemoveChannel(channel);
       setConnection({ activeChannels: supabase.getChannels().length });
     };
   }, [user, isNutritionist, isAdmin, queryClient]);

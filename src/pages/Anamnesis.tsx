@@ -26,6 +26,7 @@ import { useAppState } from "@/hooks/useAppState";
 import { useSyncStatus } from "@/hooks/useSyncStatus";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@/utils/dataSafety";
+import { safeLocalStorage, safeSessionStorage } from "@/lib/safeStorage";
 
 
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
@@ -708,7 +709,7 @@ export default function Anamnesis() {
       const backupKey = `fj_anamnesis_backup_${targetUserId}`;
       let localData: { answers: Record<string, any>, updated_at: string } | null = null;
       try {
-        const stored = localStorage.getItem(backupKey);
+        const stored = safeLocalStorage.getItem(backupKey);
         if (stored) {
           localData = JSON.parse(stored);
           // Centralized TTL Check V4.6
@@ -763,7 +764,7 @@ export default function Anamnesis() {
         
         // Versioned Decision Key V4.6
         const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverUpdatedAt, localUpdatedAt);
-        const resolution = localStorage.getItem(resolutionKey);
+        const resolution = safeLocalStorage.getItem(resolutionKey);
 
         if (resolution) {
           fjLog("SYNC", `Conflito já resolvido via versão: ${resolution}`);
@@ -835,7 +836,7 @@ export default function Anamnesis() {
   const saveLocalBackup = useCallback((currentAnswers: Record<string, any>) => {
     if (!targetUserId) return;
     try {
-      localStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
+      safeLocalStorage.setItem(`fj_anamnesis_backup_${targetUserId}`, JSON.stringify({
         answers: currentAnswers,
         updated_at: new Date().toISOString()
       }));
@@ -1844,7 +1845,7 @@ export default function Anamnesis() {
                 setShowConflictModal(false);
                 if (serverVersion && localBackup && resolvedTenantId) {
                   const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
-                  localStorage.setItem(resolutionKey, "manter_local");
+                  safeLocalStorage.setItem(resolutionKey, "manter_local");
                 }
                 logSafetyAction("manter_local");
                 toast.success("Mantendo versão local! 🏠");
@@ -1860,7 +1861,7 @@ export default function Anamnesis() {
                   saveLocalBackup(serverVersion.answers);
                   setShowConflictModal(false);
                   const resolutionKey = getConflictVersionKey(targetUserId, resolvedTenantId, serverVersion.updated_at, localBackup.updated_at);
-                  localStorage.setItem(resolutionKey, "restaurar_servidor");
+                  safeLocalStorage.setItem(resolutionKey, "restaurar_servidor");
                   logSafetyAction("restaurar_servidor");
                   toast.success("Versão do servidor restaurada! ☁️");
                 }
