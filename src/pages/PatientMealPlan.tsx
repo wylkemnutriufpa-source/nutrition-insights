@@ -307,6 +307,7 @@ export default function PatientMealPlan() {
       const newFollowedCount = completions.filter(c => c.adherence_status === "followed").length + 1;
       if (newFollowedCount >= items.length) {
         confetti();
+        setShowCelebration(true);
         toast.success("🏆 Dia perfeito! Todas as refeições seguidas!");
       } else {
         toast.success("✅ Muito bem! Continue assim.");
