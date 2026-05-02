@@ -473,7 +473,7 @@ const EditorV3Page = () => {
 
   useEffect(() => {
     if (initialMeals && initialMeals.length > 0) {
-      hydrateMeals(initialMeals, initialAuditLog);
+      hydrateMeals(initialMeals, initialAuditLog, draftSharingToken || undefined);
       hydratedRef.current = true;
     }
   }, [initialMeals, initialAuditLog, hydrateMeals]);
