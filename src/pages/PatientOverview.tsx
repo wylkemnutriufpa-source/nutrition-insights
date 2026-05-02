@@ -15,6 +15,7 @@ import {
   Calendar, ArrowRight, Flame, Clock, Trophy, ChevronRight,
   Heart, Zap, Scale, Droplets
 } from "lucide-react";
+import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
 
 const container = { hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.07 } } };
 const item = { hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0 } };
@@ -118,6 +119,10 @@ export default function PatientOverview() {
               <span>Dia <strong className="text-foreground">{data.daysSinceStart}</strong> da sua jornada</span>
             </div>
           )}
+        </motion.div>
+
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mb-6">
+          <PatientRetentionAlerts />
         </motion.div>
 
         {loading || !data ? (

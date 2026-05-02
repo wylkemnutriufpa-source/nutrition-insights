@@ -11,7 +11,7 @@ import { toast } from "sonner";
 import confetti from "@/lib/confetti";
 import {
   Utensils, Flame, Zap, Eye, Timer, RefreshCw,
-  CalendarDays, Star, ChevronDown, ChevronUp,
+  CalendarDays, Star, ChevronDown, ChevronUp, Trophy,
   CheckCircle2, MinusCircle, AlertCircle, Circle, FileDown, Calendar
 } from "lucide-react";
 import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
@@ -32,6 +32,8 @@ import {
   MEAL_TYPES, DAYS,
   type MealPlanItem, type MealCompletion, type AdherenceStatus, type MealDetailData,
 } from "@/components/patient/MealPlanDailyView";
+import { useEngagement } from "@/hooks/useEngagement";
+import { PatientRetentionAlerts } from "@/components/dashboard/PatientRetentionAlerts";
 
 const DAYS_SHORT = ["Dom", "Seg", "Ter", "Qua", "Qui", "Sex", "Sáb"];
 
@@ -105,6 +107,8 @@ export default function PatientMealPlan() {
   const [justCompleted, setJustCompleted] = useState<string | null>(null);
   const xpTimerRef = useRef<number | null>(null);
   const [exportingPDF, setExportingPDF] = useState(false);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const { isStreakAtRisk, isNearCompletion, identityStatus } = useEngagement();
 
   const dayOfWeek = new Date(date + "T12:00:00").getDay();
   const isToday = date === new Date().toISOString().split("T")[0];
@@ -303,6 +307,7 @@ export default function PatientMealPlan() {
       const newFollowedCount = completions.filter(c => c.adherence_status === "followed").length + 1;
       if (newFollowedCount >= items.length) {
         confetti();
+        setShowCelebration(true);
         toast.success("🏆 Dia perfeito! Todas as refeições seguidas!");
       } else {
         toast.success("✅ Muito bem! Continue assim.");
@@ -464,7 +469,34 @@ export default function PatientMealPlan() {
   return (
     <DashboardLayout>
       <div className={`max-w-2xl mx-auto space-y-5 transition-all duration-500 overflow-x-hidden pb-10 ${focusMode ? "pt-2" : ""}`}>
+        {isToday && <PatientRetentionAlerts />}
+        
         <AnimatePresence>
+          {showCelebration && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowCelebration(false)}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-background/90 backdrop-blur-md cursor-pointer"
+            >
+              <motion.div
+                initial={{ scale: 0.8, y: 20 }}
+                animate={{ scale: 1, y: 0 }}
+                className="text-center p-8"
+              >
+                <div className="w-24 h-24 bg-primary/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Trophy className="w-12 h-12 text-primary" />
+                </div>
+                <h2 className="text-3xl font-display font-bold mb-2">Dia Completo! ✔️</h2>
+                <p className="text-muted-foreground mb-8">Você manteve a consistência e venceu mais um dia.</p>
+                <Button onClick={() => setShowCelebration(false)} className="rounded-full px-8">
+                  Continuar evoluindo
+                </Button>
+              </motion.div>
+            </motion.div>
+          )}
+
           {xpPopup.show && <XPPopup show={xpPopup.show} points={xpPopup.points} />}
         </AnimatePresence>
 
