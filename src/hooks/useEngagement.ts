@@ -27,7 +27,9 @@ const NIGHT_MESSAGES = [
 export function useEngagement() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
-  const today = format(new Date(), "yyyy-MM-dd");
+  const todayDateObj = new Date();
+  const today = format(todayDateObj, "yyyy-MM-dd");
+  const tomorrow = format(new Date(todayDateObj.getTime() + 86400000), "yyyy-MM-dd");
 
   const { data: profile } = useQuery({
     queryKey: ["profile", user?.id],
@@ -204,11 +206,16 @@ export function useEngagement() {
     return "light";
   })();
 
-  const achievements = {
-    oneDay: stats?.total_checkins >= 1,
-    threeDays: stats?.longest_streak >= 3,
-    sevenDays: stats?.longest_streak >= 7,
-  };
+  const isDayComplete = progressPct === 100 && totalMeals > 0;
+  
+  // Future Prediction
+  const daysToRecord = stats?.longest_streak && stats?.current_streak 
+    ? Math.max(0, stats.longest_streak - stats.current_streak + 1)
+    : 0;
+
+  const dailyMission = totalMeals > 0 
+    ? isDayComplete ? "Missão cumprida! 🎉" : "Completar todas as refeições do dia"
+    : "Defina seu plano para começar";
 
   return {
     stats,
@@ -224,6 +231,10 @@ export function useEngagement() {
     rewardImpact,
     identityStatus,
     isBetterThanLastWeek,
+    isDayComplete,
+    daysToRecord,
+    dailyMission,
+    tomorrow,
     remainingMeals: totalMeals - completedMeals,
     isLoading: loadingStats || loadingCheckins,
     toggleCheckin: (mealId: string, completed: boolean = true) => 
