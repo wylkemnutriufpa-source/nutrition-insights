@@ -21,6 +21,9 @@ interface EditorState {
   patientContext: PatientContext | null;
   confidence: PlanConfidence | null;
 
+  // Dispatch centralizado (ETAPA 3 - ANTI-CASCATA)
+  dispatch: (action: string, updateFn: (state: EditorState) => Partial<EditorState>) => void;
+
   setPatientId: (id: string) => void;
   setPatientContext: (context: PatientContext) => void;
   setGoalMetadata: (metadata: any) => void;
