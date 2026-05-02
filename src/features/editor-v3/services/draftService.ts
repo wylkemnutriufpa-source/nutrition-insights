@@ -6,8 +6,8 @@
  * A promoção (draft -> plano oficial) acontece em `promoteDraft.ts`.
  */
 import { supabase } from '@/integrations/supabase/client';
-import type { Meal, DraftPayload, AuditLogEntry } from './types';
-import { normalizeMeals } from './utils/normalization';
+import type { Meal, DraftPayload, AuditLogEntry } from '../types';
+import { normalizeMeals } from '../utils/normalization';
 
 export interface DraftRecord {
   id: string;
