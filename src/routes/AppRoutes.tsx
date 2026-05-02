@@ -312,7 +312,7 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
   
   if (authStatus === "loading") return <PageLoader />;
   if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
-  if (!isNutritionist && !isAdmin) return <Navigate to="/" replace />;
+  if (!isNutritionist && !isAdmin) return <Navigate to="/client/dashboard" replace />;
   
   return <>{children}</>;
 }
