@@ -142,6 +142,48 @@ export default function OnboardingPipeline() {
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
+  // Realtime for meal-plan-jobs
+  useEffect(() => {
+    if (!user) return;
+    
+    // Fetch active job on mount
+    supabase
+      .from("meal_plan_jobs")
+      .select("*")
+      .eq("patient_id", user.id)
+      .in("status", ["pending", "processing"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setActiveJob(data);
+      });
+
+    const ch = supabase
+      .channel("meal-plan-jobs")
+      .on("postgres_changes", { 
+        event: "*", 
+        schema: "public", 
+        table: "meal_plan_jobs", 
+        filter: `patient_id=eq.${user.id}` 
+      }, (payload: any) => {
+        const job = payload.new;
+        setActiveJob(job);
+        
+        if (job.status === "completed") {
+          fetchPipeline();
+          setGenerating(false);
+          queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+        } else if (job.status === "failed") {
+          setJobError(job.error || "Ocorreu um erro durante o processamento.");
+          setGenerating(false);
+        }
+      })
+      .subscribe();
+      
+    return () => { supabase.removeChannel(ch); };
+  }, [user]);
+
   // Auto-detect inconsistent state on mount/reload: if the pipeline has
   // `plan_generated=true` but `plan_approved=false`, the lifecycle sync
   // SHOULD have already happened. We re-attempt it silently — if it fails
