@@ -72,10 +72,13 @@ export default function OnboardingPipeline() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [activeJob, setActiveJob] = useState<any>(null);
+  const [jobError, setJobError] = useState<string | null>(null);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [consentSubmitting, setConsentSubmitting] = useState(false);
   // Sync fallback state — quando RPC de finalização falha mesmo com plano gerado
   const [syncError, setSyncError] = useState<string | null>(null);
+
   const [syncRetrying, setSyncRetrying] = useState(false);
   // Auto-retry com backoff exponencial: 5s, 10s, 20s, 40s, 80s, 160s (max)
   const [autoRetryAttempt, setAutoRetryAttempt] = useState(0);
@@ -136,6 +139,48 @@ export default function OnboardingPipeline() {
       .channel("onboarding-pipeline")
       .on("postgres_changes", { event: "*", schema: "public", table: "onboarding_pipelines", filter: `patient_id=eq.${user.id}` }, () => fetchPipeline())
       .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user]);
+
+  // Realtime for meal-plan-jobs
+  useEffect(() => {
+    if (!user) return;
+    
+    // Fetch active job on mount
+    supabase
+      .from("meal_plan_jobs")
+      .select("*")
+      .eq("patient_id", user.id)
+      .in("status", ["pending", "processing"])
+      .order("created_at", { ascending: false })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setActiveJob(data);
+      });
+
+    const ch = supabase
+      .channel("meal-plan-jobs")
+      .on("postgres_changes", { 
+        event: "*", 
+        schema: "public", 
+        table: "meal_plan_jobs", 
+        filter: `patient_id=eq.${user.id}` 
+      }, (payload: any) => {
+        const job = payload.new;
+        setActiveJob(job);
+        
+        if (job.status === "completed") {
+          fetchPipeline();
+          setGenerating(false);
+          queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
+        } else if (job.status === "failed") {
+          setJobError(job.error || "Ocorreu um erro durante o processamento.");
+          setGenerating(false);
+        }
+      })
+      .subscribe();
+      
     return () => { supabase.removeChannel(ch); };
   }, [user]);
 
@@ -332,92 +377,44 @@ export default function OnboardingPipeline() {
   async function handleGeneratePlan() {
     if (!pipeline || !user) return;
     setGenerating(true);
+    setJobError(null);
+    
     try {
-      const { data, error } = await invokeWithRetry("generate-meal-plan", {
-        body: {
-          patientId: user.id,
-          nutritionistId: pipeline.nutritionist_id,
-          weight: pipeline.weight,
-          height: pipeline.height,
-          wakeTime: pipeline.wake_time,
-          sleepTime: pipeline.sleep_time,
-          mealCount: pipeline.meal_count,
-          cookingPreference: pipeline.cooking_preference,
-          foodPreferences: pipeline.food_preferences,
-          isPipeline: true,
-          planCount: 3,
-        },
-      });
+      const payload = {
+        patientId: user.id,
+        nutritionistId: pipeline.nutritionist_id,
+        weight: pipeline.weight,
+        height: pipeline.height,
+        wakeTime: pipeline.wake_time,
+        sleepTime: pipeline.sleep_time,
+        mealCount: pipeline.meal_count,
+        cookingPreference: pipeline.cooking_preference,
+        foodPreferences: pipeline.food_preferences,
+        isPipeline: true,
+        planCount: 3,
+      };
 
-      if (error) {
-        // Após retries, se ainda for erro transitório de rede, mantemos o
-        // botão em "Gerando..." e NÃO exibimos toast falso. O usuário pode
-        // tentar novamente — o estado segue consistente.
-        if (isTransientNetworkError(error)) {
-          console.warn("[OnboardingPipeline] Transient network error after retries — silencing toast", error);
-          // Mantém generating=true brevemente para não piscar erro falso, depois libera.
-          setTimeout(() => setGenerating(false), 300);
-          return;
-        }
-        const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
-        throw new Error(msg);
-      }
-      if (!data?.success) throw new Error(data?.error || "Falha na geração");
+      // Insert Job instead of direct invocation
+      const { data: job, error } = await supabase
+        .from("meal_plan_jobs")
+        .insert({
+          patient_id: user.id,
+          payload,
+          status: "pending",
+          current_step: "iniciando"
+        })
+        .select()
+        .single();
 
-      // Update pipeline — handle both multi-plan and single-plan responses
-      const resolvedPlanId = data.multiPlan && data.plans?.length > 0
-        ? data.plans[0].mealPlanId
-        : data.mealPlanId || null;
-
-      await supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          plan_generated: true,
-          generated_plan_id: resolvedPlanId,
-          generated_plan_data: data,
-          status: "pending_approval",
-        } as any)
-        .eq("id", pipeline.id);
-
-      // Notify nutritionist
-      const planCountMsg = data.multiPlan ? `${data.plans.length} opções de plano` : "Pré-plano";
-      const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()).data?.full_name || "Paciente";
-      await supabase.from("notifications").insert({
-        user_id: pipeline.nutritionist_id,
-        title: "🔔 Plano Aguardando Aprovação",
-        message: `${patientName} completou o onboarding. ${planCountMsg} de ${data.explainability?.calculation?.final_kcal || ''}kcal gerado(s) via Protocolo FitJourney.`,
-        type: "warning",
-        action_url: `/patients/${user.id}?tab=onboarding`,
-      } as any);
-
-      // Transition lifecycle: pipeline → draft_ready_for_review (Plano em Revisão)
-      const syncOk = await runLifecycleSync(pipeline.id);
-
-      await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
-      await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
-      await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
-
-      if (syncOk) {
-        toast.success(data.multiPlan
-          ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
-          : "Pré-plano gerado! Aguardando aprovação do profissional."
-        );
-      } else {
-        toast.warning(
-          "Plano gerado, mas a sincronização final está pendente. Use o botão de tentar novamente abaixo.",
-          { duration: 8000 }
-        );
-      }
-      fetchPipeline();
+      if (error) throw error;
+      setActiveJob(job);
+      
+      toast.info("Geração iniciada! Acompanhe o progresso abaixo.");
     } catch (err: any) {
-      // Última rede de proteção: se chegou um erro transitório aqui, não polua a UI.
-      if (isTransientNetworkError(err)) {
-        console.warn("[OnboardingPipeline] Transient network error caught — silencing toast", err);
-      } else {
-        toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
-      }
+      console.error("Error creating job:", err);
+      toast.error("Erro ao iniciar geração: " + (err.message || "Tente novamente"));
+      setGenerating(false);
     }
-    setGenerating(false);
   }
 
   /**
@@ -936,7 +933,7 @@ export default function OnboardingPipeline() {
 
             {/* Step 4: Plan Generation */}
             {currentStep === 4 && (
-              <Card>
+              <Card className="relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
@@ -944,28 +941,90 @@ export default function OnboardingPipeline() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">
-                    Com base nos seus dados, o Protocolo FitJourney vai calcular TMB, TDEE e gerar um plano alimentar 100% personalizado. Após a geração, o profissional revisará e aprovará.
-                  </p>
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
-                    <div className="flex justify-between text-sm"><span>Altura:</span><span className="font-medium">{pipeline.height} cm</span></div>
-                    <div className="flex justify-between text-sm"><span>Refeições/dia:</span><span className="font-medium">{pipeline.meal_count}</span></div>
-                    <div className="flex justify-between text-sm"><span>Preparo:</span><span className="font-medium">{{ quick: "⚡ Prático", homemade: "🏠 Caseiro", gourmet: "👨‍🍳 Gourmet", any: "🤷 Tanto faz" }[pipeline.cooking_preference] || pipeline.cooking_preference}</span></div>
-                  </div>
-                  <Button onClick={handleGeneratePlan} className="w-full" size="lg" disabled={generating}>
-                    {generating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Gerando plano...
-                      </>
-                    ) : (
-                      <>
+                  {(generating || (activeJob && (activeJob.status === "pending" || activeJob.status === "processing"))) ? (
+                    <div className="py-8 space-y-6">
+                      <div className="text-center space-y-2">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                          className="w-16 h-16 mx-auto rounded-full bg-primary/5 flex items-center justify-center"
+                        >
+                          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                        </motion.div>
+                        <h3 className="text-lg font-semibold capitalize">
+                          {activeJob?.current_step || "Iniciando"}...
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          O Protocolo FitJourney está calculando sua estratégia nutricional.
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-xs font-medium">
+                          <span>Progresso da Geração</span>
+                          <span>
+                            {activeJob?.current_step === "iniciando" ? "10%" : 
+                             activeJob?.current_step === "processando" ? "60%" : 
+                             activeJob?.current_step === "finalizando" ? "90%" : "0%"}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={
+                            activeJob?.current_step === "iniciando" ? 10 : 
+                            activeJob?.current_step === "processando" ? 60 : 
+                            activeJob?.current_step === "finalizando" ? 90 : 0
+                          } 
+                          className="h-2"
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          {["iniciando", "processando", "finalizando"].map((step, idx) => {
+                            const isDone = ["completed", "finalizando", "processando"].includes(activeJob?.current_step) && idx < ["iniciando", "processando", "finalizando"].indexOf(activeJob?.current_step);
+                            const isCurrent = activeJob?.current_step === step;
+                            return (
+                              <div key={step} className="flex flex-col items-center gap-1">
+                                <div className={`w-2 h-2 rounded-full ${isDone || isCurrent ? 'bg-primary' : 'bg-muted'}`} />
+                                <span className={`text-[10px] capitalize ${isCurrent ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
+                                  {step}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ) : jobError ? (
+                    <div className="py-6 text-center space-y-4">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-destructive" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-destructive">Erro na Geração</h3>
+                        <p className="text-sm text-muted-foreground px-4">
+                          {jobError}
+                        </p>
+                      </div>
+                      <Button onClick={handleGeneratePlan} variant="outline" className="gap-2">
+                        <RefreshCw className="w-4 h-4" />
+                        Tentar Novamente
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-muted-foreground">
+                        Com base nos seus dados, o Protocolo FitJourney vai calcular TMB, TDEE e gerar um plano alimentar 100% personalizado. Após a geração, o profissional revisará e aprovará.
+                      </p>
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
+                        <div className="flex justify-between text-sm"><span>Altura:</span><span className="font-medium">{pipeline.height} cm</span></div>
+                        <div className="flex justify-between text-sm"><span>Refeições/dia:</span><span className="font-medium">{pipeline.meal_count}</span></div>
+                        <div className="flex justify-between text-sm"><span>Preparo:</span><span className="font-medium">{{ quick: "⚡ Prático", homemade: "🏠 Caseiro", gourmet: "👨‍🍳 Gourmet", any: "🤷 Tanto faz" }[pipeline.cooking_preference] || pipeline.cooking_preference}</span></div>
+                      </div>
+                      <Button onClick={handleGeneratePlan} className="w-full" size="lg" disabled={generating}>
                         <Sparkles className="w-4 h-4 mr-2" />
                         Gerar Meu Pré-Plano
-                      </>
-                    )}
-                  </Button>
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}

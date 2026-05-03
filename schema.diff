@@ -1,41 +1,15 @@
 {
-  "summary": "Summary:\nColumns:\n+ meal_plans.sharing_expires_at\n+ meal_plans.sharing_token\n+ nutritionist_patients.updated_at\n+ profiles.patient_state\n- profiles.fit_intelligence_onboarded",
+  "summary": "Summary:",
   "details": {
-    "timestamp": "2026-05-02T18:26:54.143Z",
+    "timestamp": "2026-05-03T21:04:12.031Z",
     "duration": "0.0s",
-    "lastSnapshotMigration": "20260502145252_758dcac7-af2a-4fdd-b3cc-17f1eaa3169a.sql",
-    "lastActualMigration": "20260502182603_5a9ee865-c633-4d28-a0d4-d584a4c834c3.sql",
+    "lastSnapshotMigration": "20260502182603_5a9ee865-c633-4d28-a0d4-d584a4c834c3.sql",
+    "lastActualMigration": "20260503210248_ad843ca0-7dd5-4391-91a5-0854ddb963db.sql",
     "missingMigrations": [
-      "20260502152006_848b4e44-9e4c-4706-a69a-65aaac60ef22.sql",
-      "20260502154742_a814a20e-5448-417c-8773-8aa130b90d69.sql",
-      "20260502161454_18cabd4c-df6e-49e3-abb0-69cbba22f92d.sql",
-      "20260502162228_4f8970f7-d725-4c68-8dfd-fb8bb819aabd.sql",
-      "20260502163150_f3b9f1f7-06fc-4684-bbeb-5e25f6597d00.sql",
-      "20260502163633_38cc776e-9111-4b4b-8c5a-de151dd3a5a7.sql",
-      "20260502172409_dc7e8600-cae0-45fb-bd30-e585d704484c.sql",
-      "20260502182603_5a9ee865-c633-4d28-a0d4-d584a4c834c3.sql"
+      "20260502191537_5f9b5989-2a94-479f-93b5-cd4a1e87dc70.sql",
+      "20260503205938_96ea65ea-a3c2-42be-b4ae-7129a608fcda.sql",
+      "20260503210248_ad843ca0-7dd5-4391-91a5-0854ddb963db.sql"
     ],
-    "diffResults": [
-      {
-        "table": "meal_plans",
-        "type": "MISSING_IN_SNAPSHOT",
-        "columns": "sharing_expires_at, sharing_token"
-      },
-      {
-        "table": "nutritionist_patients",
-        "type": "MISSING_IN_SNAPSHOT",
-        "columns": "updated_at"
-      },
-      {
-        "table": "profiles",
-        "type": "MISSING_IN_SNAPSHOT",
-        "columns": "patient_state"
-      },
-      {
-        "table": "profiles",
-        "type": "EXTRA_IN_SNAPSHOT",
-        "columns": "fit_intelligence_onboarded"
-      }
-    ]
+    "diffResults": []
   }
 }

@@ -1,0 +1,6 @@
+{
+  "imports": {
+    "inngest": "https://esm.sh/inngest@3.22.12",
+    "inngest/deno": "https://esm.sh/inngest@3.22.12/deno"
+  }
+}
