@@ -377,92 +377,44 @@ export default function OnboardingPipeline() {
   async function handleGeneratePlan() {
     if (!pipeline || !user) return;
     setGenerating(true);
+    setJobError(null);
+    
     try {
-      const { data, error } = await invokeWithRetry("generate-meal-plan", {
-        body: {
-          patientId: user.id,
-          nutritionistId: pipeline.nutritionist_id,
-          weight: pipeline.weight,
-          height: pipeline.height,
-          wakeTime: pipeline.wake_time,
-          sleepTime: pipeline.sleep_time,
-          mealCount: pipeline.meal_count,
-          cookingPreference: pipeline.cooking_preference,
-          foodPreferences: pipeline.food_preferences,
-          isPipeline: true,
-          planCount: 3,
-        },
-      });
+      const payload = {
+        patientId: user.id,
+        nutritionistId: pipeline.nutritionist_id,
+        weight: pipeline.weight,
+        height: pipeline.height,
+        wakeTime: pipeline.wake_time,
+        sleepTime: pipeline.sleep_time,
+        mealCount: pipeline.meal_count,
+        cookingPreference: pipeline.cooking_preference,
+        foodPreferences: pipeline.food_preferences,
+        isPipeline: true,
+        planCount: 3,
+      };
 
-      if (error) {
-        // Após retries, se ainda for erro transitório de rede, mantemos o
-        // botão em "Gerando..." e NÃO exibimos toast falso. O usuário pode
-        // tentar novamente — o estado segue consistente.
-        if (isTransientNetworkError(error)) {
-          console.warn("[OnboardingPipeline] Transient network error after retries — silencing toast", error);
-          // Mantém generating=true brevemente para não piscar erro falso, depois libera.
-          setTimeout(() => setGenerating(false), 300);
-          return;
-        }
-        const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
-        throw new Error(msg);
-      }
-      if (!data?.success) throw new Error(data?.error || "Falha na geração");
+      // Insert Job instead of direct invocation
+      const { data: job, error } = await supabase
+        .from("meal_plan_jobs")
+        .insert({
+          patient_id: user.id,
+          payload,
+          status: "pending",
+          current_step: "iniciando"
+        })
+        .select()
+        .single();
 
-      // Update pipeline — handle both multi-plan and single-plan responses
-      const resolvedPlanId = data.multiPlan && data.plans?.length > 0
-        ? data.plans[0].mealPlanId
-        : data.mealPlanId || null;
-
-      await supabase
-        .from("onboarding_pipelines" as any)
-        .update({
-          plan_generated: true,
-          generated_plan_id: resolvedPlanId,
-          generated_plan_data: data,
-          status: "pending_approval",
-        } as any)
-        .eq("id", pipeline.id);
-
-      // Notify nutritionist
-      const planCountMsg = data.multiPlan ? `${data.plans.length} opções de plano` : "Pré-plano";
-      const patientName = (await supabase.from("profiles").select("full_name").eq("user_id", user.id).maybeSingle()).data?.full_name || "Paciente";
-      await supabase.from("notifications").insert({
-        user_id: pipeline.nutritionist_id,
-        title: "🔔 Plano Aguardando Aprovação",
-        message: `${patientName} completou o onboarding. ${planCountMsg} de ${data.explainability?.calculation?.final_kcal || ''}kcal gerado(s) via Protocolo FitJourney.`,
-        type: "warning",
-        action_url: `/patients/${user.id}?tab=onboarding`,
-      } as any);
-
-      // Transition lifecycle: pipeline → draft_ready_for_review (Plano em Revisão)
-      const syncOk = await runLifecycleSync(pipeline.id);
-
-      await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
-      await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
-      await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
-
-      if (syncOk) {
-        toast.success(data.multiPlan
-          ? `${data.plans.length} opções de plano geradas! Aguardando aprovação do profissional.`
-          : "Pré-plano gerado! Aguardando aprovação do profissional."
-        );
-      } else {
-        toast.warning(
-          "Plano gerado, mas a sincronização final está pendente. Use o botão de tentar novamente abaixo.",
-          { duration: 8000 }
-        );
-      }
-      fetchPipeline();
+      if (error) throw error;
+      setActiveJob(job);
+      
+      toast.info("Geração iniciada! Acompanhe o progresso abaixo.");
     } catch (err: any) {
-      // Última rede de proteção: se chegou um erro transitório aqui, não polua a UI.
-      if (isTransientNetworkError(err)) {
-        console.warn("[OnboardingPipeline] Transient network error caught — silencing toast", err);
-      } else {
-        toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
-      }
+      console.error("Error creating job:", err);
+      toast.error("Erro ao iniciar geração: " + (err.message || "Tente novamente"));
+      setGenerating(false);
     }
-    setGenerating(false);
   }
 
   /**
