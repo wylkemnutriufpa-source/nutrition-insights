@@ -333,7 +333,7 @@ export default function OnboardingPipeline() {
     if (!pipeline || !user) return;
     setGenerating(true);
     try {
-      const { data, error } = await supabase.functions.invoke("generate-meal-plan", {
+      const { data, error } = await invokeWithRetry("generate-meal-plan", {
         body: {
           patientId: user.id,
           nutritionistId: pipeline.nutritionist_id,
@@ -350,6 +350,15 @@ export default function OnboardingPipeline() {
       });
 
       if (error) {
+        // Após retries, se ainda for erro transitório de rede, mantemos o
+        // botão em "Gerando..." e NÃO exibimos toast falso. O usuário pode
+        // tentar novamente — o estado segue consistente.
+        if (isTransientNetworkError(error)) {
+          console.warn("[OnboardingPipeline] Transient network error after retries — silencing toast", error);
+          // Mantém generating=true brevemente para não piscar erro falso, depois libera.
+          setTimeout(() => setGenerating(false), 300);
+          return;
+        }
         const msg = await friendlyEdgeFunctionError(error, "Falha na geração do plano");
         throw new Error(msg);
       }
@@ -382,11 +391,8 @@ export default function OnboardingPipeline() {
       } as any);
 
       // Transition lifecycle: pipeline → draft_ready_for_review (Plano em Revisão)
-      // O trigger SQL já sincroniza automaticamente, mas chamamos explicitamente
-      // para forçar recálculo do lifecycle e capturar erros visíveis ao usuário.
       const syncOk = await runLifecycleSync(pipeline.id);
 
-      // Invalidar caches dependentes para o dashboard refletir o novo estado
       await queryClient.invalidateQueries({ queryKey: ["patient-lifecycle-state"] });
       await queryClient.invalidateQueries({ queryKey: ["patient-journey-status"] });
       await queryClient.invalidateQueries({ queryKey: ["nutritionist_patients"] });
@@ -397,7 +403,6 @@ export default function OnboardingPipeline() {
           : "Pré-plano gerado! Aguardando aprovação do profissional."
         );
       } else {
-        // Plan was generated but lifecycle sync failed — surface clear feedback.
         toast.warning(
           "Plano gerado, mas a sincronização final está pendente. Use o botão de tentar novamente abaixo.",
           { duration: 8000 }
@@ -405,7 +410,12 @@ export default function OnboardingPipeline() {
       }
       fetchPipeline();
     } catch (err: any) {
-      toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
+      // Última rede de proteção: se chegou um erro transitório aqui, não polua a UI.
+      if (isTransientNetworkError(err)) {
+        console.warn("[OnboardingPipeline] Transient network error caught — silencing toast", err);
+      } else {
+        toast.error("Erro ao gerar plano: " + (err.message || "Tente novamente"));
+      }
     }
     setGenerating(false);
   }
