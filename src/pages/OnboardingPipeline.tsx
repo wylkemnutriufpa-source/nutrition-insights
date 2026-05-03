@@ -72,10 +72,13 @@ export default function OnboardingPipeline() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [generating, setGenerating] = useState(false);
+  const [activeJob, setActiveJob] = useState<any>(null);
+  const [jobError, setJobError] = useState<string | null>(null);
   const [consentAccepted, setConsentAccepted] = useState(false);
   const [consentSubmitting, setConsentSubmitting] = useState(false);
   // Sync fallback state — quando RPC de finalização falha mesmo com plano gerado
   const [syncError, setSyncError] = useState<string | null>(null);
+
   const [syncRetrying, setSyncRetrying] = useState(false);
   // Auto-retry com backoff exponencial: 5s, 10s, 20s, 40s, 80s, 160s (max)
   const [autoRetryAttempt, setAutoRetryAttempt] = useState(0);
