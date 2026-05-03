@@ -561,13 +561,9 @@ export default function Anamnesis() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Route protection: patients must accept consent before anamnesis
-  useEffect(() => {
-    if (isPatient && !consentLoading && !hasConsent) {
-      toast.error("Você precisa aceitar o termo de consentimento antes de iniciar a anamnese.");
-      navigate("/consent", { replace: true });
-    }
-  }, [isPatient, consentLoading, hasConsent, navigate]);
+  // Consent enforcement is handled by SystemStateGuard via governance.
+  // Pages MUST NOT redirect on their own — that produced loops with /consent.
+
   const [analyzing, setAnalyzing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
