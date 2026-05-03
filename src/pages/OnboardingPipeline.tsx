@@ -423,9 +423,9 @@ export default function OnboardingPipeline() {
         height: pipeline.height,
         wakeTime: pipeline.wake_time,
         sleepTime: pipeline.sleep_time,
-        meal_count: pipeline.meal_count,
-        cooking_preference: pipeline.cooking_preference,
-        food_preferences: pipeline.food_preferences,
+        mealCount: pipeline.meal_count,
+        cookingPreference: pipeline.cooking_preference,
+        foodPreferences: pipeline.food_preferences,
         isPipeline: true,
         planCount: 3,
       };
