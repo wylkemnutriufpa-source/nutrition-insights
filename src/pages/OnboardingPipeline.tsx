@@ -405,6 +405,13 @@ export default function OnboardingPipeline() {
 
   async function handleGeneratePlan() {
     if (!pipeline || !user) return;
+    
+    // Hardening: Check if already generating
+    if (generating || (activeJob && (activeJob.status === "pending" || activeJob.status === "processing"))) {
+      toast.info("Já existe um processamento em andamento.");
+      return;
+    }
+
     setGenerating(true);
     setJobError(null);
     
@@ -416,14 +423,15 @@ export default function OnboardingPipeline() {
         height: pipeline.height,
         wakeTime: pipeline.wake_time,
         sleepTime: pipeline.sleep_time,
-        mealCount: pipeline.meal_count,
-        cookingPreference: pipeline.cooking_preference,
-        foodPreferences: pipeline.food_preferences,
+        meal_count: pipeline.meal_count,
+        cooking_preference: pipeline.cooking_preference,
+        food_preferences: pipeline.food_preferences,
         isPipeline: true,
         planCount: 3,
       };
 
       // Insert Job instead of direct invocation
+      // This will trigger the backend check and fail stuck jobs
       const { data: job, error } = await supabase
         .from("meal_plan_jobs")
         .insert({
@@ -435,10 +443,41 @@ export default function OnboardingPipeline() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        // Handle the trigger exception
+        if (error.message.includes("Já existe um processamento")) {
+          toast.warning("Um processamento já está ativo. Aguarde a conclusão.");
+          // Refresh job status to sync UI
+          const { data: existing } = await supabase
+            .from("meal_plan_jobs")
+            .select("*")
+            .eq("patient_id", user.id)
+            .in("status", ["pending", "processing"])
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle();
+          if (existing) setActiveJob(existing);
+          return;
+        }
+        throw error;
+      }
+
       setActiveJob(job);
+      toast.info("Protocolo FitJourney iniciado! Acompanhe o progresso.");
       
-      toast.info("Geração iniciada! Acompanhe o progresso abaixo.");
+      // Call the Edge Function to trigger the worker
+      // (Even if it fails, the job is 'pending' and could be picked up by a separate worker if we had a cron)
+      // For now, the Edge Function starts the process.
+      const { error: invokeError } = await supabase.functions.invoke("process-meal-plan-jobs", {
+        body: { jobId: job.id }
+      });
+      
+      if (invokeError) {
+        console.error("Invoke error:", invokeError);
+        // We don't throw here because the job is already created and Realtime/Polling will catch updates
+        // if the function actually started processing despite the response error.
+      }
+
     } catch (err: any) {
       console.error("Error creating job:", err);
       toast.error("Erro ao iniciar geração: " + (err.message || "Tente novamente"));
