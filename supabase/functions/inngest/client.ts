@@ -1,4 +1,4 @@
-import { Inngest } from "https://esm.sh/inngest@3.16.0";
+import { Inngest } from "inngest";
 
 export const inngest = new Inngest({ 
   id: "fitjourney-app",
