@@ -47,22 +47,15 @@ export default function OnboardingPaciente() {
   const { status: journeyStatus, loading: journeyLoading } = usePatientJourneyStatus();
   const navigate = useNavigate();
 
-  // Hardening: Se o paciente já completou a anamnese ou já passou dessa fase, pula os slides
+  // Hardening: Não decidimos rota aqui. Apenas limpamos a flag de teste.
+  // SystemStateGuard observa journeyStatus e redireciona automaticamente
+  // se o paciente já passou desta etapa.
   useEffect(() => {
-    // Cenário de teste: Força reset se uma flag específica estiver no localStorage
     if (localStorage.getItem(FORCE_RESET_KEY)) {
       console.log("[FJ:Test] Reset forçado detectado via localStorage flag");
-      // Não redirecionamos, permitimos que o usuário veja os slides
-      // mas removemos a flag para não entrar em loop de reset
       localStorage.removeItem(FORCE_RESET_KEY);
-      return;
     }
-
-    if (!journeyLoading && journeyStatus && journeyStatus !== "onboarding_slides") {
-      console.log("[FJ:Onboarding] Status não exige slides, redirecionando para dashboard...");
-      navigate("/", { replace: true });
-    }
-  }, [journeyStatus, journeyLoading, navigate]);
+  }, []);
 
   const [idx, setIdx] = useState(0);
   const [dir, setDir] = useState(1);
@@ -82,26 +75,25 @@ export default function OnboardingPaciente() {
 
   const complete = useCallback(async () => {
     if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(true);
-    
-    console.log("[FJ:Onboarding] Finalizing slides, transitioning to anamnesis...");
+
+    console.log("[FJ:Onboarding] Finalizing slides → updating patient_state. Governance will route.");
     localStorage.setItem(ONBOARDING_KEY, "true");
     localStorage.removeItem("fj_invited");
     localStorage.removeItem("fj_user_type");
-    
+
     if (user?.id) {
       await supabase
         .from("profiles")
         .update({ patient_state: 'anamnesis' })
         .eq("user_id", user.id);
     }
-    
-    navigate("/anamnesis?pipeline=true", { replace: true });
-    
-    // Safety timeout to release transition if redirect fails
+
+    // Não chamamos navigate(): SystemStateGuard observa o novo patient_state
+    // e move o paciente para /anamnesis automaticamente.
     setTimeout(() => {
       if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
-    }, 1000);
-  }, [navigate, user?.id]);
+    }, 1500);
+  }, [user?.id]);
 
   const skip = complete;
 
