@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
 import { useLocation } from "react-router-dom";
+import { recordStateChange } from "@/lib/governanceTelemetry";
 
 export type JourneyStatus =
   | "onboarding_slides"
@@ -54,12 +55,19 @@ export function usePatientJourneyStatus() {
 
       if (!cancelled && data) {
         const finalStatus = data.patient_state as JourneyStatus;
+        const prev = status;
         if (!finalStatus) {
           console.warn("[FJ:Guard] patient_state nulo detectado, forçando fallback para slides");
           setStatus("onboarding_slides");
+          if (prev !== "onboarding_slides") {
+            recordStateChange({ userId: user.id, from: prev, to: "onboarding_slides", source: "fetch-fallback" });
+          }
         } else {
           console.log(`[usePatientJourneyStatus] Unified state: ${finalStatus}`);
           setStatus(finalStatus);
+          if (prev !== finalStatus) {
+            recordStateChange({ userId: user.id, from: prev, to: finalStatus, source: "fetch" });
+          }
         }
         setLoading(false);
         setLastValidated(Date.now());
@@ -97,6 +105,7 @@ export function usePatientJourneyStatus() {
               return;
             }
             setStatus(newStatus as JourneyStatus);
+            recordStateChange({ userId: user.id, from: oldStatus ?? status, to: newStatus, source: "realtime" });
           }
         }
       )

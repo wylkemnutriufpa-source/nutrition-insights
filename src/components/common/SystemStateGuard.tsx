@@ -3,6 +3,7 @@ import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
 import { useLocation, Navigate } from "react-router-dom";
 import { getSystemDecision, logDecision, GovernanceContext } from "@/lib/governance";
+import { recordDecision } from "@/lib/governanceTelemetry";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 import { useConsentGuard } from "@/hooks/useConsentGuard";
@@ -56,6 +57,7 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
 
     const d = getSystemDecision(ctx);
     if (d.type !== 'ALLOW') logDecision(d);
+    recordDecision(ctx, d);
     return d;
   }, [
     location.pathname, user, profile, journeyStatus, hasConsent, isPatient,
