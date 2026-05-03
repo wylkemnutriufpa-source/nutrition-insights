@@ -26,6 +26,7 @@ export interface GovernanceContext {
   journeyStatus: string | null;
   anamnesisStatus?: 'pending' | 'completed' | null;
   hasActivePipeline?: boolean;
+  hasConsent?: boolean;
   mode: string;
   role: 'patient' | 'professional';
   isReady: boolean;
@@ -39,6 +40,59 @@ export interface GovernanceContext {
   versionMismatch?: boolean;
   isTransitioning?: boolean;
 }
+
+/**
+ * resolveRoute — Single Source of Truth for patient flow navigation.
+ *
+ * Returns the ONE route the patient is currently allowed to be on,
+ * given their state. Components must NEVER decide their own redirects.
+ *
+ * Order is deterministic and exhaustive: every patient state maps to
+ * exactly one canonical route. No exceptions, no bypasses.
+ */
+export type PatientFlowState =
+  | 'awaiting_consent'
+  | 'onboarding_slides'
+  | 'anamnesis'
+  | 'collecting_profile'
+  | 'ready_for_plan'
+  | 'plan_generated'
+  | 'active_plan';
+
+export function resolveRoute(state: PatientFlowState | string | null | undefined): string {
+  switch (state) {
+    case 'awaiting_consent':
+      return '/consent';
+    case 'onboarding_slides':
+      return '/onboarding/paciente';
+    case 'anamnesis':
+      return '/anamnesis';
+    case 'collecting_profile':
+      return '/body-analysis';
+    case 'ready_for_plan':
+    case 'plan_generated':
+    case 'active_plan':
+      return '/client/dashboard';
+    default:
+      // Unknown / null state: send to slides so the user gets a deterministic entry.
+      return '/onboarding/paciente';
+  }
+}
+
+/**
+ * Routes that belong to the canonical patient flow (one per state).
+ * Used to detect "is the patient on their assigned step?" without ad-hoc bypasses.
+ */
+const PATIENT_FLOW_ROUTES = new Set<string>([
+  '/consent',
+  '/onboarding',
+  '/onboarding/paciente',
+  '/anamnesis',
+  '/body-analysis',
+  '/client/dashboard',
+  '/my-diet',
+  '/',
+]);
 
 // ── Route Classification ──────────────────────────────────────
 
