@@ -20857,6 +20857,7 @@ export type Database = {
       }
       ensure_patient_ready: { Args: { _patient_id: string }; Returns: Json }
       extract_topic_uuid: { Args: { _topic: string }; Returns: string }
+      fail_stuck_meal_plan_jobs: { Args: never; Returns: undefined }
       finalize_pipeline_execution: {
         Args: {
           _error_details?: Json
