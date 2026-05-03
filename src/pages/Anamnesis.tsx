@@ -1279,22 +1279,16 @@ export default function Anamnesis() {
     }
   };
 
-  // Pipeline mode: auto-redirect back to onboarding pipeline after completion
+  // Pipeline mode: a transição de rota é feita pelo SystemStateGuard quando
+  // o patient_state muda. O contador é apenas visual.
   const [pipelineCountdown, setPipelineCountdown] = useState(5);
   useEffect(() => {
     if (!completed || analyzing || !isPipelineMode || isNutritionistMode) return;
     const timer = setInterval(() => {
-      setPipelineCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          navigate("/", { replace: true });
-          return 0;
-        }
-        return prev - 1;
-      });
+      setPipelineCountdown(prev => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [completed, analyzing, isPipelineMode, isNutritionistMode, navigate]);
+  }, [completed, analyzing, isPipelineMode, isNutritionistMode]);
 
   // Blocked state — onboarding not released
   if (onboardingBlocked && !isNutritionistMode) {

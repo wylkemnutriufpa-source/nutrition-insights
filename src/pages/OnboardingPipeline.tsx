@@ -1050,44 +1050,19 @@ export default function OnboardingPipeline() {
 }
 
 /**
- * AnamnesisAutoRedirect — substitui o card "Iniciar Anamnese" por redirecionamento
- * automático para /anamnesis?pipeline=true. Resolve trava no iOS/PWA onde o botão
- * Link às vezes não dispara navegação. Usa window.location como fallback robusto.
+ * AnamnesisAutoRedirect — neutralizado.
+ * Redirects automáticos foram removidos. SystemStateGuard observa
+ * patient_state e move o paciente para a próxima etapa quando o estado muda.
+ * Aqui apenas mostramos um indicador de carregamento.
  */
 function AnamnesisAutoRedirect() {
-  const navigate = useNavigate();
+  return (
+    <div className="flex items-center justify-center py-12">
+      <div className="text-sm text-muted-foreground">Carregando próxima etapa...</div>
+    </div>
+  );
+}
 
-  useEffect(() => {
-    // 📡 telemetria de redirect (ajuda diagnosticar loop em PWA iOS)
-    try {
-      const trace = {
-        ts: new Date().toISOString(),
-        from: "OnboardingPipeline.AnamnesisAutoRedirect",
-        to: "/anamnesis?pipeline=true",
-        href: typeof window !== "undefined" ? window.location.href : "",
-      };
-      const arr = JSON.parse(localStorage.getItem("fj_anamnese_trace") || "[]");
-      arr.push(trace);
-      localStorage.setItem("fj_anamnese_trace", JSON.stringify(arr.slice(-20)));
-      console.warn("[FJ:Onboarding] REDIRECT TRIGGERED →", trace);
-    } catch { /* ignore */ }
-
-    const t1 = setTimeout(() => {
-      try {
-        navigate("/anamnesis?pipeline=true", { replace: true });
-      } catch { /* ignore */ }
-    }, 50);
-
-    const t2 = setTimeout(() => {
-      if (typeof window !== "undefined" && !window.location.pathname.startsWith("/anamnesis")) {
-        window.location.href = "/anamnesis?pipeline=true";
-      }
-    }, 1200);
-
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-    };
   }, [navigate]);
 
   return (
