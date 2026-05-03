@@ -252,47 +252,47 @@ export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
     }
   }
 
-  // 7. Deterministic Patient State Governance (V5)
+  // 7. Deterministic Patient State Governance (V6 — single source of truth via resolveRoute)
   if (ctx.role === 'patient') {
-    const state = ctx.journeyStatus;
-    
-    // Safety Bypass: Always allow onboarding-specific and universal utility routes
-    // This prevents loops where Anamnesis redirects to Consent but Governance redirects back to Anamnesis.
-    if (isInList(safePathname, ONBOARDING_ALLOWED_ROUTES) || isInList(safePathname, UNIVERSAL_ROUTES)) {
-      return { type: 'ALLOW', reason: 'Bypassing state enforcement for allowed route' };
+    // Consent is a STATE, not an exception. If consent is missing, it dominates.
+    let effectiveState: string | null | undefined = ctx.journeyStatus;
+    if (ctx.hasConsent === false) {
+      effectiveState = 'awaiting_consent';
     }
 
-    // Redirect chain based on Single Source of Truth
-    switch (state) {
-      case 'onboarding_slides':
-        if (!matchRoute(safePathname, '/onboarding/paciente')) {
-          return { type: 'REDIRECT', target: '/onboarding/paciente', reason: 'Enforcing slides step' };
-        }
-        break;
-      case 'anamnesis':
-        if (!matchRoute(safePathname, '/anamnesis')) {
-          return { type: 'REDIRECT', target: '/anamnesis', reason: 'Enforcing anamnesis step' };
-        }
-        break;
-      case 'collecting_profile':
-        if (!matchRoute(safePathname, '/body-analysis')) {
-          return { type: 'REDIRECT', target: '/body-analysis', reason: 'Enforcing profile step' };
-        }
-        break;
-      case 'ready_for_plan':
-      case 'plan_generated':
-      case 'active_plan':
-        const isDashboardPath = safePathname === '/' || safePathname === '/client/dashboard' || safePathname === '/my-diet' || safePathname.startsWith('/patient/plan');
-        if (!isDashboardPath) {
-          return { type: 'REDIRECT', target: '/client/dashboard', reason: 'Accessing dashboard context' };
-        }
-        break;
-      default:
-        // No valid state, but role is patient - likely new user
-        if (!matchRoute(safePathname, '/onboarding/paciente')) {
-          return { type: 'REDIRECT', target: '/onboarding/paciente', reason: 'Missing patient state' };
-        }
+    // Allow utility routes (settings, support, hard-fail) without forcing flow,
+    // but NEVER bypass for the flow routes themselves — those are governed below.
+    const NON_FLOW_UTILITIES = ['/settings', '/support', '/privacy', '/terms', '/hard-fail-linkage', '/erro-vinculo', '/status', '/auth', '/reset-password'];
+    if (NON_FLOW_UTILITIES.some(r => matchRoute(safePathname, r))) {
+      return { type: 'ALLOW', reason: 'Utility route allowed regardless of state' };
     }
+
+    const target = resolveRoute(effectiveState);
+
+    // Tolerate equivalent dashboard paths so resolveRoute('active_plan') doesn't
+    // bounce a patient already on /, /my-diet, or /patient/plan/...
+    const isDashboardEquivalent =
+      target === '/client/dashboard' &&
+      (safePathname === '/' ||
+        safePathname === '/client/dashboard' ||
+        safePathname === '/my-diet' ||
+        safePathname.startsWith('/patient/plan'));
+
+    // Tolerate /onboarding (router entry) when target is /onboarding/paciente.
+    const isOnboardingEntryEquivalent =
+      target === '/onboarding/paciente' &&
+      (safePathname === '/onboarding' || safePathname === '/onboarding/paciente');
+
+    if (safePathname === target || isDashboardEquivalent || isOnboardingEntryEquivalent) {
+      return { type: 'ALLOW', reason: `On canonical route for state=${effectiveState}` };
+    }
+
+    return {
+      type: 'REDIRECT',
+      target,
+      reason: `Enforcing canonical route for state=${effectiveState}`,
+      metadata: { resolvedFrom: safePathname, state: effectiveState }
+    };
   }
 
   return { type: 'ALLOW', reason: 'Rule chain completed' };
