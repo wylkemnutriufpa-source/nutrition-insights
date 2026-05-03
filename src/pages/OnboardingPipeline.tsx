@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { friendlyEdgeFunctionError } from "@/lib/edgeFunctionErrorHelper";
+import { invokeWithRetry, isTransientNetworkError } from "@/lib/api/edgeFunctions";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
