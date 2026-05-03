@@ -1,5 +1,6 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
-import { Inngest, serve as serveInngest } from "https://esm.sh/inngest@3.22.12/deno";
+import { Inngest } from "https://esm.sh/inngest@3.22.12";
+import { serve as serveInngest } from "https://esm.sh/inngest@3.22.12/deno/index.js";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const inngest = new Inngest({ 
