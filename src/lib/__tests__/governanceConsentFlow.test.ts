@@ -56,13 +56,16 @@ describe("Governance — Consent precedes Anamnesis", () => {
     expect(decision.target).toBe("/client/dashboard");
   });
 
-  it("is idempotent: calling repeatedly with same state never oscillates", () => {
+  it("is idempotent: once on canonical route, no further redirects occur", () => {
     const c = ctx({ pathname: "/anamnesis", journeyStatus: "anamnesis", hasConsent: false });
     const d1 = getSystemDecision(c);
-    const d2 = getSystemDecision({ ...c, pathname: d1.target! });
-    const d3 = getSystemDecision({ ...c, pathname: d2.type === "REDIRECT" ? d2.target! : c.pathname });
+    expect(d1.type).toBe("REDIRECT");
     expect(d1.target).toBe("/consent");
+    // Follow the redirect: now on /consent
+    const d2 = getSystemDecision({ ...c, pathname: "/consent" });
     expect(d2.type).toBe("ALLOW");
+    // Stay there — repeated evaluation must keep ALLOWing
+    const d3 = getSystemDecision({ ...c, pathname: "/consent" });
     expect(d3.type).toBe("ALLOW");
   });
 });
