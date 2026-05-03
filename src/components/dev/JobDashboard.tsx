@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Activity, AlertCircle, Clock, RefreshCw, RotateCcw, ShieldCheck, History, Trash2, Play } from "lucide-react";
+import { Loader2, Activity, AlertCircle, Clock, RefreshCw, RotateCcw, ShieldCheck, History, Trash2, Play, Download, FileText, ExternalLink } from "lucide-react";
 import { toast } from "sonner";
 
 export default function JobDashboard() {
@@ -34,13 +34,36 @@ export default function JobDashboard() {
   };
 
   const handleReprocess = async (dlqId: string) => {
+...
+  const exportAudit = async () => {
     try {
-      const { data, error } = await supabase.rpc("reprocess_dead_letter_job", { dlq_id: dlqId });
+      const { data, error } = await supabase.rpc("export_clinical_audit");
       if (error) throw error;
-      toast.success(`Job reenviado com sucesso! Novo ID: ${data}`);
-      fetchData();
+      
+      const csv = [
+        ["Paciente", "Horário", "Evento", "Engine", "Plan", "Metadata"],
+        ...data.map((row: any) => [
+          row.patient_name,
+          new Date(row.action_time).toLocaleString(),
+          row.event,
+          row.engine,
+          row.plan,
+          JSON.stringify(row.meta)
+        ])
+      ].map(e => e.join(",")).join("\n");
+
+      const blob = new Blob([csv], { type: 'text/csv' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.setAttribute('hidden', '');
+      a.setAttribute('href', url);
+      a.setAttribute('download', `clinical_audit_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      toast.success("Auditoria exportada com sucesso!");
     } catch (err: any) {
-      toast.error(`Falha ao reprocessar: ${err.message}`);
+      toast.error(`Falha ao exportar: ${err.message}`);
     }
   };
 
@@ -233,11 +256,14 @@ export default function JobDashboard() {
 
         <TabsContent value="audit" className="mt-4">
           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <History className="w-4 h-4" /> Histórico de Auditoria Clínica
+              <CardTitle className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-2">
+                  <History className="w-4 h-4" /> Histórico de Auditoria Clínica
+                </div>
+                <Button variant="outline" size="sm" onClick={exportAudit} className="gap-2">
+                  <Download className="w-4 h-4" /> Exportar CSV
+                </Button>
               </CardTitle>
-            </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
