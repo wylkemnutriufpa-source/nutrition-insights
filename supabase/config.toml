@@ -3,6 +3,10 @@ project_id = "vkrcobprntictsxqmjjl"
 [functions.inngest]
 verify_jwt = false
 
+[functions.process-meal-plan-jobs]
+verify_jwt = false
+
+
 
 # Public telemetry / health endpoints — must accept anonymous calls
 [functions.log-route-404]
