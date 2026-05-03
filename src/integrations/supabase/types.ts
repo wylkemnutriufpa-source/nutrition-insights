@@ -7024,15 +7024,130 @@ export type Database = {
           },
         ]
       }
+      meal_plan_job_audit_logs: {
+        Row: {
+          created_at: string | null
+          created_by: string | null
+          error_details: string | null
+          id: string
+          job_id: string | null
+          metadata: Json | null
+          new_status: string | null
+          new_step: string | null
+          patient_id: string | null
+          previous_status: string | null
+          previous_step: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          created_by?: string | null
+          error_details?: string | null
+          id?: string
+          job_id?: string | null
+          metadata?: Json | null
+          new_status?: string | null
+          new_step?: string | null
+          patient_id?: string | null
+          previous_status?: string | null
+          previous_step?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          created_by?: string | null
+          error_details?: string | null
+          id?: string
+          job_id?: string | null
+          metadata?: Json | null
+          new_status?: string | null
+          new_step?: string | null
+          patient_id?: string | null
+          previous_status?: string | null
+          previous_step?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_job_audit_logs_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "meal_plan_jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "meal_plan_job_audit_logs_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      meal_plan_job_dead_letter: {
+        Row: {
+          engine_version: string | null
+          failure_timestamp: string | null
+          id: string
+          last_error: string | null
+          original_job_id: string | null
+          patient_id: string | null
+          payload: Json | null
+          plan_version: string | null
+          resolution_notes: string | null
+          resolved: boolean | null
+          resolved_at: string | null
+          resolved_by: string | null
+          retries_at_failure: number | null
+        }
+        Insert: {
+          engine_version?: string | null
+          failure_timestamp?: string | null
+          id?: string
+          last_error?: string | null
+          original_job_id?: string | null
+          patient_id?: string | null
+          payload?: Json | null
+          plan_version?: string | null
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          retries_at_failure?: number | null
+        }
+        Update: {
+          engine_version?: string | null
+          failure_timestamp?: string | null
+          id?: string
+          last_error?: string | null
+          original_job_id?: string | null
+          patient_id?: string | null
+          payload?: Json | null
+          plan_version?: string | null
+          resolution_notes?: string | null
+          resolved?: boolean | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          retries_at_failure?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "meal_plan_job_dead_letter_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       meal_plan_jobs: {
         Row: {
           completed_at: string | null
           created_at: string
           current_step: string | null
+          engine_version: string | null
           error: string | null
           id: string
           patient_id: string
           payload: Json
+          plan_version: string | null
           result: Json | null
           retries: number | null
           started_at: string | null
@@ -7043,10 +7158,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_step?: string | null
+          engine_version?: string | null
           error?: string | null
           id?: string
           patient_id: string
           payload?: Json
+          plan_version?: string | null
           result?: Json | null
           retries?: number | null
           started_at?: string | null
@@ -7057,10 +7174,12 @@ export type Database = {
           completed_at?: string | null
           created_at?: string
           current_step?: string | null
+          engine_version?: string | null
           error?: string | null
           id?: string
           patient_id?: string
           payload?: Json
+          plan_version?: string | null
           result?: Json | null
           retries?: number | null
           started_at?: string | null
@@ -20790,6 +20909,7 @@ export type Database = {
           patient_id: string
         }[]
       }
+      check_job_system_health: { Args: never; Returns: undefined }
       check_rate_limit: {
         Args: {
           p_endpoint: string
@@ -21448,6 +21568,7 @@ export type Database = {
         }
         Returns: Json
       }
+      reprocess_dead_letter_job: { Args: { dlq_id: string }; Returns: string }
       reset_all_ranking_points: { Args: never; Returns: Json }
       reset_onboarding_pipeline: {
         Args: {
