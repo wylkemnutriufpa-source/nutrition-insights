@@ -64,6 +64,8 @@ const MealCoverageDashboard = lazy(() => import("../pages/admin/MealCoverageDash
 const MealVisualLibraryAdmin = lazyDebug(() => import("../pages/admin/MealVisualLibraryAdmin.tsx"), "Biblioteca Visual Admin");
 const PlanBatchAudit = lazy(() => import("../pages/admin/PlanBatchAudit.tsx"));
 const TemplateMassReformulation = lazy(() => import("../pages/admin/TemplateMassReformulation.tsx"));
+const JobDashboard = lazy(() => import("../components/dev/JobDashboard"));
+
 
 // Lazy - Modules
 const PatientRegister = lazy(() => import("../pages/PatientRegister"));
