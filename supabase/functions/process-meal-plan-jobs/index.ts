@@ -34,13 +34,16 @@ Deno.serve(async (req) => {
         // 1. Mark as processing
         await supabaseAdmin
           .from("meal_plan_jobs")
-          .update({ status: "processing", current_step: "processando" })
+          .update({ 
+            status: "processing", 
+            current_step: "processando",
+            started_at: new Date().toISOString()
+          })
           .eq("id", jobId);
 
         const { patient_id, payload } = job;
 
         // 2. Run Generation Engine
-        // We invoke the other function to keep logic separated
         const { data, error } = await supabaseAdmin.functions.invoke("generate-meal-plan", {
           body: {
             ...payload,
@@ -97,17 +100,25 @@ Deno.serve(async (req) => {
           .update({ 
             status: "completed", 
             current_step: "finalizando",
+            completed_at: new Date().toISOString(),
             result: data 
           })
           .eq("id", jobId);
 
       } catch (err: any) {
         console.error(`Error processing job ${jobId}:`, err);
+        
+        // Increment retries if possible (simplified here, in a real scenario we might re-enqueue)
+        const { data: currentJob } = await supabaseAdmin.from("meal_plan_jobs").select("retries").eq("id", jobId).single();
+        const newRetries = (currentJob?.retries || 0) + 1;
+
         await supabaseAdmin
           .from("meal_plan_jobs")
           .update({ 
             status: "failed", 
-            error: err.message || "Unknown error" 
+            error: err.message || "Unknown error",
+            retries: newRetries,
+            completed_at: new Date().toISOString()
           })
           .eq("id", jobId);
       }
