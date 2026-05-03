@@ -1,26 +1,37 @@
-import { useEffect, useState, useMemo } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { useAuth } from "@/lib/auth";
 import { useTenant } from "@/lib/tenantContext";
-import { validateSystemState, fjLog } from "@/utils/dataSafety";
 import { useLocation, Navigate } from "react-router-dom";
-import { getSystemDecision, logDecision, GovernanceContext, PUBLIC_ROUTES, ONBOARDING_ALLOWED_ROUTES } from "@/lib/governance";
+import { getSystemDecision, logDecision, GovernanceContext } from "@/lib/governance";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
+import { useConsentGuard } from "@/hooks/useConsentGuard";
 import { HardFailLinkage } from "./HardFailLinkage";
-import { logAudit, getSessionCorrelationId } from "@/lib/auditLog";
+import { logAudit } from "@/lib/auditLog";
 
 /**
- * Global Guard to ensure the system is in a consistent state.
- * Implements Enterprise Governance V4.9
+ * Global Guard — the SINGLE orchestrator for navigation decisions.
+ *
+ * No other component (page, hook, useEffect) is allowed to redirect
+ * based on patient state. They mutate state in the DB; realtime + this
+ * guard recompute the canonical route.
  */
 export function SystemStateGuard({ children }: { children: React.ReactNode }) {
-  const { user, profile, loading: authLoading, isPatient, isAdmin, isNutritionist, isPersonal } = useAuth();
-  const { tenantId, isLoading: tenantLoading } = useTenant();
+  const { user, profile, loading: authLoading, isAdmin, isNutritionist, isPersonal, isPatient } = useAuth();
+  const { isLoading: tenantLoading } = useTenant();
   const { mode, role } = useExperienceMode();
   const { status: journeyStatus, loading: journeyLoading, isTransitioning } = usePatientJourneyStatus();
+  const { hasConsent, loading: consentLoading } = useConsentGuard();
   const location = useLocation();
 
-  const isReady = !authLoading && !tenantLoading && !journeyLoading;
+  // Loop detector: if we redirect more than 5 times within 2s, log a critical error.
+  const redirectsRef = useRef<number[]>([]);
+
+  const isReady =
+    !authLoading &&
+    !tenantLoading &&
+    !journeyLoading &&
+    (!isPatient || !consentLoading);
 
   const decision = useMemo(() => {
     if (!isReady) return { type: 'ALLOW' as const, reason: 'System loading' };
@@ -31,34 +42,47 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
       profile,
       journeyStatus: journeyStatus as any,
       anamnesisStatus: journeyStatus === 'ready_for_plan' || journeyStatus === 'active_plan' ? 'completed' : 'pending',
+      hasConsent: isPatient ? hasConsent : true,
       mode,
       role,
       isReady,
-      isDegraded: false, // We'll handle this separately if needed
+      isDegraded: false,
       isNutritionist,
       isPersonal,
       isAdmin,
       versionMismatch: (window as any).__FJ_VERSION_MISMATCH__,
-      isTransitioning
+      isTransitioning,
     };
 
     const d = getSystemDecision(ctx);
     if (d.type !== 'ALLOW') logDecision(d);
     return d;
-  }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isNutritionist, isPersonal, isAdmin, isTransitioning]);
+  }, [
+    location.pathname, user, profile, journeyStatus, hasConsent, isPatient,
+    mode, role, isReady, isNutritionist, isPersonal, isAdmin, isTransitioning,
+  ]);
 
-  // Track blocked renders for audit
+  // Audit + loop detection
   useEffect(() => {
     if (decision.type === 'BLOCK' || decision.type === 'REDIRECT') {
+      const now = Date.now();
+      redirectsRef.current = [...redirectsRef.current.filter(t => now - t < 2000), now];
+      if (redirectsRef.current.length > 5) {
+        console.error(
+          '[FJ:Governance:LOOP] More than 5 redirects in 2s — possible conflict.',
+          { path: location.pathname, decision }
+        );
+      }
+
       logAudit(
         "GLOBAL_GUARD_BLOCK",
         "navigation",
         user?.id,
-        { 
-          path: location.pathname, 
-          decision: decision.type, 
+        {
+          path: location.pathname,
+          decision: decision.type,
           reason: decision.reason,
-          target: decision.target 
+          target: decision.target,
         },
         "blocked"
       );
@@ -71,7 +95,7 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
     return <HardFailLinkage />;
   }
 
-  if (decision.type === 'REDIRECT' && decision.target && decision.target !== location.pathname) {
+  if ((decision.type === 'REDIRECT' || decision.type === 'BLOCK') && decision.target && decision.target !== location.pathname) {
     return <Navigate to={decision.target} replace />;
   }
 
