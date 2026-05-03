@@ -34,7 +34,16 @@ export default function JobDashboard() {
   };
 
   const handleReprocess = async (dlqId: string) => {
-...
+    try {
+      const { data, error } = await supabase.rpc("reprocess_dead_letter_job", { dlq_id: dlqId });
+      if (error) throw error;
+      toast.success(`Job reenviado com sucesso! Novo ID: ${data}`);
+      fetchData();
+    } catch (err: any) {
+      toast.error(`Falha ao reprocessar: ${err.message}`);
+    }
+  };
+
   const exportAudit = async () => {
     try {
       const { data, error } = await supabase.rpc("export_clinical_audit");
