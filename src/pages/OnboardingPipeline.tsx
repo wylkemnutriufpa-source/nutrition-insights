@@ -933,7 +933,7 @@ export default function OnboardingPipeline() {
 
             {/* Step 4: Plan Generation */}
             {currentStep === 4 && (
-              <Card>
+              <Card className="relative overflow-hidden">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Sparkles className="w-5 h-5 text-primary" />
@@ -941,28 +941,90 @@ export default function OnboardingPipeline() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  <p className="text-muted-foreground">
-                    Com base nos seus dados, o Protocolo FitJourney vai calcular TMB, TDEE e gerar um plano alimentar 100% personalizado. Após a geração, o profissional revisará e aprovará.
-                  </p>
-                  <div className="bg-muted/50 rounded-lg p-4 space-y-2">
-                    <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
-                    <div className="flex justify-between text-sm"><span>Altura:</span><span className="font-medium">{pipeline.height} cm</span></div>
-                    <div className="flex justify-between text-sm"><span>Refeições/dia:</span><span className="font-medium">{pipeline.meal_count}</span></div>
-                    <div className="flex justify-between text-sm"><span>Preparo:</span><span className="font-medium">{{ quick: "⚡ Prático", homemade: "🏠 Caseiro", gourmet: "👨‍🍳 Gourmet", any: "🤷 Tanto faz" }[pipeline.cooking_preference] || pipeline.cooking_preference}</span></div>
-                  </div>
-                  <Button onClick={handleGeneratePlan} className="w-full" size="lg" disabled={generating}>
-                    {generating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 animate-spin mr-2" />
-                        Gerando plano...
-                      </>
-                    ) : (
-                      <>
+                  {(generating || (activeJob && (activeJob.status === "pending" || activeJob.status === "processing"))) ? (
+                    <div className="py-8 space-y-6">
+                      <div className="text-center space-y-2">
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 4, ease: "linear" }}
+                          className="w-16 h-16 mx-auto rounded-full bg-primary/5 flex items-center justify-center"
+                        >
+                          <Loader2 className="w-8 h-8 text-primary animate-spin" />
+                        </motion.div>
+                        <h3 className="text-lg font-semibold capitalize">
+                          {activeJob?.current_step || "Iniciando"}...
+                        </h3>
+                        <p className="text-sm text-muted-foreground">
+                          O Protocolo FitJourney está calculando sua estratégia nutricional.
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex justify-between text-xs font-medium">
+                          <span>Progresso da Geração</span>
+                          <span>
+                            {activeJob?.current_step === "iniciando" ? "10%" : 
+                             activeJob?.current_step === "processando" ? "60%" : 
+                             activeJob?.current_step === "finalizando" ? "90%" : "0%"}
+                          </span>
+                        </div>
+                        <Progress 
+                          value={
+                            activeJob?.current_step === "iniciando" ? 10 : 
+                            activeJob?.current_step === "processando" ? 60 : 
+                            activeJob?.current_step === "finalizando" ? 90 : 0
+                          } 
+                          className="h-2"
+                        />
+                        <div className="grid grid-cols-3 gap-2">
+                          {["iniciando", "processando", "finalizando"].map((step, idx) => {
+                            const isDone = ["completed", "finalizando", "processando"].includes(activeJob?.current_step) && idx < ["iniciando", "processando", "finalizando"].indexOf(activeJob?.current_step);
+                            const isCurrent = activeJob?.current_step === step;
+                            return (
+                              <div key={step} className="flex flex-col items-center gap-1">
+                                <div className={`w-2 h-2 rounded-full ${isDone || isCurrent ? 'bg-primary' : 'bg-muted'}`} />
+                                <span className={`text-[10px] capitalize ${isCurrent ? 'font-bold text-primary' : 'text-muted-foreground'}`}>
+                                  {step}
+                                </span>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ) : jobError ? (
+                    <div className="py-6 text-center space-y-4">
+                      <div className="w-12 h-12 mx-auto rounded-full bg-destructive/10 flex items-center justify-center">
+                        <AlertCircle className="w-6 h-6 text-destructive" />
+                      </div>
+                      <div className="space-y-1">
+                        <h3 className="font-semibold text-destructive">Erro na Geração</h3>
+                        <p className="text-sm text-muted-foreground px-4">
+                          {jobError}
+                        </p>
+                      </div>
+                      <Button onClick={handleGeneratePlan} variant="outline" className="gap-2">
+                        <RefreshCw className="w-4 h-4" />
+                        Tentar Novamente
+                      </Button>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-muted-foreground">
+                        Com base nos seus dados, o Protocolo FitJourney vai calcular TMB, TDEE e gerar um plano alimentar 100% personalizado. Após a geração, o profissional revisará e aprovará.
+                      </p>
+                      <div className="bg-muted/50 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between text-sm"><span>Peso:</span><span className="font-medium">{pipeline.weight} kg</span></div>
+                        <div className="flex justify-between text-sm"><span>Altura:</span><span className="font-medium">{pipeline.height} cm</span></div>
+                        <div className="flex justify-between text-sm"><span>Refeições/dia:</span><span className="font-medium">{pipeline.meal_count}</span></div>
+                        <div className="flex justify-between text-sm"><span>Preparo:</span><span className="font-medium">{{ quick: "⚡ Prático", homemade: "🏠 Caseiro", gourmet: "👨‍🍳 Gourmet", any: "🤷 Tanto faz" }[pipeline.cooking_preference] || pipeline.cooking_preference}</span></div>
+                      </div>
+                      <Button onClick={handleGeneratePlan} className="w-full" size="lg" disabled={generating}>
                         <Sparkles className="w-4 h-4 mr-2" />
                         Gerar Meu Pré-Plano
-                      </>
-                    )}
-                  </Button>
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}
