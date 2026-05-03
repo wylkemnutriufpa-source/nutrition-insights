@@ -7026,6 +7026,7 @@ export type Database = {
       }
       meal_plan_jobs: {
         Row: {
+          completed_at: string | null
           created_at: string
           current_step: string | null
           error: string | null
@@ -7033,10 +7034,13 @@ export type Database = {
           patient_id: string
           payload: Json
           result: Json | null
+          retries: number | null
+          started_at: string | null
           status: string
           updated_at: string
         }
         Insert: {
+          completed_at?: string | null
           created_at?: string
           current_step?: string | null
           error?: string | null
@@ -7044,10 +7048,13 @@ export type Database = {
           patient_id: string
           payload?: Json
           result?: Json | null
+          retries?: number | null
+          started_at?: string | null
           status?: string
           updated_at?: string
         }
         Update: {
+          completed_at?: string | null
           created_at?: string
           current_step?: string | null
           error?: string | null
@@ -7055,6 +7062,8 @@ export type Database = {
           patient_id?: string
           payload?: Json
           result?: Json | null
+          retries?: number | null
+          started_at?: string | null
           status?: string
           updated_at?: string
         }
@@ -20502,9 +20511,11 @@ export type Database = {
       meal_plan_job_metrics: {
         Row: {
           avg_duration_seconds: number | null
-          failed_jobs: number | null
-          failure_rate_percentage: number | null
-          successful_jobs: number | null
+          completed_count: number | null
+          failed_count: number | null
+          failure_rate_pct: number | null
+          processing_count: number | null
+          total_retries: number | null
         }
         Relationships: []
       }
@@ -20770,6 +20781,15 @@ export type Database = {
         Returns: Json
       }
       check_and_update_session: { Args: never; Returns: Json }
+      check_job_anomalies: {
+        Args: never
+        Returns: {
+          anomaly_type: string
+          details: string
+          job_id: string
+          patient_id: string
+        }[]
+      }
       check_rate_limit: {
         Args: {
           p_endpoint: string
