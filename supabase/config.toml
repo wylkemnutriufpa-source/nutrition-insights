@@ -1,5 +1,9 @@
 project_id = "vkrcobprntictsxqmjjl"
 
+[functions.inngest]
+verify_jwt = false
+
+
 # Public telemetry / health endpoints — must accept anonymous calls
 [functions.log-route-404]
 verify_jwt = false
