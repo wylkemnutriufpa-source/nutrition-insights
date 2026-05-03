@@ -1053,18 +1053,9 @@ export default function OnboardingPipeline() {
  * AnamnesisAutoRedirect — neutralizado.
  * Redirects automáticos foram removidos. SystemStateGuard observa
  * patient_state e move o paciente para a próxima etapa quando o estado muda.
- * Aqui apenas mostramos um indicador de carregamento.
+ * Mantemos apenas um link manual como fallback para o usuário.
  */
 function AnamnesisAutoRedirect() {
-  return (
-    <div className="flex items-center justify-center py-12">
-      <div className="text-sm text-muted-foreground">Carregando próxima etapa...</div>
-    </div>
-  );
-}
-
-  }, [navigate]);
-
   return (
     <Card>
       <CardHeader>
@@ -1076,10 +1067,10 @@ function AnamnesisAutoRedirect() {
       <CardContent className="space-y-4 text-center py-8">
         <Loader2 className="w-8 h-8 animate-spin text-primary mx-auto" />
         <p className="text-sm text-muted-foreground">
-          Abrindo seu questionário de anamnese...
+          Aguardando liberação da anamnese...
         </p>
         <p className="text-xs text-muted-foreground">
-          Se a página não carregar em alguns segundos, toque no botão abaixo:
+          Se a página não avançar em alguns segundos, toque no botão abaixo:
         </p>
         <Button asChild variant="outline" className="w-full">
           <a href="/anamnesis?pipeline=true">
@@ -1090,3 +1081,4 @@ function AnamnesisAutoRedirect() {
     </Card>
   );
 }
+
