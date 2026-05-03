@@ -20499,6 +20499,15 @@ export type Database = {
           },
         ]
       }
+      meal_plan_job_metrics: {
+        Row: {
+          avg_duration_seconds: number | null
+          failed_jobs: number | null
+          failure_rate_percentage: number | null
+          successful_jobs: number | null
+        }
+        Relationships: []
+      }
       meal_plan_resolved_state: {
         Row: {
           created_at: string | null
@@ -21073,6 +21082,18 @@ export type Database = {
           correlation_id: string
           events: Json
           last_event_at: string
+        }[]
+      }
+      get_meal_plan_job_debug_info: {
+        Args: never
+        Returns: {
+          created_at: string
+          current_step: string
+          duration_seconds: number
+          error: string
+          id: string
+          patient_id: string
+          status: string
         }[]
       }
       get_nutritionist_dashboard_stats: {
