@@ -3,21 +3,24 @@ import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Loader2, Activity, AlertCircle, Clock, RefreshCw } from "lucide-react";
+import { Loader2, Activity, AlertCircle, Clock, RefreshCw, RotateCcw } from "lucide-react";
 
 export default function JobDashboard() {
   const [jobs, setJobs] = useState<any[]>([]);
   const [metrics, setMetrics] = useState<any>(null);
+  const [anomalies, setAnomalies] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   const fetchData = async () => {
-    const [jobsRes, metricsRes] = await Promise.all([
-      supabase.rpc("get_meal_plan_job_debug_info"),
-      supabase.from("meal_plan_job_metrics").select("*").single()
+    const [jobsRes, metricsRes, anomaliesRes] = await Promise.all([
+      supabase.from("meal_plan_jobs").select("*").order("created_at", { ascending: false }).limit(50),
+      supabase.from("meal_plan_job_metrics").select("*").single(),
+      supabase.rpc("check_job_anomalies")
     ]);
     
     if (jobsRes.data) setJobs(jobsRes.data);
     if (metricsRes.data) setMetrics(metricsRes.data);
+    if (anomaliesRes.data) setAnomalies(anomaliesRes.data);
     setLoading(false);
   };
 
@@ -34,35 +37,52 @@ export default function JobDashboard() {
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-bold flex items-center gap-2">
           <Activity className="text-primary" /> 
-          Monitor de Jobs (Dev Mode)
+          Hardening System (Enterprise Dashboard)
         </h1>
         <Button variant="outline" size="sm" onClick={fetchData} className="gap-2">
           <RefreshCw className="w-4 h-4" /> Atualizar
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      {anomalies.length > 0 && (
+        <Card className="border-red-500 bg-red-500/5">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-red-500 flex items-center gap-2 text-sm uppercase">
+              <AlertCircle className="w-4 h-4" /> Alertas do Sistema
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {anomalies.map((a, i) => (
+              <div key={i} className="text-sm text-red-600 font-medium">
+                • {a.details}
+              </div>
+            ))}
+          </CardContent>
+        </Card>
+      )}
+
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">Sucesso</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Completados</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-green-600">{metrics?.successful_jobs || 0}</div>
+            <div className="text-2xl font-bold text-green-600">{metrics?.completed_count || 0}</div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">Taxa de Falha</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Taxa de Falha</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-red-600">
-              {metrics?.failure_rate_percentage?.toFixed(1) || 0}%
+              {metrics?.failure_rate_pct?.toFixed(1) || 0}%
             </div>
           </CardContent>
         </Card>
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-medium text-muted-foreground uppercase">Tempo Médio</CardTitle>
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Duração Média</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-blue-600">
@@ -70,11 +90,21 @@ export default function JobDashboard() {
             </div>
           </CardContent>
         </Card>
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xs font-medium text-muted-foreground uppercase">Total Retries</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold text-orange-600">
+              {metrics?.total_retries || 0}
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Últimos 100 Jobs</CardTitle>
+          <CardTitle className="text-lg">Processamentos Recentes</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
@@ -82,10 +112,10 @@ export default function JobDashboard() {
               <thead>
                 <tr className="border-b text-left">
                   <th className="p-2 font-medium">Status</th>
-                  <th className="p-2 font-medium">Etapa</th>
+                  <th className="p-2 font-medium">Retries</th>
                   <th className="p-2 font-medium">Duração</th>
                   <th className="p-2 font-medium">Criado em</th>
-                  <th className="p-2 font-medium">Erro</th>
+                  <th className="p-2 font-medium">Mensagem</th>
                 </tr>
               </thead>
               <tbody>
@@ -100,16 +130,24 @@ export default function JobDashboard() {
                         {job.status}
                       </Badge>
                     </td>
-                    <td className="p-2 capitalize">{job.current_step}</td>
+                    <td className="p-2 text-center">
+                      {job.retries > 0 ? (
+                        <span className="flex items-center gap-1 text-orange-600">
+                          <RotateCcw className="w-3 h-3" /> {job.retries}
+                        </span>
+                      ) : "0"}
+                    </td>
                     <td className="p-2 flex items-center gap-1">
                       <Clock className="w-3 h-3 text-muted-foreground" />
-                      {job.duration_seconds?.toFixed(1)}s
+                      {job.completed_at && job.started_at 
+                        ? (Math.abs(new Date(job.completed_at).getTime() - new Date(job.started_at).getTime()) / 1000).toFixed(1) + "s"
+                        : "-"}
                     </td>
                     <td className="p-2 text-muted-foreground">
                       {new Date(job.created_at).toLocaleTimeString()}
                     </td>
-                    <td className="p-2 max-w-xs truncate text-red-500" title={job.error}>
-                      {job.error || "-"}
+                    <td className="p-2 max-w-xs truncate text-muted-foreground italic" title={job.error}>
+                      {job.error || (job.status === 'completed' ? 'Sucesso' : 'Em fila')}
                     </td>
                   </tr>
                 ))}
