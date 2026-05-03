@@ -438,7 +438,9 @@ export default function OnboardingPipeline() {
           patient_id: user.id,
           payload,
           status: "pending",
-          current_step: "iniciando"
+          current_step: "iniciando",
+          engine_version: "2.0.0",
+          plan_version: "1.0.0"
         })
         .select()
         .single();
