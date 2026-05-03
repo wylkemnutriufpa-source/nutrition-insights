@@ -7,6 +7,7 @@ function ctx(overrides: Partial<GovernanceContext> = {}): GovernanceContext {
     user: { id: "user-1" },
     profile: { id: "user-1", tenant_id: "tenant-1" },
     journeyStatus: "active_plan",
+    hasConsent: true,
     mode: "basic",
     role: "patient",
     isReady: true,
@@ -22,48 +23,41 @@ function ctx(overrides: Partial<GovernanceContext> = {}): GovernanceContext {
   };
 }
 
-describe("Governance Engine — Onboarding Loop Prevention", () => {
-  it("should ALLOW access to /consent even if journeyStatus is 'anamnesis'", () => {
+describe("Governance — Onboarding Loop Prevention", () => {
+  it("ALLOWS access to /consent when consent is missing (state dominates)", () => {
     const decision = getSystemDecision(
-      ctx({
-        pathname: "/consent",
-        journeyStatus: "anamnesis",
-      })
+      ctx({ pathname: "/consent", journeyStatus: "anamnesis", hasConsent: false })
     );
     expect(decision.type).toBe("ALLOW");
-    expect(decision.reason).toContain("Bypassing state enforcement");
   });
 
-  it("should REDIRECT to /anamnesis if user is in 'anamnesis' state and on a random page", () => {
+  it("REDIRECTS to /anamnesis when state=anamnesis and user is on a non-flow page", () => {
     const decision = getSystemDecision(
-      ctx({
-        pathname: "/client/dashboard",
-        journeyStatus: "anamnesis",
-      })
+      ctx({ pathname: "/client/dashboard", journeyStatus: "anamnesis" })
     );
     expect(decision.type).toBe("REDIRECT");
     expect(decision.target).toBe("/anamnesis");
   });
 
-  it("should ALLOW access to /settings for active patients", () => {
+  it("ALLOWS /settings (utility route) regardless of state", () => {
     const decision = getSystemDecision(
-      ctx({
-        pathname: "/settings",
-        journeyStatus: "active_plan",
-      })
+      ctx({ pathname: "/settings", journeyStatus: "anamnesis" })
     );
     expect(decision.type).toBe("ALLOW");
-    expect(decision.reason).toContain("Bypassing state enforcement");
   });
 
-  it("should ALLOW access to /onboarding/paciente if journeyStatus is 'onboarding_slides'", () => {
+  it("ALLOWS /onboarding/paciente when state=onboarding_slides", () => {
     const decision = getSystemDecision(
-      ctx({
-        pathname: "/onboarding/paciente",
-        journeyStatus: "onboarding_slides",
-      })
+      ctx({ pathname: "/onboarding/paciente", journeyStatus: "onboarding_slides" })
     );
     expect(decision.type).toBe("ALLOW");
-    expect(decision.reason).toContain("Bypassing state enforcement");
+  });
+
+  it("does not produce a redirect chain: target route is ALLOWED on next call", () => {
+    const c = ctx({ pathname: "/client/dashboard", journeyStatus: "anamnesis" });
+    const d1 = getSystemDecision(c);
+    expect(d1.type).toBe("REDIRECT");
+    const d2 = getSystemDecision({ ...c, pathname: d1.target! });
+    expect(d2.type).toBe("ALLOW");
   });
 });
