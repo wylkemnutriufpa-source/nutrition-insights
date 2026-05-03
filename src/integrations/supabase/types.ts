@@ -7024,6 +7024,42 @@ export type Database = {
           },
         ]
       }
+      meal_plan_jobs: {
+        Row: {
+          created_at: string
+          current_step: string | null
+          error: string | null
+          id: string
+          patient_id: string
+          payload: Json
+          result: Json | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          current_step?: string | null
+          error?: string | null
+          id?: string
+          patient_id: string
+          payload?: Json
+          result?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          current_step?: string | null
+          error?: string | null
+          id?: string
+          patient_id?: string
+          payload?: Json
+          result?: Json | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       meal_plan_meal_targets: {
         Row: {
           calories_target: number | null
