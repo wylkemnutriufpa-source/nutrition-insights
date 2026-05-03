@@ -1187,10 +1187,10 @@ export default function Anamnesis() {
     if (isPipelineMode && !isNutritionistMode) {
       setAnalyzing(false);
       toast.success("Anamnese salva! Indo para a próxima etapa do onboarding. ✅");
-      
-      // Navigate immediately while still transitioning
-      navigate("/body-analysis", { replace: true });
-      
+
+      // Não chamamos navigate(): a edge function que conclui anamnese atualiza
+      // patient_state para 'collecting_profile' e o SystemStateGuard rota
+      // automaticamente para /body-analysis.
       setTimeout(() => {
         if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
       }, 1500);
