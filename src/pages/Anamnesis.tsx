@@ -561,13 +561,9 @@ export default function Anamnesis() {
   const [answers, setAnswers] = useState<Record<string, any>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  // Route protection: patients must accept consent before anamnesis
-  useEffect(() => {
-    if (isPatient && !consentLoading && !hasConsent) {
-      toast.error("Você precisa aceitar o termo de consentimento antes de iniciar a anamnese.");
-      navigate("/consent", { replace: true });
-    }
-  }, [isPatient, consentLoading, hasConsent, navigate]);
+  // Consent enforcement is handled by SystemStateGuard via governance.
+  // Pages MUST NOT redirect on their own — that produced loops with /consent.
+
   const [analyzing, setAnalyzing] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [aiResult, setAiResult] = useState<any>(null);
@@ -814,11 +810,7 @@ export default function Anamnesis() {
 
       if (latestAnamnesis.status === "completed") {
         setCompleted(true);
-        // Anti-Loop: if already completed and NOT in nutritionist mode, go to dashboard
-        if (!isNutritionistMode) {
-          console.log("[FJ:Anamnesis] Já concluída, redirecionando...");
-          navigate("/", { replace: true });
-        }
+        // SystemStateGuard observa patient_state e roteia automaticamente.
       } else if (latestAnamnesis.status === "draft") {
         if (savedAnswers && Object.keys(savedAnswers).length > 0) {
           const lastIdx = questions.findIndex((q) => !(q.id in savedAnswers));
@@ -1187,10 +1179,10 @@ export default function Anamnesis() {
     if (isPipelineMode && !isNutritionistMode) {
       setAnalyzing(false);
       toast.success("Anamnese salva! Indo para a próxima etapa do onboarding. ✅");
-      
-      // Navigate immediately while still transitioning
-      navigate("/body-analysis", { replace: true });
-      
+
+      // Não chamamos navigate(): a edge function que conclui anamnese atualiza
+      // patient_state para 'collecting_profile' e o SystemStateGuard rota
+      // automaticamente para /body-analysis.
       setTimeout(() => {
         if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
       }, 1500);
@@ -1287,22 +1279,16 @@ export default function Anamnesis() {
     }
   };
 
-  // Pipeline mode: auto-redirect back to onboarding pipeline after completion
+  // Pipeline mode: a transição de rota é feita pelo SystemStateGuard quando
+  // o patient_state muda. O contador é apenas visual.
   const [pipelineCountdown, setPipelineCountdown] = useState(5);
   useEffect(() => {
     if (!completed || analyzing || !isPipelineMode || isNutritionistMode) return;
     const timer = setInterval(() => {
-      setPipelineCountdown(prev => {
-        if (prev <= 1) {
-          clearInterval(timer);
-          navigate("/", { replace: true });
-          return 0;
-        }
-        return prev - 1;
-      });
+      setPipelineCountdown(prev => (prev <= 1 ? 0 : prev - 1));
     }, 1000);
     return () => clearInterval(timer);
-  }, [completed, analyzing, isPipelineMode, isNutritionistMode, navigate]);
+  }, [completed, analyzing, isPipelineMode, isNutritionistMode]);
 
   // Blocked state — onboarding not released
   if (onboardingBlocked && !isNutritionistMode) {

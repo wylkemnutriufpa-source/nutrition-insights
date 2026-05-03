@@ -39,26 +39,13 @@ export default function OnboardingGateScreen({ status }: Props) {
   const config = STATUS_CONFIG[status || "onboarding_slides"] || STATUS_CONFIG.onboarding_slides;
   const Icon = config.icon;
 
-  // Auto-redirect lead_created to onboarding
+  // Não redirecionamos aqui. SystemStateGuard é o único orquestrador.
+  // Apenas mostramos o botão de retry se a sincronização demorar muito.
   useEffect(() => {
     console.log(`[OnboardingGateScreen] Current status: ${status}`);
-    
-    // Mostre o botão de tentar novamente após 8 segundos se não houver redirecionamento
     const retryTimer = setTimeout(() => setShowRetry(true), 8000);
-
-    if (status === "onboarding_slides") {
-      const timer = setTimeout(() => {
-        console.log(`[OnboardingGate:Redirect] Directing ${status} to /onboarding`);
-        navigate("/onboarding", { replace: true });
-      }, 1500);
-      return () => {
-        clearTimeout(timer);
-        clearTimeout(retryTimer);
-      };
-    }
-
     return () => clearTimeout(retryTimer);
-  }, [status, navigate]);
+  }, [status]);
 
   const handleRetry = () => {
     console.log("[OnboardingGate:Retry] Forcing refresh...");
