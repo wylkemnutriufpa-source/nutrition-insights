@@ -530,6 +530,7 @@ export const AppRoutes = () => {
                 {/* Admin Routes */}
                 <Route path="/admin/dashboard" element={<NutritionistRoute><StabilityZone name="Dashboard Admin"><LP section="Admin Dashboard"><AdminDashboard /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/admin/audit-logs" element={<NutritionistRoute><LP section="Audit Logs"><AuditLogs /></LP></NutritionistRoute>} />
+                <Route path="/admin/audit/checklist" element={<NutritionistRoute><LP section="Checklist Auditoria"><OperationalChecklist /></LP></NutritionistRoute>} />
                 <Route path="/admin/clinical-rules" element={<NutritionistRoute><LP section="Regras Clínicas"><ClinicalRulesAdmin /></LP></NutritionistRoute>} />
                 <Route path="/admin/affiliates" element={<NutritionistRoute><LP section="Afiliados"><AdminAffiliates /></LP></NutritionistRoute>} />
                 <Route path="/admin/booking-settings" element={<NutritionistRoute><LP section="Config. Agenda"><AdminBookingSettings /></LP></NutritionistRoute>} />
