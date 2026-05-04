@@ -20,12 +20,10 @@ import {
   ShieldCheck, 
   Zap, 
   RefreshCw, 
-  Search,
   Database,
   Bell,
   Trash2,
   Lock,
-  ArrowRight,
   ChevronRight,
   Info,
   Terminal,
@@ -33,7 +31,7 @@ import {
   AlertTriangle,
   Loader2
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 type Status = "functional" | "partial" | "pending";
@@ -61,8 +59,8 @@ interface ModuleStatus {
   health: number;
   lastCheck: string;
   status: "up" | "degraded" | "down";
-    endpoints: { name: string; status: "ok" | "warn" | "error" }[];
-  },
+  endpoints: { name: string; status: "ok" | "warn" | "error" }[];
+}
 
 const CHECKLIST_DATA: ChecklistItem[] = [
   { 
@@ -115,6 +113,25 @@ const CHECKLIST_DATA: ChecklistItem[] = [
     onAction: async () => {
       await new Promise(r => setTimeout(r, 1000));
       toast.info("Schemas validados: protocol_used detectado em 1420 registros.");
+    }
+  },
+  { 
+    id: "10", 
+    category: "Engine Clínica", 
+    title: "Meal Context Engine (FitJourney)", 
+    status: "functional", 
+    details: "Coerência alimentar garantida por tipo de refeição.",
+    why: "Implementada lógica contextual que valida carboidratos leves no café, snacks leves, e proteínas obrigatórias no almoço/jantar.",
+    evidence: {
+      logs: ["[Engine] MealContext validado para breakfast/snack/lunch/dinner.", "[Rules] Proteína obrigatória aplicada em lunch/dinner."],
+      version: "4.2.0",
+      lastExec: "Agora",
+      errors: []
+    },
+    actionLabel: "Simular Contextos",
+    onAction: async () => {
+      await new Promise(r => setTimeout(r, 1000));
+      toast.success("Simulação concluída: Todas as refeições geradas respeitaram o contexto clinical_type.");
     }
   },
   { 
@@ -209,25 +226,6 @@ const CHECKLIST_DATA: ChecklistItem[] = [
     onAction: async () => {
       await new Promise(r => setTimeout(r, 1000));
       toast.info("Alerta de teste enviado para a console de auditoria.");
-    }
-  }
-  { 
-    id: "10", 
-    category: "Engine Clínica", 
-    title: "Meal Context Engine (FitJourney)", 
-    status: "functional", 
-    details: "Coerência alimentar garantida por tipo de refeição.",
-    why: "Implementada lógica contextual que valida carboidratos leves no café, snacks leves, e proteínas obrigatórias no almoço/jantar.",
-    evidence: {
-      logs: ["[Engine] MealContext validado para breakfast/snack/lunch/dinner.", "[Rules] Proteína obrigatória aplicada em lunch/dinner."],
-      version: "4.2.0",
-      lastExec: "Agora",
-      errors: []
-    },
-    actionLabel: "Simular Contextos",
-    onAction: async () => {
-      await new Promise(r => setTimeout(r, 1000));
-      toast.success("Simulação concluída: Todas as refeições geradas respeitaram o contexto clinical_type.");
     }
   }
 ];
@@ -336,7 +334,7 @@ export default function OperationalChecklist() {
             <Button variant="outline" className="gap-2" onClick={() => window.location.reload()}>
               <RefreshCw className="h-4 w-4" /> Atualizar Telemetria
             </Button>
-            <Badge variant="secondary" className="px-3 py-1 font-mono uppercase tracking-wider">v4.0.0-stable</Badge>
+            <Badge variant="secondary" className="px-3 py-1 font-mono uppercase tracking-wider">v4.2.0-stable</Badge>
           </div>
         </header>
 
