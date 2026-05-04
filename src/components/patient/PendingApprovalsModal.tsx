@@ -26,7 +26,7 @@ import {
   FileText, Zap, Search, Trash2
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+// Removed EditorVersionPicker as we now handle version dispatching automatically
 
 interface PendingPipeline {
   id: string;
@@ -261,8 +261,13 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
 
       await transitionPlanToReview(reviewPlanId, user.id);
 
+      // Fetch version to decide editor
+      const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", reviewPlanId).single();
+      const isV3 = planData?.editor_version === "v3";
+      const path = isV3 ? `/v3/${selectedPipeline.patient_id}?planId=${reviewPlanId}` : `/meal-plans/${reviewPlanId}`;
+
       onOpenChange(false);
-      navigate(`/meal-plans/${reviewPlanId}`);
+      navigate(path);
       toast.success(
         finalized.corrected
           ? "Plano gerado e corrigido pelo motor clínico antes da revisão."
@@ -324,8 +329,13 @@ export default function PendingApprovalsModal({ open, onOpenChange }: Props) {
         toast.success("Plano revisado pelo motor clínico. Abrindo versão corrigida...");
       }
 
+      // Fetch version to decide editor
+      const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", resolvedPlanId).single();
+      const isV3 = planData?.editor_version === "v3";
+      const path = isV3 ? `/v3/${selectedPipeline.patient_id}?planId=${resolvedPlanId}` : `/meal-plans/${resolvedPlanId}`;
+
       onOpenChange(false);
-      navigate(`/meal-plans/${resolvedPlanId}`);
+      navigate(path);
     } catch (err: any) {
       toast.error("Erro ao abrir plano: " + (err.message || "Tente novamente"));
     } finally {

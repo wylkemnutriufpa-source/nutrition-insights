@@ -21,7 +21,7 @@ import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
   LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles, UserPlus,
-  UtensilsCrossed
+  UtensilsCrossed, User, FileText
 } from "lucide-react";
 import { BASE_URL } from "@/lib/config";
 import { useNavigate, Link } from "react-router-dom";
@@ -317,26 +317,21 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
                 toast.error("ID do paciente não encontrado");
                 return;
               }
-              navigate(`/v3/${encodeURIComponent(p.patient_id)}`); 
+              // Navigate to patient detail where they can choose the correct editor version
+              navigate(`/${encodeURIComponent(p.patient_id)}`); 
             }}
             size="sm"
             className="h-9 px-4 rounded-xl bg-primary hover:bg-primary/90 font-bold gap-2 shadow-lg shadow-primary/20"
           >
-            <Sparkles className="w-3.5 h-3.5" />
-            CRIAR PLANO
+            <User className="w-3.5 h-3.5" />
+            VER PERFIL
           </Button>
           <div className="flex items-center gap-0.5 ml-2">
             <button
-              onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}`); }}
-              className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Editor V3"
+              onClick={(e) => { e.stopPropagation(); navigate(`/${p.patient_id}?section=plan`); }}
+              className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Plano Alimentar"
             >
-              <Zap className="w-4 h-4" />
-            </button>
-            <button
-              onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.patient_id}?returnTo=${encodeURIComponent(window.location.pathname)}`); }}
-              className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Editor V2"
-            >
-              <UtensilsCrossed className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); setAssignTarget(p); setAssignDialogOpen(true); }}

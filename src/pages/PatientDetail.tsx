@@ -60,7 +60,7 @@ import { SmartRecommendationsPanel } from "@/components/dashboard/SmartRecommend
 import type { PatientSignals } from "@/components/dashboard/SmartRecommendationsPanel";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
-import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+// Removed EditorVersionPicker to maintain absolute independence between V2 and V3 flows
 import { EditorMatrixModal } from "@/components/diet/EditorMatrixModal";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
@@ -1607,7 +1607,9 @@ export default function PatientDetail() {
                             });
                             if (error) throw error;
                             toast.success("Plano criado! Abrindo Builder...");
-                            navigate(`/v3/${resolvedPatientId}?planId=${newPlan.id}`, { replace: true });
+                            // Navigate to the editor matching the plan version
+                            const editorPath = newPlan.editor_version === "v3" ? `/v3/${resolvedPatientId}` : `/meal-plans/${newPlan.id}`;
+                            navigate(`${editorPath}?planId=${newPlan.id}`, { replace: true });
                           } catch (err: any) {
                             toast.error(err.message || "Erro ao criar plano");
                           }
@@ -1658,24 +1660,34 @@ export default function PatientDetail() {
                                 </div>
                                 <div className="flex items-center gap-2">
                                   {isPending && (
-                                    <EditorVersionPicker
-                                      planId={plan.id}
-                                      patientId={resolvedPatientId}
-                                      onBeforeNavigate={() => setOpenSection(null)}
-                                      label="Revisar e Aprovar"
-                                      variant="default"
+                                    <Button
+                                      size="sm"
                                       className="gradient-primary shadow-glow gap-1.5"
-                                      icon={<Pencil className="w-3.5 h-3.5" />}
-                                    />
+                                      onClick={() => {
+                                        setOpenSection(null);
+                                        const path = plan.editor_version === "v3" 
+                                          ? `/v3/${resolvedPatientId}?planId=${plan.id}`
+                                          : `/meal-plans/${plan.id}`;
+                                        navigate(path);
+                                      }}
+                                    >
+                                      <Pencil className="w-3.5 h-3.5" /> Revisar e Aprovar
+                                    </Button>
                                   )}
-                                  <EditorVersionPicker
-                                    planId={plan.id}
-                                    patientId={resolvedPatientId}
-                                    onBeforeNavigate={() => setOpenSection(null)}
-                                    label={isPending ? "Ver" : "Ver Plano"}
+                                  <Button
+                                    size="sm"
                                     variant="outline"
-                                    icon={<FileText className="w-3.5 h-3.5" />}
-                                  />
+                                    className="gap-1.5"
+                                    onClick={() => {
+                                      setOpenSection(null);
+                                      const path = plan.editor_version === "v3" 
+                                        ? `/v3/${resolvedPatientId}?planId=${plan.id}`
+                                        : `/meal-plans/${plan.id}`;
+                                      navigate(path);
+                                    }}
+                                  >
+                                    <FileText className="w-3.5 h-3.5" /> {isPending ? "Ver" : "Ver Plano"}
+                                  </Button>
                                 </div>
                               </div>
                               {plan.description && <p className="text-sm text-muted-foreground mt-2">{plan.description}</p>}

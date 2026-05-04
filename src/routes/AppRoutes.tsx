@@ -33,11 +33,8 @@ const ClientDashboard = lazy(() => import("../pages/ClientDashboard"));
 const MealPlanEditorV2 = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
 const MealPlanEditorV2Entry = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
 const EditorV3Page = lazyDebug(() => import("../features/editor-v3").then(m => ({ default: m.EditorV3Page })), "Editor V3");
-const MealPlanEditorV2Redirect = () => {
-  const { id } = useParams();
-  const [searchParams] = useSearchParams();
-  return <Navigate to={`/v3/${searchParams.get('patientId') || 'unknown'}?planId=${id}`} replace />;
-};
+// Removed MealPlanEditorV2Redirect as it was mixing V2 and V3 logic.
+// Routes now point directly to their respective editors.
 const DietBuilder = lazy(() => import("../pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
@@ -605,7 +602,7 @@ export const AppRoutes = () => {
                 <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                 
                 {/* Legacy V3 paths being unified to V3 */}
-                <Route path="/meal-plan-editor/:id" element={<MealPlanEditorV2Redirect />} />
+                {/* Removed forced V2 to V3 redirect to maintain architectural independence */}
                 
                 <Route path="/editor" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 {/* Editor V3 Aliases — Centralizados para EditorV3Page */}
