@@ -188,160 +188,52 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
           className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden"
-          style={{
-            background:
-              "radial-gradient(ellipse at center, hsl(240 30% 8%) 0%, hsl(240 40% 4%) 60%, hsl(0 0% 0%) 100%)",
-          }}
+          style={{ background: "#000" }}
         >
-          {/* Central visualization */}
-          <div className="relative w-[280px] h-[280px] md:w-[340px] md:h-[340px]">
-            <svg
-              viewBox="0 0 100 100"
-              className="absolute inset-0 w-full h-full"
-              style={{ filter: "url(#boot-glow)" }}
-            >
-              <defs>
-                <filter id="boot-glow">
-                  <feGaussianBlur stdDeviation="1.5" result="blur" />
-                  <feMerge>
-                    <feMergeNode in="blur" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-                <radialGradient id="halo-grad" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="hsl(152 58% 48%)" stopOpacity="0.25" />
-                  <stop offset="100%" stopColor="hsl(152 58% 48%)" stopOpacity="0" />
-                </radialGradient>
-              </defs>
+          {/* Video background */}
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src="/videos/logo-animated.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ filter: "brightness(0.8) contrast(1.1)" }}
+          />
 
-              {/* Energy halo */}
-              <AnimatePresence>
-                {isBloom && (
-                  <motion.circle
-                    cx="50"
-                    cy="50"
-                    r="45"
-                    fill="url(#halo-grad)"
-                    initial={{ opacity: 0, scale: 0.5 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 2 }}
-                    transition={{ duration: 1.2, ease: "easeOut" }}
-                  />
-                )}
-              </AnimatePresence>
+          {/* Gradient overlay for cinematic feel */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)",
+            }}
+          />
 
-              {/* Neural network edges */}
-              {NEURAL_EDGES.map(([a, b], i) => {
-                const na = NEURAL_NODES[a];
-                const nb = NEURAL_NODES[b];
-                return (
-                  <motion.line
-                    key={`e-${i}`}
-                    x1={na.x}
-                    y1={na.y}
-                    x2={nb.x}
-                    y2={nb.y}
-                    stroke="hsl(152 58% 48%)"
-                    strokeWidth="0.3"
-                    initial={{ opacity: 0, pathLength: 0 }}
-                    animate={
-                      showNetwork
-                        ? { opacity: showBrain ? 0.5 : 0.2, pathLength: 1 }
-                        : { opacity: 0, pathLength: 0 }
-                    }
-                    transition={{
-                      duration: 0.8,
-                      delay: i * 0.03,
-                      ease: "easeOut",
-                    }}
-                  />
-                );
-              })}
-
-              {/* Neural network nodes */}
-              {NEURAL_NODES.map((n, i) => (
-                <motion.circle
-                  key={`n-${i}`}
-                  cx={n.x}
-                  cy={n.y}
-                  r={n.r}
-                  fill="hsl(152 58% 48%)"
-                  initial={{ opacity: 0, scale: 0 }}
-                  animate={
-                    showNetwork
-                      ? {
-                          opacity: showBrain ? [0.4, 0.9, 0.4] : [0, 0.5, 0],
-                          scale: 1,
-                        }
-                      : { opacity: 0, scale: 0 }
-                  }
-                  transition={{
-                    opacity: {
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                      delay: i * 0.15,
-                    },
-                    scale: { duration: 0.6, delay: i * 0.04, ease: "easeOut" },
-                  }}
-                />
-              ))}
-
-              {/* Orbiting particles */}
-              <OrbitingParticles visible={showBrain} />
-            </svg>
-
-            {/* Brain icon overlay */}
+          {/* Central content - simplified to let the video shine */}
+          <div className="relative z-10 flex flex-col items-center">
             <AnimatePresence>
-              {showBrain && (
+              {showBrand && (
                 <motion.div
-                  className="absolute inset-0 flex items-center justify-center"
-                  initial={{ opacity: 0, scale: 0.8, rotateY: -30 }}
-                  animate={{
-                    opacity: 1,
-                    scale: 1,
-                    rotateY: [0, 8, -8, 0],
-                  }}
-                  exit={{ opacity: 0, scale: 1.3 }}
-                  transition={{
-                    opacity: { duration: 0.6 },
-                    scale: { duration: 0.6, ease: "easeOut" },
-                    rotateY: {
-                      duration: 4,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    },
-                  }}
-                  style={{ perspective: 600 }}
+                  className="text-center"
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
                 >
-                  <Brain
-                    className="text-primary"
+                  <h1
+                    className="text-3xl md:text-4xl font-bold tracking-[0.25em] uppercase text-white"
                     style={{
-                      width: 56,
-                      height: 56,
-                      filter: `drop-shadow(0 0 20px hsl(152 58% 48% / 0.5)) drop-shadow(0 0 40px hsl(152 58% 48% / 0.2))`,
+                      textShadow: "0 0 40px rgba(16, 185, 129, 0.4)",
                     }}
-                  />
+                  >
+                    FitJourney
+                  </h1>
                 </motion.div>
               )}
             </AnimatePresence>
-
-            {/* Bloom effect on ready */}
-            <AnimatePresence>
-              {isBloom && (
-                <motion.div
-                  className="absolute inset-0 rounded-full pointer-events-none"
-                  initial={{ opacity: 0, scale: 0.5 }}
-                  animate={{ opacity: [0, 0.6, 0], scale: [0.5, 2.5] }}
-                  transition={{ duration: 1.5, ease: "easeOut" }}
-                  style={{
-                    background:
-                      "radial-gradient(circle, hsl(152 58% 48% / 0.4) 0%, transparent 70%)",
-                  }}
-                />
-              )}
-            </AnimatePresence>
           </div>
+
 
           {/* Brand text */}
           <AnimatePresence>
