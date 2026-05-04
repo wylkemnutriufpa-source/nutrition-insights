@@ -78,9 +78,10 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
 
   return (
     <motion.div
-      className="fixed inset-0 z-[140] flex items-center justify-center overflow-hidden bg-black"
+      className="fixed inset-0 z-[140] flex items-center justify-center overflow-hidden bg-black cursor-pointer"
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8, ease: EASE_PREMIUM }}
+      onClick={skip}
     >
       {/* Video — Centered and contained */}
       <div className="absolute inset-0 flex items-center justify-center bg-black">
