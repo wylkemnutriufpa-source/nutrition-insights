@@ -322,21 +322,12 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus, isPatient, isNutritionist, isAdmin } = useAuth();
-  const { hasConsent, loading: consentLoading } = useConsentGuard();
-  const location = useLocation();
-
-  // Onboarding Determinístico: Intenção prevalece sobre roles do backend (Regra 3)
-  const isInvitedPatient = localStorage.getItem("fj_invited") === "true";
-
-  if (authStatus === "loading" || consentLoading) return <PageLoader />;
+function PatientRoute({ children }: { children: React.ReactNode }) {
+  const { authStatus } = useAuth();
+  
+  if (authStatus === "loading") return <PageLoader />;
   if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
   
-  if (isNutritionist || isAdmin) return <>{children}</>;
-
-  // EMERGENCY BYPASS: Always allow patient access in incident mode
-  return <>{children}</>;
   return <>{children}</>;
 }
 
