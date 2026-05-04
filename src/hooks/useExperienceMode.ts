@@ -11,6 +11,15 @@ export interface ExperienceModeContextValue {
   isAdvanced: boolean;
   minMode: (min: ExperienceMode) => boolean;
   setMode: (m: ExperienceMode) => Promise<void>;
+  // Compatibility properties
+  isRouteAllowed: (route: string) => boolean;
+  isLoading: boolean;
+  failedMode: ExperienceMode | null;
+  lastError: any | null;
+  isOffline: boolean;
+  pendingQueueSize: number;
+  queueStats: any;
+  retryLastMode: () => void;
 }
 
 const MODE_LEVEL: Record<ExperienceMode, number> = { basic: 0, pro: 1, advanced: 2 };
@@ -27,7 +36,7 @@ export function useExperienceMode(): ExperienceModeContextValue {
   const auth = useAuth();
   
   const mode = (auth.experienceMode as ExperienceMode) || "basic";
-  const role = auth.experienceRole as ExperienceRole;
+  const role = (auth.experienceRole as ExperienceRole) || "nutritionist";
 
   return {
     mode,
@@ -37,5 +46,14 @@ export function useExperienceMode(): ExperienceModeContextValue {
     isAdvanced: mode === "advanced",
     minMode: (min: ExperienceMode) => checkMinMode(mode, min),
     setMode: auth.setMode as any,
+    // Compatibility
+    isRouteAllowed: () => true, // NEVER block routes as per user instruction
+    isLoading: auth.loading,
+    failedMode: null,
+    lastError: null,
+    isOffline: false,
+    pendingQueueSize: 0,
+    queueStats: { size: 0, isFull: false, hasExpired: false, oldestQueuedAt: null },
+    retryLastMode: () => {},
   };
 }
