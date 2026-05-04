@@ -21,7 +21,7 @@ import {
   Users, Plus, UserCheck, UserX, ChevronRight, Search,
   TrendingUp, TrendingDown, Minus, Target, Loader2, ToggleLeft, ToggleRight, X, CalendarDays,
   LayoutGrid, List, Crown, Settings2, ShieldAlert, Copy, Zap, CheckCircle2, MessageCircle, Link2, Sparkles, UserPlus,
-  UtensilsCrossed
+  UtensilsCrossed, User, FileText
 } from "lucide-react";
 import { BASE_URL } from "@/lib/config";
 import { useNavigate, Link } from "react-router-dom";
