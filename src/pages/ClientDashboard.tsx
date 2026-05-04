@@ -202,7 +202,6 @@ export default function ClientDashboard() {
     if (biquiniEnrollment?.status === "pending_onboarding") setShowOnboarding(true);
   }, [biquiniEnrollment]);
 
-  const onboarding = useOnboardingGuard();
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
   const shouldBlock = isPatient && !journeyLoading && journeyStatus && !isFluid;
 
