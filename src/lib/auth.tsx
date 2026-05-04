@@ -82,40 +82,32 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
-    const { data, error } = await supabase
-      .from("profiles")
-      .select(`
-        *, 
-        user_roles(role), 
-        user_tenants(
-          role, 
-          is_active, 
-          tenant_id, 
-          tenants(id, name, slug, plan_type, is_active)
-        )
-      `)
-      .eq("user_id", userId)
-      .maybeSingle();
+    try {
+      const { data, error } = await supabase
+        .from("profiles")
+        .select(`
+          id, full_name, user_id, avatar_url, phone, experience_mode, is_orphan
+        `)
+        .eq("user_id", userId)
+        .maybeSingle();
 
-    if (error) throw error;
-
-    if (data) {
-      setProfile(data);
-      const userRoles = (data as any).user_roles?.map((r: any) => r.role) || [];
-      setRoles(userRoles);
-      
-      const memberships = (data as any).user_tenants || [];
-      const activeMembership = memberships.find((m: any) => m.is_active && m.tenants?.is_active) || memberships[0];
-      
-      if (activeMembership?.tenants) {
-        setTenantId(activeMembership.tenants.id);
-        setTenant(activeMembership.tenants);
+      if (error) {
+        console.warn("[Auth] Failed to fetch profile details:", error);
       }
-    } else {
-      setProfile(null);
+
+      if (data) {
+        setProfile(data as Profile);
+      } else {
+        setProfile(null);
+      }
+      
+      // Temporary: Hardcoding roles/tenants to prevent deep query issues during recovery
       setRoles([]);
       setTenantId(null);
       setTenant(null);
+    } catch (e) {
+      console.error("[Auth] Exception in fetchData:", e);
+      setProfile(null);
     }
   };
 
@@ -188,7 +180,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout fetching profile")), 4000))
           ]).catch(e => console.error("[Auth] Profile fetch failed/timed out:", e));
           
-          checkSubscription();
+          // skip checkSubscription during recovery
+          // checkSubscription();
         }
       } catch (err: any) {
         logError("auth_error", "initialization", err.message);
