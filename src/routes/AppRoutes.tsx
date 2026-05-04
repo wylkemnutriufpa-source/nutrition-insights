@@ -342,12 +342,22 @@ function RedirectWithParams({ to }: { to: string }) {
 
 export const AppRoutes = () => {
   const { isDegraded, isOrphan } = useAppState();
-  const { experienceMode, experienceRole } = useAuth();
+  const { experienceMode, experienceRole, authStatus } = useAuth();
+  const [bootComplete, setBootComplete] = useState(false);
   
   useEffect(() => {
     document.documentElement.setAttribute("data-experience-mode", experienceMode);
     document.documentElement.setAttribute("data-experience-role", experienceRole);
   }, [experienceMode, experienceRole]);
+
+  if (!bootComplete) {
+    return (
+      <AppBootExperience 
+        dataReady={authStatus !== "loading"} 
+        onComplete={() => setBootComplete(true)} 
+      />
+    );
+  }
   
   return (
     <div className="min-h-screen">
