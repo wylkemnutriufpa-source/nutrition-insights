@@ -258,7 +258,6 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   // No Modo de Recuperação, evitamos redirecionar para /auth se já houver um usuário ou se estivermos tentando acessar a home
   if (authStatus === "unauthenticated") {
     console.warn("[ProtectedRoute] Estado: NÃO AUTENTICADO. Mantendo na tela para inspeção manual.");
-    // return <Navigate to="/auth" replace />; // DESATIVADO NO RECOVERY
     return <>{children}</>;
   }
 
@@ -272,8 +271,16 @@ function DashboardRedirect() {
     return <PageLoader />;
   }
   
-  // DESATIVADO REDIRECT AUTOMÁTICO NO RECOVERY
-  return null;
+  // No modo de recuperação, evitamos redirecionar se o status não for definitivo
+  if (authStatus !== "authenticated") {
+    return null;
+  }
+  
+  if (isNutritionist || isPersonal || isAdmin) {
+    return <Navigate to="/admin/dashboard" replace />;
+  }
+  
+  return <Navigate to="/client/dashboard" replace />;
 }
   
   if (authStatus === "unauthenticated") {
