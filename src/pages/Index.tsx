@@ -1187,13 +1187,10 @@ export default function Index() {
   // Removed automatic redirect to /welcome for radical simplification.
   // The Index page will render content directly based on roles.
 
-  if (!loading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   const tourKey = isProRole ? "tour_professional_completed" : "tour_patient_completed";
   const onboardingKey = isProRole ? "fitjourney_professional_onboarding_completed" : "patient_onboarding_completed";
   const INTRO_STORAGE_KEY = "fj_intro_seen";
+
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
@@ -1222,6 +1219,10 @@ export default function Index() {
     const timer = setTimeout(() => setShowTour(true), 1500);
     return () => clearTimeout(timer);
   }, [loading, onboardingKey, tourKey, showIntro]);
+
+  if (!loading && !user) {
+    return <Navigate to="/auth" replace />;
+  }
 
   if (showIntro) {
     return (
