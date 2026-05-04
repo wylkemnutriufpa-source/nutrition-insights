@@ -58,7 +58,7 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
   }, [user, profile, authLoading, journeyLoading]);
 
 
-  // Governance Effect
+  // Governance Effect - LOG ONLY
   useEffect(() => {
     if (!isReady) return;
 
@@ -79,7 +79,9 @@ export function AppStateProvider({ children }: { children: React.ReactNode }) {
     };
 
     const decision = getSystemDecision(ctx);
+    // Explicit rule: No automatic navigation. Decision is logged but not applied here.
     if (decision.type !== 'ALLOW') {
+      console.warn("[FJ:Governance] Suggested decision:", decision);
       logDecision(decision);
     }
   }, [location.pathname, user, profile, journeyStatus, mode, role, isReady, isDegraded]);
