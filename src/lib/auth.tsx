@@ -82,33 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          id, full_name, user_id, avatar_url, phone, experience_mode, is_orphan
-        `)
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        console.warn("[Auth] Failed to fetch profile details:", error);
-      }
-
-      if (data) {
-        setProfile(data as Profile);
-      } else {
-        setProfile(null);
-      }
-      
-      // Temporary: Hardcoding roles/tenants to prevent deep query issues during recovery
-      setRoles([]);
-      setTenantId(null);
-      setTenant(null);
-    } catch (e) {
-      console.error("[Auth] Exception in fetchData:", e);
-      setProfile(null);
-    }
+    // Modo Recuperação: No-op para evitar bloqueios
+    setProfile(null);
+    setRoles([]);
+    setTenantId(null);
+    setTenant(null);
   };
 
   const checkSubscription = async () => {
@@ -151,43 +129,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initialize = async () => {
-      console.log("[Auth] Bootstrapping...");
       setLoading(true);
-      setError(null);
-
-      // Safety timeout para garantir que o loading termine mesmo se o Supabase travar
-      const safetyTimer = setTimeout(() => {
-        if (loading) {
-          console.warn("[Auth] Initialization safety timeout triggered.");
-          setLoading(false);
-        }
-      }, 5000);
-
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-        if (sessionError) throw sessionError;
-
-        if (!mounted) return;
-
-        setSession(session);
-        const currentUser = session?.user ?? null;
-        setUser(currentUser);
-
-        if (currentUser) {
-          // Timeout menor para o fetch de dados do perfil
-          await Promise.race([
-            fetchData(currentUser.id),
-            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout fetching profile")), 4000))
-          ]).catch(e => console.error("[Auth] Profile fetch failed/timed out:", e));
-          
-          // skip checkSubscription during recovery
-          // checkSubscription();
+        const { data: { session } } = await supabase.auth.getSession();
+        if (mounted) {
+          setSession(session);
+          setUser(session?.user ?? null);
+          if (session?.user) await fetchData(session.user.id);
         }
-      } catch (err: any) {
-        logError("auth_error", "initialization", err.message);
-        setError(err instanceof Error ? err : new Error(String(err)));
+      } catch (e) {
+        console.error("Recovery init error", e);
       } finally {
-        clearTimeout(safetyTimer);
         if (mounted) setLoading(false);
       }
     };
