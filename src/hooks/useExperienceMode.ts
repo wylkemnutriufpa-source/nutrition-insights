@@ -203,7 +203,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     const saved = localStorage.getItem(STORAGE_KEY) as ExperienceMode;
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
   });
-  const [isLoading, setIsLoading] = useState(false); // Mudado para false para evitar travamento de renderização se a hidratação falhar ou demorar
+  const [isLoading, setIsLoading] = useState(true);
   const [failedMode, setFailedMode] = useState<ExperienceMode | null>(() => {
     const saved = sessionStorage.getItem(`${STORAGE_KEY}_failed`);
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved as ExperienceMode : null;
