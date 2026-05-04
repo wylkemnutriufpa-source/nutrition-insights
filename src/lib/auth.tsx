@@ -135,7 +135,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
-          if (session?.user) await fetchData(session.user.id);
+          // if (session?.user) await fetchData(session.user.id); // Kill-Switch: Evitar fetchData no boot
         }
       } catch (e) {
         console.error("Recovery init error", e);
@@ -154,6 +154,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
 
+        // Kill-Switch: Desativar carregamento automático de dados e redirecionamentos no onAuthStateChange
+        /*
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
           setLoading(true);
           try {
@@ -173,9 +175,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setLoading(false);
           setError(null);
         }
-
+        */
       }
     );
+
 
     return () => {
       mounted = false;
