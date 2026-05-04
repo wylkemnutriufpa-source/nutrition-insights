@@ -1,4 +1,4 @@
-import { ClinicalStrategy, FitJourneyStrategy, BiquiniBrancoStrategy, DefaultV3Strategy } from './strategies';
+import { ClinicalStrategy, FitJourneyStrategy, BiquiniBrancoStrategy, DefaultV3Strategy } from '../strategies';
 
 export class ClinicalEngineFactory {
   private static strategies: Record<string, ClinicalStrategy> = {
