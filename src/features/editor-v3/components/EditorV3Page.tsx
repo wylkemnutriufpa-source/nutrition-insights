@@ -744,10 +744,19 @@ const EditorV3Page = () => {
                      nutritionalScore.total >= 90 ? "bg-emerald-500 text-black" : 
                      nutritionalScore.total >= 70 ? "bg-amber-500 text-black" : 
                      "bg-rose-500 text-white"
-                   )}>
-                     {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
-                   </Badge>
-                 )}
+                    )}>
+                      {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
+                    </Badge>
+                  )}
+                  {patientContext?.protocol_type && (
+                    <Badge variant="outline" className="px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter border-amber-500/50 text-amber-500">
+                      Protocolo: {
+                        patientContext.protocol_type === 'fitjourney' ? 'FitJourney' : 
+                        patientContext.protocol_type === 'bikini_protocol' || patientContext.protocol_type === 'bikini_branco' ? 'Biquíni Branco' : 
+                        'Engine V3'
+                      }
+                    </Badge>
+                  )}
                  {patientContext && (
                    <Popover>
                      <PopoverTrigger asChild>
