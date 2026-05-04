@@ -1474,23 +1474,15 @@ export default function PatientDetail() {
                             return;
                           }
                           if (genData.mealPlanId) {
-                            const finalized = await finalizeGeneratedMealPlan({
-                              planId: genData.mealPlanId,
-                              patientId: patientIdentity.canonicalId,
-                              userId: user!.id,
-                              tenantId,
-                            });
+                            const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
+                            const isV3 = planData?.editor_version === "v3";
+                            const path = isV3 ? `/v3/${patientIdentity.canonicalId}?planId=${genData.mealPlanId}` : `/meal-plans/${genData.mealPlanId}`;
+                            
                             if (genData.is_fallback_template) {
-                              toast.info(`Nota: Nenhum plano anterior encontrado. Usamos o template padrão "${genData.template_name_used || "Base"}" como fallback.`, { duration: 6000 });
-                            } else if (genData.template_name_used) {
-                              toast.success(`Plano gerado usando o template: ${genData.template_name_used}`);
+                              toast.info(`Nota: Usamos template padrão como fallback.`);
                             }
-                            toast.success(
-                              finalized.corrected
-                                ? "Plano gerado e revisado pelo motor clínico."
-                                : `Plano gerado com ${genData.items_count || 0} itens!`
-                            );
-                            navigate(`/meal-plans/${finalized.finalPlanId}`);
+                            toast.success("Plano gerado com sucesso!");
+                            navigate(path);
                           }
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao processar onboarding");
