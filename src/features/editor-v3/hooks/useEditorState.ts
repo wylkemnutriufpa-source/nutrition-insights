@@ -203,6 +203,19 @@ export const useEditorState = create<EditorState>()(
         const allIssues = [...baseIssues, ...clinicalIssues];
         const confidence = calculatePlanConfidence(nutritionalScore, allIssues, goalMetadata);
         
+        // Registrar macros no console em dev para debug
+        if (process.env.NODE_ENV === 'development') {
+          const totals = meals.reduce((acc, meal) => {
+            meal.items.forEach(item => {
+              const macros = calculateItemMacros(item, item.quantity);
+              acc.kcal += macros.kcal;
+              acc.protein += macros.protein;
+            });
+            return acc;
+          }, { kcal: 0, protein: 0 });
+          console.log(`[V3 Score] Total Kcal: ${Math.round(totals.kcal)}, Protein: ${Math.round(totals.protein)}g`);
+        }
+        
         set({ 
           nutritionalScore, 
           validationIssues: allIssues,
