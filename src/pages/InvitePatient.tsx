@@ -113,13 +113,16 @@ export default function InvitePatient() {
     fetchData();
   }, [user?.id]);
 
-  // Links use production URL for sharing/display by default unless in preview for testing
-  const onboardingLink = useMemo(() => getOnboardingUrl(true), []);
-  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id, true), [user?.id]);
-  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id, true) : "", [user?.id]);
+  // Links use relative URL in preview by default, but production URL for sharing/display
+  const onboardingLink = useMemo(() => getOnboardingUrl(), []);
+  const publicRegisterLink = useMemo(() => getInvitationUrl(undefined, user?.id), [user?.id]);
+  const quickLink = useMemo(() => user?.id ? getQuickLinkUrl(user.id) : "", [user?.id]);
   const publicProfileLink = useMemo(() => {
     if (!publicProfile?.slug) return null;
-    return `${PRODUCTION_URL}/p/${publicProfile.slug}`;
+    const origin = (window.location.hostname.includes("lovable") || window.location.hostname.includes("localhost")) 
+      ? window.location.origin 
+      : PRODUCTION_URL;
+    return `${origin}/p/${publicProfile.slug}`;
   }, [publicProfile]);
 
   const whatsappMessage = useMemo(() => {

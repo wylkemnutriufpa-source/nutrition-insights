@@ -1,6 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { formatInternationalWhatsApp } from "./whatsapp";
+import { BASE_URL } from "@/lib/config";
 
 export type WhatsAppTemplateType = "meal_plan_ready" | "protocol_activated" | "registration_updated" | "invitation";
 
@@ -16,7 +17,7 @@ export interface WhatsAppTemplateParams {
 export const getWhatsAppTemplate = (type: WhatsAppTemplateType, params: WhatsAppTemplateParams) => {
   const firstName = params.patientName ? params.patientName.split(" ")[0] : "Paciente";
   const clinicPart = params.clinicName ? ` da clínica *${params.clinicName}*` : "";
-  const link = params.appUrl || "https://app.fitjourney.com.br";
+  const link = params.appUrl || BASE_URL;
 
   switch (type) {
     case "meal_plan_ready":
