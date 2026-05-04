@@ -350,11 +350,11 @@ export const getCompatibleFoods = async (
     protein: f.protein,
     carbs: f.carbs,
     fat: f.fat,
-    portionValue: 1,
-    portionUnitLabel: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
-    portionUnit: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
-    portionLabel: f.serving_size || "100g",
-    measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
+    portionValue: 100,
+    portionUnitLabel: "g",
+    portionUnit: "g",
+    portionLabel: "100g",
+    measurementType: "gram",
   }));
 };
 
