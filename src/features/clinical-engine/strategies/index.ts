@@ -86,15 +86,23 @@ export class BiquiniBrancoStrategy implements ClinicalStrategy {
 
     // Lógica especializada Biquini Branco: Foco em densidade nutricional e anti-inflamatório
     if (mealName.includes('café') || mealName.includes('desjejum')) {
-      const seeds = shuffleArray(availableFoods.filter(f => ['Linhaça', 'Chia', 'Aveia'].some(w => f.name.includes(w))));
-      const fruits = shuffleArray(availableFoods.filter(f => ['Mamão', 'Morango', 'Abacaxi'].some(w => f.name.includes(w))));
+      const seeds = shuffleArray(availableFoods.filter(f => ['Linhaça', 'Chia', 'Aveia', 'Gergelim'].some(w => f.name.includes(w))));
+      const fruits = shuffleArray(availableFoods.filter(f => ['Mamão', 'Morango', 'Abacaxi', 'Uva'].some(w => f.name.includes(w))));
       newItems = [
         createMealItem(seeds[0], 20 * scale),
         createMealItem(fruits[0], 100 * scale)
       ];
     } else if (mealName.includes('almoço') || mealName.includes('jantar')) {
-      const veggies = shuffleArray(availableFoods.filter(f => ['Alface', 'Tomate', 'Brócolis'].some(w => f.name.includes(w))));
-      const leanProteins = shuffleArray(availableFoods.filter(f => ['Tilápia', 'Frango'].some(w => f.name.includes(w))));
+      // Biquini Branco prioriza refeições frescas, mas pode sugerir marmitas leves
+      if (Math.random() > 0.85) {
+        const lightMarmitas = availableFoods.filter(f => (f.isMarmita || f.name.toLowerCase().includes('(fit)')) && f.calories < 350);
+        if (lightMarmitas.length > 0) {
+          return [createMealItem(shuffleArray(lightMarmitas)[0], 1)].filter((i): i is MealItem => i !== null);
+        }
+      }
+
+      const veggies = shuffleArray(availableFoods.filter(f => ['Alface', 'Tomate', 'Brócolis', 'Cenoura', 'Pepino'].some(w => f.name.includes(w))));
+      const leanProteins = shuffleArray(availableFoods.filter(f => ['Tilápia', 'Frango', 'Peixe', 'Ovo'].some(w => f.name.includes(w))));
       newItems = [
         createMealItem(leanProteins[0], 120 * scale),
         createMealItem(veggies[0], 150)
