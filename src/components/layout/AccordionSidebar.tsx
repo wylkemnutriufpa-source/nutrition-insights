@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/lib/auth";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
 import { useIsMobile } from "@/hooks/use-mobile";
