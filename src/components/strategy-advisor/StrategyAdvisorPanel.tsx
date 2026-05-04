@@ -42,7 +42,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
     try {
       const { data: anamnesis } = await (supabase.from("patient_anamnesis") as any)
         .select("answers, status")
-        .eq("patient_id", patientId)
+        .eq("user_id", patientId)
         .order("created_at", { ascending: false })
         .limit(1)
         .maybeSingle();
