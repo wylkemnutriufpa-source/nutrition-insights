@@ -56,8 +56,14 @@ export default function BuilderTopbar({
     <div className="bg-card/80 backdrop-blur-sm border border-border rounded-xl p-3 space-y-2">
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div className="flex items-center gap-3 min-w-0">
-          <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 h-8 w-8">
-            <ArrowLeft className="w-4 h-4" />
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onBack} 
+            className="shrink-0 h-9 gap-2 px-3 border border-border/50 hover:bg-accent group transition-all"
+          >
+            <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+            <span className="font-bold text-xs uppercase tracking-wider">Voltar</span>
           </Button>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">

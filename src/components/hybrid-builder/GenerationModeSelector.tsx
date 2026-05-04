@@ -395,7 +395,7 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
           }
         }}
         disabled={generating}
-        className="w-full h-14 text-sm gap-3 gradient-primary shadow-glow border-2 border-primary/20"
+        className="w-full h-16 text-sm gap-3 gradient-primary shadow-glow border-2 border-primary/40 hover:scale-[1.02] active:scale-[0.98] transition-all"
       >
         {generating ? (
           <>

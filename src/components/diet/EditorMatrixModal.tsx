@@ -100,6 +100,12 @@ export function EditorMatrixModal({ isOpen, onClose, onSelect, patientId }: Edit
   };
 
   const handleCloseAttempt = () => {
+    // Se ainda não escolheu nada e não está carregando, permite fechar direto sem confirmação
+    // para evitar a frustração de "não conseguir fechar" reportada pelo usuário.
+    if (!lastChoice && !isLoading) {
+      onClose();
+      return;
+    }
     setShowExitConfirm(true);
   };
 
