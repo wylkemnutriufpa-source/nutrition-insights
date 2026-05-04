@@ -53,7 +53,7 @@ interface ChecklistItem {
   };
   actionLabel?: string;
   onAction?: () => Promise<void>;
-}
+  },
 
 interface ModuleStatus {
   name: string;
