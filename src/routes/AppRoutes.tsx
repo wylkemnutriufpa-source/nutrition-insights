@@ -241,21 +241,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   return <>{children}</>;
 }
 
-function DashboardRedirect() {
-  const { authStatus } = useAuth();
-  if (authStatus === "loading") return null;
-  if (authStatus !== "authenticated") return <Navigate to="/auth" replace />;
-  // Fallback seguro: se autenticado, tenta ir para welcome ou auth de novo se tudo falhar
-  return <Navigate to="/welcome" replace />;
-}
-
-function NutritionistRoute({ children }: { children: React.ReactNode }) {
-  return <ProtectedRoute>{children}</ProtectedRoute>;
-}
-
-function PatientRoute({ children }: { children: React.ReactNode }) {
-  return <ProtectedRoute>{children}</ProtectedRoute>;
-}
+// Routes are now direct, no internal redirects to dashboard here.
 
 
 function RedirectWithParams({ to }: { to: string }) {
@@ -267,18 +253,7 @@ function RedirectWithParams({ to }: { to: string }) {
   return <Navigate to={target} replace />;
 }
 
-function HomeRedirect() {
-  const { authStatus } = useAuth();
-  
-  if (authStatus === "loading") return null;
-  
-  if (authStatus === "authenticated") {
-    return <DashboardRedirect />;
-  }
-  
-  // Direto para auth se não estiver logado
-  return <Navigate to="/auth" replace />;
-}
+// HomeRedirect removed. Root route handles logic.
 
 
 export const AppRoutes = () => {

@@ -222,201 +222,202 @@ export default function ClientDashboard() {
   return (
     <DashboardLayout>
       <SafeRender name="Conteúdo do Dashboard" data={[user, profile, dashData]}>
-        {shouldBlock ? (
-          <div className="max-w-7xl mx-auto px-4 py-12">
-            <div className="bg-card/50 border border-border/50 rounded-2xl p-8 text-center space-y-6 max-w-md mx-auto">
-               <h2 className="text-xl font-bold">Onboarding Necessário</h2>
-               <p className="text-muted-foreground text-sm">Para liberar seu dashboard e plano alimentar, precisamos que você complete seu cadastro inicial.</p>
-               <Button onClick={() => navigate("/onboarding/paciente")} className="w-full">
-                 Completar Onboarding
-               </Button>
+        <>
+          {shouldBlock && (
+            <div className="max-w-7xl mx-auto px-4 pt-4">
+              <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-3 text-amber-500">
+                  <AlertTriangle className="w-5 h-5 flex-shrink-0" />
+                  <p className="text-sm font-medium">Você ainda não completou seu cadastro inicial. Algumas funcionalidades podem estar limitadas.</p>
+                </div>
+                <Button onClick={() => navigate("/onboarding/paciente")} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white shrink-0">
+                  Completar Agora
+                </Button>
+              </div>
             </div>
+          )}
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <ExperienceModeSwitcher />
           </div>
-        ) : (
-          <>
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-              <ExperienceModeSwitcher />
-            </div>
-            <OnboardingProgressModal />
-            <OnboardingExitGuard />
-            <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden pb-12">
-              
-              {/* Premium Header */}
-              <motion.div variants={item}>
-                <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
-                  <div className="glass-premium rounded-2xl p-4 md:p-6 shimmer-sweep">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm text-muted-foreground mb-1">
-                          {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
-                        </p>
-                        <div className="flex items-center gap-2">
-                          <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold truncate">
-                            Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
-                          </h1>
-                          <PremiumBadge />
-                        </div>
-                        <PremiumAccentLine />
+          <OnboardingProgressModal />
+          <OnboardingExitGuard />
+          <motion.div variants={container} initial="hidden" animate="show" className="space-y-4 md:space-y-6 px-1 md:px-0 overflow-hidden pb-12">
+            
+            {/* Premium Header */}
+            <motion.div variants={item}>
+              <PremiumCardWrapper className="relative overflow-hidden rounded-2xl gradient-border particles-bg" enableShimmer>
+                <div className="glass-premium rounded-2xl p-4 md:p-6 shimmer-sweep">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">
+                        {format(new Date(), "EEEE, dd 'de' MMMM", { locale: ptBR })}
+                      </p>
+                      <div className="flex items-center gap-2">
+                        <h1 className="font-display text-xl sm:text-2xl md:text-3xl font-bold truncate">
+                          Olá, {profile?.full_name?.split(" ")[0] || "Paciente"} 👋
+                        </h1>
+                        <PremiumBadge />
                       </div>
+                      <PremiumAccentLine />
                     </div>
                   </div>
-                </PremiumCardWrapper>
-              </motion.div>
-
-              {/* Retention Recovery Alert */}
-              <RetentionAlert 
-                riskLevel={riskLevel} 
-                isStreakAtRisk={isStreakAtRisk}
-                criticalNightMessage={criticalNightMessage}
-                currentStreak={stats?.current_streak}
-              />
-
-              {/* Patient Engagement Central (Check-ins + Progress) */}
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-8 space-y-6">
-                  {/* Unified Focus Entry */}
-                  <motion.div variants={item}>
-                    <PatientDailyFocusHero />
-                  </motion.div>
-
-                  {/* Daily Meal Tracker */}
-                  <motion.div variants={item}>
-                    <Card className="border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm">
-                      <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
-                        <UtensilsCrossed className="w-24 h-24" />
-                      </div>
-                      <CardHeader className="pb-4 border-b border-border/10">
-                        <DailyEngagementProgress 
-                          completed={checkins?.length || 0} 
-                          total={lifecycle.plan?.meals?.length || 0} 
-                          expectationMessage={expectationMessage}
-                          personalMessage={personalMessage}
-                          rewardImpact={rewardImpact}
-                        />
-                      </CardHeader>
-                      <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
-                        {lifecycle.plan?.meals?.map((meal: any, idx: number) => (
-                          <MealCheckinCard 
-                            key={meal.id || idx}
-                            mealId={meal.id || String(idx)}
-                            title={meal.title || "Refeição"}
-                            time={meal.time || "--:--"}
-                            kcal={safeNum(meal.calories_target)}
-                          />
-                        ))}
-                        {(!lifecycle.plan?.meals || lifecycle.plan.meals.length === 0) && (
-                          <div className="col-span-full text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border/50">
-                             <UtensilsCrossed className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
-                             <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando suas refeições.</p>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-
-                  {/* Clinical & Behavioral Insights */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <motion.div variants={item} className="h-full">
-                      <ClinicalInsightsCard />
-                    </motion.div>
-                    <motion.div variants={item} className="h-full">
-                      <PatientBehaviorLearningCard />
-                    </motion.div>
-                  </div>
                 </div>
+              </PremiumCardWrapper>
+            </motion.div>
 
-                <div className="lg:col-span-4 space-y-6">
-                  {/* Adherence & Streaks */}
-                  <motion.div variants={item}>
-                    <AdherenceStats 
-                      streak={stats?.current_streak || 0} 
-                      adherence={stats?.weekly_adherence_pct || 0} 
-                      longestStreak={stats?.longest_streak}
-                    />
-                  </motion.div>
+            {/* Retention Recovery Alert */}
+            <RetentionAlert 
+              riskLevel={riskLevel} 
+              isStreakAtRisk={isStreakAtRisk}
+              criticalNightMessage={criticalNightMessage}
+              currentStreak={stats?.current_streak}
+            />
 
-                  {/* Engagement Alerts & Loops */}
-                  <motion.div variants={item}>
-                    <PatientRetentionAlerts />
-                  </motion.div>
-
-                  {/* Next Meal Shortcut */}
-                  <motion.div variants={item}>
-                    <NextMealWidget />
-                  </motion.div>
-
-                  {/* Momentum Indicator */}
-                  <motion.div variants={item}>
-                    <TherapeuticMomentumBar />
-                  </motion.div>
-
-                  {/* Metabolic Radar */}
-                  <motion.div variants={item}>
-                    <PatientMetabolicInsightPanel />
-                  </motion.div>
-
-                  {/* Smart Tips */}
-                  <motion.div variants={item}>
-                    <SmartTips />
-                  </motion.div>
-                </div>
-              </div>
-
-              {/* Secondary Sections */}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
-                 <motion.div variants={item}>
-                   <SubscriptionCard />
-                 </motion.div>
-                 <motion.div variants={item}>
-                    <NutritionistStatusBanner patientId={user?.id} />
-                 </motion.div>
-                 <motion.div variants={item}>
-                    <PatientAIInsightsWidget />
-                 </motion.div>
-              </div>
-
-              {/* Team & Programs */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Patient Engagement Central (Check-ins + Progress) */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-8 space-y-6">
+                {/* Unified Focus Entry */}
                 <motion.div variants={item}>
-                  <Card className="glass-premium overflow-hidden border-border/50">
-                    <CardHeader className="flex flex-row items-center justify-between pb-2">
-                      <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                        <Users className="w-5 h-5 text-primary" /> Meu Time Profissional
-                      </h3>
+                  <PatientDailyFocusHero />
+                </motion.div>
+
+                {/* Daily Meal Tracker */}
+                <motion.div variants={item}>
+                  <Card className="border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm">
+                    <div className="absolute top-0 right-0 p-6 opacity-5 group-hover:opacity-10 transition-opacity">
+                      <UtensilsCrossed className="w-24 h-24" />
+                    </div>
+                    <CardHeader className="pb-4 border-b border-border/10">
+                      <DailyEngagementProgress 
+                        completed={checkins?.length || 0} 
+                        total={lifecycle.plan?.meals?.length || 0} 
+                        expectationMessage={expectationMessage}
+                        personalMessage={personalMessage}
+                        rewardImpact={rewardImpact}
+                      />
                     </CardHeader>
-                    <CardContent>
-                      <MyTeamTab />
+                    <CardContent className="pt-6 grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {lifecycle.plan?.meals?.map((meal: any, idx: number) => (
+                        <MealCheckinCard 
+                          key={meal.id || idx}
+                          mealId={meal.id || String(idx)}
+                          title={meal.title || "Refeição"}
+                          time={meal.time || "--:--"}
+                          kcal={safeNum(meal.calories_target)}
+                        />
+                      ))}
+                      {(!lifecycle.plan?.meals || lifecycle.plan.meals.length === 0) && (
+                        <div className="col-span-full text-center py-12 bg-muted/20 rounded-2xl border border-dashed border-border/50">
+                           <UtensilsCrossed className="w-8 h-8 text-muted-foreground mx-auto mb-2 opacity-30" />
+                           <p className="text-sm text-muted-foreground">Seu profissional ainda está preparando suas refeições.</p>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
 
-                {programs.length > 0 && (
-                  <motion.div variants={item}>
-                    <Card className="glass-premium overflow-hidden border-border/50">
-                      <CardHeader>
-                        <h3 className="font-display font-bold text-lg flex items-center gap-2">
-                          <Rocket className="w-5 h-5 text-accent" /> Projetos em Andamento
-                        </h3>
-                      </CardHeader>
-                      <CardContent className="space-y-3">
-                        {programs.map(p => (
-                          <div key={p.id} className="p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between">
-                            <div>
-                              <p className="font-bold text-sm">{p.title}</p>
-                              <p className="text-xs text-muted-foreground">{p.tag} • Fase {p.current_phase || 1}</p>
-                            </div>
-                            <Button size="sm" variant="ghost" className="rounded-full">Ver mais</Button>
-                          </div>
-                        ))}
-                      </CardContent>
-                    </Card>
+                {/* Clinical & Behavioral Insights */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <motion.div variants={item} className="h-full">
+                    <ClinicalInsightsCard />
                   </motion.div>
-                )}
+                  <motion.div variants={item} className="h-full">
+                    <PatientBehaviorLearningCard />
+                  </motion.div>
+                </div>
               </div>
 
-            </motion.div>
-          </>
-        )}
+              <div className="lg:col-span-4 space-y-6">
+                {/* Adherence & Streaks */}
+                <motion.div variants={item}>
+                  <AdherenceStats 
+                    streak={stats?.current_streak || 0} 
+                    adherence={stats?.weekly_adherence_pct || 0} 
+                    longestStreak={stats?.longest_streak}
+                  />
+                </motion.div>
+
+                {/* Engagement Alerts & Loops */}
+                <motion.div variants={item}>
+                  <PatientRetentionAlerts />
+                </motion.div>
+
+                {/* Next Meal Shortcut */}
+                <motion.div variants={item}>
+                  <NextMealWidget />
+                </motion.div>
+
+                {/* Momentum Indicator */}
+                <motion.div variants={item}>
+                  <TherapeuticMomentumBar />
+                </motion.div>
+
+                {/* Metabolic Radar */}
+                <motion.div variants={item}>
+                  <PatientMetabolicInsightPanel />
+                </motion.div>
+
+                {/* Smart Tips */}
+                <motion.div variants={item}>
+                  <SmartTips />
+                </motion.div>
+              </div>
+            </div>
+
+            {/* Secondary Sections */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
+               <motion.div variants={item}>
+                 <SubscriptionCard />
+               </motion.div>
+               <motion.div variants={item}>
+                <NutritionistStatusBanner patientId={user?.id} />
+               </motion.div>
+               <motion.div variants={item}>
+                <PatientAIInsightsWidget />
+               </motion.div>
+            </div>
+
+            {/* Team & Programs */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <motion.div variants={item}>
+                <Card className="glass-premium overflow-hidden border-border/50">
+                  <CardHeader className="flex flex-row items-center justify-between pb-2">
+                    <h3 className="font-display font-bold text-lg flex items-center gap-2">
+                      <Users className="w-5 h-5 text-primary" /> Meu Time Profissional
+                    </h3>
+                  </CardHeader>
+                  <CardContent>
+                    <MyTeamTab />
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {programs.length > 0 && (
+                <motion.div variants={item}>
+                  <Card className="glass-premium overflow-hidden border-border/50">
+                    <CardHeader>
+                      <h3 className="font-display font-bold text-lg flex items-center gap-2">
+                        <Rocket className="w-5 h-5 text-accent" /> Projetos em Andamento
+                      </h3>
+                    </CardHeader>
+                    <CardContent className="space-y-3">
+                      {programs.map(p => (
+                        <div key={p.id} className="p-4 rounded-xl bg-muted/30 border border-border/50 flex items-center justify-between">
+                          <div>
+                            <p className="font-bold text-sm">{p.title}</p>
+                            <p className="text-xs text-muted-foreground">{p.tag} • Fase {p.current_phase || 1}</p>
+                          </div>
+                          <Button size="sm" variant="ghost" className="rounded-full">Ver mais</Button>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
+            </div>
+
+          </motion.div>
+        </>
       </SafeRender>
       <PhaseTransitionModal />
       <ProgramJoinRequest open={programJoinOpen} onOpenChange={setProgramJoinOpen} />

@@ -1,5 +1,5 @@
-
 import { useAuth } from "@/lib/auth";
+import { featureMap } from "@/config/features";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
 
@@ -22,18 +22,6 @@ export interface ExperienceModeContextValue {
   queueStats: { processed: number; failed: number; isFull: boolean; hasExpired: boolean };
 }
 
-const featureMap = {
-  patient: {
-    basic: ["diet", "recipes", "feedback"],
-    pro: ["diet", "recipes", "feedback", "progress", "tips"],
-    advanced: "all",
-  },
-  nutritionist: {
-    basic: ["consultation", "diet", "assessment"],
-    pro: ["consultation", "diet", "assessment", "analytics", "reports"],
-    advanced: "all",
-  },
-};
 
 export function useExperienceMode(): ExperienceModeContextValue {
   const { profile, experienceMode, experienceRole, setMode, loading } = useAuth();
