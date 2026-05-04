@@ -1221,15 +1221,11 @@ export default function Index() {
   }, [loading, onboardingKey, tourKey, showIntro]);
 
   if (showIntro) {
-
     return (
       <CinematicIntro 
         onComplete={() => {
           setShowIntro(false);
           sessionStorage.setItem(INTRO_STORAGE_KEY, "1");
-          if (location.search.includes("intro=1")) {
-            navigate("/", { replace: true });
-          }
         }} 
       />
     );
@@ -1237,11 +1233,9 @@ export default function Index() {
 
   if (loading && !showIntro) {
     return (
-      <DashboardLayout>
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <BrainLoader text="Iniciando FitJourney..." />
-        </div>
-      </DashboardLayout>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <BrainLoader text="Iniciando FitJourney..." />
+      </div>
     );
   }
 
