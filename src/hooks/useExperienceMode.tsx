@@ -1,5 +1,5 @@
-
 import { useAuth } from "@/lib/auth";
+import { featureMap } from "@/config/features";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
 
