@@ -1,15 +1,35 @@
 {
-  "summary": "Summary:",
+  "summary": "Summary:\nColumns:\n+ meal_plans.engine_version\n+ meal_plans.plan_version\n+ meal_plans.protocol_used\n+ profiles.protocol_type",
   "details": {
-    "timestamp": "2026-05-03T21:04:12.031Z",
-    "duration": "0.0s",
-    "lastSnapshotMigration": "20260502182603_5a9ee865-c633-4d28-a0d4-d584a4c834c3.sql",
-    "lastActualMigration": "20260503210248_ad843ca0-7dd5-4391-91a5-0854ddb963db.sql",
+    "timestamp": "2026-05-04T21:22:20.326Z",
+    "duration": "0.1s",
+    "lastSnapshotMigration": "20260503210248_ad843ca0-7dd5-4391-91a5-0854ddb963db.sql",
+    "lastActualMigration": "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql",
     "missingMigrations": [
-      "20260502191537_5f9b5989-2a94-479f-93b5-cd4a1e87dc70.sql",
-      "20260503205938_96ea65ea-a3c2-42be-b4ae-7129a608fcda.sql",
-      "20260503210248_ad843ca0-7dd5-4391-91a5-0854ddb963db.sql"
+      "20260503211721_388b4c18-4a0a-45a9-9b71-748cfaf63996.sql",
+      "20260503212042_4bf9c767-9734-4df6-a0e5-8eed3a3939f5.sql",
+      "20260503214553_39719ff8-7a5e-4d07-95d5-51c8ad033404.sql",
+      "20260503214736_d149a744-9af3-4534-9652-85ca8ff944c3.sql",
+      "20260503230255_c94418a6-7cd5-4da1-b1c3-ff10cba9d4be.sql",
+      "20260503235759_2a2e8a0f-9c33-4183-8d62-7249fe4ba3a8.sql",
+      "20260503235917_5d8bc823-d33e-44f3-9aa0-614b3a84c770.sql",
+      "20260504002128_3b91a5b4-e73f-4f69-ae2d-2ec972592149.sql",
+      "20260504124504_562ff044-ce51-43b6-b13d-2b4df66e14d8.sql",
+      "20260504124547_7e618a3e-5a39-4f9f-9599-f384ffeaeaab.sql",
+      "20260504124619_6edc5f24-ba94-40c9-90fb-62c6564bb25c.sql",
+      "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql"
     ],
-    "diffResults": []
+    "diffResults": [
+      {
+        "table": "meal_plans",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "engine_version, plan_version, protocol_used"
+      },
+      {
+        "table": "profiles",
+        "type": "MISSING_IN_SNAPSHOT",
+        "columns": "protocol_type"
+      }
+    ]
   }
 }
