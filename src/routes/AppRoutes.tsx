@@ -560,21 +560,21 @@ export const AppRoutes = () => {
                 <Route path="/admin/template-nutrition-audit" element={<NutritionistRoute><LP section="Auditoria Nutricional de Templates"><TemplateNutritionAudit /></LP></NutritionistRoute>} />
 
                 {/* Patient Routes */}
-                <Route path="/client/dashboard" element={<PaymentGuardedPatientRoute><StabilityZone name="Dashboard Cliente"><LP section="Dashboard"><ClientDashboard /></LP></StabilityZone></PaymentGuardedPatientRoute>} />
-                <Route path="/journey" element={<PaymentGuardedPatientRoute><LP section="Jornada"><Journey /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/achievements" element={<PaymentGuardedPatientRoute><LP section="Conquistas"><Achievements /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/challenges" element={<PaymentGuardedPatientRoute><LP section="Desafios"><Challenges /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/checkin" element={<PaymentGuardedPatientRoute><LP section="Check-in"><Checkin /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/workouts" element={<PaymentGuardedPatientRoute><LP section="Treinos"><PatientWorkouts /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/meal-plans" element={<PaymentGuardedPatientRoute><LP section="Meus Planos"><MealPlans /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/my-diet" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/dieta" element={<PaymentGuardedPatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/paciente/plano" element={<PaymentGuardedPatientRoute><LP section="Plano de Refeição"><PatientMealPlan /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/my-workouts" element={<PaymentGuardedPatientRoute><LP section="Meus Treinos"><PatientWorkouts /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/weight-calculator" element={<PaymentGuardedPatientRoute><LP section="Calculadora de Peso"><WeightCalculator /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/water-calculator" element={<PaymentGuardedPatientRoute><LP section="Calculadora de Água"><WaterCalculator /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/health-quiz" element={<PaymentGuardedPatientRoute><LP section="Health Check"><HealthCheckQuiz /></LP></PaymentGuardedPatientRoute>} />
-                <Route path="/checklist" element={<PaymentGuardedPatientRoute><LP section="Checklist"><Checklist /></LP></PaymentGuardedPatientRoute>} />
+                <Route path="/client/dashboard" element={<PatientRoute><StabilityZone name="Dashboard Cliente"><LP section="Dashboard"><ClientDashboard /></LP></StabilityZone></PatientRoute>} />
+                <Route path="/journey" element={<PatientRoute><LP section="Jornada"><Journey /></LP></PatientRoute>} />
+                <Route path="/achievements" element={<PatientRoute><LP section="Conquistas"><Achievements /></LP></PatientRoute>} />
+                <Route path="/challenges" element={<PatientRoute><LP section="Desafios"><Challenges /></LP></PatientRoute>} />
+                <Route path="/checkin" element={<PatientRoute><LP section="Check-in"><Checkin /></LP></PatientRoute>} />
+                <Route path="/workouts" element={<PatientRoute><LP section="Treinos"><PatientWorkouts /></LP></PatientRoute>} />
+                <Route path="/meal-plans" element={<PatientRoute><LP section="Meus Planos"><MealPlans /></LP></PatientRoute>} />
+                <Route path="/my-diet" element={<PatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PatientRoute>} />
+                <Route path="/dieta" element={<PatientRoute><LP section="Minha Dieta"><PatientMealPlan /></LP></PatientRoute>} />
+                <Route path="/paciente/plano" element={<PatientRoute><LP section="Plano de Refeição"><PatientMealPlan /></LP></PatientRoute>} />
+                <Route path="/my-workouts" element={<PatientRoute><LP section="Meus Treinos"><PatientWorkouts /></LP></PatientRoute>} />
+                <Route path="/weight-calculator" element={<PatientRoute><LP section="Calculadora de Peso"><WeightCalculator /></LP></PatientRoute>} />
+                <Route path="/water-calculator" element={<PatientRoute><LP section="Calculadora de Água"><WaterCalculator /></LP></PatientRoute>} />
+                <Route path="/health-quiz" element={<PatientRoute><LP section="Health Check"><HealthCheckQuiz /></LP></PatientRoute>} />
+                <Route path="/checklist" element={<PatientRoute><LP section="Checklist"><Checklist /></LP></PatientRoute>} />
                 
                 {/* Editor Routes */}
                 <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
