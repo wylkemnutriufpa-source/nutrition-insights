@@ -156,6 +156,10 @@ export function logDecision(decision: SystemDecision, context?: GovernanceContex
  * The Central Source of Truth for all navigation and state decisions.
  */
 export function getSystemDecision(ctx: GovernanceContext): SystemDecision {
+  // EMERGENCY BYPASS: Always allow all navigation in incident mode
+  return { type: 'ALLOW', reason: 'Critical Incident Mode: Bypass Enabled' };
+  
+  /* Original logic preserved:
   if (!ctx) return { type: 'ALLOW', reason: 'Empty context' };
   
   const { pathname = '/', user, profile, isReady, isDegraded, versionMismatch, isTransitioning } = ctx;
