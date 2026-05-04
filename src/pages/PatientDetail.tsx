@@ -60,7 +60,7 @@ import { SmartRecommendationsPanel } from "@/components/dashboard/SmartRecommend
 import type { PatientSignals } from "@/components/dashboard/SmartRecommendationsPanel";
 import { MomentumIndicator } from "@/components/gamification/MomentumIndicator";
 import { JourneyTimelineFeed } from "@/components/gamification/JourneyTimelineFeed";
-import { EditorVersionPicker } from "@/components/common/EditorVersionPicker";
+// Removed EditorVersionPicker to maintain absolute independence between V2 and V3 flows
 import { EditorMatrixModal } from "@/components/diet/EditorMatrixModal";
 import MealAdherenceWidget from "@/components/patient/MealAdherenceWidget";
 import OnboardingReleaseDialog from "@/components/patient/OnboardingReleaseDialog";
