@@ -268,9 +268,19 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     if (hydratedFromDb.current) return;
     
     const hydrate = async () => {
+      // Watchdog para evitar travamento em caso de erro na hidratação
+      const watchdog = setTimeout(() => {
+        if (!hydratedFromDb.current) {
+          console.warn("[ExperienceMode] WATCHDOG: Hidratação demorou muito, liberando loading.");
+          setIsLoading(false);
+          hydratedFromDb.current = true;
+        }
+      }, 5000);
+
       try {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) {
+          clearTimeout(watchdog);
           setIsLoading(false);
           hydratedFromDb.current = true;
           return;
@@ -294,6 +304,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       } catch (e) {
         console.warn("[ExperienceMode] Falha na hidratação inicial:", e);
       } finally {
+        clearTimeout(watchdog);
         setIsLoading(false);
         hydratedFromDb.current = true;
       }
