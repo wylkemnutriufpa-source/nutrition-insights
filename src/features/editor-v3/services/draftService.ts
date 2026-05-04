@@ -149,6 +149,8 @@ export async function saveDraft(
 ): Promise<DraftRecord | null> {
   // Contract Validation (ETAPA 2)
   validateDraftIntegrity({ meals, version: 1 });
+  // Contract Validation (ETAPA 2)
+  validateDraftIntegrity({ meals, version: 1 });
 
   const normalizedMeals = normalizeMeals(meals);
   const macros = computeMacros(normalizedMeals);
