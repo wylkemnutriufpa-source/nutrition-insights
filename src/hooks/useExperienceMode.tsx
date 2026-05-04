@@ -22,7 +22,6 @@ export interface ExperienceModeContextValue {
   queueStats: { processed: number; failed: number; isFull: boolean; hasExpired: boolean };
 }
 
-import { featureMap } from "@/config/features";
 
 export function useExperienceMode(): ExperienceModeContextValue {
   const { profile, experienceMode, experienceRole, setMode, loading } = useAuth();
