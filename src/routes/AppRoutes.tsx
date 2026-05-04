@@ -377,8 +377,10 @@ export const AppRoutes = () => {
       {isOrphan && <HardFailLinkage />}
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
-          {/* Removed SystemStateGuard, ExperienceRouteGuard, and WorkspaceRouteGuard for radical simplification */}
-          <StabilityZone name="Navegação Principal">
+          <SystemStateGuard>
+            <ExperienceRouteGuard>
+              <WorkspaceRouteGuard>
+                <StabilityZone name="Navegação Principal">
               <Routes>
                 {/* Home */}
                 <Route path="/" element={<HomeRedirect />} />
@@ -648,7 +650,9 @@ export const AppRoutes = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </StabilityZone>
-          {/* Removed closing SystemStateGuard */}
+              </WorkspaceRouteGuard>
+            </ExperienceRouteGuard>
+          </SystemStateGuard>
         </Suspense>
       </AnimatePresence>
     </div>

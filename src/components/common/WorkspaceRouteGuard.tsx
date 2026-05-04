@@ -1,6 +1,20 @@
-/**
- * DEPRECATED — neutralized. Logic moved to explicit actions.
- */
-export default function WorkspaceRouteGuard() {
-  return null;
+
+import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { Navigate, useLocation } from "react-router-dom";
+
+export default function WorkspaceRouteGuard({ children }: { children: React.ReactNode }) {
+  const { isPatientContext, isProfessionalContext } = useWorkspaceContext();
+  const location = useLocation();
+
+  // Simple validation to ensure user is in the correct context for the route
+  if (location.pathname.startsWith("/admin") && !isProfessionalContext) {
+     return <Navigate to="/client/dashboard" replace />;
+  }
+
+  if (location.pathname.startsWith("/client") && !isPatientContext) {
+     return <Navigate to="/admin/dashboard" replace />;
+  }
+
+  return <>{children}</>;
 }
