@@ -27,14 +27,13 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
-              <WorkspaceProvider>
-                <Helmet>
-                  <title>FitJourney</title>
-                </Helmet>
-                {children}
-                <Toaster />
-                <Sonner />
-              </WorkspaceProvider>
+              {/* Removed WorkspaceProvider to prevent blocking */}
+              <Helmet>
+                <title>FitJourney</title>
+              </Helmet>
+              {children}
+              <Toaster />
+              <Sonner />
             </AuthProvider>
 
           </BrowserRouter>
