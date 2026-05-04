@@ -82,22 +82,24 @@ export default function CinematicIntro({ onComplete }: CinematicIntroProps) {
       exit={{ opacity: 0 }}
       transition={{ duration: 0.8, ease: EASE_PREMIUM }}
     >
-      {/* Video background */}
-      <video
-        ref={videoRef}
-        className="absolute inset-0 w-full h-full object-cover"
-        src="/videos/intro.mp4"
-        autoPlay
-        muted
-        loop
-        playsInline
-        preload="auto"
-        onCanPlayThrough={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
-        onCanPlay={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
-        onLoadedData={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
-        onError={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
-        style={{ filter: "brightness(0.55) contrast(1.1) saturate(1.2)" }}
-      />
+      {/* Video — Centered and contained */}
+      <div className="absolute inset-0 flex items-center justify-center bg-black">
+        <video
+          ref={videoRef}
+          className="w-full h-full object-contain"
+          src="/videos/intro.mp4"
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          onCanPlayThrough={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
+          onCanPlay={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
+          onLoadedData={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
+          onError={() => { if (!videoReadyRef.current) { videoReadyRef.current = true; setVideoReady(true); } }}
+          style={{ filter: "brightness(0.65) contrast(1.1) saturate(1.2)" }}
+        />
+      </div>
 
       {/* Gradient overlays for cinematic feel */}
       <div
