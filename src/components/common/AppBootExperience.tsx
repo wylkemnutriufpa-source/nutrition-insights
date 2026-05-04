@@ -57,22 +57,20 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden bg-black cursor-pointer"
+          className="fixed inset-0 z-[150] flex items-center justify-center overflow-hidden bg-black cursor-pointer"
           onClick={handleFinish}
         >
-          {/* Video — Centralizado e contido para não distorcer o logo */}
-          <div className="absolute inset-0 flex items-center justify-center">
-            <video
-              className="w-full h-full object-contain"
-              src="/videos/logo-animated.mp4"
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              style={{ filter: "brightness(0.9) contrast(1.1)" }}
-            />
-          </div>
+          {/* Video — Always full screen and centered */}
+          <video
+            className="absolute inset-0 w-full h-full object-contain md:object-cover"
+            src="/videos/logo-animated.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ filter: "brightness(0.9) contrast(1.1)" }}
+          />
 
           {/* Gradient overlay suave */}
           <div
@@ -82,46 +80,48 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
             }}
           />
 
-          {/* Brand text */}
-          <motion.div
-            className="relative z-10 text-center mt-auto mb-24"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.8, duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <h1
-              className="text-2xl md:text-3xl font-bold tracking-[0.3em] uppercase text-white"
-              style={{
-                textShadow: "0 0 30px rgba(16, 185, 129, 0.3)",
-              }}
-            >
-              FitJourney
-            </h1>
-          </motion.div>
-
-          {/* Loading bar */}
-          <motion.div
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 w-32 h-[1px] rounded-full overflow-hidden"
-            style={{ background: "rgba(255,255,255,0.05)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.5 }}
-          >
+          {/* Brand text & Loading — Centered stack */}
+          <div className="relative z-10 flex flex-col items-center gap-8">
             <motion.div
-              className="h-full rounded-full"
-              style={{
-                background: "linear-gradient(90deg, #10b981, #34d399)",
-              }}
-              initial={{ width: "0%" }}
-              animate={{ width: dataReady ? "100%" : "60%" }}
-              transition={{
-                duration: dataReady ? 0.3 : 3,
-                ease: "easeInOut",
-              }}
-            />
-          </motion.div>
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+              className="text-center"
+            >
+              <h1
+                className="text-3xl md:text-4xl font-bold tracking-[0.25em] uppercase text-white"
+                style={{
+                  textShadow: "0 0 40px rgba(16, 185, 129, 0.4)",
+                }}
+              >
+                FitJourney
+              </h1>
+            </motion.div>
+
+            {/* Loading bar */}
+            <motion.div
+              className="w-40 h-[2px] rounded-full overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.7 }}
+            >
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  background: "linear-gradient(90deg, #10b981, #34d399)",
+                }}
+                initial={{ width: "0%" }}
+                animate={{ width: dataReady ? "100%" : "60%" }}
+                transition={{
+                  duration: dataReady ? 0.4 : 4,
+                  ease: "easeInOut",
+                }}
+              />
+            </motion.div>
+          </div>
           
-          <div className="absolute top-6 right-6 text-[10px] uppercase tracking-widest text-white/20 animate-pulse">
-            Toque para entrar
+          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.3em] text-white/30 animate-pulse font-light">
+            Clique para entrar
           </div>
         </motion.div>
       ) : null}
