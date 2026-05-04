@@ -5,6 +5,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { 
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import {
   CheckCircle2, 
   Clock, 
   AlertCircle, 
@@ -17,9 +25,16 @@ import {
   Bell,
   Trash2,
   Lock,
-  ArrowRight
+  ArrowRight,
+  ChevronRight,
+  Info,
+  Terminal,
+  FileCode,
+  AlertTriangle,
+  Loader2
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
 
 type Status = "functional" | "partial" | "pending";
 
@@ -29,6 +44,15 @@ interface ChecklistItem {
   title: string;
   status: Status;
   details: string;
+  why: string;
+  evidence: {
+    logs: string[];
+    version: string;
+    lastExec: string;
+    errors: string[];
+  };
+  actionLabel?: string;
+  onAction?: () => Promise<void>;
 }
 
 interface ModuleStatus {
@@ -102,11 +126,28 @@ const MODULES_STATUS: ModuleStatus[] = [
 
 export default function OperationalChecklist() {
   const [activeCategory, setActiveCategory] = useState<string>("Todos");
+  const [selectedItem, setSelectedItem] = useState<ChecklistItem | null>(null);
+  const [actionLoading, setActionLoading] = useState<string | null>(null);
+
   const categories = ["Todos", ...Array.from(new Set(CHECKLIST_DATA.map(i => i.category)))];
 
   const filteredItems = activeCategory === "Todos" 
     ? CHECKLIST_DATA 
     : CHECKLIST_DATA.filter(i => i.category === activeCategory);
+
+  const handleAction = async (item: ChecklistItem, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (actionLoading) return;
+    
+    setActionLoading(item.id);
+    try {
+      if (item.onAction) {
+        await item.onAction();
+      }
+    } finally {
+      setActionLoading(null);
+    }
+  };
 
   const getStatusIcon = (status: Status) => {
     switch (status) {
@@ -268,6 +309,104 @@ export default function OperationalChecklist() {
             </Card>
           </div>
         </div>
+
+        {/* --- Evidence Modal --- */}
+        <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
+          <DialogContent className="glass-premium border-slate-800 max-w-2xl">
+            {selectedItem && (
+              <>
+                <DialogHeader>
+                  <div className="flex items-center gap-3 mb-2">
+                    {getStatusIcon(selectedItem.status)}
+                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest opacity-60">
+                      {selectedItem.category}
+                    </Badge>
+                  </div>
+                  <DialogTitle className="text-2xl font-bold font-display">{selectedItem.title}</DialogTitle>
+                  <DialogDescription className="text-slate-400">
+                    Detalhes operacionais e evidências técnicas de auditoria.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-6 py-4">
+                  {/* Status Justification */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
+                      <Info className="h-3 w-3" /> Por que este status?
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 text-sm leading-relaxed text-slate-300">
+                      {selectedItem.why}
+                    </div>
+                  </div>
+
+                  {/* Technical Evidence Grid */}
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2">
+                        <FileCode className="h-3 w-3" /> Engine Version
+                      </div>
+                      <p className="text-sm font-mono font-bold text-primary">{selectedItem.evidence.version}</p>
+                    </div>
+                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
+                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2">
+                        <Clock className="h-3 w-3" /> Última Execução
+                      </div>
+                      <p className="text-sm font-medium">{selectedItem.evidence.lastExec}</p>
+                    </div>
+                  </div>
+
+                  {/* Execution Logs */}
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+                      <Terminal className="h-3 w-3" /> Logs Recentes
+                    </div>
+                    <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 max-h-32 overflow-y-auto">
+                      {selectedItem.evidence.logs.map((log, i) => (
+                        <div key={i} className="flex gap-2">
+                          <span className="text-slate-600 select-none">[{i+1}]</span>
+                          <span className="text-emerald-500/80">{log}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Critical Errors */}
+                  {selectedItem.evidence.errors.length > 0 && (
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2 text-xs font-bold text-red-400 uppercase tracking-wider">
+                        <AlertTriangle className="h-3 w-3" /> Erros Bloqueantes
+                      </div>
+                      <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/20 space-y-1">
+                        {selectedItem.evidence.errors.map((err, i) => (
+                          <div key={i} className="text-xs text-red-400/90 font-medium flex gap-2">
+                            <span>•</span> {err}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                <DialogFooter className="border-t border-slate-800 pt-4 gap-2">
+                  <Button variant="ghost" onClick={() => setSelectedItem(null)}>Fechar</Button>
+                  {selectedItem.actionLabel && (
+                    <Button 
+                      className="gap-2"
+                      onClick={(e) => {
+                        handleAction(selectedItem, e);
+                        setSelectedItem(null);
+                      }}
+                      disabled={actionLoading === selectedItem.id}
+                    >
+                      {actionLoading === selectedItem.id ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                      {selectedItem.actionLabel}
+                    </Button>
+                  )}
+                </DialogFooter>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
       </div>
     </DashboardLayout>
   );
