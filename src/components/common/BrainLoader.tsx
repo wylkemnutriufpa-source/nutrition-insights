@@ -1,7 +1,6 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Brain } from "lucide-react";
-import logoVideo from "@/assets/logo-video.mp4";
 
 const DEFAULT_MESSAGES = [
   "Analisando seu metabolismo…",
