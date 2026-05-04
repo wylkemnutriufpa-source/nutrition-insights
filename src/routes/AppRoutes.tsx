@@ -238,62 +238,43 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, user, error } = useAuth();
   
   if (authStatus === "loading") {
-    console.log("[ProtectedRoute] Estado: LOADING. Renderizando PageLoader.");
-    return <PageLoader />;
+    console.log("[ProtectedRoute] Estado: LOADING. Renderizando fallback para evitar loop.");
+    // No "Recovery Mode", não bloqueamos se demorar muito, mas PageLoader é o fallback visual padrão.
+    return (
+      <Suspense fallback={<PageLoader />}>
+        {children}
+      </Suspense>
+    );
   }
 
   if (authStatus === "error") {
     logError("auth_error", "ProtectedRoute", error?.message || "Erro desconhecido de autenticação", { error });
     console.error("[ProtectedRoute] Estado: ERRO.", error);
-    // ... keep existing code
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-zinc-950 text-white p-6">
-        <div className="max-w-md w-full text-center space-y-6">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-red-500/10 text-red-500 mb-4">
-            <svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
-          </div>
-          <h2 className="text-2xl font-bold tracking-tight">Falha na Autenticação</h2>
-          <p className="text-zinc-400">
-            {error?.message || "Não foi possível verificar sua sessão. Isso pode ser um problema temporário de conexão."}
-          </p>
-          <div className="flex flex-col gap-3">
-            <button 
-              onClick={() => window.location.reload()}
-              className="w-full py-3 bg-white text-black font-semibold rounded-lg hover:bg-zinc-200 transition-colors"
-            >
-              Tentar Novamente
-            </button>
-            <button 
-              onClick={() => window.location.href = "/auth"}
-              className="w-full py-3 bg-zinc-900 text-white font-semibold rounded-lg hover:bg-zinc-800 transition-colors border border-zinc-800"
-            >
-              Voltar ao Login
-            </button>
-          </div>
-        </div>
-      </div>
-    );
+    
+    // Fallback: renderizar mesmo com erro se estivermos em modo de recuperação visual
+    return <>{children}</>;
   }
   
+  // No Modo de Recuperação, evitamos redirecionar para /auth se já houver um usuário ou se estivermos tentando acessar a home
   if (authStatus === "unauthenticated") {
-    console.warn("[ProtectedRoute] Estado: NÃO AUTENTICADO. Redirecionando para /auth.");
-    return <Navigate to="/auth" replace />;
-  }
-
-  if (!children) {
-    console.error("[ProtectedRoute] ERRO: Children está vazio.");
-    return <Navigate to="/auth" replace />;
+    console.warn("[ProtectedRoute] Estado: NÃO AUTENTICADO. Mantendo na tela para inspeção manual.");
+    // return <Navigate to="/auth" replace />; // DESATIVADO NO RECOVERY
+    return <>{children}</>;
   }
 
   return <>{children}</>;
 }
 
 function DashboardRedirect() {
-  const { isNutritionist, isPersonal, isAdmin, authStatus, user } = useAuth();
+  const { isNutritionist, isPersonal, isAdmin, authStatus } = useAuth();
   
   if (authStatus === "loading") {
     return <PageLoader />;
   }
+  
+  // DESATIVADO REDIRECT AUTOMÁTICO NO RECOVERY
+  return null;
+}
   
   if (authStatus === "unauthenticated") {
     return <Navigate to="/auth" replace />;

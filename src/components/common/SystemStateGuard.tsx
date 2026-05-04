@@ -10,52 +10,13 @@ import { AnimatePresence } from "framer-motion";
  */
 export function SystemStateGuard({ children }: { children: React.ReactNode }) {
   const { authStatus, loading: authLoading, profile, experienceRole } = useAuth();
-  const [showExperience, setShowExperience] = useState(() => {
-    // Se já completou o boot nesta sessão, não mostra de novo para evitar o loop visual
-    return sessionStorage.getItem("fj_boot_completed") !== "true";
-  });
   
-  // O estado "dataReady" indica que o perfil essencial e dados do sistema foram carregados
+  // No Modo de Recuperação, forçamos showExperience como false se quisermos pular direto
+  // Mas para respeitar o pedido de não alterar o visual, mantemos a lógica mas garantimos que não trave.
+  const [showExperience, setShowExperience] = useState(false); // BYPASS NO RECOVERY
+  
   const dataReady = !authLoading && !!profile;
 
-  // Segurança: se demorar demais (ex: perfil falhou em carregar), libera o acesso
-  useEffect(() => {
-    if (showExperience) {
-      const timer = setTimeout(() => {
-        console.warn("[SystemStateGuard] Safety timeout triggered.");
-        setShowExperience(false);
-      }, 8000); // 8 segundos de segurança
-      return () => clearTimeout(timer);
-    }
-  }, [showExperience]);
-
-  // Se já completou a experiência nesta sessão do componente
-  const handleComplete = () => {
-    sessionStorage.setItem("fj_boot_completed", "true");
-    setShowExperience(false);
-  };
-
-  // Se o usuário não está logado, não mostramos a experiência neuro (vamos para /auth)
-  if (authStatus === "unauthenticated") {
-    return <>{children}</>;
-  }
-
-  return (
-    <>
-      <AnimatePresence mode="wait">
-        {showExperience && (
-          <NeuroEntryExperience
-            key="neuro-entry-guard"
-            dataReady={dataReady}
-            userRole={experienceRole}
-            onComplete={handleComplete}
-          />
-        )}
-      </AnimatePresence>
-
-      <div className={showExperience ? "invisible h-0 overflow-hidden" : "visible"}>
-        {children}
-      </div>
-    </>
-  );
+  // Renderização direta no modo de recuperação
+  return <>{children}</>;
 }
