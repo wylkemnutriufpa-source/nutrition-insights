@@ -11,6 +11,7 @@ import {
   calculatePersonalizedScore, 
   validateClinicalContext, 
   calculatePlanConfidence,
+  calculateItemMacros,
   runClinicalRegressions,
   NutritionalScore, 
   ValidationIssue 
