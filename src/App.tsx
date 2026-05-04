@@ -9,10 +9,18 @@ const AppContent = () => {
   const { authStatus } = useAuth();
   const [bootComplete, setBootComplete] = useState(false);
   
-  // No Recovery Mode, pulamos o boot se houver qualquer sinal de loop
+  // O boot visual (vídeo girando) aparece enquanto os dados carregam
   const dataReady = authStatus !== "loading";
 
-  // Desativado boot para destravar UI em loop
+  if (!bootComplete) {
+    return (
+      <AppBootExperience 
+        dataReady={dataReady} 
+        onComplete={() => setBootComplete(true)} 
+      />
+    );
+  }
+
   return <AppRoutes />;
 };
 
