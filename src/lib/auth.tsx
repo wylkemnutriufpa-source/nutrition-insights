@@ -52,8 +52,8 @@ interface AuthContextType {
   checkSubscription: () => Promise<void>;
   setMode: (mode: string) => Promise<void>;
   error: Error | null;
-  experienceMode: string;
-  experienceRole: "professional" | "patient";
+  experienceMode: "basic" | "pro" | "advanced";
+  experienceRole: "nutritionist" | "patient";
   tenantId: string | null;
   tenant: any | null;
 }
@@ -197,8 +197,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isPatient = roles.includes("patient");
   const isLojista = (roles as string[]).includes("lojista");
 
-  const experienceRole: "professional" | "patient" = (isNutritionist || isPersonal || isAdmin) ? "professional" : "patient";
-  const experienceMode = profile?.experience_mode || "pro";
+  const experienceRole: "nutritionist" | "patient" = (isNutritionist || isPersonal || isAdmin) ? "nutritionist" : "patient";
+  const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode as any) || "basic";
 
   return (
     <AuthContext.Provider
@@ -252,8 +252,8 @@ export function useAuth() {
       checkSubscription: async () => {},
       setMode: async (m: string) => {},
       error: null,
-      experienceMode: "pro",
-      experienceRole: "professional" as const,
+      experienceMode: "basic" as const,
+      experienceRole: "nutritionist" as const,
       tenantId: null,
       tenant: null,
     };

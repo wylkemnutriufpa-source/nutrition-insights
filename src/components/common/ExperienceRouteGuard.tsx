@@ -1,23 +1,12 @@
 
-import { useLocation, Navigate } from "react-router-dom";
-import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { useLocation } from "react-router-dom";
 
+/**
+ * ExperienceRouteGuard simplificado.
+ * Conforme instrução, NÃO bloqueia acesso nem redireciona.
+ * Mantido apenas para compatibilidade de exportação se necessário.
+ */
 export default function ExperienceRouteGuard({ children }: { children: React.ReactNode }) {
-  const { isRouteAllowed } = useExperienceMode();
-  const location = useLocation();
-  
-  // Public or always visible routes bypass the check
-  const isPublic = [
-    "/auth", "/auth/confirm", "/reset-password", "/invitation", "/convite",
-    "/landing", "/privacy", "/terms", "/status", "/status-page", "/welcome"
-  ].some(p => location.pathname.startsWith(p));
-
-  if (isPublic) return <>{children}</>;
-  
-  if (!isRouteAllowed(location.pathname)) {
-    console.warn(`[ExperienceRouteGuard] Route blocked: ${location.pathname}`);
-    return <Navigate to="/" replace />;
-  }
-  
+  // Apenas renderiza os filhos sem nenhuma trava.
   return <>{children}</>;
 }
