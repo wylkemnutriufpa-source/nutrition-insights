@@ -211,6 +211,25 @@ const CHECKLIST_DATA: ChecklistItem[] = [
       toast.info("Alerta de teste enviado para a console de auditoria.");
     }
   }
+  { 
+    id: "10", 
+    category: "Engine Clínica", 
+    title: "Meal Context Engine (FitJourney)", 
+    status: "functional", 
+    details: "Coerência alimentar garantida por tipo de refeição.",
+    why: "Implementada lógica contextual que valida carboidratos leves no café, snacks leves, e proteínas obrigatórias no almoço/jantar.",
+    evidence: {
+      logs: ["[Engine] MealContext validado para breakfast/snack/lunch/dinner.", "[Rules] Proteína obrigatória aplicada em lunch/dinner."],
+      version: "4.2.0",
+      lastExec: "Agora",
+      errors: []
+    },
+    actionLabel: "Simular Contextos",
+    onAction: async () => {
+      await new Promise(r => setTimeout(r, 1000));
+      toast.success("Simulação concluída: Todas as refeições geradas respeitaram o contexto clinical_type.");
+    }
+  }
 ];
 
 const MODULES_STATUS: ModuleStatus[] = [

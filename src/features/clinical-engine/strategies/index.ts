@@ -35,18 +35,22 @@ export class FitJourneyStrategy implements ClinicalStrategy {
 
   generateMeal(meal: Meal, goal: string, baseCalories: number, availableFoods: Food[]): MealItem[] {
     const mealName = meal.name.toLowerCase();
+    const type = meal.type; // Assumindo que Meal tem 'type' do tipo meal_types definido no prompt
     const scale = baseCalories / 2000;
     let newItems: (MealItem | null)[] = [];
 
-    // Lógica especializada FitJourney: Foco em performance/músculo
-    if (mealName.includes('café') || mealName.includes('desjejum')) {
+    // Lógica especializada FitJourney: Foco em performance/músculo + Coerência por Tipo
+    if (type === 'breakfast' || mealName.includes('café') || mealName.includes('desjejum')) {
       const proteins = shuffleArray(availableFoods.filter(f => ['Whey', 'Ovo', 'Frango', 'Iogurte'].some(w => f.name.includes(w))));
       const carbs = shuffleArray(availableFoods.filter(f => ['Aveia', 'Pão', 'Banana', 'Tapioca'].some(w => f.name.includes(w))));
       newItems = [
         createMealItem(proteins[0], (goal === 'muscle-gain' ? 40 : 30) * scale),
         createMealItem(carbs[0], (goal === 'muscle-gain' ? 80 : 50) * scale)
       ];
-    } else if (mealName.includes('almoço') || mealName.includes('jantar')) {
+    } else if (type === 'snack' || mealName.includes('lanche')) {
+      const snacks = shuffleArray(availableFoods.filter(f => ['Fruta', 'Iogurte', 'Castanha', 'Barra'].some(w => f.name.includes(w))));
+      newItems = [createMealItem(snacks[0], 100 * scale)];
+    } else if (['lunch', 'dinner'].includes(type || '') || mealName.includes('almoço') || mealName.includes('jantar')) {
       // 30% de chance de sugerir uma Marmita Fit no FitJourney para praticidade
       if (Math.random() > 0.7) {
         const marmitas = availableFoods.filter(f => f.isMarmita || f.name.toLowerCase().includes('(fit)'));
@@ -58,10 +62,16 @@ export class FitJourneyStrategy implements ClinicalStrategy {
 
       const proteins = shuffleArray(availableFoods.filter(f => ['Frango', 'Patinho', 'Peixe', 'Ovo'].some(w => f.name.includes(w))));
       const carbs = shuffleArray(availableFoods.filter(f => ['Arroz', 'Batata', 'Feijão', 'Macarrão'].some(w => f.name.includes(w))));
+      const veggies = shuffleArray(availableFoods.filter(f => ['Brócolis', 'Alface', 'Tomate'].some(w => f.name.includes(w))));
+      
       newItems = [
         createMealItem(proteins[0], (goal === 'muscle-gain' ? 200 : 150) * scale),
-        createMealItem(carbs[0], (goal === 'muscle-gain' ? 250 : 150) * scale)
+        createMealItem(carbs[0], (goal === 'muscle-gain' ? 250 : 150) * scale),
+        createMealItem(veggies[0], 100)
       ];
+    } else if (type === 'supper' || mealName.includes('ceia')) {
+      const lightProteins = shuffleArray(availableFoods.filter(f => ['Whey', 'Ovo', 'Caseína'].some(w => f.name.includes(w))));
+      newItems = [createMealItem(lightProteins[0], 30 * scale)];
     }
 
     return newItems.filter((i): i is MealItem => i !== null);
@@ -71,7 +81,7 @@ export class FitJourneyStrategy implements ClinicalStrategy {
     const hasMarmita = items.some(i => i.isMarmita);
     return hasMarmita 
       ? "Sugerida Marmita Fit para garantir praticidade sem comprometer o aporte de macros."
-      : "Priorizado alto valor biológico proteico e carboidratos complexos para otimização metabólica (FitJourney).";
+      : "Priorizado alto valor biológico proteico e carboidratos complexos seguindo as regras de coerência por tipo de refeição (FitJourney).";
   }
 }
 
