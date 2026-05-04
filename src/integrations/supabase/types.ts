@@ -21599,6 +21599,7 @@ export type Database = {
         }
         Returns: Json
       }
+      reconcile_patient_state: { Args: { _patient_id: string }; Returns: Json }
       record_ai_usage: {
         Args: { _feature_key: string; _plan_tier?: string; _user_id: string }
         Returns: Json

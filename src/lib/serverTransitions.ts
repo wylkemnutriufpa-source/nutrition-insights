@@ -328,6 +328,24 @@ export async function savePlanAsApproved(
 }
 
 /**
+ * Reconcile patient_state based on commercial and clinical reality.
+ * (ETAPA 3 - Contratos de Estado)
+ */
+export async function reconcilePatientState(patientId: string): Promise<TransitionResult> {
+  const { data, error } = await supabase.rpc(
+    "reconcile_patient_state" as any,
+    { _patient_id: patientId }
+  );
+
+  if (error) {
+    console.error("[ServerTransition] reconcilePatientState failed:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true, data: data as Record<string, unknown> };
+}
+
+/**
  * Protocol domain resolution helper.
  */
 export const PROTOCOL_DOMAIN = {
