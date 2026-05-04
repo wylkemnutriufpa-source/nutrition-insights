@@ -1458,13 +1458,10 @@ export default function PatientDetail() {
                           const patientIdentity = await resolvePatientIdentity(patientId);
                           const pd = await resolveLatestOnboardingPipeline(patientId);
                           if (pd?.generated_plan_id && pd?.plan_generated) {
-                            const finalized = await finalizeGeneratedMealPlan({
-                              planId: pd.generated_plan_id,
-                              patientId: patientIdentity.canonicalId,
-                              userId: user!.id,
-                              tenantId,
-                            });
-                            navigate(`/meal-plans/${finalized.finalPlanId}`);
+                            const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", pd.generated_plan_id).single();
+                            const isV3 = planData?.editor_version === "v3";
+                            const path = isV3 ? `/v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}` : `/meal-plans/${pd.generated_plan_id}`;
+                            navigate(path);
                             return;
                           }
                           // No onboarding plan — generate one
