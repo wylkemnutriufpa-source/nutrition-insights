@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
+import AppBootExperience from "@/components/common/AppBootExperience";
 import { useAppState } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
@@ -342,12 +343,22 @@ function RedirectWithParams({ to }: { to: string }) {
 
 export const AppRoutes = () => {
   const { isDegraded, isOrphan } = useAppState();
-  const { experienceMode, experienceRole } = useAuth();
+  const { experienceMode, experienceRole, authStatus } = useAuth();
+  const [bootComplete, setBootComplete] = useState(false);
   
   useEffect(() => {
     document.documentElement.setAttribute("data-experience-mode", experienceMode);
     document.documentElement.setAttribute("data-experience-role", experienceRole);
   }, [experienceMode, experienceRole]);
+
+  if (!bootComplete) {
+    return (
+      <AppBootExperience 
+        dataReady={authStatus !== "loading"} 
+        onComplete={() => setBootComplete(true)} 
+      />
+    );
+  }
   
   return (
     <div className="min-h-screen">
