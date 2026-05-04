@@ -72,8 +72,8 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         .eq("id", patientId)
         .maybeSingle();
 
-      const weight = parseFloat(String(physicalAssessment?.weight || answers.weight || 70));
-      const height = parseFloat(String(physicalAssessment?.height || answers.height || 170));
+      const weight = parseFloat(String(bodyAssessment?.weight_kg || answers.weight || 70));
+      let height = parseFloat(String(bodyAssessment?.height_m ? (Number(bodyAssessment.height_m) * 100) : (answers.height || 170)));
 
       const profile: PatientProfile = {
         patientId,
@@ -84,7 +84,7 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         height: height < 3 ? height * 100 : height,
         activityLevel: answers.activity_level || "light",
         goal: answers.goal || answers.objective || answers.main_goal || "lose_weight",
-        bodyFatEstimate: physicalAssessment?.body_fat_percentage || null,
+        bodyFatEstimate: bodyAssessment?.body_fat_percent ? Number(bodyAssessment.body_fat_percent) : null,
         restrictions: Array.isArray(answers.restrictions) ? answers.restrictions.filter((r: string) => r !== "none") : [],
         allergies: Array.isArray(answers.allergies) ? answers.allergies.filter((a: string) => a !== "none") : [],
         dislikedFoods: typeof answers.disliked_foods === "string"
