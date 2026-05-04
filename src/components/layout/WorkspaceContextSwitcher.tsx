@@ -10,7 +10,7 @@ interface Props {
 
 export default function WorkspaceContextSwitcher({ collapsed = false }: Props) {
   const { activeContext, setContext, isHybridUser } = useWorkspaceContext();
-  const { isBasic } = useExperienceMode();
+  const { isBasic } = useExperienceMode() as any;
 
   if (!isHybridUser || isBasic) return null;
 
