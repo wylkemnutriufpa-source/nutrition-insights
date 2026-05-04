@@ -340,6 +340,16 @@ function RedirectWithParams({ to }: { to: string }) {
   return <Navigate to={target} replace />;
 }
 
+function HomeRedirect() {
+  const { authStatus } = useAuth();
+  
+  if (authStatus === "loading") return <PageLoader />;
+  if (authStatus === "authenticated") {
+    return <DashboardRedirect />;
+  }
+  return <Index />;
+}
+
 export const AppRoutes = () => {
   const { isDegraded, isOrphan } = useAppState();
   const { experienceMode, experienceRole } = useAuth();
@@ -359,7 +369,8 @@ export const AppRoutes = () => {
           <StabilityZone name="Navegação Principal">
               <Routes>
                 {/* Home */}
-                <Route path="/" element={<LP section="Início"><Index /></LP>} />
+                <Route path="/" element={<HomeRedirect />} />
+
                 
                 {/* Redirects */}
                 <Route path="/dashboard" element={<DashboardRedirect />} />
