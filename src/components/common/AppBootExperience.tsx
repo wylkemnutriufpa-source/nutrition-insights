@@ -1,9 +1,5 @@
-import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
-import { Brain } from "lucide-react";
-
-// ─── Types ───
-type BootStage = "idle" | "awakening" | "syncing" | "ready" | "transitioning";
 
 interface AppBootExperienceProps {
   /** True when ALL data (auth, profile, roles, flags) is loaded */
@@ -19,176 +15,44 @@ function microVibrate(ms = 12) {
   } catch { /* noop */ }
 }
 
-// ─── Sound helper ───
-function playBootTone() {
-  try {
-    if (localStorage.getItem("fj_audio_muted") === "1") return;
-    const ctx = new AudioContext();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = "sine";
-    osc.frequency.setValueAtTime(396, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(528, ctx.currentTime + 0.6);
-    gain.gain.setValueAtTime(0, ctx.currentTime);
-    gain.gain.linearRampToValueAtTime(0.06, ctx.currentTime + 0.15);
-    gain.gain.linearRampToValueAtTime(0.03, ctx.currentTime + 0.4);
-    gain.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.8);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.85);
-  } catch { /* Web Audio not available */ }
-}
-
-// ─── Neural network nodes (deterministic) ───
-const NEURAL_NODES = [
-  { x: 50, y: 20, r: 2.5 }, { x: 30, y: 35, r: 2 }, { x: 70, y: 35, r: 2 },
-  { x: 20, y: 50, r: 1.8 }, { x: 50, y: 50, r: 3 }, { x: 80, y: 50, r: 1.8 },
-  { x: 30, y: 65, r: 2 }, { x: 70, y: 65, r: 2 }, { x: 50, y: 80, r: 2.5 },
-  { x: 40, y: 42, r: 1.5 }, { x: 60, y: 42, r: 1.5 },
-  { x: 40, y: 58, r: 1.5 }, { x: 60, y: 58, r: 1.5 },
-];
-
-const NEURAL_EDGES: [number, number][] = [
-  [0, 1], [0, 2], [1, 3], [1, 4], [2, 4], [2, 5],
-  [3, 6], [4, 6], [4, 7], [5, 7], [6, 8], [7, 8],
-  [0, 9], [0, 10], [9, 4], [10, 4], [4, 11], [4, 12], [11, 8], [12, 8],
-  [1, 9], [2, 10], [6, 11], [7, 12], [3, 4], [5, 4],
-];
-
-// ─── Orbiting particles ───
-function OrbitingParticles({ visible }: { visible: boolean }) {
-  const particles = useMemo(
-    () =>
-      Array.from({ length: 6 }, (_, i) => ({
-        angle: (i / 6) * Math.PI * 2,
-        radius: 90 + (i % 3) * 20,
-        size: 2 + (i % 3),
-        duration: 6 + i * 0.8,
-        delay: i * 0.3,
-      })),
-    []
-  );
-
-  if (!visible) return null;
-
-  return (
-    <g>
-      {particles.map((p, i) => (
-        <motion.circle
-          key={i}
-          cx={50 + Math.cos(p.angle) * (p.radius / 2)}
-          cy={50 + Math.sin(p.angle) * (p.radius / 2)}
-          r={p.size / 2}
-          fill="hsl(152 58% 48%)"
-          initial={{ opacity: 0 }}
-          animate={{
-            opacity: [0, 0.6, 0.2, 0.6, 0],
-            cx: [
-              50 + Math.cos(p.angle) * (p.radius / 2),
-              50 + Math.cos(p.angle + Math.PI) * (p.radius / 2),
-              50 + Math.cos(p.angle + Math.PI * 2) * (p.radius / 2),
-            ],
-            cy: [
-              50 + Math.sin(p.angle) * (p.radius / 2),
-              50 + Math.sin(p.angle + Math.PI) * (p.radius / 2),
-              50 + Math.sin(p.angle + Math.PI * 2) * (p.radius / 2),
-            ],
-          }}
-          transition={{
-            duration: p.duration,
-            repeat: Infinity,
-            ease: "linear",
-            delay: p.delay,
-          }}
-        />
-      ))}
-    </g>
-  );
-}
-
-// ─── Main component ───
 export default function AppBootExperience({ dataReady, onComplete }: AppBootExperienceProps) {
   const shouldReduceMotion = useReducedMotion();
-  const [stage, setStage] = useState<BootStage>("idle");
-  const tonePlayed = useRef(false);
+  const [booting, setBooting] = useState(true);
   const minTimeRef = useRef(Date.now());
 
-  // Stage progression
   useEffect(() => {
-    if (shouldReduceMotion) {
-      // Skip animations entirely
-      if (dataReady) {
-        setStage("transitioning");
-        const t = setTimeout(onComplete, 400);
-        return () => clearTimeout(t);
-      }
+    if (shouldReduceMotion && dataReady) {
+      onComplete();
       return;
     }
 
-    const timers: NodeJS.Timeout[] = [];
+    if (dataReady) {
+      const elapsed = Date.now() - minTimeRef.current;
+      const minDisplay = 2500; // Tempo mínimo para o vídeo aparecer
+      const remaining = Math.max(0, minDisplay - elapsed);
 
-    // Stage 1: idle → awakening (immediate)
-    timers.push(setTimeout(() => setStage("awakening"), 100));
+      const timer = setTimeout(() => {
+        setBooting(false);
+        microVibrate(8);
+      }, remaining);
 
-    // Stage 2: awakening → syncing (after ~1.2s)
-    timers.push(
-      setTimeout(() => {
-        setStage("syncing");
-        if (!tonePlayed.current) {
-          tonePlayed.current = true;
-          playBootTone();
-          microVibrate(12);
-        }
-      }, 1200)
-    );
-
-    return () => timers.forEach(clearTimeout);
-  }, [shouldReduceMotion, dataReady, onComplete]);
-
-  // When data is ready + minimum visual time elapsed → ready → transitioning
-  useEffect(() => {
-    if (!dataReady || stage === "ready" || stage === "transitioning") return;
-    if (stage !== "syncing" && stage !== "awakening") return;
-
-    const elapsed = Date.now() - minTimeRef.current;
-    const minDisplay = 2800; // minimum boot animation duration
-    const remaining = Math.max(0, minDisplay - elapsed);
-
-    const t1 = setTimeout(() => {
-      setStage("ready");
-      microVibrate(8);
-    }, remaining);
-
-    return () => clearTimeout(t1);
-  }, [dataReady, stage]);
-
-  // ready → transitioning after bloom
-  useEffect(() => {
-    if (stage !== "ready") return;
-    const t = setTimeout(() => setStage("transitioning"), 800);
-    return () => clearTimeout(t);
-  }, [stage]);
+      return () => clearTimeout(timer);
+    }
+  }, [dataReady, shouldReduceMotion, onComplete]);
 
   const handleExitComplete = useCallback(() => {
     onComplete();
   }, [onComplete]);
 
-  // Derived visual states
-  const showNetwork = stage !== "idle";
-  const showBrain = stage === "syncing" || stage === "ready" || stage === "transitioning";
-  const showBrand = stage === "syncing" || stage === "ready" || stage === "transitioning";
-  const isBloom = stage === "ready" || stage === "transitioning";
-
   return (
     <AnimatePresence onExitComplete={handleExitComplete}>
-      {stage !== "transitioning" ? (
+      {booting ? (
         <motion.div
-          key="boot"
+          key="boot-video-container"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden"
-          style={{ background: "#000" }}
+          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden bg-black"
         >
           {/* Video background */}
           <video
@@ -202,90 +66,48 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
             style={{ filter: "brightness(0.8) contrast(1.1)" }}
           />
 
-          {/* Gradient overlay for cinematic feel */}
+          {/* Gradient overlay */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)",
+              background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.5) 100%)",
             }}
           />
 
-          {/* Central content - simplified to let the video shine */}
-          <div className="relative z-10 flex flex-col items-center">
-            <AnimatePresence>
-              {showBrand && (
-                <motion.div
-                  className="text-center"
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -10 }}
-                  transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-                >
-                  <h1
-                    className="text-3xl md:text-4xl font-bold tracking-[0.25em] uppercase text-white"
-                    style={{
-                      textShadow: "0 0 40px rgba(16, 185, 129, 0.4)",
-                    }}
-                  >
-                    FitJourney
-                  </h1>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
-
-
           {/* Brand text */}
-          <AnimatePresence>
-            {showBrand && (
-              <motion.div
-                className="mt-8 text-center"
-                initial={{ opacity: 0, y: 16 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -8 }}
-                transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
-              >
-                <h1
-                  className="text-2xl md:text-3xl font-bold tracking-[0.18em] uppercase"
-                  style={{
-                    color: "hsl(152 58% 48%)",
-                    textShadow: "0 0 30px hsl(152 58% 48% / 0.3)",
-                  }}
-                >
-                  FITJOURNEY
-                </h1>
-                <motion.p
-                  className="text-xs md:text-sm tracking-[0.12em] mt-2 uppercase"
-                  style={{ color: "hsl(210 20% 60%)" }}
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  transition={{ delay: 0.4, duration: 0.5 }}
-                >
-                  Intelligent Clinical Evolution
-                </motion.p>
-              </motion.div>
-            )}
-          </AnimatePresence>
+          <motion.div
+            className="relative z-10 text-center"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}
+          >
+            <h1
+              className="text-3xl md:text-4xl font-bold tracking-[0.25em] uppercase text-white"
+              style={{
+                textShadow: "0 0 40px rgba(16, 185, 129, 0.4)",
+              }}
+            >
+              FitJourney
+            </h1>
+          </motion.div>
 
-          {/* Subtle loading bar */}
+          {/* Loading bar */}
           <motion.div
             className="absolute bottom-12 left-1/2 -translate-x-1/2 w-40 h-[2px] rounded-full overflow-hidden"
-            style={{ background: "hsl(210 20% 15%)" }}
+            style={{ background: "rgba(255,255,255,0.1)" }}
             initial={{ opacity: 0 }}
-            animate={{ opacity: showNetwork ? 0.7 : 0 }}
-            transition={{ duration: 0.5 }}
+            animate={{ opacity: 0.7 }}
           >
             <motion.div
               className="h-full rounded-full"
               style={{
-                background:
-                  "linear-gradient(90deg, hsl(152 58% 48%), hsl(170 60% 50%))",
+                background: "linear-gradient(90deg, #10b981, #34d399)",
               }}
               initial={{ width: "0%" }}
-              animate={{ width: dataReady ? "100%" : "70%" }}
+              animate={{ width: dataReady ? "100%" : "60%" }}
               transition={{
                 duration: dataReady ? 0.4 : 4,
-                ease: dataReady ? "easeOut" : "easeInOut",
+                ease: "easeInOut",
               }}
             />
           </motion.div>
