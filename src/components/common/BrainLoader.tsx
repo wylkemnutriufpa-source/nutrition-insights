@@ -158,18 +158,24 @@ export function BrainLoaderScreen({
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.5 }}
-          className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-background/80 backdrop-blur-md"
+          className="fixed inset-0 z-[120] flex flex-col items-center justify-center bg-background"
         >
           <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
+            initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             exit={{ scale: 0.95, opacity: 0 }}
             transition={{ duration: 0.4 }}
             className="flex flex-col items-center gap-6"
           >
-            <AnimatedBrain size={80} glowSize={140} />
+            <video
+              src="/videos/loading.mp4"
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-64 h-64 object-contain drop-shadow-[0_0_24px_hsl(var(--primary)/0.35)]"
+            />
             <MessageRotator messages={messages} text={text} />
-            {/* Life bar */}
             <div className="w-48 h-1 rounded-full bg-muted overflow-hidden">
               <motion.div
                 className="h-full rounded-full bg-gradient-to-r from-primary via-primary/80 to-primary"
