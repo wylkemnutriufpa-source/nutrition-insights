@@ -207,50 +207,42 @@ export default function NeuroEntryExperience({
           transition={{ duration: 0.8, ease: EASE_PREMIUM }}
           className="fixed inset-0 z-[120] flex flex-col items-center justify-center overflow-hidden"
           style={{
-            background: "radial-gradient(ellipse at 50% 40%, hsl(152 30% 8%) 0%, hsl(222 40% 5%) 45%, hsl(0 0% 2%) 100%)",
+            background: "#000",
           }}
         >
+          {/* Video background */}
+          <video
+            className="absolute inset-0 w-full h-full object-cover"
+            src="/videos/logo-animated.mp4"
+            autoPlay
+            muted
+            loop
+            playsInline
+            preload="auto"
+            style={{ filter: "brightness(0.7) contrast(1.1)" }}
+          />
+
+          {/* Gradient overlay */}
+          <div
+            className="absolute inset-0 pointer-events-none"
+            style={{
+              background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.5) 100%)",
+            }}
+          />
+
           {/* Deep space atmosphere */}
           <div className="absolute inset-0 pointer-events-none">
-            {/* Breathing ambient */}
+            {/* Volumetric light - subtly kept to blend with video */}
             <motion.div
-              className="absolute inset-0"
-              animate={{
-                background: [
-                  "radial-gradient(ellipse at 50% 40%, hsl(152 25% 9%) 0%, hsl(222 40% 5%) 45%, hsl(0 0% 2%) 100%)",
-                  "radial-gradient(ellipse at 50% 40%, hsl(152 30% 11%) 0%, hsl(222 40% 6%) 45%, hsl(0 0% 2%) 100%)",
-                  "radial-gradient(ellipse at 50% 40%, hsl(152 25% 9%) 0%, hsl(222 40% 5%) 45%, hsl(0 0% 2%) 100%)",
-                ],
-              }}
-              transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-            />
-
-            {/* Volumetric light behind brain */}
-            <motion.div
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[55%] w-[500px] h-[500px] md:w-[700px] md:h-[700px] rounded-full"
+              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[50%] w-[500px] h-[500px] rounded-full"
               style={{
-                background: "radial-gradient(circle, hsl(var(--primary) / 0.08) 0%, hsl(var(--primary) / 0.02) 40%, transparent 65%)",
+                background: "radial-gradient(circle, hsl(var(--primary) / 0.1) 0%, transparent 70%)",
               }}
-              animate={{ scale: [0.9, 1.1, 0.9], opacity: [0.5, 0.8, 0.5] }}
-              transition={{ duration: 6, repeat: Infinity, ease: "easeInOut" }}
+              animate={{ opacity: [0.4, 0.7, 0.4] }}
+              transition={{ duration: 4, repeat: Infinity, ease: "easeInOut" }}
             />
-
-            {/* Floating particles */}
-            {!reduced && <BackgroundParticles />}
           </div>
 
-          {/* Brain + neural network — hero element */}
-          <motion.div
-            className="relative z-10"
-            animate={
-              state === "awareness"
-                ? { scale: 0.88, opacity: 0.8, y: -10 }
-                : { scale: 1, opacity: 1, y: 0 }
-            }
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <NeuralLoading active={showBrain} durationMultiplier={durationMultiplier} />
-          </motion.div>
 
           {/* Cinematic text sequence */}
           <CinematicText
