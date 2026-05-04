@@ -52,8 +52,15 @@ export function useExperienceMode() {
     isFeatureEnabled,
     minMode,
     isRouteAllowed,
+    isBasic: mode === "basic",
+    isPro: mode === "pro",
+    isAdvanced: mode === "advanced",
     isLoading: loading,
     failedMode: null,
     retryLastMode: () => {},
+    lastError: null,
+    isOffline: false,
+    pendingQueueSize: 0,
+    queueStats: { processed: 0, failed: 0 },
   };
 }
