@@ -275,7 +275,13 @@ export default function MealPlans() {
             ? `Plano gerado e ajustado automaticamente!`
             : `Plano gerado com ${genData.items_count || 0} itens!`);
           runPostGenVisualMatch(resolvedPlanId).catch(() => {});
-          navigate(`/meal-plans/${resolvedPlanId}`, { replace: true });
+          
+          // Fetch version to decide editor
+          const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", resolvedPlanId).single();
+          const isV3 = planData?.editor_version === "v3";
+          const path = isV3 ? `/v3/${patientIdentity.canonicalId}?planId=${resolvedPlanId}` : `/meal-plans/${resolvedPlanId}`;
+          
+          navigate(path, { replace: true });
         } else {
           toast.error("Plano gerado mas sem ID retornado. Tente novamente.");
           onboardingHandled.current = null;
@@ -332,7 +338,13 @@ export default function MealPlans() {
           toast.success(`Plano gerado com ${genData.items_count || 0} refeições!`);
           runPostGenVisualMatch(genData.mealPlanId).catch(() => {});
           setOpen(false);
-          navigate(`/meal-plans/${genData.mealPlanId}`);
+          
+          // Fetch version to decide editor
+          const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
+          const isV3 = planData?.editor_version === "v3";
+          const path = isV3 ? `/v3/${form.patient_id}?planId=${genData.mealPlanId}` : `/meal-plans/${genData.mealPlanId}`;
+          
+          navigate(path);
         }
       } else {
         const { data: newPlan, error } = await createMealPlanDraft({
