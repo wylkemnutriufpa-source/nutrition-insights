@@ -342,12 +342,14 @@ export default function MealPlans() {
           title: form.title || "Plano Alimentar",
           description: form.description || null,
           startDate: form.start_date,
+          editorVersion: "v2" // Manual creation in this view defaults to V2
         });
         if (error) { toast.error("Erro: " + error.message); }
         else if (newPlan) {
           toast.success("Plano criado! Abrindo Builder...");
           setOpen(false);
-          navigate(`/v3/${form.patient_id}?planId=${newPlan.id}`, { replace: true });
+          // Directly navigate to V2 as requested by the contract
+          navigate(`/meal-plans/${newPlan.id}`, { replace: true });
         }
       }
       setForm({ title: "", description: "", patient_id: "", start_date: new Date().toISOString().split("T")[0], autoGenerate: true });
