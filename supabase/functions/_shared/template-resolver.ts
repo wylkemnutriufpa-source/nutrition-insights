@@ -415,13 +415,21 @@ export function buildMealItemFromTemplate(
 
   // Build substitution lines from foods_structure substitutions
   const subLines: string[] = [];
+  const subJson: string[] = [];
+  
   for (const food of template.foods_structure) {
     if (food.substitutions && food.substitutions.length > 0) {
       const matchedScaled = scaledFoods.find(sf => sf.name === food.name);
       const rawGrams = matchedScaled?.portion_grams ?? food.portion_grams;
       const grams = Number.isFinite(Number(rawGrams)) && Number(rawGrams) > 0 ? Number(rawGrams) : 100;
+      
       const alts = food.substitutions.slice(0, 4).map(s => `${s} (${grams}g)`);
       subLines.push(`• ${food.name} → ${alts.join(", ")}`);
+      
+      // Also populate subJson for actual data structure if needed by editor
+      food.substitutions.slice(0, 4).forEach(s => {
+        if (!subJson.includes(s)) subJson.push(s);
+      });
     }
   }
 
@@ -443,6 +451,11 @@ export function buildMealItemFromTemplate(
     protein_target: safeP,
     carbs_target: safeC,
     fat_target: safeF,
+    edit_metadata: {
+      substitutions_json: subJson.length > 0 ? subJson : [],
+      template_id: template.id,
+      scale_factor: scaleFactor,
+    },
     _source: "template_resolver",
     _template_id: template.id,
     _scale_factor: scaleFactor,
