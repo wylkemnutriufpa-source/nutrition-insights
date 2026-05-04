@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   generateCorrelationId,
