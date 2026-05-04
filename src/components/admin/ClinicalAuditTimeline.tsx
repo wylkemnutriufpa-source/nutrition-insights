@@ -5,7 +5,7 @@ import { ptBR } from "date-fns/locale";
 import { 
   History, 
   Dna, 
-  Version, 
+  Binary, 
   Settings2, 
   ChevronRight,
   FileText,
@@ -62,15 +62,18 @@ export function ClinicalAuditTimeline({ patientId }: ClinicalAuditTimelineProps)
 
   // Unify events for timeline
   const events = [
-    ...(logs || []).map(l => ({
-      id: l.id,
-      type: 'audit',
-      action: l.action_type,
-      date: new Date(l.created_at),
-      metadata: l.action_metadata,
-      protocol: l.action_metadata?.protocol || 'V3',
-      version: l.action_metadata?.engine_version || '3.1.0'
-    })),
+    ...(logs || []).map(l => {
+      const metadata = (l.action_metadata as any) || {};
+      return {
+        id: l.id,
+        type: 'audit',
+        action: l.action_type,
+        date: new Date(l.created_at),
+        metadata,
+        protocol: metadata.protocol || 'V3',
+        version: metadata.engine_version || '3.1.0'
+      };
+    }),
     ...(plans || []).map(p => ({
       id: p.id,
       type: 'plan',
@@ -160,7 +163,7 @@ export function ClinicalAuditTimeline({ patientId }: ClinicalAuditTimelineProps)
 
                   <div className="flex items-center gap-4 text-[10px] text-muted-foreground uppercase tracking-widest font-bold">
                     <div className="flex items-center gap-1.5">
-                      <Version className="h-3 w-3" />
+                      <Binary className="h-3 w-3" />
                       Engine v{event.version}
                     </div>
                     {(event as any).plan_version && (
