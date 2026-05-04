@@ -524,6 +524,13 @@ const EditorV3Page = () => {
       if (result.ok) {
         toast.success('Plano promovido com sucesso!');
         await savePlan();
+        
+        // Fluxo V3: Salva e retorna para o detalhe do paciente para visualização do plano oficial
+        if (patientId) {
+          navigate(`/patients/${patientId}`);
+        } else {
+          navigate('/dashboard');
+        }
       } else {
         toast.error(`Erro: ${result.error}`);
       }
