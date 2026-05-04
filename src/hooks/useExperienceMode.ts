@@ -167,24 +167,32 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
 
 export function useExperienceMode() {
   const context = useContext(ExperienceModeContext);
-  // Independent access: if context is missing, return a default guest state
-  if (!context) {
+  const auth = useAuth();
+  
+  // If context is missing (Provider removed), we use data from useAuth
+  // to maintain backward compatibility without the provider overhead.
+  if (!context || Object.keys(context).length === 0 || !context.mode) {
+    const mode = (auth.experienceMode as ExperienceMode) || "pro";
+    const role = auth.experienceRole || "professional";
+    
     return {
-      mode: "pro" as ExperienceMode,
-      setMode: async () => {},
-      isRouteAllowed: () => true,
-      isBasic: false,
-      isPro: true,
-      isAdvanced: false,
-      isLoading: false,
+      mode,
+      setMode: async (m: ExperienceMode) => {
+        console.warn("setMode called without ExperienceModeProvider. This is a no-op.");
+      },
+      isRouteAllowed: (route: string) => isRouteVisible(route, mode, role),
+      isBasic: mode === "basic",
+      isPro: mode === "pro",
+      isAdvanced: mode === "advanced",
+      isLoading: auth.loading,
       retryLastMode: () => {},
       failedMode: null,
       lastError: null,
       isOffline: false,
       pendingQueueSize: 0,
       queueStats: { size: 0, isFull: false, hasExpired: false, oldestQueuedAt: null },
-      minMode: () => true,
-      role: "professional" as ExperienceRole,
+      minMode: (min: ExperienceMode) => checkMinMode(mode, min),
+      role,
     };
   }
   return context;
