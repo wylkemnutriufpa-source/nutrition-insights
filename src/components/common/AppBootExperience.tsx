@@ -291,25 +291,35 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
               <OrbitingParticles visible={showBrain} />
             </svg>
 
-            {/* Rotating Logo Video centerpiece */}
+            {/* Brain icon overlay */}
             <AnimatePresence>
               {showBrain && (
                 <motion.div
                   className="absolute inset-0 flex items-center justify-center"
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 1.2 }}
-                  transition={{ duration: 0.8, ease: "easeOut" }}
+                  initial={{ opacity: 0, scale: 0.8, rotateY: -30 }}
+                  animate={{
+                    opacity: 1,
+                    scale: 1,
+                    rotateY: [0, 8, -8, 0],
+                  }}
+                  exit={{ opacity: 0, scale: 1.3 }}
+                  transition={{
+                    opacity: { duration: 0.6 },
+                    scale: { duration: 0.6, ease: "easeOut" },
+                    rotateY: {
+                      duration: 4,
+                      repeat: Infinity,
+                      ease: "easeInOut",
+                    },
+                  }}
+                  style={{ perspective: 600 }}
                 >
-                  <video
-                    src={logoVideo}
-                    autoPlay
-                    muted
-                    loop
-                    playsInline
-                    className="w-48 h-48 md:w-56 md:h-56 object-contain mix-blend-screen"
+                  <Brain
+                    className="text-primary"
                     style={{
-                      filter: "drop-shadow(0 0 20px hsl(152 58% 48% / 0.4))",
+                      width: 56,
+                      height: 56,
+                      filter: `drop-shadow(0 0 20px hsl(152 58% 48% / 0.5)) drop-shadow(0 0 40px hsl(152 58% 48% / 0.2))`,
                     }}
                   />
                 </motion.div>
