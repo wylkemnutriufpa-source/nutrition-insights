@@ -17,6 +17,7 @@ export interface MenuItem {
   icon_color: string | null;
   color: string | null;
   premium_priority_boost: boolean;
+  feature?: string;
 }
 
 interface MenuUsage {
@@ -67,6 +68,7 @@ function normalizeMenuItem(raw: any): MenuItem | null {
     icon_color: typeof raw.icon_color === "string" ? raw.icon_color : null,
     color: typeof raw.color === "string" ? raw.color : null,
     premium_priority_boost: Boolean(raw.premium_priority_boost),
+    feature: typeof raw.feature === "string" ? raw.feature : undefined,
   };
 }
 
@@ -179,7 +181,7 @@ export function useSmartMenu() {
     const fetchData = async () => {
       try {
         const [itemsRes, usageRes] = await Promise.all([
-          supabase.from("menu_items").select("*").eq("is_active", true).order("order_default"),
+          supabase.from("menu_items").select("*, feature").eq("is_active", true).order("order_default"),
           supabase.from("user_menu_usage").select("menu_item_id,clicks_count,last_access_at,usage_score").eq("user_id", user.id),
         ]);
 

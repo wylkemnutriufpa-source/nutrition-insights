@@ -160,7 +160,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const location = useLocation();
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
-  const { isRouteAllowed } = useExperienceMode();
+  const { isRouteAllowed, isFeatureEnabled } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -175,7 +175,11 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   return (
     <div className="space-y-1">
       {visibleSections.map(section => {
-        const sectionItems = getItemsForSection(section.id).filter(i => i.is_visible && isRouteAllowed(i.route || "/"));
+        const sectionItems = getItemsForSection(section.id).filter(i => {
+          if (!i.is_visible) return false;
+          if (i.premium_only && !isFeatureEnabled("pro")) return false; // Exemplo de bloqueio por modo
+          return true;
+        });
         
         if (sectionItems.length === 0) return null;
         
@@ -327,11 +331,16 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isRouteAllowed, minMode } = useExperienceMode();
+  const { isFeatureEnabled, minMode } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
-  const allItems = categories.flatMap((c) => c.items).filter(item => isRouteAllowed(item.route));
+  const allItems = categories.flatMap((c) => c.items).filter(item => {
+    if ((item as any).feature) {
+      return isFeatureEnabled((item as any).feature);
+    }
+    return true;
+  });
   const fixedItems = allItems.filter((item) => FIXED_ROUTES.includes(item.route));
 
   const groupedMap = new Map<string, SmartMenuItem[]>();
