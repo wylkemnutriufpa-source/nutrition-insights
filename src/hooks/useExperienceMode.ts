@@ -221,34 +221,10 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
 
   const hydratedFromDb = useRef(false);
 
-  // Broadcast channel for cross-tab sync
+  // Cross-tab sync removed to simplify boot and eliminate concurrency issues.
   useEffect(() => {
-    let channel: BroadcastChannel | null = null;
-    try {
-      channel = new BroadcastChannel("experience_mode_sync");
-      channel.addEventListener("message", (event: MessageEvent) => {
-        if (event.data?.type === "MODE_UPDATE" && event.data?.mode) {
-          const newMode = event.data.mode;
-          console.log("[ExperienceMode] Syncing mode from broadcast channel:", newMode);
-          setModeState(newMode);
-          localStorage.setItem(STORAGE_KEY, newMode);
-        }
-      });
-    } catch {
-      // BroadcastChannel may not exist in all envs — storage event is the fallback
-    }
-
-    // Fallback: storage event (cross-tab when BroadcastChannel unavailable)
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY && event.newValue) {
-        console.log("[ExperienceMode] Syncing mode from storage event:", event.newValue);
-        setModeState(event.newValue as ExperienceMode);
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-
     // Logout listener to clear session state
-    supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         console.log("[ExperienceMode] User signed out, clearing session state");
         sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
@@ -258,8 +234,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     });
 
     return () => {
-      try { channel?.close(); } catch {}
-      window.removeEventListener("storage", handleStorage);
+      subscription.unsubscribe();
     };
   }, []);
 
