@@ -4029,6 +4029,7 @@ export async function generateMealPlanHandler(req: Request, maybeSupabaseClient?
           generation_metadata: generationMetadata,
           tenant_id: resolvedTenantId,
           template_id: lastUsedTemplateId,
+          editor_version: "v3", // OBRIGATÓRIO: Motor Inteligente V3
         })
         .select("id")
         .single();
