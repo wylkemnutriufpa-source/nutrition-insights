@@ -12,7 +12,7 @@ import {
 } from '../utils/dataFetcher';
 import { 
   isProtein, isCarb, isFruit, getDeterministicSuggestions,
-  calculateNutritionalScore, validatePlanClinically 
+  calculateNutritionalScore, validatePlanClinically, calculateItemMacros 
 } from '../../clinical-engine';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 import { Button } from '@/components/ui/button';
