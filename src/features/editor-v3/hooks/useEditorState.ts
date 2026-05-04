@@ -455,6 +455,7 @@ export const useEditorState = create<EditorState>()(
             instanceId: makeInstanceId(),
             quantity: initialQuantity,
             locked: false,
+            substitutions: []
           };
         });
         set((state) => ({
