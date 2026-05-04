@@ -44,11 +44,6 @@ const DialogContent = React.forwardRef<
       {children}
       <DialogPrimitive.Close
         aria-label="Fechar"
-        onClick={(e) => {
-          console.log("[Dialog] Close button clicked");
-          // No need for manual close if it's already a Primitive.Close, 
-          // but we can ensure it's not being blocked.
-        }}
         className="absolute right-3 top-3 z-[110] flex h-10 w-10 items-center justify-center rounded-full bg-slate-900/10 border border-slate-900/20 shadow-sm ring-offset-background transition-all hover:bg-slate-900/20 hover:scale-105 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none cursor-pointer pointer-events-auto group backdrop-blur-sm"
       >
         <X className="h-5 w-5 text-slate-700 dark:text-slate-200 group-hover:text-primary transition-colors" />
