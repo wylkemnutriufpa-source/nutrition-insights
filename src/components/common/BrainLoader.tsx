@@ -1,6 +1,7 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect } from "react";
 import { Brain } from "lucide-react";
+import logoVideo from "@/assets/logo-video.mp4";
 
 const DEFAULT_MESSAGES = [
   "Analisando seu metabolismo…",
@@ -71,16 +72,24 @@ function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
         </motion.div>
       ))}
 
-      {/* Brain icon with Y-axis rotation */}
+      {/* Logo Video instead of Brain icon */}
       <motion.div
         className="absolute inset-0 flex items-center justify-center"
-        animate={shouldReduceMotion ? {} : { rotateY: [0, 360] }}
-        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-        style={{ perspective: 600 }}
+        animate={shouldReduceMotion ? {} : { scale: [1, 1.05, 1] }}
+        transition={shouldReduceMotion ? {} : { duration: 3, repeat: Infinity, ease: "easeInOut" }}
       >
-        <Brain
-          className="text-primary drop-shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
-          style={{ width: size * 0.55, height: size * 0.55 }}
+        <video
+          src={logoVideo}
+          autoPlay
+          muted
+          loop
+          playsInline
+          className="object-contain mix-blend-screen"
+          style={{ 
+            width: size * 1.2, 
+            height: size * 1.2,
+            filter: `drop-shadow(0 0 12px hsl(var(--primary)/0.4))`
+          }}
         />
       </motion.div>
     </div>
