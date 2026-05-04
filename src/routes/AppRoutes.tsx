@@ -365,8 +365,7 @@ export const AppRoutes = () => {
   
   return (
     <div className="min-h-screen">
-      {isDegraded && <DegradedModeBanner />}
-      {isOrphan && <HardFailLinkage />}
+      {/* Degraded and Orphan checks removed for ultra-simplification during boot stabilization */}
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           {/* Removed SystemStateGuard, ExperienceRouteGuard, and WorkspaceRouteGuard for radical simplification */}
