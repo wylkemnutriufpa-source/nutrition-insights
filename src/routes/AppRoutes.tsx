@@ -342,6 +342,12 @@ function RedirectWithParams({ to }: { to: string }) {
 
 export const AppRoutes = () => {
   const { isDegraded, isOrphan } = useAppState();
+  const { experienceMode, experienceRole } = useAuth();
+  
+  useEffect(() => {
+    document.documentElement.setAttribute("data-experience-mode", experienceMode);
+    document.documentElement.setAttribute("data-experience-role", experienceRole);
+  }, [experienceMode, experienceRole]);
   
   return (
     <div className="min-h-screen">
