@@ -147,8 +147,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
       }, 8000);
       
-      // Timer de segurança removido para evitar auto-cura. 
-      // O sistema deve falhar via ErrorBoundary ou timeout nativo do navegador.
+      // Watchdog removido — o sistema deve carregar ou falhar via ErrorBoundary
+      // para manter o comportamento determinístico e evitar "auto-cura" inconsistente.
 
 
       try {
