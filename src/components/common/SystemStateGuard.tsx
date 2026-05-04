@@ -9,14 +9,34 @@ import { AnimatePresence } from "framer-motion";
  * para o dashboard. Monitora a carga de dados do perfil e assinaturas.
  */
 export function SystemStateGuard({ children }: { children: React.ReactNode }) {
-  const { authStatus, loading: authLoading, profile, experienceRole } = useAuth();
-  
-  // No Modo de Recuperação, forçamos showExperience como false se quisermos pular direto
-  // Mas para respeitar o pedido de não alterar o visual, mantemos a lógica mas garantimos que não trave.
-  const [showExperience, setShowExperience] = useState(false); // BYPASS NO RECOVERY
+  const { authStatus, loading: authLoading, profile } = useAuth();
+  const [showExperience, setShowExperience] = useState(false);
   
   const dataReady = !authLoading && !!profile;
 
-  // Renderização direta no modo de recuperação
-  return <>{children}</>;
+  // Se o usuário está autenticado e o perfil está pronto, mas ainda não mostramos a experiência
+  useEffect(() => {
+    if (authStatus === "authenticated" && dataReady && !sessionStorage.getItem("fj_entry_completed")) {
+      setShowExperience(true);
+    }
+  }, [authStatus, dataReady]);
+
+  const handleComplete = () => {
+    sessionStorage.setItem("fj_entry_completed", "true");
+    setShowExperience(false);
+  };
+
+  return (
+    <>
+      <AnimatePresence>
+        {showExperience && (
+          <NeuroEntryExperience 
+            dataReady={dataReady} 
+            onComplete={handleComplete} 
+          />
+        )}
+      </AnimatePresence>
+      {children}
+    </>
+  );
 }
