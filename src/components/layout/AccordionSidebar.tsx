@@ -160,7 +160,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const location = useLocation();
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
-  const { isRouteAllowed, isFeatureEnabled } = useExperienceMode() as any;
+  const { isRouteAllowed, isFeatureEnabled } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -331,7 +331,7 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isFeatureEnabled, minMode } = useExperienceMode() as any;
+  const { isFeatureEnabled, minMode } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 

@@ -61,7 +61,7 @@ function CorrelationIdBadge({ id }: { id: string }) {
 
 export default function ExperienceModeStatusSection() {
   const { mode, isLoading, failedMode, lastError, isOffline, pendingQueueSize, queueStats, retryLastMode } =
-    useExperienceMode() as any;
+    useExperienceMode();
 
   // If no change is in progress and everything is normal, hide the section
   if (!isLoading && !failedMode && !isOffline && pendingQueueSize === 0) {

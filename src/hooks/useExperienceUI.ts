@@ -6,7 +6,7 @@ import { useExperienceMode } from "./useExperienceMode";
  * Use these to conditionally render UI elements by complexity level.
  */
 export function useExperienceUI() {
-  const { mode, minMode, isBasic, isPro, isAdvanced } = useExperienceMode() as any;
+  const { mode, minMode, isBasic, isPro, isAdvanced } = useExperienceMode();
 
   return useMemo(() => ({
     mode,
