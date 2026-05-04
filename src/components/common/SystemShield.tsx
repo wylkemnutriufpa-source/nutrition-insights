@@ -16,8 +16,17 @@ const SystemShieldContext = createContext<{
 
 export const useSystemShield = () => {
   const context = useContext(SystemShieldContext);
+  // Safe fallback if provider is removed
   if (!context) {
-    console.error("CRITICAL: useSystemShield used outside SystemShieldProvider");
+    return {
+      bootState: {
+        isAuthLoaded: true,
+        isRouterActive: true,
+        isProvidersMounted: true,
+        isHealthy: true,
+      },
+      reportBootStatus: () => {},
+    };
   }
   return context;
 };
