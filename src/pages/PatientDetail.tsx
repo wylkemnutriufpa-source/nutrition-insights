@@ -1521,9 +1521,10 @@ export default function PatientDetail() {
                           <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
                             const activePlan = mealPlans.find((p: any) => p.is_active);
                             if (!activePlan) return;
-                            // Professional has full authority — open editor directly
                             setOpenSection(null);
-                            navigate(`/meal-plans/${activePlan.id}`);
+                            const isV3 = activePlan.editor_version === "v3";
+                            const path = isV3 ? `/v3/${patientId}?planId=${activePlan.id}` : `/meal-plans/${activePlan.id}`;
+                            navigate(path);
                           }}>
                             <Pencil className="w-3 h-3" /> Editar Ativo
                           </Button>
