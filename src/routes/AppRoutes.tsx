@@ -313,11 +313,11 @@ function DashboardRedirect() {
 }
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus, isNutritionist, isAdmin } = useAuth();
+  const { authStatus, isNutritionist, isAdmin, isPersonal } = useAuth();
   
   if (authStatus === "loading") return <PageLoader />;
   if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
-  if (!isNutritionist && !isAdmin) return <Navigate to="/client/dashboard" replace />;
+  if (!isNutritionist && !isAdmin && !isPersonal) return <Navigate to="/client/dashboard" replace />;
   
   return <>{children}</>;
 }
