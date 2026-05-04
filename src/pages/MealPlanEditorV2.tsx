@@ -498,7 +498,15 @@ export default function MealPlanEditorV2() {
         <div className="text-center py-20 space-y-4">
           <AlertTriangle className="w-10 h-10 text-muted-foreground mx-auto" />
           <p className="text-muted-foreground">Plano não encontrado.</p>
-          <Button variant="ghost" onClick={() => navigate("/meal-plans")}>
+          <Button variant="ghost" onClick={() => {
+            const searchParams = new URLSearchParams(window.location.search);
+            const returnTo = searchParams.get('returnTo');
+            if (returnTo) {
+              navigate(decodeURIComponent(returnTo));
+            } else {
+              navigate("/meal-plans");
+            }
+          }}>
             <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
           </Button>
         </div>
