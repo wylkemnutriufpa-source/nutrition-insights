@@ -68,6 +68,7 @@ function normalizeMenuItem(raw: any): MenuItem | null {
     icon_color: typeof raw.icon_color === "string" ? raw.icon_color : null,
     color: typeof raw.color === "string" ? raw.color : null,
     premium_priority_boost: Boolean(raw.premium_priority_boost),
+    feature: typeof raw.feature === "string" ? raw.feature : undefined,
   };
 }
 
