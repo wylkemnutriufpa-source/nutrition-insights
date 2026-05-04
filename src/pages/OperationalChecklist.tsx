@@ -61,8 +61,8 @@ interface ModuleStatus {
   health: number;
   lastCheck: string;
   status: "up" | "degraded" | "down";
-  endpoints: { name: string; status: "ok" | "warn" | "error" }[];
-  },
+    endpoints: { name: string; status: "ok" | "warn" | "error" }[];
+}
 
 const CHECKLIST_DATA: ChecklistItem[] = [
   { 
