@@ -21,6 +21,7 @@ interface Profile {
   experience_mode_locked?: boolean;
   unlock_date?: string | null;
   is_orphan?: boolean;
+  patient_state?: string | null;
 }
 
 interface SubscriptionState {
