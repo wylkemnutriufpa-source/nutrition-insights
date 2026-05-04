@@ -44,7 +44,7 @@ export async function invokeWithRetry(
   functionName: string,
   options: InvokeOptions = {}
 ) {
-  const { body, headers, retryDelays = [200, 500] } = options;
+  const { body, headers = {}, retryDelays = [200, 500] } = options;
   const maxAttempts = retryDelays.length + 1;
 
   let lastError: any = null;
@@ -52,67 +52,55 @@ export async function invokeWithRetry(
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
     const startedAt = performance.now();
     try {
+      // Garantir que temos o token de autorização mais recente
+      const { data: { session } } = await supabase.auth.getSession();
+      const authHeaders = {
+        ...headers,
+        ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}),
+      };
+
       const { data, error } = await supabase.functions.invoke(functionName, {
         body,
-        headers,
+        headers: authHeaders,
       });
       const elapsed = Math.round(performance.now() - startedAt);
 
       if (error) {
-        // Erros HTTP reais (4xx/5xx) — não fazemos retry, propagamos.
-        // O supabase-js entrega esses erros como FunctionsHttpError com status.
+        // Logar erro real para diagnóstico conforme solicitado
+        console.error(`[EdgeFunction:${functionName}] Error detail:`, {
+          error,
+          attempt,
+          elapsed,
+          status: (error as any)?.context?.status || (error as any)?.status
+        });
+
         const status = (error as any)?.context?.status ?? (error as any)?.status;
         const isHttpError = typeof status === "number" && status >= 400;
 
         if (isHttpError) {
-          console.error(
-            `[EdgeFunction] ${functionName} attempt ${attempt}/${maxAttempts} HTTP ${status} (${elapsed}ms)`,
-            error
-          );
           return { data, error };
         }
 
-        // Erro sem status → tratamos como possível falha de rede transitória.
         if (isTransientNetworkError(error) && attempt < maxAttempts) {
-          console.warn(
-            `[EdgeFunction] ${functionName} transient network error on attempt ${attempt}/${maxAttempts} (${elapsed}ms). Retrying in ${retryDelays[attempt - 1]}ms...`,
-            error
-          );
           lastError = error;
           await sleep(retryDelays[attempt - 1]);
           continue;
         }
 
-        console.error(
-          `[EdgeFunction] ${functionName} failed on attempt ${attempt}/${maxAttempts} (${elapsed}ms)`,
-          error
-        );
         return { data, error };
       }
 
-      if (attempt > 1) {
-        console.info(
-          `[EdgeFunction] ${functionName} succeeded on attempt ${attempt}/${maxAttempts} (${elapsed}ms)`
-        );
-      }
       return { data, error: null };
     } catch (err: any) {
       const elapsed = Math.round(performance.now() - startedAt);
       lastError = err;
 
       if (isTransientNetworkError(err) && attempt < maxAttempts) {
-        console.warn(
-          `[EdgeFunction] ${functionName} threw transient network error on attempt ${attempt}/${maxAttempts} (${elapsed}ms). Retrying in ${retryDelays[attempt - 1]}ms...`,
-          err
-        );
         await sleep(retryDelays[attempt - 1]);
         continue;
       }
 
-      console.error(
-        `[EdgeFunction] ${functionName} threw on attempt ${attempt}/${maxAttempts} (${elapsed}ms)`,
-        err
-      );
+      console.error(`[EdgeFunction:${functionName}] Exception:`, err);
       return { data: null, error: err };
     }
   }
