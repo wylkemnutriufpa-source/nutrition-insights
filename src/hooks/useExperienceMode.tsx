@@ -39,7 +39,11 @@ export function useExperienceMode() {
   };
 
   // Mantido para compatibilidade com rotas/menus se necessário
-  const isRouteAllowed = (route: string) => true;
+  const isRouteAllowed = (route: string) => {
+    // Se quiser implementar lógica de bloqueio de rota baseada em modo no futuro:
+    // return isFeatureEnabled(routeToFeature(route));
+    return true;
+  };
 
   return {
     mode,
