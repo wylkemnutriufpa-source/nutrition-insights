@@ -10,13 +10,28 @@ import { AnimatePresence } from "framer-motion";
  */
 export function SystemStateGuard({ children }: { children: React.ReactNode }) {
   const { authStatus, loading: authLoading, profile, experienceRole } = useAuth();
-  const [showExperience, setShowExperience] = useState(true);
+  const [showExperience, setShowExperience] = useState(() => {
+    // Se já completou o boot nesta sessão, não mostra de novo para evitar o loop visual
+    return sessionStorage.getItem("fj_boot_completed") !== "true";
+  });
   
   // O estado "dataReady" indica que o perfil essencial e dados do sistema foram carregados
   const dataReady = !authLoading && !!profile;
 
+  // Segurança: se demorar demais (ex: perfil falhou em carregar), libera o acesso
+  useEffect(() => {
+    if (showExperience) {
+      const timer = setTimeout(() => {
+        console.warn("[SystemStateGuard] Safety timeout triggered.");
+        setShowExperience(false);
+      }, 8000); // 8 segundos de segurança
+      return () => clearTimeout(timer);
+    }
+  }, [showExperience]);
+
   // Se já completou a experiência nesta sessão do componente
   const handleComplete = () => {
+    sessionStorage.setItem("fj_boot_completed", "true");
     setShowExperience(false);
   };
 

@@ -46,6 +46,7 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
 
   const handleExitComplete = useCallback(() => {
     console.log("[AppBootExperience] Transição concluída.");
+    sessionStorage.setItem("fj_boot_completed", "true");
     onComplete();
   }, [onComplete]);
 
@@ -57,20 +58,22 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden bg-black cursor-pointer"
+          className="fixed inset-0 z-[150] flex items-center justify-center overflow-hidden bg-black cursor-pointer"
           onClick={handleFinish}
         >
-          {/* Video — Always full screen and centered */}
-          <video
-            className="absolute inset-0 w-full h-full object-cover"
-            src="/videos/logo-animated.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            style={{ filter: "brightness(0.9) contrast(1.1)" }}
-          />
+          {/* Video — Perfectly centered and covering */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <video
+              className="min-w-full min-h-full w-auto h-auto object-cover"
+              src="/videos/logo-animated.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              style={{ filter: "brightness(0.9) contrast(1.1)" }}
+            />
+          </div>
 
           {/* Gradient overlay suave */}
           <div
