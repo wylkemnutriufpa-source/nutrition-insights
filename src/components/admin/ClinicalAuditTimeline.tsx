@@ -11,8 +11,10 @@ import {
   FileText,
   Table,
   Filter,
-  Download
+  Download,
+  FileDown
 } from "lucide-react";
+import { generateClinicalAuditPDF } from "@/lib/pdfExport";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -109,6 +111,19 @@ export function ClinicalAuditTimeline({ patientId }: ClinicalAuditTimelineProps)
     document.body.removeChild(link);
   };
 
+  const exportPDF = () => {
+    generateClinicalAuditPDF({
+      patientName: "Paciente Auditado", // In production, fetch from profile
+      events: events.map(e => ({
+        action: e.action,
+        date: e.date,
+        protocol: e.protocol,
+        version: e.version,
+        metadata: e.metadata
+      }))
+    });
+  };
+
   return (
     <Card className="bg-background border-border/50 shadow-xl overflow-hidden">
       <CardHeader className="flex flex-row items-center justify-between border-b border-border/10 bg-muted/30 pb-4">
@@ -130,7 +145,11 @@ export function ClinicalAuditTimeline({ patientId }: ClinicalAuditTimelineProps)
           </Select>
           <Button variant="outline" size="sm" className="h-8 text-xs gap-2" onClick={exportCSV}>
             <Download className="h-3 w-3" />
-            Exportar CSV
+            CSV
+          </Button>
+          <Button variant="outline" size="sm" className="h-8 text-xs gap-2 bg-emerald-500/10 text-emerald-500 border-emerald-500/20" onClick={exportPDF}>
+            <FileDown className="h-3 w-3" />
+            PDF Premium
           </Button>
         </div>
       </CardHeader>
