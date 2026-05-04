@@ -50,9 +50,12 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
   checkSubscription: () => Promise<void>;
   error: Error | null;
-  // Consolidated experience mode properties
+  // Experience Mode
   experienceMode: string;
   experienceRole: "professional" | "patient";
+  // Tenant
+  tenantId: string | null;
+  tenant: any | null;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -70,6 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [roles, setRoles] = useState<AppRole[]>([]);
+  const [tenantId, setTenantId] = useState<string | null>(null);
+  const [tenant, setTenant] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [subscription, setSubscription] = useState<SubscriptionState>(defaultSubscription);
@@ -77,10 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
-    // 1 single database call to get Profile + Roles
+    // 1 single database call to get Profile + Roles + Tenants
     const { data, error } = await supabase
       .from("profiles")
-      .select("*, user_roles(role)")
+      .select(`
+        *, 
+        user_roles(role), 
+        user_tenants(
+          role, 
+          is_active, 
+          tenant_id, 
+          tenants(id, name, slug, plan_type, is_active)
+        )
+      `)
       .eq("user_id", userId)
       .maybeSingle();
 
@@ -88,10 +102,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (data) {
       setProfile(data);
-      setRoles((data as any).user_roles?.map((r: any) => r.role) || []);
+      const userRoles = (data as any).user_roles?.map((r: any) => r.role) || [];
+      setRoles(userRoles);
+      
+      // Resolve Tenant
+      const memberships = (data as any).user_tenants || [];
+      const activeMembership = memberships.find((m: any) => m.is_active && m.tenants?.is_active) || memberships[0];
+      
+      if (activeMembership?.tenants) {
+        setTenantId(activeMembership.tenants.id);
+        setTenant(activeMembership.tenants);
+      }
     } else {
       setProfile(null);
       setRoles([]);
+      setTenantId(null);
+      setTenant(null);
     }
   };
 
@@ -124,7 +150,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     let mounted = true;
 
     const initialize = async () => {
-      console.log("[Auth] Bootstrapping session...");
+      console.log("[Auth] Bootstrapping...");
       setLoading(true);
       setError(null);
 
@@ -139,9 +165,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
 
         if (currentUser) {
-          console.log("[Auth] Authenticated. Fetching profile/roles...");
           await fetchData(currentUser.id);
-          checkSubscription(); // Triggered but doesn't block boot
+          checkSubscription();
         }
       } catch (err: any) {
         logError("auth_error", "initialization", err.message);
@@ -163,18 +188,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
 
-        if (event === "SIGNED_IN" && currentUser) {
+        if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
           setLoading(true);
           await fetchData(currentUser.id);
-          checkSubscription();
           setLoading(false);
-          
-          // Cleanup storage
-          ["fitjourney_ref", "fitjourney_ref_at", "fitjourney_invite_code", "fitjourney_nutri_id", "fj_selected_role"]
-            .forEach(key => safeLocalStorage.removeItem(key));
         } else if (event === "SIGNED_OUT") {
           setProfile(null);
           setRoles([]);
+          setTenantId(null);
+          setTenant(null);
           setSubscription(defaultSubscription);
           setLoading(false);
         }
@@ -194,7 +216,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const authStatus: AuthStatus = loading ? "loading" : error ? "error" : user ? "authenticated" : "unauthenticated";
 
-  // Compute experience mode/role from profile/roles
   const isNutritionist = roles.includes("nutritionist");
   const isPersonal = roles.includes("personal");
   const isAdmin = (roles as string[]).includes("admin");
@@ -225,6 +246,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         error,
         experienceMode,
         experienceRole,
+        tenantId,
+        tenant,
       }}
     >
       {children}
@@ -254,6 +277,8 @@ export function useAuth() {
       error: null,
       experienceMode: "pro",
       experienceRole: "professional" as const,
+      tenantId: null,
+      tenant: null,
     };
   }
   return context;
