@@ -5,6 +5,7 @@ import { isProtein } from './v3Motor';
 import { toast } from 'sonner';
 import { ClinicalEngineFactory } from './engineFactory';
 import { logAudit } from '@/lib/auditLog';
+import { recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
 
 /**
  * Proxy para manter compatibilidade com Editor V3
@@ -98,10 +99,14 @@ export const refinePlanWithScore = (
         
         if (targetMealIndex !== -1) {
           const protein = proteins[Math.floor(Math.random() * proteins.length)];
+          const safeQuantity = applyClinicalSafety(protein.name, 100);
+          const macros = recalculateMacros(protein, safeQuantity);
+          
           const newItem: MealItem = {
             ...protein,
+            ...macros,
             instanceId: Math.random().toString(36).substring(2, 10),
-            quantity: 100,
+            quantity: safeQuantity,
             locked: false
           };
           newMeals[targetMealIndex] = {
