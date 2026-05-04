@@ -334,8 +334,8 @@ function HomeRedirect() {
   if (authStatus === "authenticated") {
     return <DashboardRedirect />;
   }
-  // Se não estiver logado na home, manda para o auth
-  return <Navigate to="/auth" replace />;
+  // Modo de Recuperação: Carrega o componente Auth diretamente para evitar loop de Navigate
+  return <Auth />;
 }
 
 
