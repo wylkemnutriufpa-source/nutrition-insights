@@ -31,12 +31,13 @@ export function useExperienceMode(): ExperienceModeContextValue {
 
   const isFeatureEnabled = (feature: string) => {
     const userRole = role === "nutritionist" ? "nutritionist" : "patient";
-    const userMode = mode;
+    const userMode = (mode === "pro" || mode === "advanced") ? mode : "basic";
 
-    const allowedFeatures = featureMap[userRole][userMode];
+    const roleMap = featureMap[userRole] || featureMap.patient;
+    const allowedFeatures = roleMap[userMode] || roleMap.basic;
     
     if (allowedFeatures === "all") return true;
-    return allowedFeatures.includes(feature);
+    return Array.isArray(allowedFeatures) ? allowedFeatures.includes(feature) : false;
   };
 
   // Mantido apenas para compatibilidade visual ou se algum componente antigo usar

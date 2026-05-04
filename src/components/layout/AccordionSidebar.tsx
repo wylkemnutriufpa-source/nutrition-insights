@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslation } from "react-i18next";
+import { useAuth } from "@/lib/auth";
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { useWorkspace, type WorkspaceSection, type WorkspaceItem } from "@/hooks/useWorkspace";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -163,8 +164,10 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const { isRouteAllowed, isFeatureEnabled } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
+  const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const hasRole = isPatient || isNutritionist || isPersonal || isAdmin;
 
-  if (loading) return null;
+  if (loading || !hasRole) return null;
 
   const visibleSections = sections
     .filter(s => s.is_visible)
@@ -334,6 +337,10 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   const { isFeatureEnabled, minMode } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
+  const { isPatient, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
+  const hasRole = isPatient || isNutritionist || isPersonal || isAdmin;
+
+  if (loading || !hasRole) return null;
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
     if ((item as any).feature) {
