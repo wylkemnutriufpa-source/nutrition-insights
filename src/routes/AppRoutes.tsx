@@ -222,6 +222,7 @@ const TermsOfUse = lazy(() => import("../pages/TermsOfUse"));
 const SystemAuditLogs = lazy(() => import("../pages/AuditLogs"));
 const Pricing = lazy(() => import("../pages/Pricing"));
 const Landing = lazy(() => import("../pages/Landing"));
+const OperationalChecklist = lazy(() => import("../pages/OperationalChecklist"));
 
 function LP({ children, section }: { children: React.ReactNode; section?: string }) {
   return (
