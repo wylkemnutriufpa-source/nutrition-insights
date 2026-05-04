@@ -202,7 +202,6 @@ export default function ClientDashboard() {
     if (biquiniEnrollment?.status === "pending_onboarding") setShowOnboarding(true);
   }, [biquiniEnrollment]);
 
-  const onboarding = useOnboardingGuard();
   const isFluid = journeyStatus ? IS_FLUID_STATE(journeyStatus) : true;
   const shouldBlock = isPatient && !journeyLoading && journeyStatus && !isFluid;
 
@@ -221,7 +220,13 @@ export default function ClientDashboard() {
       <SafeRender name="Conteúdo do Dashboard" data={[user, profile, dashData]}>
         {shouldBlock ? (
           <div className="max-w-7xl mx-auto px-4 py-12">
-            <OnboardingGateScreen status={journeyStatus!} />
+            <div className="bg-card/50 border border-border/50 rounded-2xl p-8 text-center space-y-6 max-w-md mx-auto">
+               <h2 className="text-xl font-bold">Onboarding Necessário</h2>
+               <p className="text-muted-foreground text-sm">Para liberar seu dashboard e plano alimentar, precisamos que você complete seu cadastro inicial.</p>
+               <Button onClick={() => navigate("/onboarding/paciente")} className="w-full">
+                 Completar Onboarding
+               </Button>
+            </div>
           </div>
         ) : (
           <>

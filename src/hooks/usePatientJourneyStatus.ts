@@ -119,12 +119,11 @@ export function usePatientJourneyStatus() {
 
   const canAccessOnboarding = status !== "no_link" && status !== null;
 
-  // EMERGENCY BYPASS: Always return active_plan to bypass onboarding in incident mode
   return { 
-    status: isPatient ? "active_plan" : status, 
-    loading: false, 
-    canAccessOnboarding: true, 
-    isTransitioning: false,
-    refetch: () => Promise.resolve() 
+    status, 
+    loading, 
+    canAccessOnboarding, 
+    isTransitioning,
+    refetch: fetchStatus 
   };
 }
