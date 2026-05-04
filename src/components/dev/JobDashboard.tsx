@@ -265,6 +265,7 @@ export default function JobDashboard() {
 
         <TabsContent value="audit" className="mt-4">
           <Card>
+            <CardHeader>
               <CardTitle className="flex items-center justify-between gap-2">
                 <div className="flex items-center gap-2">
                   <History className="w-4 h-4" /> Histórico de Auditoria Clínica
@@ -273,6 +274,7 @@ export default function JobDashboard() {
                   <Download className="w-4 h-4" /> Exportar CSV
                 </Button>
               </CardTitle>
+            </CardHeader>
             <CardContent>
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
