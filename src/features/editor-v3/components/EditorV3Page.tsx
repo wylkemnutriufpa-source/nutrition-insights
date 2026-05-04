@@ -246,7 +246,7 @@ const EditorV3Page = () => {
         // Carregar Perfil do Paciente (Contexto Central)
         const { data: profile } = await supabase
           .from('profiles')
-          .select('*')
+          .select('id, full_name, goal, food_restrictions, food_preferences, consent_given, consent_date, protocol_type')
           .eq('id', patientId)
           .maybeSingle();
 
