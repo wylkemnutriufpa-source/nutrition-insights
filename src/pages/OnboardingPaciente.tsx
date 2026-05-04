@@ -88,11 +88,10 @@ export default function OnboardingPaciente() {
         .eq("user_id", user.id);
     }
 
-    // Não chamamos navigate(): SystemStateGuard observa o novo patient_state
-    // e move o paciente para /anamnesis automaticamente.
-    setTimeout(() => {
-      if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
-    }, 1500);
+    // Explicit navigation after user action
+    navigate("/client/dashboard");
+    
+    if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
   }, [user?.id]);
 
   const skip = complete;
