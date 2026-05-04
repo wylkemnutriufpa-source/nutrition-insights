@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { format } from "date-fns";
+import { ptBR } from "date-fns/locale";
 
 /**
  * Utility para gerar e baixar PDFs usando a API nativa do navegador (print).
@@ -67,6 +69,35 @@ const CSS = `
     .badge { display: inline-block; background: #6d28d9; color: white; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 600; }
     .notes { background: #fffbeb; border: 1px solid #fde68a; padding: 12px; border-radius: 8px; font-size: 13px; margin-top: 15px; }
     @media print { body { padding: 20px; } }
+  </style>
+`;
+
+const PREMIUM_CSS = `
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: 'Inter', sans-serif; color: #FFFFFF; background: #000000; padding: 40px; line-height: 1.5; }
+    .page { min-height: 100vh; position: relative; }
+    .header { border-bottom: 2px solid #10B981; padding-bottom: 20px; margin-bottom: 40px; display: flex; justify-content: space-between; align-items: flex-end; }
+    .logo { font-size: 28px; font-weight: 800; color: #FFFFFF; letter-spacing: -1px; }
+    .logo span { color: #10B981; }
+    .title-area { margin-bottom: 30px; }
+    h1 { font-size: 32px; font-weight: 800; text-transform: uppercase; margin-bottom: 10px; color: #10B981; }
+    .subtitle { font-size: 14px; color: #9CA3AF; text-transform: uppercase; letter-spacing: 2px; }
+    .info-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; margin-bottom: 40px; }
+    .info-card { background: #111827; border: 1px solid #1F2937; padding: 20px; border-radius: 12px; }
+    .info-card label { display: block; font-size: 10px; color: #6B7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+    .info-card value { font-size: 18px; font-weight: 700; color: #FFFFFF; }
+    .timeline { position: relative; padding-left: 30px; border-left: 2px solid #1F2937; margin-left: 10px; }
+    .event { position: relative; margin-bottom: 30px; }
+    .event::before { content: ''; position: absolute; left: -36px; top: 0; width: 10px; height: 10px; border-radius: 50%; background: #10B981; border: 4px solid #000000; box-shadow: 0 0 0 2px #10B981; }
+    .event-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+    .event-title { font-size: 16px; font-weight: 700; color: #F3F4F6; }
+    .event-date { font-size: 12px; font-family: monospace; color: #9CA3AF; }
+    .event-body { background: #111827; border: 1px solid #1F2937; padding: 15px; border-radius: 8px; font-size: 12px; }
+    .badge { background: #064E3B; color: #10B981; padding: 2px 10px; border-radius: 99px; font-size: 10px; font-weight: 700; text-transform: uppercase; }
+    .footer { position: absolute; bottom: 0; width: 100%; text-align: center; font-size: 10px; color: #4B5563; padding: 20px 0; border-top: 1px solid #1F2937; }
+    @media print { body { background: #000000 !important; color: #FFFFFF !important; -webkit-print-color-adjust: exact; } .info-card { background: #111827 !important; } }
   </style>
 `;
 
@@ -216,4 +247,74 @@ function openPrintWindow(html: string, title: string) {
   printWindow.onload = () => {
     setTimeout(() => printWindow.print(), 300);
   };
+}
+
+export function generateClinicalAuditPDF(data: {
+  patientName: string;
+  events: {
+    action: string;
+    date: Date;
+    protocol: string;
+    version: string;
+    metadata: any;
+  }[];
+}) {
+  const html = `<!DOCTYPE html><html><head><meta charset="utf-8">${PREMIUM_CSS}</head><body>
+    <div class="page">
+      <div class="header">
+        <div class="logo">FIT<span>JOURNEY</span></div>
+        <div style="text-align:right">
+          <p style="font-size:12px;font-weight:700">RELATÓRIO DE AUDITORIA CLÍNICA</p>
+          <p style="font-size:10px;color:#9CA3AF">PACIENTE: ${data.patientName.toUpperCase()}</p>
+        </div>
+      </div>
+
+      <div class="title-area">
+        <div class="subtitle">Clinical Engine v3.1</div>
+        <h1>Histórico Determinístico</h1>
+      </div>
+
+      <div class="info-grid">
+        <div class="info-card">
+          <label>Total de Eventos</label>
+          <value>${data.events.length}</value>
+        </div>
+        <div class="info-card">
+          <label>Período de Auditoria</label>
+          <value>${format(data.events[data.events.length - 1].date, "dd/MM/yy")} - ${format(data.events[0].date, "dd/MM/yy")}</value>
+        </div>
+      </div>
+
+      <div class="timeline">
+        ${data.events.map(event => `
+          <div class="event">
+            <div class="event-header">
+              <div class="event-title">${event.action} <span class="badge" style="margin-left:10px">${event.protocol}</span></div>
+              <div class="event-date">${format(event.date, "dd MMM yyyy • HH:mm", { locale: ptBR })}</div>
+            </div>
+            <div class="event-body">
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+                <div><span style="color:#6B7280;text-transform:uppercase;font-size:9px">Engine Version:</span> v${event.version}</div>
+                <div><span style="color:#6B7280;text-transform:uppercase;font-size:9px">Tipo:</span> ${event.protocol}</div>
+              </div>
+              ${event.metadata ? `
+                <div style="margin-top:10px;padding-top:10px;border-top:1px solid #1F2937;color:#9CA3AF">
+                  ${Object.entries(event.metadata).map(([k, v]) => {
+                    if (typeof v === 'object') return '';
+                    return `<span style="margin-right:15px"><strong>${k.replace(/_/g, ' ')}:</strong> ${v}</span>`;
+                  }).join('')}
+                </div>
+              ` : ''}
+            </div>
+          </div>
+        `).join('')}
+      </div>
+
+      <div class="footer">
+        TRUE BLACK EDITION · FITJOURNEY CLINICAL SYSTEMS · ${new Date().toLocaleDateString('pt-BR')}
+      </div>
+    </div>
+  </body></html>`;
+
+  openPrintWindow(html, `auditoria-clinica-${data.patientName.replace(/\s/g, '-')}`);
 }
