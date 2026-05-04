@@ -264,15 +264,16 @@ const EditorV3Page = () => {
           const context = {
             id: profile.id,
             name: profile.full_name || 'Paciente',
-            goal: profileAny.goal || 'Manutenção',
-            restrictions: profileAny.food_restrictions || [],
-            preferences: profileAny.food_preferences || [],
+            goal: (profile as any).goal || 'Manutenção',
+            restrictions: (profile as any).food_restrictions || [],
+            preferences: (profile as any).food_preferences || [],
             calories_target: assessment?.calories_target || 2000,
             protein_target: assessment?.protein_target || 150,
             carbs_target: assessment?.carbs_target || 200,
             fat_target: assessment?.fat_target || 60,
-            consent_given: profileAny.consent_given,
-            consent_date: profileAny.consent_date,
+            consent_given: (profile as any).consent_given,
+            consent_date: (profile as any).consent_date,
+            protocol_type: (profile as any).protocol_type || 'default_v3',
           };
           setPatientContext(context);
         }
@@ -743,10 +744,19 @@ const EditorV3Page = () => {
                      nutritionalScore.total >= 90 ? "bg-emerald-500 text-black" : 
                      nutritionalScore.total >= 70 ? "bg-amber-500 text-black" : 
                      "bg-rose-500 text-white"
-                   )}>
-                     {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
-                   </Badge>
-                 )}
+                    )}>
+                      {nutritionalScore.total >= 90 ? "Excelente" : nutritionalScore.total >= 70 ? "Ajustar" : "Crítico"}
+                    </Badge>
+                  )}
+                  {patientContext?.protocol_type && (
+                    <Badge variant="outline" className="px-2 py-0 rounded text-[9px] font-black uppercase tracking-tighter border-amber-500/50 text-amber-500">
+                      Protocolo: {
+                        patientContext.protocol_type === 'fitjourney' ? 'FitJourney' : 
+                        patientContext.protocol_type === 'bikini_protocol' || patientContext.protocol_type === 'bikini_branco' ? 'Biquíni Branco' : 
+                        'Engine V3'
+                      }
+                    </Badge>
+                  )}
                  {patientContext && (
                    <Popover>
                      <PopoverTrigger asChild>

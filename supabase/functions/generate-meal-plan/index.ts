@@ -64,6 +64,7 @@ import {
   syncProteinDescriptionPortions,
 } from "../_shared/meal-description.ts";
 import { scaleRecipeByMacros, type RecipeIngredient } from "../_shared/recipe-scaling-engine.ts";
+import { ClinicalEngine } from "../_shared/clinical-engine.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "https://fitjourney.com.br", // Reforçado para produção
@@ -73,7 +74,7 @@ const corsHeaders = {
 
 // ──── Constants ────
 // ──── UNIFIED ENGINE VERSION ────
-const ENGINE_VERSION = "8.0.0-unified";
+const ENGINE_VERSION = "9.0.0-unified-clinical";
 const PROTOCOL_VERSION = "clinical_nutrition_engine_v1";
 
 // ──── FEATURE FLAG: DB-EXCLUSIVE MODE (MANDATORY) ────
