@@ -282,26 +282,26 @@ function HomeRedirect() {
 
 
 export const AppRoutes = () => {
-  // TESTE DE ESTÁTICA: Removido qualquer redirecionamento baseado no authStatus
+  const { authStatus } = useAuth();
   return (
     <Routes>
-      <Route path="/" element={<Auth />} />
+      {/* Raiz: se logado vai para welcome (que decide destino), senão mostra Auth */}
+      <Route
+        path="/"
+        element={
+          authStatus === "authenticated" ? <Navigate to="/welcome" replace /> : <Auth />
+        }
+      />
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/confirm" element={<AuthConfirm />} />
       <Route path="/welcome" element={<Welcome />} />
-      <Route path="/index" element={<Index />} />
-      
-      {/* Kill-Switch: Comentado redirect automático do "*" para evitar loop */}
-      {/* 
-      <Route 
-        path="*" 
-        element={
-          authStatus === "authenticated" 
-            ? <Navigate to="/welcome" replace /> 
-            : <Navigate to="/auth" replace />
-        } 
-      /> 
-      */}
+      <Route path="/index" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Index /></Suspense></ProtectedRoute>} />
+      <Route path="/admin/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Index /></Suspense></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Index /></Suspense></ProtectedRoute>} />
+      <Route path="/client/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><ClientDashboard /></Suspense></ProtectedRoute>} />
+
+      {/* Fallback: qualquer rota desconhecida volta para a raiz (que decide auth) */}
+      <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
 };
