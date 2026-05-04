@@ -81,29 +81,13 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           />
 
           {/* Brand text & Loading — Centered stack */}
-          <div className="relative z-10 flex flex-col items-center gap-8">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}
-              className="text-center"
-            >
-              <h1
-                className="text-3xl md:text-4xl font-bold tracking-[0.25em] uppercase text-white"
-                style={{
-                  textShadow: "0 0 40px rgba(16, 185, 129, 0.4)",
-                }}
-              >
-                FitJourney
-              </h1>
-            </motion.div>
-
+          <div className="relative z-10 flex flex-col items-center gap-4 mt-auto mb-12">
             {/* Loading bar */}
             <motion.div
-              className="w-40 h-[2px] rounded-full overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.1)" }}
+              className="w-48 h-[1px] rounded-full overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.05)" }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.7 }}
+              animate={{ opacity: 0.5 }}
             >
               <motion.div
                 className="h-full rounded-full"
@@ -118,10 +102,10 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
                 }}
               />
             </motion.div>
-          </div>
-          
-          <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-[10px] uppercase tracking-[0.3em] text-white/30 animate-pulse font-light">
-            Clique para entrar
+            
+            <div className="text-[10px] uppercase tracking-[0.4em] text-white/20 animate-pulse font-light">
+              Clique para entrar
+            </div>
           </div>
         </motion.div>
       ) : null}
