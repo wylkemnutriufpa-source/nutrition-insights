@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { lazy, Suspense, useEffect, useState } from "react";
-import AppBootExperience from "@/components/common/AppBootExperience";
+import { lazy, Suspense, useEffect } from "react";
 import { useAppState } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
@@ -342,30 +341,18 @@ function RedirectWithParams({ to }: { to: string }) {
 }
 
 export const AppRoutes = () => {
-  const { authStatus, experienceMode, experienceRole } = useAuth();
-  const [bootComplete, setBootComplete] = useState(false);
-  
-  // Independent loader/boot logic
-  const isDataReady = authStatus !== "loading";
+  const { isDegraded, isOrphan } = useAppState();
+  const { experienceMode, experienceRole } = useAuth();
   
   useEffect(() => {
-    // Basic theme sync on mount/auth change
     document.documentElement.setAttribute("data-experience-mode", experienceMode);
     document.documentElement.setAttribute("data-experience-role", experienceRole);
   }, [experienceMode, experienceRole]);
-
-  if (!bootComplete) {
-    return (
-      <AppBootExperience 
-        dataReady={isDataReady} 
-        onComplete={() => setBootComplete(true)} 
-      />
-    );
-  }
   
   return (
     <div className="min-h-screen">
-      {/* Degraded and Orphan checks removed for ultra-simplification during boot stabilization */}
+      {isDegraded && <DegradedModeBanner />}
+      {isOrphan && <HardFailLinkage />}
       <AnimatePresence mode="wait">
         <Suspense fallback={<PageLoader />}>
           {/* Removed SystemStateGuard, ExperienceRouteGuard, and WorkspaceRouteGuard for radical simplification */}
