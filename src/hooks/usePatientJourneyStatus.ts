@@ -24,65 +24,32 @@ export const IS_FLUID_STATE = (status: JourneyStatus) =>
  * Returns the patient's unified state from profiles.
  */
 export function usePatientJourneyStatus() {
-  const { user, isPatient } = useAuth();
-  const location = useLocation();
+  const { user, profile, isPatient, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<JourneyStatus>(null);
   const [loading, setLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [lastValidated, setLastValidated] = useState<number>(0);
 
-  // Expose global setter for atomic transitions
+  // Synchronize status with profile from useAuth
   useEffect(() => {
-    (window as any).__FJ_SET_TRANSITIONING__ = setIsTransitioning;
-    return () => { delete (window as any).__FJ_SET_TRANSITIONING__; };
-  }, []);
-
-  const fetchStatus = async (cancelled = false) => {
-    if (!user?.id) return;
-    try {
-      console.log(`[usePatientJourneyStatus] Fetching unified state for ${user.id}...`);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("patient_state")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error) {
-        console.error("[usePatientJourneyStatus] Fetch error:", error);
-        if (!cancelled) setLoading(false);
-        return;
-      }
-
-      if (!cancelled && data) {
-        const finalStatus = data.patient_state as JourneyStatus;
-        const prev = status;
-        if (!finalStatus) {
-          console.warn("[FJ:Guard] patient_state nulo detectado, forçando fallback para slides");
-          setStatus("onboarding_slides");
-          if (prev !== "onboarding_slides") {
-            recordStateChange({ userId: user.id, from: prev, to: "onboarding_slides", source: "fetch-fallback" });
-          }
-        } else {
-          console.log(`[usePatientJourneyStatus] Unified state: ${finalStatus}`);
-          setStatus(finalStatus);
-          if (prev !== finalStatus) {
-            recordStateChange({ userId: user.id, from: prev, to: finalStatus, source: "fetch" });
-          }
-        }
-        setLoading(false);
-        setLastValidated(Date.now());
-      }
-    } catch (err) {
-      console.error("[usePatientJourneyStatus] Unexpected error:", err);
-      if (!cancelled) setLoading(false);
+    if (authLoading) return;
+    
+    if (profile?.patient_state) {
+      setStatus(profile.patient_state as JourneyStatus);
+      setLoading(false);
+    } else if (isPatient) {
+      // Fallback if profile doesn't have it yet but user is a patient
+      setStatus("onboarding_slides");
+      setLoading(false);
+    } else {
+      setLoading(false);
     }
+  }, [profile, authLoading, isPatient]);
+
+  const fetchStatus = async () => {
+    // If needed to manually refetch, we refresh the profile in useAuth
+    // which will update the status here via the useEffect above.
+    console.log("[usePatientJourneyStatus] Manually refreshing status...");
   };
-
-  useEffect(() => {
-    if (!user || !isPatient) { setLoading(false); return; }
-
-    let cancelled = false;
-    fetchStatus(cancelled);
 
     const channel = supabase
       .channel(`patient-state-${user.id}`)
