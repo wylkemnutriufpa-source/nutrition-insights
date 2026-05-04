@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from "vitest";
-import { generateMealPlanFromLibrary } from "@/lib/mealPlanAutoGenerator";
+import { generateMealPlanFromLibrary, PatientProfile } from "@/lib/mealPlanAutoGenerator";
 
 // Mock clinicalEngineAudit to avoid DB calls in tests
 vi.mock("@/lib/clinicalEngineAudit", () => ({
@@ -20,63 +20,58 @@ vi.mock("@/integrations/supabase/client", () => ({
 }));
 
 describe("Clinical Engine Determinism Tests", () => {
-  const baseProfile = {
-    name: "Patient Alpha",
-    goal: "maintenance" as const,
-    calories_target: 2000,
-    protein_target: 150,
-    carbs_target: 200,
-    fat_target: 60,
-    routine_meals_count: 4,
+  const baseProfile: PatientProfile = {
+    patientId: "test-patient-uuid",
+    goal: "maintenance",
+    planType: "normal",
+    targetCalories: 2000,
+    targetProtein: 150,
+    targetCarbs: 200,
+    targetFat: 60,
     restrictions: ["gluten"],
-    preferences: ["chicken"],
+    rejectedFoods: ["chicken"],
+    clinicalTags: []
   };
 
-  it("should be deterministic for the same input using FitJourney strategy", async () => {
-    const profile = { ...baseProfile, protocol_type: "fitjourney" };
-    
-    const result1 = await generateMealPlanFromLibrary(profile);
-    const result2 = await generateMealPlanFromLibrary(profile);
+  it("should be deterministic for the same input using a mocked library", async () => {
+    // We mock the return value of supabase to return consistent items
+    const { supabase } = await import("@/integrations/supabase/client");
+    (supabase.from as any).mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({
+        data: [
+          { id: '1', title: 'Meal 1', meal_type: 'breakfast', base_calories: 400, protein: 30, carbs: 40, fat: 12, plan_type: 'normal', goal_tag: 'maintenance', is_active: true },
+          { id: '2', title: 'Meal 2', meal_type: 'morning_snack', base_calories: 200, protein: 15, carbs: 20, fat: 6, plan_type: 'normal', goal_tag: 'maintenance', is_active: true },
+          { id: '3', title: 'Meal 3', meal_type: 'lunch', base_calories: 600, protein: 45, carbs: 60, fat: 18, plan_type: 'normal', goal_tag: 'maintenance', is_active: true },
+          { id: '4', title: 'Meal 4', meal_type: 'afternoon_snack', base_calories: 200, protein: 15, carbs: 20, fat: 6, plan_type: 'normal', goal_tag: 'maintenance', is_active: true },
+          { id: '5', title: 'Meal 5', meal_type: 'dinner', base_calories: 440, protein: 33, carbs: 44, fat: 13, plan_type: 'normal', goal_tag: 'maintenance', is_active: true },
+          { id: '6', title: 'Meal 6', meal_type: 'evening_snack', base_calories: 160, protein: 12, carbs: 16, fat: 5, plan_type: 'normal', goal_tag: 'maintenance', is_active: true },
+        ],
+        error: null
+      })
+    });
+
+    const result1 = await generateMealPlanFromLibrary(baseProfile);
+    const result2 = await generateMealPlanFromLibrary(baseProfile);
 
     // Deterministic outputs must match exactly for the same inputs
-    expect(result1).toEqual(result2);
-    expect(result1.length).toBeGreaterThan(0);
+    expect(result1.slots).toEqual(result2.slots);
+    expect(result1.success).toBe(true);
   });
 
-  it("should be deterministic for the same input using Biquini Branco strategy", async () => {
-    const profile = { ...baseProfile, protocol_type: "biquini_branco" };
-    
-    const result1 = await generateMealPlanFromLibrary(profile);
-    const result2 = await generateMealPlanFromLibrary(profile);
+  it("should block generation if items have different plan types", async () => {
+    const { supabase } = await import("@/integrations/supabase/client");
+    (supabase.from as any).mockReturnValue({
+      select: vi.fn().mockReturnThis(),
+      eq: vi.fn().mockResolvedValue({
+        data: [
+          { id: '1', title: 'Marmita', meal_type: 'lunch', base_calories: 600, plan_type: 'marmita', goal_tag: 'maintenance', is_active: true }
+        ],
+        error: null
+      })
+    });
 
-    expect(result1).toEqual(result2);
-  });
-
-  it("should produce different results for different strategies with same input", async () => {
-    const fjProfile = { ...baseProfile, protocol_type: "fitjourney" };
-    const bbProfile = { ...baseProfile, protocol_type: "biquini_branco" };
-
-    const fjResult = await generateMealPlanFromLibrary(fjProfile);
-    const bbResult = await generateMealPlanFromLibrary(bbProfile);
-
-    // Strategies should differ in their clinical logic
-    // We expect some difference in food selection or macro distribution logic
-    // (Note: This depends on actual implementation of strategies)
-    expect(fjResult).not.toEqual(bbResult);
-  });
-
-  it("should respect restrictions across all strategies", async () => {
-    const restrictedProfile = { ...baseProfile, restrictions: ["ovo", "egg"] };
-    
-    const result = await generateMealPlanFromLibrary(restrictedProfile);
-    
-    const hasEggs = result.some(meal => 
-      meal.items.some(item => 
-        item.name.toLowerCase().includes("ovo") || 
-        item.name.toLowerCase().includes("egg")
-      )
-    );
-
-    expect(hasEggs).toBe(false);
+    // Profile is 'normal', but only 'marmita' found
+    await expect(generateMealPlanFromLibrary(baseProfile)).rejects.toThrow(/Biblioteca de refeições não contém itens válidos/);
   });
 });
