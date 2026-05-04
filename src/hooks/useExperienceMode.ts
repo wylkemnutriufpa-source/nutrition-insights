@@ -1,5 +1,7 @@
 import { useAuth } from "@/lib/auth";
 
+import { createContext } from "react";
+
 export type ExperienceMode = "basic" | "pro" | "advanced";
 export type ExperienceRole = "nutritionist" | "patient";
 
@@ -21,6 +23,8 @@ export interface ExperienceModeContextValue {
   queueStats: any;
   retryLastMode: () => void;
 }
+
+export const ExperienceModeContext = createContext<any>({});
 
 const MODE_LEVEL: Record<ExperienceMode, number> = { basic: 0, pro: 1, advanced: 2 };
 
