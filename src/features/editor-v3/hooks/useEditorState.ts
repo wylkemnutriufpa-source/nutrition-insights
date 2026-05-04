@@ -410,7 +410,8 @@ export const useEditorState = create<EditorState>()(
                       ...calculatedMacros, 
                       calories: calculatedMacros.kcal,
                       instanceId: makeInstanceId(), 
-                      quantity: 1 
+                      quantity: 1,
+                      substitutions: [] // Contrato V3
                     }
                   ] 
                 }
