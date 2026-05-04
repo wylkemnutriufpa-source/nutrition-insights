@@ -47,19 +47,22 @@ export default function NeuroEntryExperience({
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[120] flex flex-col items-center justify-center overflow-hidden bg-black"
+          className="fixed inset-0 z-[120] flex flex-col items-center justify-center overflow-hidden bg-black cursor-pointer"
+          onClick={handleSkip}
         >
-          {/* Video background */}
-          <video
-            className="absolute inset-0 w-full h-full object-cover"
-            src="/videos/logo-animated.mp4"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            style={{ filter: "brightness(0.7) contrast(1.1)" }}
-          />
+          {/* Video — Centralizado e contido */}
+          <div className="absolute inset-0 flex items-center justify-center">
+            <video
+              className="w-full h-full object-contain"
+              src="/videos/logo-animated.mp4"
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              style={{ filter: "brightness(0.8) contrast(1.1)" }}
+            />
+          </div>
 
           {/* Gradient overlay */}
           <div
