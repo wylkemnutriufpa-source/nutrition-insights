@@ -194,6 +194,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const signOut = async () => {
     invalidateMenuCache();
+    // Clear workspace and context related data
+    localStorage.removeItem("fj_workspace_context");
+    localStorage.removeItem("fj_last_path");
+    
+    // Hard clear of any session state to prevent loops
+    sessionStorage.clear();
+    
     await supabase.auth.signOut();
   };
 
