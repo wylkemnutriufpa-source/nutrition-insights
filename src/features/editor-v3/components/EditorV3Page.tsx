@@ -423,8 +423,9 @@ const EditorV3Page = () => {
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        const macros = recalculateMacros(item, item.quantity);
-        acc.kcal += macros.calories;
+        // No V3, usamos calculateItemMacros do motor V3 para consistência
+        const macros = calculateItemMacros(item, item.quantity);
+        acc.kcal += macros.kcal;
         acc.protein += macros.protein;
         acc.carbs += macros.carbs;
         acc.fat += macros.fat;
