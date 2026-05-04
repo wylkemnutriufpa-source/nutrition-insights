@@ -78,6 +78,7 @@ export interface PatientContext {
   fat_target: number;
   consent_given?: boolean;
   consent_date?: string;
+  protocol_type?: string;
 }
 
 export interface PlanConfidence {
