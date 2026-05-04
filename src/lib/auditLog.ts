@@ -25,41 +25,35 @@ export function logAudit(
 ) {
   const finalCorrelationId = correlationId || generateRequestCorrelationId();
   
+  // Enriquecimento automático de metadados clínicos
+  const enrichedMetadata = {
+    ...metadata,
+    engine_version: "4.0.0",
+    client_timestamp: new Date().toISOString(),
+    platform: "web-clinical-admin"
+  };
+
   supabase
     .rpc("log_audit", {
       _action: action,
       _resource_type: resourceType,
       _resource_id: resourceId ?? null,
-      _metadata: { 
-        ...metadata
-      } as unknown as Json,
+      _metadata: enrichedMetadata as unknown as Json,
       _correlation_id: finalCorrelationId,
       _status: status,
       _parent_correlation_id: SESSION_CORRELATION_ID
     })
     .then(({ error }) => {
       if (error) {
-        console.warn("[audit] Failed to persist log, attempting silent retry...", error.message);
-        setTimeout(async () => {
-          try {
-            await supabase.rpc("log_audit", {
-              _action: action,
-              _resource_type: resourceType,
-              _resource_id: resourceId ?? null,
-              _metadata: { 
-                ...metadata, 
-                parent_correlation_id: SESSION_CORRELATION_ID,
-                retry: true 
-              } as unknown as Json,
-              _correlation_id: finalCorrelationId,
-              _status: status
-            });
-          } catch (e) {
-            // Silent failure on retry
-          }
-        }, 2000);
+        console.warn("[audit] Failed to persist log", error.message);
       }
     });
+
+  // Alerta de Threshold (Simulação de monitoramento)
+  if (status === 'error' && action.includes('generation')) {
+    console.error(`[THRESHOLD ALERT] Falha crítica na geração clínica do paciente ${resourceId}`);
+    // Aqui seria disparado o alerta para Slack/Edge Function se necessário
+  }
 }
 
 export function getSessionCorrelationId() {
