@@ -236,63 +236,25 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { authStatus } = useAuth();
-  const location = useLocation();
-  
-  // O loader principal é tratado no App.tsx. Aqui apenas bloqueamos se não estiver autenticado.
   if (authStatus === "loading") return null;
-
-  if (authStatus !== "authenticated") {
-    console.warn("[ProtectedRoute] Não autenticado. Redirecionando para /auth");
-    return <Navigate to="/auth" state={{ from: location }} replace />;
-  }
-
+  if (authStatus !== "authenticated") return <Navigate to="/auth" replace />;
   return <>{children}</>;
 }
 
 function DashboardRedirect() {
-  const { isNutritionist, isPersonal, isAdmin, authStatus } = useAuth();
-  
+  const { authStatus } = useAuth();
   if (authStatus === "loading") return null;
-  
-  if (authStatus !== "authenticated") {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  if (isNutritionist || isPersonal || isAdmin) {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  
-  return <Navigate to="/client/dashboard" replace />;
+  if (authStatus !== "authenticated") return <Navigate to="/auth" replace />;
+  // Fallback seguro: se autenticado, tenta ir para welcome ou auth de novo se tudo falhar
+  return <Navigate to="/welcome" replace />;
 }
-
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus, isNutritionist, isAdmin, isPersonal } = useAuth();
-  
-  if (authStatus === "loading") return null;
-  
-  if (authStatus === "unauthenticated") {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  if (!isNutritionist && !isAdmin && !isPersonal) {
-    return <Navigate to="/client/dashboard" replace />;
-  }
-  
-  return <>{children}</>;
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 
-
 function PatientRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus } = useAuth();
-  
-  if (authStatus === "loading") return null;
-  
-  if (authStatus === "unauthenticated") {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  return <>{children}</>;
+  return <ProtectedRoute>{children}</ProtectedRoute>;
 }
 
 
