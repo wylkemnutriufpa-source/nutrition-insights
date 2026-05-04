@@ -8,38 +8,13 @@ import React from "react";
  */
 const IndependentLoader = () => {
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black overflow-hidden">
-      {/* Video Container - Mantendo centralização absoluta */}
-      <div className="relative w-full h-full flex items-center justify-center">
-        <video
-          className="w-full h-full max-w-[800px] max-h-[800px] object-contain"
-          src="/videos/logo-animated.mp4"
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-        />
-        
-        {/* Overlay suave para profundidade */}
-        <div 
-          className="absolute inset-0 pointer-events-none"
-          style={{
-            background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)",
-          }}
-        />
-      </div>
-
-      {/* Indicador de carregamento discreto no rodapé */}
-      <div className="absolute bottom-12 flex flex-col items-center gap-3">
-        <div className="w-32 h-[1px] bg-white/10 overflow-hidden rounded-full">
-          <div className="h-full bg-emerald-500/50 animate-[loading_2s_ease-in-out_infinite]" />
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white overflow-hidden">
+      <div className="flex flex-col items-center gap-4">
+        <h1 className="text-2xl font-bold text-gray-800 animate-pulse">Carregando...</h1>
+        <div className="w-48 h-1 bg-gray-100 rounded-full overflow-hidden">
+          <div className="h-full bg-blue-600 animate-[loading_1.5s_ease-in-out_infinite]" />
         </div>
-        <span className="text-[10px] uppercase tracking-[0.3em] text-white/20 font-light">
-          Sincronizando Sistemas
-        </span>
       </div>
-
       <style dangerouslySetInnerHTML={{ __html: `
         @keyframes loading {
           0% { transform: translateX(-100%); }
