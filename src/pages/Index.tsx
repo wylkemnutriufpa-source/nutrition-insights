@@ -1184,13 +1184,8 @@ export default function Index() {
 
   // Regra Determinística: Redirecionar para o Hub de Boas-Vindas se não tivermos roles definidas
   // ou se houver intenção de convite pendente.
-  const isInvited = localStorage.getItem("fj_invited") === "true";
-  
-  useEffect(() => {
-    if (!loading && user && (isInvited || !isProRole)) {
-      navigate("/welcome", { replace: true });
-    }
-  }, [loading, user, isInvited, isProRole, navigate]);
+  // Removed automatic redirect to /welcome for radical simplification.
+  // The Index page will render content directly based on roles.
 
   if (!loading && !user) {
     return <Navigate to="/auth" replace />;

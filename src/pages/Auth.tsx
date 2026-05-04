@@ -39,8 +39,8 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   
   useEffect(() => {
     if (authStatus === "authenticated") {
-      console.log("[Auth] Usuário já autenticado. Redirecionando para /welcome...");
-      navigate("/welcome", { replace: true });
+      console.log("[Auth] Usuário já autenticado. Redirecionando para /dashboard...");
+      navigate("/dashboard", { replace: true });
     }
   }, [authStatus, navigate]);
 
@@ -96,9 +96,9 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           _metadata: {},
         });
       }
-      // Fluxo Determinístico: Redirecionar sempre para /welcome após login
-      const target = nextPath && nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : "";
-      navigate(`/welcome${target}`, { replace: true });
+      // Fluxo Determinístico: Redirecionar sempre para /dashboard após login
+      const target = nextPath && nextPath !== "/" ? nextPath : "/dashboard";
+      navigate(target, { replace: true });
     }
   };
 
