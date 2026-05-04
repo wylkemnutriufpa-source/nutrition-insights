@@ -90,8 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setProfile((profileRes.data as any) ?? null);
       setRoles(((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[]);
     } catch (e) {
-      console.error("[Auth] fetchData error (non-fatal):", e);
-      // Não bloqueia: mantém usuário autenticado mesmo sem profile/roles
+      if (import.meta.env.DEV) {
+        console.error("[Auth] fetchData error (non-fatal):", e);
+      }
+      // Non-blocking fallback: empty profile and roles
       setProfile(null);
       setRoles([]);
     }
@@ -112,7 +114,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
       }
     } catch (e: any) {
-      console.error("Error checking subscription:", e);
+      if (import.meta.env.DEV) {
+        console.error("Error checking subscription:", e);
+      }
     } finally {
       subCheckRef.current = false;
     }
@@ -134,7 +138,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .eq("user_id", user.id);
     
     if (error) {
-      console.error("Error updating mode:", error);
+      if (import.meta.env.DEV) {
+        console.error("Error updating mode:", error);
+      }
       // Revert if error
       await fetchData(user.id);
       throw error;
@@ -152,12 +158,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(session);
           setUser(session?.user ?? null);
           if (session?.user) {
-            // Fetch em background, sem bloquear o loading inicial
-            fetchData(session.user.id).catch((e) => console.error("[Auth] bg fetch:", e));
+            // Background fetch, non-blocking
+            fetchData(session.user.id).catch((e) => {
+              if (import.meta.env.DEV) console.error("[Auth] bg fetch:", e);
+            });
           }
         }
       } catch (e) {
-        console.error("Recovery init error", e);
+        if (import.meta.env.DEV) console.error("Recovery init error", e);
       } finally {
         if (mounted) setLoading(false);
       }
@@ -174,8 +182,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
 
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
-          // Background fetch — não bloqueia UI
-          fetchData(currentUser.id).catch((e) => console.error("[Auth] state fetch:", e));
+          // Background fetch, non-blocking
+          fetchData(currentUser.id).catch((e) => {
+            if (import.meta.env.DEV) console.error("[Auth] state fetch:", e);
+          });
         } else if (event === "SIGNED_OUT") {
           setProfile(null);
           setRoles([]);
@@ -213,7 +223,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isLojista = (roles as string[]).includes("lojista");
 
   const experienceRole: "nutritionist" | "patient" = (isNutritionist || isPersonal || isAdmin) ? "nutritionist" : "patient";
-  const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode as any) || "basic";
+  const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode === "pro" || profile?.experience_mode === "advanced") 
+    ? profile.experience_mode 
+    : "basic";
 
   return (
     <AuthContext.Provider
