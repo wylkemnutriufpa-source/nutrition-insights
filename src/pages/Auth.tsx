@@ -96,9 +96,9 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           _metadata: {},
         });
       }
-      // Fluxo Determinístico: Redirecionar sempre para /welcome após login
-      const target = nextPath && nextPath !== "/" ? `?next=${encodeURIComponent(nextPath)}` : "";
-      navigate(`/welcome${target}`, { replace: true });
+      // Fluxo Determinístico: Redirecionar sempre para /dashboard após login
+      const target = nextPath && nextPath !== "/" ? nextPath : "/dashboard";
+      navigate(target, { replace: true });
     }
   };
 
