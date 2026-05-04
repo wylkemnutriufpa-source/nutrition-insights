@@ -619,7 +619,11 @@ export default function MealPlans() {
               return (
                 <motion.div key={p.id} whileHover={{ y: -2 }}
                   className="glass rounded-xl p-5 shadow-card cursor-pointer"
-                  onClick={() => navigate(`/meal-plans/${p.id}`)}
+                  onClick={() => {
+                    const isV3 = p.editor_version === "v3";
+                    const path = isV3 ? `/v3/${p.patient_id}?planId=${p.id}` : `/meal-plans/${p.id}`;
+                    navigate(path);
+                  }}
                 >
                   <div className="flex items-start justify-between">
                     <div>
