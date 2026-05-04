@@ -347,8 +347,10 @@ function HomeRedirect() {
   if (authStatus === "authenticated") {
     return <DashboardRedirect />;
   }
-  return <Index />;
+  // Se não estiver logado na home, manda para o auth
+  return <Navigate to="/auth" replace />;
 }
+
 
 export const AppRoutes = () => {
   const { isDegraded, isOrphan } = useAppState();
