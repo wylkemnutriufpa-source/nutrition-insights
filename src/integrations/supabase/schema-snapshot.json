@@ -1,7 +1,7 @@
 {
   "$schema": "./schema-snapshot.schema.json",
-  "lastMigration": "20260503210248_ad843ca0-7dd5-4391-91a5-0854ddb963db.sql",
-  "migrationsCount": 651,
+  "lastMigration": "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql",
+  "migrationsCount": 663,
   "tables": {
     "meal_plan_items": [
       "calories_target",
@@ -36,6 +36,7 @@
       "description",
       "editor_version",
       "end_date",
+      "engine_version",
       "generated_by",
       "generation_metadata",
       "generation_source",
@@ -57,7 +58,9 @@
       "plan_mode",
       "plan_status",
       "plan_type",
+      "plan_version",
       "previous_plan_id",
+      "protocol_used",
       "quality_alerts",
       "requires_regeneration",
       "sharing_expires_at",
@@ -216,6 +219,7 @@
       "phone",
       "plateau_probability",
       "preferred_editor_version",
+      "protocol_type",
       "ranking_nickname",
       "regain_probability",
       "search_vector",
