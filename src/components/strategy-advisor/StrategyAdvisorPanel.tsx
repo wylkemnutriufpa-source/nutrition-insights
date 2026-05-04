@@ -47,10 +47,10 @@ export default function StrategyAdvisorPanel({ patientId, onStrategyConfirmed, o
         .limit(1)
         .maybeSingle();
 
-      const { data: physicalAssessment } = await supabase.from("patient_body_assessments")
-        .select("weight, height")
+      const { data: bodyAssessment } = await supabase.from("patient_body_assessments")
+        .select("weight_kg, height_m, body_fat_percent")
         .eq("patient_id", patientId)
-        .order("created_at", { ascending: false })
+        .order("assessment_date", { ascending: false })
         .limit(1)
         .maybeSingle();
 
