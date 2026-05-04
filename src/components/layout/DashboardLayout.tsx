@@ -29,7 +29,7 @@ import { useNutritionistRealtime } from "@/hooks/useNutritionistRealtime";
 import { useRefetchOnFocus } from "@/hooks/useRefetchOnFocus";
 import { useRealtimeEventBus } from "@/hooks/useRealtimeEventBus";
 import WorkspaceContextSwitcher from "@/components/layout/WorkspaceContextSwitcher";
-import { WorkspaceContext, useWorkspaceContextState, useWorkspaceContext } from "@/hooks/useWorkspaceContext";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import SystemHealthBadge from "./SystemHealthBadge";
 import { StabilityZone } from "@/components/common/StabilityZone";
 
@@ -549,7 +549,7 @@ function DynamicSidebar({
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { profile, signOut, isPatient, isNutritionist, isPersonal, isAdmin, loading: authLoading } = useAuth();
   const isProRole = isNutritionist || isPersonal || isAdmin;
-  const workspaceCtx = useWorkspaceContextState(isProRole, isPatient, authLoading);
+
   const location = useLocation();
   const isMobile = useIsMobile();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
@@ -649,8 +649,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
 
   if (isMobile) {
     return (
-      <WorkspaceContext.Provider value={workspaceCtx}>
       <div className="min-h-screen bg-background">
+
         <div className="fixed top-0 left-0 right-0 z-50 h-16 bg-card border-b border-border flex items-center justify-between px-4">
           <div className="flex items-center gap-3">
             <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
@@ -693,13 +693,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           </div>
         </main>
       </div>
-      </WorkspaceContext.Provider>
     );
+
   }
 
   return (
-    <WorkspaceContext.Provider value={workspaceCtx}>
     <div className="min-h-screen flex bg-background">
+
       <motion.aside
         initial={false}
         animate={{ width: collapsed ? 72 : 260 }}
@@ -739,6 +739,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </ErrorBoundary>
       )}
     </div>
-    </WorkspaceContext.Provider>
   );
 }
+
