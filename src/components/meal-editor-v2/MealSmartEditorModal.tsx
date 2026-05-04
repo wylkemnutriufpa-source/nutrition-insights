@@ -268,9 +268,9 @@ export function MealSmartEditorModal({
   )).length > substitutionCount;
 
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl [&>button]:z-[80]"
+        className="max-w-4xl max-h-[90vh] flex flex-col p-0 gap-0 overflow-hidden border-none shadow-2xl"
       >
         <DialogHeader className="px-4 py-3 sm:px-6 sm:py-4 pr-12 sm:pr-14 bg-gradient-to-r from-primary/10 via-background to-background border-b relative">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
