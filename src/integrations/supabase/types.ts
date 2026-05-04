@@ -7470,6 +7470,7 @@ export type Database = {
           description: string | null
           editor_version: string | null
           end_date: string | null
+          engine_version: string | null
           generated_by: string | null
           generation_metadata: Json | null
           generation_source: string | null
@@ -7491,7 +7492,9 @@ export type Database = {
           plan_mode: Database["public"]["Enums"]["plan_mode_type"]
           plan_status: string
           plan_type: string | null
+          plan_version: string | null
           previous_plan_id: string | null
+          protocol_used: string | null
           quality_alerts: Json | null
           requires_regeneration: boolean | null
           sharing_expires_at: string | null
@@ -7527,6 +7530,7 @@ export type Database = {
           description?: string | null
           editor_version?: string | null
           end_date?: string | null
+          engine_version?: string | null
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
@@ -7548,7 +7552,9 @@ export type Database = {
           plan_mode?: Database["public"]["Enums"]["plan_mode_type"]
           plan_status?: string
           plan_type?: string | null
+          plan_version?: string | null
           previous_plan_id?: string | null
+          protocol_used?: string | null
           quality_alerts?: Json | null
           requires_regeneration?: boolean | null
           sharing_expires_at?: string | null
@@ -7584,6 +7590,7 @@ export type Database = {
           description?: string | null
           editor_version?: string | null
           end_date?: string | null
+          engine_version?: string | null
           generated_by?: string | null
           generation_metadata?: Json | null
           generation_source?: string | null
@@ -7605,7 +7612,9 @@ export type Database = {
           plan_mode?: Database["public"]["Enums"]["plan_mode_type"]
           plan_status?: string
           plan_type?: string | null
+          plan_version?: string | null
           previous_plan_id?: string | null
+          protocol_used?: string | null
           quality_alerts?: Json | null
           requires_regeneration?: boolean | null
           sharing_expires_at?: string | null
@@ -14780,6 +14789,7 @@ export type Database = {
           phone: string | null
           plateau_probability: number | null
           preferred_editor_version: string | null
+          protocol_type: string | null
           ranking_nickname: string | null
           regain_probability: number | null
           search_vector: unknown
@@ -14838,6 +14848,7 @@ export type Database = {
           phone?: string | null
           plateau_probability?: number | null
           preferred_editor_version?: string | null
+          protocol_type?: string | null
           ranking_nickname?: string | null
           regain_probability?: number | null
           search_vector?: unknown
@@ -14896,6 +14907,7 @@ export type Database = {
           phone?: string | null
           plateau_probability?: number | null
           preferred_editor_version?: string | null
+          protocol_type?: string | null
           ranking_nickname?: string | null
           regain_probability?: number | null
           search_vector?: unknown
