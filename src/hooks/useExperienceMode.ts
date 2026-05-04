@@ -268,14 +268,14 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     if (hydratedFromDb.current) return;
     
     const hydrate = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        hydratedFromDb.current = true;
-        return;
-      }
-
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          setIsLoading(false);
+          hydratedFromDb.current = true;
+          return;
+        }
+
         const fetchPromise = supabase
           .from("profiles")
           .select("experience_mode")
