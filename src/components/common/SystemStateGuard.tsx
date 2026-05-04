@@ -9,7 +9,7 @@ import { AnimatePresence } from "framer-motion";
  * para o dashboard. Monitora a carga de dados do perfil e assinaturas.
  */
 export function SystemStateGuard({ children }: { children: React.ReactNode }) {
-  const { authStatus, loading: authLoading, profile, isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
+  const { authStatus, loading: authLoading, profile, isNutritionist, isPersonal, isAdmin } = useAuth();
   const [showExperience, setShowExperience] = useState(false);
   
   const dataReady = !authLoading && !!profile;
@@ -34,6 +34,8 @@ export function SystemStateGuard({ children }: { children: React.ReactNode }) {
           <NeuroEntryExperience 
             dataReady={dataReady} 
             userRole={userRole}
+            onComplete={handleComplete} 
+          />
         )}
       </AnimatePresence>
       {children}
