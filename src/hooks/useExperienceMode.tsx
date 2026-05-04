@@ -61,6 +61,6 @@ export function useExperienceMode() {
     lastError: null,
     isOffline: false,
     pendingQueueSize: 0,
-    queueStats: { processed: 0, failed: 0 },
+    queueStats: { processed: 0, failed: 0, isFull: false, hasExpired: false },
   };
 }
