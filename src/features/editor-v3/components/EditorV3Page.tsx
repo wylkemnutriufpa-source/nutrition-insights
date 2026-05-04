@@ -635,14 +635,14 @@ const EditorV3Page = () => {
     let newQuantity = 1;
 
     if (autoAdjust) {
-      const currentMacros = calculateItemMacros(currentItem, currentItem.quantity);
-      const targetKcalPerUnit = target.kcal; 
+      const currentMacros = recalculateMacros(currentItem, currentItem.quantity);
+      const targetKcalPerUnit = target.kcal || target.calories || 0; 
       
       if (targetKcalPerUnit > 0) {
         if (target.measurementType === 'gram' || target.measurementType === 'ml') {
-          newQuantity = Math.round((currentMacros.kcal / targetKcalPerUnit) * 100);
+          newQuantity = Math.round((currentMacros.calories / targetKcalPerUnit) * 100);
         } else {
-          newQuantity = Math.round(currentMacros.kcal / targetKcalPerUnit);
+          newQuantity = Math.round(currentMacros.calories / targetKcalPerUnit);
         }
       } else {
         newQuantity = currentItem.quantity;
@@ -653,19 +653,16 @@ const EditorV3Page = () => {
       else newQuantity = 1;
     }
 
+    const safeQuantity = applyClinicalSafety(target.name, newQuantity);
+    const macros = recalculateMacros(target, safeQuantity);
+
     updateMealItem(mealId, instanceId, {
-      name: target.name,
-      kcal: target.kcal,
-      calories: target.kcal,
-      protein: target.protein,
-      carbs: target.carbs,
-      fat: target.fat,
-      portionLabel: target.portionLabel,
-      imageUrl: target.imageUrl,
-      ingredients: target.ingredients,
-      isMarmita: target.isMarmita,
-      measurementType: target.measurementType,
-      quantity: newQuantity
+      ...target,
+      ...macros,
+      kcal: macros.calories,
+      calories: macros.calories,
+      instanceId,
+      quantity: safeQuantity
     });
     
     setReplacementPending(null);
@@ -1008,8 +1005,8 @@ const EditorV3Page = () => {
                   <div className="flex items-center gap-5">
                     {item.imageUrl && <img src={item.imageUrl} alt={item.name} className="w-14 h-14 rounded-xl object-cover" />}
                     <div>
-                      <p className="font-black text-[15px] tracking-tight text-white">{formatPortion(item.quantity ?? 1, item.portionUnit, item.measurementType)} {item.name}</p>
-                      <p className="text-[11px] font-bold text-white/50">{Math.round((item.quantity ?? 1) * (item.calories ?? 0) * ((item.measurementType === 'gram' || item.measurementType === 'ml') ? 0.01 : 1))} kcal</p>
+                      <p className="font-black text-[15px] tracking-tight text-white">{formatPortion(item)} {item.name}</p>
+                      <p className="text-[11px] font-bold text-white/50">{Math.round(recalculateMacros(item, item.quantity).calories)} kcal</p>
                     </div>
                   </div>
                   <Button variant="ghost" size="icon" onClick={(e) => { e.stopPropagation(); removeFood(meal.id, item.instanceId); }} className="h-10 w-10 text-rose-500/40 hover:text-rose-500 hover:bg-rose-500/10 rounded-xl"><Trash2 className="w-4 h-4" /></Button>
