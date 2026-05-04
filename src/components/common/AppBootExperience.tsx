@@ -61,17 +61,17 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           className="fixed inset-0 z-[150] flex items-center justify-center overflow-hidden bg-black cursor-pointer"
           onClick={handleFinish}
         >
-          {/* Video — Perfectly centered and covering */}
-          <div className="absolute inset-0 flex items-center justify-center">
+          {/* Video — Perfectly centered and contained for logo clarity */}
+          <div className="absolute inset-0 flex items-center justify-center bg-black">
             <video
-              className="min-w-full min-h-full w-auto h-auto object-cover"
+              className="w-full h-full max-w-[800px] max-h-[800px] object-contain"
               src="/videos/logo-animated.mp4"
               autoPlay
               muted
               loop
               playsInline
               preload="auto"
-              style={{ filter: "brightness(0.9) contrast(1.1)" }}
+              style={{ filter: "brightness(1) contrast(1)" }}
             />
           </div>
 
