@@ -1001,7 +1001,21 @@ export default function MealPlanEditorV2() {
             <Button
               variant="ghost"
               size="icon"
-              onClick={() => isFullscreen ? setIsFullscreen(false) : (plan?.patient_id ? navigate(`/patients/${plan.patient_id}`) : navigate("/meal-plans"))}
+              onClick={() => {
+                if (isFullscreen) {
+                  setIsFullscreen(false);
+                } else {
+                  const searchParams = new URLSearchParams(window.location.search);
+                  const returnTo = searchParams.get('returnTo');
+                  if (returnTo) {
+                    navigate(decodeURIComponent(returnTo));
+                  } else if (plan?.patient_id) {
+                    navigate(`/patients/${plan.patient_id}`);
+                  } else {
+                    navigate("/meal-plans");
+                  }
+                }
+              }}
               className="shrink-0"
             >
               <ArrowLeft className="w-5 h-5" />
