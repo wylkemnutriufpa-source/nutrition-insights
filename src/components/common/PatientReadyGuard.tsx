@@ -48,20 +48,11 @@ export default function PatientReadyGuard({ children, context, patientId }: Prop
     setGraceDone(false);
   }, [result.status, targetId, context]);
 
-  // Block dashboard/critical screens if not in a fluid state
-  // IMPORTANT: This check must stay AFTER all hooks to avoid React rule violations
-  const isAllowedPath = ONBOARDING_ALLOWED_ROUTES.some(r => location.pathname.startsWith(r));
+  // EMERGENCY BYPASS: Access always allowed in incident mode
+  return <>{children}</>;
   
-  const shouldBlockJourney = 
-    isPatient && 
-    !journeyLoading && 
-    !isAllowedPath && 
-    journeyStatus && 
-    (journeyStatus === "onboarding_slides" || journeyStatus === "anamnesis");
-
-  if (shouldBlockJourney) {
-    console.log(`[PatientReadyGuard] Blocking access to ${location.pathname} for status ${journeyStatus}`);
-  }
+  /* Original logic preserved:
+  const isAllowedPath = false; // Suspend access check
 
   // Profissional sem patientId explícito: não bloqueia nada
   if (!isPatient && !patientId) return <>{children}</>;
