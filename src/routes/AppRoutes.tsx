@@ -337,12 +337,6 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
 
   // EMERGENCY BYPASS: Always allow patient access in incident mode
   return <>{children}</>;
-  
-  /* Original logic preserved:
-  if ((isPatient || isInvitedPatient) && !hasConsent && !["/consent", "/auth", "/settings", "/welcome", "/onboarding"].some(r => location.pathname.startsWith(r))) {
-    return <Navigate to="/consent" replace />;
-  }
-  */
   return <>{children}</>;
 }
 
