@@ -163,6 +163,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
       setError(null);
 
+      // Safety timeout para garantir que o loading termine mesmo se o Supabase travar
+      const safetyTimer = setTimeout(() => {
+        if (loading) {
+          console.warn("[Auth] Initialization safety timeout triggered.");
+          setLoading(false);
+        }
+      }, 5000);
+
       try {
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         if (sessionError) throw sessionError;
@@ -174,13 +182,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
 
         if (currentUser) {
-          await fetchData(currentUser.id);
+          // Timeout menor para o fetch de dados do perfil
+          await Promise.race([
+            fetchData(currentUser.id),
+            new Promise((_, reject) => setTimeout(() => reject(new Error("Timeout fetching profile")), 4000))
+          ]).catch(e => console.error("[Auth] Profile fetch failed/timed out:", e));
+          
           checkSubscription();
         }
       } catch (err: any) {
         logError("auth_error", "initialization", err.message);
         setError(err instanceof Error ? err : new Error(String(err)));
       } finally {
+        clearTimeout(safetyTimer);
         if (mounted) setLoading(false);
       }
     };
