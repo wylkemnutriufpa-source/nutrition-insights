@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, AuthStatus } from "@/lib/auth";
-import BrainLoader from "@/components/common/BrainLoader";
+import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 
 /**
  * Função utilitária para blindagem da navegação.
@@ -56,21 +56,24 @@ export default function Welcome() {
     }
   }, [roles, authStatus, loading, navigate, nextPath]);
 
-  return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-background">
-      <div className="max-w-md w-full text-center space-y-8 p-6">
-        <div className="flex justify-center">
-          <BrainLoader />
-        </div>
-        <div className="space-y-2">
-          <h1 className="text-2xl font-bold font-display animate-pulse">
-            Sincronizando sua jornada...
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Preparando seu ambiente personalizado.
-          </p>
-        </div>
-      </div>
-    </div>
-  );
+  // Mensagens de etapa baseadas no estado real do auth/roles
+  const stageMessages =
+    authStatus === "loading" || loading
+      ? [
+          "Verificando sua sessão…",
+          "Carregando autenticação…",
+          "Validando credenciais…",
+        ]
+      : authStatus === "authenticated" && roles.length === 0
+      ? [
+          "Carregando suas permissões…",
+          "Sincronizando perfil clínico…",
+          "Preparando seu workspace…",
+        ]
+      : [
+          "Quase lá…",
+          "Direcionando para sua jornada…",
+        ];
+
+  return <BrainLoaderScreen messages={stageMessages} visible />;
 }
