@@ -1220,11 +1220,8 @@ export default function Index() {
     return () => clearTimeout(timer);
   }, [loading, onboardingKey, tourKey, showIntro]);
 
-  if (!loading && !user) {
-    return <Navigate to="/auth" replace />;
-  }
-
   if (showIntro) {
+
     return (
       <CinematicIntro 
         onComplete={() => {

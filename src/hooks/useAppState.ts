@@ -19,9 +19,3 @@ export function useAppState() {
     isOrphan,
   };
 }
-
-// AppStateProvider removed to simplify boot. 
-// Components can now call useAppState() directly as it consumes useAuth.
-export function AppStateProvider({ children }: { children: React.ReactNode }) {
-  return <>{children}</>;
-}
