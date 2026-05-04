@@ -28,6 +28,15 @@ export const WorkspaceContext = createContext<WorkspaceContextValue>({
 
 export function useWorkspaceContext() {
   const context = useContext(WorkspaceContext);
+  if (context === undefined || context.setContext === undefined) {
+    return {
+      activeContext: "professional",
+      setContext: () => {},
+      isHybridUser: false,
+      isProfessionalContext: true,
+      isPatientContext: false,
+    } as WorkspaceContextValue;
+  }
   return context;
 }
 
