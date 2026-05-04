@@ -1,6 +1,6 @@
 import { Routes, Route, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { useAppState } from "@/hooks/useAppState";
 import { DegradedModeBanner } from "@/components/common/DegradedModeBanner";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
