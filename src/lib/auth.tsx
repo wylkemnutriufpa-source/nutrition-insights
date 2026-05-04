@@ -148,6 +148,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (user) await fetchData(user.id);
   };
 
+  const setMode = async (m: string) => {
+    if (!user) return;
+    const { error } = await supabase
+      .from("profiles")
+      .update({ experience_mode: m } as any)
+      .eq("user_id", user.id);
+    
+    if (error) throw error;
+    await fetchData(user.id);
+  };
+
   useEffect(() => {
     let mounted = true;
 
