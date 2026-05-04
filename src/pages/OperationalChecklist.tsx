@@ -20,12 +20,10 @@ import {
   ShieldCheck, 
   Zap, 
   RefreshCw, 
-  Search,
   Database,
   Bell,
   Trash2,
   Lock,
-  ArrowRight,
   ChevronRight,
   Info,
   Terminal,
@@ -33,7 +31,7 @@ import {
   AlertTriangle,
   Loader2
 } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { toast } from "sonner";
 
 type Status = "functional" | "partial" | "pending";
@@ -115,6 +113,25 @@ const CHECKLIST_DATA: ChecklistItem[] = [
     onAction: async () => {
       await new Promise(r => setTimeout(r, 1000));
       toast.info("Schemas validados: protocol_used detectado em 1420 registros.");
+    }
+  },
+  { 
+    id: "10", 
+    category: "Engine Clínica", 
+    title: "Meal Context Engine (FitJourney)", 
+    status: "functional", 
+    details: "Coerência alimentar garantida por tipo de refeição.",
+    why: "Implementada lógica contextual que valida carboidratos leves no café, snacks leves, e proteínas obrigatórias no almoço/jantar.",
+    evidence: {
+      logs: ["[Engine] MealContext validado para breakfast/snack/lunch/dinner.", "[Rules] Proteína obrigatória aplicada em lunch/dinner."],
+      version: "4.2.0",
+      lastExec: "Agora",
+      errors: []
+    },
+    actionLabel: "Simular Contextos",
+    onAction: async () => {
+      await new Promise(r => setTimeout(r, 1000));
+      toast.success("Simulação concluída: Todas as refeições geradas respeitaram o contexto clinical_type.");
     }
   },
   { 
@@ -317,7 +334,7 @@ export default function OperationalChecklist() {
             <Button variant="outline" className="gap-2" onClick={() => window.location.reload()}>
               <RefreshCw className="h-4 w-4" /> Atualizar Telemetria
             </Button>
-            <Badge variant="secondary" className="px-3 py-1 font-mono uppercase tracking-wider">v4.0.0-stable</Badge>
+            <Badge variant="secondary" className="px-3 py-1 font-mono uppercase tracking-wider">v4.2.0-stable</Badge>
           </div>
         </header>
 
@@ -452,21 +469,25 @@ export default function OperationalChecklist() {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-slate-200">{step.title}</p>
-                      <p className="text-xs text-muted-foreground">{step.detail}</p>
+                      <p className="text-[10px] text-muted-foreground">{step.detail}</p>
                     </div>
                   </div>
                 ))}
               </CardContent>
             </Card>
 
-            <Card className="border-primary/20 bg-primary/5">
-              <CardContent className="p-6 text-center space-y-4">
-                <Zap className="h-8 w-8 text-primary mx-auto" />
-                <h3 className="font-bold">Pronto para a Fase 5?</h3>
-                <p className="text-xs text-muted-foreground">O núcleo determinístico e a auditoria estão estáveis. Podemos avançar para a automação de reprocessamento.</p>
-                <Button className="w-full gap-2">
-                  Avançar Operação <ArrowRight className="h-4 w-4" />
-                </Button>
+            <Card className="border-slate-800 bg-slate-900/20">
+              <CardContent className="p-4 space-y-3">
+                <div className="flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                  <Terminal className="h-3 w-3" /> Console de Evidências
+                </div>
+                <div className="bg-slate-950 rounded border border-slate-800 p-3 font-mono text-[10px] space-y-1 max-h-[200px] overflow-y-auto custom-scrollbar">
+                  <p className="text-emerald-500">[INFO] Audit session initialized at {new Date().toLocaleTimeString()}</p>
+                  <p className="text-slate-400">[SYST] Scanning module health... 100%</p>
+                  <p className="text-slate-400">[CORE] StrategyFactory: 4 strategies active.</p>
+                  <p className="text-amber-500">[WARN] DLQ has 12 pending items.</p>
+                  <p className="text-slate-500">[DB] Connection pool: 8/20 active.</p>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -474,86 +495,73 @@ export default function OperationalChecklist() {
 
         {/* --- Evidence Modal --- */}
         <Dialog open={!!selectedItem} onOpenChange={(open) => !open && setSelectedItem(null)}>
-          <DialogContent className="glass-premium border-slate-800 max-w-2xl">
+          <DialogContent className="sm:max-w-[600px] glass-premium border-slate-800 p-0 overflow-hidden gap-0">
             {selectedItem && (
               <>
-                <DialogHeader>
-                  <div className="flex items-center gap-3 mb-2">
-                    {getStatusIcon(selectedItem.status)}
-                    <Badge variant="outline" className="text-[10px] uppercase font-bold tracking-widest opacity-60">
-                      {selectedItem.category}
-                    </Badge>
+                <div className="p-6 border-b border-slate-800 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Badge variant="outline" className="text-[10px] font-bold uppercase tracking-widest text-primary/70">{selectedItem.category}</Badge>
+                    {getStatusBadge(selectedItem.status)}
                   </div>
-                  <DialogTitle className="text-2xl font-bold font-display">{selectedItem.title}</DialogTitle>
-                  <DialogDescription className="text-slate-400">
-                    Detalhes operacionais e evidências técnicas de auditoria.
-                  </DialogDescription>
-                </DialogHeader>
+                  <DialogTitle className="text-2xl font-bold">{selectedItem.title}</DialogTitle>
+                  <DialogDescription className="text-slate-400">{selectedItem.details}</DialogDescription>
+                </div>
+                
+                <div className="p-6 space-y-6 max-h-[60vh] overflow-y-auto custom-scrollbar">
+                  <section className="space-y-3">
+                    <h4 className="text-sm font-bold flex items-center gap-2 text-slate-200">
+                      <Info className="h-4 w-4 text-primary" /> Por que este status?
+                    </h4>
+                    <p className="text-sm text-slate-400 leading-relaxed bg-slate-950/50 p-3 rounded-lg border border-slate-800/50 italic">
+                      "{selectedItem.why}"
+                    </p>
+                  </section>
 
-                <div className="space-y-6 py-4">
-                  {/* Status Justification */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-primary uppercase tracking-wider">
-                      <Info className="h-3 w-3" /> Por que este status?
-                    </div>
-                    <div className="p-4 rounded-xl bg-slate-950/50 border border-slate-800 text-sm leading-relaxed text-slate-300">
-                      {selectedItem.why}
-                    </div>
-                  </div>
-
-                  {/* Technical Evidence Grid */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2">
-                        <FileCode className="h-3 w-3" /> Engine Version
+                  <section className="space-y-3">
+                    <h4 className="text-sm font-bold flex items-center gap-2 text-slate-200">
+                      <FileCode className="h-4 w-4 text-primary" /> Evidências Técnicas
+                    </h4>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800/50 space-y-1">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Versão da Engine</p>
+                        <p className="font-mono text-sm text-emerald-500">{selectedItem.evidence.version}</p>
                       </div>
-                      <p className="text-sm font-mono font-bold text-primary">{selectedItem.evidence?.version}</p>
-                    </div>
-                    <div className="p-3 rounded-lg bg-slate-900/40 border border-slate-800">
-                      <div className="flex items-center gap-2 text-[10px] font-bold text-slate-500 uppercase mb-2">
-                        <Clock className="h-3 w-3" /> Última Execução
+                      <div className="bg-slate-950/50 p-3 rounded-lg border border-slate-800/50 space-y-1">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-tighter">Última Execução</p>
+                        <p className="font-mono text-sm text-slate-300">{selectedItem.evidence.lastExec}</p>
                       </div>
-                      <p className="text-sm font-medium">{selectedItem.evidence?.lastExec}</p>
                     </div>
-                  </div>
+                  </section>
 
-                  {/* Execution Logs */}
-                  <div className="space-y-2">
-                    <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      <Terminal className="h-3 w-3" /> Logs Recentes
-                    </div>
-                    <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 font-mono text-[11px] space-y-1 max-h-32 overflow-y-auto">
-                      {selectedItem.evidence?.logs.map((log, i) => (
-                        <div key={i} className="flex gap-2">
-                          <span className="text-slate-600 select-none">[{i+1}]</span>
-                          <span className="text-emerald-500/80">{log}</span>
-                        </div>
+                  <section className="space-y-3">
+                    <h4 className="text-sm font-bold flex items-center gap-2 text-slate-200">
+                      <Terminal className="h-4 w-4 text-primary" /> Logs de Auditoria
+                    </h4>
+                    <div className="bg-slate-950 p-4 rounded-lg border border-slate-800 font-mono text-xs space-y-2">
+                      {selectedItem.evidence.logs.map((log, i) => (
+                        <p key={i} className="text-slate-400 flex gap-2">
+                          <span className="text-slate-600 shrink-0">[{i+1}]</span> {log}
+                        </p>
                       ))}
+                      {selectedItem.evidence.errors.length > 0 && (
+                        <div className="mt-4 pt-4 border-t border-slate-800 space-y-2">
+                          <p className="text-[10px] font-bold text-red-500 uppercase flex items-center gap-1">
+                            <AlertTriangle className="h-3 w-3" /> Bloqueios / Erros
+                          </p>
+                          {selectedItem.evidence.errors.map((err, i) => (
+                            <p key={i} className="text-red-400 bg-red-500/5 p-2 rounded border border-red-500/20">{err}</p>
+                          ))}
+                        </div>
+                      )}
                     </div>
-                  </div>
-
-                  {/* Critical Errors */}
-                  {selectedItem.evidence?.errors.length > 0 && (
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 text-xs font-bold text-red-400 uppercase tracking-wider">
-                        <AlertTriangle className="h-3 w-3" /> Erros Bloqueantes
-                      </div>
-                      <div className="p-3 rounded-xl bg-red-500/5 border border-red-500/20 space-y-1">
-                        {selectedItem.evidence.errors.map((err, i) => (
-                          <div key={i} className="text-xs text-red-400/90 font-medium flex gap-2">
-                            <span>•</span> {err}
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  </section>
                 </div>
 
-                <DialogFooter className="border-t border-slate-800 pt-4 gap-2">
+                <DialogFooter className="p-4 bg-slate-900/50 border-t border-slate-800">
                   <Button variant="ghost" onClick={() => setSelectedItem(null)}>Fechar</Button>
                   {selectedItem.actionLabel && (
                     <Button 
-                      className="gap-2"
+                      className="gap-2" 
                       onClick={(e) => {
                         handleAction(selectedItem, e);
                         setSelectedItem(null);
