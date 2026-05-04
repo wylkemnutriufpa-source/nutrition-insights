@@ -181,7 +181,7 @@ export function useSmartMenu() {
     const fetchData = async () => {
       try {
         const [itemsRes, usageRes] = await Promise.all([
-          supabase.from("menu_items").select("*").eq("is_active", true).order("order_default"),
+          supabase.from("menu_items").select("*, feature").eq("is_active", true).order("order_default"),
           supabase.from("user_menu_usage").select("menu_item_id,clicks_count,last_access_at,usage_score").eq("user_id", user.id),
         ]);
 
