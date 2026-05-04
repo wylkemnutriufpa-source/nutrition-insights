@@ -315,21 +315,36 @@ function DashboardRedirect() {
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, isNutritionist, isAdmin, isPersonal } = useAuth();
   
+  console.log(`[NutritionistRoute] Status: ${authStatus} | Nutri=${isNutritionist}, Admin=${isAdmin}, Personal=${isPersonal}`);
+  
   if (authStatus === "loading") return <PageLoader />;
-  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
-  if (!isNutritionist && !isAdmin && !isPersonal) return <Navigate to="/client/dashboard" replace />;
+  if (authStatus === "unauthenticated") {
+    console.warn("[NutritionistRoute] Não autenticado. Redirecionando para /auth");
+    return <Navigate to="/auth" replace />;
+  }
+  if (!isNutritionist && !isAdmin && !isPersonal) {
+    console.warn("[NutritionistRoute] Sem permissão. Redirecionando para /client/dashboard");
+    return <Navigate to="/client/dashboard" replace />;
+  }
   
   return <>{children}</>;
 }
 
+
 function PatientRoute({ children }: { children: React.ReactNode }) {
   const { authStatus } = useAuth();
   
+  console.log(`[PatientRoute] Status: ${authStatus}`);
+  
   if (authStatus === "loading") return <PageLoader />;
-  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
+  if (authStatus === "unauthenticated") {
+    console.warn("[PatientRoute] Não autenticado. Redirecionando para /auth");
+    return <Navigate to="/auth" replace />;
+  }
   
   return <>{children}</>;
 }
+
 
 function RedirectWithParams({ to }: { to: string }) {
   const params = useParams();
