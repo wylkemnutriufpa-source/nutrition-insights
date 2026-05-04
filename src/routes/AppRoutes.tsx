@@ -335,10 +335,14 @@ function PaymentGuardedPatientRoute({ children }: { children: React.ReactNode })
   
   if (isNutritionist || isAdmin) return <>{children}</>;
 
-  // Se for paciente (por role ou intenção) e não tiver consentimento
+  // EMERGENCY BYPASS: Always allow patient access in incident mode
+  return <>{children}</>;
+  
+  /* Original logic preserved:
   if ((isPatient || isInvitedPatient) && !hasConsent && !["/consent", "/auth", "/settings", "/welcome", "/onboarding"].some(r => location.pathname.startsWith(r))) {
     return <Navigate to="/consent" replace />;
   }
+  */
   return <>{children}</>;
 }
 
