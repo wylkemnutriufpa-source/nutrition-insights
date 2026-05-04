@@ -1,24 +1,35 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import BrainLoader from "@/components/common/BrainLoader";
 
 export default function Welcome() {
-  const { roles, authStatus, profile } = useAuth();
+  const { roles, authStatus, profile, loading } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next");
+  const navigatedRef = useRef(false);
 
   useEffect(() => {
+    // Navega APENAS UMA VEZ, e só quando temos certeza absoluta do estado
+    if (navigatedRef.current) return;
+    if (loading) return;
     if (authStatus === "loading") return;
 
     if (authStatus === "unauthenticated") {
+      navigatedRef.current = true;
       navigate("/auth", { replace: true });
       return;
     }
 
     if (authStatus === "authenticated") {
-      // Deterministic navigation based ONLY on roles loaded from database
+      // Aguarda roles OU profile estarem carregados — sem isso, não navega
+      if (roles.length === 0 && !profile) {
+        return; // permanece em loading visual
+      }
+
+      navigatedRef.current = true;
+
       if (roles.includes("nutritionist") || roles.includes("personal") || roles.includes("admin")) {
         navigate(nextPath || "/admin/dashboard", { replace: true });
         return;
@@ -29,15 +40,10 @@ export default function Welcome() {
         return;
       }
 
-      // Fallback para quando o usuário está logado mas ainda não tem perfil/roles carregados
-      // Se já carregou o status de auth mas os dados estão vazios, assumimos paciente como padrão seguro
-      if (roles.length === 0) {
-        console.log("[Welcome] Sem roles identificadas, direcionando para visão segura de paciente.");
-        navigate(nextPath || "/client/dashboard", { replace: true });
-        return;
-      }
+      // Sem role definida mas com profile: assume paciente como destino seguro
+      navigate(nextPath || "/client/dashboard", { replace: true });
     }
-  }, [roles, authStatus, profile, navigate, nextPath]);
+  }, [roles, authStatus, profile, loading, navigate, nextPath]);
 
   return (
     <div className="min-h-screen flex flex-col items-center justify-center bg-background">
