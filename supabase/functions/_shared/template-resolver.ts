@@ -451,6 +451,11 @@ export function buildMealItemFromTemplate(
     protein_target: safeP,
     carbs_target: safeC,
     fat_target: safeF,
+    edit_metadata: {
+      substitutions_json: subJson.length > 0 ? subJson : [],
+      template_id: template.id,
+      scale_factor: scaleFactor,
+    },
     _source: "template_resolver",
     _template_id: template.id,
     _scale_factor: scaleFactor,
