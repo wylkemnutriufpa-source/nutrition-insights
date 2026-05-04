@@ -9,7 +9,7 @@ export default function ExperienceRouteGuard({ children }: { children: React.Rea
   // Public or always visible routes bypass the check
   const isPublic = [
     "/auth", "/auth/confirm", "/reset-password", "/invitation", "/convite",
-    "/landing", "/privacy", "/terms", "/status", "/status-page"
+    "/landing", "/privacy", "/terms", "/status", "/status-page", "/welcome"
   ].some(p => location.pathname.startsWith(p));
 
   if (isPublic) return <>{children}</>;

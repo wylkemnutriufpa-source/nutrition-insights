@@ -8,6 +8,9 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   const location = useLocation();
 
   // Simple validation to ensure user is in the correct context for the route
+  const isAuthRoute = ["/auth", "/welcome", "/auth/confirm", "/reset-password"].some(p => location.pathname.startsWith(p));
+  if (isAuthRoute) return <>{children}</>;
+
   if (location.pathname.startsWith("/admin") && !isProfessionalContext) {
      return <Navigate to="/client/dashboard" replace />;
   }
