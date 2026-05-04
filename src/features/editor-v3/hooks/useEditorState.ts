@@ -410,7 +410,8 @@ export const useEditorState = create<EditorState>()(
                       ...calculatedMacros, 
                       calories: calculatedMacros.kcal,
                       instanceId: makeInstanceId(), 
-                      quantity: 1 
+                      quantity: 1,
+                      substitutions: [] // Contrato V3
                     }
                   ] 
                 }
@@ -432,7 +433,7 @@ export const useEditorState = create<EditorState>()(
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
-              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: initialQuantity, locked: false }] }
+              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: initialQuantity, locked: false, substitutions: [] }] }
               : m
           ),
           planStatus: 'draft',
@@ -454,6 +455,7 @@ export const useEditorState = create<EditorState>()(
             instanceId: makeInstanceId(),
             quantity: initialQuantity,
             locked: false,
+            substitutions: []
           };
         });
         set((state) => ({

@@ -34,7 +34,8 @@ const createMealItem = (food: Food | undefined, quantity: number): MealItem | nu
     ...macros, // Override with recalculated values (NÃO confiar em valores vindos da engine)
     instanceId: makeId(),
     quantity: safeQuantity,
-    locked: food.isMarmita || false
+    locked: food.isMarmita || false,
+    substitutions: [] // Contrato V3: substitutions sempre array
   };
 };
 

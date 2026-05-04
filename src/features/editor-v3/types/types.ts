@@ -32,7 +32,7 @@ export interface MealItem extends Food {
   instanceId: string;
   quantity: number; 
   selectedUnit?: string;
-  substitutions?: Food[];
+  substitutions: Food[]; // Definido como obrigatório para evitar null/undefined
   description?: string;
   instructions?: string;
   ingredients?: any[];

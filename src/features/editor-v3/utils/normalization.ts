@@ -63,7 +63,8 @@ export function normalizeMeals(meals: Meal[]): Meal[] {
       quantity: item.quantity !== undefined ? item.quantity : (
         item.measurementType === 'gram' ? 100 : 
         item.measurementType === 'ml' ? 200 : 1
-      )
+      ),
+      substitutions: item.substitutions || [] // Contrato V3: sempre array
     }))
   }));
 }

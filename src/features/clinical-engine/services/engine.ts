@@ -107,7 +107,8 @@ export const refinePlanWithScore = (
             ...macros,
             instanceId: Math.random().toString(36).substring(2, 10),
             quantity: safeQuantity,
-            locked: false
+            locked: false,
+            substitutions: [] // Garantindo contrato V3
           };
           newMeals[targetMealIndex] = {
             ...newMeals[targetMealIndex],

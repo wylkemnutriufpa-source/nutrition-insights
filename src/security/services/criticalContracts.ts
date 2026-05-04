@@ -32,7 +32,8 @@ export const MealItemSchema = z.object({
   measurementType: z.enum(['gram', 'ml', 'spoon', 'unit']),
   portionLabel: z.string(),
   imageUrl: z.string().url().nullable().optional(),
-  locked: z.boolean().default(false)
+  locked: z.boolean().default(false),
+  substitutions: z.array(z.any()).default([]) // Contrato V3: sempre array
 });
 
 export const MealSchema = z.object({
