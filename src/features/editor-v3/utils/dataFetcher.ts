@@ -95,11 +95,11 @@ export const searchFoods = async (query: string): Promise<Food[]> => {
       protein: f.protein,
       carbs: f.carbs,
       fat: f.fat,
-      portionValue: 1,
-      portionUnitLabel: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
-      portionUnit: f.serving_size?.includes("g") ? "g" : (f.serving_size?.includes("ml") ? "ml" : "unidade"),
-      portionLabel: f.serving_size || "100g",
-      measurementType: f.serving_size?.includes("g") ? "gram" : (f.serving_size?.includes("ml") ? "ml" : "unit"),
+      portionValue: 100, // No V3, a base é 100 para alimentos em gramas
+      portionUnitLabel: "g",
+      portionUnit: "g",
+      portionLabel: "100g",
+      measurementType: "gram",
       imageUrl: imageUrl || undefined
     };
   }));
