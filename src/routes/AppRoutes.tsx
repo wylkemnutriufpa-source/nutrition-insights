@@ -235,30 +235,16 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus, user, error } = useAuth();
+  const { authStatus } = useAuth();
+  const location = useLocation();
   
   if (authStatus === "loading") {
-    console.log("[ProtectedRoute] Estado: LOADING. Renderizando fallback para evitar loop.");
-    // No "Recovery Mode", não bloqueamos se demorar muito, mas PageLoader é o fallback visual padrão.
-    return (
-      <Suspense fallback={<PageLoader />}>
-        {children}
-      </Suspense>
-    );
+    return <PageLoader />;
   }
 
-  if (authStatus === "error") {
-    logError("auth_error", "ProtectedRoute", error?.message || "Erro desconhecido de autenticação", { error });
-    console.error("[ProtectedRoute] Estado: ERRO.", error);
-    
-    // Fallback: renderizar mesmo com erro se estivermos em modo de recuperação visual
-    return <>{children}</>;
-  }
-  
-  // No Modo de Recuperação, evitamos redirecionar para /auth se já houver um usuário ou se estivermos tentando acessar a home
-  if (authStatus === "unauthenticated") {
-    console.warn("[ProtectedRoute] Estado: NÃO AUTENTICADO. Mantendo na tela para inspeção manual.");
-    return <>{children}</>;
+  if (authStatus !== "authenticated") {
+    console.warn("[ProtectedRoute] Não autenticado. Redirecionando para /auth");
+    return <Navigate to="/auth" state={{ from: location }} replace />;
   }
 
   return <>{children}</>;
