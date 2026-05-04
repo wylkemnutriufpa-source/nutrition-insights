@@ -51,6 +51,7 @@ export interface AuditLogEntry {
 export interface Meal {
   id: string;
   name: string;
+  type?: 'breakfast' | 'snack' | 'lunch' | 'dinner' | 'supper';
   items: MealItem[];
   daySubstitutions?: Record<string, string>;
   selectionMode?: 'day' | 'week';

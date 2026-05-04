@@ -1,5 +1,6 @@
 import { Meal, Food, MealItem } from '../types/clinical-types';
 import { toast } from 'sonner';
+import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../utils/foodNormalization';
 
 export interface ClinicalStrategy {
   id: string;
@@ -21,10 +22,18 @@ const makeId = () => Math.random().toString(36).substring(2, 10);
 
 const createMealItem = (food: Food | undefined, quantity: number): MealItem | null => {
   if (!food) return null;
+  
+  // Step 4: Apply clinical minimums and corrections
+  const safeQuantity = applyClinicalSafety(food.name, quantity);
+  
+  // Step 3: Recalculate macros based on verified database values
+  const macros = recalculateMacros(food, safeQuantity);
+  
   return {
     ...food,
+    ...macros, // Override with recalculated values (NÃO confiar em valores vindos da engine)
     instanceId: makeId(),
-    quantity: Math.round(quantity),
+    quantity: safeQuantity,
     locked: food.isMarmita || false
   };
 };
