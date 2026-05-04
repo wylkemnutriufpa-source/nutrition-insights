@@ -160,7 +160,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const location = useLocation();
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
-  const { isRouteAllowed } = useExperienceMode();
+  const { isRouteAllowed, isFeatureEnabled } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
 
@@ -175,7 +175,11 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   return (
     <div className="space-y-1">
       {visibleSections.map(section => {
-        const sectionItems = getItemsForSection(section.id).filter(i => i.is_visible && isRouteAllowed(i.route || "/"));
+        const sectionItems = getItemsForSection(section.id).filter(i => {
+          if (!i.is_visible) return false;
+          if (i.premium_only && !isFeatureEnabled("pro")) return false; // Exemplo de bloqueio por modo
+          return true;
+        });
         
         if (sectionItems.length === 0) return null;
         
