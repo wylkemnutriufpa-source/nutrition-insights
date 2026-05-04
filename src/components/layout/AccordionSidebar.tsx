@@ -327,11 +327,20 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isRouteAllowed, minMode } = useExperienceMode();
+  const { isFeatureEnabled } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
-  const allItems = categories.flatMap((c) => c.items).filter(item => isRouteAllowed(item.route));
+  // Filtragem simples baseada em features mapeadas ou tags no SmartMenuItem (se existirem)
+  // Como as rotas vêm do useSmartMenu, vamos assumir que elas têm uma propriedade 'feature' ou similar,
+  // ou apenas usar o isFeatureEnabled se o menuItem tiver essa informação.
+  const allItems = categories.flatMap((c) => c.items).filter(item => {
+    // Se o item tiver uma feature associada, verifica. Senão, mostra.
+    if ((item as any).feature) {
+      return isFeatureEnabled((item as any).feature);
+    }
+    return true;
+  });
   const fixedItems = allItems.filter((item) => FIXED_ROUTES.includes(item.route));
 
   const groupedMap = new Map<string, SmartMenuItem[]>();

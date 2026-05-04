@@ -124,13 +124,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const setMode = async (m: string) => {
     if (!user) return;
+    
+    // Otimismo: atualiza localmente primeiro
+    setProfile(prev => prev ? { ...prev, experience_mode: m } : null);
+
     const { error } = await supabase
       .from("profiles")
       .update({ experience_mode: m } as any)
       .eq("user_id", user.id);
     
-    if (error) throw error;
-    await fetchData(user.id);
+    if (error) {
+      console.error("Error updating mode:", error);
+      // Revert if error
+      await fetchData(user.id);
+      throw error;
+    }
   };
 
   useEffect(() => {
