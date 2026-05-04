@@ -9,22 +9,54 @@ import { useDietStore, Food } from '@/stores/diet-builder/useDietStore';
 const MARMITAS_DB = [
   { 
     id: 'm1', 
-    name: 'Marmita Fit Frango c/ Batata Doce', 
+    name: 'Fit Frango c/ Batata Doce (350g)', 
     imagem: 'https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400', 
     locked: true, 
     items: [
-      { name: 'Frango (Marmita)', calories: 200, protein: 30, carbs: 0, fat: 5, locked: true }, 
-      { name: 'Batata Doce (Marmita)', calories: 100, protein: 2, carbs: 22, fat: 0, locked: true }
+      { name: 'Frango desfiado (Fit)', calories: 185, protein: 32, carbs: 0, fat: 4, locked: true }, 
+      { name: 'Batata doce cozida (Fit)', calories: 125, protein: 2, carbs: 28, fat: 0, locked: true },
+      { name: 'Mix de Legumes (Fit)', calories: 40, protein: 2, carbs: 6, fat: 0, locked: true }
     ] 
   },
   { 
     id: 'm2', 
-    name: 'Marmita Carne c/ Arroz Integral', 
+    name: 'Carne Moída c/ Arroz Integral (350g)', 
     imagem: 'https://images.unsplash.com/photo-1544025162-d76694265547?w=400', 
     locked: true, 
     items: [
-      { name: 'Patinho (Marmita)', calories: 220, protein: 28, carbs: 0, fat: 8, locked: true }, 
-      { name: 'Arroz (Marmita)', calories: 120, protein: 3, carbs: 25, fat: 1, locked: true }
+      { name: 'Patinho moído (Fit)', calories: 210, protein: 29, carbs: 0, fat: 9, locked: true }, 
+      { name: 'Arroz integral cozido (Fit)', calories: 140, protein: 3, carbs: 30, fat: 1, locked: true },
+      { name: 'Cenoura baby (Fit)', calories: 35, protein: 1, carbs: 7, fat: 0, locked: true }
+    ] 
+  },
+  { 
+    id: 'm3', 
+    name: 'Strogonoff de Frango Fit (320g)', 
+    imagem: 'https://images.unsplash.com/photo-1604908176997-125f25cc6f3d?w=400', 
+    locked: true, 
+    items: [
+      { name: 'Strogonoff de Frango (Fit)', calories: 240, protein: 34, carbs: 8, fat: 7, locked: true }, 
+      { name: 'Arroz branco (Fit)', calories: 130, protein: 2, carbs: 28, fat: 0, locked: true }
+    ] 
+  },
+  { 
+    id: 'm4', 
+    name: 'Salmão Grelhado c/ Quinoa (300g)', 
+    imagem: 'https://images.unsplash.com/photo-1467003909585-2f8a72700288?w=400', 
+    locked: true, 
+    items: [
+      { name: 'Filé de Salmão (Fit)', calories: 260, protein: 28, carbs: 0, fat: 14, locked: true }, 
+      { name: 'Quinoa real (Fit)', calories: 120, protein: 4, carbs: 21, fat: 2, locked: true }
+    ] 
+  },
+  { 
+    id: 'm5', 
+    name: 'Escondidinho de Mandioca c/ Carne (400g)', 
+    imagem: 'https://images.unsplash.com/photo-1541529086526-db283c563270?w=400', 
+    locked: true, 
+    items: [
+      { name: 'Carne desfiada (Fit)', calories: 230, protein: 32, carbs: 0, fat: 10, locked: true }, 
+      { name: 'Purê de Mandioca (Fit)', calories: 180, protein: 2, carbs: 42, fat: 0, locked: true }
     ] 
   },
 ];
@@ -54,9 +86,15 @@ export const MarmitaLibraryModal: React.FC<{ isOpen: boolean; onClose: () => voi
                   className="w-full flex items-center p-3 bg-emerald-50 rounded-2xl border border-emerald-100 hover:bg-emerald-100 transition-colors"
                 >
                   <img src={m.imagem} className="w-14 h-14 rounded-xl object-cover" alt={m.name} />
-                  <div className="ml-4 text-left">
-                    <p className="font-bold text-slate-800">{m.name}</p>
-                    <p className="text-[10px] uppercase font-bold text-emerald-600">Marmita Congelada</p>
+                  <div className="ml-4 text-left flex-1">
+                    <p className="font-bold text-slate-800 text-sm">{m.name}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-[10px] uppercase font-bold text-emerald-600">Marmita Fit</p>
+                      <span className="text-[10px] text-slate-400">•</span>
+                      <p className="text-[10px] font-bold text-slate-500">
+                        {m.items.reduce((a, b) => a + b.calories, 0)} kcal
+                      </p>
+                    </div>
                   </div>
                 </button>
               ))}

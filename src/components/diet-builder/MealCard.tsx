@@ -32,12 +32,16 @@ export const MealCard: React.FC<MealCardProps> = ({ meal }) => {
   const [isMarmitaModalOpen, setIsMarmitaModalOpen] = useState(false);
   const { removeFood, replaceFood, saveAsTemplate } = useDietStore();
 
-  const mealTotals = meal.items.reduce((acc, item) => ({
-    calories: acc.calories + item.calories,
-    protein: acc.protein + item.protein,
-    carbs: acc.carbs + item.carbs,
-    fat: acc.fat + item.fat,
-  }), { calories: 0, protein: 0, carbs: 0, fat: 0 });
+  const mealTotals = meal.items.reduce((acc, item) => {
+    // Garantir que as propriedades calories e kcal sejam somadas corretamente (suporte a Food e MealItem)
+    const calories = item.calories || (item as any).kcal || 0;
+    return {
+      calories: acc.calories + calories,
+      protein: acc.protein + (item.protein || 0),
+      carbs: acc.carbs + (item.carbs || 0),
+      fat: acc.fat + (item.fat || 0),
+    };
+  }, { calories: 0, protein: 0, carbs: 0, fat: 0 });
 
   return (
     <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-slate-100 hover:shadow-md transition-shadow group">
