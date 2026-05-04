@@ -29,6 +29,8 @@ export interface GovernanceContext {
   isPersonal?: boolean;
   isAdmin?: boolean;
   isTransitioning?: boolean;
+  isHybrid?: boolean; // Mantido para compatibilidade com outros componentes
+  versionMismatch?: boolean; // Mantido para compatibilidade com outros componentes
 }
 
 export const PUBLIC_ROUTES = [
