@@ -1,12 +1,17 @@
-
-import { useLocation } from "react-router-dom";
+import { useExperienceMode } from "@/hooks/useExperienceMode";
+import { ReactNode } from "react";
 
 /**
  * ExperienceRouteGuard simplificado.
  * Conforme instrução, NÃO bloqueia acesso nem redireciona.
- * Mantido apenas para compatibilidade de exportação se necessário.
+ * Serve para que componentes filhos saibam o modo atual.
  */
-export default function ExperienceRouteGuard({ children }: { children: React.ReactNode }) {
-  // Apenas renderiza os filhos sem nenhuma trava.
+export default function ExperienceRouteGuard({ children, feature }: { children: ReactNode; feature?: string }) {
+  const { isFeatureEnabled } = useExperienceMode();
+  
+  // No modo recuperação total, não bloqueamos rotas.
+  // Mas se quisermos apenas esconder o conteúdo (mantendo a rota), poderíamos fazer:
+  // if (feature && !isFeatureEnabled(feature)) return null;
+
   return <>{children}</>;
 }
