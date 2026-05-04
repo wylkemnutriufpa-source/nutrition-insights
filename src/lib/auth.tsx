@@ -52,10 +52,8 @@ interface AuthContextType {
   checkSubscription: () => Promise<void>;
   setMode: (mode: string) => Promise<void>;
   error: Error | null;
-  // Experience Mode
   experienceMode: string;
   experienceRole: "professional" | "patient";
-  // Tenant
   tenantId: string | null;
   tenant: any | null;
 }
@@ -84,7 +82,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
-    // 1 single database call to get Profile + Roles + Tenants
     const { data, error } = await supabase
       .from("profiles")
       .select(`
@@ -107,7 +104,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const userRoles = (data as any).user_roles?.map((r: any) => r.role) || [];
       setRoles(userRoles);
       
-      // Resolve Tenant
       const memberships = (data as any).user_tenants || [];
       const activeMembership = memberships.find((m: any) => m.is_active && m.tenants?.is_active) || memberships[0];
       
@@ -195,8 +191,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       async (event, currentSession) => {
         if (event === "INITIAL_SESSION") return;
         
-        console.log(`[Auth] Event: ${event}`);
-        
         setSession(currentSession);
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
@@ -256,6 +250,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         signOut,
         refreshProfile,
         checkSubscription,
+        setMode,
         error,
         experienceMode,
         experienceRole,
@@ -287,6 +282,7 @@ export function useAuth() {
       signOut: async () => {},
       refreshProfile: async () => {},
       checkSubscription: async () => {},
+      setMode: async (m: string) => {},
       error: null,
       experienceMode: "pro",
       experienceRole: "professional" as const,
