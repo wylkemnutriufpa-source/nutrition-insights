@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, AuthStatus } from "@/lib/auth";
-import BrainLoader from "@/components/common/BrainLoader";
+import { BrainLoaderScreen } from "@/components/common/BrainLoader";
 
 /**
  * Função utilitária para blindagem da navegação.
