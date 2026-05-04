@@ -5,7 +5,7 @@ import { Table, TableHeader, TableRow, TableHead, TableBody, TableCell } from "@
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Search, Download, History, RefreshCcw, FileSpreadsheet, Loader2, XCircle, CheckCircle } from "lucide-react";
+import { Search, Download, History, RefreshCcw, FileSpreadsheet, Loader2, XCircle, CheckCircle, BrainCircuit, ArrowRightLeft } from "lucide-react";
 import { toast } from "sonner";
 import { exportData } from "@/lib/auditExportUtils";
 import { 
@@ -16,6 +16,9 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
+import { ClinicalAuditTimeline } from "./ClinicalAuditTimeline";
+import { EngineExplainabilityPanel } from "./EngineExplainabilityPanel";
+import { ProtocolComparison } from "./ProtocolComparison";
 
 export const AdminAuditDashboard = () => {
   const [alerts, setAlerts] = useState<any[]>([]);
@@ -107,6 +110,8 @@ export const AdminAuditDashboard = () => {
       <Tabs defaultValue="overview" className="space-y-6">
         <TabsList>
           <TabsTrigger value="overview">Visão Geral</TabsTrigger>
+          <TabsTrigger value="clinical">Auditoria Clínica</TabsTrigger>
+          <TabsTrigger value="compare">Comparador Elite</TabsTrigger>
           <TabsTrigger value="exports">Exportações ({exportTasks.filter(t => t.status === 'processing' || t.status === 'pending').length})</TabsTrigger>
         </TabsList>
 
@@ -187,6 +192,31 @@ export const AdminAuditDashboard = () => {
               </CardContent>
             </Card>
           </div>
+        </TabsContent>
+
+        <TabsContent value="clinical" className="space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <ClinicalAuditTimeline patientId={filters.patient_id || "79f0616b-1933-4f51-b8ef-f10f448651a1"} />
+            </div>
+            <div className="space-y-6">
+              <EngineExplainabilityPanel 
+                metadata={{
+                  calories_target: 2150,
+                  protein_target: 165,
+                  carbs_target: 220,
+                  fat_target: 72,
+                  protocol: "FitJourney",
+                  restrictions_applied: ["Lactose", "Glúten"],
+                  clinical_rationale: "Paciente apresenta sensibilidade gástrica reportada. Engine selecionou estratégia de alta densidade nutricional com exclusão de alérgenos comuns para otimizar recuperação muscular."
+                }} 
+              />
+            </div>
+          </div>
+        </TabsContent>
+
+        <TabsContent value="compare" className="space-y-6">
+          <ProtocolComparison patientId={filters.patient_id || "79f0616b-1933-4f51-b8ef-f10f448651a1"} />
         </TabsContent>
 
         <TabsContent value="exports">
