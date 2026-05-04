@@ -142,13 +142,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Safety watchdog: Force loading state to end if it hangs for more than 8s
       const authTimeout = setTimeout(() => {
         if (mounted) {
-          console.warn(`[Auth:${correlationId}] TIMEOUT DE SEGURANÇA: Finalizando estado de loading forçadamente.`);
+          console.warn(`[Auth:${correlationId}] WATCHDOG: Forçando fim do loading.`);
           setLoading(false);
         }
-      }, 8000);
+      }, 5000);
       
-      // Timer de segurança removido para evitar auto-cura. 
-      // O sistema deve falhar via ErrorBoundary ou timeout nativo do navegador.
+      // Watchdog removido — o sistema deve carregar ou falhar via ErrorBoundary
+      // para manter o comportamento determinístico e evitar "auto-cura" inconsistente.
 
 
       try {

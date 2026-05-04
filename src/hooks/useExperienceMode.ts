@@ -203,7 +203,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     const saved = localStorage.getItem(STORAGE_KEY) as ExperienceMode;
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved : "basic";
   });
-  const [isLoading, setIsLoading] = useState(true); // Start loading during hydration
+  const [isLoading, setIsLoading] = useState(true);
   const [failedMode, setFailedMode] = useState<ExperienceMode | null>(() => {
     const saved = sessionStorage.getItem(`${STORAGE_KEY}_failed`);
     return saved && ["basic", "pro", "advanced"].includes(saved) ? saved as ExperienceMode : null;
@@ -268,14 +268,24 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     if (hydratedFromDb.current) return;
     
     const hydrate = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        setIsLoading(false);
-        hydratedFromDb.current = true;
-        return;
-      }
+      // Watchdog para evitar travamento em caso de erro na hidratação
+      const watchdog = setTimeout(() => {
+        if (!hydratedFromDb.current) {
+          console.warn("[ExperienceMode] WATCHDOG: Hidratação demorou muito, liberando loading.");
+          setIsLoading(false);
+          hydratedFromDb.current = true;
+        }
+      }, 5000);
 
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (!user) {
+          clearTimeout(watchdog);
+          setIsLoading(false);
+          hydratedFromDb.current = true;
+          return;
+        }
+
         const fetchPromise = supabase
           .from("profiles")
           .select("experience_mode")
@@ -294,6 +304,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
       } catch (e) {
         console.warn("[ExperienceMode] Falha na hidratação inicial:", e);
       } finally {
+        clearTimeout(watchdog);
         setIsLoading(false);
         hydratedFromDb.current = true;
       }
