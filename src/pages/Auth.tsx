@@ -97,8 +97,8 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
           _metadata: {},
         });
       }
-      // Fluxo Determinístico: Redirecionar para a raiz e deixar o HomeRedirect orquestrar
-      const target = nextPath && nextPath !== "/" ? nextPath : "/";
+      // Após login, vai para /welcome que orquestra o destino conforme roles
+      const target = nextPath && nextPath !== "/" ? nextPath : "/welcome";
       navigate(target, { replace: true });
 
     }
