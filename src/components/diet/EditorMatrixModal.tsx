@@ -79,16 +79,8 @@ export function EditorMatrixModal({ isOpen, onClose, onSelect, patientId }: Edit
       // 3. Persistir no LocalStorage (Backup)
       localStorage.setItem("preferred_editor_version", version);
 
-      // 4. Validação V3 (Se necessário)
-      if (version === "v3") {
-        setIsValidating(true);
-        const patientData = await fetchPatientAnamnesis(patientId);
-        setIsValidating(false);
-        
-        if (patientData?.is_fallback) {
-          toast.info("Ativando Fallback Inteligente: Dados de anamnese incompletos, usaremos dados de cadastro.");
-        }
-      }
+      // 4. Concluído
+      onSelect(version);
 
       onSelect(version);
     } catch (err) {

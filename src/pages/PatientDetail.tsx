@@ -1458,13 +1458,10 @@ export default function PatientDetail() {
                           const patientIdentity = await resolvePatientIdentity(patientId);
                           const pd = await resolveLatestOnboardingPipeline(patientId);
                           if (pd?.generated_plan_id && pd?.plan_generated) {
-                            const finalized = await finalizeGeneratedMealPlan({
-                              planId: pd.generated_plan_id,
-                              patientId: patientIdentity.canonicalId,
-                              userId: user!.id,
-                              tenantId,
-                            });
-                            navigate(`/meal-plans/${finalized.finalPlanId}`);
+                            const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", pd.generated_plan_id).single();
+                            const isV3 = planData?.editor_version === "v3";
+                            const path = isV3 ? `/v3/${patientIdentity.canonicalId}?planId=${pd.generated_plan_id}` : `/meal-plans/${pd.generated_plan_id}`;
+                            navigate(path);
                             return;
                           }
                           // No onboarding plan — generate one
@@ -1477,23 +1474,15 @@ export default function PatientDetail() {
                             return;
                           }
                           if (genData.mealPlanId) {
-                            const finalized = await finalizeGeneratedMealPlan({
-                              planId: genData.mealPlanId,
-                              patientId: patientIdentity.canonicalId,
-                              userId: user!.id,
-                              tenantId,
-                            });
+                            const { data: planData } = await supabase.from("meal_plans").select("editor_version").eq("id", genData.mealPlanId).single();
+                            const isV3 = planData?.editor_version === "v3";
+                            const path = isV3 ? `/v3/${patientIdentity.canonicalId}?planId=${genData.mealPlanId}` : `/meal-plans/${genData.mealPlanId}`;
+                            
                             if (genData.is_fallback_template) {
-                              toast.info(`Nota: Nenhum plano anterior encontrado. Usamos o template padrão "${genData.template_name_used || "Base"}" como fallback.`, { duration: 6000 });
-                            } else if (genData.template_name_used) {
-                              toast.success(`Plano gerado usando o template: ${genData.template_name_used}`);
+                              toast.info(`Nota: Usamos template padrão como fallback.`);
                             }
-                            toast.success(
-                              finalized.corrected
-                                ? "Plano gerado e revisado pelo motor clínico."
-                                : `Plano gerado com ${genData.items_count || 0} itens!`
-                            );
-                            navigate(`/meal-plans/${finalized.finalPlanId}`);
+                            toast.success("Plano gerado com sucesso!");
+                            navigate(path);
                           }
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao processar onboarding");
@@ -1532,9 +1521,10 @@ export default function PatientDetail() {
                           <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={async () => {
                             const activePlan = mealPlans.find((p: any) => p.is_active);
                             if (!activePlan) return;
-                            // Professional has full authority — open editor directly
                             setOpenSection(null);
-                            navigate(`/meal-plans/${activePlan.id}`);
+                            const isV3 = activePlan.editor_version === "v3";
+                            const path = isV3 ? `/v3/${patientId}?planId=${activePlan.id}` : `/meal-plans/${activePlan.id}`;
+                            navigate(path);
                           }}>
                             <Pencil className="w-3 h-3" /> Editar Ativo
                           </Button>

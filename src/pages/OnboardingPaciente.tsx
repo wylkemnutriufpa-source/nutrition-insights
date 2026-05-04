@@ -74,13 +74,8 @@ export default function OnboardingPaciente() {
   const { user } = useAuth();
 
   const complete = useCallback(async () => {
-    if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(true);
-
-    console.log("[FJ:Onboarding] Finalizing slides → updating patient_state. Governance will route.");
-    localStorage.setItem(ONBOARDING_KEY, "true");
-    localStorage.removeItem("fj_invited");
-    localStorage.removeItem("fj_user_type");
-
+    console.log("[FJ:Onboarding] Finalizing slides → updating patient_state and navigating explicitly.");
+    
     if (user?.id) {
       await supabase
         .from("profiles")
@@ -88,11 +83,12 @@ export default function OnboardingPaciente() {
         .eq("user_id", user.id);
     }
 
-    // Explicit navigation after user action
+    localStorage.setItem(ONBOARDING_KEY, "true");
+    localStorage.removeItem("fj_invited");
+    localStorage.removeItem("fj_user_type");
+
     navigate("/client/dashboard");
-    
-    if ((window as any).__FJ_SET_TRANSITIONING__) (window as any).__FJ_SET_TRANSITIONING__(false);
-  }, [user?.id]);
+  }, [user?.id, navigate]);
 
   const skip = complete;
 
