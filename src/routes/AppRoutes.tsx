@@ -253,18 +253,7 @@ function RedirectWithParams({ to }: { to: string }) {
   return <Navigate to={target} replace />;
 }
 
-function HomeRedirect() {
-  const { authStatus } = useAuth();
-  
-  if (authStatus === "loading") return null;
-  
-  if (authStatus === "authenticated") {
-    return <DashboardRedirect />;
-  }
-  
-  // Direto para auth se não estiver logado
-  return <Navigate to="/auth" replace />;
-}
+// HomeRedirect removed. Root route handles logic.
 
 
 export const AppRoutes = () => {
