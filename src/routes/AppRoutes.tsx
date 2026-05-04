@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { lazy, Suspense } from "react";
 import { useAppState } from "@/hooks/useAppState";
