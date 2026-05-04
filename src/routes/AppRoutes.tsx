@@ -282,17 +282,6 @@ function DashboardRedirect() {
   
   return <Navigate to="/client/dashboard" replace />;
 }
-  
-  if (authStatus === "unauthenticated") {
-    return <Navigate to="/auth" replace />;
-  }
-  
-  if (isNutritionist || isPersonal || isAdmin) {
-    return <Navigate to="/admin/dashboard" replace />;
-  }
-  
-  return <Navigate to="/client/dashboard" replace />;
-}
 
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
