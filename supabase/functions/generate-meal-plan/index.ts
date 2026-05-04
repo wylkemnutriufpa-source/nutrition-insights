@@ -74,7 +74,7 @@ const corsHeaders = {
 
 // ──── Constants ────
 // ──── UNIFIED ENGINE VERSION ────
-const ENGINE_VERSION = "8.0.0-unified";
+const ENGINE_VERSION = "9.0.0-unified-clinical";
 const PROTOCOL_VERSION = "clinical_nutrition_engine_v1";
 
 // ──── FEATURE FLAG: DB-EXCLUSIVE MODE (MANDATORY) ────
