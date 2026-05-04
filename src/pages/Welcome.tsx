@@ -29,15 +29,12 @@ export default function Welcome() {
         return;
       }
 
-      // If roles not yet loaded but authenticated, wait
-      if (roles.length === 0 && !profile) {
-        console.log("[Welcome] Waiting for roles and profile...");
+      // Fallback para quando o usuário está logado mas ainda não tem perfil/roles carregados
+      // Se já carregou o status de auth mas os dados estão vazios, assumimos paciente como padrão seguro
+      if (roles.length === 0) {
+        console.log("[Welcome] Sem roles identificadas, direcionando para visão segura de paciente.");
+        navigate(nextPath || "/client/dashboard", { replace: true });
         return;
-      }
-
-      // Fallback for edge cases where user is logged in but has no roles yet
-      if (profile) {
-        navigate("/client/dashboard", { replace: true });
       }
     }
   }, [roles, authStatus, profile, navigate, nextPath]);
