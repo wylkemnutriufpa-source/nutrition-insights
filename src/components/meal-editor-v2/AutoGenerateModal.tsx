@@ -209,6 +209,7 @@ export function AutoGenerateModal({ open, onOpenChange }: Props) {
           generation_source: "meal_library_engine",
           generation_metadata: result.metadata as unknown as Json,
           updated_at: new Date().toISOString(),
+          editor_version: "v2", // OBRIGATÓRIO: Mantém o plano no Editor V2
         })
         .eq("id", planId);
 
