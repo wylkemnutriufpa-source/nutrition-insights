@@ -17,6 +17,7 @@ export interface MenuItem {
   icon_color: string | null;
   color: string | null;
   premium_priority_boost: boolean;
+  feature?: string;
 }
 
 interface MenuUsage {
