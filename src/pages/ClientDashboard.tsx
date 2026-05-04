@@ -193,10 +193,14 @@ export default function ClientDashboard() {
 
   useEffect(() => {
     if (!queryLoading && !journeyLoading && !isLoading) {
-      if (queryError) page.setPageError(queryErrorObj);
-      else page.setReady();
+      if (queryError && !page.isError) {
+        page.setPageError(queryErrorObj);
+      } else if (!queryError && !page.isReady) {
+        page.setReady();
+      }
     }
-  }, [queryLoading, journeyLoading, isLoading, queryError, queryErrorObj, page]);
+  }, [queryLoading, journeyLoading, isLoading, queryError, queryErrorObj, page.isError, page.isReady, page.setPageError, page.setReady]);
+
 
   useEffect(() => {
     if (biquiniEnrollment?.status === "pending_onboarding") setShowOnboarding(true);

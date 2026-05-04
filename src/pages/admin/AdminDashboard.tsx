@@ -907,8 +907,9 @@ export default function AdminDashboard() {
     setProfessionals(profs);
     setPlans((plansData as PricingPlan[]) || []);
     setLoading(false);
-    page.setReady();
-  }, [user, page]);
+    if (!page.isReady) page.setReady();
+  }, [user, page.isReady, page.setReady]);
+
 
   useEffect(() => { fetchAll(); }, [fetchAll]);
 
