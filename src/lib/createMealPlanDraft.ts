@@ -8,6 +8,7 @@ interface CreateMealPlanDraftInput {
   title?: string;
   description?: string | null;
   startDate?: string;
+  editorVersion?: "v2" | "v3";
 }
 
 export async function createMealPlanDraft({
@@ -17,6 +18,7 @@ export async function createMealPlanDraft({
   title = "Plano Alimentar",
   description = null,
   startDate = new Date().toISOString().split("T")[0],
+  editorVersion = "v2",
 }: CreateMealPlanDraftInput) {
   return supabase
     .from("meal_plans")
@@ -28,11 +30,11 @@ export async function createMealPlanDraft({
       start_date: startDate,
       plan_status: "draft",
       is_active: false,
-      editor_version: "v2",
+      editor_version: editorVersion,
       plan_mode: "single_day",
-      generation_source: "assisted_engine_v2",
+      generation_source: editorVersion === "v3" ? "assisted_engine_v3" : "assisted_engine_v2",
       ...getTenantIdForInsert(tenantId),
     } as any)
-    .select("id")
+    .select("id, editor_version")
     .single();
 }
