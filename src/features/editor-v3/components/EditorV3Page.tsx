@@ -65,11 +65,16 @@ const MEASURE_OPTIONS = [
 ];
 
 const formatPortion = (item: MealItem) => {
+  // No V3, exibimos gramas diretamente para maior precisão técnica
+  if (item.measurementType === 'gram') {
+    return `${Math.round(item.quantity)}g`;
+  }
+  if (item.measurementType === 'ml') {
+    return `${Math.round(item.quantity)}ml`;
+  }
+  
+  // Para unidades e colheres, usamos a normalização
   const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
-  
-  if (displayUnit === 'g') return `${Math.round(displayQuantity)}g`;
-  if (displayUnit === 'ml') return `${Math.round(displayQuantity)}ml`;
-  
   return `${displayQuantity} ${displayUnit} (~${Math.round(item.quantity)}g)`;
 };
 
