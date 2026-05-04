@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { Brain } from "lucide-react";
+import logoVideo from "@/assets/logo-video.mp4";
 
 // ─── Types ───
 type BootStage = "idle" | "awakening" | "syncing" | "ready" | "transitioning";
