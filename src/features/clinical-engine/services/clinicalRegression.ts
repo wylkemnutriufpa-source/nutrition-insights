@@ -28,7 +28,7 @@ export const runClinicalRegressions = () => {
     items: [
       { 
         id: 'f1', name: 'Leite Desnatado', kcal: 50, protein: 5, carbs: 5, fat: 0, 
-        instanceId: 'i1', quantity: 200, measurementType: 'ml', portionLabel: '200ml' 
+        instanceId: 'i1', quantity: 200, measurementType: 'ml', portionLabel: '200ml', substitutions: [] 
       } as any
     ]
   };
@@ -56,7 +56,7 @@ export const runClinicalRegressions = () => {
     items: [
       { 
         id: 'f2', name: 'Frango Grelhado', kcal: 165, protein: 31, carbs: 0, fat: 3, 
-        instanceId: 'i2', quantity: 200, measurementType: 'gram', portionLabel: '200g' 
+        instanceId: 'i2', quantity: 200, measurementType: 'gram', portionLabel: '200g', substitutions: [] 
       } as any
     ]
   };

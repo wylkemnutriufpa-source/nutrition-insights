@@ -12,7 +12,7 @@ import {
 } from '../utils/dataFetcher';
 import { 
   isProtein, isCarb, isFruit, getDeterministicSuggestions,
-  calculateNutritionalScore, validatePlanClinically 
+  calculateNutritionalScore, validatePlanClinically, calculateItemMacros 
 } from '../../clinical-engine';
 import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 import { Button } from '@/components/ui/button';
@@ -65,11 +65,16 @@ const MEASURE_OPTIONS = [
 ];
 
 const formatPortion = (item: MealItem) => {
+  // No V3, exibimos gramas diretamente para maior precisão técnica
+  if (item.measurementType === 'gram') {
+    return `${Math.round(item.quantity)}g`;
+  }
+  if (item.measurementType === 'ml') {
+    return `${Math.round(item.quantity)}ml`;
+  }
+  
+  // Para unidades e colheres, usamos a normalização
   const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
-  
-  if (displayUnit === 'g') return `${Math.round(displayQuantity)}g`;
-  if (displayUnit === 'ml') return `${Math.round(displayQuantity)}ml`;
-  
   return `${displayQuantity} ${displayUnit} (~${Math.round(item.quantity)}g)`;
 };
 
@@ -418,8 +423,9 @@ const EditorV3Page = () => {
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        const macros = recalculateMacros(item, item.quantity);
-        acc.kcal += macros.calories;
+        // No V3, usamos calculateItemMacros do motor V3 para consistência
+        const macros = calculateItemMacros(item, item.quantity);
+        acc.kcal += macros.kcal;
         acc.protein += macros.protein;
         acc.carbs += macros.carbs;
         acc.fat += macros.fat;
