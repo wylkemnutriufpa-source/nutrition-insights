@@ -1,5 +1,5 @@
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 
 export type PageStatus = "loading" | "ready" | "error";
 
@@ -11,6 +11,7 @@ interface PageStateOptions<T> {
 /**
  * usePageState: Gancho para gerenciar estados explícitos de página (loading, ready, error).
  * Proíbe renderização sem estado definido.
+ * Utiliza useMemo para garantir estabilidade referencial e evitar loops em efeitos.
  */
 export function usePageState<T = any>(options: PageStateOptions<T> = {}) {
   const [status, setStatus] = useState<PageStatus>(options.initialStatus || "loading");
@@ -46,7 +47,8 @@ export function usePageState<T = any>(options: PageStateOptions<T> = {}) {
     }
   }, [options.onRetry, setPageError, setLoading]);
 
-  return {
+  // Estabilização referencial obrigatória para evitar loops em Dependency Arrays
+  return useMemo(() => ({
     status,
     error,
     data,
@@ -57,5 +59,6 @@ export function usePageState<T = any>(options: PageStateOptions<T> = {}) {
     isLoading: status === "loading",
     isReady: status === "ready",
     isError: status === "error"
-  };
+  }), [status, error, data, setReady, setPageError, setLoading, handleRetry]);
 }
+
