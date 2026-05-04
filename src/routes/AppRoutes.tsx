@@ -628,7 +628,7 @@ export const AppRoutes = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </StabilityZone>
-          </SystemStateGuard>
+          {/* Removed closing SystemStateGuard */}
         </Suspense>
       </AnimatePresence>
     </div>
