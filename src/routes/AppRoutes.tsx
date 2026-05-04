@@ -292,44 +292,54 @@ function DashboardRedirect() {
   const { isNutritionist, isPersonal, isAdmin, authStatus, user } = useAuth();
   
   if (authStatus === "loading") {
-    console.log("[DashboardRedirect] Auth Loading...");
     return <PageLoader />;
   }
   
   if (authStatus === "unauthenticated") {
-    console.warn("[DashboardRedirect] Não autenticado. Volta para /auth");
     return <Navigate to="/auth" replace />;
   }
   
-  console.log(`[DashboardRedirect] Usuário: ${user?.id} | Roles: Nutri=${isNutritionist}, Personal=${isPersonal}, Admin=${isAdmin}`);
-
   if (isNutritionist || isPersonal || isAdmin) {
-    console.log("[DashboardRedirect] Redirecionando para /admin/dashboard");
     return <Navigate to="/admin/dashboard" replace />;
   }
   
-  console.log("[DashboardRedirect] Redirecionando para /client/dashboard");
   return <Navigate to="/client/dashboard" replace />;
 }
+
 
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, isNutritionist, isAdmin, isPersonal } = useAuth();
   
+  console.log(`[NutritionistRoute] Status: ${authStatus} | Nutri=${isNutritionist}, Admin=${isAdmin}, Personal=${isPersonal}`);
+  
   if (authStatus === "loading") return <PageLoader />;
-  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
-  if (!isNutritionist && !isAdmin && !isPersonal) return <Navigate to="/client/dashboard" replace />;
+  if (authStatus === "unauthenticated") {
+    console.warn("[NutritionistRoute] Não autenticado. Redirecionando para /auth");
+    return <Navigate to="/auth" replace />;
+  }
+  if (!isNutritionist && !isAdmin && !isPersonal) {
+    console.warn("[NutritionistRoute] Sem permissão. Redirecionando para /client/dashboard");
+    return <Navigate to="/client/dashboard" replace />;
+  }
   
   return <>{children}</>;
 }
 
+
 function PatientRoute({ children }: { children: React.ReactNode }) {
   const { authStatus } = useAuth();
   
+  console.log(`[PatientRoute] Status: ${authStatus}`);
+  
   if (authStatus === "loading") return <PageLoader />;
-  if (authStatus === "unauthenticated") return <Navigate to="/auth" replace />;
+  if (authStatus === "unauthenticated") {
+    console.warn("[PatientRoute] Não autenticado. Redirecionando para /auth");
+    return <Navigate to="/auth" replace />;
+  }
   
   return <>{children}</>;
 }
+
 
 function RedirectWithParams({ to }: { to: string }) {
   const params = useParams();
@@ -347,8 +357,10 @@ function HomeRedirect() {
   if (authStatus === "authenticated") {
     return <DashboardRedirect />;
   }
-  return <Index />;
+  // Se não estiver logado na home, manda para o auth
+  return <Navigate to="/auth" replace />;
 }
+
 
 export const AppRoutes = () => {
   const { isDegraded, isOrphan } = useAppState();
