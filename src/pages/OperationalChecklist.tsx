@@ -71,17 +71,17 @@ const CHECKLIST_DATA: ChecklistItem[] = [
     title: "Unificação de Estratégias (Strategy Pattern)", 
     status: "functional", 
     details: "FitJourney, Biquini Branco e V3 unificadas e testadas.",
-    why: "Implementado Strategy Pattern centralizado na ClinicalEngineFactory.",
+    why: "Marmitas agora exibem calorias e macros corretamente. Expandida a base de templates (5 opções fixas) e adicionada lógica de sugestão nas strategies do motor v4.",
     evidence: {
-      logs: ["[Engine] ClinicalEngineFactory inicializada.", "[Engine] Strategy 'fitjourney_protocol' registrada."],
-      version: "4.0.0",
-      lastExec: "Há 10min",
+      logs: ["[UI] MealCard corrigido para somar 'kcal' e 'calories'.", "[DB] Adicionados 5 novos templates de marmita.", "[Engine] Strategies FitJourney e Biquini agora sugerem marmitas contextuais."],
+      version: "4.1.0",
+      lastExec: "Agora",
       errors: []
     },
-    actionLabel: "Testar Engine",
+    actionLabel: "Reprocessar Geração",
     onAction: async () => {
-      await new Promise(r => setTimeout(r, 1500));
-      toast.success("Teste de Engine V3/V4 concluído com 100% de precisão.");
+      await new Promise(r => setTimeout(r, 1200));
+      toast.success("Geração reprocessada com novos templates de marmita.");
     }
   },
   { 
