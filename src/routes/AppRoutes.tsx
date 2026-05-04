@@ -605,6 +605,9 @@ export const AppRoutes = () => {
                 <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
                 <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                 
+                {/* Legacy V3 paths being unified to V3 */}
+                <Route path="/meal-plan-editor/:id" element={<MealPlanEditorV2Redirect />} />
+                
                 <Route path="/editor" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 {/* Editor V3 Aliases — Centralizados para EditorV3Page */}
                 <Route path="/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
