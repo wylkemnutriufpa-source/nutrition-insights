@@ -46,6 +46,7 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
 
   const handleExitComplete = useCallback(() => {
     console.log("[AppBootExperience] Transição concluída.");
+    sessionStorage.setItem("fj_boot_completed", "true");
     onComplete();
   }, [onComplete]);
 
