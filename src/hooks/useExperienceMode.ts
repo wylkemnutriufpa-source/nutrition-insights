@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useCallback, useMemo, useEffect, useRef } from "react";
+import { useAuth } from "@/lib/auth";
 import { supabase } from "@/integrations/supabase/client";
 import {
   generateCorrelationId,
@@ -167,24 +168,32 @@ export const ExperienceModeContext = createContext<ExperienceModeContextValue>({
 
 export function useExperienceMode() {
   const context = useContext(ExperienceModeContext);
-  // Independent access: if context is missing, return a default guest state
-  if (!context) {
+  const auth = useAuth();
+  
+  // If context is missing (Provider removed), we use data from useAuth
+  // to maintain backward compatibility without the provider overhead.
+  if (!context || Object.keys(context).length === 0 || !context.mode) {
+    const mode = (auth.experienceMode as ExperienceMode) || "pro";
+    const role = auth.experienceRole || "professional";
+    
     return {
-      mode: "pro" as ExperienceMode,
-      setMode: async () => {},
-      isRouteAllowed: () => true,
-      isBasic: false,
-      isPro: true,
-      isAdvanced: false,
-      isLoading: false,
+      mode,
+      setMode: async (m: ExperienceMode) => {
+        console.warn("setMode called without ExperienceModeProvider. This is a no-op.");
+      },
+      isRouteAllowed: (route: string) => isRouteVisible(route, mode, role),
+      isBasic: mode === "basic",
+      isPro: mode === "pro",
+      isAdvanced: mode === "advanced",
+      isLoading: auth.loading,
       retryLastMode: () => {},
       failedMode: null,
       lastError: null,
       isOffline: false,
       pendingQueueSize: 0,
       queueStats: { size: 0, isFull: false, hasExpired: false, oldestQueuedAt: null },
-      minMode: () => true,
-      role: "professional" as ExperienceRole,
+      minMode: (min: ExperienceMode) => checkMinMode(mode, min),
+      role,
     };
   }
   return context;
@@ -221,34 +230,10 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
 
   const hydratedFromDb = useRef(false);
 
-  // Broadcast channel for cross-tab sync
+  // Cross-tab sync removed to simplify boot and eliminate concurrency issues.
   useEffect(() => {
-    let channel: BroadcastChannel | null = null;
-    try {
-      channel = new BroadcastChannel("experience_mode_sync");
-      channel.addEventListener("message", (event: MessageEvent) => {
-        if (event.data?.type === "MODE_UPDATE" && event.data?.mode) {
-          const newMode = event.data.mode;
-          console.log("[ExperienceMode] Syncing mode from broadcast channel:", newMode);
-          setModeState(newMode);
-          localStorage.setItem(STORAGE_KEY, newMode);
-        }
-      });
-    } catch {
-      // BroadcastChannel may not exist in all envs — storage event is the fallback
-    }
-
-    // Fallback: storage event (cross-tab when BroadcastChannel unavailable)
-    const handleStorage = (event: StorageEvent) => {
-      if (event.key === STORAGE_KEY && event.newValue) {
-        console.log("[ExperienceMode] Syncing mode from storage event:", event.newValue);
-        setModeState(event.newValue as ExperienceMode);
-      }
-    };
-    window.addEventListener("storage", handleStorage);
-
     // Logout listener to clear session state
-    supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_OUT') {
         console.log("[ExperienceMode] User signed out, clearing session state");
         sessionStorage.removeItem(`${STORAGE_KEY}_failed`);
@@ -258,8 +243,7 @@ export function useExperienceModeState(role: ExperienceRole = "professional") {
     });
 
     return () => {
-      try { channel?.close(); } catch {}
-      window.removeEventListener("storage", handleStorage);
+      subscription.unsubscribe();
     };
   }, []);
 

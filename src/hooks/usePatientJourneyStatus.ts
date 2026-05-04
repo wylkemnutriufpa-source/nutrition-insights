@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { useLocation } from "react-router-dom";
 import { recordStateChange } from "@/lib/governanceTelemetry";
 
 export type JourneyStatus =
@@ -14,22 +13,14 @@ export type JourneyStatus =
   | "no_link"
   | null;
 
-/** 
- * Centralized rule for allowed (non-blocking) states.
- */
 export const IS_FLUID_STATE = (status: JourneyStatus) => 
   status === "ready_for_plan" || status === "plan_generated" || status === "active_plan";
 
-/**
- * Returns the patient's unified state from profiles.
- */
 export function usePatientJourneyStatus() {
-  const { user, isPatient } = useAuth();
-  const location = useLocation();
+  const { user, profile, isPatient, loading: authLoading } = useAuth();
   const [status, setStatus] = useState<JourneyStatus>(null);
   const [loading, setLoading] = useState(true);
   const [isTransitioning, setIsTransitioning] = useState(false);
-  const [lastValidated, setLastValidated] = useState<number>(0);
 
   // Expose global setter for atomic transitions
   useEffect(() => {
@@ -37,52 +28,23 @@ export function usePatientJourneyStatus() {
     return () => { delete (window as any).__FJ_SET_TRANSITIONING__; };
   }, []);
 
-  const fetchStatus = async (cancelled = false) => {
-    if (!user?.id) return;
-    try {
-      console.log(`[usePatientJourneyStatus] Fetching unified state for ${user.id}...`);
-      const { data, error } = await supabase
-        .from("profiles")
-        .select("patient_state")
-        .eq("user_id", user.id)
-        .single();
-
-      if (error) {
-        console.error("[usePatientJourneyStatus] Fetch error:", error);
-        if (!cancelled) setLoading(false);
-        return;
-      }
-
-      if (!cancelled && data) {
-        const finalStatus = data.patient_state as JourneyStatus;
-        const prev = status;
-        if (!finalStatus) {
-          console.warn("[FJ:Guard] patient_state nulo detectado, forçando fallback para slides");
-          setStatus("onboarding_slides");
-          if (prev !== "onboarding_slides") {
-            recordStateChange({ userId: user.id, from: prev, to: "onboarding_slides", source: "fetch-fallback" });
-          }
-        } else {
-          console.log(`[usePatientJourneyStatus] Unified state: ${finalStatus}`);
-          setStatus(finalStatus);
-          if (prev !== finalStatus) {
-            recordStateChange({ userId: user.id, from: prev, to: finalStatus, source: "fetch" });
-          }
-        }
-        setLoading(false);
-        setLastValidated(Date.now());
-      }
-    } catch (err) {
-      console.error("[usePatientJourneyStatus] Unexpected error:", err);
-      if (!cancelled) setLoading(false);
+  // Synchronize status with profile from useAuth
+  useEffect(() => {
+    if (authLoading) return;
+    
+    if (profile?.patient_state) {
+      setStatus(profile.patient_state as JourneyStatus);
+      setLoading(false);
+    } else if (isPatient) {
+      setStatus("onboarding_slides");
+      setLoading(false);
+    } else {
+      setLoading(false);
     }
-  };
+  }, [profile, authLoading, isPatient]);
 
   useEffect(() => {
-    if (!user || !isPatient) { setLoading(false); return; }
-
-    let cancelled = false;
-    fetchStatus(cancelled);
+    if (!user || !isPatient) return;
 
     const channel = supabase
       .channel(`patient-state-${user.id}`)
@@ -99,11 +61,8 @@ export function usePatientJourneyStatus() {
           const oldStatus = (payload.old as any)?.patient_state;
           
           if (newStatus && newStatus !== status) {
-            console.log(`[FJ:Audit] State change detected: ${status} -> ${newStatus} (Realtime)`);
-            if (isTransitioning) {
-              console.warn(`[FJ:Audit] Realtime update suppressed because isTransitioning=true`);
-              return;
-            }
+            console.log(`[FJ:Audit] State change detected (Realtime): ${newStatus}`);
+            if (isTransitioning) return;
             setStatus(newStatus as JourneyStatus);
             recordStateChange({ userId: user.id, from: oldStatus ?? status, to: newStatus, source: "realtime" });
           }
@@ -112,10 +71,9 @@ export function usePatientJourneyStatus() {
       .subscribe();
 
     return () => {
-      cancelled = true;
       supabase.removeChannel(channel);
     };
-  }, [user, isPatient]);
+  }, [user, isPatient, status, isTransitioning]);
 
   const canAccessOnboarding = status !== "no_link" && status !== null;
 
@@ -124,6 +82,6 @@ export function usePatientJourneyStatus() {
     loading, 
     canAccessOnboarding, 
     isTransitioning,
-    refetch: fetchStatus 
+    refetch: async () => { console.log("Refetch triggered via useAuth sync."); }
   };
 }
