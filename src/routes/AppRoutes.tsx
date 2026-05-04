@@ -318,12 +318,14 @@ function RedirectWithParams({ to }: { to: string }) {
 function HomeRedirect() {
   const { authStatus } = useAuth();
   
+  console.log(`[HomeRedirect] Status: ${authStatus}`);
+
   if (authStatus === "loading") return <PageLoader />;
   if (authStatus === "authenticated") {
     return <DashboardRedirect />;
   }
   
-  return <Navigate to="/auth" replace />;
+  return <Navigate to="/welcome" replace />;
 }
 
 
