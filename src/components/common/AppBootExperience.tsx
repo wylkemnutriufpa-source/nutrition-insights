@@ -19,6 +19,14 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
   const shouldReduceMotion = useReducedMotion();
   const [booting, setBooting] = useState(true);
   const minTimeRef = useRef(Date.now());
+  const [skipTriggered, setSkipTriggered] = useState(false);
+
+  const handleFinish = useCallback(() => {
+    if (skipTriggered) return;
+    setSkipTriggered(true);
+    setBooting(false);
+    microVibrate(15);
+  }, [skipTriggered]);
 
   useEffect(() => {
     if (shouldReduceMotion && dataReady) {
@@ -28,19 +36,16 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
 
     if (dataReady) {
       const elapsed = Date.now() - minTimeRef.current;
-      const minDisplay = 2500; // Tempo mínimo para o vídeo aparecer
+      const minDisplay = 3000; // Tempo mínimo para garantir que o vídeo seja visto
       const remaining = Math.max(0, minDisplay - elapsed);
 
-      const timer = setTimeout(() => {
-        setBooting(false);
-        microVibrate(8);
-      }, remaining);
-
+      const timer = setTimeout(handleFinish, remaining);
       return () => clearTimeout(timer);
     }
-  }, [dataReady, shouldReduceMotion, onComplete]);
+  }, [dataReady, shouldReduceMotion, handleFinish, onComplete]);
 
   const handleExitComplete = useCallback(() => {
+    console.log("[AppBootExperience] Transição concluída.");
     onComplete();
   }, [onComplete]);
 
@@ -52,9 +57,10 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden bg-black"
+          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden bg-black cursor-pointer"
+          onClick={handleFinish}
         >
-          {/* Video background */}
+          {/* Video — Always full screen and centered */}
           <video
             className="absolute inset-0 w-full h-full object-cover"
             src="/videos/logo-animated.mp4"
@@ -63,54 +69,44 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
             loop
             playsInline
             preload="auto"
-            style={{ filter: "brightness(0.8) contrast(1.1)" }}
+            style={{ filter: "brightness(0.9) contrast(1.1)" }}
           />
 
-          {/* Gradient overlay */}
+          {/* Gradient overlay suave */}
           <div
             className="absolute inset-0 pointer-events-none"
             style={{
-              background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.5) 100%)",
+              background: "radial-gradient(circle at center, transparent 0%, rgba(0,0,0,0.4) 100%)",
             }}
           />
 
-          {/* Brand text */}
-          <motion.div
-            className="relative z-10 text-center"
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.5, duration: 1, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <h1
-              className="text-3xl md:text-4xl font-bold tracking-[0.25em] uppercase text-white"
-              style={{
-                textShadow: "0 0 40px rgba(16, 185, 129, 0.4)",
-              }}
-            >
-              FitJourney
-            </h1>
-          </motion.div>
-
-          {/* Loading bar */}
-          <motion.div
-            className="absolute bottom-12 left-1/2 -translate-x-1/2 w-40 h-[2px] rounded-full overflow-hidden"
-            style={{ background: "rgba(255,255,255,0.1)" }}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 0.7 }}
-          >
+          {/* Loading & Interaction — Centered at bottom */}
+          <div className="relative z-10 flex flex-col items-center gap-4 mt-auto mb-12">
+            {/* Loading bar */}
             <motion.div
-              className="h-full rounded-full"
-              style={{
-                background: "linear-gradient(90deg, #10b981, #34d399)",
-              }}
-              initial={{ width: "0%" }}
-              animate={{ width: dataReady ? "100%" : "60%" }}
-              transition={{
-                duration: dataReady ? 0.4 : 4,
-                ease: "easeInOut",
-              }}
-            />
-          </motion.div>
+              className="w-48 h-[1px] rounded-full overflow-hidden"
+              style={{ background: "rgba(255,255,255,0.1)" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.6 }}
+            >
+              <motion.div
+                className="h-full rounded-full"
+                style={{
+                  background: "linear-gradient(90deg, #10b981, #34d399)",
+                }}
+                initial={{ width: "0%" }}
+                animate={{ width: dataReady ? "100%" : "60%" }}
+                transition={{
+                  duration: dataReady ? 0.4 : 4,
+                  ease: "easeInOut",
+                }}
+              />
+            </motion.div>
+            
+            <div className="text-[10px] uppercase tracking-[0.4em] text-white/30 animate-pulse font-light">
+              Clique para entrar
+            </div>
+          </div>
         </motion.div>
       ) : null}
     </AnimatePresence>
