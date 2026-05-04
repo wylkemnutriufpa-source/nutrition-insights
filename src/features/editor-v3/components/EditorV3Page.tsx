@@ -11,9 +11,10 @@ import {
   searchVisualLibrary, uploadVisualLibraryImage 
 } from '../utils/dataFetcher';
 import { 
-  isProtein, isCarb, isFruit, getDeterministicSuggestions, calculateItemMacros,
+  isProtein, isCarb, isFruit, getDeterministicSuggestions,
   calculateNutritionalScore, validatePlanClinically 
 } from '../../clinical-engine';
+import { normalizeFoodMeasurement, recalculateMacros, applyClinicalSafety } from '../../clinical-engine/utils/foodNormalization';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -63,24 +64,13 @@ const MEASURE_OPTIONS = [
   { label: 'Unid. G', unit: 'unid G', type: 'unit' as const },
 ];
 
-const formatPortion = (quantity: number, unit: string, type?: 'unit' | 'gram' | 'spoon' | 'ml') => {
-  if (type === 'gram') return `${quantity}g`;
-  if (type === 'ml') return `${quantity}ml`;
-  if (type === 'spoon') return `${quantity} ${quantity === 1 ? 'colher' : 'colheres'}`;
+const formatPortion = (item: MealItem) => {
+  const { displayUnit, displayQuantity } = normalizeFoodMeasurement(item);
   
-  const plurals: Record<string, string> = {
-    fatia: 'fatias',
-    unidade: 'unidades',
-    pote: 'potes',
-    medida: 'medidas',
-    marmita: 'marmitas'
-  };
+  if (displayUnit === 'g') return `${Math.round(displayQuantity)}g`;
+  if (displayUnit === 'ml') return `${Math.round(displayQuantity)}ml`;
   
-  if (quantity === 1) {
-    return `1 ${unit}`;
-  }
-  
-  return `${quantity} ${plurals[unit] || unit + 's'}`;
+  return `${displayQuantity} ${displayUnit} (~${Math.round(item.quantity)}g)`;
 };
 
 const EditorV3Page = () => {
@@ -428,8 +418,8 @@ const EditorV3Page = () => {
   const totalMacros = useMemo(() => {
     return meals.reduce((acc, meal) => {
       meal.items.forEach(item => {
-        const macros = calculateItemMacros(item, item.quantity);
-        acc.kcal += macros.kcal;
+        const macros = recalculateMacros(item, item.quantity);
+        acc.kcal += macros.calories;
         acc.protein += macros.protein;
         acc.carbs += macros.carbs;
         acc.fat += macros.fat;
