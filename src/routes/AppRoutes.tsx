@@ -253,13 +253,15 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function DashboardRedirect() {
   const { isNutritionist, isPersonal, isAdmin, authStatus } = useAuth();
   
+  console.log(`[DashboardRedirect] Status: ${authStatus}`);
+
   if (authStatus === "loading") {
     return <PageLoader />;
   }
   
-  // No modo de recuperação, evitamos redirecionar se o status não for definitivo
   if (authStatus !== "authenticated") {
-    return null;
+    console.warn("[DashboardRedirect] Redirecionando para /auth (não autenticado)");
+    return <Navigate to="/auth" replace />;
   }
   
   if (isNutritionist || isPersonal || isAdmin) {
@@ -338,12 +340,13 @@ export const AppRoutes = () => {
     <div className="min-h-screen">
       {isDegraded && <DegradedModeBanner />}
       {isOrphan && <HardFailLinkage />}
-      <AnimatePresence mode="wait">
-        <Suspense fallback={<PageLoader />}>
-          <SystemStateGuard>
-            <ExperienceRouteGuard>
-              <WorkspaceRouteGuard>
-                <StabilityZone name="Navegação Principal">
+      <ErrorBoundaryDebug name="App-Level">
+        <AnimatePresence mode="wait">
+          <Suspense fallback={<PageLoader />}>
+            <SystemStateGuard>
+              <ExperienceRouteGuard>
+                <WorkspaceRouteGuard>
+                  <StabilityZone name="Navegação Principal">
               <Routes>
                 {/* Home */}
                 <Route path="/" element={<HomeRedirect />} />
@@ -613,11 +616,12 @@ export const AppRoutes = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </StabilityZone>
-              </WorkspaceRouteGuard>
-            </ExperienceRouteGuard>
-          </SystemStateGuard>
-        </Suspense>
-      </AnimatePresence>
+                </WorkspaceRouteGuard>
+              </ExperienceRouteGuard>
+            </SystemStateGuard>
+          </Suspense>
+        </AnimatePresence>
+      </ErrorBoundaryDebug>
     </div>
   );
 };
