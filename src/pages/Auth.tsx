@@ -34,15 +34,16 @@ const Auth = forwardRef<HTMLDivElement>(function Auth(_, ref) {
   const [selectedRole, setSelectedRole] = useState<SelectedRole>(null);
   const nextPath = searchParams.get("next") || searchParams.get("redirect") || "/";
 
-  // Check if already authenticated and redirect
+  // Bypass authenticated check during recovery mode if needed
+  // For now, keeping it simple to ensure the page renders
   const { authStatus } = useAuth();
   
-  useEffect(() => {
+  /* useEffect(() => {
     if (authStatus === "authenticated") {
       console.log("[Auth] Usuário já autenticado. Redirecionando para /dashboard...");
       navigate("/dashboard", { replace: true });
     }
-  }, [authStatus, navigate]);
+  }, [authStatus, navigate]); */
 
   // Show error if redirected from no-role sign-out
   useEffect(() => {

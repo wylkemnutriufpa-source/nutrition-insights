@@ -320,28 +320,15 @@ function HomeRedirect() {
 
 
 export const AppRoutes = () => {
-  const { isDegraded, isOrphan } = useAppState();
-  const { experienceMode, experienceRole } = useAuth();
-  
-  useEffect(() => {
-    document.documentElement.setAttribute("data-experience-mode", experienceMode);
-    document.documentElement.setAttribute("data-experience-role", experienceRole);
-  }, [experienceMode, experienceRole]);
-  
   return (
     <div className="min-h-screen">
-      {isDegraded && <DegradedModeBanner />}
-      {isOrphan && <HardFailLinkage />}
       <ErrorBoundaryDebug name="App-Level">
         <AnimatePresence mode="wait">
           <Suspense fallback={<PageLoader />}>
-            <SystemStateGuard>
-              <ExperienceRouteGuard>
-                <WorkspaceRouteGuard>
-                  <StabilityZone name="Navegação Principal">
+            <StabilityZone name="Navegação Principal">
               <Routes>
-                {/* Home */}
-                <Route path="/" element={<HomeRedirect />} />
+                {/* Home - Direto para Auth para evitar loops */}
+                <Route path="/" element={<Navigate to="/auth" replace />} />
 
                 
                 {/* Redirects */}
@@ -608,9 +595,6 @@ export const AppRoutes = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </StabilityZone>
-                </WorkspaceRouteGuard>
-              </ExperienceRouteGuard>
-            </SystemStateGuard>
           </Suspense>
         </AnimatePresence>
       </ErrorBoundaryDebug>
