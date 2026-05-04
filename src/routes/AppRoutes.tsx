@@ -282,15 +282,17 @@ function HomeRedirect() {
 
 
 export const AppRoutes = () => {
-  const { authStatus } = useAuth();
-
+  // TESTE DE ESTÁTICA: Removido qualquer redirecionamento baseado no authStatus
   return (
     <Routes>
+      <Route path="/" element={<Auth />} />
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/confirm" element={<AuthConfirm />} />
       <Route path="/welcome" element={<Welcome />} />
       <Route path="/index" element={<Index />} />
       
+      {/* Kill-Switch: Comentado redirect automático do "*" para evitar loop */}
+      {/* 
       <Route 
         path="*" 
         element={
@@ -298,7 +300,9 @@ export const AppRoutes = () => {
             ? <Navigate to="/welcome" replace /> 
             : <Navigate to="/auth" replace />
         } 
-      />
+      /> 
+      */}
     </Routes>
   );
 };
+
