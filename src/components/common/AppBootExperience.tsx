@@ -36,13 +36,13 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
 
     if (dataReady) {
       const elapsed = Date.now() - minTimeRef.current;
-      const minDisplay = 3000; // Garantir tempo para o vídeo ser apreciado
+      const minDisplay = 3000; // Tempo mínimo para garantir que o vídeo seja visto
       const remaining = Math.max(0, minDisplay - elapsed);
 
       const timer = setTimeout(handleFinish, remaining);
       return () => clearTimeout(timer);
     }
-  }, [dataReady, shouldReduceMotion, handleFinish]);
+  }, [dataReady, shouldReduceMotion, handleFinish, onComplete]);
 
   const handleExitComplete = useCallback(() => {
     console.log("[AppBootExperience] Transição concluída.");
@@ -57,12 +57,12 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
           initial={{ opacity: 1 }}
           exit={{ opacity: 0, filter: "blur(20px)", scale: 1.05 }}
           transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1] }}
-          className="fixed inset-0 z-[150] flex items-center justify-center overflow-hidden bg-black cursor-pointer"
+          className="fixed inset-0 z-[150] flex flex-col items-center justify-center overflow-hidden bg-black cursor-pointer"
           onClick={handleFinish}
         >
           {/* Video — Always full screen and centered */}
           <video
-            className="absolute inset-0 w-full h-full object-contain md:object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
             src="/videos/logo-animated.mp4"
             autoPlay
             muted
@@ -80,14 +80,14 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
             }}
           />
 
-          {/* Brand text & Loading — Centered stack */}
+          {/* Loading & Interaction — Centered at bottom */}
           <div className="relative z-10 flex flex-col items-center gap-4 mt-auto mb-12">
             {/* Loading bar */}
             <motion.div
               className="w-48 h-[1px] rounded-full overflow-hidden"
-              style={{ background: "rgba(255,255,255,0.05)" }}
+              style={{ background: "rgba(255,255,255,0.1)" }}
               initial={{ opacity: 0 }}
-              animate={{ opacity: 0.5 }}
+              animate={{ opacity: 0.6 }}
             >
               <motion.div
                 className="h-full rounded-full"
@@ -103,7 +103,7 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
               />
             </motion.div>
             
-            <div className="text-[10px] uppercase tracking-[0.4em] text-white/20 animate-pulse font-light">
+            <div className="text-[10px] uppercase tracking-[0.4em] text-white/30 animate-pulse font-light">
               Clique para entrar
             </div>
           </div>
