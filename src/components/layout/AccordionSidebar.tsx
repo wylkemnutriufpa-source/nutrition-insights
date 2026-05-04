@@ -331,7 +331,7 @@ export default function AccordionSidebar({ categories, flatItems, collapsed, isP
 function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClick, trackClick }: Props) {
   const location = useLocation();
   const { t } = useTranslation();
-  const { isFeatureEnabled, minMode } = useExperienceMode();
+  const { isFeatureEnabled, minMode } = useExperienceMode() as any;
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
 
