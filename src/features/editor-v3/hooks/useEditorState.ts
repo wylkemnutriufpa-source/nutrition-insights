@@ -433,7 +433,7 @@ export const useEditorState = create<EditorState>()(
         set((state) => ({
           meals: state.meals.map((m) =>
             m.id === mealId
-              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: initialQuantity, locked: false }] }
+              ? { ...m, items: [...m.items, { ...food, instanceId: makeInstanceId(), quantity: initialQuantity, locked: false, substitutions: [] }] }
               : m
           ),
           planStatus: 'draft',
