@@ -197,8 +197,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
           setLoading(true);
-          await fetchData(currentUser.id);
-          setLoading(false);
+          try {
+            await fetchData(currentUser.id);
+          } catch (err: any) {
+            console.error("[Auth] Error fetching data in state change:", err);
+            setError(err instanceof Error ? err : new Error(String(err)));
+          } finally {
+            setLoading(false);
+          }
         } else if (event === "SIGNED_OUT") {
           setProfile(null);
           setRoles([]);
@@ -206,7 +212,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setTenant(null);
           setSubscription(defaultSubscription);
           setLoading(false);
+          setError(null);
         }
+
       }
     );
 
