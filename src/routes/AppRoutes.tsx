@@ -288,13 +288,14 @@ export const AppRoutes = () => {
     <Routes>
       <Route path="/auth" element={<Auth />} />
       <Route path="/auth/confirm" element={<AuthConfirm />} />
+      <Route path="/welcome" element={<Welcome />} />
+      <Route path="/index" element={<Index />} />
       
-      {/* Fallback direto para Auth se não autenticado, ou dashboard se autenticado */}
       <Route 
         path="*" 
         element={
           authStatus === "authenticated" 
-            ? <DashboardRedirect /> 
+            ? <Navigate to="/welcome" replace /> 
             : <Navigate to="/auth" replace />
         } 
       />
