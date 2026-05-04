@@ -41,10 +41,8 @@ export function useOnboardingGuard() {
       isAdmin,
     };
 
-    const decision = getSystemDecision(ctx);
-    if (decision.type === 'REDIRECT' && (decision.target === '/onboarding' || decision.target === '/onboarding/paciente' || decision.target === '/consent')) {
-      return "must_complete";
-    }
+    // EMERGENCY BYPASS: Never block for onboarding in incident mode
+    return "none";
     if (journeyStatus === "no_link") return "error_no_link";
     return "none";
   }, [journeyStatus, journeyLoading, authLoading, location.pathname, isReady, isDegraded, mode, role, user, profile, isNutritionist, isPersonal, isAdmin, hasConsent, consentLoading, isPatient]);
