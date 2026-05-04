@@ -82,11 +82,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
-    // Modo Recuperação: No-op para evitar bloqueios
-    setProfile(null);
-    setRoles([]);
-    setTenantId(null);
-    setTenant(null);
+    try {
+      const [profileRes, rolesRes] = await Promise.all([
+        supabase.from("profiles").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+      ]);
+      setProfile((profileRes.data as any) ?? null);
+      setRoles(((rolesRes.data ?? []).map((r: any) => r.role)) as AppRole[]);
+    } catch (e) {
+      console.error("[Auth] fetchData error (non-fatal):", e);
+      // Não bloqueia: mantém usuário autenticado mesmo sem profile/roles
+      setProfile(null);
+      setRoles([]);
+    }
   };
 
   const checkSubscription = async () => {
@@ -135,7 +143,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (mounted) {
           setSession(session);
           setUser(session?.user ?? null);
-          // if (session?.user) await fetchData(session.user.id); // Kill-Switch: Evitar fetchData no boot
+          if (session?.user) {
+            // Fetch em background, sem bloquear o loading inicial
+            fetchData(session.user.id).catch((e) => console.error("[Auth] bg fetch:", e));
+          }
         }
       } catch (e) {
         console.error("Recovery init error", e);
@@ -154,28 +165,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         const currentUser = currentSession?.user ?? null;
         setUser(currentUser);
 
-        // Kill-Switch: Desativar carregamento automático de dados e redirecionamentos no onAuthStateChange
-        /*
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
-          setLoading(true);
-          try {
-            await fetchData(currentUser.id);
-          } catch (err: any) {
-            console.error("[Auth] Error fetching data in state change:", err);
-            setError(err instanceof Error ? err : new Error(String(err)));
-          } finally {
-            setLoading(false);
-          }
+          // Background fetch — não bloqueia UI
+          fetchData(currentUser.id).catch((e) => console.error("[Auth] state fetch:", e));
         } else if (event === "SIGNED_OUT") {
           setProfile(null);
           setRoles([]);
-          setTenantId(null);
-          setTenant(null);
           setSubscription(defaultSubscription);
-          setLoading(false);
           setError(null);
         }
-        */
       }
     );
 
