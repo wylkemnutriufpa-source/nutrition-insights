@@ -342,11 +342,14 @@ function RedirectWithParams({ to }: { to: string }) {
 }
 
 export const AppRoutes = () => {
-  const { isDegraded, isOrphan } = useAppState();
-  const { experienceMode, experienceRole, authStatus } = useAuth();
+  const { authStatus, experienceMode, experienceRole } = useAuth();
   const [bootComplete, setBootComplete] = useState(false);
   
+  // Independent loader/boot logic
+  const isDataReady = authStatus !== "loading";
+  
   useEffect(() => {
+    // Basic theme sync on mount/auth change
     document.documentElement.setAttribute("data-experience-mode", experienceMode);
     document.documentElement.setAttribute("data-experience-role", experienceRole);
   }, [experienceMode, experienceRole]);
@@ -354,7 +357,7 @@ export const AppRoutes = () => {
   if (!bootComplete) {
     return (
       <AppBootExperience 
-        dataReady={authStatus !== "loading"} 
+        dataReady={isDataReady} 
         onComplete={() => setBootComplete(true)} 
       />
     );
