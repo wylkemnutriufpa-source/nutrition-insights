@@ -82,33 +82,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const subCheckRef = useRef(false);
 
   const fetchData = async (userId: string) => {
-    try {
-      const { data, error } = await supabase
-        .from("profiles")
-        .select(`
-          id, full_name, user_id, avatar_url, phone, experience_mode, is_orphan
-        `)
-        .eq("user_id", userId)
-        .maybeSingle();
-
-      if (error) {
-        console.warn("[Auth] Failed to fetch profile details:", error);
-      }
-
-      if (data) {
-        setProfile(data as Profile);
-      } else {
-        setProfile(null);
-      }
-      
-      // Temporary: Hardcoding roles/tenants to prevent deep query issues during recovery
-      setRoles([]);
-      setTenantId(null);
-      setTenant(null);
-    } catch (e) {
-      console.error("[Auth] Exception in fetchData:", e);
-      setProfile(null);
-    }
+    // Modo Recuperação: No-op para evitar bloqueios
+    setProfile(null);
+    setRoles([]);
+    setTenantId(null);
+    setTenant(null);
   };
 
   const checkSubscription = async () => {
