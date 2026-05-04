@@ -6249,6 +6249,39 @@ export type Database = {
           },
         ]
       }
+      job_alert_configs: {
+        Row: {
+          alert_severity_threshold: string | null
+          channel_type: string
+          created_at: string | null
+          id: string
+          is_active: boolean | null
+          recipient_email: string | null
+          updated_at: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          alert_severity_threshold?: string | null
+          channel_type: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          recipient_email?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          alert_severity_threshold?: string | null
+          channel_type?: string
+          created_at?: string | null
+          id?: string
+          is_active?: boolean | null
+          recipient_email?: string | null
+          updated_at?: string | null
+          webhook_url?: string | null
+        }
+        Relationships: []
+      }
       lab_marker_rules: {
         Row: {
           category: string
@@ -7028,6 +7061,7 @@ export type Database = {
         Row: {
           created_at: string | null
           created_by: string | null
+          engine_version: string | null
           error_details: string | null
           id: string
           job_id: string | null
@@ -7035,12 +7069,14 @@ export type Database = {
           new_status: string | null
           new_step: string | null
           patient_id: string | null
+          plan_version: string | null
           previous_status: string | null
           previous_step: string | null
         }
         Insert: {
           created_at?: string | null
           created_by?: string | null
+          engine_version?: string | null
           error_details?: string | null
           id?: string
           job_id?: string | null
@@ -7048,12 +7084,14 @@ export type Database = {
           new_status?: string | null
           new_step?: string | null
           patient_id?: string | null
+          plan_version?: string | null
           previous_status?: string | null
           previous_step?: string | null
         }
         Update: {
           created_at?: string | null
           created_by?: string | null
+          engine_version?: string | null
           error_details?: string | null
           id?: string
           job_id?: string | null
@@ -7061,6 +7099,7 @@ export type Database = {
           new_status?: string | null
           new_step?: string | null
           patient_id?: string | null
+          plan_version?: string | null
           previous_status?: string | null
           previous_step?: string | null
         }
@@ -21005,6 +21044,17 @@ export type Database = {
         Returns: Json
       }
       ensure_patient_ready: { Args: { _patient_id: string }; Returns: Json }
+      export_clinical_audit: {
+        Args: { p_patient_id?: string }
+        Returns: {
+          action_time: string
+          engine: string
+          event: string
+          meta: Json
+          patient_name: string
+          plan: string
+        }[]
+      }
       extract_topic_uuid: { Args: { _topic: string }; Returns: string }
       fail_stuck_meal_plan_jobs: { Args: never; Returns: undefined }
       finalize_pipeline_execution: {
