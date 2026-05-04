@@ -1,24 +1,15 @@
 
-import { useState } from "react";
 import { CoreProviders } from "./providers/CoreProviders";
 import { AppRoutes } from "./routes/AppRoutes";
-import AppBootExperience from "./components/common/AppBootExperience";
 import { useAuth } from "./lib/auth";
+import IndependentLoader from "./components/ui/IndependentLoader";
 
 const AppContent = () => {
-  const { authStatus } = useAuth();
-  const [bootComplete, setBootComplete] = useState(false);
-  
-  // O boot visual (vídeo girando) aparece enquanto os dados carregam
-  const dataReady = authStatus !== "loading";
+  const { loading } = useAuth();
 
-  if (!bootComplete) {
-    return (
-      <AppBootExperience 
-        dataReady={dataReady} 
-        onComplete={() => setBootComplete(true)} 
-      />
-    );
+  // Exibição baseada puramente no estado de carregamento da autenticação
+  if (loading) {
+    return <IndependentLoader />;
   }
 
   return <AppRoutes />;

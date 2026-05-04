@@ -238,9 +238,8 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { authStatus } = useAuth();
   const location = useLocation();
   
-  if (authStatus === "loading") {
-    return <PageLoader />;
-  }
+  // O loader principal é tratado no App.tsx. Aqui apenas bloqueamos se não estiver autenticado.
+  if (authStatus === "loading") return null;
 
   if (authStatus !== "authenticated") {
     console.warn("[ProtectedRoute] Não autenticado. Redirecionando para /auth");
@@ -253,14 +252,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
 function DashboardRedirect() {
   const { isNutritionist, isPersonal, isAdmin, authStatus } = useAuth();
   
-  console.log(`[DashboardRedirect] Status: ${authStatus}`);
-
-  if (authStatus === "loading") {
-    return <PageLoader />;
-  }
+  if (authStatus === "loading") return null;
   
   if (authStatus !== "authenticated") {
-    console.warn("[DashboardRedirect] Redirecionando para /auth (não autenticado)");
     return <Navigate to="/auth" replace />;
   }
   
@@ -275,15 +269,13 @@ function DashboardRedirect() {
 function NutritionistRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, isNutritionist, isAdmin, isPersonal } = useAuth();
   
-  console.log(`[NutritionistRoute] Status: ${authStatus} | Nutri=${isNutritionist}, Admin=${isAdmin}, Personal=${isPersonal}`);
+  if (authStatus === "loading") return null;
   
-  if (authStatus === "loading") return <PageLoader />;
   if (authStatus === "unauthenticated") {
-    console.warn("[NutritionistRoute] Não autenticado. Redirecionando para /auth");
     return <Navigate to="/auth" replace />;
   }
+  
   if (!isNutritionist && !isAdmin && !isPersonal) {
-    console.warn("[NutritionistRoute] Sem permissão. Redirecionando para /client/dashboard");
     return <Navigate to="/client/dashboard" replace />;
   }
   
@@ -294,11 +286,9 @@ function NutritionistRoute({ children }: { children: React.ReactNode }) {
 function PatientRoute({ children }: { children: React.ReactNode }) {
   const { authStatus } = useAuth();
   
-  console.log(`[PatientRoute] Status: ${authStatus}`);
+  if (authStatus === "loading") return null;
   
-  if (authStatus === "loading") return <PageLoader />;
   if (authStatus === "unauthenticated") {
-    console.warn("[PatientRoute] Não autenticado. Redirecionando para /auth");
     return <Navigate to="/auth" replace />;
   }
   
@@ -318,14 +308,14 @@ function RedirectWithParams({ to }: { to: string }) {
 function HomeRedirect() {
   const { authStatus } = useAuth();
   
-  console.log(`[HomeRedirect] Status: ${authStatus}`);
-
-  if (authStatus === "loading") return <PageLoader />;
+  if (authStatus === "loading") return null;
+  
   if (authStatus === "authenticated") {
     return <DashboardRedirect />;
   }
   
-  return <Navigate to="/welcome" replace />;
+  // Direto para auth se não estiver logado
+  return <Navigate to="/auth" replace />;
 }
 
 
