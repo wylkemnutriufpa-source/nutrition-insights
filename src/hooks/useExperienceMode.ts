@@ -61,3 +61,7 @@ export function useExperienceMode(): ExperienceModeContextValue {
     retryLastMode: () => {},
   };
 }
+
+export function useExperienceModeState() {
+  return {};
+}
