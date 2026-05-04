@@ -7,6 +7,20 @@ import { ClinicalEngineFactory } from './engineFactory';
 import { logAudit } from '@/lib/auditLog';
 
 /**
+ * Proxy para manter compatibilidade com Editor V3
+ */
+export const generateMealWithEngine = (
+  meal: Meal, 
+  goal: string, 
+  baseCalories: number = 2000, 
+  availableFoods: Food[] = [],
+  protocolType: string = 'default_v3'
+): MealItem[] => {
+  const strategy = ClinicalEngineFactory.getStrategy(protocolType);
+  return strategy.generateMeal(meal, goal, baseCalories, availableFoods);
+};
+
+/**
  * Gera um plano completo distribuindo alimentos usando a estratégia clínica selecionada.
  */
 export const generatePlanWithEngine = (
