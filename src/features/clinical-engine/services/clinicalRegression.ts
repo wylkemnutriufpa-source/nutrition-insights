@@ -56,7 +56,7 @@ export const runClinicalRegressions = () => {
     items: [
       { 
         id: 'f2', name: 'Frango Grelhado', kcal: 165, protein: 31, carbs: 0, fat: 3, 
-        instanceId: 'i2', quantity: 200, measurementType: 'gram', portionLabel: '200g' 
+        instanceId: 'i2', quantity: 200, measurementType: 'gram', portionLabel: '200g', substitutions: [] 
       } as any
     ]
   };
