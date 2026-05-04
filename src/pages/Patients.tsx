@@ -565,7 +565,7 @@ function PatientsListSkeleton() {
 
 export default function Patients() {
   const { user, profile } = useAuth();
-  const { minMode, isBasic } = useExperienceMode();
+  const { minMode, isBasic } = useExperienceMode() as any;
   const nav = useNavigate();
   const navigateToPatient = useCallback((patientId: string) => {
     trackPatientView(patientId);
