@@ -360,6 +360,59 @@ export default function GenerationModeSelector({ patientId, onGenerated }: Props
         </div>
       </div>
 
+      {/* Option 0: Onboarding Smart Engine */}
+      <Button
+        onClick={async () => {
+          if (!user || !store.planId) return;
+          setGenerating(true);
+          try {
+            toast.info("Geração inteligente baseada no Onboarding...");
+            const { data, error } = await invokeWithRetry("generate-meal-plan", {
+              body: {
+                patientId,
+                nutritionistId: user.id,
+                existingPlanId: store.planId,
+                meal_plan_id: store.planId,
+                isPipeline: false,
+                generationMode: "smart", // Re-uses the anamnesis logic
+              },
+            });
+
+            if (error || !data?.success) {
+              const msg = error ? await friendlyEdgeFunctionError(error, "Erro ao gerar") : (data?.error || "Erro desconhecido");
+              toast.error(msg);
+              return;
+            }
+
+            await store.hydrate(store.planId, user.id);
+            toast.success("✅ Plano gerado com sucesso via Smart Engine!");
+            onGenerated();
+          } catch (err: any) {
+            toast.error(err.message || "Erro ao gerar");
+          } finally {
+            setGenerating(true); // Manter bloqueado até hydrate
+            setTimeout(() => setGenerating(false), 2000);
+          }
+        }}
+        disabled={generating}
+        className="w-full h-14 text-sm gap-3 gradient-primary shadow-glow border-2 border-primary/20"
+      >
+        {generating ? (
+          <>
+            <Loader2 className="w-5 h-5 animate-spin" />
+            Processando Onboarding...
+          </>
+        ) : (
+          <>
+            <ClipboardCheck className="w-5 h-5" />
+            <div className="text-left">
+              <p className="font-bold">✨ Geração via Onboarding/Anamnese</p>
+              <p className="text-[10px] opacity-80">Lê 100% dos dados da anamnese e cria o plano ideal</p>
+            </div>
+          </>
+        )}
+      </Button>
+
       {/* Option 1: Strategy Advisor */}
       <Button
         onClick={() => setView("strategy")}

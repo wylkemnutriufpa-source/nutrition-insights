@@ -255,9 +255,29 @@ export default function HybridPlanBuilder() {
   return (
     <DashboardLayout>
       <DndContext collisionDetection={pointerWithin} sensors={sensors} onDragStart={(e) => { dragStartYRef.current = getClientY(e.activatorEvent); const d = e.active.data.current; if (d?.type === "food") setActiveDragData({ type: "food", label: d.food.food_name }); else if (d?.type === "recipe") setActiveDragData({ type: "recipe", label: d.recipe.title }); }} onDragMove={(e) => dragStartYRef.current && autoScrollCanvas(dragStartYRef.current + e.delta.y)} onDragEnd={(e) => { setActiveDragData(null); handleDragEnd(e); }} onDragCancel={() => setActiveDragData(null)}>
-        <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
-          <BuilderTopbar patientName={store.patientName} saving={saving} publishing={publishing} validating={validating} onBack={() => navigate("/meal-plans")} onSave={handleSave} onValidate={handleValidate} onPublish={handlePublish} onSaveAsTemplate={() => setSaveTemplateOpen(true)} lockedValidationMode={lockedValidationMode} onRename={(t) => store.updatePlan({ title: t } as any)} />
-          <QuickAdjustPanel />
+          <div className="flex-1 flex flex-col h-full bg-background overflow-hidden">
+            <BuilderTopbar 
+              patientName={store.patientName} 
+              saving={saving} 
+              publishing={publishing} 
+              validating={validating} 
+              onBack={() => {
+                const searchParams = new URLSearchParams(window.location.search);
+                const returnTo = searchParams.get('returnTo');
+                if (returnTo) {
+                  navigate(decodeURIComponent(returnTo));
+                } else {
+                  navigate("/meal-plans");
+                }
+              }} 
+              onSave={handleSave} 
+              onValidate={handleValidate} 
+              onPublish={handlePublish} 
+              onSaveAsTemplate={() => setSaveTemplateOpen(true)} 
+              lockedValidationMode={lockedValidationMode} 
+              onRename={(t) => store.updatePlan({ title: t } as any)} 
+            />
+            <QuickAdjustPanel />
           <div className="flex-1 flex gap-3 p-3 overflow-hidden">
             {leftPanelOpen ? <div className="w-72 shrink-0 border rounded-xl bg-card/50 flex flex-col overflow-hidden"><div className="p-2 border-b flex justify-between items-center"><span className="text-xs font-bold">Biblioteca</span><Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setLeftPanelOpen(false)}><PanelLeftOpen className="w-3.5 h-3.5" /></Button></div><BuilderLibraryPanel /></div> : <Button variant="outline" size="icon" onClick={() => setLeftPanelOpen(true)}><PanelLeftOpen className="w-4 h-4" /></Button>}
             <div ref={canvasScrollRef} className="flex-1 overflow-y-auto"><MealPlanCanvas patientContext={patientContext} composerMode={composerMode} showDropTargets onRequestGenerate={() => setRightPanelOpen(true)} /></div>
