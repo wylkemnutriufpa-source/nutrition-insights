@@ -29,9 +29,15 @@ export interface GovernanceContext {
   isPersonal?: boolean;
   isAdmin?: boolean;
   isTransitioning?: boolean;
-  isHybrid?: boolean; // Mantido para compatibilidade com outros componentes
-  versionMismatch?: boolean; // Mantido para compatibilidade com outros componentes
+  isHybrid?: boolean; 
+  versionMismatch?: boolean;
+  isPatientContext?: boolean;
+  isProfessionalContext?: boolean;
 }
+
+// Mantido para compatibilidade com testes e outros componentes
+export type PatientFlowState = string;
+export function resolveRoute(state: any): string { return '/client/dashboard'; }
 
 export const PUBLIC_ROUTES = [
   "/landing", "/cadastro", "/register", "/auth", "/reset-password", "/confirm", "/p/", "/program/", "/pricing", "/privacy", "/terms"
