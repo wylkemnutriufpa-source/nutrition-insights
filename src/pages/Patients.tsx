@@ -327,7 +327,13 @@ function PatientCard({ p, idx, navigate, toggleStatus, setAssignTarget, setAssig
           </Button>
           <div className="flex items-center gap-0.5 ml-2">
             <button
-              onClick={(e) => { e.stopPropagation(); navigate(`/meal-plan-editor/${p.patient_id}?returnTo=${encodeURIComponent(window.location.pathname)}`); }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}`); }}
+              className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Editor V3"
+            >
+              <Zap className="w-4 h-4" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.patient_id}?returnTo=${encodeURIComponent(window.location.pathname)}`); }}
               className="text-muted-foreground hover:text-primary p-1.5 transition-colors" title="Editor V2"
             >
               <UtensilsCrossed className="w-4 h-4" />

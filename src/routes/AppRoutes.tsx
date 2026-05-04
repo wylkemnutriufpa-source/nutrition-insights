@@ -1,4 +1,4 @@
-import { Routes, Route, Navigate, useLocation, useParams } from "react-router-dom";
+import { Routes, Route, Navigate, useLocation, useParams, useSearchParams } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
 import { lazy, Suspense } from "react";
 import { useAppState } from "@/hooks/useAppState";
@@ -33,6 +33,11 @@ const ClientDashboard = lazy(() => import("../pages/ClientDashboard"));
 const MealPlanEditorV2 = lazyDebug(() => import("../pages/MealPlanEditorV2"), "MealPlanEditorV2");
 const MealPlanEditorV2Entry = lazyDebug(() => import("../pages/MealPlanEditorV2Entry"), "MealPlanEditorV2Entry");
 const EditorV3Page = lazyDebug(() => import("../features/editor-v3").then(m => ({ default: m.EditorV3Page })), "Editor V3");
+const MealPlanEditorV2Redirect = () => {
+  const { id } = useParams();
+  const [searchParams] = useSearchParams();
+  return <Navigate to={`/v3/${searchParams.get('patientId') || 'unknown'}?planId=${id}`} replace />;
+};
 const DietBuilder = lazy(() => import("../pages/diet-builder/DietBuilder"));
 const GlobalRanking = lazy(() => import("../pages/GlobalRanking"));
 const ProfessionalClinicalAnalytics = lazy(() => import("../pages/ProfessionalClinicalAnalytics"));
@@ -589,7 +594,6 @@ export const AppRoutes = () => {
                 
                 {/* Editor Routes */}
                 <Route path="/meal-plans/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
-                <Route path="/meal-plan-editor/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
                 <Route path="/meal-plan-editor" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                 <Route path="/editor-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
                 <Route path="/editor-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
@@ -600,14 +604,17 @@ export const AppRoutes = () => {
                 <Route path="/dieta-v2/:id" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2 /></StabilityZone></LP></NutritionistRoute>} />
                 <Route path="/dieta-v2" element={<NutritionistRoute><LP section="Editor de Plano"><StabilityZone name="Editor V2"><MealPlanEditorV2Entry /></StabilityZone></LP></NutritionistRoute>} />
                 
+                {/* Legacy V3 paths being unified to V3 */}
+                <Route path="/meal-plan-editor/:id" element={<MealPlanEditorV2Redirect />} />
+                
                 <Route path="/editor" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
-                {/* Editor V3 Aliases */}
+                {/* Editor V3 Aliases — Centralizados para EditorV3Page */}
                 <Route path="/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
+                <Route path="/v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/diet/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/editor-v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/experimental/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/elite/v3/:patientId" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
-                <Route path="/v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/meal-plan-editor-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
                 <Route path="/dieta-v3" element={<NutritionistRoute><StabilityZone name="Editor V3"><LP section="Editor V3"><EditorV3Page /></LP></StabilityZone></NutritionistRoute>} />
 
