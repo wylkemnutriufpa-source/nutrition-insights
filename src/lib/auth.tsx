@@ -50,6 +50,7 @@ interface AuthContextType {
   signOut: () => Promise<void>;
   refreshProfile: () => Promise<void>;
   checkSubscription: () => Promise<void>;
+  setMode: (mode: string) => Promise<void>;
   error: Error | null;
   // Experience Mode
   experienceMode: string;
