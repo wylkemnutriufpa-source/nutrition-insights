@@ -3,6 +3,25 @@ import { useAuth } from "@/lib/auth";
 
 export type ExperienceMode = "basic" | "pro" | "advanced";
 
+export interface ExperienceModeContextValue {
+  mode: ExperienceMode;
+  role: "nutritionist" | "patient";
+  setMode: (mode: string) => Promise<void>;
+  isFeatureEnabled: (feature: string) => boolean;
+  minMode: (requiredMode: ExperienceMode) => boolean;
+  isRouteAllowed: (route: string) => boolean;
+  isBasic: boolean;
+  isPro: boolean;
+  isAdvanced: boolean;
+  isLoading: boolean;
+  failedMode: ExperienceMode | null;
+  retryLastMode: () => void;
+  lastError: any;
+  isOffline: boolean;
+  pendingQueueSize: number;
+  queueStats: { processed: number; failed: number; isFull: boolean; hasExpired: boolean };
+}
+
 const featureMap = {
   patient: {
     basic: ["diet", "recipes", "feedback"],
@@ -16,7 +35,7 @@ const featureMap = {
   },
 };
 
-export function useExperienceMode() {
+export function useExperienceMode(): ExperienceModeContextValue {
   const { profile, experienceMode, experienceRole, setMode, loading } = useAuth();
 
   const mode = experienceMode as ExperienceMode;
