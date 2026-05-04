@@ -108,23 +108,12 @@ function OrbitingParticles({ visible }: { visible: boolean }) {
 
 // ─── Main component ───
 export default function AppBootExperience({ dataReady, onComplete }: AppBootExperienceProps) {
-  const shouldReduceMotion = useReducedMotion();
   const [stage, setStage] = useState<BootStage>("idle");
   const tonePlayed = useRef(false);
   const minTimeRef = useRef(Date.now());
 
   // Stage progression
   useEffect(() => {
-    if (shouldReduceMotion) {
-      // Skip animations entirely
-      if (dataReady) {
-        setStage("transitioning");
-        const t = setTimeout(onComplete, 400);
-        return () => clearTimeout(t);
-      }
-      return;
-    }
-
     const timers: NodeJS.Timeout[] = [];
 
     // Stage 1: idle → awakening (immediate)
@@ -143,7 +132,7 @@ export default function AppBootExperience({ dataReady, onComplete }: AppBootExpe
     );
 
     return () => timers.forEach(clearTimeout);
-  }, [shouldReduceMotion, dataReady, onComplete]);
+  }, [dataReady, onComplete]);
 
   // When data is ready + minimum visual time elapsed → ready → transitioning
   useEffect(() => {
