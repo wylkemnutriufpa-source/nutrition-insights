@@ -9,19 +9,10 @@ const AppContent = () => {
   const { authStatus } = useAuth();
   const [bootComplete, setBootComplete] = useState(false);
   
-  // O AppBootExperience deve rodar até que o auth esteja resolvido (autenticado ou não)
-  // e o tempo mínimo de animação tenha passado.
+  // No Recovery Mode, pulamos o boot se houver qualquer sinal de loop
   const dataReady = authStatus !== "loading";
 
-  if (!bootComplete) {
-    return (
-      <AppBootExperience 
-        dataReady={dataReady} 
-        onComplete={() => setBootComplete(true)} 
-      />
-    );
-  }
-
+  // Desativado boot para destravar UI em loop
   return <AppRoutes />;
 };
 
