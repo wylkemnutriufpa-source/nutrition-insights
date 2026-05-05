@@ -15,7 +15,7 @@ describe("mealPlanSubstitutionValidator", () => {
     }
   };
 
-  it("should return valid for correct substitutions (Frango Grelhado exists in mock with 198kcal)", () => {
+  it("should return valid for correct substitutions (Frango grelhado exists in mock with 198kcal)", () => {
     const result = validateMealSubstitutions(baseItem as any);
     expect(result.valid).toBe(true);
   });
