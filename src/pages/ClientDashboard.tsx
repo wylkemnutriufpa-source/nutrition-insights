@@ -310,7 +310,7 @@ export default function ClientDashboard() {
                   <PatientDailyFocusHero />
                 </motion.div>
 
-                {/* Daily Meal Tracker */}
+                {/* Daily Meal Tracker - ALWAYS ENABLED (DIET) */}
                 <motion.div variants={item}>
                   <Card className={`border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm transition-all duration-500 ${
                     mode === 'advanced' ? 'ring-1 ring-amber-500/20' : 
@@ -353,53 +353,51 @@ export default function ClientDashboard() {
                   </Card>
                 </motion.div>
 
-                {/* Clinical & Behavioral Insights */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <motion.div variants={item} className="h-full">
-                    <ClinicalInsightsCard />
-                  </motion.div>
-                  <motion.div variants={item} className="h-full">
-                    <PatientBehaviorLearningCard />
-                  </motion.div>
-                </div>
+                {/* Clinical & Behavioral Insights - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <motion.div variants={item} className="h-full">
+                      <ClinicalInsightsCard />
+                    </motion.div>
+                    <motion.div variants={item} className="h-full">
+                      <PatientBehaviorLearningCard />
+                    </motion.div>
+                  </div>
+                )}
               </div>
 
               <div className="lg:col-span-4 space-y-6">
-                {/* Adherence & Streaks */}
-                <motion.div variants={item}>
-                  <AdherenceStats 
-                    streak={stats?.current_streak || 0} 
-                    adherence={stats?.weekly_adherence_pct || 0} 
-                    longestStreak={stats?.longest_streak}
-                  />
-                </motion.div>
+                {/* Adherence & Streaks - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <motion.div variants={item}>
+                    <AdherenceStats 
+                      streak={stats?.current_streak || 0} 
+                      adherence={stats?.weekly_adherence_pct || 0} 
+                      longestStreak={stats?.longest_streak}
+                    />
+                  </motion.div>
+                )}
 
-                {/* Engagement Alerts & Loops */}
-                <motion.div variants={item}>
-                  <PatientRetentionAlerts />
-                </motion.div>
+                {/* Challenges & Community - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <motion.div variants={item}>
+                    <AchievementBadges achievements={{
+                      oneDay: (stats?.total_checkins || 0) >= 1,
+                      threeDays: (stats?.current_streak || 0) >= 3,
+                      sevenDays: (stats?.current_streak || 0) >= 7
+                    }} />
+                  </motion.div>
+                )}
 
-                {/* Next Meal Shortcut */}
-                <motion.div variants={item}>
-                  <NextMealWidget />
-                </motion.div>
-
-                {/* Momentum Indicator */}
-                <motion.div variants={item}>
-                  <TherapeuticMomentumBar />
-                </motion.div>
-
-                {/* Metabolic Radar */}
-                <motion.div variants={item}>
-                  <PatientMetabolicInsightPanel />
-                </motion.div>
-
-                {/* Smart Tips */}
-                <motion.div variants={item}>
-                  <SmartTips />
-                </motion.div>
+                {/* Smart Tips - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <motion.div variants={item}>
+                    <SmartTips />
+                  </motion.div>
+                )}
               </div>
             </div>
+
 
             {/* Secondary Sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
