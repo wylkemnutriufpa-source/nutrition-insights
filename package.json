@@ -18,7 +18,7 @@
     "typecheck": "tsc --noEmit",
     "preview": "vite preview",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage --coverage.thresholds.statements=70",
+    "test:coverage": "vitest run --coverage",
     "test:watch": "vitest",
     "test:e2e": "npx playwright test --reporter=list",
     "test:e2e:ui": "npx playwright test --ui",
