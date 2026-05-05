@@ -3,6 +3,22 @@ import { format } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
 /**
+ * Clean up text from technical audit information and weird symbols
+ */
+function cleanClinicalText(text: string): string {
+  if (!text) return "";
+  const auditMarkers = ["AUDITORIA CLÍNICA", "TRILHA DE REGRAS", "Motor de Cálculo", "Clinical Engine", "Timestamp:", "Protocolo:", "MEAL_KCAL_SPLIT", "Status: Validado"];
+  let cleaned = text.replace(/[Ø=Ý]+/g, "");
+  const lines = cleaned.split("\n");
+  const filteredLines = lines.filter(line => {
+    const upperLine = line.toUpperCase();
+    return !auditMarkers.some(marker => upperLine.includes(marker.toUpperCase()));
+  });
+  return filteredLines.join("\n").trim();
+}
+
+
+/**
  * Utility para gerar e baixar PDFs usando a API nativa do navegador (print).
  * Cria uma janela de impressão formatada que pode ser salva como PDF.
  */
