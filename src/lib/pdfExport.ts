@@ -311,7 +311,7 @@ export function generateClinicalAuditPDF(data: {
       </div>
 
       <div class="footer">
-        TRUE BLACK EDITION · FITJOURNEY CLINICAL SYSTEMS · ${new Date().toLocaleDateString('pt-BR')}
+        Gerado via FitJourney Nutrition · ${new Date().toLocaleDateString('pt-BR')}
       </div>
     </div>
   </body></html>`;
