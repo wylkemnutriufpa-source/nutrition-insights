@@ -369,6 +369,8 @@ export default function PatientMealPlan() {
           carbs_target: i.carbs_target || undefined,
           fat_target: i.fat_target || undefined,
           day_of_week: i.day_of_week ?? undefined,
+          is_primary: i.is_primary !== false,
+          substitution_group_id: (i as any).substitution_group_id || null,
         })),
         targetCalories: planFull?.total_target_calories || undefined,
         targetProtein: planFull?.total_target_protein || undefined,
