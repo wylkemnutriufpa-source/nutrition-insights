@@ -12,13 +12,13 @@ export interface AIUsageStatus {
   loading: boolean;
 }
 
-const PLAN_TIER = "free"; // TODO: derive from user subscription
-
 export function useAIUsage(featureKey: string) {
-  const { user } = useAuth();
+  const { user, subscription } = useAuth();
   const [status, setStatus] = useState<AIUsageStatus>({
     allowed: true, used: 0, max_uses: 999, loading: true,
   });
+
+  const planTier = subscription?.subscription_tier || "free";
 
   const checkUsage = useCallback(async () => {
     if (!user) return;
@@ -26,7 +26,7 @@ export function useAIUsage(featureKey: string) {
       const { data, error } = await supabase.rpc("check_ai_usage", {
         _user_id: user.id,
         _feature_key: featureKey,
-        _plan_tier: PLAN_TIER,
+        _plan_tier: planTier,
       });
       if (error) throw error;
       const result = typeof data === "string" ? JSON.parse(data) : data;
@@ -51,7 +51,7 @@ export function useAIUsage(featureKey: string) {
       const { data, error } = await supabase.rpc("record_ai_usage", {
         _user_id: user.id,
         _feature_key: featureKey,
-        _plan_tier: PLAN_TIER,
+        _plan_tier: planTier,
       });
       if (error) throw error;
       const result = typeof data === "string" ? JSON.parse(data) : data;

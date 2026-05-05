@@ -22,6 +22,31 @@ export interface ExperienceModeContextValue {
   queueStats: { processed: number; failed: number; isFull: boolean; hasExpired: boolean };
 }
 
+/**
+ * Pure function to check feature permissions.
+ * Extracted to avoid direct circular dependencies if needed and for testability.
+ */
+export const checkFeaturePermission = (
+  feature: string,
+  mode: ExperienceMode,
+  role: "nutritionist" | "patient"
+): boolean => {
+  const levels = { basic: 0, pro: 1, advanced: 2 };
+  
+  // If feature is a mode name, check minimum level
+  if (feature === "pro" || feature === "advanced" || feature === "basic") {
+    const currentLevel = levels[mode] ?? 0;
+    const requiredLevel = levels[feature as ExperienceMode] ?? 0;
+    return currentLevel >= requiredLevel;
+  }
+
+  const roleMap = featureMap[role] || featureMap.patient;
+  const allowedFeatures = roleMap[mode] || roleMap.basic;
+  
+  if (allowedFeatures === "all") return true;
+  return Array.isArray(allowedFeatures) ? allowedFeatures.includes(feature) : false;
+};
+
 export function useExperienceMode(): ExperienceModeContextValue {
   const { experienceMode, experienceRole, setMode, loading } = useAuth();
 
@@ -29,30 +54,22 @@ export function useExperienceMode(): ExperienceModeContextValue {
   const role = experienceRole;
 
   const minMode = (requiredMode: ExperienceMode) => {
-    const levels = { basic: 0, pro: 1, advanced: 2 };
-    const currentLevel = levels[mode] ?? 0;
-    const requiredLevel = levels[requiredMode] ?? 0;
-    return currentLevel >= requiredLevel;
+    return checkFeaturePermission(requiredMode, mode, role);
   };
 
   const isFeatureEnabled = (feature: string) => {
-    // Se a feature for o nome de um modo, usamos minMode
-    if (feature === "pro" || feature === "advanced" || feature === "basic") {
-      return minMode(feature as ExperienceMode);
-    }
-
-    const userRole = role === "nutritionist" ? "nutritionist" : "patient";
-    // For feature mapping, pro and advanced are treated as having their own lists
-    const userMode = (mode === "pro" || mode === "advanced") ? mode : "basic";
-
-    const roleMap = featureMap[userRole] || featureMap.patient;
-    const allowedFeatures = roleMap[userMode] || roleMap.basic;
-    
-    if (allowedFeatures === "all") return true;
-    return Array.isArray(allowedFeatures) ? allowedFeatures.includes(feature) : false;
+    return checkFeaturePermission(feature, mode, role);
   };
 
-  const isRouteAllowed = (route: string) => true;
+  const isRouteAllowed = (route: string) => {
+    // Basic route normalization
+    const cleanRoute = route.split('?')[0].split('#')[0].replace(/^\//, '');
+    if (!cleanRoute || cleanRoute === 'dashboard') return true;
+
+    // A route is allowed if it's explicitly in the allowed features list for the current mode/role
+    // Or if the mode has "all" features.
+    return isFeatureEnabled(cleanRoute);
+  };
 
   return {
     mode,
