@@ -319,6 +319,10 @@ export const AppRoutes = () => {
       <Route path="/mission-control" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MissionControl /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/workspace-editor" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WorkspaceEditor /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/control-tower" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalControlTower /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/cockpit" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CockpitPremium /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/clinical-workspace" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalWorkspace /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/coach-bodybuilder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CoachBodybuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/protocols" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Protocols /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/technical-sheets" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><TechnicalSheets /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/clinical-brain" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClinicalBrain /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/intelligence-settings" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><IntelligenceSettings /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -330,7 +334,8 @@ export const AppRoutes = () => {
       <Route path="/weight-calculator" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><WeightCalculator /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patient-meal-plan" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientMealPlan /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/workouts" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientWorkouts /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/personal-dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/personal/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PersonalDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/personal-dashboard" element={<Navigate to="/personal/dashboard" replace />} />
       <Route path="/body-analysis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyAnalysis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/body-projection" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><BodyProjectionExperience /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/consent" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ConsentRequired /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
