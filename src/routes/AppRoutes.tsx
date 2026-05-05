@@ -271,10 +271,10 @@ export const AppRoutes = () => {
       <Route path="/welcome" element={<Welcome />} />
       
       {/* Rotas Core - Dashboard Central */}
-      <Route path="/index" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Index /></Suspense></ProtectedRoute>} />
-      <Route path="/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Index /></Suspense></ProtectedRoute>} />
-      <Route path="/admin/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Index /></Suspense></ProtectedRoute>} />
-      <Route path="/client/dashboard" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><ClientDashboard /></Suspense></ProtectedRoute>} />
+      <Route path="/index" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Index /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Index /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/admin/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Index /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/client/dashboard" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ClientDashboard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
 
       {/* Mapeamento de Rotas do Nutritionist (Conforme imports acima) */}
       <Route path="/patients" element={<ProtectedRoute><Suspense fallback={<PageLoader />}><Patients /></Suspense></ProtectedRoute>} />
