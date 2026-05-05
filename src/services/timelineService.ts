@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { Database } from "@/integrations/supabase/types";
+import { Database, Json } from "@/integrations/supabase/types";
 
 type TimelineEventInsert = Database["public"]["Tables"]["timeline_events"]["Insert"];
 
@@ -11,7 +11,7 @@ export interface TimelineEventPayload {
   title: string;
   description?: string;
   media_url?: string;
-  metadata_json?: Record<string, unknown>;
+  metadata_json?: Json;
   visibility_scope?: "global" | "patient_specific";
   poll_question?: string;
   poll_options?: string[];
