@@ -196,7 +196,7 @@ function DynamicSidebar({
   onLinkClick?: () => void;
 }) {
   const { categories, flatItems, trackClick } = useSmartMenu();
-  const { minMode } = useExperienceMode();
+  const { minMode, mode } = useExperienceMode();
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
   const { isProfessionalContext } = useWorkspaceContext();
   const pendingCount = usePendingApprovals();
@@ -212,7 +212,11 @@ function DynamicSidebar({
   const showPending = effectiveProRole && pendingCount > 0;
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className={`flex h-full min-h-0 flex-col transition-colors duration-500 ${
+      mode === 'advanced' ? 'bg-card/40' : 
+      mode === 'pro' ? 'bg-blue-500/5' : 
+      'bg-green-700/5'
+    }`}>
       {/* Workspace context switcher for hybrid users */}
       <WorkspaceContextSwitcher collapsed={collapsed} />
 
@@ -560,6 +564,7 @@ function DynamicSidebar({
 
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { profile, signOut, isPatient, isNutritionist, isPersonal, isAdmin, loading: authLoading } = useAuth();
+  const { mode } = useExperienceMode();
   const isProRole = isNutritionist || isPersonal || isAdmin;
 
   const location = useLocation();
@@ -716,7 +721,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         initial={false}
         animate={{ width: collapsed ? 72 : 260 }}
         transition={{ duration: 0.2 }}
-        className="fixed left-0 top-0 h-screen border-r border-border bg-card flex flex-col z-50"
+        className={`fixed left-0 top-0 h-screen border-r transition-all duration-500 flex flex-col z-50 ${
+          mode === 'advanced' ? 'border-amber-500/20 bg-card' :
+          mode === 'pro' ? 'border-blue-500/20 bg-card' :
+          'border-green-700/20 bg-card'
+        }`}
       >
         <ErrorBoundary section="Layout:DesktopSidebar" fallback={<SidebarFallback />}>
           <DynamicSidebar {...sidebarProps} collapsed={collapsed} setCollapsed={handleSetCollapsed} />
@@ -724,7 +733,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       </motion.aside>
 
       <main className="flex-1 transition-all duration-200" style={{ marginLeft: collapsed ? 72 : 260 }}>
-        <div className="fixed top-0 right-0 z-40 p-3 transition-[left] duration-200" style={{ left: collapsed ? 72 : 260 }}>
+        <div className={`fixed top-0 right-0 z-40 p-3 transition-all duration-500 border-b backdrop-blur-md ${
+          mode === 'advanced' ? 'border-amber-500/10 bg-background/80' :
+          mode === 'pro' ? 'border-blue-500/10 bg-background/80' :
+          'border-green-700/10 bg-background/80'
+        }`} style={{ left: collapsed ? 72 : 260 }}>
           <div className="flex justify-end items-center gap-2">
             <SyncButton />
             <SystemHealthBadge />

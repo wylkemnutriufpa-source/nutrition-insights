@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
-import { Brain, Clock, TrendingDown, TrendingUp, AlertCircle, Sparkles } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Brain, Clock, TrendingDown, TrendingUp, AlertCircle, Sparkles, ChevronRight } from "lucide-react";
 import { safeNum } from "@/lib/formatMacros";
 
 interface BehaviorPattern {
@@ -28,6 +29,7 @@ const DAYS_PT: Record<number, string> = {
 
 export default function PatientBehaviorLearningCard() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [patterns, setPatterns] = useState<BehaviorPattern[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -46,7 +48,11 @@ export default function PatientBehaviorLearningCard() {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5, delay: 0.2 }}
-      className="glass-premium rounded-2xl overflow-hidden shimmer-sweep"
+      className="glass-premium rounded-2xl overflow-hidden shimmer-sweep cursor-pointer hover:shadow-xl transition-all duration-300 ring-1 ring-white/5 hover:ring-primary/20"
+      onClick={() => {
+        console.log("[ACTION] Behavior card clicked");
+        navigate("/checklist");
+      }}
     >
       <div className="p-5 pb-3 flex items-center gap-3">
         <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center">

@@ -432,7 +432,15 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
             <button
               onClick={() => setOpenGroup(isOpen ? null : group.name)}
               className={`flex items-center gap-2 w-full px-3 py-2 rounded-lg transition-all text-left group
-                ${isOpen ? "bg-primary/10 shadow-sm" : hasActiveItem ? "bg-primary/5" : "hover:bg-muted/50"}
+                ${isOpen 
+                  ? mode === 'advanced' ? "bg-amber-500/10 shadow-sm" : 
+                    mode === 'pro' ? "bg-blue-500/10 shadow-sm" : 
+                    "bg-green-700/10 shadow-sm" 
+                  : hasActiveItem 
+                    ? mode === 'advanced' ? "bg-amber-500/5" :
+                      mode === 'pro' ? "bg-blue-500/5" :
+                      "bg-green-700/5"
+                    : "hover:bg-muted/50"}
               `}
             >
               {!collapsed && (

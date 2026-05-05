@@ -107,8 +107,13 @@ export default function PatientDailyFocusHero() {
       <motion.div
         initial={{ opacity: 0, y: 16 }}
         animate={{ opacity: 1, y: 0 }}
-        className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br ${bgClass} p-5 cursor-pointer hover:shadow-lg transition-shadow`}
-        onClick={() => setModalOpen(true)}
+        whileHover={{ scale: 1.01 }}
+        whileTap={{ scale: 0.99 }}
+        className={`relative overflow-hidden rounded-2xl border bg-gradient-to-br ${bgClass} p-5 cursor-pointer shadow-sm hover:shadow-md transition-all duration-300 ring-1 ring-white/5 hover:ring-primary/20`}
+        onClick={() => {
+          console.log("[ACTION] Daily focus hero clicked");
+          setModalOpen(true);
+        }}
       >
         <div className="flex items-start gap-4">
           <div className="w-12 h-12 rounded-xl bg-background/50 flex items-center justify-center shrink-0">
