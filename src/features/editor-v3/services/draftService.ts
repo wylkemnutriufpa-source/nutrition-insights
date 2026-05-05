@@ -148,7 +148,7 @@ export async function loadOrCreateDraft(
     });
     return null;
   }
-  console.info('[v3-draft] draft created successfully:', created?.id);
+  console.info('[v3-draft] draft created successfully:', (created as any)?.id);
   return created as unknown as DraftRecord;
 }
 
