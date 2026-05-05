@@ -44,7 +44,7 @@ export function useWorkspace() {
     try {
       // Try to get existing workspace
       const { data: existing } = await supabase
-        .from("workspace_profiles" as any)
+        .from("workspace_profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
@@ -52,41 +52,41 @@ export function useWorkspace() {
       let workspaceId: string;
 
       if (existing) {
-        setProfile(existing as any);
-        workspaceId = (existing as any).id;
+        setProfile(existing);
+        workspaceId = existing.id;
       } else {
         // Initialize default workspace via RPC
         const { data: newId } = await supabase.rpc("initialize_default_workspace", {
           _user_id: user.id,
-        } as any);
+        });
         workspaceId = newId as string;
 
         const { data: newProfile } = await supabase
-          .from("workspace_profiles" as any)
+          .from("workspace_profiles")
           .select("*")
           .eq("id", workspaceId)
           .single();
-        setProfile(newProfile as any);
+        if (newProfile) setProfile(newProfile);
       }
 
       // Fetch sections
       const { data: secs } = await supabase
-        .from("workspace_sections" as any)
+        .from("workspace_sections")
         .select("*")
         .eq("workspace_id", workspaceId)
         .order("sort_order");
 
-      setSections((secs || []) as any);
+      setSections(secs || []);
 
       // Fetch items with menu_items join
       const { data: rawItems } = await supabase
-        .from("workspace_items" as any)
+        .from("workspace_items")
         .select("*")
         .eq("workspace_id", workspaceId)
         .order("sort_order");
 
       // Now enrich with menu_items data
-      const menuItemIds = ((rawItems || []) as any[]).map((i: any) => i.menu_item_id);
+      const menuItemIds = (rawItems || []).map(i => i.menu_item_id);
       let menuMap = new Map<string, any>();
 
       if (menuItemIds.length > 0) {
@@ -95,10 +95,10 @@ export function useWorkspace() {
           .select("id, label, label_key, route, icon, premium_only, feature, role_visibility")
           .in("id", menuItemIds);
 
-        (menuData || []).forEach((m: any) => menuMap.set(m.id, m));
+        (menuData || []).forEach(m => menuMap.set(m.id, m));
       }
 
-      const enriched = ((rawItems || []) as any[]).map((item: any) => {
+      const enriched: WorkspaceItem[] = (rawItems || []).map(item => {
         const menu = menuMap.get(item.menu_item_id);
         return {
           ...item,
@@ -108,7 +108,7 @@ export function useWorkspace() {
           icon: menu?.icon || "LayoutDashboard",
           premium_only: menu?.premium_only || false,
           feature: menu?.feature || undefined,
-          role_visibility: Array.isArray(menu?.role_visibility) ? menu.role_visibility : [],
+          role_visibility: Array.isArray(menu?.role_visibility) ? (menu.role_visibility as string[]) : [],
         };
       });
 
