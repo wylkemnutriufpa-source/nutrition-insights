@@ -42,6 +42,11 @@ export function useExperienceMode(): ExperienceModeContextValue {
   }, [mode]);
 
   const isFeatureEnabled = (feature: string) => {
+    // Se a feature for o nome de um modo, usamos minMode
+    if (feature === "pro" || feature === "advanced" || feature === "basic") {
+      return minMode(feature as ExperienceMode);
+    }
+
     const userRole = role === "nutritionist" ? "nutritionist" : "patient";
     const userMode = (localMode === "pro" || localMode === "advanced") ? localMode : "basic";
 
