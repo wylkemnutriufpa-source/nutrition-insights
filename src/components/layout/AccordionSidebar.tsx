@@ -375,7 +375,11 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
           <Link
             key={item.id}
             to={item.route}
-            onClick={() => { trackClick(item.id); onLinkClick?.(); }}
+            onClick={() => { 
+              console.log("[NAV] Sidebar clicking fixed item", { to: item.route, id: item.id });
+              trackClick(item.id); 
+              onLinkClick?.(); 
+            }}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all border mb-2
               ${active
                 ? "bg-gradient-to-r from-amber-500/15 to-amber-600/10 border-amber-500/30 shadow-sm"
