@@ -349,14 +349,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 </head>
 <body>
   <div class="premium-header">
-    <div class="header-content">
-      <div class="brand-area">
-        <div class="logo-text"><span class="logo-fit">Fit</span><span class="logo-journey">Journey</span></div>
-      </div>
-      <div class="patient-info">
-        <div class="name">${escapeHtml(data.patientName)}</div>
-        <div>Profissional: ${escapeHtml(data.nutritionistName)}</div>
-      </div>
+    <div class="logo-text">
+      <span class="logo-fit">Fit</span><span class="logo-journey">Journey</span>
+    </div>
+    <div class="patient-info">
+      <div class="label">Plano Alimentar de:</div>
+      <div class="name">${escapeHtml(data.patientName)}</div>
+      <div style="font-size: 11px; font-weight: 500;">Profissional: ${escapeHtml(data.nutritionistName)}</div>
     </div>
   </div>
 
