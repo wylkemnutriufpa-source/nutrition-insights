@@ -391,6 +391,18 @@ export const AppRoutes = () => {
       <Route path="/terms" element={<LP section="Termos"><TermsOfUse /></LP>} />
       <Route path="/privacy" element={<LP section="Privacidade"><PrivacyPolicy /></LP>} />
       
+      {/* Public Booking / Profiles */}
+      <Route path="/booking/:slug" element={<Suspense fallback={<PageLoader />}><PublicBooking /></Suspense>} />
+      <Route path="/plans/:slug" element={<Suspense fallback={<PageLoader />}><PublicPlans /></Suspense>} />
+      <Route path="/profile/:slug" element={<Suspense fallback={<PageLoader />}><PublicProfile /></Suspense>} />
+      <Route path="/program/:programId" element={<Suspense fallback={<PageLoader />}><PublicProgram /></Suspense>} />
+      <Route path="/quick-link/:nutriId" element={<Suspense fallback={<PageLoader />}><QuickLink /></Suspense>} />
+      
+      {/* Protocolos Especiais */}
+      <Route path="/biquini-branco" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoLanding /></Suspense>} />
+      <Route path="/biquini-branco/:programId" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoDetail /></Suspense>} />
+      
+      
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
       <Route path="/dashboard" element={<Navigate to="/welcome?next=/dashboard" replace />} />
