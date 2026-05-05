@@ -27,6 +27,7 @@ import { useSyncStatus } from "@/hooks/useSyncStatus";
 import { HardFailLinkage } from "@/components/common/HardFailLinkage";
 import { getBackupValidity, getConflictVersionKey, fjLog, validateSystemState } from "@/utils/dataSafety";
 import { safeLocalStorage, safeSessionStorage } from "@/lib/safeStorage";
+import { usePatientJourneyStatus } from "@/hooks/usePatientJourneyStatus";
 
 
 import { SmartPlanCard } from "@/components/patient/AnamnesisInsightsCard";
