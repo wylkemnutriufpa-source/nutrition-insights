@@ -120,16 +120,21 @@ function MessageRotator({ messages, text }: { messages: string[]; text?: string 
 
 // ━━━ INLINE: small, for buttons ━━━
 export function BrainLoaderInline({ text, className = "" }: { text?: string; className?: string }) {
+  const shouldReduceMotion = useReducedMotion();
   return (
-    <span className={`inline-flex items-center gap-2 ${className}`}>
+    <span 
+      className={`inline-flex items-center gap-2 ${className}`}
+      role="status"
+      aria-label={text || "Carregando..."}
+    >
       <motion.span
-        animate={{ rotateY: [0, 360] }}
-        transition={{ duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
+        animate={shouldReduceMotion ? {} : { rotateY: [0, 360] }}
+        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
         style={{ perspective: 400, display: "inline-flex" }}
       >
         <Brain className="w-4 h-4 text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.3)]" />
       </motion.span>
-      {text && <span className="text-xs text-muted-foreground">{text}</span>}
+      {text && <span className="text-xs text-muted-foreground font-medium">{text}</span>}
     </span>
   );
 }
@@ -137,9 +142,15 @@ export function BrainLoaderInline({ text, className = "" }: { text?: string; cla
 // ━━━ CARD: medium, for cards/modals ━━━
 export function BrainLoaderCard({ text, messages = DEFAULT_MESSAGES, className = "" }: BrainLoaderProps) {
   return (
-    <div className={`flex flex-col items-center justify-center py-10 gap-4 ${className}`}>
-      <AnimatedBrain size={56} glowSize={90} />
-      <MessageRotator messages={messages} text={text} />
+    <div 
+      className={`flex flex-col items-center justify-center py-10 gap-6 ${className}`}
+      role="status"
+      aria-label={text || messages[0] || "Carregando..."}
+    >
+      <AnimatedBrain size={64} glowSize={100} />
+      <div className="max-w-[200px] w-full">
+        <MessageRotator messages={messages} text={text} />
+      </div>
     </div>
   );
 }
