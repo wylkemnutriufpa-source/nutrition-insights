@@ -416,6 +416,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     </div>
   </div>
 
+  <div class="page-content">
   <div class="macro-summary">
     <div class="macro-card" style="border-top: 3px solid #D4A84B;">
       <div class="macro-label">Energia Total</div>
