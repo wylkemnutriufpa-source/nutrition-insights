@@ -259,14 +259,20 @@ function buildPremiumCSS(): string {
 
       .food-line {
         display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        margin-bottom: 4px;
-        color: #333;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        color: #334155;
         font-size: 11px;
       }
 
-      .food-bullet { color: #D4A84B; font-weight: bold; }
+      .food-bullet { 
+        width: 5px; 
+        height: 5px; 
+        background-color: #D4A84B; 
+        border-radius: 1px; 
+        flex-shrink: 0;
+      }
 
       .substitution-box {
         background: #fafafa;
