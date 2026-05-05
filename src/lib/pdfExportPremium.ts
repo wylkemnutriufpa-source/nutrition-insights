@@ -125,7 +125,7 @@ function formatDescription(desc: string): string {
 function buildPremiumCSS(): string {
   return `
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800;900&family=Inter:wght@400;500;600;700&display=swap');
 
       @page {
         margin: 0;
@@ -136,132 +136,178 @@ function buildPremiumCSS(): string {
       
       body {
         font-family: 'Inter', -apple-system, sans-serif;
-        color: #1e293b;
+        color: #0f172a;
         background: #ffffff;
         font-size: 11px;
-        line-height: 1.5;
+        line-height: 1.6;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
       .page-content {
-        padding: 0 40px 40px 40px;
+        padding: 0 50px 50px 50px;
+        position: relative;
       }
 
+      /* Estilo Premium para o Header */
       .premium-header {
-        background: #0f172a;
-        padding: 40px 30px;
-        margin-bottom: 30px;
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        padding: 50px 40px;
+        margin-bottom: 40px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-radius: 0 0 20px 20px;
+        border-radius: 0 0 40px 40px;
         color: white;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .premium-header::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(212, 168, 75, 0.1) 0%, transparent 70%);
+        transform: translate(100px, -100px);
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 36px;
-        font-weight: 800;
-        letter-spacing: -0.02em;
-        line-height: 1;
+        font-size: 42px;
+        font-weight: 900;
+        letter-spacing: -0.04em;
+        line-height: 0.9;
+        display: flex;
+        flex-direction: column;
       }
 
       .logo-fit {
         color: #D4A84B;
+        font-style: italic;
       }
-      .logo-journey { color: #ffffff; }
+      .logo-journey { 
+        color: #ffffff;
+        font-size: 0.8em;
+        margin-top: -5px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        font-family: 'Montserrat', sans-serif;
+        font-weight: 300;
+      }
 
       .patient-info {
         text-align: right;
+        border-right: 4px solid #D4A84B;
+        padding-right: 20px;
       }
 
       .patient-info .name {
-        font-size: 20px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 24px;
         font-weight: 800;
         color: #D4A84B;
         margin-bottom: 4px;
         text-transform: uppercase;
-        letter-spacing: 0.5px;
+        letter-spacing: 1px;
       }
 
       .patient-info .label {
         font-size: 10px;
         color: #94a3b8;
         text-transform: uppercase;
-        font-weight: 600;
+        font-weight: 700;
         margin-bottom: 2px;
+        letter-spacing: 2px;
       }
 
       .professional-label {
-        font-size: 11px;
+        font-size: 12px;
         font-weight: 500;
         color: #ffffff;
-        opacity: 0.9;
+        opacity: 0.8;
       }
 
+      /* Cards de Macronutrientes */
       .macro-summary {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 12px;
-        margin-bottom: 24px;
+        gap: 20px;
+        margin-bottom: 35px;
       }
 
       .macro-card {
         background: #ffffff;
-        border: 1px solid #f0f0f0;
-        border-radius: 12px;
-        padding: 16px;
+        border: 1px solid #f1f5f9;
+        border-radius: 16px;
+        padding: 20px 15px;
         text-align: center;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+        transition: transform 0.2s ease;
       }
 
       .macro-label {
-        font-size: 9px;
+        font-size: 10px;
         text-transform: uppercase;
-        color: #666;
-        font-weight: 700;
-        margin-bottom: 4px;
-      }
-
-      .macro-value {
-        font-size: 18px;
+        color: #64748b;
         font-weight: 800;
-        color: #1a1a2e;
-      }
-
-      .day-section { margin-bottom: 25px; page-break-inside: avoid; }
-
-      .day-header {
-        background: #1a1a2e;
-        color: #ffffff;
-        padding: 8px 15px;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 12px;
-      }
-
-      .day-header .day-name {
-        font-size: 14px;
-        font-weight: 800;
-        text-transform: uppercase;
+        margin-bottom: 6px;
         letter-spacing: 1px;
       }
 
+      .macro-value {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 22px;
+        font-weight: 800;
+        color: #0f172a;
+      }
+
+      .macro-value span {
+        font-size: 11px;
+        font-weight: 500;
+        color: #94a3b8;
+      }
+
+      /* Seções de Dias */
+      .day-section { margin-bottom: 40px; page-break-inside: avoid; }
+
+      .day-header {
+        background: #0f172a;
+        color: #ffffff;
+        padding: 12px 25px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 20px;
+        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+      }
+
+      .day-header .day-name {
+        font-family: 'Montserrat', sans-serif;
+        font-size: 16px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 3px;
+      }
+
+      /* Linhas de Refeição */
       .meal-row {
-        border: 1px solid #eeeeee;
-        border-radius: 8px;
-        margin-bottom: 10px;
+        border: 1px solid #f1f5f9;
+        border-radius: 16px;
+        margin-bottom: 15px;
         overflow: hidden;
         background: #ffffff;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
       }
 
       .meal-header-row {
-        background: #fdfdfd;
-        padding: 10px 15px;
-        border-bottom: 1px solid #f0f0f0;
+        background: #f8fafc;
+        padding: 15px 25px;
+        border-bottom: 1px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -270,92 +316,104 @@ function buildPremiumCSS(): string {
       .meal-title-group {
         display: flex;
         align-items: center;
-        gap: 8px;
+        gap: 12px;
       }
 
       .meal-label-tag {
         font-size: 10px;
         font-weight: 800;
         text-transform: uppercase;
-        padding: 2px 8px;
-        border-radius: 4px;
+        padding: 4px 12px;
+        border-radius: 6px;
         color: #fff;
+        letter-spacing: 0.5px;
       }
 
       .meal-primary-title {
-        font-size: 13px;
+        font-family: 'Montserrat', sans-serif;
+        font-size: 15px;
         font-weight: 700;
-        color: #1a1a2e;
+        color: #0f172a;
       }
 
       .meal-kcal-badge {
+        font-family: 'Montserrat', sans-serif;
         font-weight: 800;
         color: #D4A84B;
-        font-size: 12px;
+        font-size: 14px;
+        background: #fff;
+        padding: 4px 12px;
+        border-radius: 99px;
+        box-shadow: inset 0 0 0 1px #f1f5f9;
       }
 
       .meal-body {
-        padding: 12px 15px;
+        padding: 20px 25px;
       }
 
       .food-list {
-        margin-bottom: 10px;
+        margin-bottom: 0;
       }
 
       .food-line {
         display: flex;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 6px;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 8px;
         color: #334155;
-        font-size: 11px;
+        font-size: 12px;
       }
 
       .food-bullet { 
-        width: 5px; 
-        height: 5px; 
+        width: 6px; 
+        height: 6px; 
         background-color: #D4A84B; 
-        border-radius: 1px; 
+        border-radius: 50%; 
         flex-shrink: 0;
+        margin-top: 6px;
       }
 
+      /* Substituições */
       .substitution-box {
-        background: #fafafa;
-        border: 1px dashed #ddd;
-        border-radius: 6px;
-        padding: 10px;
-        margin-top: 10px;
+        background: #fdfaf3;
+        border: 1px solid #f9f1df;
+        border-radius: 12px;
+        padding: 15px 20px;
+        margin-top: 20px;
       }
 
       .sub-header {
-        font-size: 9px;
+        font-size: 10px;
         font-weight: 800;
-        color: #999;
+        color: #856404;
         text-transform: uppercase;
-        margin-bottom: 6px;
+        margin-bottom: 10px;
         display: flex;
         align-items: center;
-        gap: 5px;
+        gap: 8px;
+        letter-spacing: 1px;
       }
 
       .sub-item {
-        font-size: 10px;
-        padding: 4px 0;
-        border-bottom: 1px solid #eee;
+        font-size: 11px;
+        padding: 8px 0;
+        border-bottom: 1px solid #f3e9d2;
         display: flex;
         justify-content: space-between;
+        color: #4b3d17;
       }
       .sub-item:last-child { border-bottom: none; }
 
+      /* Footer */
       .premium-footer {
-        margin-top: 60px;
-        padding-top: 20px;
+        margin-top: 80px;
+        padding: 40px;
         border-top: 1px solid #f1f5f9;
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 8px;
-        font-size: 10px;
+        gap: 10px;
+        font-size: 11px;
         color: #94a3b8;
         font-weight: 500;
         text-align: center;
@@ -363,9 +421,23 @@ function buildPremiumCSS(): string {
       
       .footer-brand {
         font-family: 'Playfair Display', serif;
-        font-size: 14px;
-        font-weight: 700;
-        color: #1e293b;
+        font-size: 18px;
+        font-weight: 800;
+        color: #0f172a;
+        margin-bottom: 5px;
+      }
+
+      .watermark {
+        position: fixed;
+        bottom: 100px;
+        right: -100px;
+        font-size: 120px;
+        font-weight: 900;
+        color: rgba(15, 23, 42, 0.02);
+        transform: rotate(-45deg);
+        z-index: -1;
+        pointer-events: none;
+        text-transform: uppercase;
       }
     </style>
   `;
