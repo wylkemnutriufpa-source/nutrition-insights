@@ -308,47 +308,40 @@ function buildPremiumCSS(): string {
         justify-content: space-between;
         align-items: center;
       }
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
 
       .meal-title-group {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
       }
 
       .meal-label-tag {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 800;
         text-transform: uppercase;
-        padding: 4px 12px;
-        border-radius: 6px;
+        padding: 3px 9px;
+        border-radius: 5px;
         color: #fff;
         letter-spacing: 0.5px;
-      }
-
-      .meal-primary-title {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 15px;
-        font-weight: 700;
-        color: #0f172a;
+        white-space: nowrap;
       }
 
       .meal-kcal-badge {
         font-family: 'Montserrat', sans-serif;
         font-weight: 800;
         color: #D4A84B;
-        font-size: 14px;
+        font-size: 12px;
         background: #fff;
-        padding: 4px 12px;
+        padding: 3px 10px;
         border-radius: 99px;
         box-shadow: inset 0 0 0 1px #f1f5f9;
+        white-space: nowrap;
       }
 
       .meal-body {
-        padding: 20px 25px;
+        padding: 10px 16px 12px;
       }
 
       .food-list {
