@@ -70,7 +70,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   }
 
   // 4. Rotas específicas que devem ser exclusivas de paciente
-  const patientOnlyPaths = ["/journey", "/patient-plan", "/checkin", "/meals"];
+  const patientOnlyPaths = ["/journey", "/patient-meal-plan", "/checkin", "/meals"];
   if (patientOnlyPaths.some(p => location.pathname.startsWith(p)) && !isPro && !isPatient && roles !== null && roles.length > 0) {
     console.log(`[DEBUG] WorkspaceRouteGuard redirecting to /welcome | reason: no valid role found for patient features`);
     return <Navigate to="/welcome" replace />;

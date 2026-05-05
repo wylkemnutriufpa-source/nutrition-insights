@@ -68,7 +68,7 @@ const allRoutes = [
   // Patient only
   { to: "/meals", icon: Leaf, label: "Refeições", keywords: "refeicoes registrar comida foto meal log cafe almoco jantar lanche", roles: ["patient"], desc: "Registrar refeições" },
   { to: "/checklist", icon: ClipboardCheck, label: "Checklist Diário", keywords: "checklist tarefas diario rotina habitos daily tasks", roles: ["patient"], desc: "Tarefas do dia" },
-  { to: "/my-diet", icon: UtensilsCrossed, label: "Minha Dieta", keywords: "minha dieta plano alimentar cardapio refeicoes do dia my diet", roles: ["patient"], desc: "Ver plano alimentar" },
+  { to: "/patient-meal-plan", icon: UtensilsCrossed, label: "Minha Dieta", keywords: "minha dieta plano alimentar cardapio refeicoes do dia my diet", roles: ["patient"], desc: "Ver plano alimentar" },
   { to: "/my-workouts", icon: Dumbbell, label: "Meus Treinos", keywords: "meus treinos exercicios academia musculacao workout gym", roles: ["patient"], desc: "Treinos prescritos" },
   { to: "/journey", icon: TrendingUp, label: "Jornada", keywords: "jornada progresso evolucao timeline historico caminho", roles: ["patient"], desc: "Histórico de evolução" },
   { to: "/achievements", icon: Trophy, label: "Conquistas", keywords: "conquistas medalhas trofeus badges premios achievements gamificacao xp", roles: ["patient"], desc: "Medalhas e conquistas" },

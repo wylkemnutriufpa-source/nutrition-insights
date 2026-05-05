@@ -69,7 +69,7 @@ function SidebarFallback({ onLinkClick }: { onLinkClick?: () => void }) {
   ] : [
     { to: "/", label: "Início" },
     { to: "/journey", label: "Jornada" },
-    { to: "/my-diet", label: "Minha Dieta" },
+    { to: "/patient-meal-plan", label: "Minha Dieta" },
     { to: "/meals", label: "Refeições" },
     { to: "/recipes", label: "Receitas" },
     { to: "/settings", label: "Configurações" },
