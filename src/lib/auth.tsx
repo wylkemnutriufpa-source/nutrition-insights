@@ -158,7 +158,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(initialSession);
           setUser(initialSession?.user ?? null);
           if (initialSession?.user) {
-            // Wait for roles and profile before finishing loading
             await fetchData(initialSession.user.id);
           }
         }
@@ -180,7 +179,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(currentUser);
 
         if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && currentUser) {
-          // Background fetch, non-blocking
           fetchData(currentUser.id).catch((e) => {
             if (import.meta.env.DEV) console.error("[Auth] state fetch:", e);
           });
@@ -193,12 +191,30 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     );
 
+    // Realtime Profile Sync
+    let profileChannel: any = null;
+    if (user?.id) {
+      profileChannel = supabase
+        .channel(`auth-profile-${user.id}`)
+        .on(
+          "postgres_changes",
+          { event: "UPDATE", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` },
+          (payload) => {
+            if (mounted) {
+              console.log("[Auth] Profile update detected via Realtime", payload.new);
+              setProfile(payload.new as Profile);
+            }
+          }
+        )
+        .subscribe();
+    }
 
     return () => {
       mounted = false;
       authSubscription.unsubscribe();
+      if (profileChannel) supabase.removeChannel(profileChannel);
     };
-  }, []);
+  }, [user?.id]);
 
   const signOut = async () => {
     invalidateMenuCache();
