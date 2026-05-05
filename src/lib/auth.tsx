@@ -239,8 +239,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const experienceRole: "nutritionist" | "patient" = (isNutritionist || isPersonal || isAdmin) ? "nutritionist" : "patient";
   const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode === "pro" || profile?.experience_mode === "advanced") 
-    ? profile.experience_mode 
+    ? profile.experience_mode as any
     : "basic";
+
+  useEffect(() => {
+    console.log(`[DEBUG] useAuth experienceMode calculated: ${experienceMode} | profileMode: ${profile?.experience_mode}`);
+  }, [experienceMode, profile?.experience_mode]);
 
   return (
     <AuthContext.Provider

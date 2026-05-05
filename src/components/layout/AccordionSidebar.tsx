@@ -345,6 +345,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   const location = useLocation();
   const { t } = useTranslation();
   const { isFeatureEnabled, minMode, mode } = useExperienceMode();
+  console.log(`[DEBUG] LegacySidebar render | mode: ${mode}`);
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const { isPatient, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
