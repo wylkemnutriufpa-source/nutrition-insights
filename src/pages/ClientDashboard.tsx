@@ -230,7 +230,15 @@ export default function ClientDashboard() {
                   <AlertTriangle className="w-5 h-5 flex-shrink-0" />
                   <p className="text-sm font-medium">Você ainda não completou seu cadastro inicial. Algumas funcionalidades podem estar limitadas.</p>
                 </div>
-                <Button onClick={() => navigate("/onboarding/paciente")} size="sm" className="bg-amber-500 hover:bg-amber-600 text-white shrink-0">
+                <Button 
+                  onClick={() => {
+                    if (journeyStatus === 'anamnesis') navigate("/anamnesis");
+                    else if (journeyStatus === 'collecting_profile') navigate("/onboarding/paciente"); // Or wherever collecting_profile goes
+                    else navigate("/onboarding/paciente");
+                  }} 
+                  size="sm" 
+                  className="bg-amber-500 hover:bg-amber-600 text-white shrink-0"
+                >
                   Completar Agora
                 </Button>
               </div>
