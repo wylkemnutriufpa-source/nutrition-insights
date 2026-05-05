@@ -312,14 +312,24 @@ function buildPremiumCSS(): string {
       .sub-item:last-child { border-bottom: none; }
 
       .premium-footer {
-        margin-top: 40px;
+        margin-top: 60px;
         padding-top: 20px;
-        border-top: 1px solid #eee;
+        border-top: 1px solid #f1f5f9;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
         font-size: 10px;
         color: #94a3b8;
         font-weight: 500;
+        text-align: center;
+      }
+      
+      .footer-brand {
+        font-family: 'Playfair Display', serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
       }
     </style>
   `;
