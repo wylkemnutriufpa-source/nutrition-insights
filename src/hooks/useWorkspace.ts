@@ -127,20 +127,20 @@ export function useWorkspace() {
     if (!profile) return;
     const maxOrder = sections.reduce((m, s) => Math.max(m, s.sort_order), -1);
     const { data } = await supabase
-      .from("workspace_sections" as any)
+      .from("workspace_sections")
       .insert({ workspace_id: profile.id, section_name: name, section_icon: icon, section_color: color, sort_order: maxOrder + 1 })
       .select()
       .single();
-    if (data) setSections(prev => [...prev, data as any]);
+    if (data) setSections(prev => [...prev, data]);
   }, [profile, sections]);
 
   const updateSection = useCallback(async (id: string, updates: Partial<WorkspaceSection>) => {
-    await supabase.from("workspace_sections" as any).update(updates).eq("id", id);
+    await supabase.from("workspace_sections").update(updates).eq("id", id);
     setSections(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   }, []);
 
   const deleteSection = useCallback(async (id: string) => {
-    await supabase.from("workspace_sections" as any).delete().eq("id", id);
+    await supabase.from("workspace_sections").delete().eq("id", id);
     setSections(prev => prev.filter(s => s.id !== id));
     setItems(prev => prev.filter(i => i.section_id !== id));
   }, []);
@@ -148,7 +148,7 @@ export function useWorkspace() {
   const reorderSections = useCallback(async (orderedIds: string[]) => {
     const updates = orderedIds.map((id, i) => ({ id, sort_order: i }));
     for (const u of updates) {
-      await supabase.from("workspace_sections" as any).update({ sort_order: u.sort_order }).eq("id", u.id);
+      await supabase.from("workspace_sections").update({ sort_order: u.sort_order }).eq("id", u.id);
     }
     setSections(prev => {
       const map = new Map(prev.map(s => [s.id, s]));
@@ -158,7 +158,7 @@ export function useWorkspace() {
 
   // Item CRUD
   const moveItem = useCallback(async (itemId: string, toSectionId: string, newOrder: number) => {
-    await supabase.from("workspace_items" as any).update({ section_id: toSectionId, sort_order: newOrder }).eq("id", itemId);
+    await supabase.from("workspace_items").update({ section_id: toSectionId, sort_order: newOrder }).eq("id", itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, section_id: toSectionId, sort_order: newOrder } : i));
   }, []);
 
@@ -166,7 +166,7 @@ export function useWorkspace() {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     const newVis = !item.is_visible;
-    await supabase.from("workspace_items" as any).update({ is_visible: newVis }).eq("id", itemId);
+    await supabase.from("workspace_items").update({ is_visible: newVis }).eq("id", itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, is_visible: newVis } : i));
   }, [items]);
 
@@ -174,7 +174,7 @@ export function useWorkspace() {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     const newPin = !item.is_pinned;
-    await supabase.from("workspace_items" as any).update({ is_pinned: newPin }).eq("id", itemId);
+    await supabase.from("workspace_items").update({ is_pinned: newPin }).eq("id", itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, is_pinned: newPin } : i));
   }, [items]);
 
@@ -186,23 +186,23 @@ export function useWorkspace() {
     }
     const maxOrder = items.filter(i => i.section_id === sectionId).reduce((m, i) => Math.max(m, i.sort_order), -1);
     const { data } = await supabase
-      .from("workspace_items" as any)
+      .from("workspace_items")
       .insert({ workspace_id: profile.id, section_id: sectionId, menu_item_id: menuItemId, sort_order: maxOrder + 1 })
       .select()
       .single();
     if (data) {
-      setItems(prev => [...prev, { ...(data as any), ...menuData }]);
+      setItems(prev => [...prev, { ...data, ...menuData }]);
     }
   }, [profile, items]);
 
   const removeItem = useCallback(async (itemId: string) => {
-    await supabase.from("workspace_items" as any).delete().eq("id", itemId);
+    await supabase.from("workspace_items").delete().eq("id", itemId);
     setItems(prev => prev.filter(i => i.id !== itemId));
   }, []);
 
   const reorderItems = useCallback(async (sectionId: string, orderedItemIds: string[]) => {
     for (let i = 0; i < orderedItemIds.length; i++) {
-      await supabase.from("workspace_items" as any).update({ sort_order: i }).eq("id", orderedItemIds[i]);
+      await supabase.from("workspace_items").update({ sort_order: i }).eq("id", orderedItemIds[i]);
     }
     setItems(prev => {
       const updated = [...prev];
@@ -217,9 +217,9 @@ export function useWorkspace() {
   const resetToDefault = useCallback(async () => {
     if (!profile || !user?.id) return;
     // Delete everything and reinitialize
-    await supabase.from("workspace_items" as any).delete().eq("workspace_id", profile.id);
-    await supabase.from("workspace_sections" as any).delete().eq("workspace_id", profile.id);
-    await supabase.from("workspace_profiles" as any).delete().eq("id", profile.id);
+    await supabase.from("workspace_items").delete().eq("workspace_id", profile.id);
+    await supabase.from("workspace_sections").delete().eq("workspace_id", profile.id);
+    await supabase.from("workspace_profiles").delete().eq("id", profile.id);
     setProfile(null);
     setSections([]);
     setItems([]);
@@ -232,7 +232,7 @@ export function useWorkspace() {
     return items
       .filter(i => i.section_id === sectionId)
       .filter(i => {
-        const rv = (i as any).role_visibility;
+        const rv = i.role_visibility;
         // If no role_visibility defined, show to everyone
         if (!Array.isArray(rv) || rv.length === 0) return true;
         return rv.includes(userRole);
