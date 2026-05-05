@@ -47,46 +47,8 @@ export const checkFeaturePermission = (
   return Array.isArray(allowedFeatures) ? allowedFeatures.includes(feature) : false;
 };
 
+import { useExperienceContext } from "@/providers/ExperienceProvider";
+
 export function useExperienceMode(): ExperienceModeContextValue {
-  const { experienceMode, experienceRole, setMode, loading } = useAuth();
-
-  const mode = (experienceMode as ExperienceMode) || "basic";
-  const role = experienceRole;
-
-  const minMode = (requiredMode: ExperienceMode) => {
-    return checkFeaturePermission(requiredMode, mode, role);
-  };
-
-  const isFeatureEnabled = (feature: string) => {
-    return checkFeaturePermission(feature, mode, role);
-  };
-
-  const isRouteAllowed = (route: string) => {
-    // Basic route normalization
-    const cleanRoute = route.split('?')[0].split('#')[0].replace(/^\//, '');
-    if (!cleanRoute || cleanRoute === 'dashboard') return true;
-
-    // A route is allowed if it's explicitly in the allowed features list for the current mode/role
-    // Or if the mode has "all" features.
-    return isFeatureEnabled(cleanRoute);
-  };
-
-  return {
-    mode,
-    role,
-    setMode,
-    isFeatureEnabled,
-    minMode,
-    isRouteAllowed,
-    isBasic: mode === "basic",
-    isPro: mode === "pro",
-    isAdvanced: mode === "advanced",
-    isLoading: loading,
-    failedMode: null,
-    retryLastMode: () => {},
-    lastError: null,
-    isOffline: false,
-    pendingQueueSize: 0,
-    queueStats: { processed: 0, failed: 0, isFull: false, hasExpired: false },
-  };
+  return useExperienceContext();
 }
