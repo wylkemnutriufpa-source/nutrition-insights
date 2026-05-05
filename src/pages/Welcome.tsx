@@ -66,14 +66,17 @@ export default function Welcome() {
         // Garantir que temos o estado mais recente do banco
         const pState = profile?.patient_state || "onboarding_slides";
         
-        // Regra de Ouro: se pState for null ou concluído, vai para dashboard
+        // Regra de Ouro: se pState for null, concluído ou active_plan, vai para dashboard
         let target = "/client/dashboard";
         
         if (pState === "onboarding_slides") target = "/onboarding/paciente";
         else if (pState === "anamnesis") target = "/anamnesis";
+        else if (pState === "collecting_profile") target = "/client/dashboard"; // Fallback para evitar loop se o estado for intermediário
         
-        // Se o usuário finalizou anamnese recentemente, o estado pode estar em transição
-        // mas o Welcome deve preferir o Dashboard se houver qualquer sinal de conclusão.
+        // Se onboarding_completed for true, SEMPRE vai para dashboard ignorando patient_state (segurança extra)
+        if (profile?.onboarding_completed) {
+          target = "/client/dashboard";
+        }
         
         // Se nextPath for /dashboard ou /, normalizamos para o destino correto
         const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index";
@@ -83,7 +86,7 @@ export default function Welcome() {
           state: pState, 
           target: finalTarget, 
           originalNext: nextPath,
-          onboardingCompleted: profile?.patient_state === null || profile?.patient_state === 'completed'
+          onboardingCompleted: profile?.onboarding_completed
         });
         
         navigate(finalTarget, { replace: true });
