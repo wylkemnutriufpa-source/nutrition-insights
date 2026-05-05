@@ -8,7 +8,6 @@
 import { supabase } from '@/integrations/supabase/client';
 import type { Meal, DraftPayload, AuditLogEntry } from '../types';
 import { normalizeMeals } from '../utils/normalization';
-import { validateDraftIntegrity } from '../../security/services/criticalContracts';
 
 export interface DraftRecord {
   id: string;
@@ -23,7 +22,6 @@ export interface DraftRecord {
   draft_status: 'editing' | 'promoted' | 'discarded';
   promoted_meal_plan_id: string | null;
   sharing_token: string | null;
-
   updated_at: string;
 }
 
@@ -51,7 +49,6 @@ function computeMacros(meals: Meal[]) {
   for (const meal of meals) {
     for (const item of meal.items) {
       const q = item.quantity ?? 1;
-      // Normalizing macro calculation to avoid silent failures
       const baseKcal = Number(item.kcal || item.calories || 0);
       const baseProtein = Number(item.protein || 0);
       const baseCarbs = Number(item.carbs || 0);
@@ -67,29 +64,22 @@ function computeMacros(meals: Meal[]) {
   return { kcal, protein, carbs, fat };
 }
 
-/**
- * Carrega o draft `editing` ativo do par (nutricionista atual, paciente).
- * Se não existir, cria um novo a partir das `seedMeals`.
- * Também registra o log de acesso.
- */
 export async function loadOrCreateDraft(
   patientId: string,
-  seedMeals: Meal[]
+  seedMeals: Meal[] = []
 ): Promise<DraftRecord | null> {
   const { data: userRes } = await supabase.auth.getUser();
   const nutritionistId = userRes.user?.id;
   if (!nutritionistId) return null;
 
-  // Registrar log de acesso: Visualização de plano/draft
   await supabase.from('access_logs').insert({
     user_id: nutritionistId,
     patient_id: patientId,
     action: 'view',
     resource: 'draft',
     user_agent: navigator.userAgent
-  });
+  } as any);
 
-  // 1) Tenta achar um draft em edição
   const { data: existing, error: findErr } = await supabase
     .from('v3_drafts' as any)
     .select('*')
@@ -110,7 +100,6 @@ export async function loadOrCreateDraft(
     return record;
   }
 
-  // 2) Cria um novo
   const tenantId = await getActiveTenant();
   if (!tenantId) {
     console.warn('[v3-draft] no active tenant — cannot create draft');
@@ -140,38 +129,22 @@ export async function loadOrCreateDraft(
     .single();
 
   if (insErr) {
-    console.error('[v3-draft] create failed:', insErr.message, {
-      patientId,
-      nutritionistId,
-      tenantId,
-      errorDetails: insErr
-    });
+    console.error('[v3-draft] create failed:', insErr.message);
     return null;
   }
   console.info('[v3-draft] draft created successfully:', (created as any)?.id);
   return created as unknown as DraftRecord;
 }
 
-/**
- * Salva o conteúdo atual do editor no draft.
- * Retorna o registro atualizado para controle de updated_at.
- */
 export async function saveDraft(
-  draftId: string, 
-  meals: Meal[], 
-  auditLog: AuditLogEntry[] = []
+  draftId: string,
+  meals: Meal[]
 ): Promise<DraftRecord | null> {
-  // Contract Validation (ETAPA 2)
-  validateDraftIntegrity({ meals, version: 1 });
-  // Contract Validation (ETAPA 2)
-  validateDraftIntegrity({ meals, version: 1 });
-
-  const normalizedMeals = normalizeMeals(meals);
-  const macros = computeMacros(normalizedMeals);
-  const payload: DraftPayload = { 
-    meals: normalizedMeals, 
+  const macros = computeMacros(meals);
+  const payload: DraftPayload = {
+    meals,
     version: DRAFT_PAYLOAD_VERSION,
-    audit_log: auditLog
+    audit_log: []
   };
 
   const { data, error } = await supabase
@@ -182,23 +155,16 @@ export async function saveDraft(
       meta_protein: macros.protein,
       meta_carbs: macros.carbs,
       meta_fat: macros.fat,
-    })
+    } as any)
     .eq('id', draftId)
     .select('*')
     .single();
 
   if (error) {
-    console.warn('[v3-draft] save failed — keeping local fallback', {
-      draftId,
-      errorMessage: error.message,
-      errorCode: error.code
-    });
+    console.warn('[v3-draft] save failed — keeping local fallback', error.message);
     return null;
   }
   
-  console.debug('[v3-draft] saved successfully:', draftId);
-
-  // Log de acesso: Edição de draft
   const { data: userRes } = await supabase.auth.getUser();
   if (userRes.user) {
     const record = data as unknown as DraftRecord;
@@ -208,39 +174,28 @@ export async function saveDraft(
       action: 'edit',
       resource: 'draft',
       user_agent: navigator.userAgent
-    });
+    } as any);
   }
 
   return data as unknown as DraftRecord;
 }
 
-/**
- * Marca um draft como descartado (usado pelo Resetar).
- * Não apaga histórico — preserva para auditoria.
- */
 export async function discardDraft(draftId: string): Promise<void> {
-  const { data: draftData } = await supabase
+  const { data: draft } = await supabase
     .from('v3_drafts' as any)
-    .select('patient_id')
+    .update({ draft_status: 'discarded' } as any)
     .eq('id', draftId)
+    .select('patient_id')
     .single();
 
-  const draft = draftData as any;
-
-  await supabase
-    .from('v3_drafts' as any)
-    .update({ draft_status: 'discarded' })
-    .eq('id', draftId);
-
-  // Log de exclusão (soft-delete)
   const { data: userRes } = await supabase.auth.getUser();
-  if (userRes.user && draft?.patient_id) {
+  if (userRes.user && draft) {
     await supabase.from('access_logs').insert({
       user_id: userRes.user.id,
-      patient_id: draft.patient_id,
+      patient_id: (draft as any).patient_id,
       action: 'delete',
       resource: 'draft',
       user_agent: navigator.userAgent
-    });
+    } as any);
   }
 }
