@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth";
 import { featureMap } from "@/config/features";
 
@@ -24,14 +25,23 @@ export interface ExperienceModeContextValue {
 
 
 export function useExperienceMode(): ExperienceModeContextValue {
-  const { profile, experienceMode, experienceRole, setMode, loading } = useAuth();
+  const { profile, experienceMode, experienceRole, setMode, loading, refreshProfile } = useAuth();
 
   const mode = experienceMode as ExperienceMode;
   const role = experienceRole;
 
+  // Forçar atualização local quando o modo mudar no perfil
+  const [localMode, setLocalMode] = useState<ExperienceMode>(mode);
+
+  useEffect(() => {
+    if (mode !== localMode) {
+      setLocalMode(mode);
+    }
+  }, [mode]);
+
   const isFeatureEnabled = (feature: string) => {
     const userRole = role === "nutritionist" ? "nutritionist" : "patient";
-    const userMode = (mode === "pro" || mode === "advanced") ? mode : "basic";
+    const userMode = (localMode === "pro" || localMode === "advanced") ? localMode : "basic";
 
     const roleMap = featureMap[userRole] || featureMap.patient;
     const allowedFeatures = roleMap[userMode] || roleMap.basic;
@@ -43,7 +53,7 @@ export function useExperienceMode(): ExperienceModeContextValue {
   // Mantido apenas para compatibilidade visual ou se algum componente antigo usar
   const minMode = (requiredMode: ExperienceMode) => {
     const levels = { basic: 0, pro: 1, advanced: 2 };
-    return levels[mode] >= levels[requiredMode];
+    return levels[localMode] >= levels[requiredMode];
   };
 
   // Mantido para compatibilidade com rotas/menus se necessário
@@ -53,10 +63,17 @@ export function useExperienceMode(): ExperienceModeContextValue {
     return true;
   };
 
+  const wrappedSetMode = async (newMode: string) => {
+    await setMode(newMode);
+    setLocalMode(newMode as ExperienceMode);
+    // Forçar refresh do perfil para garantir que useAuth e o banco estejam em sincronia total
+    setTimeout(() => refreshProfile(), 500);
+  };
+
   return {
-    mode,
+    mode: localMode,
     role,
-    setMode,
+    setMode: wrappedSetMode,
     isFeatureEnabled,
     minMode,
     isRouteAllowed,

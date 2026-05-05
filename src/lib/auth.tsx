@@ -22,6 +22,7 @@ interface Profile {
   unlock_date?: string | null;
   is_orphan?: boolean;
   patient_state?: string | null;
+  onboarding_completed?: boolean;
 }
 
 interface SubscriptionState {

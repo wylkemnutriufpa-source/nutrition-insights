@@ -179,6 +179,15 @@ const CommandPaletteDialog = memo(function CommandPaletteDialog() {
   const [dataLoaded, setDataLoaded] = useState(false);
 
   useEffect(() => {
+    const handleOpen = () => {
+      console.log("[CommandPalette] Event 'open-command-palette' received");
+      setIsOpen(true);
+    };
+    window.addEventListener("open-command-palette", handleOpen);
+    return () => window.removeEventListener("open-command-palette", handleOpen);
+  }, []);
+
+  useEffect(() => {
     const down = (e: KeyboardEvent) => {
       if (e.key === "k" && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();

@@ -63,17 +63,31 @@ export default function Welcome() {
 
       // Flow Paciente
       if (effectiveRoles.includes("patient")) {
-        const pState = profile?.patient_state || "onboarding_slides";
+        // Garantir que temos o estado mais recente do banco
+        const pState = (profile as any)?.patient_state || "onboarding_slides";
+        const onboardingCompleted = (profile as any)?.onboarding_completed;
+        
+        // Regra de Ouro: se pState for null, concluído ou active_plan, vai para dashboard
         let target = "/client/dashboard";
         
         if (pState === "onboarding_slides") target = "/onboarding/paciente";
         else if (pState === "anamnesis") target = "/anamnesis";
+        else if (pState === "collecting_profile") target = "/client/dashboard"; // Fallback
         
-        // Se nextPath for /dashboard ou /, normalizamos para o destino correto
+        // Se onboarding_completed for true, SEMPRE vai para dashboard (segurança extra)
+        if (onboardingCompleted) {
+          target = "/client/dashboard";
+        }
+        
         const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index";
         const finalTarget = (nextPath && !isDefaultPath) ? nextPath : target;
         
-        console.log("[NAV] Welcome -> Patient Flow", { state: pState, target: finalTarget, originalNext: nextPath });
+        console.log("[NAV] Welcome -> Patient Flow", { 
+          state: pState, 
+          target: finalTarget, 
+          onboardingCompleted
+        });
+        
         navigate(finalTarget, { replace: true });
         return;
       }

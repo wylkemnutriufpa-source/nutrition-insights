@@ -1156,11 +1156,12 @@ export default function Anamnesis() {
     if (profileRes.error) {
       console.error("[FJ:Anamnesis] profile sync failed:", profileRes.error);
     } else {
-      console.log("[FJ:Anamnesis] patient_state updated to collecting_profile");
-      // Hardening: Explicitly verify and set state
+      console.log("[FJ:Anamnesis] patient_state updated to active_plan");
+      // Hardening: Explicitly verify and set state as active_plan (canonical for finished onboarding)
+      // This is the absolute signal for Welcome.tsx to redirect to Dashboard
       await supabase.from("profiles").update({ 
-        patient_state: 'collecting_profile',
-        onboarding_completed: true // Marcar como concluído se for o fim do fluxo esperado
+        patient_state: 'active_plan' as any,
+        onboarding_completed: true
       }).eq("user_id", targetUserId);
     }
 
