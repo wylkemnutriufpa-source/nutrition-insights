@@ -394,42 +394,6 @@ export default function ClientDashboard() {
               </div>
             </div>
 
-              <div className="lg:col-span-4 space-y-6">
-                {/* Adherence & Streaks */}
-                <motion.div variants={item}>
-                  <AdherenceStats 
-                    streak={stats?.current_streak || 0} 
-                    adherence={stats?.weekly_adherence_pct || 0} 
-                    longestStreak={stats?.longest_streak}
-                  />
-                </motion.div>
-
-                {/* Engagement Alerts & Loops */}
-                <motion.div variants={item}>
-                  <PatientRetentionAlerts />
-                </motion.div>
-
-                {/* Next Meal Shortcut */}
-                <motion.div variants={item}>
-                  <NextMealWidget />
-                </motion.div>
-
-                {/* Momentum Indicator */}
-                <motion.div variants={item}>
-                  <TherapeuticMomentumBar />
-                </motion.div>
-
-                {/* Metabolic Radar */}
-                <motion.div variants={item}>
-                  <PatientMetabolicInsightPanel />
-                </motion.div>
-
-                {/* Smart Tips */}
-                <motion.div variants={item}>
-                  <SmartTips />
-                </motion.div>
-              </div>
-            </div>
 
             {/* Secondary Sections */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pt-4 border-t border-border/50">
