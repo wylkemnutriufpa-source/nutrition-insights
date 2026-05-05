@@ -345,7 +345,10 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   const location = useLocation();
   const { t } = useTranslation();
   const { isFeatureEnabled, minMode, mode } = useExperienceMode();
+  
   console.log(`[DEBUG] LegacySidebar render | mode: ${mode}`);
+  console.log(`[DEBUG] Itens ANTES do filtro:`, categories.flatMap(c => c.items).map(i => ({ label: i.label, feature: i.feature, premium: i.premium_only })));
+
   const isMobile = useIsMobile();
   const [openGroup, setOpenGroup] = useState<string | null>(null);
   const { isPatient, isNutritionist, isPersonal, isAdmin, loading } = useAuth();
@@ -354,17 +357,21 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   if (loading || !hasRole) return null;
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
-    // Priority 1: Role check (already done in useSmartMenu, but safe to keep)
-    // Priority 2: Specific feature check
+    // Priority 1: Specific feature check
+    let allowed = true;
     if (item.feature) {
-      return isFeatureEnabled(item.feature);
+      allowed = isFeatureEnabled(item.feature);
+    } else if (item.premium_only && !minMode("pro")) {
+      // Priority 2: Generic premium check
+      allowed = false;
     }
-    // Priority 3: Generic premium check
-    if (item.premium_only && !minMode("pro")) {
-      return false;
-    }
-    return true;
+    
+    console.log(`[DEBUG] Item: ${item.label} | feature: ${item.feature} | premium_only: ${item.premium_only} | PASSED: ${allowed}`);
+    return allowed;
   });
+
+  console.log(`[DEBUG] Itens DEPOIS do filtro:`, allItems.map(i => i.label));
+
   const fixedItems = allItems.filter((item) => FIXED_ROUTES.includes(item.route));
 
   const groupedMap = new Map<string, SmartMenuItem[]>();
