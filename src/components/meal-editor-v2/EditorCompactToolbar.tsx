@@ -292,6 +292,8 @@ export default function EditorCompactToolbar({ viewMode, onViewModeChange }: Pro
           <DietPreviewPanel />
         </DialogContent>
       </Dialog>
+
+      <SharePlanDialog open={shareOpen} onOpenChange={setShareOpen} data={shareData} />
     </div>
   );
 }
