@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye, FileDown } from "lucide-react";
+import { LayoutGrid, List, Utensils, BookOpen, Sparkles, Wand2, Eye, FileDown, Share2 } from "lucide-react";
 import { WeeklyGrid } from "./WeeklyGrid";
 import { ListView } from "./ListView";
 import { MealLibraryModal } from "./MealLibraryModal";
@@ -12,7 +12,8 @@ import { MealLibrarySidebar } from "./MealLibrarySidebar";
 import DietPreviewPanel from "./DietPreviewPanel";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useMealPlanEditorV2Store } from "@/stores/mealPlanEditorV2Store";
-import { generatePremiumMealPlanPDF } from "@/lib/pdfExportPremium";
+import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
+import SharePlanDialog from "@/components/meal-plan/SharePlanDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 
