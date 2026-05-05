@@ -89,7 +89,7 @@ function buildPremiumCSS(): string {
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
 
       @page {
-        margin: 12mm 14mm;
+        margin: 10mm;
         size: A4;
       }
 
@@ -100,67 +100,72 @@ function buildPremiumCSS(): string {
         color: #1a1a2e;
         background: #ffffff;
         font-size: 11px;
-        line-height: 1.5;
+        line-height: 1.4;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
       .premium-header {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 40%, #0d0d1a 100%);
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
         border-radius: 16px;
-        padding: 28px 32px;
+        padding: 25px 32px;
         margin-bottom: 24px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        border-bottom: 4px solid #D4A84B;
         position: relative;
         overflow: hidden;
       }
 
-      .header-content {
-        position: relative;
-        z-index: 1;
-        display: flex;
-        justify-content: space-between;
-        align-items: flex-start;
-      }
-
-      .brand-area {
-        display: flex;
-        flex-direction: column;
-        gap: 6px;
+      .premium-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(212,168,75,0.1) 0%, transparent 70%);
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 32px;
+        font-size: 36px;
         font-weight: 800;
         letter-spacing: -0.02em;
         line-height: 1;
+        position: relative;
+        z-index: 2;
       }
 
       .logo-fit {
-        background: linear-gradient(180deg, #D4A84B 0%, #F5D55A 25%, #FFFBE6 50%, #F5D55A 75%, #8B6914 100%);
+        background: linear-gradient(180deg, #D4A84B 0%, #F5D55A 100%);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        background-clip: text;
       }
-
-      .logo-journey {
-        background: linear-gradient(180deg, #8A8A8A 0%, #C0C0C0 20%, #E8E8E8 45%, #F5F5F5 55%, #C0C0C0 75%, #3A3A3A 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
+      .logo-journey { color: #ffffff; }
 
       .patient-info {
         text-align: right;
-        color: rgba(255,255,255,0.7);
-        font-size: 11px;
+        color: #ffffff;
+        position: relative;
+        z-index: 2;
       }
 
       .patient-info .name {
-        font-size: 16px;
-        font-weight: 700;
-        color: #fff;
-        margin-bottom: 2px;
+        font-size: 18px;
+        font-weight: 800;
+        color: #D4A84B;
+        margin-bottom: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .patient-info .label {
+        font-size: 10px;
+        color: rgba(255,255,255,0.6);
+        text-transform: uppercase;
+        font-weight: 600;
       }
 
       .macro-summary {
@@ -171,78 +176,149 @@ function buildPremiumCSS(): string {
       }
 
       .macro-card {
-        background: #fafafa;
-        border: 1px solid #eee;
+        background: #ffffff;
+        border: 1px solid #f0f0f0;
         border-radius: 12px;
-        padding: 14px 16px;
+        padding: 16px;
         text-align: center;
-        position: relative;
-        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
       }
 
-      .macro-card::before {
-        content: '';
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        height: 3px;
+      .macro-label {
+        font-size: 9px;
+        text-transform: uppercase;
+        color: #666;
+        font-weight: 700;
+        margin-bottom: 4px;
       }
-
-      .macro-card.kcal::before { background: linear-gradient(90deg, #D4A84B, #F5D55A); }
-      .macro-card.prot::before { background: linear-gradient(90deg, #EF4444, #F87171); }
-      .macro-card.carb::before { background: linear-gradient(90deg, #F59E0B, #FBBF24); }
-      .macro-card.fat::before { background: linear-gradient(90deg, #3B82F6, #60A5FA); }
 
       .macro-value {
-        font-size: 22px;
+        font-size: 18px;
         font-weight: 800;
         color: #1a1a2e;
-        line-height: 1.1;
       }
 
-      .day-section { margin-bottom: 20px; page-break-inside: avoid; }
+      .day-section { margin-bottom: 25px; page-break-inside: avoid; }
 
       .day-header {
+        background: #1a1a2e;
+        color: #ffffff;
+        padding: 8px 15px;
+        border-radius: 8px;
         display: flex;
         align-items: center;
         gap: 10px;
         margin-bottom: 12px;
-        padding: 8px 0;
-        border-bottom: 2px solid #1a1a2e;
       }
 
-      .day-number {
-        width: 32px;
-        height: 32px;
-        background: #1a1a2e;
-        color: #D4A84B;
-        border-radius: 8px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+      .day-header .day-name {
+        font-size: 14px;
         font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 1px;
       }
 
       .meal-row {
-        display: flex;
-        background: #fff;
-        border: 1px solid #f0f0f0;
-        border-radius: 10px;
-        margin-bottom: 8px;
+        border: 1px solid #eeeeee;
+        border-radius: 8px;
+        margin-bottom: 10px;
         overflow: hidden;
-        page-break-inside: avoid;
+        background: #ffffff;
       }
 
-      .meal-type-bar { width: 5px; flex-shrink: 0; }
-      .meal-content { flex: 1; padding: 10px 14px; display: flex; gap: 14px; }
-      .meal-info { flex: 1; }
-      .meal-title { font-size: 13px; font-weight: 700; color: #1a1a2e; }
-      .food-line { display: flex; align-items: baseline; gap: 6px; font-size: 10.5px; color: #555; }
-      .food-bullet { color: #D4A84B; font-size: 6px; margin-top: 3px; }
-      .meal-macros { min-width: 80px; text-align: right; font-size: 10px; color: #888; }
-      .kcal-value { font-size: 15px; font-weight: 800; color: #D4A84B; }
-      .premium-footer { margin-top: 30px; padding-top: 16px; border-top: 1px solid #eee; display: flex; justify-content: space-between; font-size: 9px; color: #ccc; }
+      .meal-header-row {
+        background: #fdfdfd;
+        padding: 10px 15px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .meal-title-group {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .meal-label-tag {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        padding: 2px 8px;
+        border-radius: 4px;
+        color: #fff;
+      }
+
+      .meal-primary-title {
+        font-size: 13px;
+        font-weight: 700;
+        color: #1a1a2e;
+      }
+
+      .meal-kcal-badge {
+        font-weight: 800;
+        color: #D4A84B;
+        font-size: 12px;
+      }
+
+      .meal-body {
+        padding: 12px 15px;
+      }
+
+      .food-list {
+        margin-bottom: 10px;
+      }
+
+      .food-line {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        margin-bottom: 4px;
+        color: #333;
+        font-size: 11px;
+      }
+
+      .food-bullet { color: #D4A84B; font-weight: bold; }
+
+      .substitution-box {
+        background: #fafafa;
+        border: 1px dashed #ddd;
+        border-radius: 6px;
+        padding: 10px;
+        margin-top: 10px;
+      }
+
+      .sub-header {
+        font-size: 9px;
+        font-weight: 800;
+        color: #999;
+        text-transform: uppercase;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+      }
+
+      .sub-item {
+        font-size: 10px;
+        padding: 4px 0;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+      }
+      .sub-item:last-child { border-bottom: none; }
+
+      .premium-footer {
+        margin-top: 40px;
+        padding-top: 15px;
+        border-top: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        font-size: 9px;
+        color: #999;
+        font-weight: 500;
+      }
     </style>
   `;
 }
@@ -273,26 +349,38 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 </head>
 <body>
   <div class="premium-header">
-    <div class="header-content">
-      <div class="brand-area">
-        <div class="logo-text"><span class="logo-fit">Fit</span><span class="logo-journey">Journey</span></div>
-      </div>
-      <div class="patient-info">
-        <div class="name">${escapeHtml(data.patientName)}</div>
-        <div>Profissional: ${escapeHtml(data.nutritionistName)}</div>
-      </div>
+    <div class="logo-text">
+      <span class="logo-fit">Fit</span><span class="logo-journey">Journey</span>
+    </div>
+    <div class="patient-info">
+      <div class="label">Plano Alimentar de:</div>
+      <div class="name">${escapeHtml(data.patientName)}</div>
+      <div style="font-size: 11px; font-weight: 500;">Profissional: ${escapeHtml(data.nutritionistName)}</div>
     </div>
   </div>
 
   <div class="macro-summary">
-    <div class="macro-card kcal">
-      <div class="macro-value">${data.targetCalories || 0} <span style="font-size:11px">kcal</span></div>
+    <div class="macro-card" style="border-top: 3px solid #D4A84B;">
+      <div class="macro-label">Energia Total</div>
+      <div class="macro-value">${data.targetCalories || 0} <span style="font-size: 10px; font-weight: 500;">kcal</span></div>
+    </div>
+    <div class="macro-card" style="border-top: 3px solid #EF4444;">
+      <div class="macro-label">Proteínas</div>
+      <div class="macro-value">${data.targetProtein || 0}g</div>
+    </div>
+    <div class="macro-card" style="border-top: 3px solid #F59E0B;">
+      <div class="macro-label">Carboidratos</div>
+      <div class="macro-value">${data.targetCarbs || 0}g</div>
+    </div>
+    <div class="macro-card" style="border-top: 3px solid #3B82F6;">
+      <div class="macro-label">Gorduras</div>
+      <div class="macro-value">${data.targetFat || 0}g</div>
     </div>
   </div>
 
   ${sortedDays.map(dayKey => {
     const dayItems = groupedByDay[dayKey];
-    const dayName = dayKey === -1 ? "Todos os Dias" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
+    const dayName = dayKey === -1 ? "Diário (Todos os Dias)" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
 
     const mealTypeGroups = mealOrder.map(mType => {
       const typeItems = dayItems.filter(i => i.mealType === mType);
@@ -314,43 +402,32 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const renderGroup = (groupItems: MealPlanPDFItem[]) => {
         const primary = groupItems.find(i => i.is_primary) || groupItems[0];
         const substitutions = groupItems.filter(i => i !== primary);
-        
-        const subKcal = substitutions.reduce((s, i) => s + (i.calories_target || 0), 0);
-        const subProt = substitutions.reduce((s, i) => s + (i.protein_target || 0), 0);
-        const subCarb = substitutions.reduce((s, i) => s + (i.carbs_target || 0), 0);
-        const subFat = substitutions.reduce((s, i) => s + (i.fat_target || 0), 0);
 
         return `
           <div class="meal-row">
-            <div class="meal-type-bar" style="background: ${mealInfo.color}"></div>
-            <div class="meal-content">
-              <div class="meal-info">
-                <div class="meal-title">
-                  <span style="color: ${mealInfo.color}; margin-right: 5px;">${mealInfo.emoji}</span>
-                  ${escapeHtml(mealInfo.label)}: ${escapeHtml(primary.title)}
-                </div>
+            <div class="meal-header-row">
+              <div class="meal-title-group">
+                <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.emoji} ${mealInfo.label}</span>
+                <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
+              </div>
+              <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
+            </div>
+            <div class="meal-body">
+              <div class="food-list">
                 ${primary.description ? formatDescription(primary.description) : ""}
-                
-                ${substitutions.length > 0 ? `
-                  <div style="margin-top: 10px; padding: 8px; background: #fafafa; border-radius: 6px; border-left: 3px solid #eee;">
-                    <div style="font-size: 9px; font-weight: 800; color: #999; margin-bottom: 5px; text-transform: uppercase;">Opções de Substituição</div>
-                    ${substitutions.map(sub => `
-                      <div style="margin-bottom: 4px;">
-                        <div style="font-size: 11px; font-weight: 700;">${escapeHtml(sub.title)}</div>
-                        <div style="font-size: 9px; color: #999;">${sub.calories_target} kcal · P ${sub.protein_target}g</div>
-                      </div>
-                    `).join("")}
-                    <div style="margin-top: 8px; padding-top: 6px; border-top: 1px solid #eee; font-size: 9px; color: #777;">
-                      <span style="font-weight: 800; color: #c44; text-transform: uppercase;">Macros não considerados:</span>
-                      <span style="margin-left: 4px;">${subKcal} kcal · P ${subProt}g · C ${subCarb}g · G ${subFat}g</span>
+              </div>
+              
+              ${substitutions.length > 0 ? `
+                <div class="substitution-box">
+                  <div class="sub-header">🔄 Opções de Substituição</div>
+                  ${substitutions.map(sub => `
+                    <div class="sub-item">
+                      <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
+                      <span style="color: #999; font-size: 9px;">${sub.calories_target} kcal</span>
                     </div>
-                  </div>
-                ` : ""}
-              </div>
-              <div class="meal-macros">
-                <div class="kcal-value">${primary.calories_target || 0}</div>
-                <div style="font-size: 8px; color: #D4A84B; font-weight: 700; margin-top: 2px;">(Total Considerado)</div>
-              </div>
+                  `).join("")}
+                </div>
+              ` : ""}
             </div>
           </div>
         `;
@@ -363,10 +440,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     });
 
     const filteredGroups = mealTypeGroups.filter(g => g !== "");
-    return `<div class="day-section"><div class="day-header"><div class="day-number">${dayKey === 0 ? 7 : dayKey}</div><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
+    return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
 
-  <div class="premium-footer"><div>FitJourney</div><div>${new Date().toLocaleDateString('pt-BR')}</div></div>
+  <div class="premium-footer">
+    <div>Gerado por FitJourney Premium</div>
+    <div>${new Date().toLocaleDateString('pt-BR')}</div>
+  </div>
 </body></html>`;
 
   return html;
