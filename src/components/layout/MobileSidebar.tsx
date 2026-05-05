@@ -59,7 +59,7 @@ export default function MobileSidebar({
   onLinkClick,
 }: MobileSidebarProps) {
   const { isNutritionist, isPersonal, isAdmin } = useAuth();
-  const { mode } = useExperienceMode();
+  const { mode, isFeatureEnabled } = useExperienceMode();
   const { isProfessionalContext } = useWorkspaceContext();
   const { categories, flatItems, trackClick } = useSmartMenu();
   const { coachBodybuilderEnabled, personalTrainerEnabled } = useProfessionalModules();
