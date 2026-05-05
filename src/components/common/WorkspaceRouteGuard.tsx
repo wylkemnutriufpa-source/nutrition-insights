@@ -9,7 +9,7 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
   const location = useLocation();
 
   // Se ainda está carregando o estado básico ou roles ainda não foram consolidadas
-  if (authStatus === \"loading\" || (authStatus === \"authenticated\" && roles === null)) {
+  if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
     return null;
   }
 

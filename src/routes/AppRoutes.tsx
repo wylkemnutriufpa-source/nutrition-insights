@@ -238,7 +238,7 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { authStatus, roles, loading } = useAuth();
   const location = useLocation();
 
-  if (authStatus === \"loading\" || (authStatus === \"authenticated\" && roles === null)) {
+  if (authStatus === "loading" || (authStatus === "authenticated" && roles === null)) {
     return null;
   }
   
