@@ -638,21 +638,33 @@ export default function PatientDetail() {
             <Button
               variant="outline"
               className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-              onClick={() => navigate(`/in-office/${resolvedPatientId}`)}
+              disabled={!resolvedPatientId}
+              onClick={() => {
+                if (!resolvedPatientId) return;
+                navigate(`/in-office/${resolvedPatientId}`);
+              }}
             >
               🏥 Modo Consultório
             </Button>
             <Button
               variant="outline"
               className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-              onClick={() => navigate(`/meal-plan-editor/${resolvedPatientId}`)}
+              disabled={!resolvedPatientId}
+              onClick={() => {
+                if (!resolvedPatientId) return;
+                navigate(`/meal-plan-editor/${resolvedPatientId}`);
+              }}
             >
               <UtensilsCrossed className="w-4 h-4" /> Montar Plano (V2)
             </Button>
             <Button
               variant="outline"
               className="gap-2 border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
-              onClick={() => navigate(`/v3/${resolvedPatientId}`)}
+              disabled={!resolvedPatientId}
+              onClick={() => {
+                if (!resolvedPatientId) return;
+                navigate(`/v3/${resolvedPatientId}`);
+              }}
             >
               <Sparkles className="w-4 h-4" /> Editor V3 (Beta)
             </Button>
