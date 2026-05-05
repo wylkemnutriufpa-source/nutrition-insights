@@ -590,8 +590,18 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     });
 
     const filteredGroups = [...mealTypeGroups, ...remainingGroups].filter(g => g !== "");
-    return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
+    return `
+      <div class="day-section">
+        <div class="day-header">
+          <div class="day-name">${dayName}</div>
+        </div>
+        ${filteredGroups.join("")}
+      </div>
+    `;
   }).join("")}
+
+  <div class="watermark">FITJOURNEY</div>
+
 
   </div>
     <div class="premium-footer">
