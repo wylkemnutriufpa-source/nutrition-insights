@@ -580,34 +580,48 @@ export default function PatientDetail() {
           <Button variant="ghost" size="icon" onClick={() => navigate("/patients")}>
             <ArrowLeft className="w-5 h-5" />
           </Button>
-          <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
-            <span className="text-2xl font-bold text-primary">
-              {(profile?.full_name || "P")[0].toUpperCase()}
-            </span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 flex-wrap">
-              {currentPrestigePlan ? (
-                <PrestigeName name={profile?.full_name || "Paciente"} plan={currentPrestigePlan} className="font-display text-2xl font-bold" />
-              ) : (
-                <h1 className="font-display text-2xl font-bold">{profile?.full_name || "Paciente"}</h1>
-              )}
-              <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
-                {patientStatus === "active" ? "Ativo" : "Inativo"}
-              </Badge>
-              {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
-              {patientId && <ActiveProtocolBadge patientId={resolvedPatientId} compact />}
-              {(data as any)?.requiresMedicalReview && (
-                <Badge variant="destructive" className="gap-1 animate-pulse">
-                  <ShieldAlert className="w-3 h-3" /> Revisão Médica Requerida
-                </Badge>
-              )}
-            </div>
-            <p className="text-sm text-muted-foreground">
-              Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
-              {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
-            </p>
-          </div>
+          {(() => {
+            const displayName =
+              (profile?.full_name && profile.full_name.trim()) ||
+              (patientEmail && patientEmail.split("@")[0]) ||
+              "Paciente sem nome";
+            const initial = displayName[0]?.toUpperCase() || "P";
+            return (
+              <>
+                <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center">
+                  <span className="text-2xl font-bold text-primary">{initial}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    {currentPrestigePlan ? (
+                      <PrestigeName name={displayName} plan={currentPrestigePlan} className="font-display text-2xl font-bold" />
+                    ) : (
+                      <h1 className="font-display text-2xl font-bold truncate" title={displayName}>{displayName}</h1>
+                    )}
+                    <Badge variant={patientStatus === "active" ? "default" : "secondary"}>
+                      {patientStatus === "active" ? "Ativo" : "Inativo"}
+                    </Badge>
+                    {currentPrestigePlan && <PrestigeBadge plan={currentPrestigePlan} allPlans={prestigePlans} size="sm" />}
+                    {patientId && <ActiveProtocolBadge patientId={resolvedPatientId} compact />}
+                    {(data as any)?.requiresMedicalReview && (
+                      <Badge variant="destructive" className="gap-1 animate-pulse">
+                        <ShieldAlert className="w-3 h-3" /> Revisão Médica Requerida
+                      </Badge>
+                    )}
+                  </div>
+                  {patientEmail && (
+                    <p className="text-xs text-muted-foreground/80 truncate" title={patientEmail}>
+                      {patientEmail}
+                    </p>
+                  )}
+                  <p className="text-sm text-muted-foreground">
+                    Checklist hoje: {checklistStats.completed}/{checklistStats.total} tarefas •
+                    {patientProtocols.filter(p => p.status === "active").length} protocolos ativos
+                  </p>
+                </div>
+              </>
+            );
+          })()}
           <HealthScoreRing
             score={calculateHealthScore({
               hasAnamnesis: anamnesis?.status === "completed",

@@ -175,9 +175,13 @@ export function usePatientDetail(patientId: string | undefined) {
       const currentPrestigePlan = matchedPlan || null;
 
       let patientEmail = "";
-      if (isAdmin) {
+      // Profissional vinculado já tem permissão para ver o e-mail do próprio paciente — usado
+      // apenas como fallback de identificação visual quando full_name está vazio.
+      try {
         const { data: emailData } = await supabase.rpc("get_user_email_by_id", { _user_id: patientUserId });
         if (emailData) patientEmail = emailData;
+      } catch {
+        // silencioso: e-mail é apenas um fallback visual
       }
 
       const uniqueDocs = dedupeById(docs);
