@@ -310,7 +310,7 @@ export default function ClientDashboard() {
                   <PatientDailyFocusHero />
                 </motion.div>
 
-                {/* Daily Meal Tracker */}
+                {/* Daily Meal Tracker - ALWAYS ENABLED (DIET) */}
                 <motion.div variants={item}>
                   <Card className={`border-border/50 bg-card/40 backdrop-blur-md overflow-hidden relative group shadow-sm transition-all duration-500 ${
                     mode === 'advanced' ? 'ring-1 ring-amber-500/20' : 
@@ -353,16 +353,45 @@ export default function ClientDashboard() {
                   </Card>
                 </motion.div>
 
-                {/* Clinical & Behavioral Insights */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <motion.div variants={item} className="h-full">
-                    <ClinicalInsightsCard />
-                  </motion.div>
-                  <motion.div variants={item} className="h-full">
-                    <PatientBehaviorLearningCard />
-                  </motion.div>
-                </div>
+                {/* Clinical & Behavioral Insights - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <motion.div variants={item} className="h-full">
+                      <ClinicalInsightsCard />
+                    </motion.div>
+                    <motion.div variants={item} className="h-full">
+                      <PatientBehaviorLearningCard />
+                    </motion.div>
+                  </div>
+                )}
               </div>
+
+              <div className="lg:col-span-4 space-y-6">
+                {/* Adherence & Streaks - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <motion.div variants={item}>
+                    <AdherenceStats 
+                      streak={stats?.current_streak || 0} 
+...
+                    />
+                  </motion.div>
+                )}
+
+                {/* Challenges & Community - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <motion.div variants={item}>
+                    <AchievementBadges />
+                  </motion.div>
+                )}
+
+                {/* Smart Tips - HIDDEN IN BASIC */}
+                {mode !== "basic" && (
+                  <motion.div variants={item}>
+                    <SmartTips />
+                  </motion.div>
+                )}
+              </div>
+            </div>
 
               <div className="lg:col-span-4 space-y-6">
                 {/* Adherence & Streaks */}
