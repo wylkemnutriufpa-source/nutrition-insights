@@ -382,7 +382,7 @@ export default function ClientDashboard() {
                 {mode !== "basic" && (
                   <motion.div variants={item}>
                     <AchievementBadges achievements={{
-                      oneDay: (stats?.meals_logged || 0) >= 1,
+                      oneDay: (stats?.total_checkins || 0) >= 1,
                       threeDays: (stats?.current_streak || 0) >= 3,
                       sevenDays: (stats?.current_streak || 0) >= 7
                     }} />
