@@ -717,6 +717,49 @@ export default function PatientMealPlan() {
               setSubstitutionItem(null);
             }}
           />
+          <Dialog open={showPreview} onOpenChange={setShowPreview}>
+            <DialogContent className="max-w-[95vw] w-[1200px] h-[90vh] flex flex-col p-0 overflow-hidden bg-slate-50 border-none rounded-3xl">
+              <DialogHeader className="p-6 bg-white border-b shrink-0">
+                <div className="flex items-center justify-between gap-4">
+                  <div>
+                    <DialogTitle className="font-display text-2xl font-bold flex items-center gap-2">
+                      <FileDown className="w-6 h-6 text-primary" />
+                      Visualização do Plano Premium
+                    </DialogTitle>
+                    <p className="text-muted-foreground text-sm mt-1">
+                      Confira as informações antes de gerar o documento final.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" onClick={() => setShowPreview(false)} className="rounded-full px-6">
+                      Cancelar
+                    </Button>
+                    <Button 
+                      onClick={() => {
+                        if (previewData) generatePremiumMealPlanPDF(previewData);
+                        setShowPreview(false);
+                      }} 
+                      className="bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-full px-8 shadow-lg shadow-primary/20"
+                    >
+                      <FileDown className="w-4 h-4 mr-2" />
+                      Confirmar e Imprimir
+                    </Button>
+                  </div>
+                </div>
+              </DialogHeader>
+              <div className="flex-1 overflow-auto p-4 md:p-8 bg-slate-100/50">
+                <div className="bg-white shadow-2xl rounded-2xl mx-auto max-w-[800px] min-h-full overflow-hidden">
+                  {previewData && (
+                    <iframe
+                      srcDoc={buildPremiumMealPlanHTML(previewData)}
+                      className="w-full h-[calc(90vh-140px)] border-none"
+                      title="PDF Preview"
+                    />
+                  )}
+                </div>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </DashboardLayout>
