@@ -367,6 +367,9 @@ export const AppRoutes = () => {
       <Route path="/meals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Meals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/shopping-list" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ShoppingList /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patient-plan" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient-plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient/plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient/view/:token" element={<Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense>} />
       <Route path="/anamnesis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Anamnesis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/programs" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Programs /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/programs/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProgramDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
