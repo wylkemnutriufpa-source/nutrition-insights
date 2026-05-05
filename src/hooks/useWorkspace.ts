@@ -109,7 +109,7 @@ export function useWorkspace() {
       if (menuItemIds.length > 0) {
         const { data: menuData } = await supabase
           .from("menu_items")
-          .select("id, label, label_key, route, icon, premium_only, role_visibility")
+          .select("id, label, label_key, route, icon, premium_only, feature, role_visibility")
           .in("id", menuItemIds);
 
         (menuData || []).forEach((m: any) => menuMap.set(m.id, m));
