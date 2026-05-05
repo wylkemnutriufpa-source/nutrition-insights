@@ -1,10 +1,10 @@
 
-import IndependentLoader from "../ui/IndependentLoader";
+import { BrainLoaderScreen } from "./BrainLoader";
 
 /**
- * PageLoader agora é um alias para o IndependentLoader
- * para garantir que todo o sistema use o loader "puro" e isolado.
+ * PageLoader utiliza o BrainLoaderScreen oficial com vídeo
+ * para manter a consistência visual em todo o sistema.
  */
-export const PageLoader = () => <IndependentLoader />;
+export const PageLoader = () => <BrainLoaderScreen visible />;
 
 export default PageLoader;
