@@ -353,8 +353,14 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
   if (loading || !hasRole) return null;
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
-    if ((item as any).feature) {
-      return isFeatureEnabled((item as any).feature);
+    // Priority 1: Role check (already done in useSmartMenu, but safe to keep)
+    // Priority 2: Specific feature check
+    if (item.feature) {
+      return isFeatureEnabled(item.feature);
+    }
+    // Priority 3: Generic premium check
+    if (item.premium_only && !minMode("pro")) {
+      return false;
     }
     return true;
   });
