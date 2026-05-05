@@ -114,15 +114,15 @@ export function parseBodyAssessment(rawText: string): ParseResult {
       /(\d{2,3}[.]?\d*)\s*kg\b/,
     ],
     height_m: [
-      /(?:altura|estatura|height)[:\s]*(\d[.]\d{2})/,
+      /(?:altura|estatura|height)[:\s]*(\d[.,]\d{2})/,
       /(?:altura|estatura)[:\s]*(\d{3})\s*(?:cm)?/,
     ],
     bmi: [
-      /(?:imc|bmi)[:\s]*(\d{1,2}[.]?\d*)/,
+      /(?:imc|bmi)[:\s]*(\d{1,2}[.,]?\d*)/,
     ],
     body_fat_percent: [
-      /(?:%\s*gordura|gordura corporal|body fat|bf|percentual de gordura)[:\s]*(\d{1,2}[.]?\d*)/,
-      /gordura[:\s]*(\d{1,2}[.]?\d*)\s*%/,
+      /(?:%\s*gordura|gordura corporal|body fat|bf|percentual de gordura)[:\s]*(\d{1,2}[.,]?\d*)/,
+      /gordura[:\s]*(\d{1,2}[.,]?\d*)\s*%/,
     ],
     lean_mass_kg: [
       /(?:massa magra|lean mass|massa muscular)[:\s]*(\d{2,3}[.]?\d*)/,
