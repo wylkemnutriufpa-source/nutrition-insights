@@ -17,7 +17,7 @@ describe("bodyAssessmentParser", () => {
     });
 
     it("should extract BMI and body fat", () => {
-      const text = "IMC de 24.5 e BF 15%";
+      const text = "IMC 24.5 e BF 15%";
       const result = parseBodyAssessment(text);
       expect(result.assessment.bmi).toBe(24.5);
       expect(result.assessment.body_fat_percent).toBe(15);
