@@ -21,6 +21,7 @@ const SUB_TOLERANCE = {
 };
 
 function normalize(text: string): string {
+  if (!text) return "";
   return text.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
 }
 

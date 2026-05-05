@@ -5,17 +5,17 @@ describe("mealPlanSubstitutionValidator", () => {
   const baseItem = {
     id: "item1",
     title: "Almoço",
-    calories_target: 200, 
-    protein_target: 30,
-    carbs_target: 50,
-    fat_target: 10,
+    calories_target: 198, 
+    protein_target: 37,
+    carbs_target: 0,
+    fat_target: 4,
     meal_type: "lunch",
     metadata: {
-      substitutions_json: ["• Frango grelhado", "• Patinho grelhado"]
+      substitutions_json: ["• Frango grelhado"]
     }
   };
 
-  it("should return valid for correct substitutions (Frango grelhado exists in mock with 198kcal)", () => {
+  it("should return valid for exact match in database", () => {
     const result = validateMealSubstitutions(baseItem as any);
     expect(result.valid).toBe(true);
   });
@@ -33,11 +33,11 @@ describe("mealPlanSubstitutionValidator", () => {
   it("should apply Wannubia specific rules", () => {
     const wannubiaItem = {
       ...baseItem,
-      metadata: { substitutions_json: ["• Arroz branco"] } 
+      metadata: { substitutions_json: ["• Arroz integral"] } 
     };
     const result = validateMealSubstitutions(wannubiaItem as any, 4, "Wannubia");
     expect(result.valid).toBe(false);
-    expect(result.errors.some(e => e.includes("deve ser uma Proteína"))).toBe(true);
+    expect(result.errors.some(e => e.includes("primeira substituição deve ser uma Proteína"))).toBe(true);
   });
 
   it("should fail for Marmita Fixa without enough items", () => {

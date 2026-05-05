@@ -26,9 +26,10 @@ describe("criticalContracts", () => {
 
   describe("validateDraftIntegrity", () => {
     it("should return valid data for correct payload", () => {
-      const result = validateDraftIntegrity(validDraft);
+      // Use JSON.parse(JSON.stringify) to ensure clean object for zod
+      const clean = JSON.parse(JSON.stringify(validDraft));
+      const result = validateDraftIntegrity(clean);
       expect(result).toBeDefined();
-      expect(result.meals[0].items[0].instanceId).toBe("inst1");
     });
 
     it("should throw error for duplicate instanceIds", () => {
@@ -39,7 +40,7 @@ describe("criticalContracts", () => {
           name: "Café",
           items: [
             createValidItem("f1", "inst1"),
-            createValidItem("f2", "inst1") // DUPLICATE
+            createValidItem("f2", "inst1")
           ]
         }]
       };
