@@ -391,7 +391,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return order.indexOf(a) - order.indexOf(b);
   });
 
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "pre_workout", "post_workout", "dinner", "evening_snack"];
+  const mealOrder = ["breakfast", "morning_snack", "lunch", "snack", "afternoon_snack", "pre_workout", "post_workout", "dinner", "evening_snack"];
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
