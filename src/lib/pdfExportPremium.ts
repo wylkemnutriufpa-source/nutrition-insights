@@ -326,6 +326,61 @@ function buildPremiumCSS(): string {
 }
 
 export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
+  const renderMealTypeItems = (typeItems: MealPlanPDFItem[], mType: string) => {
+    const subGroups: Record<string, MealPlanPDFItem[]> = {};
+    const orphans: MealPlanPDFItem[] = [];
+    typeItems.forEach(item => {
+      if (item.substitution_group_id) {
+        if (!subGroups[item.substitution_group_id]) subGroups[item.substitution_group_id] = [];
+        subGroups[item.substitution_group_id].push(item);
+      } else {
+        orphans.push(item);
+      }
+    });
+
+    const mealInfo = MEAL_LABELS[mType] || { label: mType, emoji: "🍽️", color: "#888" };
+
+    const renderGroup = (groupItems: MealPlanPDFItem[]) => {
+      const primary = groupItems.find(i => i.is_primary) || groupItems[0];
+      const substitutions = groupItems.filter(i => i !== primary);
+
+      return `
+        <div class="meal-row">
+          <div class="meal-header-row">
+            <div class="meal-title-group">
+              <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.emoji} ${mealInfo.label}</span>
+              <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
+            </div>
+            <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
+          </div>
+          <div class="meal-body">
+            <div class="food-list">
+              ${primary.description ? formatDescription(primary.description) : ""}
+            </div>
+            
+            ${substitutions.length > 0 ? `
+              <div class="substitution-box">
+                <div class="sub-header">🔄 Opções de Substituição</div>
+                ${substitutions.map(sub => `
+                  <div class="sub-item">
+                    <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
+                    <span style="color: #999; font-size: 9px;">${sub.calories_target} kcal</span>
+                  </div>
+                `).join("")}
+              </div>
+            ` : ""}
+          </div>
+        </div>
+      `;
+    };
+
+    const sortedSubGroups = Object.keys(subGroups).sort().map(key => renderGroup(subGroups[key]));
+    const renderedOrphans = orphans.map(i => renderGroup([i]));
+    
+    return [...sortedSubGroups, ...renderedOrphans].join("");
+  };
+
+
   const groupedByDay = data.items.reduce((acc, item) => {
     const dayKey = item.day_of_week ?? -1;
     if (!acc[dayKey]) acc[dayKey] = [];
@@ -380,68 +435,44 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     </div>
   </div>
 
+  ${data.goal ? `
+    <div style="margin-bottom: 20px; padding: 15px; background: #fdf6e3; border-radius: 12px; border-left: 4px solid #D4A84B;">
+      <div style="font-size: 9px; text-transform: uppercase; font-weight: 700; color: #856404; margin-bottom: 4px;">Objetivo Principal</div>
+      <div style="font-size: 13px; font-weight: 700; color: #1a1a2e;">${GOAL_LABELS[data.goal] || data.goal}</div>
+    </div>
+  ` : ""}
+
+  ${data.notes ? `
+    <div style="margin-bottom: 25px; padding: 15px; background: #f8f9fa; border-radius: 12px; border: 1px solid #e9ecef;">
+      <div style="font-size: 9px; text-transform: uppercase; font-weight: 700; color: #6c757d; margin-bottom: 4px;">Observações do Nutricionista</div>
+      <div style="font-size: 11px; line-height: 1.5; color: #333;">${escapeHtml(data.notes)}</div>
+    </div>
+  ` : ""}
+
   ${sortedDays.map(dayKey => {
     const dayItems = groupedByDay[dayKey];
     const dayName = dayKey === -1 ? "Diário (Todos os Dias)" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
 
+    const processedMealTypes = new Set<string>();
+    
     const mealTypeGroups = mealOrder.map(mType => {
       const typeItems = dayItems.filter(i => i.mealType === mType);
       if (typeItems.length === 0) return "";
+      processedMealTypes.add(mType);
 
-      const subGroups: Record<string, MealPlanPDFItem[]> = {};
-      const orphans: MealPlanPDFItem[] = [];
-      typeItems.forEach(item => {
-        if (item.substitution_group_id) {
-          if (!subGroups[item.substitution_group_id]) subGroups[item.substitution_group_id] = [];
-          subGroups[item.substitution_group_id].push(item);
-        } else {
-          orphans.push(item);
-        }
-      });
-
-      const mealInfo = MEAL_LABELS[mType] || { label: mType, emoji: "🍽️", color: "#888" };
-
-      const renderGroup = (groupItems: MealPlanPDFItem[]) => {
-        const primary = groupItems.find(i => i.is_primary) || groupItems[0];
-        const substitutions = groupItems.filter(i => i !== primary);
-
-        return `
-          <div class="meal-row">
-            <div class="meal-header-row">
-              <div class="meal-title-group">
-                <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.emoji} ${mealInfo.label}</span>
-                <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
-              </div>
-              <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
-            </div>
-            <div class="meal-body">
-              <div class="food-list">
-                ${primary.description ? formatDescription(primary.description) : ""}
-              </div>
-              
-              ${substitutions.length > 0 ? `
-                <div class="substitution-box">
-                  <div class="sub-header">🔄 Opções de Substituição</div>
-                  ${substitutions.map(sub => `
-                    <div class="sub-item">
-                      <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
-                      <span style="color: #999; font-size: 9px;">${sub.calories_target} kcal</span>
-                    </div>
-                  `).join("")}
-                </div>
-              ` : ""}
-            </div>
-          </div>
-        `;
-      };
-
-      const sortedSubGroups = Object.keys(subGroups).sort().map(key => renderGroup(subGroups[key]));
-      const renderedOrphans = orphans.map(i => renderGroup([i]));
-      
-      return [...sortedSubGroups, ...renderedOrphans].join("");
+      return renderMealTypeItems(typeItems, mType);
     });
 
-    const filteredGroups = mealTypeGroups.filter(g => g !== "");
+    // Add any meal types that were not in the mealOrder
+    const remainingItems = dayItems.filter(i => !processedMealTypes.has(i.mealType));
+    const remainingGroups = [...new Set(remainingItems.map(i => i.mealType))].map(mType => {
+      const typeItems = remainingItems.filter(i => i.mealType === mType);
+      return renderMealTypeItems(typeItems, mType);
+    });
+
+    const filteredGroups = [...mealTypeGroups, ...remainingGroups].filter(g => g !== "");
+    return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
+  }).join("")}
     return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
 
