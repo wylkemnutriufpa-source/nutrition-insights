@@ -243,6 +243,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                             key={item.id}
                             to={item.route || "/"}
                             onClick={() => {
+                              console.log("[NAV] Sidebar clicking workspace item", { to: item.route, id: item.id });
                               setOpenSection(null);
                               onLinkClick?.();
                             }}
