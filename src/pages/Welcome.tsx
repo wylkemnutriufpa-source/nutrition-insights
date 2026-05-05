@@ -27,6 +27,7 @@ export default function Welcome() {
 
     // 3. Se não está autenticado, vai para login imediatamente
     if (authStatus === "unauthenticated") {
+      console.log("[NAV] Welcome redirecting to /auth", { roles, authStatus, reason: "unauthenticated" });
       navigatedRef.current = true;
       navigate("/auth", { replace: true });
       return;
@@ -38,24 +39,27 @@ export default function Welcome() {
 
       // 1. Se não tem roles (array vazio), fallback seguro para paciente
       if (roles.length === 0) {
-        if (import.meta.env.DEV) console.info("[Welcome] No roles found, falling back to patient");
+        console.log("[NAV] Welcome redirecting to patient dashboard", { roles, reason: "no roles found" });
         navigate(nextPath || "/client/dashboard", { replace: true });
         return;
       }
 
       // 2. Prioridade: Admin/Nutri/Personal
       if (roles.includes("nutritionist") || roles.includes("personal") || roles.includes("admin")) {
+        console.log("[NAV] Welcome redirecting to admin dashboard", { roles, reason: "pro role detected" });
         navigate(nextPath || "/admin/dashboard", { replace: true });
         return;
       }
 
       // 3. Específico: Paciente
       if (roles.includes("patient")) {
+        console.log("[NAV] Welcome redirecting to client dashboard", { roles, reason: "patient role detected" });
         navigate(nextPath || "/client/dashboard", { replace: true });
         return;
       }
 
       // 4. Última instância: Se tem roles mas não mapeadas, dashboard de cliente
+      console.log("[NAV] Welcome redirecting to client dashboard", { roles, reason: "unmapped roles" });
       navigate(nextPath || "/client/dashboard", { replace: true });
     }
   }, [roles, authStatus, loading, navigate, nextPath]);

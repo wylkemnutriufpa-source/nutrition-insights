@@ -235,9 +235,20 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus } = useAuth();
+  const { authStatus, roles } = useAuth();
+  const location = useLocation();
+
   if (authStatus === "loading") return null;
-  if (authStatus !== "authenticated") return <Navigate to="/auth" replace />;
+  
+  if (authStatus !== "authenticated") {
+    console.log("[NAV] ProtectedRoute redirecting to /auth", {
+      from: location.pathname,
+      roles,
+      status: authStatus,
+      reason: "not authenticated"
+    });
+    return <Navigate to="/auth" replace />;
+  }
   return <>{children}</>;
 }
 
@@ -263,7 +274,12 @@ export const AppRoutes = () => {
       <Route
         path="/"
         element={
-          authStatus === "authenticated" ? <Navigate to="/welcome" replace /> : <Auth />
+          authStatus === "authenticated" ? (
+            (() => {
+              console.log("[NAV] Root path redirecting to /welcome", { authStatus });
+              return <Navigate to="/welcome" replace />;
+            })()
+          ) : <Auth />
         }
       />
       <Route path="/auth" element={<Auth />} />
