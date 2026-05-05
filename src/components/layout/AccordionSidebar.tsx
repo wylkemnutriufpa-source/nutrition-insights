@@ -358,16 +358,14 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
 
   const allItems = categories.flatMap((c) => c.items).filter(item => {
     // Priority 1: Specific feature check
-    let allowed = true;
     if (item.feature) {
-      allowed = isFeatureEnabled(item.feature);
-    } else if (item.premium_only && !minMode("pro")) {
-      // Priority 2: Generic premium check
-      allowed = false;
+      if (!isFeatureEnabled(item.feature)) return false;
+    } else {
+      // Fallback: if no feature E NOT premium_only, assume it's basic (visible to everyone)
+      // If it is premium_only without feature, treat as pro
+      if (item.premium_only && !minMode("pro")) return false;
     }
-    
-    console.log(`[DEBUG] Item: ${item.label} | feature: ${item.feature} | premium_only: ${item.premium_only} | PASSED: ${allowed}`);
-    return allowed;
+    return true;
   });
 
   console.log(`[DEBUG] Itens DEPOIS do filtro:`, allItems.map(i => i.label));
