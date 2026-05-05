@@ -235,10 +235,12 @@ function LP({ children, section }: { children: React.ReactNode; section?: string
 }
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { authStatus, roles } = useAuth();
+  const { authStatus, roles, loading } = useAuth();
   const location = useLocation();
 
-  if (authStatus === "loading") return null;
+  if (authStatus === \"loading\" || (authStatus === \"authenticated\" && roles === null)) {
+    return null;
+  }
   
   if (authStatus !== "authenticated") {
     console.log("[NAV] ProtectedRoute redirecting to /auth", {
