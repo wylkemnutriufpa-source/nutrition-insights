@@ -372,7 +372,8 @@ export default function ClientDashboard() {
                   <motion.div variants={item}>
                     <AdherenceStats 
                       streak={stats?.current_streak || 0} 
-...
+                      adherence={stats?.weekly_adherence_pct || 0} 
+                      longestStreak={stats?.longest_streak}
                     />
                   </motion.div>
                 )}
