@@ -475,6 +475,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
 
+  </div>
   <div style="margin-bottom: 40px;"></div>
 </body></html>`;
 
