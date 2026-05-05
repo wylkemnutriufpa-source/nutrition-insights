@@ -28,7 +28,7 @@ describe("criticalContracts", () => {
     });
 
     it("should throw error for missing meals", () => {
-      const invalid = { ...validDraft, meals: [] };
+      const invalid = { version: 1, meals: [] };
       expect(() => validateDraftIntegrity(invalid)).toThrow("Draft Integrity Contract Violated");
     });
 
