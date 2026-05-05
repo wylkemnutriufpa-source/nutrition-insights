@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // --- DTO Schemas ---
@@ -45,12 +44,6 @@ export const DraftPayloadSchema = z.object({
 
 // --- Contracts ---
 
-/**
- * Contract: Draft Integrity
- * - meals nunca pode ser null
- * - items sempre com instanceId único
- * - locked nunca pode ser removido automaticamente
- */
 export const validateDraftIntegrity = (data: any) => {
   const result = DraftPayloadSchema.safeParse(data);
   if (!result.success) {
@@ -72,14 +65,9 @@ export const validateDraftIntegrity = (data: any) => {
   return result.data;
 };
 
-/**
- * Contract: Clinical Validity
- */
 export const validateClinicalValidity = (data: any) => {
-  // Placeholder for clinical rules
-  // Example: Total calories shouldn't be zero if items exist
   let totalKcal = 0;
-  if (!data.meals) return true;
+  if (!data || !data.meals) return true;
   data.meals.forEach((meal: any) => {
     if (!meal.items) return;
     meal.items.forEach((item: any) => {
@@ -87,7 +75,7 @@ export const validateClinicalValidity = (data: any) => {
     });
   });
 
-  if (totalKcal === 0 && data.meals.some((m: any) => m.items.length > 0)) {
+  if (totalKcal === 0 && data.meals.some((m: any) => m.items && m.items.length > 0)) {
     throw new Error("Clinical Validity Violation: Items exist but total calories is zero");
   }
 
