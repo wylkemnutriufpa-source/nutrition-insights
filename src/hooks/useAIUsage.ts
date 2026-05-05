@@ -51,7 +51,7 @@ export function useAIUsage(featureKey: string) {
       const { data, error } = await supabase.rpc("record_ai_usage", {
         _user_id: user.id,
         _feature_key: featureKey,
-        _plan_tier: PLAN_TIER,
+        _plan_tier: planTier,
       });
       if (error) throw error;
       const result = typeof data === "string" ? JSON.parse(data) : data;
