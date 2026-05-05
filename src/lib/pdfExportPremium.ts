@@ -106,53 +106,82 @@ function buildPremiumCSS(): string {
       }
 
       .premium-header {
-        background: #0a0a0f;
-        border-radius: 12px;
-        padding: 20px 25px;
-        margin-bottom: 20px;
+        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+        border-radius: 16px;
+        padding: 25px 32px;
+        margin-bottom: 24px;
         display: flex;
         justify-content: space-between;
         align-items: center;
-        border-bottom: 3px solid #D4A84B;
+        border-bottom: 4px solid #D4A84B;
+        position: relative;
+        overflow: hidden;
+      }
+
+      .premium-header::after {
+        content: '';
+        position: absolute;
+        top: -50%;
+        right: -10%;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(212,168,75,0.1) 0%, transparent 70%);
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 28px;
+        font-size: 36px;
         font-weight: 800;
         letter-spacing: -0.02em;
         line-height: 1;
+        position: relative;
+        z-index: 2;
       }
 
-      .logo-fit { color: #D4A84B; }
+      .logo-fit {
+        background: linear-gradient(180deg, #D4A84B 0%, #F5D55A 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
       .logo-journey { color: #ffffff; }
 
       .patient-info {
         text-align: right;
         color: #ffffff;
+        position: relative;
+        z-index: 2;
       }
 
       .patient-info .name {
-        font-size: 16px;
-        font-weight: 700;
+        font-size: 18px;
+        font-weight: 800;
         color: #D4A84B;
-        margin-bottom: 2px;
+        margin-bottom: 4px;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      .patient-info .label {
+        font-size: 10px;
+        color: rgba(255,255,255,0.6);
+        text-transform: uppercase;
+        font-weight: 600;
       }
 
       .macro-summary {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 10px;
-        margin-bottom: 20px;
+        gap: 12px;
+        margin-bottom: 24px;
       }
 
       .macro-card {
-        background: #f8f8f8;
-        border: 1px solid #e0e0e0;
-        border-radius: 10px;
-        padding: 12px;
+        background: #ffffff;
+        border: 1px solid #f0f0f0;
+        border-radius: 12px;
+        padding: 16px;
         text-align: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
       }
 
       .macro-label {
