@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { AuthProvider } from "@/lib/auth";
 import { WorkspaceProvider } from "./WorkspaceProvider";
+import { ExperienceProvider } from "./ExperienceProvider";
 import { CommandPaletteProvider } from "@/components/common/CommandPalette";
 import { BrowserRouter } from "react-router-dom";
 
@@ -28,16 +29,18 @@ export const CoreProviders = ({ children }: { children: React.ReactNode }) => {
         <TooltipProvider>
           <BrowserRouter>
             <AuthProvider>
-              <WorkspaceProvider>
-                <CommandPaletteProvider>
-                  <Helmet>
-                    <title>FitJourney</title>
-                  </Helmet>
-                  {children}
-                  <Toaster />
-                  <Sonner />
-                </CommandPaletteProvider>
-              </WorkspaceProvider>
+              <ExperienceProvider>
+                <WorkspaceProvider>
+                  <CommandPaletteProvider>
+                    <Helmet>
+                      <title>FitJourney</title>
+                    </Helmet>
+                    {children}
+                    <Toaster />
+                    <Sonner />
+                  </CommandPaletteProvider>
+                </WorkspaceProvider>
+              </ExperienceProvider>
             </AuthProvider>
 
           </BrowserRouter>
