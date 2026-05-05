@@ -1,34 +1,21 @@
 {
-  "summary": "Summary:\nColumns:\n+ meal_plans.engine_version\n+ meal_plans.plan_version\n+ meal_plans.protocol_used\n+ profiles.protocol_type",
+  "summary": "Summary:\nColumns:\n+ profiles.onboarding_completed",
   "details": {
-    "timestamp": "2026-05-04T21:22:20.326Z",
+    "timestamp": "2026-05-05T16:41:22.227Z",
     "duration": "0.1s",
-    "lastSnapshotMigration": "20260503210248_ad843ca0-7dd5-4391-91a5-0854ddb963db.sql",
-    "lastActualMigration": "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql",
+    "lastSnapshotMigration": "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql",
+    "lastActualMigration": "20260505163040_cb8577b4-7bf5-4132-b845-865307547fe5.sql",
     "missingMigrations": [
-      "20260503211721_388b4c18-4a0a-45a9-9b71-748cfaf63996.sql",
-      "20260503212042_4bf9c767-9734-4df6-a0e5-8eed3a3939f5.sql",
-      "20260503214553_39719ff8-7a5e-4d07-95d5-51c8ad033404.sql",
-      "20260503214736_d149a744-9af3-4534-9652-85ca8ff944c3.sql",
-      "20260503230255_c94418a6-7cd5-4da1-b1c3-ff10cba9d4be.sql",
-      "20260503235759_2a2e8a0f-9c33-4183-8d62-7249fe4ba3a8.sql",
-      "20260503235917_5d8bc823-d33e-44f3-9aa0-614b3a84c770.sql",
-      "20260504002128_3b91a5b4-e73f-4f69-ae2d-2ec972592149.sql",
-      "20260504124504_562ff044-ce51-43b6-b13d-2b4df66e14d8.sql",
-      "20260504124547_7e618a3e-5a39-4f9f-9599-f384ffeaeaab.sql",
-      "20260504124619_6edc5f24-ba94-40c9-90fb-62c6564bb25c.sql",
-      "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql"
+      "20260505153843_7feb4428-45b3-4b0f-9f77-ebe1a45a4185.sql",
+      "20260505154340_bcbe6815-6891-480a-a0a8-21192847b61b.sql",
+      "20260505160220_222f30ac-61ea-4b5a-9da3-2ed80d772b0a.sql",
+      "20260505163040_cb8577b4-7bf5-4132-b845-865307547fe5.sql"
     ],
     "diffResults": [
       {
-        "table": "meal_plans",
-        "type": "MISSING_IN_SNAPSHOT",
-        "columns": "engine_version, plan_version, protocol_used"
-      },
-      {
         "table": "profiles",
         "type": "MISSING_IN_SNAPSHOT",
-        "columns": "protocol_type"
+        "columns": "onboarding_completed"
       }
     ]
   }
