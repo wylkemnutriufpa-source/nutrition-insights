@@ -71,8 +71,43 @@ function escapeHtml(str: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/**
+ * Clean up text from technical audit information and weird symbols
+ */
+function cleanClinicalText(text: string): string {
+  if (!text) return "";
+  
+  // Remove technical audit blocks often added by clinical engine for transparency but not meant for patients
+  const auditMarkers = [
+    "AUDITORIA CLÍNICA",
+    "TRILHA DE REGRAS",
+    "Motor de Cálculo",
+    "Clinical Engine",
+    "Timestamp:",
+    "Protocolo:",
+    "MEAL_KCAL_SPLIT",
+    "Status: Validado"
+  ];
+
+  let cleaned = text;
+  
+  // Remove technical symbols like Ø=Ý
+  cleaned = cleaned.replace(/[Ø=Ý]+/g, "");
+
+  // If we find any audit marker, we try to remove the line
+  const lines = cleaned.split("\n");
+  const filteredLines = lines.filter(line => {
+    const upperLine = line.toUpperCase();
+    return !auditMarkers.some(marker => upperLine.includes(marker.toUpperCase()));
+  });
+
+  return filteredLines.join("\n").trim();
+}
+
 function formatDescription(desc: string): string {
-  return desc
+  const cleanedDesc = cleanClinicalText(desc);
+  
+  return cleanedDesc
     .split("\n")
     .filter(l => l.trim())
     .map(line => {
