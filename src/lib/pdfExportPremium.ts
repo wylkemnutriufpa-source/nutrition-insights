@@ -293,7 +293,6 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   ${sortedDays.map(dayKey => {
     const dayItems = groupedByDay[dayKey];
     const dayName = dayKey === -1 ? "Todos os Dias" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
-    const dayKcal = dayItems.filter(i => i.is_primary !== false).reduce((s, i) => s + (i.calories_target || 0), 0);
 
     const mealTypeGroups = mealOrder.map(mType => {
       const typeItems = dayItems.filter(i => i.mealType === mType);
@@ -361,7 +360,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const renderedOrphans = orphans.map(i => renderGroup([i]));
       
       return [...sortedSubGroups, ...renderedOrphans].join("");
-    }).join("");
+    });
 
     const filteredGroups = mealTypeGroups.filter(g => g !== "");
     return `<div class="day-section"><div class="day-header"><div class="day-number">${dayKey === 0 ? 7 : dayKey}</div><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
