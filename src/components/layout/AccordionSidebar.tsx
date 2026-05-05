@@ -455,6 +455,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
                             key={menuItem.id}
                             to={menuItem.route}
                             onClick={() => {
+                              console.log("[NAV] Sidebar clicking legacy group item", { to: menuItem.route, id: menuItem.id });
                               trackClick(menuItem.id);
                               setOpenGroup(null);
                               onLinkClick?.();
