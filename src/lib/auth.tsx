@@ -38,7 +38,7 @@ interface AuthContextType {
   user: User | null;
   session: Session | null;
   profile: Profile | null;
-  roles: AppRole[];
+  roles: AppRole[] | null;
   loading: boolean;
   authStatus: AuthStatus;
   isNutritionist: boolean;
@@ -72,7 +72,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
-  const [roles, setRoles] = useState<AppRole[]>([]);
+  const [roles, setRoles] = useState<AppRole[] | null>(null);
   const [tenantId, setTenantId] = useState<string | null>(null);
   const [tenant, setTenant] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
@@ -216,11 +216,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const authStatus: AuthStatus = loading ? "loading" : error ? "error" : user ? "authenticated" : "unauthenticated";
 
-  const isNutritionist = roles.includes("nutritionist");
-  const isPersonal = roles.includes("personal");
-  const isAdmin = (roles as string[]).includes("admin");
-  const isPatient = roles.includes("patient");
-  const isLojista = (roles as string[]).includes("lojista");
+  const isNutritionist = roles?.includes("nutritionist") ?? false;
+  const isPersonal = roles?.includes("personal") ?? false;
+  const isAdmin = (roles as string[] | null)?.includes("admin") ?? false;
+  const isPatient = roles?.includes("patient") ?? false;
+  const isLojista = (roles as string[] | null)?.includes("lojista") ?? false;
 
   const experienceRole: "nutritionist" | "patient" = (isNutritionist || isPersonal || isAdmin) ? "nutritionist" : "patient";
   const experienceMode: "basic" | "pro" | "advanced" = (profile?.experience_mode === "pro" || profile?.experience_mode === "advanced") 
@@ -265,7 +265,7 @@ export function useAuth() {
       user: null,
       session: null,
       profile: null,
-      roles: [],
+      roles: null,
       loading: false,
       authStatus: "loading" as AuthStatus,
       isNutritionist: false,
