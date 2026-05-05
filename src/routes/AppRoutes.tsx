@@ -278,8 +278,9 @@ export const AppRoutes = () => {
         element={
           authStatus === "authenticated" ? (
             (() => {
-              console.log("[NAV] Root path redirecting to /welcome", { authStatus });
-              return <Navigate to="/welcome" replace />;
+              const search = window.location.search;
+              console.log("[NAV] Root path redirecting to /welcome", { authStatus, search });
+              return <Navigate to={`/welcome${search}`} replace />;
             })()
           ) : <Auth />
         }
@@ -377,6 +378,7 @@ export const AppRoutes = () => {
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
+      <Route path="/dashboard" element={<Navigate to="/welcome?next=/dashboard" replace />} />
       <Route path="*" element={<Navigate to="/welcome" replace />} />
     </Routes>
   );

@@ -32,6 +32,8 @@ export default function WorkspaceRouteGuard({ children }: { children: React.Reac
 
   // 2. Proteção de Client (Paciente)
   if (location.pathname.startsWith("/client")) {
+    // Hybrid users or pro users acting as professionals shouldn't be redirected to /admin
+    // ONLY redirect if the user DOES NOT have the patient role AND has a pro role.
     if (!isPatient && isPro) {
       console.log("[NAV] WorkspaceRouteGuard redirecting to /admin/dashboard", {
         from: location.pathname,

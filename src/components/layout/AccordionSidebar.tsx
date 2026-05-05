@@ -243,6 +243,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                             key={item.id}
                             to={item.route || "/"}
                             onClick={() => {
+                              console.log("[NAV] Sidebar clicking workspace item", { to: item.route, id: item.id });
                               setOpenSection(null);
                               onLinkClick?.();
                             }}
@@ -283,7 +284,11 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
                         <Link
                           key={item.id}
                           to={item.route || "/"}
-                          onClick={() => { setOpenSection(null); onLinkClick?.(); }}
+                          onClick={() => { 
+                            console.log("[NAV] Sidebar clicking workspace flyout item", { to: item.route, id: item.id });
+                            setOpenSection(null); 
+                            onLinkClick?.(); 
+                          }}
                           className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
                             ${active
                               ? isPremium
@@ -375,7 +380,11 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
           <Link
             key={item.id}
             to={item.route}
-            onClick={() => { trackClick(item.id); onLinkClick?.(); }}
+            onClick={() => { 
+              console.log("[NAV] Sidebar clicking fixed item", { to: item.route, id: item.id });
+              trackClick(item.id); 
+              onLinkClick?.(); 
+            }}
             className={`flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all border mb-2
               ${active
                 ? "bg-gradient-to-r from-amber-500/15 to-amber-600/10 border-amber-500/30 shadow-sm"
@@ -446,6 +455,7 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
                             key={menuItem.id}
                             to={menuItem.route}
                             onClick={() => {
+                              console.log("[NAV] Sidebar clicking legacy group item", { to: menuItem.route, id: menuItem.id });
                               trackClick(menuItem.id);
                               setOpenGroup(null);
                               onLinkClick?.();
@@ -486,7 +496,12 @@ function LegacySidebar({ categories, flatItems, collapsed, isProRole, onLinkClic
                         <Link
                           key={menuItem.id}
                           to={menuItem.route}
-                          onClick={() => { trackClick(menuItem.id); setOpenGroup(null); onLinkClick?.(); }}
+                          onClick={() => { 
+                            console.log("[NAV] Sidebar clicking legacy flyout item", { to: menuItem.route, id: menuItem.id });
+                            trackClick(menuItem.id); 
+                            setOpenGroup(null); 
+                            onLinkClick?.(); 
+                          }}
                           className={`flex flex-col items-center gap-1.5 px-2 py-3 rounded-xl transition-all group/item text-center
                             ${active
                               ? isPremium
