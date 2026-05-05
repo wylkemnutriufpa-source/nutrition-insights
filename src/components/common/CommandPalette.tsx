@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, useCallback, createContext, useContext, ReactNode, memo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/lib/auth";
+import { useWorkspaceContext } from "@/hooks/useWorkspaceContext";
 import { supabase } from "@/integrations/supabase/client";
 import {
   CommandDialog,
