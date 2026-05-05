@@ -108,50 +108,34 @@ function buildPremiumCSS(): string {
       }
 
       .premium-header {
-        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        border-radius: 16px;
-        padding: 25px 32px;
-        margin-bottom: 24px;
+        background: #ffffff;
+        border-radius: 0;
+        padding: 40px 0 24px 0;
+        margin-bottom: 32px;
         display: flex;
         justify-content: space-between;
-        align-items: center;
-        border-bottom: 4px solid #D4A84B;
+        align-items: flex-end;
+        border-bottom: 2px solid #0f172a;
         position: relative;
-        overflow: hidden;
-      }
-
-      .premium-header::after {
-        content: '';
-        position: absolute;
-        top: -50%;
-        right: -10%;
-        width: 300px;
-        height: 300px;
-        background: radial-gradient(circle, rgba(212,168,75,0.1) 0%, transparent 70%);
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 36px;
+        font-size: 42px;
         font-weight: 800;
-        letter-spacing: -0.02em;
+        letter-spacing: -0.03em;
         line-height: 1;
-        position: relative;
-        z-index: 2;
+        color: #0f172a;
       }
 
       .logo-fit {
-        background: linear-gradient(180deg, #D4A84B 0%, #F5D55A 100%);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+        color: #D4A84B;
       }
-      .logo-journey { color: #ffffff; }
+      .logo-journey { color: #0f172a; }
 
       .patient-info {
         text-align: right;
-        color: #ffffff;
-        position: relative;
-        z-index: 2;
+        color: #0f172a;
       }
 
       .patient-info .name {
