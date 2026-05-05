@@ -145,7 +145,7 @@ export function BrainLoaderScreen({
             {/* Fallback UI: If video fails or reduced motion is active */}
             {(videoError || shouldReduceMotion || !videoLoaded) && (
               <div className="flex flex-col items-center justify-center gap-8 animate-in fade-in duration-1000">
-                <Loader2 className="w-12 h-12 animate-spin text-primary/40" />
+                {/* No icon fallback as requested, just keeping the background and messages */}
               </div>
             )}
             
