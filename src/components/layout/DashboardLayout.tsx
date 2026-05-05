@@ -565,10 +565,10 @@ function DynamicSidebar({
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const { profile, signOut, isPatient, isNutritionist, isPersonal, isAdmin, loading: authLoading } = useAuth();
   const { mode } = useExperienceMode();
-  console.log(`[DEBUG] DashboardLayout render | mode: ${mode} | path: ${location.pathname}`);
   const isProRole = isNutritionist || isPersonal || isAdmin;
 
   const location = useLocation();
+  console.log(`[DEBUG] DashboardLayout render | mode: ${mode} | path: ${location.pathname}`);
   const isMobile = useIsMobile();
   const [dark, setDark] = useState(() => document.documentElement.classList.contains("dark"));
   const [collapsed, setCollapsed] = useState(() => {
