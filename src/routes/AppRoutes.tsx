@@ -327,7 +327,7 @@ export const AppRoutes = () => {
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="*" element={<Navigate to="/welcome" replace />} />
     </Routes>
   );
 };
