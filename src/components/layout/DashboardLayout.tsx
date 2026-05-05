@@ -325,28 +325,31 @@ function DynamicSidebar({
 
       {effectiveProRole && minMode("pro") && (
         <div className="px-3 mb-1 space-y-1">
-          <Link
-            to="/control-tower"
-            onClick={onLinkClick}
-            className={`flex items-center gap-2 w-full rounded-xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
-          >
-            <div className="relative flex-shrink-0">
-              <motion.div
-                className="absolute -inset-1 rounded-full"
-                style={{ background: "radial-gradient(circle, hsl(270 80% 60% / 0.3), transparent 70%)" }}
-                animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
-                transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              />
-              <Activity className="w-4 h-4 text-violet-500 relative z-10" />
-            </div>
-            {!collapsed && (
-              <span className="text-xs font-semibold text-violet-500 truncate group-hover:text-violet-400 transition-colors">
-                Control Tower
-              </span>
-            )}
-          </Link>
+          {isFeatureEnabled("analytics") && (
+            <Link
+              to="/control-tower"
+              onClick={onLinkClick}
+              className={`flex items-center gap-2 w-full rounded-xl border border-violet-500/30 bg-violet-500/10 hover:bg-violet-500/20 transition-all px-3 py-2.5 group ${collapsed ? "justify-center" : ""}`}
+            >
+              <div className="relative flex-shrink-0">
+                <motion.div
+                  className="absolute -inset-1 rounded-full"
+                  style={{ background: "radial-gradient(circle, hsl(270 80% 60% / 0.3), transparent 70%)" }}
+                  animate={{ scale: [1, 1.3, 1], opacity: [0.3, 0.6, 0.3] }}
+                  transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+                />
+                <Activity className="w-4 h-4 text-violet-500 relative z-10" />
+              </div>
+              {!collapsed && (
+                <span className="text-xs font-semibold text-violet-500 truncate group-hover:text-violet-400 transition-colors">
+                  Control Tower
+                </span>
+              )}
+            </Link>
+          )}
+
           {/* Cockpit Premium — only for nutritionists and admins */}
-          {(isNutritionist || isAdmin) && (
+          {(isNutritionist || isAdmin) && isFeatureEnabled("automation") && (
             <Link
               to="/cockpit"
               onClick={() => {
@@ -363,8 +366,9 @@ function DynamicSidebar({
               )}
             </Link>
           )}
+
           {/* Workspace Clínico — only for nutritionists and admins, NOT personal trainers */}
-          {(isNutritionist || isAdmin) && (
+          {(isNutritionist || isAdmin) && isFeatureEnabled("analytics") && (
             <Link
               to="/clinical-workspace"
               onClick={() => {
@@ -381,8 +385,9 @@ function DynamicSidebar({
               )}
             </Link>
           )}
+
           {/* Coach Bodybuilder — only for nutritionists/admins, locked unless admin-enabled */}
-          {(isNutritionist || isAdmin) && (
+          {(isNutritionist || isAdmin) && isFeatureEnabled("protocols") && (
             <div className="relative">
               {!coachBodybuilderEnabled && (
                 <div className="absolute inset-0 z-10 rounded-xl bg-muted/60 backdrop-blur-[1px] flex items-center justify-center cursor-not-allowed">
@@ -403,8 +408,9 @@ function DynamicSidebar({
               </Link>
             </div>
           )}
+
           {/* Personal Trainer — only for personal trainers and admins, locked unless admin-enabled */}
-          {(isPersonal || isAdmin) && (
+          {(isPersonal || isAdmin) && isFeatureEnabled("protocols") && (
             <div className="relative">
               {!personalTrainerEnabled && (
                 <div className="absolute inset-0 z-10 rounded-xl bg-muted/60 backdrop-blur-[1px] flex items-center justify-center cursor-not-allowed">
