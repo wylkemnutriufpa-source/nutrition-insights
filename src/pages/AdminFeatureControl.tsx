@@ -10,7 +10,7 @@ import { FEATURE_REGISTRY, getFeaturesByCategory, type FeatureDefinition } from 
 import AIUsageLimitsEditor from "@/components/admin/AIUsageLimitsEditor";
 import {
   Zap, Users, Utensils, BarChart3, MessageSquare,
-  Crown, Search, Shield, Sparkles, Clock
+  Crown, Search, Shield, Sparkles, Clock, Loader2
 } from "lucide-react";
 
 const ALL_FEATURES = FEATURE_REGISTRY;
