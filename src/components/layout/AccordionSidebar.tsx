@@ -162,7 +162,7 @@ function WorkspaceSidebar({ collapsed, onLinkClick }: { collapsed: boolean; onLi
   const location = useLocation();
   const { t } = useTranslation();
   const { sections, getItemsForSection, loading } = useWorkspace();
-  const { isRouteAllowed, isFeatureEnabled } = useExperienceMode();
+  const { isRouteAllowed, isFeatureEnabled, minMode } = useExperienceMode();
   const isMobile = useIsMobile();
   const [openSection, setOpenSection] = useState<string | null>(null);
   const { isPatient, isNutritionist, isPersonal, isAdmin } = useAuth();
