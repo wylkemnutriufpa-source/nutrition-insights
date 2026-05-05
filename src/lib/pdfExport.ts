@@ -149,7 +149,7 @@ export function generateMealPlanPDF(data: MealPlanPDFData) {
         ${items.map(item => `
           <tr>
             <td><span class="badge">${item.mealType}</span><br/>${item.title}</td>
-            <td>${item.description || '-'}</td>
+            <td>${item.description ? cleanClinicalText(item.description) : '-'}</td>
             <td>${item.calories || '-'}</td>
             <td>${item.protein ? item.protein + 'g' : '-'}</td>
             <td>${item.carbs ? item.carbs + 'g' : '-'}</td>
