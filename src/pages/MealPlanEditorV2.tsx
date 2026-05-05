@@ -48,8 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileText, History as HistoryIcon, Layout, Monitor, Smartphone, Tablet } from "lucide-react";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
 import { toast } from "sonner";
 import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
