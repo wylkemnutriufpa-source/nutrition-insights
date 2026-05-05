@@ -8011,6 +8011,7 @@ export type Database = {
           category: string
           color: string | null
           created_at: string
+          feature: string | null
           icon: string
           icon_color: string | null
           id: string
@@ -8027,6 +8028,7 @@ export type Database = {
           category?: string
           color?: string | null
           created_at?: string
+          feature?: string | null
           icon?: string
           icon_color?: string | null
           id?: string
@@ -8043,6 +8045,7 @@ export type Database = {
           category?: string
           color?: string | null
           created_at?: string
+          feature?: string | null
           icon?: string
           icon_color?: string | null
           id?: string
@@ -8320,6 +8323,7 @@ export type Database = {
           clinical_goal: string
           contraindicated_conditions: string[] | null
           created_at: string | null
+          created_by: string | null
           description: string | null
           id: string
           is_active: boolean | null
@@ -8338,6 +8342,7 @@ export type Database = {
           clinical_goal: string
           contraindicated_conditions?: string[] | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
@@ -8356,6 +8361,7 @@ export type Database = {
           clinical_goal?: string
           contraindicated_conditions?: string[] | null
           created_at?: string | null
+          created_by?: string | null
           description?: string | null
           id?: string
           is_active?: boolean | null
