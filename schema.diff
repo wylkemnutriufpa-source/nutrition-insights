@@ -1,22 +1,13 @@
 {
-  "summary": "Summary:\nColumns:\n+ profiles.onboarding_completed",
+  "summary": "Summary:",
   "details": {
-    "timestamp": "2026-05-05T16:41:22.227Z",
-    "duration": "0.1s",
-    "lastSnapshotMigration": "20260504143328_a0d78025-f16a-4c40-8bde-f24abc68c47e.sql",
-    "lastActualMigration": "20260505163040_cb8577b4-7bf5-4132-b845-865307547fe5.sql",
+    "timestamp": "2026-05-05T17:14:47.795Z",
+    "duration": "0.0s",
+    "lastSnapshotMigration": "20260505163040_cb8577b4-7bf5-4132-b845-865307547fe5.sql",
+    "lastActualMigration": "20260505165800_547a8811-974c-4ea6-b463-52baa98ad6aa.sql",
     "missingMigrations": [
-      "20260505153843_7feb4428-45b3-4b0f-9f77-ebe1a45a4185.sql",
-      "20260505154340_bcbe6815-6891-480a-a0a8-21192847b61b.sql",
-      "20260505160220_222f30ac-61ea-4b5a-9da3-2ed80d772b0a.sql",
-      "20260505163040_cb8577b4-7bf5-4132-b845-865307547fe5.sql"
+      "20260505165800_547a8811-974c-4ea6-b463-52baa98ad6aa.sql"
     ],
-    "diffResults": [
-      {
-        "table": "profiles",
-        "type": "MISSING_IN_SNAPSHOT",
-        "columns": "onboarding_completed"
-      }
-    ]
+    "diffResults": []
   }
 }

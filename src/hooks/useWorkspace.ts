@@ -1,27 +1,15 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth";
+import { Database } from "@/integrations/supabase/types";
 
-export interface WorkspaceSection {
-  id: string;
-  workspace_id: string;
-  section_name: string;
-  section_icon: string;
-  section_color: string;
-  sort_order: number;
-  is_visible: boolean;
-  is_collapsed: boolean;
-}
+type WorkspaceProfileRow = Database["public"]["Tables"]["workspace_profiles"]["Row"];
+type WorkspaceSectionRow = Database["public"]["Tables"]["workspace_sections"]["Row"];
+type WorkspaceItemRow = Database["public"]["Tables"]["workspace_items"]["Row"];
 
-export interface WorkspaceItem {
-  id: string;
-  workspace_id: string;
-  section_id: string;
-  menu_item_id: string;
-  sort_order: number;
-  is_pinned: boolean;
-  is_visible: boolean;
-  custom_label: string | null;
+export interface WorkspaceSection extends WorkspaceSectionRow {}
+
+export interface WorkspaceItem extends WorkspaceItemRow {
   // Joined from menu_items
   label?: string;
   label_key?: string;
@@ -32,12 +20,7 @@ export interface WorkspaceItem {
   role_visibility?: string[];
 }
 
-export interface WorkspaceProfile {
-  id: string;
-  user_id: string;
-  workspace_name: string;
-  is_default: boolean;
-}
+export interface WorkspaceProfile extends WorkspaceProfileRow {}
 
 export function useWorkspace() {
   const { user, isNutritionist, isPersonal, isAdmin, roles } = useAuth();
@@ -61,7 +44,7 @@ export function useWorkspace() {
     try {
       // Try to get existing workspace
       const { data: existing } = await supabase
-        .from("workspace_profiles" as any)
+        .from("workspace_profiles")
         .select("*")
         .eq("user_id", user.id)
         .maybeSingle();
@@ -69,41 +52,41 @@ export function useWorkspace() {
       let workspaceId: string;
 
       if (existing) {
-        setProfile(existing as any);
-        workspaceId = (existing as any).id;
+        setProfile(existing);
+        workspaceId = existing.id;
       } else {
         // Initialize default workspace via RPC
         const { data: newId } = await supabase.rpc("initialize_default_workspace", {
           _user_id: user.id,
-        } as any);
+        });
         workspaceId = newId as string;
 
         const { data: newProfile } = await supabase
-          .from("workspace_profiles" as any)
+          .from("workspace_profiles")
           .select("*")
           .eq("id", workspaceId)
           .single();
-        setProfile(newProfile as any);
+        if (newProfile) setProfile(newProfile);
       }
 
       // Fetch sections
       const { data: secs } = await supabase
-        .from("workspace_sections" as any)
+        .from("workspace_sections")
         .select("*")
         .eq("workspace_id", workspaceId)
         .order("sort_order");
 
-      setSections((secs || []) as any);
+      setSections(secs || []);
 
       // Fetch items with menu_items join
       const { data: rawItems } = await supabase
-        .from("workspace_items" as any)
+        .from("workspace_items")
         .select("*")
         .eq("workspace_id", workspaceId)
         .order("sort_order");
 
       // Now enrich with menu_items data
-      const menuItemIds = ((rawItems || []) as any[]).map((i: any) => i.menu_item_id);
+      const menuItemIds = (rawItems || []).map(i => i.menu_item_id);
       let menuMap = new Map<string, any>();
 
       if (menuItemIds.length > 0) {
@@ -112,10 +95,10 @@ export function useWorkspace() {
           .select("id, label, label_key, route, icon, premium_only, feature, role_visibility")
           .in("id", menuItemIds);
 
-        (menuData || []).forEach((m: any) => menuMap.set(m.id, m));
+        (menuData || []).forEach(m => menuMap.set(m.id, m));
       }
 
-      const enriched = ((rawItems || []) as any[]).map((item: any) => {
+      const enriched: WorkspaceItem[] = (rawItems || []).map(item => {
         const menu = menuMap.get(item.menu_item_id);
         return {
           ...item,
@@ -125,7 +108,7 @@ export function useWorkspace() {
           icon: menu?.icon || "LayoutDashboard",
           premium_only: menu?.premium_only || false,
           feature: menu?.feature || undefined,
-          role_visibility: Array.isArray(menu?.role_visibility) ? menu.role_visibility : [],
+          role_visibility: Array.isArray(menu?.role_visibility) ? (menu.role_visibility as string[]) : [],
         };
       });
 
@@ -144,20 +127,20 @@ export function useWorkspace() {
     if (!profile) return;
     const maxOrder = sections.reduce((m, s) => Math.max(m, s.sort_order), -1);
     const { data } = await supabase
-      .from("workspace_sections" as any)
+      .from("workspace_sections")
       .insert({ workspace_id: profile.id, section_name: name, section_icon: icon, section_color: color, sort_order: maxOrder + 1 })
       .select()
       .single();
-    if (data) setSections(prev => [...prev, data as any]);
+    if (data) setSections(prev => [...prev, data]);
   }, [profile, sections]);
 
   const updateSection = useCallback(async (id: string, updates: Partial<WorkspaceSection>) => {
-    await supabase.from("workspace_sections" as any).update(updates).eq("id", id);
+    await supabase.from("workspace_sections").update(updates).eq("id", id);
     setSections(prev => prev.map(s => s.id === id ? { ...s, ...updates } : s));
   }, []);
 
   const deleteSection = useCallback(async (id: string) => {
-    await supabase.from("workspace_sections" as any).delete().eq("id", id);
+    await supabase.from("workspace_sections").delete().eq("id", id);
     setSections(prev => prev.filter(s => s.id !== id));
     setItems(prev => prev.filter(i => i.section_id !== id));
   }, []);
@@ -165,7 +148,7 @@ export function useWorkspace() {
   const reorderSections = useCallback(async (orderedIds: string[]) => {
     const updates = orderedIds.map((id, i) => ({ id, sort_order: i }));
     for (const u of updates) {
-      await supabase.from("workspace_sections" as any).update({ sort_order: u.sort_order }).eq("id", u.id);
+      await supabase.from("workspace_sections").update({ sort_order: u.sort_order }).eq("id", u.id);
     }
     setSections(prev => {
       const map = new Map(prev.map(s => [s.id, s]));
@@ -175,7 +158,7 @@ export function useWorkspace() {
 
   // Item CRUD
   const moveItem = useCallback(async (itemId: string, toSectionId: string, newOrder: number) => {
-    await supabase.from("workspace_items" as any).update({ section_id: toSectionId, sort_order: newOrder }).eq("id", itemId);
+    await supabase.from("workspace_items").update({ section_id: toSectionId, sort_order: newOrder }).eq("id", itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, section_id: toSectionId, sort_order: newOrder } : i));
   }, []);
 
@@ -183,7 +166,7 @@ export function useWorkspace() {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     const newVis = !item.is_visible;
-    await supabase.from("workspace_items" as any).update({ is_visible: newVis }).eq("id", itemId);
+    await supabase.from("workspace_items").update({ is_visible: newVis }).eq("id", itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, is_visible: newVis } : i));
   }, [items]);
 
@@ -191,7 +174,7 @@ export function useWorkspace() {
     const item = items.find(i => i.id === itemId);
     if (!item) return;
     const newPin = !item.is_pinned;
-    await supabase.from("workspace_items" as any).update({ is_pinned: newPin }).eq("id", itemId);
+    await supabase.from("workspace_items").update({ is_pinned: newPin }).eq("id", itemId);
     setItems(prev => prev.map(i => i.id === itemId ? { ...i, is_pinned: newPin } : i));
   }, [items]);
 
@@ -203,23 +186,23 @@ export function useWorkspace() {
     }
     const maxOrder = items.filter(i => i.section_id === sectionId).reduce((m, i) => Math.max(m, i.sort_order), -1);
     const { data } = await supabase
-      .from("workspace_items" as any)
+      .from("workspace_items")
       .insert({ workspace_id: profile.id, section_id: sectionId, menu_item_id: menuItemId, sort_order: maxOrder + 1 })
       .select()
       .single();
     if (data) {
-      setItems(prev => [...prev, { ...(data as any), ...menuData }]);
+      setItems(prev => [...prev, { ...data, ...menuData }]);
     }
   }, [profile, items]);
 
   const removeItem = useCallback(async (itemId: string) => {
-    await supabase.from("workspace_items" as any).delete().eq("id", itemId);
+    await supabase.from("workspace_items").delete().eq("id", itemId);
     setItems(prev => prev.filter(i => i.id !== itemId));
   }, []);
 
   const reorderItems = useCallback(async (sectionId: string, orderedItemIds: string[]) => {
     for (let i = 0; i < orderedItemIds.length; i++) {
-      await supabase.from("workspace_items" as any).update({ sort_order: i }).eq("id", orderedItemIds[i]);
+      await supabase.from("workspace_items").update({ sort_order: i }).eq("id", orderedItemIds[i]);
     }
     setItems(prev => {
       const updated = [...prev];
@@ -234,9 +217,9 @@ export function useWorkspace() {
   const resetToDefault = useCallback(async () => {
     if (!profile || !user?.id) return;
     // Delete everything and reinitialize
-    await supabase.from("workspace_items" as any).delete().eq("workspace_id", profile.id);
-    await supabase.from("workspace_sections" as any).delete().eq("workspace_id", profile.id);
-    await supabase.from("workspace_profiles" as any).delete().eq("id", profile.id);
+    await supabase.from("workspace_items").delete().eq("workspace_id", profile.id);
+    await supabase.from("workspace_sections").delete().eq("workspace_id", profile.id);
+    await supabase.from("workspace_profiles").delete().eq("id", profile.id);
     setProfile(null);
     setSections([]);
     setItems([]);
@@ -249,7 +232,7 @@ export function useWorkspace() {
     return items
       .filter(i => i.section_id === sectionId)
       .filter(i => {
-        const rv = (i as any).role_visibility;
+        const rv = i.role_visibility;
         // If no role_visibility defined, show to everyone
         if (!Array.isArray(rv) || rv.length === 0) return true;
         return rv.includes(userRole);

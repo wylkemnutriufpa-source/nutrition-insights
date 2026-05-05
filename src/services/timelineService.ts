@@ -1,4 +1,7 @@
 import { supabase } from "@/integrations/supabase/client";
+import { Database, Json } from "@/integrations/supabase/types";
+
+type TimelineEventInsert = Database["public"]["Tables"]["timeline_events"]["Insert"];
 
 export interface TimelineEventPayload {
   workspace_id: string;
@@ -8,14 +11,14 @@ export interface TimelineEventPayload {
   title: string;
   description?: string;
   media_url?: string;
-  metadata_json?: Record<string, unknown>;
+  metadata_json?: Json;
   visibility_scope?: "global" | "patient_specific";
   poll_question?: string;
   poll_options?: string[];
 }
 
 export async function generateTimelineEvent(payload: TimelineEventPayload) {
-  const insertPayload = {
+  const insertPayload: TimelineEventInsert = {
     workspace_id: payload.workspace_id,
     author_id: payload.author_id,
     target_patient_id: payload.target_patient_id || null,
@@ -31,7 +34,7 @@ export async function generateTimelineEvent(payload: TimelineEventPayload) {
 
   const { data, error } = await supabase
     .from("timeline_events")
-    .insert(insertPayload as any)
+    .insert(insertPayload)
     .select()
     .single();
 
@@ -45,7 +48,7 @@ export async function generateSystemEvent(
   title: string,
   description?: string,
   targetPatientId?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Json
 ) {
   return generateTimelineEvent({
     workspace_id: workspaceId,
