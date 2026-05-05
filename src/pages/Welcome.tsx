@@ -69,8 +69,11 @@ export default function Welcome() {
         if (pState === "onboarding_slides") target = "/onboarding/paciente";
         else if (pState === "anamnesis") target = "/anamnesis";
         
-        const finalTarget = nextPath || target;
-        console.log("[NAV] Welcome -> Patient Flow", { state: pState, target: finalTarget });
+        // Se nextPath for /dashboard ou /, normalizamos para o destino correto
+        const isDefaultPath = nextPath === "/" || nextPath === "/dashboard" || nextPath === "/index";
+        const finalTarget = (nextPath && !isDefaultPath) ? nextPath : target;
+        
+        console.log("[NAV] Welcome -> Patient Flow", { state: pState, target: finalTarget, originalNext: nextPath });
         navigate(finalTarget, { replace: true });
         return;
       }
