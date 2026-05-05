@@ -486,7 +486,12 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   }).join("")}
 
   </div>
-  <div style="margin-bottom: 40px;"></div>
+    <div class="premium-footer">
+      <div class="footer-brand">Fit<span style="color: #D4A84B">Journey</span></div>
+      <div>Plano Alimentar Gerado em ${new Date().toLocaleDateString("pt-BR")}</div>
+      <div style="font-size: 8px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Documento Confidencial • Direitos Reservados</div>
+    </div>
+    <div style="margin-bottom: 40px;"></div>
 </body></html>`;
 
   return html;
