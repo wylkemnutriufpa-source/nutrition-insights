@@ -204,6 +204,109 @@ export default function AdminFeatureControl() {
         ) : (
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
             {/* Sidebar - Nutritionist List */}
+            {/* Seção de Experiência Dinâmica */}
+            <div className="lg:col-span-4 mb-8">
+              <Card className="glass shadow-card border-amber-500/20">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle className="font-display text-lg flex items-center gap-2">
+                        <Sparkles className="w-5 h-5 text-amber-500" />
+                        Configuração de Visualização por Modo
+                      </CardTitle>
+                      <p className="text-xs text-muted-foreground">Defina o que cada papel visualiza em cada nível de experiência</p>
+                    </div>
+                    {savingExp && <Loader2 className="w-4 h-4 animate-spin text-amber-500" />}
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                    {/* Painel Paciente */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 border-b border-border pb-2">
+                        <Users className="w-4 h-4 text-primary" />
+                        <h3 className="font-bold text-sm">Experiência do Paciente</h3>
+                      </div>
+                      
+                      {/* Modo Básico Paciente */}
+                      <div className="p-4 rounded-xl bg-green-500/5 border border-green-500/10 space-y-3">
+                        <div className="flex items-center justify-between">
+                          <span className="text-xs font-bold text-green-600 uppercase tracking-wider">Modo Básico (Essencial)</span>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { key: 'diet', label: 'Plano Alimentar' },
+                            { key: 'recipes', label: 'Receitas' },
+                            { key: 'feedback', label: 'Feedback' },
+                            { key: 'checklist', label: 'Checklist' },
+                            { key: 'anamnesis', label: 'Anamnese' },
+                            { key: 'journey', label: 'Jornada/Timeline' },
+                          ].map(f => {
+                            const config = expConfigs.find(c => c.role === 'patient' && c.mode === 'basic' && c.feature_key === f.key);
+                            const isEnabled = config ? config.is_enabled : true; // default
+                            return (
+                              <button
+                                key={f.key}
+                                onClick={() => toggleExpFeature('patient', 'basic', f.key, isEnabled)}
+                                className={`flex items-center justify-between px-3 py-2 rounded-lg text-[10px] font-medium transition-all ${
+                                  isEnabled ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                                }`}
+                              >
+                                {f.label}
+                                {isEnabled ? <Zap className="w-3 h-3 ml-1 fill-current" /> : <Shield className="w-3 h-3 ml-1" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+
+                      {/* Modo Pro Paciente */}
+                      <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 space-y-3">
+                        <span className="text-xs font-bold text-blue-600 uppercase tracking-wider">Modo Pro (Completo)</span>
+                        <p className="text-[10px] text-muted-foreground">Normalmente todas as features básicas + performance e engajamento.</p>
+                      </div>
+                    </div>
+
+                    {/* Painel Profissional */}
+                    <div className="space-y-4">
+                      <div className="flex items-center gap-2 border-b border-border pb-2">
+                        <Utensils className="w-4 h-4 text-primary" />
+                        <h3 className="font-bold text-sm">Experiência do Profissional</h3>
+                      </div>
+                      
+                      <div className="p-4 rounded-xl bg-muted/30 border border-border space-y-3">
+                        <span className="text-xs font-bold uppercase tracking-wider">Configuração de Interface</span>
+                        <p className="text-[10px] text-muted-foreground">O profissional pode alternar entre Básico/Pro para simplificar sua própria visão do dashboard clínico.</p>
+                        <div className="grid grid-cols-2 gap-2">
+                          {[
+                            { key: 'analytics', label: 'Analytics Avançado' },
+                            { key: 'automation', label: 'Automação' },
+                            { key: 'financial', label: 'Financeiro' },
+                            { key: 'clinical-risk', label: 'Risco Clínico' },
+                          ].map(f => {
+                            const config = expConfigs.find(c => c.role === 'nutritionist' && c.mode === 'basic' && c.feature_key === f.key);
+                            const isEnabled = config ? config.is_enabled : false; 
+                            return (
+                              <button
+                                key={f.key}
+                                onClick={() => toggleExpFeature('nutritionist', 'basic', f.key, isEnabled)}
+                                className={`flex items-center justify-between px-3 py-2 rounded-lg text-[10px] font-medium transition-all ${
+                                  isEnabled ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+                                }`}
+                              >
+                                {f.label}
+                                {isEnabled ? <Zap className="w-3 h-3 ml-1 fill-current" /> : <Shield className="w-3 h-3 ml-1" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="lg:col-span-1 space-y-3">
               <Card className="glass shadow-card">
                 <CardHeader className="pb-3">
