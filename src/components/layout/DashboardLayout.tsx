@@ -694,7 +694,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <SyncButton />
             <SystemHealthBadge />
             <TrialCountdown />
-            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={openCommandPalette}>
+            <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))}>
               <Search className="w-4 h-4" />
             </Button>
             <ErrorBoundary section="Layout:NotificationBell" fallback={null}>
@@ -742,7 +742,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             <SyncButton />
             <SystemHealthBadge />
             <TrialCountdown />
-            <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={openCommandPalette} title="Buscar (Ctrl+K)">
+            <Button variant="ghost" size="icon" className="h-9 w-9 mr-1" onClick={() => window.dispatchEvent(new CustomEvent('open-command-palette'))} title="Buscar (Ctrl+K)">
               <Search className="w-4 h-4" />
             </Button>
             <ErrorBoundary section="Layout:NotificationBell" fallback={null}>
