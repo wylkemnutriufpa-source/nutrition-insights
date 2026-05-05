@@ -189,7 +189,7 @@ export default function WorkspacePatients({ search }: Props) {
               />
 
               {/* Avatar + Info (link) */}
-              <Link to={`/patient/${p.patient_id}`} className="flex items-center gap-3 flex-1 min-w-0">
+              <Link to={`/patients/${p.patient_id}`} className="flex items-center gap-3 flex-1 min-w-0">
                 <Avatar className="w-9 h-9">
                   <AvatarFallback className="bg-primary/10 text-primary text-xs font-bold">{initials}</AvatarFallback>
                 </Avatar>
@@ -223,7 +223,7 @@ export default function WorkspacePatients({ search }: Props) {
                 <Settings2 className="h-3.5 w-3.5 text-amber-500/70" />
               </Button>
 
-              <Link to={`/patient/${p.patient_id}`} className="shrink-0">
+              <Link to={`/patients/${p.patient_id}`} className="shrink-0">
                 <ExternalLink className="w-3.5 h-3.5 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
               </Link>
             </div>

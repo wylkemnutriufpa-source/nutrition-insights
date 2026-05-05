@@ -45,7 +45,7 @@ export default function WorkspaceOnboardings({ search }: Props) {
           return (
             <Link
               key={o.id}
-              to={`/patient/${o.patient_id}`}
+              to={`/patients/${o.patient_id}`}
               className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-primary/30 transition-all group"
             >
               <div className="w-9 h-9 rounded-lg bg-sky-500/10 flex items-center justify-center">

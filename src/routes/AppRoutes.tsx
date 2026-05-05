@@ -297,7 +297,7 @@ export const AppRoutes = () => {
 
       {/* Mapeamento de Rotas do Nutritionist (Conforme imports acima) */}
       <Route path="/patients" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Patients /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/patients/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patients/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/analyze-meal" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><AnalyzeMeal /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/diet-builder" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><DietBuilder /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/meal-plans" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><MealPlans /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
@@ -367,14 +367,17 @@ export const AppRoutes = () => {
       <Route path="/meals" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Meals /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/shopping-list" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ShoppingList /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/patient-plan" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient-plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient/plan/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/patient/view/:token" element={<Suspense fallback={<PageLoader />}><PatientPlanPage /></Suspense>} />
       <Route path="/anamnesis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Anamnesis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/programs" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Programs /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/programs/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProgramDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/programs/:programId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><ProgramDetail /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/checkin-panel" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><CheckinPanel /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/checklist" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Checklist /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/feedbacks" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Feedbacks /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/fitness-anamnesis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><FitnessAnamnesis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/in-office/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeWizard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/in-office/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeWizard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/in-office" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeSelector /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Onboarding */}
@@ -387,6 +390,18 @@ export const AppRoutes = () => {
       <Route path="/pricing" element={<LP section="Preços"><Pricing /></LP>} />
       <Route path="/terms" element={<LP section="Termos"><TermsOfUse /></LP>} />
       <Route path="/privacy" element={<LP section="Privacidade"><PrivacyPolicy /></LP>} />
+      
+      {/* Public Booking / Profiles */}
+      <Route path="/booking/:slug" element={<Suspense fallback={<PageLoader />}><PublicBooking /></Suspense>} />
+      <Route path="/plans/:slug" element={<Suspense fallback={<PageLoader />}><PublicPlans planType="patient_prestige" /></Suspense>} />
+      <Route path="/profile/:slug" element={<Suspense fallback={<PageLoader />}><PublicProfile /></Suspense>} />
+      <Route path="/program/:programId" element={<Suspense fallback={<PageLoader />}><PublicProgram /></Suspense>} />
+      <Route path="/quick-link/:nutriId" element={<Suspense fallback={<PageLoader />}><QuickLink /></Suspense>} />
+      
+      {/* Protocolos Especiais */}
+      <Route path="/biquini-branco" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoLanding /></Suspense>} />
+      <Route path="/biquini-branco/:programId" element={<Suspense fallback={<PageLoader />}><BiquiniBrancoDetail /></Suspense>} />
+      
       
       {/* Fallback */}
       <Route path="/404" element={<NotFound />} />

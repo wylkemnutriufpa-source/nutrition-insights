@@ -101,7 +101,7 @@ export default function WorkspaceMealPlans({ search }: Props) {
           return (
             <Link
               key={plan.id}
-              to={`/meal-plan/${plan.id}`}
+              to={`/meal-plans/${plan.id}`}
               className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border hover:border-primary/30 transition-all"
             >
               <div className="w-9 h-9 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">

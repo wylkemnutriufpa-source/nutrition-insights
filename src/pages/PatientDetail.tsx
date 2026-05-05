@@ -652,7 +652,7 @@ export default function PatientDetail() {
               disabled={!resolvedPatientId}
               onClick={() => {
                 if (!resolvedPatientId) return;
-                navigate(`/meal-plan-editor/${resolvedPatientId}`);
+                navigate(`/meal-plans?patientId=${resolvedPatientId}`);
               }}
             >
               <UtensilsCrossed className="w-4 h-4" /> Montar Plano (V2)
