@@ -48,7 +48,7 @@ export async function generateSystemEvent(
   title: string,
   description?: string,
   targetPatientId?: string,
-  metadata?: Record<string, unknown>
+  metadata?: Json
 ) {
   return generateTimelineEvent({
     workspace_id: workspaceId,
