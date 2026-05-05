@@ -43,7 +43,13 @@ export default function AdminFeatureControl() {
   useEffect(() => {
     if (!user) return;
     const fetchData = async () => {
+      // 1. Fetch Nutritionists and their professional feature usage
       const { data: nutRoles } = await supabase.from("user_roles").select("user_id").eq("role", "nutritionist");
+      
+      // 2. Fetch Experience Configurations (Dynamic UI settings)
+      const { data: configs } = await supabase.from("experience_configurations").select("*").order("role, mode, feature_key");
+      if (configs) setExpConfigs(configs);
+
       if (!nutRoles) { setLoading(false); return; }
 
       const result: NutritionistFeature[] = [];
@@ -74,7 +80,7 @@ export default function AdminFeatureControl() {
         result.push({ user_id: r.user_id, full_name: profile?.full_name || "Nutricionista", features });
       }
       setNutritionists(result);
-      if (result.length > 0) setSelectedNut(result[0].user_id);
+      if (result.length > 0 && !selectedNut) setSelectedNut(result[0].user_id);
       setLoading(false);
     };
     fetchData();
