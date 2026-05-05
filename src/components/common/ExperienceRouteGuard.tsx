@@ -1,5 +1,6 @@
 import { useExperienceMode } from "@/hooks/useExperienceMode";
 import { ReactNode } from "react";
+import { Shield } from "lucide-react";
 
 /**
  * ExperienceRouteGuard simplificado.
