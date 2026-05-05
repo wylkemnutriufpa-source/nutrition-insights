@@ -91,8 +91,12 @@ function cleanClinicalText(text: string): string {
 
   let cleaned = text;
   
-  // Remove technical symbols like Ø=Ý
+  // Remove símbolos técnicos e emojis que não renderizam corretamente nos PDFs
   cleaned = cleaned.replace(/[Ø=Ý]+/g, "");
+  // Remove emojis (planos suplementares Unicode) e símbolos pictográficos
+  cleaned = cleaned.replace(/[\u{1F300}-\u{1FAFF}\u{2600}-\u{27BF}\u{1F000}-\u{1F2FF}]/gu, "");
+  // Remove caracteres de controle
+  cleaned = cleaned.replace(/[\u0000-\u001F\u007F]/g, " ");
 
   // If we find any audit marker, we try to remove the line
   const lines = cleaned.split("\n");
@@ -106,12 +110,19 @@ function cleanClinicalText(text: string): string {
 
 function formatDescription(desc: string): string {
   const cleanedDesc = cleanClinicalText(desc);
-  
+
   return cleanedDesc
     .split("\n")
-    .filter(l => l.trim())
+    .filter(l => {
+      const t = l.trim().toLowerCase();
+      if (!t) return false;
+      // Remove linhas redundantes de cabeçalho de substituições embutidas no description
+      if (/^substitui[çc][õo]es?\s*:?$/.test(t)) return false;
+      // Remove "x → y" lines (já são renderizadas no box de substituições)
+      if (/[→➜>]/.test(l) && !/^\d/.test(t)) return false;
+      return true;
+    })
     .map(line => {
-      // Remove any existing bullet points and trim
       const cleaned = line.replace(/^[•\-●*]\s*/, "").trim();
       if (!cleaned) return "";
       return `<div class="food-line">
@@ -138,22 +149,22 @@ function buildPremiumCSS(): string {
         font-family: 'Inter', -apple-system, sans-serif;
         color: #0f172a;
         background: #ffffff;
-        font-size: 11px;
-        line-height: 1.6;
+        font-size: 10.5px;
+        line-height: 1.45;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
       .page-content {
-        padding: 0 50px 50px 50px;
+        padding: 0 28px 24px 28px;
         position: relative;
       }
 
       /* Estilo Premium para o Header */
       .premium-header {
         background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-        padding: 50px 40px;
-        margin-bottom: 40px;
+        padding: 22px 28px;
+        margin-bottom: 18px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -235,78 +246,74 @@ function buildPremiumCSS(): string {
       .macro-summary {
         display: grid;
         grid-template-columns: repeat(4, 1fr);
-        gap: 20px;
-        margin-bottom: 35px;
+        gap: 10px;
+        margin-bottom: 18px;
       }
 
       .macro-card {
         background: #ffffff;
         border: 1px solid #f1f5f9;
-        border-radius: 16px;
-        padding: 20px 15px;
+        border-radius: 10px;
+        padding: 10px 8px;
         text-align: center;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-        transition: transform 0.2s ease;
+        box-shadow: 0 2px 6px rgba(0,0,0,0.03);
       }
 
       .macro-label {
-        font-size: 10px;
+        font-size: 9px;
         text-transform: uppercase;
         color: #64748b;
         font-weight: 800;
-        margin-bottom: 6px;
-        letter-spacing: 1px;
+        margin-bottom: 3px;
+        letter-spacing: 0.6px;
       }
 
       .macro-value {
         font-family: 'Montserrat', sans-serif;
-        font-size: 22px;
+        font-size: 16px;
         font-weight: 800;
         color: #0f172a;
       }
 
       .macro-value span {
-        font-size: 11px;
+        font-size: 9px;
         font-weight: 500;
         color: #94a3b8;
       }
 
       /* Seções de Dias */
-      .day-section { margin-bottom: 40px; page-break-inside: avoid; }
+      .day-section { margin-bottom: 16px; page-break-inside: avoid; }
 
       .day-header {
         background: #0f172a;
         color: #ffffff;
-        padding: 12px 25px;
-        border-radius: 12px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        margin-bottom: 20px;
-        box-shadow: 0 4px 12px rgba(15, 23, 42, 0.1);
+        padding: 7px 18px;
+        border-radius: 8px;
+        text-align: center;
+        margin-bottom: 10px;
       }
 
       .day-header .day-name {
         font-family: 'Montserrat', sans-serif;
-        font-size: 16px;
+        font-size: 12px;
         font-weight: 800;
         text-transform: uppercase;
-        letter-spacing: 3px;
+        letter-spacing: 2px;
       }
 
       /* Linhas de Refeição */
       .meal-row {
-        border: 1px solid #f1f5f9;
-        border-radius: 16px;
-        margin-bottom: 15px;
+        border: 1px solid #e2e8f0;
+        border-radius: 10px;
+        margin-bottom: 8px;
         overflow: hidden;
         background: #ffffff;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        page-break-inside: avoid;
       }
 
       .meal-header-row {
         background: #f8fafc;
-        padding: 15px 25px;
+        padding: 8px 14px;
         border-bottom: 1px solid #f1f5f9;
         display: flex;
         justify-content: space-between;
@@ -316,39 +323,36 @@ function buildPremiumCSS(): string {
       .meal-title-group {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: 10px;
+        flex: 1;
+        min-width: 0;
       }
 
       .meal-label-tag {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 800;
         text-transform: uppercase;
-        padding: 4px 12px;
-        border-radius: 6px;
+        padding: 3px 9px;
+        border-radius: 5px;
         color: #fff;
         letter-spacing: 0.5px;
-      }
-
-      .meal-primary-title {
-        font-family: 'Montserrat', sans-serif;
-        font-size: 15px;
-        font-weight: 700;
-        color: #0f172a;
+        white-space: nowrap;
       }
 
       .meal-kcal-badge {
         font-family: 'Montserrat', sans-serif;
         font-weight: 800;
         color: #D4A84B;
-        font-size: 14px;
+        font-size: 12px;
         background: #fff;
-        padding: 4px 12px;
+        padding: 3px 10px;
         border-radius: 99px;
         box-shadow: inset 0 0 0 1px #f1f5f9;
+        white-space: nowrap;
       }
 
       .meal-body {
-        padding: 20px 25px;
+        padding: 10px 16px 12px;
       }
 
       .food-list {
@@ -358,17 +362,17 @@ function buildPremiumCSS(): string {
       .food-line {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 8px;
+        gap: 8px;
+        margin-bottom: 4px;
         color: #334155;
-        font-size: 12px;
+        font-size: 10.5px;
       }
 
-      .food-bullet { 
-        width: 6px; 
-        height: 6px; 
-        background-color: #D4A84B; 
-        border-radius: 50%; 
+      .food-bullet {
+        width: 4px;
+        height: 4px;
+        background-color: #D4A84B;
+        border-radius: 50%;
         flex-shrink: 0;
         margin-top: 6px;
       }
@@ -377,26 +381,23 @@ function buildPremiumCSS(): string {
       .substitution-box {
         background: #fdfaf3;
         border: 1px solid #f9f1df;
-        border-radius: 12px;
-        padding: 15px 20px;
-        margin-top: 20px;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 8px;
       }
 
       .sub-header {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 800;
         color: #856404;
         text-transform: uppercase;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        margin-bottom: 4px;
         letter-spacing: 1px;
       }
 
       .sub-item {
-        font-size: 11px;
-        padding: 8px 0;
+        font-size: 10px;
+        padding: 3px 0;
         border-bottom: 1px solid #f3e9d2;
         display: flex;
         justify-content: space-between;
@@ -406,25 +407,20 @@ function buildPremiumCSS(): string {
 
       /* Footer */
       .premium-footer {
-        margin-top: 80px;
-        padding: 40px;
+        margin-top: 24px;
+        padding: 14px 20px;
         border-top: 1px solid #f1f5f9;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        font-size: 11px;
-        color: #94a3b8;
-        font-weight: 500;
         text-align: center;
+        font-size: 9px;
+        color: #94a3b8;
       }
-      
+
       .footer-brand {
         font-family: 'Playfair Display', serif;
-        font-size: 18px;
+        font-size: 14px;
         font-weight: 800;
         color: #0f172a;
-        margin-bottom: 5px;
+        margin-bottom: 3px;
       }
 
       .watermark {
@@ -462,12 +458,14 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
       const substitutions = groupItems.filter(i => i !== primary);
 
+      const sameAsLabel = (primary.title || "").trim().toLowerCase() === mealInfo.label.toLowerCase();
+      const showTitle = primary.title && !sameAsLabel;
       return `
         <div class="meal-row">
           <div class="meal-header-row">
             <div class="meal-title-group">
               <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.label}</span>
-              <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
+              ${showTitle ? `<span class="meal-primary-title">${escapeHtml(primary.title)}</span>` : ""}
             </div>
             <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
           </div>
@@ -475,14 +473,14 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             <div class="food-list">
               ${primary.description ? formatDescription(primary.description) : ""}
             </div>
-            
+
             ${substitutions.length > 0 ? `
               <div class="substitution-box">
                 <div class="sub-header">Opções de Substituição</div>
                 ${substitutions.map(sub => `
                   <div class="sub-item">
                     <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
-                    <span style="color: #999; font-size: 9px;">${sub.calories_target} kcal</span>
+                    <span style="color: #999; font-size: 9px;">${sub.calories_target || 0} kcal</span>
                   </div>
                 `).join("")}
               </div>
@@ -570,19 +568,18 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
 
   ${sortedDays.map(dayKey => {
     const dayItems = groupedByDay[dayKey];
-    const dayName = dayKey === -1 ? "Diário (Todos os Dias)" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
+    const dayName = dayKey === -1 ? "" : (DAY_NAMES[dayKey] || `Dia ${dayKey}`);
+    const showDayHeader = sortedDays.length > 1 && dayKey !== -1;
 
     const processedMealTypes = new Set<string>();
-    
+
     const mealTypeGroups = mealOrder.map(mType => {
       const typeItems = dayItems.filter(i => i.mealType === mType);
       if (typeItems.length === 0) return "";
       processedMealTypes.add(mType);
-
       return renderMealTypeItems(typeItems, mType);
     });
 
-    // Add any meal types that were not in the mealOrder
     const remainingItems = dayItems.filter(i => !processedMealTypes.has(i.mealType));
     const remainingGroups = [...new Set(remainingItems.map(i => i.mealType))].map(mType => {
       const typeItems = remainingItems.filter(i => i.mealType === mType);
@@ -592,9 +589,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     const filteredGroups = [...mealTypeGroups, ...remainingGroups].filter(g => g !== "");
     return `
       <div class="day-section">
-        <div class="day-header">
-          <div class="day-name">${dayName}</div>
-        </div>
+        ${showDayHeader ? `<div class="day-header"><div class="day-name">${dayName}</div></div>` : ""}
         ${filteredGroups.join("")}
       </div>
     `;
