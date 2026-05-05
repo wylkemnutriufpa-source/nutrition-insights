@@ -113,6 +113,7 @@ describe("ExperienceProvider", () => {
 
   // Test 6: Múltiplos componentes consomem o contexto e atualizam juntos
   it("should sync updates across multiple context consumers", async () => {
+    // We use a shared wrapper to ensure both hooks are under the SAME provider instance
     const { result: hook1 } = renderHook(() => useExperienceContext(), { wrapper });
     const { result: hook2 } = renderHook(() => useExperienceContext(), { wrapper });
 
