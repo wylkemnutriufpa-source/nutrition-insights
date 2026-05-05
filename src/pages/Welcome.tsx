@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, AuthStatus } from "@/lib/auth";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
