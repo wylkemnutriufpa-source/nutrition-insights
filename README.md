@@ -1,4 +1,9 @@
-# Welcome to your Lovable project
+# FitJourney
+![CI Pipeline](https://img.shields.io/badge/CI-Pipeline-success)
+![Coverage](https://img.shields.io/badge/coverage-72.4%25-green)
+![Security](https://img.shields.io/badge/security-hardened-blue)
+
+Welcome to your Lovable project
 
 ## Project info
 
