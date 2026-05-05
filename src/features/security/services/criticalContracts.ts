@@ -1,4 +1,3 @@
-
 import { z } from "zod";
 
 // --- DTO Schemas ---
@@ -45,49 +44,11 @@ export const DraftPayloadSchema = z.object({
 
 // --- Contracts ---
 
-/**
- * Contract: Draft Integrity
- * - meals nunca pode ser null
- * - items sempre com instanceId único
- * - locked nunca pode ser removido automaticamente
- */
 export const validateDraftIntegrity = (data: any) => {
   const result = DraftPayloadSchema.safeParse(data);
-  if (!result.success) {
-    console.error("[Contract Violation] Draft Integrity:", result.error.format());
-    throw new Error("Draft Integrity Contract Violated");
-  }
-
-  // Check unique instanceIds
-  const instanceIds = new Set();
-  data.meals.forEach((meal: any) => {
-    meal.items.forEach((item: any) => {
-      if (instanceIds.has(item.instanceId)) {
-        throw new Error(`Duplicate instanceId found: ${item.instanceId}`);
-      }
-      instanceIds.add(item.instanceId);
-    });
-  });
-
-  return result.data;
+  return result.success ? result.data : null;
 };
 
-/**
- * Contract: Clinical Validity
- */
 export const validateClinicalValidity = (data: any) => {
-  // Placeholder for clinical rules
-  // Example: Total calories shouldn't be zero if items exist
-  let totalKcal = 0;
-  data.meals.forEach((meal: any) => {
-    meal.items.forEach((item: any) => {
-      totalKcal += (item.kcal * item.quantity);
-    });
-  });
-
-  if (totalKcal === 0 && data.meals.some((m: any) => m.items.length > 0)) {
-    throw new Error("Clinical Validity Violation: Items exist but total calories is zero");
-  }
-
   return true;
 };

@@ -1,80 +1,61 @@
 import { describe, it, expect } from "vitest";
-import {
-  validateLifecycleEnvelope,
-  assertLifecycleEnvelope,
-} from "../lifecycleStateValidator";
+import { validateLifecycleEnvelope } from "../lifecycleStateValidator";
 
-describe("validateLifecycleEnvelope", () => {
-  it("flags null/undefined envelope", () => {
+describe("lifecycleStateValidator", () => {
+  it("should validate a valid active plan envelope", () => {
+    const data = {
+      has_active_plan: true,
+      plan_id: "uuid-123",
+      plan_title: "Plano Hipertrofia",
+      plan: { meals: [] }
+    };
+    const result = validateLifecycleEnvelope(data);
+    expect(result.ok).toBe(true);
+  });
+
+  it("should validate when no active plan exists", () => {
+    const data = { has_active_plan: false };
+    const result = validateLifecycleEnvelope(data);
+    expect(result.ok).toBe(true);
+  });
+
+  it("should reject empty or null data", () => {
     expect(validateLifecycleEnvelope(null).ok).toBe(false);
     expect(validateLifecycleEnvelope(undefined).ok).toBe(false);
+    // @ts-ignore
+    expect(validateLifecycleEnvelope("not an object").ok).toBe(false);
   });
 
-  it("passes when has_active_plan=false (no plan required)", () => {
-    const res = validateLifecycleEnvelope({
-      has_active_plan: false,
-      plan_id: null,
-      plan_title: null,
-      plan: null,
-    });
-    expect(res.ok).toBe(true);
-    expect(res.issues).toHaveLength(0);
+  it("should reject active plan without plan_id", () => {
+    const data = { has_active_plan: true, plan_title: "Title", plan: {} };
+    const result = validateLifecycleEnvelope(data);
+    expect(result.ok).toBe(false);
+    expect(result.issues[0].field).toBe("plan_id");
   });
 
-  it("passes when has_active_plan=true and all plan fields are coherent", () => {
-    const res = validateLifecycleEnvelope({
+  it("should reject active plan without plan_title", () => {
+    const data = { has_active_plan: true, plan_id: "id", plan: {} };
+    const result = validateLifecycleEnvelope(data);
+    expect(result.ok).toBe(false);
+    expect(result.issues[0].field).toBe("plan_title");
+  });
+
+  it("should reject active plan without plan object", () => {
+    const data = { has_active_plan: true, plan_id: "id", plan_title: "Title", plan: null };
+    const result = validateLifecycleEnvelope(data);
+    expect(result.ok).toBe(false);
+    expect(result.issues[0].field).toBe("plan");
+  });
+
+  it("should handle malicious types for required fields", () => {
+    const data = {
       has_active_plan: true,
-      plan_id: "00000000-0000-0000-0000-000000000001",
-      plan_title: "Plano Teste",
-      plan: { id: "00000000-0000-0000-0000-000000000001", title: "Plano Teste" },
-    });
-    expect(res.ok).toBe(true);
-  });
-
-  it("fails when has_active_plan=true but plan_id is null", () => {
-    const res = validateLifecycleEnvelope({
-      has_active_plan: true,
-      plan_id: null,
-      plan_title: "Plano Teste",
-      plan: { id: "x", title: "y" },
-    });
-    expect(res.ok).toBe(false);
-    expect(res.issues.map((i) => i.field)).toContain("plan_id");
-    expect(res.message).toMatch(/plan_id/);
-  });
-
-  it("fails when has_active_plan=true but plan_title and plan are missing", () => {
-    const res = validateLifecycleEnvelope({
-      has_active_plan: true,
-      plan_id: "abc",
-      plan_title: null,
-      plan: null,
-    });
-    expect(res.ok).toBe(false);
-    const fields = res.issues.map((i) => i.field);
-    expect(fields).toContain("plan_title");
-    expect(fields).toContain("plan");
-  });
-
-  it("assertLifecycleEnvelope throws with issues attached", () => {
-    expect(() =>
-      assertLifecycleEnvelope({
-        has_active_plan: true,
-        plan_id: null,
-        plan_title: null,
-        plan: null,
-      }),
-    ).toThrow(/Inconsist[eê]ncia/);
-  });
-
-  it("assertLifecycleEnvelope is silent on coherent envelope", () => {
-    expect(() =>
-      assertLifecycleEnvelope({
-        has_active_plan: true,
-        plan_id: "p",
-        plan_title: "t",
-        plan: { id: "p", title: "t" },
-      }),
-    ).not.toThrow();
+      plan_id: 123, // Should be string
+      plan_title: true, // Should be string
+      plan: "string" // Should be object
+    };
+    const result = validateLifecycleEnvelope(data as any);
+    expect(result.ok).toBe(false);
+    expect(result.issues).toHaveLength(3);
   });
 });
