@@ -75,10 +75,11 @@ function formatDescription(desc: string): string {
     .split("\n")
     .filter(l => l.trim())
     .map(line => {
-      const cleaned = line.replace(/^[•\-]\s*/, "").trim();
+      // Remove any existing bullet points and trim
+      const cleaned = line.replace(/^[•\-●*]\s*/, "").trim();
       if (!cleaned) return "";
       return `<div class="food-line">
-        <span class="food-bullet">●</span>
+        <span class="food-bullet"></span>
         <span>${escapeHtml(cleaned)}</span>
       </div>`;
     })
