@@ -351,17 +351,17 @@ function buildPremiumCSS(): string {
       .food-line {
         display: flex;
         align-items: flex-start;
-        gap: 12px;
-        margin-bottom: 8px;
+        gap: 8px;
+        margin-bottom: 4px;
         color: #334155;
-        font-size: 12px;
+        font-size: 10.5px;
       }
 
-      .food-bullet { 
-        width: 6px; 
-        height: 6px; 
-        background-color: #D4A84B; 
-        border-radius: 50%; 
+      .food-bullet {
+        width: 4px;
+        height: 4px;
+        background-color: #D4A84B;
+        border-radius: 50%;
         flex-shrink: 0;
         margin-top: 6px;
       }
@@ -370,26 +370,23 @@ function buildPremiumCSS(): string {
       .substitution-box {
         background: #fdfaf3;
         border: 1px solid #f9f1df;
-        border-radius: 12px;
-        padding: 15px 20px;
-        margin-top: 20px;
+        border-radius: 8px;
+        padding: 8px 12px;
+        margin-top: 8px;
       }
 
       .sub-header {
-        font-size: 10px;
+        font-size: 9px;
         font-weight: 800;
         color: #856404;
         text-transform: uppercase;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
+        margin-bottom: 4px;
         letter-spacing: 1px;
       }
 
       .sub-item {
-        font-size: 11px;
-        padding: 8px 0;
+        font-size: 10px;
+        padding: 3px 0;
         border-bottom: 1px solid #f3e9d2;
         display: flex;
         justify-content: space-between;
@@ -399,25 +396,20 @@ function buildPremiumCSS(): string {
 
       /* Footer */
       .premium-footer {
-        margin-top: 80px;
-        padding: 40px;
+        margin-top: 24px;
+        padding: 14px 20px;
         border-top: 1px solid #f1f5f9;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 10px;
-        font-size: 11px;
-        color: #94a3b8;
-        font-weight: 500;
         text-align: center;
+        font-size: 9px;
+        color: #94a3b8;
       }
-      
+
       .footer-brand {
         font-family: 'Playfair Display', serif;
-        font-size: 18px;
+        font-size: 14px;
         font-weight: 800;
         color: #0f172a;
-        margin-bottom: 5px;
+        margin-bottom: 3px;
       }
 
       .watermark {
