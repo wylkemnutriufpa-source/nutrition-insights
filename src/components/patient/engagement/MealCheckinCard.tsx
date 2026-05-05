@@ -9,9 +9,10 @@ interface MealCheckinCardProps {
   title: string;
   time: string;
   kcal: number;
+  onClick?: () => void;
 }
 
-export default function MealCheckinCard({ mealId, title, time, kcal }: MealCheckinCardProps) {
+export default function MealCheckinCard({ mealId, title, time, kcal, onClick }: MealCheckinCardProps) {
   const { checkins, toggleCheckin, isCheckingIn } = useEngagement();
   const isCompleted = checkins?.some(c => String(c.meal_id) === String(mealId) && c.completed);
   
@@ -32,7 +33,8 @@ export default function MealCheckinCard({ mealId, title, time, kcal }: MealCheck
     <motion.div 
       initial={{ opacity: 0, x: -10 }}
       animate={{ opacity: 1, x: 0 }}
-      className={`p-4 rounded-2xl border transition-all flex items-center justify-between relative overflow-hidden ${
+      onClick={onClick}
+      className={`p-4 rounded-2xl border transition-all flex items-center justify-between relative overflow-hidden cursor-pointer ${
         isCompleted 
           ? "bg-primary/5 border-primary/20" 
           : isCurrentTime 
@@ -82,7 +84,10 @@ export default function MealCheckinCard({ mealId, title, time, kcal }: MealCheck
               ? "shadow-sm" 
               : "hover:border-primary hover:text-primary"
         }`}
-        onClick={() => toggleCheckin(mealId, !isCompleted)}
+        onClick={(e) => {
+          e.stopPropagation();
+          toggleCheckin(mealId, !isCompleted);
+        }}
       >
         {isCompleted ? "Concluído" : "Marcar"}
       </Button>
