@@ -38,7 +38,7 @@ describe("API Smoke Tests", () => {
     const mockSession = { user: { id: "u1" }, access_token: "t1" };
     (supabase.auth.signInWithPassword as any).mockResolvedValue({ data: { session: mockSession }, error: null });
 
-    const { data, error } = await supabase.auth.signInWithPassword({ email: "test@fitjourney.com", password: "123" });
+    const { data, error } = await (supabase.auth as any).signInWithPassword({ email: "test@fitjourney.com", password: "123" });
     
     expect(error).toBeNull();
     expect(data.session).toBeDefined();
@@ -49,7 +49,7 @@ describe("API Smoke Tests", () => {
     const mockWorkspace = { id: "ws1", user_id: "u1" };
     mockMaybeSingle.mockResolvedValue({ data: mockWorkspace, error: null });
 
-    const { data, error } = await supabase.from("workspace_profiles").select("*").eq("id", "ws1").maybeSingle();
+    const { data, error } = await (supabase.from("workspace_profiles") as any).select("*").eq("id", "ws1").maybeSingle();
     
     expect(error).toBeNull();
     expect(data).toMatchObject(mockWorkspace);
@@ -60,7 +60,7 @@ describe("API Smoke Tests", () => {
     const mockEvent = { id: "e1", title: "Novo Evento", event_type: "milestone" };
     mockSingle.mockResolvedValue({ data: mockEvent, error: null });
 
-    const { data, error } = await supabase.from("timeline_events").insert({ title: "Novo Evento" }).select().single();
+    const { data, error } = await (supabase.from("timeline_events") as any).insert({ title: "Novo Evento" }).select().single();
     
     expect(error).toBeNull();
     expect(data).toMatchObject(mockEvent);
@@ -71,7 +71,7 @@ describe("API Smoke Tests", () => {
     const mockNutrition = { weight_kg: 80, goal: "maintain" };
     mockMaybeSingle.mockResolvedValue({ data: mockNutrition, error: null });
 
-    const { data, error } = await supabase.from("profiles").select("weight_kg, goal").eq("id", "p1").maybeSingle();
+    const { data, error } = await (supabase.from("profiles") as any).select("weight_kg, goal").eq("id", "p1").maybeSingle();
     
     expect(error).toBeNull();
     expect(data).toMatchObject(mockNutrition);
@@ -82,7 +82,7 @@ describe("API Smoke Tests", () => {
     const mockPlan = { plan_id: "plan1", success: true, meals: [] };
     (supabase.functions.invoke as any).mockResolvedValue({ data: mockPlan, error: null });
 
-    const { data, error } = await supabase.functions.invoke("generate-meal-plan-v2", { body: { patient_id: "p1" } });
+    const { data, error } = await (supabase.functions as any).invoke("generate-meal-plan-v2", { body: { patient_id: "p1" } });
     
     expect(error).toBeNull();
     expect(data.success).toBe(true);
