@@ -12,7 +12,7 @@ function isNavigationReady(authStatus: AuthStatus, roles: string[] | null) {
 }
 
 export default function Welcome() {
-  const { roles, authStatus, loading } = useAuth();
+  const { roles, authStatus, loading, profile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next");
@@ -53,8 +53,14 @@ export default function Welcome() {
 
       // 3. Específico: Paciente
       if (roles.includes("patient")) {
-        console.log("[NAV] Welcome redirecting to client dashboard", { roles, reason: "patient role detected" });
-        navigate(nextPath || "/client/dashboard", { replace: true });
+        const pState = profile?.patient_state;
+        let target = "/client/dashboard";
+        
+        if (pState === "onboarding_slides") target = "/onboarding/paciente";
+        else if (pState === "anamnesis") target = "/anamnesis";
+        
+        console.log("[NAV] Welcome redirecting to patient path", { roles, state: pState, target, reason: "patient role detected" });
+        navigate(nextPath || target, { replace: true });
         return;
       }
 
