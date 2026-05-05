@@ -48,8 +48,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { FileText, History as HistoryIcon, Layout, Monitor, Smartphone, Tablet } from "lucide-react";
 import PlanAuditPanel from "@/components/plans/PlanAuditPanel";
-import { jsPDF } from "jspdf";
-import "jspdf-autotable";
+import { generatePremiumMealPlanPDF, type PremiumMealPlanPDFData } from "@/lib/pdfExportPremium";
 import { toast } from "sonner";
 import { calculatePlanTotals } from "@/lib/calculatePlanTotals";
 import { resolveOverallValidationStatus, runValidateAndFixMealPlan } from "@/lib/mealPlanValidationFlow";
@@ -186,157 +185,42 @@ export default function MealPlanEditorV2() {
   const exportToPDF = async () => {
     if (!plan || store.items.length === 0) return;
     setExportingPDF(true);
-    const toastId = toast.loading("Gerando PDF...");
+    const toastId = toast.loading("Gerando PDF Premium...");
     try {
-      const doc = new jsPDF({
-        orientation: pdfOrientation,
-        unit: "mm",
-        format: "a4",
-      });
-      
-      const patientName = store.patientName || "Paciente";
-      const pageWidth = doc.internal.pageSize.getWidth();
-      const pageHeight = doc.internal.pageSize.getHeight();
-      
-      // Theme colors
-      const primaryColor = pdfTheme === "modern" ? [34, 197, 94] : [40, 40, 40]; // Green vs Dark Gray
-      
-      // Header Background (Modern Theme)
-      if (pdfTheme === "modern") {
-        doc.setFillColor(240, 253, 244); // bg-emerald-50
-        doc.rect(0, 0, pageWidth, 50, "F");
-        doc.setDrawColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.setLineWidth(0.5);
-        doc.line(0, 50, pageWidth, 50);
-      }
-      
-      // Header Text
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(24);
-      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.text("Plano Alimentar", 14, 25);
-      
-      doc.setFontSize(10);
-      doc.setTextColor(100);
-      doc.setFont("helvetica", "normal");
-      doc.text(`Gerado em: ${new Date().toLocaleDateString("pt-BR")} às ${new Date().toLocaleTimeString("pt-BR", { hour: '2-digit', minute: '2-digit' })}`, 14, 32);
-      
-      // Patient Info Box
-      doc.setFillColor(255, 255, 255);
-      doc.setDrawColor(230);
-      doc.roundedRect(14, 38, pageWidth - 28, 25, 3, 3, "FD");
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(11);
-      doc.setTextColor(40);
-      doc.text("PACIENTE:", 20, 48);
-      doc.setFont("helvetica", "normal");
-      doc.text(patientName.toUpperCase(), 45, 48);
-      
-      doc.setFont("helvetica", "bold");
-      doc.text("PLANO:", 20, 56);
-      doc.setFont("helvetica", "normal");
-      doc.text(plan.title.toUpperCase(), 45, 56);
-      
-      let y = 75;
-      
-      const sortedItems = [...store.items].sort((a, b) => (a.meal_type || "").localeCompare(b.meal_type || ""));
-      
-      sortedItems.forEach((item, idx) => {
-        // Page break check
-        if (y > pageHeight - 30) {
-          doc.addPage();
-          y = 20;
-        }
-        
-        // Meal Header
-        doc.setFillColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-        doc.roundedRect(14, y, pageWidth - 28, 10, 2, 2, "F");
-        doc.setTextColor(255);
-        doc.setFont("helvetica", "bold");
-        doc.setFontSize(12);
-        doc.text(item.title.toUpperCase(), 20, y + 7);
-        
-        // Macros Badge
-        doc.setFontSize(8);
-        const macroText = `${item.calories_target} kcal | P: ${item.protein_target}g C: ${item.carbs_target}g G: ${item.fat_target}g`;
-        const macroWidth = doc.getTextWidth(macroText);
-        doc.text(macroText, pageWidth - 20 - macroWidth, y + 7);
-        
-        y += 18;
-        
-        // Description
-        doc.setTextColor(60);
-        doc.setFont("helvetica", "normal");
-        doc.setFontSize(10);
-        const descLines = doc.splitTextToSize(item.description || "Nenhuma descrição fornecida.", pageWidth - 32);
-        doc.text(descLines, 16, y);
-        y += (descLines.length * 5) + 6;
-        
-        // Substitutions
-        const meta = (item as any).edit_metadata || (item as any).metadata || {};
-        const substitutions = meta.substitutions_json as string[] || [];
-        
-        if (substitutions.length > 0) {
-          doc.setFont("helvetica", "bold");
-          doc.setFontSize(9);
-          doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-          doc.text("OPÇÕES DE SUBSTITUIÇÃO:", 16, y);
-          y += 5;
-          
-          doc.setFont("helvetica", "italic");
-          doc.setTextColor(100);
-          substitutions.forEach(sub => {
-            const subLines = doc.splitTextToSize(`• ${sub}`, pageWidth - 40);
-            if (y > pageHeight - 15) {
-              doc.addPage();
-              y = 20;
-            }
-            doc.text(subLines, 20, y);
-            y += (subLines.length * 5);
-          });
-          y += 4;
-        }
-        
-        y += 10;
-        // Separator
-        doc.setDrawColor(240);
-        doc.line(14, y - 5, pageWidth - 14, y - 5);
-      });
-      
-      // Engine & Audit Trail (Requirement)
-      if (y > pageHeight - 50) {
-        doc.addPage();
-        y = 20;
-      }
-      
-      doc.setFillColor(250, 250, 250);
-      doc.roundedRect(14, y, pageWidth - 28, 35, 2, 2, "F");
-      doc.setDrawColor(220);
-      doc.rect(14, y, pageWidth - 28, 35);
-      
-      doc.setFont("helvetica", "bold");
-      doc.setFontSize(9);
-      doc.setTextColor(primaryColor[0], primaryColor[1], primaryColor[2]);
-      doc.text("AUDITORIA CLÍNICA E TRILHA DE REGRAS:", 18, y + 8);
-      
-      doc.setFont("helvetica", "normal");
-      doc.setFontSize(8);
-      doc.setTextColor(80);
-      doc.text(`• Motor de Cálculo: FitJourney Clinical Engine v${CURRENT_ENGINE_VERSION}`, 18, y + 15);
-      doc.text(`• Timestamp: ${new Date().toISOString()}`, 18, y + 20);
-      doc.text(`• Protocolo: food-rules.ts + MEAL_KCAL_SPLIT (20/10/30/10/22/8)`, 18, y + 25);
-      doc.text(`• Status: Validado e Revisado pelo Profissional`, 18, y + 30);
-      
-      y += 45;
+      const { data: profProfile } = await supabase
+        .from("profiles")
+        .select("full_name")
+        .eq("user_id", user?.id)
+        .maybeSingle();
 
-      // Footer
-      doc.setFontSize(8);
-      doc.setTextColor(150);
-      const footerText = `Gerado via FitJourney Nutrition v${CURRENT_ENGINE_VERSION} - Relatório de Auditoria Clínica.`;
-      doc.text(footerText, (pageWidth - doc.getTextWidth(footerText)) / 2, pageHeight - 10);
-      
-      doc.save(`Plano_Alimentar_${patientName.replace(/\s+/g, "_")}_${new Date().toISOString().slice(0, 10)}.pdf`);
+      const nutritionistName = profProfile?.full_name || "Seu Nutricionista";
+
+      // Prepare data for the premium export engine
+      const pdfData: PremiumMealPlanPDFData = {
+        planTitle: plan.title || "Plano Alimentar",
+        patientName: store.patientName || "Paciente",
+        nutritionistName: nutritionistName,
+        startDate: new Date(plan.start_date || new Date()).toLocaleDateString("pt-BR"),
+        items: store.items.map(i => ({
+          mealType: i.meal_type || "lunch",
+          title: i.title || "Refeição",
+          description: i.description || undefined,
+          calories_target: i.calories_target || undefined,
+          protein_target: i.protein_target || undefined,
+          carbs_target: i.carbs_target || undefined,
+          fat_target: i.fat_target || undefined,
+          day_of_week: i.day_of_week ?? undefined,
+          is_primary: i.is_primary !== false,
+          substitution_group_id: (i as any).substitution_group_id || null,
+        })),
+        targetCalories: plan.total_target_calories || undefined,
+        targetProtein: plan.total_target_protein || undefined,
+        targetCarbs: plan.total_target_carbs || undefined,
+        targetFat: plan.total_target_fat || undefined,
+        notes: plan.description || undefined,
+      };
+
+      generatePremiumMealPlanPDF(pdfData);
       toast.success("PDF gerado com sucesso!", { id: toastId });
     } catch (err) {
       console.error("Erro ao gerar PDF:", err);

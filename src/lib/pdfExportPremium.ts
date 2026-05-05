@@ -37,6 +37,7 @@ const MEAL_LABELS: Record<string, { label: string; color: string }> = {
   morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
   lunch: { label: "Almoço", color: "#f59e0b" },
   afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
+  snack: { label: "Lanche", color: "#ec4899" },
   pre_workout: { label: "Pré-Treino", color: "#ef4444" },
   post_workout: { label: "Pós-Treino", color: "#3b82f6" },
   dinner: { label: "Jantar", color: "#6366f1" },
@@ -75,10 +76,11 @@ function formatDescription(desc: string): string {
     .split("\n")
     .filter(l => l.trim())
     .map(line => {
-      const cleaned = line.replace(/^[•\-]\s*/, "").trim();
+      // Remove any existing bullet points and trim
+      const cleaned = line.replace(/^[•\-●*]\s*/, "").trim();
       if (!cleaned) return "";
       return `<div class="food-line">
-        <span class="food-bullet">●</span>
+        <span class="food-bullet"></span>
         <span>${escapeHtml(cleaned)}</span>
       </div>`;
     })
@@ -91,7 +93,7 @@ function buildPremiumCSS(): string {
       @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Playfair+Display:wght@700;800&display=swap');
 
       @page {
-        margin: 10mm;
+        margin: 0;
         size: A4;
       }
 
@@ -99,47 +101,48 @@ function buildPremiumCSS(): string {
       
       body {
         font-family: 'Inter', -apple-system, sans-serif;
-        color: #1a1a2e;
+        color: #1e293b;
         background: #ffffff;
         font-size: 11px;
-        line-height: 1.4;
+        line-height: 1.5;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
 
+      .page-content {
+        padding: 0 40px 40px 40px;
+      }
+
       .premium-header {
-        background: #ffffff;
-        border-radius: 0;
-        padding: 40px 0 24px 0;
-        margin-bottom: 32px;
+        background: #0f172a;
+        padding: 40px 30px;
+        margin-bottom: 30px;
         display: flex;
         justify-content: space-between;
-        align-items: flex-end;
-        border-bottom: 2px solid #0f172a;
-        position: relative;
+        align-items: center;
+        border-radius: 0 0 20px 20px;
+        color: white;
       }
 
       .logo-text {
         font-family: 'Playfair Display', serif;
-        font-size: 42px;
+        font-size: 36px;
         font-weight: 800;
-        letter-spacing: -0.03em;
+        letter-spacing: -0.02em;
         line-height: 1;
-        color: #0f172a;
       }
 
       .logo-fit {
         color: #D4A84B;
       }
-      .logo-journey { color: #0f172a; }
+      .logo-journey { color: #ffffff; }
 
       .patient-info {
         text-align: right;
-        color: #0f172a;
       }
 
       .patient-info .name {
-        font-size: 18px;
+        font-size: 20px;
         font-weight: 800;
         color: #D4A84B;
         margin-bottom: 4px;
@@ -149,9 +152,17 @@ function buildPremiumCSS(): string {
 
       .patient-info .label {
         font-size: 10px;
-        color: #64748b;
+        color: #94a3b8;
         text-transform: uppercase;
         font-weight: 600;
+        margin-bottom: 2px;
+      }
+
+      .professional-label {
+        font-size: 11px;
+        font-weight: 500;
+        color: #ffffff;
+        opacity: 0.9;
       }
 
       .macro-summary {
@@ -258,14 +269,20 @@ function buildPremiumCSS(): string {
 
       .food-line {
         display: flex;
-        align-items: flex-start;
-        gap: 8px;
-        margin-bottom: 4px;
-        color: #333;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 6px;
+        color: #334155;
         font-size: 11px;
       }
 
-      .food-bullet { color: #D4A84B; font-weight: bold; }
+      .food-bullet { 
+        width: 5px; 
+        height: 5px; 
+        background-color: #D4A84B; 
+        border-radius: 1px; 
+        flex-shrink: 0;
+      }
 
       .substitution-box {
         background: #fafafa;
@@ -296,14 +313,24 @@ function buildPremiumCSS(): string {
       .sub-item:last-child { border-bottom: none; }
 
       .premium-footer {
-        margin-top: 40px;
+        margin-top: 60px;
         padding-top: 20px;
-        border-top: 1px solid #eee;
+        border-top: 1px solid #f1f5f9;
         display: flex;
-        justify-content: center;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
         font-size: 10px;
         color: #94a3b8;
         font-weight: 500;
+        text-align: center;
+      }
+      
+      .footer-brand {
+        font-family: 'Playfair Display', serif;
+        font-size: 14px;
+        font-weight: 700;
+        color: #1e293b;
       }
     </style>
   `;
@@ -379,7 +406,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return order.indexOf(a) - order.indexOf(b);
   });
 
-  const mealOrder = ["breakfast", "morning_snack", "lunch", "afternoon_snack", "pre_workout", "post_workout", "dinner", "evening_snack"];
+  const mealOrder = ["breakfast", "morning_snack", "lunch", "snack", "afternoon_snack", "pre_workout", "post_workout", "dinner", "evening_snack"];
 
   const html = `<!DOCTYPE html>
 <html lang="pt-BR">
@@ -396,10 +423,11 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     <div class="patient-info">
       <div class="label">Plano Alimentar de:</div>
       <div class="name">${escapeHtml(data.patientName)}</div>
-      <div style="font-size: 11px; font-weight: 500;">Profissional: ${escapeHtml(data.nutritionistName)}</div>
+      <div class="professional-label">Profissional: ${escapeHtml(data.nutritionistName)}</div>
     </div>
   </div>
 
+  <div class="page-content">
   <div class="macro-summary">
     <div class="macro-card" style="border-top: 3px solid #D4A84B;">
       <div class="macro-label">Energia Total</div>
@@ -458,7 +486,13 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     return `<div class="day-section"><div class="day-header"><div class="day-name">${dayName}</div></div>${filteredGroups.join("")}</div>`;
   }).join("")}
 
-  <div style="margin-bottom: 40px;"></div>
+  </div>
+    <div class="premium-footer">
+      <div class="footer-brand">Fit<span style="color: #D4A84B">Journey</span></div>
+      <div>Plano Alimentar Gerado em ${new Date().toLocaleDateString("pt-BR")}</div>
+      <div style="font-size: 8px; opacity: 0.6; text-transform: uppercase; letter-spacing: 1px;">Documento Confidencial • Direitos Reservados</div>
+    </div>
+    <div style="margin-bottom: 40px;"></div>
 </body></html>`;
 
   return html;
