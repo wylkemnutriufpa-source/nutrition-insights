@@ -26,7 +26,6 @@ describe("criticalContracts", () => {
 
   describe("validateDraftIntegrity", () => {
     it("should return valid data for correct payload", () => {
-      // Zod transforms or strictly validates types.
       const result = validateDraftIntegrity(validDraft);
       expect(result).toBeDefined();
       expect(result.meals[0].items[0].instanceId).toBe("inst1");
