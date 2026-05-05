@@ -377,7 +377,7 @@ export const AppRoutes = () => {
       <Route path="/checklist" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Checklist /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/feedbacks" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><Feedbacks /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/fitness-anamnesis" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><FitnessAnamnesis /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
-      <Route path="/in-office/:id" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeWizard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
+      <Route path="/in-office/:patientId" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeWizard /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       <Route path="/in-office" element={<ProtectedRoute><WorkspaceRouteGuard><Suspense fallback={<PageLoader />}><InOfficeSelector /></Suspense></WorkspaceRouteGuard></ProtectedRoute>} />
       
       {/* Onboarding */}
