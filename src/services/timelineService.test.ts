@@ -2,24 +2,30 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { generateTimelineEvent } from "./timelineService";
 import { supabase } from "@/integrations/supabase/client";
 
-// Mock Supabase
+// Mock Supabase with proper chain return values
+const mockSingle = vi.fn();
+const mockOrder = vi.fn();
+const mockEq = vi.fn(() => ({ order: mockOrder }));
+const mockSelect = vi.fn(() => ({ 
+  single: mockSingle,
+  eq: mockEq,
+  order: mockOrder
+}));
+const mockInsert = vi.fn(() => ({ select: mockSelect }));
+const mockDelete = vi.fn(() => ({ eq: vi.fn().mockResolvedValue({ error: null }) }));
+
 vi.mock("@/integrations/supabase/client", () => ({
   supabase: {
-    from: vi.fn(() => ({
-      insert: vi.fn(() => ({
-        select: vi.fn(() => ({
-          single: vi.fn(),
-        })),
-      })),
-      select: vi.fn(() => ({
-        eq: vi.fn(() => ({
-          order: vi.fn(),
-        })),
-      })),
-      delete: vi.fn(() => ({
-        eq: vi.fn(),
-      })),
-    })),
+    from: vi.fn((table: string) => {
+      if (table === "timeline_events") {
+        return {
+          insert: mockInsert,
+          select: mockSelect,
+          delete: mockDelete,
+        };
+      }
+      return {};
+    }),
   },
 }));
 
@@ -38,7 +44,7 @@ describe("timelineService", () => {
 
   it("should insert valid event and return data", async () => {
     const mockData = { id: "evt-1", ...mockPayload };
-    (supabase.from as any)().insert().select().single.mockResolvedValue({ data: mockData, error: null });
+    mockSingle.mockResolvedValue({ data: mockData, error: null });
 
     const result = await generateTimelineEvent(mockPayload);
     expect(result).toEqual(mockData);
@@ -47,7 +53,7 @@ describe("timelineService", () => {
 
   it("should handle insertion error and return null", async () => {
     const consoleSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    (supabase.from as any)().insert().select().single.mockResolvedValue({ data: null, error: { message: "DB Error" } });
+    mockSingle.mockResolvedValue({ data: null, error: { message: "DB Error" } });
 
     const result = await generateTimelineEvent(mockPayload);
     expect(result).toBeNull();
