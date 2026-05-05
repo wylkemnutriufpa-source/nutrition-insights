@@ -620,8 +620,9 @@ export default function MealPlans() {
                 <motion.div key={p.id} whileHover={{ y: -2 }}
                   className="glass rounded-xl p-5 shadow-card cursor-pointer"
                   onClick={() => {
+                    if (!p.id) return;
                     const isV3 = p.editor_version === "v3";
-                    const path = isV3 ? `/v3/${p.patient_id}?planId=${p.id}` : `/meal-plans/${p.id}`;
+                    const path = isV3 && p.patient_id ? `/v3/${p.patient_id}?planId=${p.id}` : `/meal-plans/${p.id}`;
                     navigate(path);
                   }}
                 >
@@ -633,15 +634,30 @@ export default function MealPlans() {
                     </div>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="icon" className="h-9 w-9" title="Builder Híbrido"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}?planId=${p.id}`); }}>
+                        disabled={!p.patient_id || !p.id}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          if (!p.patient_id || !p.id) return;
+                          navigate(`/v3/${p.patient_id}?planId=${p.id}`); 
+                        }}>
                         <Zap className="w-4 h-4 text-primary" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor V3 (Premium)"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/v3/${p.patient_id}?planId=${p.id}`); }}>
+                        disabled={!p.patient_id || !p.id}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          if (!p.patient_id || !p.id) return;
+                          navigate(`/v3/${p.patient_id}?planId=${p.id}`); 
+                        }}>
                         <Sparkles className="w-4 h-4 text-purple-600" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-9 w-9" title="Editor Clássico V2"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/meal-plans/${p.id}`); }}>
+                        disabled={!p.id}
+                        onClick={(e) => { 
+                          e.stopPropagation(); 
+                          if (!p.id) return;
+                          navigate(`/meal-plans/${p.id}`); 
+                        }}>
                         <PencilLine className="w-4 h-4" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-9 w-9 text-destructive hover:text-destructive hover:bg-destructive/10"

@@ -638,21 +638,33 @@ export default function PatientDetail() {
             <Button
               variant="outline"
               className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-              onClick={() => navigate(`/in-office/${resolvedPatientId}`)}
+              disabled={!resolvedPatientId}
+              onClick={() => {
+                if (!resolvedPatientId) return;
+                navigate(`/in-office/${resolvedPatientId}`);
+              }}
             >
               🏥 Modo Consultório
             </Button>
             <Button
               variant="outline"
               className="gap-2 border-primary/30 text-primary hover:bg-primary/10"
-              onClick={() => navigate(`/meal-plan-editor/${resolvedPatientId}`)}
+              disabled={!resolvedPatientId}
+              onClick={() => {
+                if (!resolvedPatientId) return;
+                navigate(`/meal-plan-editor/${resolvedPatientId}`);
+              }}
             >
               <UtensilsCrossed className="w-4 h-4" /> Montar Plano (V2)
             </Button>
             <Button
               variant="outline"
               className="gap-2 border-purple-500/30 text-purple-600 hover:bg-purple-500/10"
-              onClick={() => navigate(`/v3/${resolvedPatientId}`)}
+              disabled={!resolvedPatientId}
+              onClick={() => {
+                if (!resolvedPatientId) return;
+                navigate(`/v3/${resolvedPatientId}`);
+              }}
             >
               <Sparkles className="w-4 h-4" /> Editor V3 (Beta)
             </Button>
@@ -893,9 +905,9 @@ export default function PatientDetail() {
                     variant="ghost" 
                     className="h-8 gap-2 text-xs font-medium hover:bg-primary/10 hover:text-primary"
                     onClick={() => {
-                      const version = (profile as any)?.last_editor_version_used || "v2";
-                      if (version === "v3") {
-                        navigate(`/diet-builder?patientId=${resolvedPatientId}&planId=${plan.id}`);
+                      const version = plan.editor_version || "v2";
+                      if (version === "v3" && resolvedPatientId) {
+                        navigate(`/v3/${resolvedPatientId}?planId=${plan.id}`);
                       } else {
                         navigate(`/meal-plans/${plan.id}`);
                       }
@@ -1522,8 +1534,12 @@ export default function PatientDetail() {
                           });
                           if (error) throw error;
                           if (!newPlan?.id) throw new Error("ID do novo plano não retornado");
-                          toast.success("Plano criado! Abrindo Builder...");
-                          navigate(`/v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}`, { replace: true });
+                          if (newPlan?.id && resolvedPatientId) {
+                            toast.success("Plano criado! Abrindo Builder...");
+                            const isV3 = newPlan.editor_version === "v3";
+                            const path = isV3 ? `/v3/${encodeURIComponent(resolvedPatientId)}?planId=${newPlan.id}` : `/meal-plans/${newPlan.id}`;
+                            navigate(path, { replace: true });
+                          }
                         } catch (err: any) {
                           toast.error(err.message || "Erro ao criar plano");
                         }
@@ -1612,8 +1628,8 @@ export default function PatientDetail() {
                             if (error) throw error;
                             toast.success("Plano criado! Abrindo Builder...");
                             // Navigate to the editor matching the plan version
-                            const editorPath = newPlan.editor_version === "v3" ? `/v3/${resolvedPatientId}` : `/meal-plans/${newPlan.id}`;
-                            navigate(`${editorPath}?planId=${newPlan.id}`, { replace: true });
+                            const editorPath = newPlan.editor_version === "v3" && resolvedPatientId ? `/v3/${resolvedPatientId}?planId=${newPlan.id}` : `/meal-plans/${newPlan.id}`;
+                            navigate(editorPath, { replace: true });
                           } catch (err: any) {
                             toast.error(err.message || "Erro ao criar plano");
                           }
