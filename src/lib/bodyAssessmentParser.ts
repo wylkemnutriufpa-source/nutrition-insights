@@ -110,58 +110,58 @@ export function parseBodyAssessment(rawText: string): ParseResult {
 
   const fieldPatterns: Record<string, RegExp[]> = {
     weight_kg: [
-      /(?:peso|massa corporal|weight)[:\s]*(\d{2,3}[.]?\d*)\s*(?:kg)?/,
-      /(\d{2,3}[.]?\d*)\s*kg\b/,
+      /(?:peso|massa corporal|weight)[:\s]*(\d{2,3}(?:[.,]\d+)?)\s*(?:kg)?/,
+      /(\d{2,3}(?:[.,]\d+)?)\s*kg\b/,
     ],
     height_m: [
-      /(?:altura|estatura|height)[:\s]*(\d[.,]\d{2})/,
+      /(?:altura|estatura|height)[:\s]*(\d(?:[.,]\d+)?)/,
       /(?:altura|estatura)[:\s]*(\d{3})\s*(?:cm)?/,
     ],
     bmi: [
-      /(?:imc|bmi)[:\s]*(\d{1,2}[.,]?\d*)/,
+      /(?:imc|bmi)[:\s]*(\d{1,2}(?:[.,]\d+)?)/,
     ],
     body_fat_percent: [
-      /(?:%\s*gordura|gordura corporal|body fat|bf|percentual de gordura)[:\s]*(\d{1,2}[.,]?\d*)/,
-      /gordura[:\s]*(\d{1,2}[.,]?\d*)\s*%/,
+      /(?:%\s*gordura|gordura corporal|body fat|bf|percentual de gordura)[:\s]*(\d{1,2}(?:[.,]\d+)?)/,
+      /gordura[:\s]*(\d{1,2}(?:[.,]\d+)?)\s*%/,
     ],
     lean_mass_kg: [
-      /(?:massa magra|lean mass|massa muscular)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:massa magra|lean mass|massa muscular)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     fat_mass_kg: [
-      /(?:massa gorda|fat mass|massa de gordura)[:\s]*(\d{1,3}[.]?\d*)/,
+      /(?:massa gorda|fat mass|massa de gordura)[:\s]*(\d{1,3}(?:[.,]\d+)?)/,
     ],
     waist_cm: [
-      /(?:cintura|waist)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:cintura|waist)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     hip_cm: [
-      /(?:quadril|hip)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:quadril|hip)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     abdomen_cm: [
-      /(?:abdomen|abdominal)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:abdomen|abdominal)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     chest_cm: [
-      /(?:peitoral|torax|peito|chest)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:peitoral|torax|peito|chest)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     arm_cm: [
-      /(?:braco|arm)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:braco|arm)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     thigh_cm: [
-      /(?:coxa|thigh)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:coxa|thigh)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     calf_cm: [
-      /(?:panturrilha|calf)[:\s]*(\d{2,3}[.]?\d*)/,
+      /(?:panturrilha|calf)[:\s]*(\d{2,3}(?:[.,]\d+)?)/,
     ],
     visceral_fat_level: [
-      /(?:gordura visceral|visceral fat|visceral)[:\s]*(\d{1,2}[.]?\d*)/,
+      /(?:gordura visceral|visceral fat|visceral)[:\s]*(\d{1,2}(?:[.,]\d+)?)/,
     ],
     metabolic_age: [
-      /(?:idade metabolica|metabolic age)[:\s]*(\d{1,3}[.]?\d*)/,
+      /(?:idade metabolica|metabolic age)[:\s]*(\d{1,3}(?:[.,]\d+)?)/,
     ],
     hydration_percent: [
-      /(?:hidratacao|water|tbw|agua corporal)[:\s]*(\d{1,2}[.]?\d*)/,
+      /(?:hidratacao|water|tbw|agua corporal)[:\s]*(\d{1,2}(?:[.,]\d+)?)/,
     ],
     bone_mass_kg: [
-      /(?:massa ossea|bone mass)[:\s]*(\d{1,2}[.]?\d*)/,
+      /(?:massa ossea|bone mass)[:\s]*(\d{1,2}(?:[.,]\d+)?)/,
     ],
   };
 
@@ -194,14 +194,14 @@ export function parseBodyAssessment(rawText: string): ParseResult {
 
   // Extract skinfolds
   const skinfoldPatterns: Record<string, RegExp[]> = {
-    triceps_mm: [/(?:tricipital|triceps)[:\s]*(\d{1,2}[.]?\d*)/],
-    biceps_mm: [/(?:bicipital|biceps)[:\s]*(\d{1,2}[.]?\d*)/],
-    subscapular_mm: [/(?:subescapular|subscapular)[:\s]*(\d{1,2}[.]?\d*)/],
-    suprailiac_mm: [/(?:suprailiaca|suprailiac)[:\s]*(\d{1,2}[.]?\d*)/],
-    abdominal_mm: [/(?:abdominal)[:\s]*(\d{1,2}[.]?\d*)(?:\s*mm)/],
-    thigh_mm: [/(?:coxa|thigh)[:\s]*(\d{1,2}[.]?\d*)(?:\s*mm)/],
-    chest_mm: [/(?:peitoral|chest)[:\s]*(\d{1,2}[.]?\d*)(?:\s*mm)/],
-    axillary_mm: [/(?:axilar media|axilar|axillary)[:\s]*(\d{1,2}[.]?\d*)/],
+    triceps_mm: [/(?:tricipital|triceps)[:\s]*(\d{1,2}(?:[.,]\d+)?)/],
+    biceps_mm: [/(?:bicipital|biceps)[:\s]*(\d{1,2}(?:[.,]\d+)?)/],
+    subscapular_mm: [/(?:subescapular|subscapular)[:\s]*(\d{1,2}(?:[.,]\d+)?)/],
+    suprailiac_mm: [/(?:suprailiaca|suprailiac)[:\s]*(\d{1,2}(?:[.,]\d+)?)/],
+    abdominal_mm: [/(?:abdominal)[:\s]*(\d{1,2}(?:[.,]\d+)?)(?:\s*mm)?/],
+    thigh_mm: [/(?:coxa|thigh)[:\s]*(\d{1,2}(?:[.,]\d+)?)(?:\s*mm)?/],
+    chest_mm: [/(?:peitoral|chest)[:\s]*(\d{1,2}(?:[.,]\d+)?)(?:\s*mm)?/],
+    axillary_mm: [/(?:axilar media|axilar|axillary)[:\s]*(\d{1,2}(?:[.,]\d+)?)/],
   };
 
   const skinfolds: ParsedSkinfolds = {};
