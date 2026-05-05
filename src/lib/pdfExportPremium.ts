@@ -78,7 +78,7 @@ function formatDescription(desc: string): string {
       const cleaned = line.replace(/^[•\-]\s*/, "").trim();
       if (!cleaned) return "";
       return `<div class="food-line">
-        <span class="food-bullet">◆</span>
+        <span class="food-bullet">●</span>
         <span>${escapeHtml(cleaned)}</span>
       </div>`;
     })
@@ -108,7 +108,7 @@ function buildPremiumCSS(): string {
       }
 
       .premium-header {
-        background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+        background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
         border-radius: 16px;
         padding: 25px 32px;
         margin-bottom: 24px;
@@ -313,12 +313,12 @@ function buildPremiumCSS(): string {
 
       .premium-footer {
         margin-top: 40px;
-        padding-top: 15px;
+        padding-top: 20px;
         border-top: 1px solid #eee;
         display: flex;
-        justify-content: space-between;
-        font-size: 9px;
-        color: #999;
+        justify-content: center;
+        font-size: 10px;
+        color: #94a3b8;
         font-weight: 500;
       }
     </style>
@@ -475,7 +475,6 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
   }).join("")}
 
   <div class="premium-footer">
-    <div>Gerado por FitJourney Premium</div>
     <div>${new Date().toLocaleDateString('pt-BR')}</div>
   </div>
 </body></html>`;
