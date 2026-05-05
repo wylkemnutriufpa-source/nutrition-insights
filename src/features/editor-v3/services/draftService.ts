@@ -125,7 +125,7 @@ export async function loadOrCreateDraft(
   const macros = computeMacros(seedMeals);
 
   const { data: created, error: insErr } = await supabase
-    .from('v3_drafts' as any)
+    .from('v3_drafts')
     .insert({
       patient_id: patientId,
       nutritionist_id: nutritionistId,
