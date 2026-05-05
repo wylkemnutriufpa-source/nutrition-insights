@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { validateDraftIntegrity, validateClinicalValidity } from "../services/criticalContracts";
+import { validateDraftIntegrity, validateClinicalValidity } from "../criticalContracts";
 
 describe("criticalContracts", () => {
   const validDraft = {
