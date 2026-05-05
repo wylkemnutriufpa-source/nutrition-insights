@@ -1,6 +1,6 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
-import { Brain, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import logoVideo from "../../assets/logo-video.mp4";
 
 const DEFAULT_MESSAGES = [
@@ -120,20 +120,13 @@ function MessageRotator({ messages, text }: { messages: string[]; text?: string 
 
 // ━━━ INLINE: small, for buttons ━━━
 export function BrainLoaderInline({ text, className = "" }: { text?: string; className?: string }) {
-  const shouldReduceMotion = useReducedMotion();
   return (
     <span 
       className={`inline-flex items-center gap-2 ${className}`}
       role="status"
       aria-label={text || "Carregando..."}
     >
-      <motion.span
-        animate={shouldReduceMotion ? {} : { rotateY: [0, 360] }}
-        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-        style={{ perspective: 400, display: "inline-flex" }}
-      >
-        <Brain className="w-4 h-4 text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.3)]" />
-      </motion.span>
+      <Loader2 className="w-4 h-4 text-primary animate-spin" />
       {text && <span className="text-xs text-muted-foreground font-medium">{text}</span>}
     </span>
   );
@@ -147,7 +140,9 @@ export function BrainLoaderCard({ text, messages = DEFAULT_MESSAGES, className =
       role="status"
       aria-label={text || messages[0] || "Carregando..."}
     >
-      <AnimatedBrain size={64} glowSize={100} />
+      <div className="relative flex items-center justify-center w-16 h-16">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
       <div className="max-w-[200px] w-full">
         <MessageRotator messages={messages} text={text} />
       </div>
@@ -219,10 +214,7 @@ export function BrainLoaderScreen({
             {/* Fallback UI: If video fails or reduced motion is active */}
             {(videoError || shouldReduceMotion || !videoLoaded) && (
               <div className="flex flex-col items-center justify-center gap-8 animate-in fade-in duration-1000">
-                <AnimatedBrain size={120} glowSize={180} />
-                {!videoLoaded && !videoError && !shouldReduceMotion && (
-                   <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
-                )}
+                <Loader2 className="w-12 h-12 animate-spin text-primary/40" />
               </div>
             )}
             
