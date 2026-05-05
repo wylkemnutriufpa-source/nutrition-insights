@@ -408,7 +408,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
     <div class="patient-info">
       <div class="label">Plano Alimentar de:</div>
       <div class="name">${escapeHtml(data.patientName)}</div>
-      <div style="font-size: 11px; font-weight: 500;">Profissional: ${escapeHtml(data.nutritionistName)}</div>
+      <div class="professional-label">Profissional: ${escapeHtml(data.nutritionistName)}</div>
     </div>
   </div>
 
