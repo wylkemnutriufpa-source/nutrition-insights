@@ -1,6 +1,6 @@
 import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
 import { useState, useEffect, useCallback } from "react";
-import { Brain, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import logoVideo from "../../assets/logo-video.mp4";
 
 const DEFAULT_MESSAGES = [
@@ -18,75 +18,6 @@ interface BrainLoaderProps {
   className?: string;
 }
 
-// ─── Shared brain animation ───
-function AnimatedBrain({ size, glowSize }: { size: number; glowSize: number }) {
-  const shouldReduceMotion = useReducedMotion();
-  return (
-    <div className="relative" style={{ width: size, height: size }}>
-      {/* Aura glow */}
-      <motion.div
-        className="absolute inset-0 rounded-full"
-        style={{
-          background: `radial-gradient(circle, hsl(var(--primary) / 0.25) 0%, transparent 70%)`,
-          width: glowSize,
-          height: glowSize,
-          top: -(glowSize - size) / 2,
-          left: -(glowSize - size) / 2,
-        }}
-        animate={shouldReduceMotion ? {} : { scale: [1, 1.15, 1], opacity: [0.5, 0.8, 0.5] }}
-        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-      />
-
-      {/* Orbiting particles */}
-      {[0, 120, 240].map((deg) => (
-        <motion.div
-          key={deg}
-          className="absolute rounded-full bg-primary/40"
-          style={{
-            width: Math.max(3, size * 0.06),
-            height: Math.max(3, size * 0.06),
-            top: "50%",
-            left: "50%",
-          }}
-          animate={{
-            rotate: [deg, deg + 360],
-          }}
-          transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-          // orbit radius via transform origin
-          // We use x/y to simulate orbit
-        >
-          <motion.div
-            className="rounded-full bg-primary/50"
-            style={{
-              width: "100%",
-              height: "100%",
-              position: "absolute",
-            }}
-            animate={{
-              x: [0, Math.cos((deg * Math.PI) / 180) * size * 0.55, 0],
-              y: [0, Math.sin((deg * Math.PI) / 180) * size * 0.55, 0],
-              opacity: [0.3, 0.7, 0.3],
-            }}
-            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut", delay: deg / 360 }}
-          />
-        </motion.div>
-      ))}
-
-      {/* Brain icon with Y-axis rotation */}
-      <motion.div
-        className="absolute inset-0 flex items-center justify-center"
-        animate={shouldReduceMotion ? {} : { rotateY: [0, 360] }}
-        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-        style={{ perspective: 600 }}
-      >
-        <Brain
-          className="text-primary drop-shadow-[0_0_12px_hsl(var(--primary)/0.4)]"
-          style={{ width: size * 0.55, height: size * 0.55 }}
-        />
-      </motion.div>
-    </div>
-  );
-}
 
 function MessageRotator({ messages, text }: { messages: string[]; text?: string }) {
   const [idx, setIdx] = useState(0);
@@ -120,20 +51,13 @@ function MessageRotator({ messages, text }: { messages: string[]; text?: string 
 
 // ━━━ INLINE: small, for buttons ━━━
 export function BrainLoaderInline({ text, className = "" }: { text?: string; className?: string }) {
-  const shouldReduceMotion = useReducedMotion();
   return (
     <span 
       className={`inline-flex items-center gap-2 ${className}`}
       role="status"
       aria-label={text || "Carregando..."}
     >
-      <motion.span
-        animate={shouldReduceMotion ? {} : { rotateY: [0, 360] }}
-        transition={shouldReduceMotion ? {} : { duration: 2.2, repeat: Infinity, ease: "easeInOut" }}
-        style={{ perspective: 400, display: "inline-flex" }}
-      >
-        <Brain className="w-4 h-4 text-primary drop-shadow-[0_0_6px_hsl(var(--primary)/0.3)]" />
-      </motion.span>
+      <Loader2 className="w-4 h-4 text-primary animate-spin" />
       {text && <span className="text-xs text-muted-foreground font-medium">{text}</span>}
     </span>
   );
@@ -147,7 +71,9 @@ export function BrainLoaderCard({ text, messages = DEFAULT_MESSAGES, className =
       role="status"
       aria-label={text || messages[0] || "Carregando..."}
     >
-      <AnimatedBrain size={64} glowSize={100} />
+      <div className="relative flex items-center justify-center w-16 h-16">
+        <Loader2 className="w-12 h-12 text-primary animate-spin" />
+      </div>
       <div className="max-w-[200px] w-full">
         <MessageRotator messages={messages} text={text} />
       </div>
@@ -216,15 +142,6 @@ export function BrainLoaderScreen({
               />
             ) : null}
 
-            {/* Fallback UI: If video fails or reduced motion is active */}
-            {(videoError || shouldReduceMotion || !videoLoaded) && (
-              <div className="flex flex-col items-center justify-center gap-8 animate-in fade-in duration-1000">
-                <AnimatedBrain size={120} glowSize={180} />
-                {!videoLoaded && !videoError && !shouldReduceMotion && (
-                   <Loader2 className="w-6 h-6 animate-spin text-primary/40" />
-                )}
-              </div>
-            )}
             
             {/* Overlay for messages, centered horizontally, positioned from bottom */}
             {(text || (messages && messages.length > 0)) && (
