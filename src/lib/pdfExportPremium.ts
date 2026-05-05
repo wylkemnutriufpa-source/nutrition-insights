@@ -32,15 +32,15 @@ export interface PremiumMealPlanPDFData {
   notes?: string;
 }
 
-const MEAL_LABELS: Record<string, { label: string; emoji: string; color: string }> = {
-  breakfast: { label: "Café da Manhã", emoji: "☕", color: "#D4A84B" },
-  morning_snack: { label: "Lanche da Manhã", emoji: "🍎", color: "#4CAF50" },
-  lunch: { label: "Almoço", emoji: "🍽️", color: "#FF6B35" },
-  afternoon_snack: { label: "Lanche da Tarde", emoji: "🍪", color: "#E91E8C" },
-  pre_workout: { label: "Pré-Treino", emoji: "⚡", color: "#F44336" },
-  post_workout: { label: "Pós-Treino", emoji: "💪", color: "#2196F3" },
-  dinner: { label: "Jantar", emoji: "🌙", color: "#5C6BC0" },
-  evening_snack: { label: "Ceia", emoji: "🫖", color: "#7E57C2" },
+const MEAL_LABELS: Record<string, { label: string; color: string }> = {
+  breakfast: { label: "Café da Manhã", color: "#6366f1" },
+  morning_snack: { label: "Lanche da Manhã", color: "#10b981" },
+  lunch: { label: "Almoço", color: "#f59e0b" },
+  afternoon_snack: { label: "Lanche da Tarde", color: "#ec4899" },
+  pre_workout: { label: "Pré-Treino", color: "#ef4444" },
+  post_workout: { label: "Pós-Treino", color: "#3b82f6" },
+  dinner: { label: "Jantar", color: "#6366f1" },
+  evening_snack: { label: "Ceia", color: "#8b5cf6" },
 };
 
 const DAY_NAMES: Record<number, string> = {
@@ -338,7 +338,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
       }
     });
 
-    const mealInfo = MEAL_LABELS[mType] || { label: mType, emoji: "🍽️", color: "#888" };
+    const mealInfo = MEAL_LABELS[mType] || { label: mType, color: "#94a3b8" };
 
     const renderGroup = (groupItems: MealPlanPDFItem[]) => {
       const primary = groupItems.find(i => i.is_primary) || groupItems[0];
@@ -348,7 +348,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
         <div class="meal-row">
           <div class="meal-header-row">
             <div class="meal-title-group">
-              <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.emoji} ${mealInfo.label}</span>
+              <span class="meal-label-tag" style="background: ${mealInfo.color}">${mealInfo.label}</span>
               <span class="meal-primary-title">${escapeHtml(primary.title)}</span>
             </div>
             <div class="meal-kcal-badge">${primary.calories_target || 0} kcal</div>
@@ -360,7 +360,7 @@ export function buildPremiumMealPlanHTML(data: PremiumMealPlanPDFData): string {
             
             ${substitutions.length > 0 ? `
               <div class="substitution-box">
-                <div class="sub-header">🔄 Opções de Substituição</div>
+                <div class="sub-header">Opções de Substituição</div>
                 ${substitutions.map(sub => `
                   <div class="sub-item">
                     <span style="font-weight: 600;">${escapeHtml(sub.title)}</span>
