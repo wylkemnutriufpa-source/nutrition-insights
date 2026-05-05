@@ -1241,7 +1241,8 @@ export default function Index() {
 
   const renderContent = () => {
     if (isPatient) {
-      return <PatientGridDashboard />;
+      console.log("[NAV] Index -> Redirecting patient to /client/dashboard");
+      return <Navigate to="/client/dashboard" replace />;
     }
 
     // Professional / Admin view with toggle

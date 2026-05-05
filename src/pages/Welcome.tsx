@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useAuth, AuthStatus } from "@/lib/auth";
 import { BrainLoaderScreen } from "@/components/common/BrainLoader";
@@ -12,63 +12,74 @@ function isNavigationReady(authStatus: AuthStatus, roles: string[] | null) {
 }
 
 export default function Welcome() {
-  const { roles, authStatus, loading, profile } = useAuth();
+  const { roles, authStatus, loading, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextPath = searchParams.get("next");
   const navigatedRef = useRef(false);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // 1. Blindagem contra múltiplas navegações no mesmo ciclo
+    // 1. Blindagem contra múltiplas navegações
     if (navigatedRef.current) return;
 
-    // 2. Se ainda está carregando o estado básico do auth, aguarda
+    // 2. Se ainda está carregando, aguarda
     if (authStatus === "loading" || loading) return;
 
-    // 3. Se não está autenticado, vai para login imediatamente
+    // 3. Se não está autenticado, vai para login
     if (authStatus === "unauthenticated") {
-      console.log("[NAV] Welcome redirecting to /auth", { roles, authStatus, reason: "unauthenticated" });
+      console.log("[NAV] Welcome -> Redirecting to /auth (Not authenticated)");
       navigatedRef.current = true;
       navigate("/auth", { replace: true });
       return;
     }
 
-    // 4. Se está autenticado, aguarda a blindagem de roles
+    // 4. Se está autenticado mas sem roles (stuck detection)
+    if (authStatus === "authenticated" && roles === null) {
+      const timer = setTimeout(() => {
+        console.warn("[NAV] Welcome -> Roles still null after 5s, forcing refresh...");
+        refreshProfile().catch(err => {
+          console.error("[NAV] Welcome -> Refresh failed:", err);
+          setError("Falha ao carregar permissões. Tente novamente.");
+        });
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+
+    // 5. Se roles consolidado, decide destino
     if (isNavigationReady(authStatus, roles)) {
       navigatedRef.current = true;
+      
+      // Fallback: se roles vazio, trata como paciente
+      const effectiveRoles = roles.length === 0 ? ["patient"] : roles;
 
-      // 1. Se não tem roles (array vazio), fallback seguro para paciente
-      if (roles.length === 0) {
-        console.log("[NAV] Welcome redirecting to patient dashboard", { roles, reason: "no roles found" });
-        navigate(nextPath || "/client/dashboard", { replace: true });
+      // Prioridade Pro
+      if (effectiveRoles.includes("nutritionist") || effectiveRoles.includes("personal") || effectiveRoles.includes("admin")) {
+        const target = nextPath || "/admin/dashboard";
+        console.log("[NAV] Welcome -> Admin/Pro Flow", { roles: effectiveRoles, target });
+        navigate(target, { replace: true });
         return;
       }
 
-      // 2. Prioridade: Admin/Nutri/Personal
-      if (roles.includes("nutritionist") || roles.includes("personal") || roles.includes("admin")) {
-        console.log("[NAV] Welcome redirecting to admin dashboard", { roles, reason: "pro role detected" });
-        navigate(nextPath || "/admin/dashboard", { replace: true });
-        return;
-      }
-
-      // 3. Específico: Paciente
-      if (roles.includes("patient")) {
-        const pState = profile?.patient_state;
+      // Flow Paciente
+      if (effectiveRoles.includes("patient")) {
+        const pState = profile?.patient_state || "onboarding_slides";
         let target = "/client/dashboard";
         
         if (pState === "onboarding_slides") target = "/onboarding/paciente";
         else if (pState === "anamnesis") target = "/anamnesis";
         
-        console.log("[NAV] Welcome redirecting to patient path", { roles, state: pState, target, reason: "patient role detected" });
-        navigate(nextPath || target, { replace: true });
+        const finalTarget = nextPath || target;
+        console.log("[NAV] Welcome -> Patient Flow", { state: pState, target: finalTarget });
+        navigate(finalTarget, { replace: true });
         return;
       }
 
-      // 4. Última instância: Se tem roles mas não mapeadas, dashboard de cliente
-      console.log("[NAV] Welcome redirecting to client dashboard", { roles, reason: "unmapped roles" });
+      // Último recurso
+      console.log("[NAV] Welcome -> Default Fallback", { roles: effectiveRoles });
       navigate(nextPath || "/client/dashboard", { replace: true });
     }
-  }, [roles, authStatus, loading, navigate, nextPath]);
+  }, [roles, authStatus, loading, navigate, nextPath, profile, refreshProfile]);
 
   // Mensagens de etapa baseadas no estado real do auth/roles
   const stageMessages =

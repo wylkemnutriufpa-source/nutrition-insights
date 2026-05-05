@@ -90,8 +90,9 @@ const ONBOARDING_STATES: LifecycleState[] = [
 
 /** Parse RPC result into PatientLifecycle */
 function parseLifecycleResult(r: Record<string, unknown>, refetchFn: () => void): PatientLifecycle {
-  const state = (r.lifecycle_state as LifecycleState) || "onboarding_started";
-  const isBlocked = !!r.is_onboarding_blocked;
+  // Mapping from RPC fields to hook fields
+  const state = (r.state || r.lifecycle_state || "onboarding_started") as LifecycleState;
+  const isBlocked = !!(r.is_onboarding_blocked || r.is_blocked);
   
   return {
     state,
@@ -168,9 +169,9 @@ async function fetchLifecycleState(patientId: string): Promise<Record<string, un
   );
   if (error) {
     console.error("Error resolving lifecycle state:", error);
-    return { lifecycle_state: "onboarding_started" };
+    return { state: "onboarding_started" };
   }
-  const envelope = (result as Record<string, unknown>) || { lifecycle_state: "onboarding_started" };
+  const envelope = (result as Record<string, unknown>) || { state: "onboarding_started" };
   // Runtime coherence check — surfaces structured errors when has_active_plan
   // is true but plan_id/plan_title/plan are null.
   const validation = validateLifecycleEnvelope(envelope);
