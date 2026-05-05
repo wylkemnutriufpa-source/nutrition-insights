@@ -149,7 +149,7 @@ function buildPremiumCSS(): string {
 
       .patient-info .label {
         font-size: 10px;
-        color: rgba(255,255,255,0.6);
+        color: #64748b;
         text-transform: uppercase;
         font-weight: 600;
       }
